@@ -1,0 +1,520 @@
+import { useState } from "react";
+import { Card, CardBody, CardHeader, CardFooter } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { Progress } from "@heroui/progress";
+import { Avatar, AvatarGroup } from "@heroui/avatar";
+import { Accordion, AccordionItem } from "@heroui/accordion";
+import { Badge } from "@heroui/badge";
+import { Divider } from "@heroui/divider";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+
+import DefaultLayout from "@/layouts/default";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+interface Project {
+  id: number;
+  name: string;
+  description: string;
+  status: "active" | "completed" | "on-hold";
+  progress: number;
+  dueDate: string;
+  team: string[];
+  tasks: Task[];
+}
+
+interface Task {
+  id: number;
+  title: string;
+  status: "todo" | "in-progress" | "completed";
+  priority: "low" | "medium" | "high";
+  assignee: string;
+  dueDate: string;
+}
+
+export default function IndexPage() {
+  const { t, language } = useLanguage();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  // Function to get progress color based on value
+  const getProgressColor = (progress: number) => {
+    if (progress >= 70) return "success";  // Green for high progress
+    if (progress >= 40) return "warning";  // Orange for medium progress
+    return "danger";                       // Red for low progress
+  };
+
+  // Helper function to translate status
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "active":
+        return t("status.active");
+      case "completed":
+        return t("status.completed");
+      case "on-hold":
+        return t("status.onHold");
+      case "in-progress":
+        return t("status.inProgress");
+      default:
+        return status;
+    }
+  };
+
+  // Helper function to translate priority
+  const getPriorityText = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return t("priority.high");
+      case "medium":
+        return t("priority.medium");
+      case "low":
+        return t("priority.low");
+      default:
+        return priority;
+    }
+  };
+
+  // Sample data
+  const projects: Project[] = [
+    {
+      id: 1,
+      name: "Website Redesign",
+      description:
+        "Complete overhaul of the company website with modern design and improved UX",
+      status: "active",
+      progress: 75,
+      dueDate: "2025-08-25",
+      team: ["Alice", "Bob", "Carol"],
+      tasks: [
+        {
+          id: 1,
+          title: "Design homepage mockup",
+          status: "completed",
+          priority: "high",
+          assignee: "Alice",
+          dueDate: "2025-08-10",
+        },
+        {
+          id: 2,
+          title: "Implement responsive navigation",
+          status: "in-progress",
+          priority: "high",
+          assignee: "Bob",
+          dueDate: "2025-08-15",
+        },
+        {
+          id: 3,
+          title: "Optimize page loading speed",
+          status: "todo",
+          priority: "medium",
+          assignee: "Carol",
+          dueDate: "2025-08-20",
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: "Mobile App Development",
+      description: "Native mobile application for iOS and Android platforms",
+      status: "active",
+      progress: 45,
+      dueDate: "2025-09-15",
+      team: ["David", "Emma", "Frank"],
+      tasks: [
+        {
+          id: 4,
+          title: "User authentication flow",
+          status: "completed",
+          priority: "high",
+          assignee: "David",
+          dueDate: "2025-08-05",
+        },
+        {
+          id: 5,
+          title: "Dashboard implementation",
+          status: "in-progress",
+          priority: "high",
+          assignee: "Emma",
+          dueDate: "2025-08-18",
+        },
+      ],
+    },
+    {
+      id: 3,
+      name: "Database Migration",
+      description: "Migrate legacy database to new cloud infrastructure",
+      status: "on-hold",
+      progress: 20,
+      dueDate: "2025-10-01",
+      team: ["Grace", "Henry"],
+      tasks: [
+        {
+          id: 6,
+          title: "Data backup and validation",
+          status: "completed",
+          priority: "high",
+          assignee: "Grace",
+          dueDate: "2025-07-30",
+        },
+        {
+          id: 7,
+          title: "Schema migration script",
+          status: "todo",
+          priority: "high",
+          assignee: "Henry",
+          dueDate: "2025-08-30",
+        },
+      ],
+    },
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "success";
+      case "completed":
+        return "primary";
+      case "on-hold":
+        return "warning";
+      case "todo":
+        return "default";
+      case "in-progress":
+        return "secondary";
+      default:
+        return "default";
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "danger";
+      case "medium":
+        return "warning";
+      case "low":
+        return "success";
+      default:
+        return "default";
+    }
+  };
+
+  const openProjectDetails = (project: Project) => {
+    setSelectedProject(project);
+    onOpen();
+  };
+
+  return (
+    <DefaultLayout>
+      <div className={`space-y-8 pb-16 ${language === "ar" ? "rtl" : "ltr"}`}>
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold text-foreground">
+            {t("dashboard.title")}
+          </h1>
+          <p className="text-lg text-default-600">{t("dashboard.subtitle")}</p>
+
+          <div className="flex gap-4 justify-center">
+            <Button color="primary" size="lg">
+              {t("dashboard.newProject")}
+            </Button>
+            <Button variant="bordered" size="lg">
+              {t("dashboard.importData")}
+            </Button>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="text-center space-y-2">
+              <p className="text-3xl font-bold text-success">3</p>
+              <p className="text-sm text-default-600">
+                {t("dashboard.activeProjects")}
+              </p>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-center space-y-2">
+              <p className="text-3xl font-bold text-primary">8</p>
+              <p className="text-sm text-default-600">
+                {t("dashboard.totalTasks")}
+              </p>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-center space-y-2">
+              <p className="text-3xl font-bold text-warning">5</p>
+              <p className="text-sm text-default-600">
+                {t("dashboard.inProgress")}
+              </p>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-center space-y-2">
+              <p className="text-3xl font-bold text-danger">2</p>
+              <p className="text-sm text-default-600">
+                {t("dashboard.overdue")}
+              </p>
+            </div>
+          </Card>
+        </div>
+
+        {/* Projects Grid */}
+        <div className="space-y-6">
+          <h2 className="text-2xl font-semibold text-foreground">
+            {t("dashboard.activeProjects")}
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <Card key={project.id} className="w-full">
+                <CardHeader className="flex gap-3">
+                  <div className="flex flex-col flex-1">
+                    <p className="text-md font-semibold">{project.name}</p>
+                    <p className="text-small text-default-500">
+                      {project.description}
+                    </p>
+                  </div>
+                  <Chip
+                    color={getStatusColor(project.status)}
+                    variant="flat"
+                    size="sm"
+                  >
+                    {getStatusText(project.status)}
+                  </Chip>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>{t("dashboard.progress")}</span>
+                      <span>{project.progress}%</span>
+                    </div>
+                    <Progress
+                      value={project.progress}
+                      color={getProgressColor(project.progress)}
+                      className="w-full"
+                      aria-label={`${t("common.progress")}: ${project.progress}%`}
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-default-600">
+                      {t("dashboard.due")}: {project.dueDate}
+                    </span>
+                    <AvatarGroup isBordered max={3} size="sm">
+                      {project.team.map((member, index) => (
+                        <Avatar key={index} name={member} size="sm" />
+                      ))}
+                    </AvatarGroup>
+                  </div>
+
+                  <Badge content={project.tasks.length} color="primary">
+                    <Button variant="flat" size="sm" fullWidth>
+                      {t("dashboard.tasks")}
+                    </Button>
+                  </Badge>
+                </CardBody>
+                <CardFooter>
+                  <Button
+                    color="primary"
+                    variant="light"
+                    fullWidth
+                    onPress={() => openProjectDetails(project)}
+                  >
+                    {t("dashboard.viewDetails")}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Tasks Accordion */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold text-foreground">
+            {t("dashboard.recentTasks")}
+          </h2>
+
+          <Accordion variant="splitted">
+            {projects.map((project) => (
+              <AccordionItem
+                key={project.id}
+                aria-label={project.name}
+                title={project.name}
+                subtitle={`${project.tasks.length} ${t("dashboard.tasks")}`}
+                startContent={
+                  <Chip
+                    color={getStatusColor(project.status)}
+                    variant="dot"
+                    size="sm"
+                  >
+                    {getStatusText(project.status)}
+                  </Chip>
+                }
+              >
+                <div className="space-y-3">
+                  {project.tasks.map((task) => (
+                    <Card key={task.id} className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={task.assignee} size="sm" />
+                          <div>
+                            <p className="font-medium">{task.title}</p>
+                            <p className="text-sm text-default-500">
+                              {t("dashboard.assignedTo")} {task.assignee}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Chip
+                            color={getStatusColor(task.status)}
+                            variant="flat"
+                            size="sm"
+                          >
+                            {getStatusText(task.status)}
+                          </Chip>
+                          <Chip
+                            color={getPriorityColor(task.priority)}
+                            variant="dot"
+                            size="sm"
+                          >
+                            {getPriorityText(task.priority)}
+                          </Chip>
+                          <span className="text-sm text-default-500">
+                            {task.dueDate}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </div>
+
+      {/* Project Details Modal */}
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {selectedProject?.name}
+                <p className="text-sm text-default-500 font-normal">
+                  {selectedProject?.description}
+                </p>
+              </ModalHeader>
+              <ModalBody>
+                {selectedProject && (
+                  <div className="space-y-6">
+                    <div className="flex gap-4">
+                      <Chip
+                        color={getStatusColor(selectedProject.status)}
+                        variant="flat"
+                      >
+                        {getStatusText(selectedProject.status)}
+                      </Chip>
+                      <span className="text-sm text-default-600">
+                        {t("dashboard.due")}: {selectedProject.dueDate}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>{t("dashboard.progress")}</span>
+                        <span>{selectedProject.progress}%</span>
+                      </div>
+                      <Progress
+                        value={selectedProject.progress}
+                        color={getProgressColor(selectedProject.progress)}
+                        aria-label={`${t("common.progress")}: ${selectedProject.progress}%`}
+                      />
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold mb-3">
+                        {t("dashboard.teamMembers")}
+                      </h4>
+                      <AvatarGroup isBordered>
+                        {selectedProject.team.map((member, index) => (
+                          <Avatar key={index} name={member} />
+                        ))}
+                      </AvatarGroup>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold mb-3">
+                        {t("dashboard.tasks")}
+                      </h4>
+                      <Table aria-label="Project tasks">
+                        <TableHeader>
+                          <TableColumn>{t("dashboard.task")}</TableColumn>
+                          <TableColumn>{t("dashboard.assignee")}</TableColumn>
+                          <TableColumn>{t("dashboard.status")}</TableColumn>
+                          <TableColumn>{t("dashboard.priority")}</TableColumn>
+                          <TableColumn>{t("dashboard.dueDate")}</TableColumn>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedProject.tasks.map((task) => (
+                            <TableRow key={task.id}>
+                              <TableCell>{task.title}</TableCell>
+                              <TableCell>{task.assignee}</TableCell>
+                              <TableCell>
+                                <Chip
+                                  color={getStatusColor(task.status)}
+                                  variant="flat"
+                                  size="sm"
+                                >
+                                  {getStatusText(task.status)}
+                                </Chip>
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  color={getPriorityColor(task.priority)}
+                                  variant="dot"
+                                  size="sm"
+                                >
+                                  {getPriorityText(task.priority)}
+                                </Chip>
+                              </TableCell>
+                              <TableCell>{task.dueDate}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  {t("common.close")}
+                </Button>
+                <Button color="primary" onPress={onClose}>
+                  {t("common.editProject")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </DefaultLayout>
+  );
+}
