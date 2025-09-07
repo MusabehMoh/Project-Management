@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export const LanguageSwitcher = () => {
@@ -29,10 +30,10 @@ export const LanguageSwitcher = () => {
     <Dropdown>
       <DropdownTrigger>
         <Button
-          variant="light"
+          className="min-w-unit-16"
           size="sm"
           startContent={currentLanguage?.flag}
-          className="min-w-unit-16"
+          variant="light"
         >
           {currentLanguage?.label}
         </Button>

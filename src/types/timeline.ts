@@ -1,6 +1,8 @@
 export interface Timeline {
-  id: string;
+  id: number;
+  treeId: string;
   projectId: number;
+  projectRequirementId?: number;
   name: string;
   description?: string;
   startDate: string;
@@ -11,110 +13,137 @@ export interface Timeline {
 }
 
 export interface Sprint {
-  id: string;
-  timelineId: string;
+  id: number;
+  treeId: string;
+  timelineId: number;
   name: string;
   description?: string;
   startDate: string;
   endDate: string;
+  department: string;
   duration: number; // in days
   tasks: Task[];
   notes?: string;
-  department?: string;
-  resources?: string[];
+  departmentId?: number;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Task {
-  id: string;
-  sprintId: string;
+  id: number;
+  treeId: string;
+  sprintId: number;
   name: string;
   description?: string;
   startDate: string;
   endDate: string;
   duration: number; // in days
-  subtasks: Subtask[];
+  subtasks?: Subtask[]; // Optional for backward compatibility with mock data
   notes?: string;
-  department?: string;
+  departmentId?: string | number;
   resources?: string[];
-  status: TaskStatus;
-  priority: TaskPriority;
+  statusId: number;
+  priorityId: number;
   progress: number; // 0-100
   createdAt?: string;
   updatedAt?: string;
+  dependentTasks: Task[];
+  members: MemberSearchResult[];
+  depTasks: WorkItem[];
 }
 
 export interface Subtask {
-  id: string;
-  taskId: string;
+  id: number;
+  treeId: string;
+  taskId: number;
   name: string;
   description?: string;
-  startDate: string;
-  endDate: string;
-  duration: number; // in days
+  startDate?: string;
+  endDate?: string;
+  duration?: number; // in days
   notes?: string;
-  department?: string;
+  departmentId?: number;
   resources?: string[];
-  status: TaskStatus;
-  priority: TaskPriority;
-  progress: number; // 0-100
+  statusId: number;
+  priorityId: number;
+  progress?: number; // 0-100
+  assigneeId?: number;
+  assigneeName?: string;
+  estimatedHours?: number;
+  actualHours?: number;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export type TaskStatus = 'not-started' | 'in-progress' | 'completed' | 'on-hold' | 'cancelled';
-export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
+export type TaskStatus =
+  | "not-started"
+  | "in-progress"
+  | "completed"
+  | "on-hold"
+  | "cancelled";
+export type TaskPriority = "low" | "medium" | "high" | "critical";
 
-export interface Resource {
+// Lookup interfaces for dynamic data
+export interface TaskStatusLookup {
   id: string;
-  name: string;
-  type: 'person' | 'equipment' | 'material';
-  department?: string;
-  isAvailable: boolean;
-  skills?: string[];
+  key: TaskStatus;
+  label: string;
+  color: string;
+  description?: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface TaskPriorityLookup {
+  id: string;
+  key: TaskPriority;
+  label: string;
+  color: string;
+  description?: string;
+  isActive: boolean;
+  sortOrder: number;
+  icon?: string;
 }
 
 export interface Department {
-  id: string;
+  id: string | number;
   name: string;
   color: string;
   description?: string;
 }
 
 export interface TimelineView {
-  type: 'gantt' | 'tree' | 'timeline';
+  type: "gantt" | "tree" | "timeline";
   showDetails: boolean;
   selectedItem?: string;
-  selectedItemType?: 'timeline' | 'sprint' | 'task' | 'subtask';
+  selectedItemType?: "timeline" | "sprint" | "task" | "subtask" | "requirement";
   filters: TimelineFilters;
 }
 
 export interface TimelineFilters {
   departments: string[];
-  resources: string[];
+  members: string[]; // User/member IDs
   status: TaskStatus[];
   priority: TaskPriority[];
+  search?: string;
   dateRange?: {
     start: string;
     end: string;
   };
-  search?: string;
 }
 
 export interface GanttBarData {
   id: string;
-  type: 'timeline' | 'sprint' | 'task' | 'subtask';
+  type: "timeline" | "sprint" | "task";
   parentId?: string;
   name: string;
   startDate: Date;
   endDate: Date;
   progress: number;
-  resources: string[];
-  department?: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  level: number; // 0 = timeline, 1 = sprint, 2 = task, 3 = subtask
+  departmentId?: string | number;
+  statusId: number;
+  priorityId: number;
+  level: number; // 0 = timeline, 1 = sprint,  2 = task
   isExpanded?: boolean;
   children?: GanttBarData[];
 }
@@ -131,9 +160,22 @@ export interface SprintFormData {
   description?: string;
   startDate: any; // CalendarDate | null
   endDate: any; // CalendarDate | null
-  department?: string;
+  departmentId?: string;
   resources?: string[];
   notes?: string;
+}
+
+export interface RequirementFormData {
+  name: string;
+  description?: string;
+  startDate: any; // CalendarDate | null
+  endDate: any; // CalendarDate | null
+  departmentId?: string;
+  resources?: string[];
+  notes?: string;
+  statusId: number;
+  priorityId: number;
+  progress: number;
 }
 
 export interface TaskFormData {
@@ -141,24 +183,11 @@ export interface TaskFormData {
   description?: string;
   startDate: any; // CalendarDate | null
   endDate: any; // CalendarDate | null
-  department?: string;
+  departmentId?: string;
   resources?: string[];
   notes?: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  progress: number;
-}
-
-export interface SubtaskFormData {
-  name: string;
-  description?: string;
-  startDate: any; // CalendarDate | null
-  endDate: any; // CalendarDate | null
-  department?: string;
-  resources?: string[];
-  notes?: string;
-  status: TaskStatus;
-  priority: TaskPriority;
+  statusId: number;
+  priorityId: number;
   progress: number;
 }
 
@@ -188,7 +217,7 @@ export interface CreateSprintRequest {
   description?: string;
   startDate: string;
   endDate: string;
-  department?: string;
+  departmentId?: string;
   resources?: string[];
   notes?: string;
 }
@@ -203,11 +232,11 @@ export interface CreateTaskRequest {
   description?: string;
   startDate: string;
   endDate: string;
-  department?: string;
+  departmentId?: string;
   resources?: string[];
   notes?: string;
-  status: TaskStatus;
-  priority: TaskPriority;
+  statusId: number;
+  priorityId: number;
   progress: number;
 }
 
@@ -219,14 +248,46 @@ export interface CreateSubtaskRequest {
   taskId: string;
   name: string;
   description?: string;
-  startDate: string;
-  endDate: string;
-  department?: string;
+  startDate?: string;
+  endDate?: string;
+  departmentId?: string;
   resources?: string[];
   notes?: string;
+  statusId: number;
+  priorityId: number;
+  progress?: number;
+  assigneeId?: number;
+  assigneeName?: string;
+  estimatedHours?: number;
+  actualHours?: number;
+}
+
+// Search Types
+export interface MemberSearchResult {
+  id: number;
+  userName: string;
+  militaryNumber: string;
+  fullName: string;
+  gradeName: string;
+  statusId: number;
+  department: string;
+}
+
+// Search tasks and subTask
+export interface WorkItem {
+  id: string;
+  sprintId: string;
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  duration: number; // in days
+  department?: string;
+  // resources?: string[];
   status: TaskStatus;
   priority: TaskPriority;
-  progress: number;
+  progress: number; // 0-100
+  members: MemberSearchResult[];
 }
 
 export interface UpdateSubtaskRequest extends Partial<CreateSubtaskRequest> {

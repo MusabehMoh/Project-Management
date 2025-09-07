@@ -4,7 +4,6 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Select, SelectItem } from "@heroui/select";
-import { Input } from "@heroui/input";
 import { Spinner } from "@heroui/spinner";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Divider } from "@heroui/divider";
@@ -19,12 +18,17 @@ import {
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PlusIcon, FilterIcon, RefreshIcon, BuildingIcon, CalendarIcon } from "@/components/icons";
+import {
+  PlusIcon,
+  FilterIcon,
+  RefreshIcon,
+  BuildingIcon,
+  CalendarIcon,
+} from "@/components/icons";
 import { useTimelines } from "@/hooks/useTimelines";
-import { useProjects } from "@/hooks/useProjects";
+import { useTimelineProjects } from "@/hooks/useTimelineProjects";
 import { timelineService } from "@/services/api";
 import { TimelineView, Timeline } from "@/types/timeline";
-
 // Import timeline components
 import TimelineTreeView from "@/components/timeline/TimelineTreeView";
 import TimelineGanttView from "@/components/timeline/TimelineGanttView";
@@ -35,63 +39,81 @@ import TimelineFilters from "@/components/timeline/TimelineFilters";
 export default function TimelinePage() {
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
-  const projectId = searchParams.get('projectId') ? parseInt(searchParams.get('projectId')!) : undefined;
-  const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>(projectId);
+  const projectId = searchParams.get("projectId")
+    ? parseInt(searchParams.get("projectId")!)
+    : undefined;
+  const [selectedProjectId, setSelectedProjectId] = useState<
+    number | undefined
+  >(projectId);
 
-  // Projects hook for all projects
-  const { projects, loading: projectsLoading } = useProjects();
+  // Projects hook for all projects (optimized for timeline - no users/owning-units loading)
+  const {
+    projects,
+    loading: projectsLoading,
+    loadProjects,
+  } = useTimelineProjects();
+
+  // Effect to load all projects for timeline dropdown
+  useEffect(() => {
+    // Load all projects (up to 100) for the timeline dropdown
+    loadProjects(1, 100);
+  }, [loadProjects]);
 
   // State for all projects with their timelines (including projects with no timelines)
-  const [projectsWithTimelines, setProjectsWithTimelines] = useState<Array<{
-    project: any;
-    timelines: Timeline[];
-    loading: boolean;
-  }>>([]);
+  const [projectsWithTimelines, setProjectsWithTimelines] = useState<
+    Array<{
+      project: any;
+      timelines: Timeline[];
+      loading: boolean;
+    }>
+  >([]);
 
-  // Timeline state management
+  // Timeline state management - only run when projects are loaded and we have a selected project
   const {
     timelines,
     selectedTimeline,
     departments,
-    resources,
     loading,
     error,
     createTimeline,
     updateTimeline,
-    deleteTimeline,
     createSprint,
     updateSprint,
     deleteSprint,
     createTask,
     updateTask,
     deleteTask,
-    createSubtask,
+    moveTask,
+    moveTaskToSprint,
     updateSubtask,
-    deleteSubtask,
     setSelectedTimeline,
-    loadTimelines: fetchTimelines
-  } = useTimelines(selectedProjectId);
+    loadTimelines: fetchTimelines,
+  } = useTimelines(
+    selectedProjectId && !projectsLoading ? selectedProjectId : undefined,
+  ); // ✅ Only load when projects are ready
+
+  // Add temporary placeholder functions for GanttView compatibility
+  const createSubtask = async () => null;
+  const deleteSubtask = async () => false;
 
   // Add missing filter functionality
   const [filters, setFilters] = useState({
     departments: [],
-    resources: [],
+    members: [],
     status: [],
     priority: [],
-    search: ''
   });
 
   const applyFilters = useCallback((newFilters: any) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   }, []);
 
   const clearFilters = useCallback(() => {
     setFilters({
       departments: [],
-      resources: [],
+      members: [],
       status: [],
       priority: [],
-      search: ''
     });
   }, []);
 
@@ -99,122 +121,297 @@ export default function TimelinePage() {
     // Error clearing would be handled by the hook
   }, []);
 
-  const refreshData = useCallback(() => {
-    fetchTimelines();
-    loadAllProjectsWithTimelines();
-  }, [fetchTimelines]);
-
-  // Load all projects and their timelines
+  // Load all projects and their timelines with a single API call (Performance Optimized)
   const loadAllProjectsWithTimelines = useCallback(async () => {
-    if (!projects.length) return;
+    if (!projects || projects.length === 0) return;
 
-    // Initialize all projects with loading state
-    const initialProjects = projects.map(project => ({
+    const initialProjects = projects.map((project) => ({
       project,
       timelines: [],
-      loading: true
+      loading: true,
     }));
+
     setProjectsWithTimelines(initialProjects);
 
     try {
-      // Load all timelines in parallel without individual state updates
+      // Try the bulk endpoint first for optimal performance
+      const response = await timelineService.getProjectsWithTimelines();
+
+      if (response.success && response.data) {
+        const projectsWithTimelineData = projects.map((project) => {
+          const projectData = response.data.find(
+            (p: any) => p.projectId === project.id,
+          );
+
+          return {
+            project,
+            timelines: projectData?.timelines || [],
+            loading: false,
+          };
+        });
+
+        setProjectsWithTimelines(projectsWithTimelineData);
+
+        return;
+      }
+
+      // Fall back to individual API calls
+      throw new Error("Bulk endpoint failed");
+    } catch {
+      // Fall back to individual API calls
       const projectTimelinePromises = projects.map(async (project) => {
         try {
-          const response = await timelineService.getProjectTimelines(project.id);
+          const response = await timelineService.getProjectTimelines(
+            project.id,
+          );
+
           return {
             project,
             timelines: response.data || [],
-            loading: false
+            loading: false,
           };
-        } catch (error) {
-          console.warn(`Failed to load timelines for project ${project.id}:`, error);
+        } catch {
           return {
             project,
             timelines: [],
-            loading: false
+            loading: false,
           };
         }
       });
 
-      // Wait for all to complete and update state once
       const results = await Promise.all(projectTimelinePromises);
+
       setProjectsWithTimelines(results);
-      
-    } catch (error) {
-      console.error('Failed to load projects with timelines:', error);
     }
   }, [projects]);
 
-  // Load projects with timelines when projects change
-  useEffect(() => {
+  // Enhanced timeline creation that refreshes data and auto-selects new timeline
+  const handleCreateTimeline = useCallback(
+    async (timelineData: any) => {
+      try {
+        // Clear current selection to ensure new timeline gets selected
+        setSelectedTimeline(null);
+        
+        const newTimeline = await createTimeline(timelineData);
+
+        if (newTimeline) {
+          // Refresh timelines for the current project
+          await fetchTimelines();
+          // Refresh projects with timelines for the dropdown
+          if (projects.length > 0) {
+            loadAllProjectsWithTimelines();
+          }
+          // The useEffect will auto-select the new timeline
+        }
+
+        return newTimeline;
+      } catch (error) {
+        throw error; // Re-throw to let the modal handle it
+      }
+    },
+    [
+      createTimeline,
+      fetchTimelines,
+      projects.length,
+      loadAllProjectsWithTimelines,
+      setSelectedTimeline,
+    ],
+  );
+
+  // Enhanced sprint creation that refreshes dropdown data
+  const handleCreateSprint = useCallback(
+    async (sprintData: any) => {
+      try {
+        const newSprint = await createSprint(sprintData);
+
+        if (newSprint) {
+          // Refresh projects with timelines for the dropdown
+          if (projects.length > 0) {
+            loadAllProjectsWithTimelines();
+          }
+        }
+
+        return newSprint;
+      } catch (error) {
+        throw error; // Re-throw to let the component handle it
+      }
+    },
+    [createSprint, projects.length, loadAllProjectsWithTimelines],
+  );
+
+  // Enhanced task update that refreshes dropdown data
+  const handleUpdateTask = useCallback(
+    async (data: any) => {
+      try {
+        const updatedTask = await updateTask(data);
+
+        if (updatedTask) {
+          // Refresh projects with timelines for the dropdown to reflect changes
+          if (projects.length > 0) {
+            loadAllProjectsWithTimelines();
+          }
+        }
+
+        return updatedTask;
+      } catch (error) {
+        throw error; // Re-throw to let the component handle it
+      }
+    },
+    [updateTask, projects.length, loadAllProjectsWithTimelines],
+  );
+
+  // Enhanced sprint update that refreshes dropdown data
+  const handleUpdateSprint = useCallback(
+    async (data: any) => {
+      try {
+        const updatedSprint = await updateSprint(data);
+
+        if (updatedSprint) {
+          // Refresh projects with timelines for the dropdown to reflect changes
+          if (projects.length > 0) {
+            loadAllProjectsWithTimelines();
+          }
+        }
+
+        return updatedSprint;
+      } catch (error) {
+        throw error; // Re-throw to let the component handle it
+      }
+    },
+    [updateSprint, projects.length, loadAllProjectsWithTimelines],
+  );
+
+  const refreshData = useCallback(() => {
+    if (selectedProjectId) {
+      // If we have a selected project, refresh that project's timelines
+      fetchTimelines();
+    }
+
+    // Always refresh all projects with timelines for the dropdown
     if (projects.length > 0) {
       loadAllProjectsWithTimelines();
     }
-  }, [projects]); // Removed loadAllProjectsWithTimelines from dependencies
+  }, [
+    fetchTimelines,
+    selectedProjectId,
+    projects.length,
+    loadAllProjectsWithTimelines,
+  ]);
 
-  // Auto-select timeline when projectsWithTimelines loads and we have a selected project
+  // Load projects with timelines when projects change - ALWAYS load for dropdown
   useEffect(() => {
-    if (selectedProjectId && projectsWithTimelines.length > 0 && !selectedTimeline) {
-      const projectWithTimelines = projectsWithTimelines.find(
-        p => p.project.id === selectedProjectId
-      );
-      
-      if (projectWithTimelines && projectWithTimelines.timelines.length > 0) {
-        console.log('Auto-selecting first timeline for project', selectedProjectId);
-        setSelectedTimeline(projectWithTimelines.timelines[0]);
+    if (projects.length > 0) {
+      // Always load all projects with timelines for the dropdown
+      loadAllProjectsWithTimelines();
+    }
+  }, [projects.length, loadAllProjectsWithTimelines]); // ✅ Remove selectedProjectId dependency
+
+  // Auto-select timeline when data loads and we have a selected project
+  useEffect(() => {
+    if (selectedProjectId && !selectedTimeline) {
+      // Priority 1: Use timelines from useTimelines hook (more up-to-date)
+      if (timelines.length > 0) {
+        // Auto-select the first timeline (newest is at index 0 due to [newTimeline, ...prev])
+        const latestTimeline = timelines[0];
+
+        setSelectedTimeline(latestTimeline);
+
+        return;
+      }
+
+      // Priority 2: Fall back to projectsWithTimelines if timelines not loaded yet
+      if (projectsWithTimelines.length > 0) {
+        const projectWithTimelines = projectsWithTimelines.find(
+          (p) => p.project.id === selectedProjectId,
+        );
+
+        if (projectWithTimelines && projectWithTimelines.timelines.length > 0) {
+          setSelectedTimeline(projectWithTimelines.timelines[0]);
+        }
       }
     }
-  }, [selectedProjectId, projectsWithTimelines, selectedTimeline, setSelectedTimeline]);
+  }, [
+    selectedProjectId,
+    timelines,
+    projectsWithTimelines,
+    selectedTimeline,
+    setSelectedTimeline,
+    t,
+  ]);
+
+  // Set page title
+  useEffect(() => {
+    document.title = `${t("timeline.title")} - PMA`;
+
+    return () => {
+      document.title = "PMA";
+    };
+  }, [t]);
 
   // UI state
   const [view, setView] = useState<TimelineView>({
-    type: 'tree', // Start with tree view by default
+    type: "tree", // Start with tree view by default
     showDetails: true,
     selectedItem: undefined,
     selectedItemType: undefined,
     filters: {
       departments: [],
-      resources: [],
+      members: [],
       status: [],
       priority: [],
-      search: ''
-    }
+    },
   });
 
-  const { isOpen: isCreateOpen, onOpen: onCreateOpen, onOpenChange: onCreateOpenChange } = useDisclosure();
-  const { isOpen: isFiltersOpen, onOpen: onFiltersOpen, onOpenChange: onFiltersOpenChange } = useDisclosure();
+  const {
+    isOpen: isCreateOpen,
+    onOpen: onCreateOpen,
+    onOpenChange: onCreateOpenChange,
+  } = useDisclosure();
+  const {
+    isOpen: isFiltersOpen,
+    onOpen: onFiltersOpen,
+    onOpenChange: onFiltersOpenChange,
+  } = useDisclosure();
 
   // Handle project selection
-  const handleProjectSelect = useCallback((projectIdStr: string) => {
-    const projectIdNum = parseInt(projectIdStr);
-    console.log('Selecting project:', projectIdNum, 'Current:', selectedProjectId);
-    
-    // Prevent unnecessary updates if same project is selected
-    if (projectIdNum === selectedProjectId) {
-      console.log('Same project selected, skipping update');
-      return;
-    }
-    
-    setSelectedProjectId(projectIdNum);
-    
-    // Auto-select the first timeline for this project if available
-    const projectWithTimelines = projectsWithTimelines.find(
-      p => p.project.id === projectIdNum
-    );
-    
-    if (projectWithTimelines && projectWithTimelines.timelines.length > 0) {
-      // Auto-select the first timeline
-      setSelectedTimeline(projectWithTimelines.timelines[0]);
-    } else {
-      // Clear selected timeline if no timelines available
-      setSelectedTimeline(null);
-    }
-    
-    // Update URL with new project ID
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('projectId', projectIdStr);
-    setSearchParams(newSearchParams);
-  }, [selectedProjectId, projectsWithTimelines, searchParams, setSearchParams, setSelectedTimeline]);
+  const handleProjectSelect = useCallback(
+    (projectIdStr: string) => {
+      const projectIdNum = parseInt(projectIdStr);
+
+      // Prevent unnecessary updates if same project is selected
+      if (projectIdNum === selectedProjectId) {
+        return;
+      }
+
+      setSelectedProjectId(projectIdNum);
+
+      // Auto-select the first timeline for this project if available
+      const projectWithTimelines = projectsWithTimelines.find(
+        (p) => p.project.id === projectIdNum,
+      );
+
+      if (projectWithTimelines && projectWithTimelines.timelines.length > 0) {
+        // Auto-select the first timeline
+        setSelectedTimeline(projectWithTimelines.timelines[0]);
+      } else {
+        // Clear selected timeline if no timelines available
+        setSelectedTimeline(null);
+      }
+
+      // Update URL with new project ID
+      const newSearchParams = new URLSearchParams(searchParams);
+
+      newSearchParams.set("projectId", projectIdStr);
+      setSearchParams(newSearchParams);
+    },
+    [
+      selectedProjectId,
+      projectsWithTimelines,
+      searchParams,
+      setSearchParams,
+      setSelectedTimeline,
+    ],
+  );
 
   // Get all timelines from ALL projects for the dropdown
   const getAllTimelinesWithProjects = () => {
@@ -229,84 +426,86 @@ export default function TimelinePage() {
       loading?: boolean;
     }> = [];
 
-    projectsWithTimelines.forEach(({ project, timelines: projectTimelines, loading }) => {
-      // Add project as a header - ALWAYS show all projects
-      allTimelines.push({
-        key: `project-${project.id}`,
-        id: '',
-        name: project.applicationName || `Project ${project.id}`,
-        projectId: project.id,
-        projectName: project.applicationName || `Project ${project.id}`,
-        timeline: null,
-        isProject: true,
-        loading
-      });
-
-      // Add timelines for this project if any exist
-      if (loading) {
-        // Show loading state for this project
+    projectsWithTimelines.forEach(
+      ({ project, timelines: projectTimelines, loading }) => {
+        // Add project as a header - ALWAYS show all projects
         allTimelines.push({
-          key: `loading-${project.id}`,
-          id: '',
-          name: 'Loading timelines...',
+          key: `project-${project.id}`,
+          id: "",
+          name: project.applicationName || `Project ${project.id}`,
           projectId: project.id,
           projectName: project.applicationName || `Project ${project.id}`,
           timeline: null,
-          isProject: false,
-          loading: true
+          isProject: true,
+          loading,
         });
-      } else if (projectTimelines.length > 0) {
-        // Show actual timelines
-        projectTimelines.forEach(timeline => {
+
+        // Add timelines for this project if any exist
+        if (loading) {
+          // Show loading state for this project
           allTimelines.push({
-            key: `${project.id}-${timeline.id}`,
-            id: timeline.id,
-            name: timeline.name,
+            key: `loading-${project.id}`,
+            id: "",
+            name: "", // Will be translated in the JSX
             projectId: project.id,
             projectName: project.applicationName || `Project ${project.id}`,
-            timeline: timeline,
-            isProject: false
+            timeline: null,
+            isProject: false,
+            loading: true,
           });
-        });
-      } else {
-        // Show "no timelines" message
-        allTimelines.push({
-          key: `no-timelines-${project.id}`,
-          id: '',
-          name: 'No timelines - Click "New Timeline" to create one',
-          projectId: project.id,
-          projectName: project.applicationName || `Project ${project.id}`,
-          timeline: null,
-          isProject: false
-        });
-      }
-    });
+        } else if (projectTimelines.length > 0) {
+          // Show actual timelines
+          projectTimelines.forEach((timeline) => {
+            allTimelines.push({
+              key: `${project.id}-${timeline.id}`,
+              id: timeline.id.toString(),
+              name: timeline.name,
+              projectId: project.id,
+              projectName: project.applicationName || `Project ${project.id}`,
+              timeline: timeline,
+              isProject: false,
+            });
+          });
+        } else {
+          // Show "no timelines" message
+          allTimelines.push({
+            key: `no-timelines-${project.id}`,
+            id: "",
+            name: "", // Will be translated in the JSX
+            projectId: project.id,
+            projectName: project.applicationName || `Project ${project.id}`,
+            timeline: null,
+            isProject: false,
+          });
+        }
+      },
+    );
 
     return allTimelines;
   };
 
-  const allTimelines = useMemo(() => getAllTimelinesWithProjects(), [projectsWithTimelines]);
-  
-  // Debug logging (temporarily disabled)
-  // console.log('Timeline page render:', {
-  //   selectedProjectId,
-  //   projects: projects.length,
-  //   projectsWithTimelines: projectsWithTimelines.length,
-  //   allTimelines: allTimelines.length
-  // });
+  const allTimelines = useMemo(
+    () => getAllTimelinesWithProjects(),
+    [projectsWithTimelines],
+  );
+
+  // Debug logging removed
 
   // Handle view changes
   const handleViewChange = (newView: Partial<TimelineView>) => {
-    setView(prev => ({ ...prev, ...newView }));
+    setView((prev) => ({ ...prev, ...newView }));
   };
 
   // Handle item selection
-  const handleItemSelect = (itemId: string, itemType: 'timeline' | 'sprint' | 'task' | 'subtask') => {
-    setView(prev => ({
+  const handleItemSelect = (
+    itemId: string,
+    itemType: "timeline" | "sprint" | "task" | "subtask",
+  ) => {
+    setView((prev) => ({
       ...prev,
       selectedItem: itemId,
       selectedItemType: itemType,
-      showDetails: true
+      showDetails: true,
     }));
   };
 
@@ -314,30 +513,35 @@ export default function TimelinePage() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only handle if no input is focused
-      if (document.activeElement?.tagName === 'INPUT') return;
-      
-      if (event.key === 'n' && event.ctrlKey) {
+      if (document.activeElement?.tagName === "INPUT") return;
+
+      if (event.key === "n" && event.ctrlKey) {
         event.preventDefault();
         onCreateOpen();
-      } else if (event.key === 'f' && event.ctrlKey) {
+      } else if (event.key === "f" && event.ctrlKey) {
         event.preventDefault();
         onFiltersOpen();
-      } else if (event.key === 'r' && event.ctrlKey) {
+      } else if (event.key === "r" && event.ctrlKey) {
         event.preventDefault();
         refreshData();
-      } else if (event.key === '1' && event.ctrlKey) {
+      } else if (event.key === "1" && event.ctrlKey) {
         event.preventDefault();
-        setView(prev => ({ ...prev, type: 'gantt' }));
-      } else if (event.key === '2' && event.ctrlKey) {
+        setView((prev) => ({ ...prev, type: "gantt" }));
+      } else if (event.key === "2" && event.ctrlKey) {
         event.preventDefault();
-        setView(prev => ({ ...prev, type: 'tree' }));
-      } else if (event.key === 'Escape') {
-        setView(prev => ({ ...prev, showDetails: false, selectedItem: undefined }));
+        setView((prev) => ({ ...prev, type: "tree" }));
+      } else if (event.key === "Escape") {
+        setView((prev) => ({
+          ...prev,
+          showDetails: false,
+          selectedItem: undefined,
+        }));
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onCreateOpen, onFiltersOpen, refreshData]);
 
   if (loading && timelines.length === 0) {
@@ -345,10 +549,12 @@ export default function TimelinePage() {
       <DefaultLayout>
         <div className="flex justify-center items-center min-h-[400px]">
           <div className="text-center space-y-4">
-            <Spinner size="lg" color="primary" />
+            <Spinner color="primary" size="lg" />
             <div>
               <p className="text-default-600">{t("common.loading")}</p>
-              <p className="text-sm text-default-500">Loading project timelines...</p>
+              <p className="text-sm text-default-500">
+                Loading project timelines...
+              </p>
             </div>
           </div>
         </div>
@@ -366,13 +572,15 @@ export default function TimelinePage() {
               <div className="flex items-center gap-3">
                 <div className="text-danger">⚠️</div>
                 <div>
-                  <p className="text-danger font-medium">Error Loading Timelines</p>
+                  <p className="text-danger font-medium">
+                    Error Loading Timelines
+                  </p>
                   <p className="text-sm text-default-600">{error}</p>
-                  <Button 
-                    size="sm" 
-                    color="danger" 
-                    variant="light" 
+                  <Button
                     className="mt-2"
+                    color="danger"
+                    size="sm"
+                    variant="light"
                     onPress={() => {
                       clearError();
                       refreshData();
@@ -390,34 +598,32 @@ export default function TimelinePage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Project Timeline
+              {t("timeline.pageTitle")}
             </h1>
-            <p className="text-default-600">
-              Manage project timelines, sprints, tasks, and subtasks
-            </p>
+            <p className="text-default-600">{t("timeline.pageDescription")}</p>
           </div>
 
           <div className="flex gap-2">
             <Button
               color="primary"
+              isDisabled={loading}
               startContent={<PlusIcon />}
               onPress={onCreateOpen}
-              isDisabled={loading}
             >
-              New Timeline
+              {t("timeline.newTimeline")}
             </Button>
             <Button
-              variant="bordered"
               startContent={<FilterIcon />}
+              variant="bordered"
               onPress={onFiltersOpen}
             >
-              Filters
+              {t("timeline.filters")}
             </Button>
             <Button
-              variant="bordered"
               isIconOnly
-              onPress={refreshData}
               isLoading={loading}
+              variant="bordered"
+              onPress={refreshData}
             >
               <RefreshIcon />
             </Button>
@@ -429,65 +635,91 @@ export default function TimelinePage() {
           <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <Select
-                label="Select Project & Timeline"
-                placeholder="Choose a project and timeline"
-                selectedKeys={
-                  selectedTimeline && selectedProjectId 
-                    ? [`${selectedProjectId}-${selectedTimeline.id}`]
-                    : selectedProjectId 
-                      ? [`project-${selectedProjectId}`]
-                      : []
-                }
+                className="min-w-[300px]"
+                label={t("timeline.selectProjectTimeline")}
+                placeholder={t("timeline.chooseProjectTimeline")}
+                selectedKeys={(() => {
+                  let keysToSelect: string[] = [];
+
+                  if (selectedTimeline && selectedProjectId) {
+                    const timelineKey = `${selectedProjectId}-${selectedTimeline.id}`;
+
+                    if (allTimelines.some((t) => t.key === timelineKey)) {
+                      keysToSelect = [timelineKey];
+                    }
+                  } else if (selectedProjectId) {
+                    const projectKey = `project-${selectedProjectId}`;
+
+                    if (allTimelines.some((t) => t.key === projectKey)) {
+                      keysToSelect = [projectKey];
+                    }
+                  }
+
+                  return keysToSelect;
+                })()}
+                size="sm"
                 onSelectionChange={(keys) => {
                   const selectedKey = Array.from(keys)[0] as string;
-                  console.log('Selected key:', selectedKey);
-                  
-                  if (selectedKey && selectedKey.startsWith('project-')) {
+
+                  if (selectedKey && selectedKey.startsWith("project-")) {
                     // User clicked on a project header - just select the project
-                    const projectIdStr = selectedKey.replace('project-', '');
+                    const projectIdStr = selectedKey.replace("project-", "");
+
                     handleProjectSelect(projectIdStr);
-                  } else if (selectedKey && !selectedKey.startsWith('no-timelines-')) {
+                  } else if (
+                    selectedKey &&
+                    !selectedKey.startsWith("no-timelines-")
+                  ) {
                     // User selected an actual timeline
-                    const [projectIdStr, timelineId] = selectedKey.split('-');
-                    const timeline = allTimelines.find(t => t.key === selectedKey && !t.isProject);
-                    
+                    const [projectIdStr] = selectedKey.split("-");
+                    const timeline = allTimelines.find(
+                      (t) => t.key === selectedKey && !t.isProject,
+                    );
+
                     if (timeline && timeline.timeline) {
                       handleProjectSelect(projectIdStr);
                       setSelectedTimeline(timeline.timeline);
                     }
                   }
                 }}
-                className="min-w-[300px]"
-                size="sm"
               >
                 {projectsLoading ? (
                   <SelectItem key="loading-projects" isDisabled>
-                    Loading projects...
+                    {t("timeline.loadingProjects")}
                   </SelectItem>
                 ) : allTimelines.length === 0 ? (
                   <SelectItem key="no-projects" isDisabled>
-                    No projects available
+                    {t("timeline.noProjectsAvailable")}
                   </SelectItem>
                 ) : (
                   allTimelines.map((item) => (
-                    <SelectItem 
-                      key={item.key} 
+                    <SelectItem
+                      key={item.key}
+                      isDisabled={
+                        item.key.startsWith("no-timelines-") ||
+                        item.key.startsWith("loading-")
+                      }
                       textValue={item.name}
-                      isDisabled={item.key.startsWith('no-timelines-') || item.key.startsWith('loading-')}
                     >
                       {item.isProject ? (
                         <div className="flex items-center gap-2 font-medium text-foreground">
                           <BuildingIcon className="w-4 h-4" />
                           {item.name}
-                          {item.loading && <span className="text-xs text-default-400">(loading...)</span>}
+                          {item.loading && (
+                            <span className="text-xs text-default-400">
+                              (loading...)
+                            </span>
+                          )}
                         </div>
-                      ) : item.key.startsWith('loading-') ? (
+                      ) : item.key.startsWith("loading-") ? (
                         <div className="ml-6 text-default-400 italic text-sm flex items-center gap-2">
-                          <div className="w-3 h-3 border border-default-300 border-t-primary rounded-full animate-spin"></div>
-                          {item.name}
+                          <div className="w-3 h-3 border border-default-300 border-t-primary rounded-full animate-spin" />
+                          {t("timeline.loadingTimelines")}
                         </div>
-                      ) : item.key.startsWith('no-timelines-') ? (
-                        <div className="ml-6 text-default-500 italic text-sm">{item.name}</div>
+                      ) : item.key.startsWith("no-timelines-") ? (
+                        <div className="ml-6 text-default-500 italic text-sm">
+                          {t("timeline.noTimelines")}
+                        </div>
                       ) : (
                         <div className="flex items-center gap-2 ml-6 text-default-700">
                           <CalendarIcon className="w-4 h-4" />
@@ -502,31 +734,35 @@ export default function TimelinePage() {
               {selectedTimeline && (
                 <div className="flex gap-2">
                   <Chip size="sm" variant="flat">
-                    {selectedTimeline.sprints.length} Sprint{selectedTimeline.sprints.length !== 1 ? 's' : ''}
+                    {selectedTimeline.sprints.length}{" "}
+                    {selectedTimeline.sprints.length !== 1
+                      ? t("timeline.sprints")
+                      : t("timeline.sprint")}
                   </Chip>
                   <Chip size="sm" variant="flat">
-                    {selectedTimeline.sprints.reduce((acc, sprint) => acc + sprint.tasks.length, 0)} Task{selectedTimeline.sprints.reduce((acc, sprint) => acc + sprint.tasks.length, 0) !== 1 ? 's' : ''}
-                  </Chip>
-                  <Chip size="sm" variant="flat">
-                    {selectedTimeline.sprints.reduce((acc, sprint) => 
-                      acc + sprint.tasks.reduce((taskAcc, task) => taskAcc + task.subtasks.length, 0), 0
-                    )} Subtask{selectedTimeline.sprints.reduce((acc, sprint) => 
-                      acc + sprint.tasks.reduce((taskAcc, task) => taskAcc + task.subtasks.length, 0), 0
-                    ) !== 1 ? 's' : ''}
+                    {selectedTimeline.sprints.reduce(
+                      (acc: number, sprint: any) => {
+                        // Count direct sprint tasks
+                        const directTasks = (sprint.tasks || []).length;
+                        
+                        // Count tasks in requirements structure
+                        const requirementTasks = (
+                          sprint.requirements || []
+                        ).reduce(
+                          (reqAcc: number, req: any) =>
+                            reqAcc + (req.tasks?.length || 0),
+                          0,
+                        );
+
+                        return acc + directTasks + requirementTasks;
+                      },
+                      0,
+                    )}{" "}
+                    {t("timeline.tasks")}
                   </Chip>
                 </div>
               )}
             </div>
-
-            {/* Search */}
-            <Input
-              placeholder="Search timelines, sprints, tasks..."
-              value={filters.search || ''}
-              onChange={(e) => applyFilters({ search: e.target.value })}
-              className="max-w-xs"
-              size="sm"
-              isClearable
-            />
           </CardHeader>
         </Card>
 
@@ -539,20 +775,21 @@ export default function TimelinePage() {
                   <CalendarIcon className="w-16 h-16 mx-auto text-default-300" />
                 </div>
                 <div>
-                  <p className="text-lg text-default-600">No timelines found</p>
+                  <p className="text-lg text-default-600">
+                    {t("timeline.noTimelinesFound")}
+                  </p>
                   <p className="text-sm text-default-500">
-                    {selectedProjectId 
-                      ? 'This project doesn\'t have any timelines yet.'
-                      : 'Select a project and create your first timeline to get started.'
-                    }
+                    {selectedProjectId
+                      ? t("timeline.noTimelinesDescription")
+                      : t("timeline.noTimelinesGeneral")}
                   </p>
                 </div>
-                <Button 
-                  color="primary" 
-                  onPress={onCreateOpen}
+                <Button
+                  color="primary"
                   startContent={<PlusIcon />}
+                  onPress={onCreateOpen}
                 >
-                  Create Timeline
+                  {t("timeline.createTimeline")}
                 </Button>
               </div>
             </CardBody>
@@ -565,9 +802,11 @@ export default function TimelinePage() {
                   <CalendarIcon className="w-16 h-16 mx-auto text-default-300" />
                 </div>
                 <div>
-                  <p className="text-lg text-default-600">Select a timeline</p>
+                  <p className="text-lg text-default-600">
+                    {t("timeline.selectTimeline")}
+                  </p>
                   <p className="text-sm text-default-500">
-                    Choose a timeline from the dropdown above to view its details.
+                    {t("timeline.selectTimelineDescription")}
                   </p>
                 </div>
               </div>
@@ -577,57 +816,60 @@ export default function TimelinePage() {
           <div className="space-y-6">
             {/* View Tabs */}
             <Tabs
-              selectedKey={view.type}
-              onSelectionChange={(key) => handleViewChange({ type: key as 'gantt' | 'tree' | 'timeline' })}
               className="w-full"
+              selectedKey={view.type}
+              onSelectionChange={(key) =>
+                handleViewChange({ type: key as "gantt" | "tree" | "timeline" })
+              }
             >
-              <Tab key="gantt" title="Gantt View" />
-              <Tab key="tree" title="Tree View" />
-            </Tabs>
-
+              <Tab key="gantt" title={t("timeline.ganttView")} />
+              <Tab key="tree" title={t("timeline.treeView")} />
+            </Tabs>{" "}
             {/* Timeline Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main View */}
-              <div className={view.showDetails ? "lg:col-span-2" : "lg:col-span-3"}>
+              <div
+                className={view.showDetails ? "lg:col-span-2" : "lg:col-span-3"}
+              >
                 <Card className="h-[600px]">
                   <CardBody className="p-0">
-                    {view.type === 'gantt' ? (
+                    {view.type === "gantt" ? (
                       <TimelineGanttView
-                        timeline={selectedTimeline}
-                        onItemSelect={handleItemSelect}
-                        onCreateSprint={createSprint}
-                        onCreateTask={createTask}
-                        onCreateSubtask={createSubtask}
-                        onUpdateSprint={updateSprint}
-                        onUpdateTask={updateTask}
-                        onUpdateSubtask={updateSubtask}
-                        onDeleteSprint={deleteSprint}
-                        onDeleteTask={deleteTask}
-                        onDeleteSubtask={deleteSubtask}
                         departments={departments}
-                        resources={resources}
                         filters={filters}
-                        selectedItem={view.selectedItem}
                         loading={loading}
+                        selectedItem={view.selectedItem}
+                        timeline={selectedTimeline}
+                        onCreateSprint={handleCreateSprint}
+                        onCreateSubtask={createSubtask}
+                        onCreateTask={createTask}
+                        onDeleteSprint={deleteSprint}
+                        onDeleteSubtask={deleteSubtask}
+                        onDeleteTask={deleteTask}
+                        onItemSelect={handleItemSelect}
+                        onUpdateSprint={handleUpdateSprint}
+                        onUpdateSubtask={updateSubtask}
+                        onUpdateTask={handleUpdateTask}
                       />
                     ) : (
                       <TimelineTreeView
-                        timeline={selectedTimeline}
-                        onItemSelect={handleItemSelect}
-                        onCreateSprint={createSprint}
-                        onCreateTask={createTask}
-                        onCreateSubtask={createSubtask}
-                        onUpdateSprint={updateSprint}
-                        onUpdateTask={updateTask}
-                        onUpdateSubtask={updateSubtask}
-                        onDeleteSprint={deleteSprint}
-                        onDeleteTask={deleteTask}
-                        onDeleteSubtask={deleteSubtask}
                         departments={departments}
-                        resources={resources}
                         filters={filters}
-                        selectedItem={view.selectedItem}
                         loading={loading}
+                        selectedItem={view.selectedItem}
+                        timeline={selectedTimeline}
+                        onCreateSprint={handleCreateSprint}
+                        onCreateSubtask={createSubtask}
+                        onCreateTask={createTask}
+                        onDeleteSprint={deleteSprint}
+                        onDeleteSubtask={deleteSubtask}
+                        onDeleteTask={deleteTask}
+                        onItemSelect={handleItemSelect}
+                        onMoveTask={moveTask}
+                        onMoveTaskToSprint={moveTaskToSprint}
+                        onUpdateSprint={handleUpdateSprint}
+                        onUpdateSubtask={updateSubtask}
+                        onUpdateTask={handleUpdateTask}
                       />
                     )}
                   </CardBody>
@@ -639,11 +881,13 @@ export default function TimelinePage() {
                 <div className="lg:col-span-1">
                   <Card className="h-[600px]">
                     <CardHeader className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">Details</h3>
+                      <h3 className="text-lg font-semibold">
+                        {t("timeline.details")}
+                      </h3>
                       <Button
                         isIconOnly
-                        variant="light"
                         size="sm"
+                        variant="light"
                         onPress={() => handleViewChange({ showDetails: false })}
                       >
                         ✕
@@ -652,16 +896,15 @@ export default function TimelinePage() {
                     <Divider />
                     <CardBody className="p-0">
                       <TimelineDetailsPanel
-                        timeline={selectedTimeline}
+                        departments={departments}
+                        loading={loading}
                         selectedItem={view.selectedItem}
                         selectedItemType={view.selectedItemType}
-                        onUpdateTimeline={updateTimeline}
-                        onUpdateSprint={updateSprint}
-                        onUpdateTask={updateTask}
+                        timeline={selectedTimeline}
+                        onUpdateSprint={handleUpdateSprint}
                         onUpdateSubtask={updateSubtask}
-                        departments={departments}
-                        resources={resources}
-                        loading={loading}
+                        onUpdateTask={handleUpdateTask}
+                        onUpdateTimeline={updateTimeline}
                       />
                     </CardBody>
                   </Card>
@@ -674,38 +917,41 @@ export default function TimelinePage() {
         {/* Create Timeline Modal */}
         <TimelineCreateModal
           isOpen={isCreateOpen}
-          onOpenChange={onCreateOpenChange}
-          onCreateTimeline={createTimeline}
-          projectId={selectedProjectId}
           loading={loading}
+          projectId={selectedProjectId}
+          onCreateTimeline={handleCreateTimeline}
+          onOpenChange={onCreateOpenChange}
         />
 
         {/* Filters Modal */}
-        <Modal isOpen={isFiltersOpen} onOpenChange={onFiltersOpenChange} size="2xl">
+        <Modal
+          isOpen={isFiltersOpen}
+          size="2xl"
+          onOpenChange={onFiltersOpenChange}
+        >
           <ModalContent>
             {(onClose) => (
               <>
                 <ModalHeader>
                   <div className="flex items-center gap-2">
                     <FilterIcon />
-                    Timeline Filters
+                    {t("timeline.timelineFilters")}
                   </div>
                 </ModalHeader>
                 <ModalBody>
                   <TimelineFilters
-                    filters={filters}
                     departments={departments}
-                    resources={resources}
-                    onFiltersChange={applyFilters}
+                    filters={filters}
                     onClearFilters={clearFilters}
+                    onFiltersChange={applyFilters}
                   />
                 </ModalBody>
                 <ModalFooter>
                   <Button color="danger" variant="light" onPress={clearFilters}>
-                    Clear All
+                    {t("timeline.clearAll")}
                   </Button>
                   <Button color="primary" onPress={onClose}>
-                    Apply Filters
+                    {t("timeline.applyFilters")}
                   </Button>
                 </ModalFooter>
               </>

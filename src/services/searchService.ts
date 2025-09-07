@@ -16,7 +16,7 @@ export interface SearchableUser {
 }
 
 export interface SearchOptions {
-  searchFields?: ('name' | 'militaryNumber' | 'username' | 'email')[];
+  searchFields?: ("name" | "militaryNumber" | "username" | "email")[];
   caseSensitive?: boolean;
   exactMatch?: boolean;
   minLength?: number;
@@ -27,7 +27,7 @@ export class SearchService {
    * Default search options
    */
   private static defaultOptions: SearchOptions = {
-    searchFields: ['name', 'militaryNumber', 'username'],
+    searchFields: ["name", "militaryNumber", "username"],
     caseSensitive: false,
     exactMatch: false,
     minLength: 0,
@@ -43,7 +43,7 @@ export class SearchService {
   static searchUsers(
     users: SearchableUser[],
     searchTerm: string,
-    options: SearchOptions = {}
+    options: SearchOptions = {},
   ): SearchableUser[] {
     const config = { ...this.defaultOptions, ...options };
 
@@ -52,17 +52,18 @@ export class SearchService {
       return users;
     }
 
-    const normalizedSearchTerm = config.caseSensitive 
-      ? searchTerm 
+    const normalizedSearchTerm = config.caseSensitive
+      ? searchTerm
       : searchTerm.toLowerCase();
 
-    return users.filter(user => {
-      return config.searchFields!.some(field => {
+    return users.filter((user) => {
+      return config.searchFields!.some((field) => {
         const fieldValue = user[field];
+
         if (!fieldValue) return false;
 
-        const normalizedFieldValue = config.caseSensitive 
-          ? fieldValue 
+        const normalizedFieldValue = config.caseSensitive
+          ? fieldValue
           : fieldValue.toLowerCase();
 
         return config.exactMatch
@@ -80,10 +81,10 @@ export class SearchService {
    */
   static searchByMilitaryNumber(
     users: SearchableUser[],
-    militaryNumber: string
+    militaryNumber: string,
   ): SearchableUser[] {
     return this.searchUsers(users, militaryNumber, {
-      searchFields: ['militaryNumber'],
+      searchFields: ["militaryNumber"],
       caseSensitive: false,
     });
   }
@@ -94,12 +95,9 @@ export class SearchService {
    * @param name The name to search for
    * @returns Filtered array of users
    */
-  static searchByName(
-    users: SearchableUser[],
-    name: string
-  ): SearchableUser[] {
+  static searchByName(users: SearchableUser[], name: string): SearchableUser[] {
     return this.searchUsers(users, name, {
-      searchFields: ['name'],
+      searchFields: ["name"],
       caseSensitive: false,
     });
   }
@@ -113,10 +111,10 @@ export class SearchService {
    */
   static universalSearch(
     users: SearchableUser[],
-    searchTerm: string
+    searchTerm: string,
   ): SearchableUser[] {
     return this.searchUsers(users, searchTerm, {
-      searchFields: ['name', 'militaryNumber', 'username'],
+      searchFields: ["name", "militaryNumber", "username"],
       caseSensitive: false,
     });
   }
@@ -137,23 +135,27 @@ export class SearchService {
       department?: string;
       rank?: string;
       isActive?: boolean;
-    }
+    },
   ): SearchableUser[] {
-    return users.filter(user => {
+    return users.filter((user) => {
       // Check each criteria
       for (const [field, value] of Object.entries(criteria)) {
-        if (value === undefined || value === null || value === '') continue;
+        if (value === undefined || value === null || value === "") continue;
 
         const userValue = user[field as keyof SearchableUser];
-        
-        if (typeof value === 'boolean') {
+
+        if (typeof value === "boolean") {
           if (userValue !== value) return false;
-        } else if (typeof value === 'string') {
-          if (!userValue || !userValue.toString().toLowerCase().includes(value.toLowerCase())) {
+        } else if (typeof value === "string") {
+          if (
+            !userValue ||
+            !userValue.toString().toLowerCase().includes(value.toLowerCase())
+          ) {
             return false;
           }
         }
       }
+
       return true;
     });
   }
@@ -168,11 +170,12 @@ export class SearchService {
   static highlightSearchTerm(
     text: string,
     searchTerm: string,
-    highlightClass: string = 'bg-yellow-200'
+    highlightClass: string = "bg-yellow-200",
   ): string {
     if (!searchTerm || !text) return text;
 
-    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const regex = new RegExp(`(${searchTerm})`, "gi");
+
     return text.replace(regex, `<span class="${highlightClass}">$1</span>`);
   }
 
@@ -184,7 +187,7 @@ export class SearchService {
    */
   static sortByRelevance(
     users: SearchableUser[],
-    searchTerm: string
+    searchTerm: string,
   ): SearchableUser[] {
     if (!searchTerm) return users;
 
@@ -194,25 +197,43 @@ export class SearchService {
       // Exact name match gets highest priority
       const aNameExact = a.name?.toLowerCase() === lowerSearchTerm ? 1 : 0;
       const bNameExact = b.name?.toLowerCase() === lowerSearchTerm ? 1 : 0;
+
       if (aNameExact !== bNameExact) return bNameExact - aNameExact;
 
       // Military number exact match gets second priority
-      const aMilExact = a.militaryNumber?.toLowerCase() === lowerSearchTerm ? 1 : 0;
-      const bMilExact = b.militaryNumber?.toLowerCase() === lowerSearchTerm ? 1 : 0;
+      const aMilExact =
+        a.militaryNumber?.toLowerCase() === lowerSearchTerm ? 1 : 0;
+      const bMilExact =
+        b.militaryNumber?.toLowerCase() === lowerSearchTerm ? 1 : 0;
+
       if (aMilExact !== bMilExact) return bMilExact - aMilExact;
 
       // Name starts with search term gets third priority
-      const aNameStarts = a.name?.toLowerCase().startsWith(lowerSearchTerm) ? 1 : 0;
-      const bNameStarts = b.name?.toLowerCase().startsWith(lowerSearchTerm) ? 1 : 0;
+      const aNameStarts = a.name?.toLowerCase().startsWith(lowerSearchTerm)
+        ? 1
+        : 0;
+      const bNameStarts = b.name?.toLowerCase().startsWith(lowerSearchTerm)
+        ? 1
+        : 0;
+
       if (aNameStarts !== bNameStarts) return bNameStarts - aNameStarts;
 
       // Military number starts with search term gets fourth priority
-      const aMilStarts = a.militaryNumber?.toLowerCase().startsWith(lowerSearchTerm) ? 1 : 0;
-      const bMilStarts = b.militaryNumber?.toLowerCase().startsWith(lowerSearchTerm) ? 1 : 0;
+      const aMilStarts = a.militaryNumber
+        ?.toLowerCase()
+        .startsWith(lowerSearchTerm)
+        ? 1
+        : 0;
+      const bMilStarts = b.militaryNumber
+        ?.toLowerCase()
+        .startsWith(lowerSearchTerm)
+        ? 1
+        : 0;
+
       if (aMilStarts !== bMilStarts) return bMilStarts - aMilStarts;
 
       // Default alphabetical sort by name
-      return (a.name || '').localeCompare(b.name || '');
+      return (a.name || "").localeCompare(b.name || "");
     });
   }
 }

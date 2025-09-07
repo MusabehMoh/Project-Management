@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+
 import {
   Project,
   User,
@@ -16,6 +17,7 @@ const ENDPOINTS = {
   PROJECT_BY_ID: (id: number) => `/projects/${id}`,
   PROJECT_STATS: "/projects/stats",
   PROJECT_SEARCH: "/projects/search",
+  SEND_PROJECT: (id: number) => `/projects/${id}/send`,
 } as const;
 
 // Projects API service
@@ -26,14 +28,14 @@ export class ProjectsApiService {
   async getProjects(
     filters?: ProjectFilters,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<ApiResponse<Project[]>> {
     const queryParams = new URLSearchParams();
-    
+
     // Add pagination
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    
+
     // Add filters
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -44,6 +46,7 @@ export class ProjectsApiService {
     }
 
     const endpoint = `${ENDPOINTS.PROJECTS}?${queryParams.toString()}`;
+
     return apiClient.get<Project[]>(endpoint);
   }
 
@@ -57,15 +60,20 @@ export class ProjectsApiService {
   /**
    * Create a new project
    */
-  async createProject(projectData: CreateProjectRequest): Promise<ApiResponse<Project>> {
+  async createProject(
+    projectData: CreateProjectRequest,
+  ): Promise<ApiResponse<Project>> {
     return apiClient.post<Project>(ENDPOINTS.PROJECTS, projectData);
   }
 
   /**
    * Update an existing project
    */
-  async updateProject(projectData: UpdateProjectRequest): Promise<ApiResponse<Project>> {
+  async updateProject(
+    projectData: UpdateProjectRequest,
+  ): Promise<ApiResponse<Project>> {
     const { id, ...updateData } = projectData;
+
     return apiClient.put<Project>(ENDPOINTS.PROJECT_BY_ID(id), updateData);
   }
 
@@ -84,11 +92,19 @@ export class ProjectsApiService {
   }
 
   /**
+   * Send project for review
+   */
+  async sendProject(id: number): Promise<ApiResponse<Project>> {
+    return apiClient.post<Project>(ENDPOINTS.SEND_PROJECT(id));
+  }
+
+  /**
    * Search projects by text
    */
   async searchProjects(query: string): Promise<ApiResponse<Project[]>> {
     const queryParams = new URLSearchParams({ q: query });
     const endpoint = `${ENDPOINTS.PROJECT_SEARCH}?${queryParams.toString()}`;
+
     return apiClient.get<Project[]>(endpoint);
   }
 
@@ -100,10 +116,13 @@ export class ProjectsApiService {
   }
 
   async bulkUpdateProjectStatus(
-    ids: number[], 
-    status: Project["status"]
+    ids: number[],
+    status: Project["status"],
   ): Promise<ApiResponse<void>> {
-    return apiClient.patch<void>(`${ENDPOINTS.PROJECTS}/bulk-status`, { ids, status });
+    return apiClient.patch<void>(`${ENDPOINTS.PROJECTS}/bulk-status`, {
+      ids,
+      status,
+    });
   }
 
   /**

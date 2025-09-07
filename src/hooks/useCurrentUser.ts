@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
-import { userService } from '@/services/api';
-import type { User } from '@/types/user';
+import type { User } from "@/types/user";
+
+import { useState, useEffect } from "react";
+
+import { userService } from "@/services/api";
 
 interface UseCurrentUserReturn {
   user: User | null;
@@ -22,22 +24,27 @@ export const useCurrentUser = (): UseCurrentUserReturn => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await userService.getCurrentUser();
-      
+
       if (response.success) {
         setUser(response.data);
       } else {
-        throw new Error(response.message || 'Failed to fetch user data');
+        throw new Error(response.message || "Failed to fetch user data");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user data';
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch user data";
+
       setError(errorMessage);
-      console.error('Error fetching current user:', err);
-      
+      console.error("Error fetching current user:", err);
+
       // Fallback to mock data in case of error during development
-      if (import.meta.env.MODE === 'development') {
-        console.warn('Using fallback user data due to API error:', errorMessage);
+      if (import.meta.env.MODE === "development") {
+        console.warn(
+          "Using fallback user data due to API error:",
+          errorMessage,
+        );
         setUser({
           id: 1,
           userName: "sarah.johnson",
@@ -48,13 +55,15 @@ export const useCurrentUser = (): UseCurrentUserReturn => {
           email: "sarah.johnson@organization.mil",
           phone: "+1-555-0101",
           isVisible: true,
-          roles: [{
-            id: 1,
-            name: "Administrator",
-            active: true,
-            roleOrder: 1,
-            actions: []
-          }],
+          roles: [
+            {
+              id: 1,
+              name: "Administrator",
+              active: true,
+              roleOrder: 1,
+              actions: [],
+            },
+          ],
           actions: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

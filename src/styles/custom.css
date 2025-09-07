@@ -1,0 +1,221 @@
+/* 
+ * Custom CSS Overrides for PMA Project
+ * 
+ * This file is designed to contain custom style overrides that can be easily modified
+ * without affecting the main application styles. Use this file to:
+ * 
+ * 1. Override HeroUI component styles
+ * 2. Add project-specific customizations
+ * 3. Fine-tune responsive behavior
+ * 4. Customize RTL/LTR specific styles
+ * 5. Add theme-specific modifications
+ * 
+ * Organization:
+ * - Global Overrides
+ * - Component Overrides
+ * - Layout Overrides
+ * - RTL/LTR Specific Styles
+ * - Theme Customizations
+ * - Responsive Overrides
+ */
+
+/* ===================================
+   GLOBAL OVERRIDES
+   =================================== */
+
+/* Example: Global text color adjustments */
+/* 
+:root {
+  --custom-primary: #your-color;
+  --custom-secondary: #your-color;
+}
+*/
+
+/* ===================================
+   COMPONENT OVERRIDES
+   =================================== */
+
+/* ProjectDetailsModal Specific Styles */
+/* 
+.project-details-modal {
+  // Custom modal styles
+}
+
+.project-details-modal .modal-header {
+  // Custom header styles
+}
+
+.project-details-modal .modal-body {
+  // Custom body styles
+}
+*/
+
+/* HeroUI Component Overrides */
+/* 
+.heroui-modal {
+  // Modal overrides
+}
+
+.heroui-button {
+  // Button overrides
+}
+
+.heroui-input {
+  // Input overrides
+}
+
+.heroui-select {
+  // Select overrides
+}
+
+.heroui-tabs {
+  // Tabs overrides
+}
+*/
+
+/* ===================================
+   LAYOUT OVERRIDES
+   =================================== */
+
+/* Navigation Overrides */
+/*
+.navbar {
+  // Navbar customizations
+}
+*/
+
+/* Sidebar Overrides */
+/*
+.sidebar {
+  // Sidebar customizations
+}
+*/
+
+/* Main Content Area */
+/*
+.main-content {
+  // Main content customizations
+}
+*/
+
+/* ===================================
+   RTL/LTR SPECIFIC STYLES
+   =================================== */
+
+/* Arabic (RTL) Specific Overrides */
+/*
+[dir="rtl"] .custom-element {
+  // RTL specific styles
+}
+*/
+
+/* English (LTR) Specific Overrides */
+/*
+[dir="ltr"] .custom-element {
+  // LTR specific styles
+}
+*/
+
+/* ===================================
+   THEME CUSTOMIZATIONS
+   =================================== */
+
+/* Light Theme Overrides */
+/*
+[data-theme="light"] {
+  // Light theme customizations
+}
+*/
+
+/* Dark Theme Overrides */
+/*
+[data-theme="dark"] {
+  // Dark theme customizations
+}
+*/
+
+/* ===================================
+   RESPONSIVE OVERRIDES
+   =================================== */
+
+/* Mobile Overrides */
+/*
+@media (max-width: 768px) {
+  // Mobile specific styles
+}
+*/
+
+/* Tablet Overrides */
+/*
+@media (min-width: 769px) and (max-width: 1024px) {
+  // Tablet specific styles
+}
+*/
+
+/* Desktop Overrides */
+/*
+@media (min-width: 1025px) {
+  // Desktop specific styles
+}
+*/
+
+/* ===================================
+   UTILITY CLASSES
+   =================================== */
+
+/* Custom utility classes for common modifications */
+/*
+.custom-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.custom-border-radius {
+  border-radius: 12px;
+}
+
+.custom-spacing {
+  padding: 1.5rem;
+}
+*/
+
+/* ===================================
+   ANIMATION OVERRIDES
+   =================================== */
+
+/* Custom animations and transitions */
+/*
+.custom-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.custom-slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+*/
+
+/* ===================================
+   PRINT STYLES
+   =================================== */
+
+/* Print-specific overrides */
+/*
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-friendly {
+    // Print optimized styles
+  }
+}
+*/

@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from "react";
 import type {
   User,
   Role,
@@ -11,9 +10,10 @@ import type {
   UserClaims,
   EmployeeSearchResult,
 } from "@/types/user";
+
+import { useState, useEffect, useCallback } from "react";
+
 import { userService, roleService, actionService } from "@/services/api";
-import { API_CONFIG } from "@/services/api/client";
-import SearchService from "@/services/searchService";
 
 // Use the configured services (mock or real based on environment)
 
@@ -33,129 +33,159 @@ export const useUsers = (initialFilters?: UserFilters) => {
   });
 
   // Load users from API
-  const loadUsers = useCallback(async (page = 1, limit = 20) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await userService.getUsers(filters, page, limit);
-      
-      if (response.success) {
-        setUsers(response.data);
-        if (response.pagination) {
-          setPagination(response.pagination);
+  const loadUsers = useCallback(
+    async (page = 1, limit = 20) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await userService.getUsers(filters, page, limit);
+
+        if (response.success) {
+          setUsers(response.data);
+          if (response.pagination) {
+            setPagination(response.pagination);
+          }
+        } else {
+          throw new Error(response.message || "Failed to load users");
         }
-      } else {
-        throw new Error(response.message || "Failed to load users");
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load users";
+
+        setError(errorMessage);
+        console.error("Error loading users:", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load users";
-      setError(errorMessage);
-      console.error("Error loading users:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+    },
+    [filters],
+  );
 
   // Create user
-  const createUser = useCallback(async (userData: CreateUserRequest) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await userService.createUser(userData);
-      
-      if (response.success) {
-        await loadUsers(pagination.page, pagination.limit);
-        return response.data;
-      } else {
-        throw new Error(response.message || "Failed to create user");
+  const createUser = useCallback(
+    async (userData: CreateUserRequest) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await userService.createUser(userData);
+
+        if (response.success) {
+          await loadUsers(pagination.page, pagination.limit);
+
+          return response.data;
+        } else {
+          throw new Error(response.message || "Failed to create user");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create user";
+
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create user";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadUsers, pagination]);
+    },
+    [loadUsers, pagination],
+  );
 
   // Update user
-  const updateUser = useCallback(async (userData: UpdateUserRequest) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await userService.updateUser(userData);
-      
-      if (response.success) {
-        await loadUsers(pagination.page, pagination.limit);
-        return response.data;
-      } else {
-        throw new Error(response.message || "Failed to update user");
+  const updateUser = useCallback(
+    async (userData: UpdateUserRequest) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await userService.updateUser(userData);
+
+        if (response.success) {
+          await loadUsers(pagination.page, pagination.limit);
+
+          return response.data;
+        } else {
+          throw new Error(response.message || "Failed to update user");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update user";
+
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update user";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadUsers, pagination]);
+    },
+    [loadUsers, pagination],
+  );
 
   // Delete user
-  const deleteUser = useCallback(async (id: number) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await userService.deleteUser(id);
-      
-      if (response.success) {
-        await loadUsers(pagination.page, pagination.limit);
-      } else {
-        throw new Error(response.message || "Failed to delete user");
+  const deleteUser = useCallback(
+    async (id: number) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await userService.deleteUser(id);
+
+        if (response.success) {
+          await loadUsers(pagination.page, pagination.limit);
+        } else {
+          throw new Error(response.message || "Failed to delete user");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to delete user";
+
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to delete user";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadUsers, pagination]);
+    },
+    [loadUsers, pagination],
+  );
 
   // Search employees
-  const searchEmployees = useCallback(async (query: string): Promise<EmployeeSearchResult[]> => {
-    try {
-      const response = await userService.searchEmployees(query);
-      
-      if (response.success) {
-        return response.data;
-      } else {
-        throw new Error(response.message || "Failed to search employees");
+  const searchEmployees = useCallback(
+    async (query: string): Promise<EmployeeSearchResult[]> => {
+      try {
+        const response = await userService.searchEmployees(query);
+
+        if (response.success) {
+          return response.data;
+        } else {
+          throw new Error(response.message || "Failed to search employees");
+        }
+      } catch (err) {
+        console.error("Error searching employees:", err);
+
+        return [];
       }
-    } catch (err) {
-      console.error("Error searching employees:", err);
-      return [];
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Get employee details
-  const getEmployeeDetails = useCallback(async (identifier: string): Promise<Employee | null> => {
-    try {
-      const response = await userService.getEmployeeDetails(identifier);
-      
-      if (response.success) {
-        return response.data;
-      } else {
-        throw new Error(response.message || "Failed to get employee details");
+  const getEmployeeDetails = useCallback(
+    async (identifier: string): Promise<Employee | null> => {
+      try {
+        const response = await userService.getEmployeeDetails(identifier);
+
+        if (response.success) {
+          return response.data;
+        } else {
+          throw new Error(response.message || "Failed to get employee details");
+        }
+      } catch (err) {
+        console.error("Error getting employee details:", err);
+
+        return null;
       }
-    } catch (err) {
-      console.error("Error getting employee details:", err);
-      return null;
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Update filters
   const updateFilters = useCallback((newFilters: UserFilters) => {
@@ -195,22 +225,24 @@ export const useRoles = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Debug logging
       if (import.meta.env.VITE_ENABLE_CONSOLE_LOGS === "true") {
-        console.log('🔧 roleService type:', roleService.constructor.name);
-        console.log('🔧 roleService:', roleService);
+        console.log("🔧 roleService type:", roleService.constructor.name);
+        console.log("🔧 roleService:", roleService);
       }
-      
+
       const response = await roleService.getRoles();
-      
+
       if (response.success) {
         setRoles(response.data);
       } else {
         throw new Error(response.message || "Failed to load roles");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load roles";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load roles";
+
       setError(errorMessage);
       console.error("Error loading roles:", err);
     } finally {
@@ -242,22 +274,24 @@ export const useActions = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Debug logging
       if (import.meta.env.VITE_ENABLE_CONSOLE_LOGS === "true") {
-        console.log('🔧 actionService type:', actionService.constructor.name);
-        console.log('🔧 actionService:', actionService);
+        console.log("🔧 actionService type:", actionService.constructor.name);
+        console.log("🔧 actionService:", actionService);
       }
-      
+
       const response = await actionService.getActions();
-      
+
       if (response.success) {
         setActions(response.data);
       } else {
         throw new Error(response.message || "Failed to load actions");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load actions";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load actions";
+
       setError(errorMessage);
       console.error("Error loading actions:", err);
     } finally {
@@ -267,13 +301,17 @@ export const useActions = () => {
 
   // Group actions by category
   const actionsByCategory = useCallback(() => {
-    return actions.reduce((acc, action) => {
-      if (!acc[action.categoryName]) {
-        acc[action.categoryName] = [];
-      }
-      acc[action.categoryName].push(action);
-      return acc;
-    }, {} as { [categoryName: string]: Action[] });
+    return actions.reduce(
+      (acc, action) => {
+        if (!acc[action.categoryName]) {
+          acc[action.categoryName] = [];
+        }
+        acc[action.categoryName].push(action);
+
+        return acc;
+      },
+      {} as { [categoryName: string]: Action[] },
+    );
   }, [actions]);
 
   useEffect(() => {
@@ -301,16 +339,18 @@ export const useUserStats = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await userService.getUserStats();
-      
+
       if (response.success) {
         setStats(response.data);
       } else {
         throw new Error(response.message || "Failed to load user statistics");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load user statistics";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load user statistics";
+
       setError(errorMessage);
       console.error("Error loading user statistics:", err);
     } finally {
@@ -343,16 +383,18 @@ export const useAuth = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await userService.getCurrentUserClaims();
-      
+
       if (response.success) {
         setUserClaims(response.data);
       } else {
         throw new Error(response.message || "Failed to load user claims");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load user claims";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load user claims";
+
       setError(errorMessage);
       console.error("Error loading user claims:", err);
     } finally {
@@ -361,30 +403,37 @@ export const useAuth = () => {
   }, []);
 
   // Check if user has permission
-  const hasPermission = useCallback((action: string, resource?: string) => {
-    if (!userClaims) return false;
-    
-    // Check if user has the specific action
-    if (userClaims.actions.includes(action)) return true;
-    
-    // Check if user has admin role
-    if (userClaims.roles.includes("Administrator")) return true;
-    
-    // Check specific permission
-    if (resource) {
-      const permission = userClaims.permissions.find(
-        p => p.action === action && p.resource === resource
-      );
-      return permission?.allowed || false;
-    }
-    
-    return false;
-  }, [userClaims]);
+  const hasPermission = useCallback(
+    (action: string, resource?: string) => {
+      if (!userClaims) return false;
+
+      // Check if user has the specific action
+      if (userClaims.actions.includes(action)) return true;
+
+      // Check if user has admin role
+      if (userClaims.roles.includes("Administrator")) return true;
+
+      // Check specific permission
+      if (resource) {
+        const permission = userClaims.permissions.find(
+          (p) => p.action === action && p.resource === resource,
+        );
+
+        return permission?.allowed || false;
+      }
+
+      return false;
+    },
+    [userClaims],
+  );
 
   // Check if user has role
-  const hasRole = useCallback((roleName: string) => {
-    return userClaims?.roles.includes(roleName) || false;
-  }, [userClaims]);
+  const hasRole = useCallback(
+    (roleName: string) => {
+      return userClaims?.roles.includes(roleName) || false;
+    },
+    [userClaims],
+  );
 
   useEffect(() => {
     loadUserClaims();

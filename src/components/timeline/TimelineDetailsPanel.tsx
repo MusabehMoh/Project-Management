@@ -1,38 +1,36 @@
 import { useMemo, useState } from "react";
-import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Progress } from "@heroui/progress";
-import { Avatar } from "@heroui/avatar";
-import { Divider } from "@heroui/divider";
 import { Button } from "@heroui/button";
-import { Input } from "@heroui/input";
-import { Slider } from "@heroui/slider";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 
-import { 
+import TimelineEditModal, {
+  TimelineEditModalFormData,
+} from "./TimelineEditModal";
+
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTimelineHelpers } from "@/hooks/useTimelineHelpers";
+import {
   Timeline,
   Sprint,
   Task,
   Subtask,
   Department,
-  Resource,
   UpdateTimelineRequest,
   UpdateSprintRequest,
   UpdateTaskRequest,
-  UpdateSubtaskRequest
+  UpdateSubtaskRequest,
 } from "@/types/timeline";
 import { EditIcon } from "@/components/icons";
 
 interface TimelineDetailsPanelProps {
   timeline: Timeline;
   selectedItem?: string;
-  selectedItemType?: 'timeline' | 'sprint' | 'task' | 'subtask';
+  selectedItemType?: "timeline" | "sprint" | "task" | "subtask" | "requirement";
   onUpdateTimeline: (data: UpdateTimelineRequest) => Promise<Timeline | null>;
   onUpdateSprint: (data: UpdateSprintRequest) => Promise<Sprint | null>;
   onUpdateTask: (data: UpdateTaskRequest) => Promise<Task | null>;
   onUpdateSubtask: (data: UpdateSubtaskRequest) => Promise<Subtask | null>;
   departments: Department[];
-  resources: Resource[];
   loading?: boolean;
 }
 
@@ -45,98 +43,146 @@ export default function TimelineDetailsPanel({
   onUpdateTask,
   onUpdateSubtask,
   departments,
-  resources,
-  loading = false
+  loading = false,
 }: TimelineDetailsPanelProps) {
+  const { t, direction } = useLanguage();
+  const {
+    getStatusColor,
+    getProgressColor,
+    getPriorityColor,
+    getDepartmentColor,
+    getStatusName,
+    getPriorityName,
+    getDepartmentName,
+    STATUS_OPTIONS,
+    PRIORITY_OPTIONS,
+  } = useTimelineHelpers(departments);
 
-  // Modal state
+  // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editModalData, setEditModalData] = useState<{
-    type: 'timeline' | 'sprint' | 'task' | 'subtask';
-    item: any;
-  } | null>(null);
+  const [editModalType, setEditModalType] = useState<
+    "timeline" | "sprint"  | "task" | "subtask"
+  >("timeline");
+  const [editModalInitialValues, setEditModalInitialValues] =
+    useState<TimelineEditModalFormData>({
+      name: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      departmentId: "",
+      statusId: 1,
+      priorityId: 2,
+      progress: 0,
+      notes: "",
+    });
+  const [editingItem, setEditingItem] = useState<any>(null);
 
   // Modal functions
-  const handleOpenEditModal = (type: 'timeline' | 'sprint' | 'task' | 'subtask', item: any) => {
-    console.log('Opening edit modal for:', { type, item });
-    setEditModalData({ type, item });
+  const handleOpenEditModal = (
+    type: "timeline" | "sprint" | "task" | "subtask",
+    item: any,
+  ) => {
+    setEditModalType(type);
+    setEditingItem(item);
+    setEditModalInitialValues({
+      name: item.name || "",
+      description: item.description || "",
+      startDate: item.startDate || "",
+      endDate: item.endDate || "",
+      departmentId: item.departmentId?.toString() || "",
+      statusId: item.statusId || 1,
+      priorityId: item.priorityId || 2,
+      progress: item.progress || 0,
+      notes: item.notes || "",
+      members: item.members || [],
+      memberIds: item.members ? item.members.map((m: any) => m.id) : [],
+    });
     setIsEditModalOpen(true);
   };
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
-    setEditModalData(null);
+    setEditingItem(null);
+  };
+
+  const handleSubmitEdit = async (formData: TimelineEditModalFormData) => {
+    if (!editingItem) return;
+
+    try {
+      if (editModalType === "timeline") {
+        await onUpdateTimeline({
+          id: editingItem.id,
+          ...formData,
+        });
+      } else if (editModalType === "sprint") {
+        await onUpdateSprint({
+          id: editingItem.id,
+          // Preserve current timeline association on sprint update
+          timelineId: (editingItem.timelineId ?? timeline.id).toString(),
+          ...formData,
+        });
+      } else if (editModalType === "task") {
+        await onUpdateTask({
+          id: editingItem.id,
+          ...formData,
+          statusId: formData.statusId,
+          priorityId: formData.priorityId,
+        });
+      } else if (editModalType === "subtask") {
+        await onUpdateSubtask({
+          id: editingItem.id,
+          ...formData,
+          statusId: formData.statusId,
+          priorityId: formData.priorityId,
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to update ${editModalType}:`, error);
+      throw error; // Re-throw to let the modal handle it
+    }
   };
 
   // Find the selected item
   const currentItem = useMemo(() => {
-    if (!selectedItem || !selectedItemType) {
+    if (!selectedItem) {
       return timeline;
     }
 
-    if (selectedItemType === 'timeline') {
+    if (selectedItemType === "timeline") {
       return timeline;
     }
 
-    if (selectedItemType === 'sprint') {
-      return timeline.sprints.find(s => s.id === selectedItem);
-    }
+    if (selectedItemType === "sprint") {
+      const sprint = timeline.sprints.find(
+        (s) => s.treeId.toString() === selectedItem,
+      );
 
-    if (selectedItemType === 'task') {
-      for (const sprint of timeline.sprints) {
-        const task = sprint.tasks.find(t => t.id === selectedItem);
-        if (task) return task;
-      }
+      return sprint || timeline;
     }
+ 
 
-    if (selectedItemType === 'subtask') {
+    if (selectedItemType === "task") {
       for (const sprint of timeline.sprints) {
-        for (const task of sprint.tasks) {
-          const subtask = task.subtasks.find(s => s.id === selectedItem);
-          if (subtask) return subtask;
+        // Check requirements structure first
+        for (const requirement of sprint.tasks || []) {
+          const task = (requirement.subtasks || []).find(
+            (t) => t.treeId.toString() === selectedItem,
+          );
+
+          if (task) return task;
+        }
+        // Check direct sprint tasks (for current mock data structure)
+        if ((sprint as any).tasks) {
+          const task = (sprint as any).tasks.find(
+            (t: any) => t.treeId.toString() === selectedItem,
+          );
+
+          if (task) return task;
         }
       }
     }
-
     return timeline;
   }, [timeline, selectedItem, selectedItemType]);
-
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'completed': return 'success';
-      case 'in-progress': return 'primary';
-      case 'on-hold': return 'warning';
-      case 'not-started': return 'default';
-      case 'cancelled': return 'danger';
-      default: return 'default';
-    }
-  };
-
-  const getProgressColor = (progress: number) => {
-    if (progress >= 76) return 'success';      // Green: 76-100%
-    if (progress >= 51) return 'warning';      // Yellow: 51-75%
-    if (progress >= 26) return 'primary';      // Blue: 26-50%
-    return 'danger';                           // Red: 0-25%
-  };
-
-  const getPriorityColor = (priority?: string) => {
-    switch (priority) {
-      case 'critical': return 'danger';
-      case 'high': return 'warning';
-      case 'medium': return 'primary';
-      case 'low': return 'default';
-      default: return 'default';
-    }
-  };
-
-  const getDepartmentColor = (departmentName?: string) => {
-    const dept = departments.find(d => d.name === departmentName);
-    return dept?.color || '#6B7280';
-  };
-
-  const getResourceInfo = (resourceId: string) => {
-    return resources.find(r => r.id === resourceId);
-  };
 
   const renderTimelineDetails = () => (
     <div className="space-y-4">
@@ -147,30 +193,54 @@ export default function TimelineDetailsPanel({
 
       <div className="space-y-3">
         <div>
-          <p className="text-sm font-medium text-default-700">Duration</p>
-          <p className="text-sm text-default-600">{timeline.startDate} → {timeline.endDate}</p>
+          <p className="text-sm font-medium text-default-700">
+            {t("timeline.detailsPanel.duration")}
+          </p>
+          <p className="text-sm text-default-600">
+            {timeline.startDate} {direction === "rtl" ? "←" : "→"}{" "}
+            {timeline.endDate}
+          </p>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-default-700">Project ID</p>
+          <p className="text-sm font-medium text-default-700">
+            {t("timeline.detailsPanel.projectId")}
+          </p>
           <p className="text-sm text-default-600">{timeline.projectId}</p>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-default-700">Structure</p>
+          <p className="text-sm font-medium text-default-700">
+            {t("timeline.detailsPanel.structure")}
+          </p>
           <div className="flex gap-2 mt-1">
-            <Chip size="sm" variant="flat" color="primary">
-              {timeline.sprints.length} Sprint{timeline.sprints.length !== 1 ? 's' : ''}
+            <Chip color="primary" size="sm" variant="flat">
+              {timeline.sprints.length} {t("timeline.sprints")}
+              {timeline.sprints.length !== 1 ? "" : ""}
             </Chip>
-            <Chip size="sm" variant="flat" color="secondary">
-              {timeline.sprints.reduce((acc, sprint) => acc + sprint.tasks.length, 0)} Task{timeline.sprints.reduce((acc, sprint) => acc + sprint.tasks.length, 0) !== 1 ? 's' : ''}
-            </Chip>
-            <Chip size="sm" variant="flat" color="warning">
-              {timeline.sprints.reduce((acc, sprint) => 
-                acc + sprint.tasks.reduce((taskAcc, task) => taskAcc + task.subtasks.length, 0), 0
-              )} Subtask{timeline.sprints.reduce((acc, sprint) => 
-                acc + sprint.tasks.reduce((taskAcc, task) => taskAcc + task.subtasks.length, 0), 0
-              ) !== 1 ? 's' : ''}
+            <Chip color="warning" size="sm" variant="flat">
+              {timeline.sprints.reduce((acc, sprint) => {
+                // Count from requirements structure
+                const reqSubtasks = (sprint.tasks || []).reduce(
+                  (reqAcc, req) =>
+                    reqAcc +
+                    (req.subtasks || []).reduce(
+                      (taskAcc, task) => taskAcc + (task.subtasks?.length || 0),
+                      0,
+                    ),
+                  0,
+                );
+                // Count from direct sprint tasks (for current mock data)
+                const sprintSubtasks =
+                  (sprint as any).tasks?.reduce(
+                    (taskAcc: number, task: any) =>
+                      taskAcc + (task.subtasks?.length || 0),
+                    0,
+                  ) || 0;
+
+                return acc + reqSubtasks + sprintSubtasks;
+              }, 0)}{" "}
+              {t("timeline.subtasks")}
             </Chip>
           </div>
         </div>
@@ -178,85 +248,86 @@ export default function TimelineDetailsPanel({
 
       <Button
         color="primary"
-        variant="light"
-        startContent={<EditIcon />}
-        size="sm"
         isDisabled={loading}
+        size="sm"
+        startContent={<EditIcon />}
+        variant="light"
         onPress={() => {
-          handleOpenEditModal('timeline', timeline);
+          handleOpenEditModal("timeline", timeline);
         }}
       >
-        Edit Timeline
+        {t("timeline.treeView.editModalTitle")}{" "}
+        {t("timeline.treeView.timelineLabel")}
       </Button>
     </div>
   );
 
   const renderSprintDetails = () => {
     const sprint = currentItem as Sprint;
-    
+
     return (
       <div className="space-y-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <h4 className="font-semibold">{sprint.name}</h4>
-            <Chip size="sm" color="secondary" variant="flat">Sprint</Chip>
+            <Chip color="secondary" size="sm" variant="flat">
+              {t("timeline.sprint")}
+            </Chip>
           </div>
           <p className="text-sm text-default-600">{sprint.description}</p>
         </div>
 
         <div className="space-y-3">
           <div>
-            <p className="text-sm font-medium text-default-700">Duration</p>
-            <p className="text-sm text-default-600">{sprint.startDate} → {sprint.endDate}</p>
-            <p className="text-xs text-default-500">{sprint.duration} days</p>
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.duration")}
+            </p>
+            <p className="text-sm text-default-600">
+              {sprint.startDate} {direction === "rtl" ? "←" : "→"}{" "}
+              {sprint.endDate}
+            </p>
+            <p className="text-xs text-default-500">
+              {sprint.duration} {t("timeline.detailsPanel.days")}
+            </p>
           </div>
 
-          {sprint.department && (
+          {sprint.departmentId && (
             <div>
-              <p className="text-sm font-medium text-default-700">Department</p>
+              <p className="text-sm font-medium text-default-700">
+                {t("timeline.detailsPanel.department")}
+              </p>
               <div className="flex items-center gap-2 mt-1">
                 <div
                   className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: getDepartmentColor(sprint.department) }}
+                  style={{
+                    backgroundColor: getDepartmentColor(sprint.departmentId),
+                  }}
                 />
-                <span className="text-sm text-default-600">{sprint.department}</span>
-              </div>
-            </div>
-          )}
-
-          {sprint.resources && sprint.resources.length > 0 && (
-            <div>
-              <p className="text-sm font-medium text-default-700">Resources</p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {sprint.resources.map(resourceId => {
-                  const resource = getResourceInfo(resourceId);
-                  return (
-                    <div key={resourceId} className="flex items-center gap-2">
-                      <Avatar
-                        name={resource?.name || resourceId}
-                        size="sm"
-                        className="w-6 h-6"
-                      />
-                      <span className="text-sm text-default-600">
-                        {resource?.name || resourceId}
-                      </span>
-                    </div>
-                  );
-                })}
+                <span className="text-sm text-default-600">
+                  {getDepartmentName(sprint.departmentId)}
+                </span>
               </div>
             </div>
           )}
 
           <div>
-            <p className="text-sm font-medium text-default-700">Tasks</p>
-            <Chip size="sm" variant="flat" color="success">
-              {sprint.tasks.length} Task{sprint.tasks.length !== 1 ? 's' : ''}
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.tasks")}
+            </p>
+            <Chip color="success" size="sm" variant="flat">
+              {(sprint.tasks || []).reduce(
+                (acc, task) => acc + (task.subtasks?.length || 0),
+                0,
+              )}{" "}
+              {t("timeline.tasks")}
             </Chip>
           </div>
 
           {sprint.notes && (
             <div>
-              <p className="text-sm font-medium text-default-700">Notes</p>
+              <p className="text-sm font-medium text-default-700">
+                {t("timeline.treeView.notes")}
+              </p>
               <p className="text-sm text-default-600">{sprint.notes}</p>
             </div>
           )}
@@ -264,15 +335,15 @@ export default function TimelineDetailsPanel({
 
         <Button
           color="primary"
-          variant="light"
-          startContent={<EditIcon />}
-          size="sm"
           isDisabled={loading}
+          size="sm"
+          startContent={<EditIcon />}
+          variant="light"
           onPress={() => {
-            handleOpenEditModal('sprint', currentItem);
+            handleOpenEditModal("sprint", currentItem);
           }}
         >
-          Edit Sprint
+          {t("timeline.treeView.editModalTitle")} {t("timeline.sprint")}
         </Button>
       </div>
     );
@@ -280,95 +351,127 @@ export default function TimelineDetailsPanel({
 
   const renderTaskDetails = () => {
     const task = currentItem as Task;
-    
+
     return (
       <div className="space-y-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <h4 className="font-semibold">{task.name}</h4>
-            <Chip size="sm" color="success" variant="flat">Task</Chip>
+            <Chip color="success" size="sm" variant="flat">
+              {t("timeline.task")}
+            </Chip>
           </div>
           <p className="text-sm text-default-600">{task.description}</p>
         </div>
 
         <div className="space-y-3">
           <div>
-            <p className="text-sm font-medium text-default-700">Duration</p>
-            <p className="text-sm text-default-600">{task.startDate} → {task.endDate}</p>
-            <p className="text-xs text-default-500">{task.duration} days</p>
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.duration")}
+            </p>
+            <p className="text-sm text-default-600">
+              {task.startDate} {direction === "rtl" ? "←" : "→"} {task.endDate}
+            </p>
+            <p className="text-xs text-default-500">
+              {task.duration} {t("timeline.detailsPanel.days")}
+            </p>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-default-700">Status & Priority</p>
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.statusAndPriority")}
+            </p>
             <div className="flex gap-2 mt-1">
-              <Chip size="sm" color={getStatusColor(task.status)} variant="flat">
-                {task.status.replace('-', ' ')}
+              <Chip
+                color={getStatusColor(task.statusId)}
+                size="sm"
+                variant="flat"
+              >
+                {getStatusName(task.statusId)}
               </Chip>
-              <Chip size="sm" color={getPriorityColor(task.priority)} variant="flat">
-                {task.priority}
+              <Chip
+                color={getPriorityColor(task.priorityId)}
+                size="sm"
+                variant="flat"
+              >
+                {getPriorityName(task.priorityId)}
               </Chip>
             </div>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-default-700">Progress</p>
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.progress")}
+            </p>
             <div className="flex items-center gap-3 mt-1">
               <Progress
-                value={task.progress}
+                className="flex-1"
                 color={getProgressColor(task.progress)}
                 size="sm"
-                className="flex-1"
+                value={task.progress}
               />
               <span className="text-sm text-default-600">{task.progress}%</span>
             </div>
           </div>
 
-          {task.department && (
+          {task.departmentId && (
             <div>
-              <p className="text-sm font-medium text-default-700">Department</p>
+              <p className="text-sm font-medium text-default-700">
+                {t("timeline.detailsPanel.department")}
+              </p>
               <div className="flex items-center gap-2 mt-1">
                 <div
                   className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: getDepartmentColor(task.department) }}
+                  style={{
+                    backgroundColor: getDepartmentColor(task.departmentId),
+                  }}
                 />
-                <span className="text-sm text-default-600">{task.department}</span>
+                <span className="text-sm text-default-600">
+                  {getDepartmentName(task.departmentId)}
+                </span>
               </div>
             </div>
           )}
 
-          {task.resources && task.resources.length > 0 && (
+          {task.members && task.members.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-default-700">Resources</p>
+              <p className="text-sm font-medium text-default-700">
+                {t("timeline.assignedMembers")}
+              </p>
               <div className="flex flex-wrap gap-2 mt-1">
-                {task.resources.map(resourceId => {
-                  const resource = getResourceInfo(resourceId);
-                  return (
-                    <div key={resourceId} className="flex items-center gap-2">
-                      <Avatar
-                        name={resource?.name || resourceId}
-                        size="sm"
-                        className="w-6 h-6"
-                      />
-                      <span className="text-sm text-default-600">
-                        {resource?.name || resourceId}
+                {task.members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-2 bg-primary-50 rounded-lg px-3 py-2"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-primary-800">
+                        {member.gradeName} {member.fullName}
+                      </span>
+                      <span className="text-xs text-primary-600">
+                        {member.department}
                       </span>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
           <div>
-            <p className="text-sm font-medium text-default-700">Subtasks</p>
-            <Chip size="sm" variant="flat" color="warning">
-              {task.subtasks.length} Subtask{task.subtasks.length !== 1 ? 's' : ''}
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.subtasks")}
+            </p>
+            <Chip color="warning" size="sm" variant="flat">
+              {task.subtasks?.length || 0} {t("timeline.subtasks")}
             </Chip>
           </div>
 
           {task.notes && (
             <div>
-              <p className="text-sm font-medium text-default-700">Notes</p>
+              <p className="text-sm font-medium text-default-700">
+                {t("timeline.treeView.notes")}
+              </p>
               <p className="text-sm text-default-600">{task.notes}</p>
             </div>
           )}
@@ -376,15 +479,15 @@ export default function TimelineDetailsPanel({
 
         <Button
           color="primary"
-          variant="light"
-          startContent={<EditIcon />}
-          size="sm"
           isDisabled={loading}
+          size="sm"
+          startContent={<EditIcon />}
+          variant="light"
           onPress={() => {
-            handleOpenEditModal('task', currentItem);
+            handleOpenEditModal("task", currentItem);
           }}
         >
-          Edit Task
+          {t("timeline.treeView.editModalTitle")} {t("timeline.task")}
         </Button>
       </div>
     );
@@ -392,88 +495,96 @@ export default function TimelineDetailsPanel({
 
   const renderSubtaskDetails = () => {
     const subtask = currentItem as Subtask;
-    
+
     return (
       <div className="space-y-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <h4 className="font-semibold">{subtask.name}</h4>
-            <Chip size="sm" color="warning" variant="flat">Subtask</Chip>
+            <Chip color="warning" size="sm" variant="flat">
+              {t("timeline.subtask")}
+            </Chip>
           </div>
           <p className="text-sm text-default-600">{subtask.description}</p>
         </div>
 
         <div className="space-y-3">
           <div>
-            <p className="text-sm font-medium text-default-700">Duration</p>
-            <p className="text-sm text-default-600">{subtask.startDate} → {subtask.endDate}</p>
-            <p className="text-xs text-default-500">{subtask.duration} days</p>
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.duration")}
+            </p>
+            <p className="text-sm text-default-600">
+              {subtask.startDate} {direction === "rtl" ? "←" : "→"}{" "}
+              {subtask.endDate}
+            </p>
+            <p className="text-xs text-default-500">
+              {subtask.duration} {t("timeline.detailsPanel.days")}
+            </p>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-default-700">Status & Priority</p>
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.statusAndPriority")}
+            </p>
             <div className="flex gap-2 mt-1">
-              <Chip size="sm" color={getStatusColor(subtask.status)} variant="flat">
-                {subtask.status.replace('-', ' ')}
+              <Chip
+                color={getStatusColor(subtask.statusId)}
+                size="sm"
+                variant="flat"
+              >
+                {getStatusName(subtask.statusId)}
               </Chip>
-              <Chip size="sm" color={getPriorityColor(subtask.priority)} variant="flat">
-                {subtask.priority}
+              <Chip
+                color={getPriorityColor(subtask.priorityId)}
+                size="sm"
+                variant="flat"
+              >
+                {getPriorityName(subtask.priorityId)}
               </Chip>
             </div>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-default-700">Progress</p>
+            <p className="text-sm font-medium text-default-700">
+              {t("timeline.detailsPanel.progress")}
+            </p>
             <div className="flex items-center gap-3 mt-1">
               <Progress
-                value={subtask.progress}
-                color={getProgressColor(subtask.progress)}
-                size="sm"
                 className="flex-1"
+                color={getProgressColor(subtask.progress || 0)}
+                size="sm"
+                value={subtask.progress || 0}
               />
-              <span className="text-sm text-default-600">{subtask.progress}%</span>
+              <span className="text-sm text-default-600">
+                {subtask.progress || 0}%
+              </span>
             </div>
           </div>
 
-          {subtask.department && (
+          {subtask.departmentId && (
             <div>
-              <p className="text-sm font-medium text-default-700">Department</p>
+              <p className="text-sm font-medium text-default-700">
+                {t("timeline.detailsPanel.department")}
+              </p>
               <div className="flex items-center gap-2 mt-1">
                 <div
                   className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: getDepartmentColor(subtask.department) }}
+                  style={{
+                    backgroundColor: getDepartmentColor(subtask.departmentId),
+                  }}
                 />
-                <span className="text-sm text-default-600">{subtask.department}</span>
-              </div>
-            </div>
-          )}
-
-          {subtask.resources && subtask.resources.length > 0 && (
-            <div>
-              <p className="text-sm font-medium text-default-700">Resources</p>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {subtask.resources.map(resourceId => {
-                  const resource = getResourceInfo(resourceId);
-                  return (
-                    <div key={resourceId} className="flex items-center gap-2">
-                      <Avatar
-                        name={resource?.name || resourceId}
-                        size="sm"
-                        className="w-6 h-6"
-                      />
-                      <span className="text-sm text-default-600">
-                        {resource?.name || resourceId}
-                      </span>
-                    </div>
-                  );
-                })}
+                <span className="text-sm text-default-600">
+                  {getDepartmentName(subtask.departmentId)}
+                </span>
               </div>
             </div>
           )}
 
           {subtask.notes && (
             <div>
-              <p className="text-sm font-medium text-default-700">Notes</p>
+              <p className="text-sm font-medium text-default-700">
+                {t("timeline.treeView.notes")}
+              </p>
               <p className="text-sm text-default-600">{subtask.notes}</p>
             </div>
           )}
@@ -481,15 +592,15 @@ export default function TimelineDetailsPanel({
 
         <Button
           color="primary"
-          variant="light"
-          startContent={<EditIcon />}
-          size="sm"
           isDisabled={loading}
+          size="sm"
+          startContent={<EditIcon />}
+          variant="light"
           onPress={() => {
-            handleOpenEditModal('subtask', currentItem);
+            handleOpenEditModal("subtask", currentItem);
           }}
         >
-          Edit Subtask
+          {t("timeline.treeView.editModalTitle")} {t("timeline.subtask")}
         </Button>
       </div>
     );
@@ -499,158 +610,50 @@ export default function TimelineDetailsPanel({
     if (!currentItem) {
       return (
         <div className="text-center py-8">
-          <p className="text-default-500">No item selected</p>
+          <p className="text-default-500">
+            {t("timeline.detailsPanel.noItemSelected")}
+          </p>
+          <p className="text-sm text-default-400 mt-2">
+            {t("timeline.detailsPanel.selectAnItem")}
+          </p>
         </div>
       );
     }
 
-    if (selectedItemType === 'sprint' && currentItem !== timeline) {
+    if (selectedItemType === "sprint" && currentItem !== timeline) {
       return renderSprintDetails();
     }
 
-    if (selectedItemType === 'task' && currentItem !== timeline) {
+    if (selectedItemType === "task" && currentItem !== timeline) {
       return renderTaskDetails();
     }
 
-    if (selectedItemType === 'subtask' && currentItem !== timeline) {
+    if (selectedItemType === "subtask" && currentItem !== timeline) {
       return renderSubtaskDetails();
     }
 
     return renderTimelineDetails();
   };
 
-  const renderEditModal = () => (
-    <Modal 
-      isOpen={isEditModalOpen} 
-      onClose={handleCloseEditModal}
-      size="2xl"
-      scrollBehavior="inside"
-    >
-      <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">
-          Edit {editModalData?.type?.charAt(0).toUpperCase()}{editModalData?.type?.slice(1)}
-        </ModalHeader>
-        <ModalBody>
-          {editModalData && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Name</label>
-                <Input
-                  placeholder="Enter name"
-                  defaultValue={editModalData.item.name}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <Input
-                  placeholder="Enter description"
-                  defaultValue={editModalData.item.description}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Start Date</label>
-                  <Input
-                    type="date"
-                    defaultValue={editModalData.item.startDate}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">End Date</label>
-                  <Input
-                    type="date"
-                    defaultValue={editModalData.item.endDate}
-                  />
-                </div>
-              </div>
-
-              {editModalData.type !== 'timeline' && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Department</label>
-                  <Input
-                    placeholder="Department"
-                    defaultValue={editModalData.item.department}
-                  />
-                </div>
-              )}
-
-              {(editModalData.type === 'task' || editModalData.type === 'subtask') && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Status</label>
-                    <Input
-                      placeholder="Status"
-                      defaultValue={editModalData.item.status}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Priority</label>
-                    <Input
-                      placeholder="Priority"
-                      defaultValue={editModalData.item.priority}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {(editModalData.type === 'task' || editModalData.type === 'subtask') && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Progress (%)</label>
-                  <Slider
-                    size="md"
-                    step={5}
-                    maxValue={100}
-                    minValue={0}
-                    defaultValue={editModalData.item.progress || 0}
-                    color={getProgressColor(editModalData.item.progress || 0)}
-                    showTooltip={true}
-                    marks={[
-                      { value: 0, label: "0%" },
-                      { value: 25, label: "25%" },
-                      { value: 50, label: "50%" },
-                      { value: 75, label: "75%" },
-                      { value: 100, label: "100%" }
-                    ]}
-                    className="max-w-md"
-                    getValue={(value) => `${value}%`}
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Notes</label>
-                <Input
-                  placeholder="Additional notes"
-                  defaultValue={editModalData.item.notes}
-                />
-              </div>
-            </div>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="light" onPress={handleCloseEditModal}>
-            Cancel
-          </Button>
-          <Button color="primary" onPress={() => {
-            // TODO: Implement save functionality
-            console.log('Save clicked for:', editModalData);
-            handleCloseEditModal();
-          }}>
-            Save Changes
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-
   return (
     <>
-      <div className="h-full overflow-auto p-4">
+      <div
+        className={`h-full overflow-auto p-4 ${direction === "rtl" ? "text-right" : "text-left"}`}
+      >
         {renderContent()}
       </div>
-      {renderEditModal()}
+      <TimelineEditModal
+        departments={departments}
+        getProgressColor={getProgressColor}
+        initialValues={editModalInitialValues}
+        isOpen={isEditModalOpen}
+        loading={loading}
+        priorityOptions={PRIORITY_OPTIONS}
+        statusOptions={STATUS_OPTIONS}
+        type={editModalType}
+        onClose={handleCloseEditModal}
+        onSubmit={handleSubmitEdit}
+      />
     </>
   );
 }

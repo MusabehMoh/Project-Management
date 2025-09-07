@@ -2,10 +2,11 @@ import { ApiResponse } from "@/types/project";
 
 // Base API configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || "http://localhost:3001/api",
+  BASE_URL: import.meta.env.VITE_API_URL || "http://localhost:3002/api",
+  WS_URL: import.meta.env.VITE_WS_URL || "ws://localhost:3002",
   TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || "10000"),
   HEADERS: {
-    "Accept": "application/json",
+    Accept: "application/json",
   },
   USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API === "true",
   ENABLE_LOGS: import.meta.env.VITE_ENABLE_CONSOLE_LOGS === "true",
@@ -48,6 +49,7 @@ class ApiClient {
   // Get authorization header (for when auth is implemented)
   private getAuthHeader(): Record<string, string> {
     const token = localStorage.getItem("authToken");
+
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
@@ -56,7 +58,7 @@ class ApiClient {
     endpoint: string,
     method: HttpMethod = HttpMethod.GET,
     data?: any,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     const requestHeaders = {
@@ -68,60 +70,81 @@ class ApiClient {
     const config: RequestInit = {
       method,
       headers: requestHeaders,
-      credentials: 'include',
+      credentials: "include",
       signal: AbortSignal.timeout(this.timeout),
     };
 
     if (data && method !== HttpMethod.GET) {
       config.body = JSON.stringify(data);
-      requestHeaders['Content-Type'] = 'application/json';
+      requestHeaders["Content-Type"] = "application/json";
     }
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+
         throw new ApiError(
-          errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+          errorData.message ||
+            `HTTP ${response.status}: ${response.statusText}`,
           response.status,
-          errorData
+          errorData,
         );
       }
 
       const result = await response.json();
+
       return result;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
       }
-      
+
       // Handle network errors, timeouts, etc.
       throw new ApiError(
         error instanceof Error ? error.message : "Network error occurred",
-        0
+        0,
       );
     }
   }
 
   // Convenience methods
-  async get<T>(endpoint: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async get<T>(
+    endpoint: string,
+    headers?: Record<string, string>,
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, HttpMethod.GET, undefined, headers);
   }
 
-  async post<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async post<T>(
+    endpoint: string,
+    data?: any,
+    headers?: Record<string, string>,
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, HttpMethod.POST, data, headers);
   }
 
-  async put<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async put<T>(
+    endpoint: string,
+    data?: any,
+    headers?: Record<string, string>,
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, HttpMethod.PUT, data, headers);
   }
 
-  async patch<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async patch<T>(
+    endpoint: string,
+    data?: any,
+    headers?: Record<string, string>,
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, HttpMethod.PATCH, data, headers);
   }
 
-  async delete<T>(endpoint: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async delete<T>(
+    endpoint: string,
+    headers?: Record<string, string>,
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, HttpMethod.DELETE, undefined, headers);
   }
 }

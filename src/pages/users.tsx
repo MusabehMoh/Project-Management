@@ -1,3 +1,11 @@
+import type {
+  User,
+  Action,
+  CreateUserRequest,
+  UpdateUserRequest,
+  EmployeeSearchResult,
+} from "@/types/user";
+
 import { useState } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -34,10 +42,16 @@ import {
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PlusIcon, EditIcon, DeleteIcon, MoreVerticalIcon, SearchIcon } from "@/components/icons";
+import {
+  PlusIcon,
+  EditIcon,
+  DeleteIcon,
+  MoreVerticalIcon,
+  SearchIcon,
+} from "@/components/icons";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { useUsers, useRoles, useActions } from "@/hooks/useUsers";
-import type { User, Role, Action, CreateUserRequest, UpdateUserRequest, EmployeeSearchResult } from "@/types/user";
+import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 
 export default function UsersPage() {
   const { t, language } = useLanguage();
@@ -59,67 +73,69 @@ export default function UsersPage() {
     createUser,
     updateUser,
     deleteUser,
-    searchEmployees,
-    getEmployeeDetails,
     updateFilters,
   } = useUsers();
 
   const { roles } = useRoles();
   const { actions, actionsByCategory } = useActions();
 
+  // Use optimized employee search
+  const {
+    employees: employeeOptions,
+    loading: employeeSearchLoading,
+    searchEmployees,
+    clearResults: clearEmployeeResults,
+  } = useEmployeeSearch({
+    minLength: 2,
+    debounceMs: 300,
+    maxResults: 25,
+    loadInitialResults: false,
+  });
+
   // Form state
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [employeeSearch, setEmployeeSearch] = useState("");
-  const [employeeOptions, setEmployeeOptions] = useState<EmployeeSearchResult[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeSearchResult | null>(null);
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<EmployeeSearchResult | null>(null);
   const [selectedRole, setSelectedRole] = useState<number | null>(null); // Single role
-  const [selectedAdditionalActions, setSelectedAdditionalActions] = useState<number[]>([]); // Additional actions only
+  const [selectedAdditionalActions, setSelectedAdditionalActions] = useState<
+    number[]
+  >([]); // Additional actions only
   const [isVisible, setIsVisible] = useState(true);
 
   // Helper functions for role and action management
   const getSelectedRoleData = () => {
-    return roles.find(r => r.id === selectedRole);
+    return roles.find((r) => r.id === selectedRole);
   };
 
   const getRoleDefaultActions = () => {
     const roleData = getSelectedRoleData();
+
     return roleData?.actions || [];
   };
 
   const getAvailableAdditionalActions = () => {
-    const roleDefaultActionIds = getRoleDefaultActions().map(a => a.id);
-    return actions.filter(action => !roleDefaultActionIds.includes(action.id));
+    const roleDefaultActionIds = getRoleDefaultActions().map((a) => a.id);
+
+    return actions.filter(
+      (action) => !roleDefaultActionIds.includes(action.id),
+    );
   };
 
   const getAllUserActions = () => {
     const defaultActions = getRoleDefaultActions();
-    const additionalActions = actions.filter(a => selectedAdditionalActions.includes(a.id));
+    const additionalActions = actions.filter((a) =>
+      selectedAdditionalActions.includes(a.id),
+    );
+
     return [...defaultActions, ...additionalActions];
   };
 
-  // Handle employee search
-  const handleEmployeeSearch = async (value: string) => {
-    console.log('🔍 Employee search triggered with value:', value);
-    setEmployeeSearch(value);
-    
-    // Always search, even for empty values to show initial options
-    try {
-      console.log('🔍 Calling searchEmployees...');
-      const results = await searchEmployees(value);
-      console.log('🔍 Search results:', results);
-      setEmployeeOptions(results);
-    } catch (error) {
-      console.error("Error searching employees:", error);
-      setEmployeeOptions([]);
-    }
-  };
-
+  // Handle employee selection
   const handleEmployeeSelect = (employee: EmployeeSearchResult) => {
     setSelectedEmployee(employee);
-    setEmployeeSearch(employee.fullName);
-    setEmployeeOptions([]);
+    clearEmployeeResults(); // Clear search results after selection
   };
 
   // Status helpers
@@ -139,39 +155,42 @@ export default function UsersPage() {
     setSelectedAdditionalActions([]);
     setIsVisible(true);
     setIsEditing(false);
-    
-    // Load initial employee options when opening the modal
-    try {
-      const initialResults = await searchEmployees("");
-      setEmployeeOptions(initialResults);
-    } catch (error) {
-      console.error("Error loading initial employees:", error);
-    }
-    
+
+    // Clear any previous search results
+    clearEmployeeResults();
+
     onOpen();
   };
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
-    setSelectedEmployee(user.employee ? {
-      id: user.employee.id,
-      userName: user.employee.userName,
-      militaryNumber: user.employee.militaryNumber,
-      fullName: user.employee.fullName,
-      gradeName: user.employee.gradeName,
-      statusId: user.employee.statusId,
-    } : null);
-    
+    setSelectedEmployee(
+      user.employee
+        ? {
+            id: user.employee.id,
+            userName: user.employee.userName,
+            militaryNumber: user.employee.militaryNumber,
+            fullName: user.employee.fullName,
+            gradeName: user.employee.gradeName,
+            statusId: user.employee.statusId,
+          }
+        : null,
+    );
+
     // Set single role
     const userRole = user.roles?.[0]; // Take first role as primary
+
     setSelectedRole(userRole?.id || null);
-    
+
     // Set additional actions (exclude role's default actions)
-    const roleDefaultActions = userRole?.actions?.map(a => a.id) || [];
-    const userActions = user.actions?.map(a => a.id) || [];
-    const additionalActions = userActions.filter(actionId => !roleDefaultActions.includes(actionId));
+    const roleDefaultActions = userRole?.actions?.map((a) => a.id) || [];
+    const userActions = user.actions?.map((a) => a.id) || [];
+    const additionalActions = userActions.filter(
+      (actionId) => !roleDefaultActions.includes(actionId),
+    );
+
     setSelectedAdditionalActions(additionalActions);
-    
+
     setIsVisible(user.isVisible);
     setIsEditing(true);
     onOpen();
@@ -187,11 +206,15 @@ export default function UsersPage() {
 
     try {
       // Get role's default actions
-      const selectedRoleData = roles.find(r => r.id === selectedRole);
-      const roleDefaultActions = selectedRoleData?.actions?.map(a => a.id) || [];
-      
+      const selectedRoleData = roles.find((r) => r.id === selectedRole);
+      const roleDefaultActions =
+        selectedRoleData?.actions?.map((a) => a.id) || [];
+
       // Combine role's default actions with additional selected actions
-      const allUserActions = [...roleDefaultActions, ...selectedAdditionalActions];
+      const allUserActions = [
+        ...roleDefaultActions,
+        ...selectedAdditionalActions,
+      ];
 
       const userData = {
         userName: selectedEmployee.userName,
@@ -235,35 +258,50 @@ export default function UsersPage() {
     setSelectedRole(null);
     setSelectedAdditionalActions([]);
     setIsVisible(true);
-    setEmployeeSearch("");
-    setEmployeeOptions([]);
+    clearEmployeeResults(); // Clear any search results
   };
 
   // Filter handlers
   const handleSearch = (value: string) => {
-    console.log('🔍 Frontend search triggered with value:', value);
+    console.log("🔍 Frontend search triggered with value:", value);
     // Use the new search field that searches both fullName and militaryNumber
     // Clear all other filters to avoid conflicts
-    updateFilters({ 
+    updateFilters({
       search: value || undefined, // Only set if value is not empty
       fullName: undefined,
       militaryNumber: undefined,
       userName: undefined,
       roleId: filters.roleId, // Keep role filter
       isVisible: filters.isVisible, // Keep visibility filter
-      statusId: filters.statusId // Keep status filter
+      statusId: filters.statusId, // Keep status filter
     });
   };
 
   const handleRoleFilter = (roleId: string) => {
-    updateFilters({ ...filters, roleId: roleId ? parseInt(roleId) : undefined });
+    updateFilters({
+      ...filters,
+      roleId: roleId ? parseInt(roleId) : undefined,
+    });
   };
 
   const handleStatusFilter = (status: string) => {
-    updateFilters({ 
-      ...filters, 
-      isVisible: status === "all" ? undefined : status === "active" 
+    updateFilters({
+      ...filters,
+      isVisible: status === "all" ? undefined : status === "active",
     });
+  };
+
+
+  // Pagination page size options
+  const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
+  const effectivePageSize = PAGE_SIZE_OPTIONS.includes(pagination.limit)
+    ? pagination.limit
+    : 20;
+
+  // Handler for page size change
+  const handlePageSizeChange = (newSize: number) => {
+    // Always go to first page when page size changes
+    loadUsers(1, newSize);
   };
 
   return (
@@ -283,80 +321,122 @@ export default function UsersPage() {
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {/* Search */}
               <Input
-                placeholder={t("users.searchEmployees")}
-                value={filters.search || ""}
-                onChange={(e) => handleSearch(e.target.value)}
                 className="w-full sm:w-80"
+                placeholder={t("users.searchEmployees")}
                 startContent={
                   <SearchIcon className="text-default-400" size={18} />
                 }
+                value={filters.search || ""}
+                onChange={(e) => handleSearch(e.target.value)}
               />
 
               {/* Role Filter */}
               <Select
-                placeholder={t("users.roles")}
+                aria-label={t("users.roles")}
                 className="w-full sm:w-48"
+                placeholder={t("users.roles")}
                 selectedKeys={filters.roleId ? [filters.roleId.toString()] : []}
                 onSelectionChange={(keys) => {
                   const roleId = Array.from(keys)[0] as string;
                   handleRoleFilter(roleId);
                 }}
-                aria-label={t("users.roles")}
               >
-                <SelectItem key="all" value="all" textValue={t("common.all")}>
+                <SelectItem key="all" textValue={t("common.all")}> 
                   {t("common.all")}
                 </SelectItem>
-                {roles.map((role) => (
-                  <SelectItem key={role.id.toString()} value={role.id.toString()} textValue={role.name}>
-                    {role.name}
-                  </SelectItem>
-                ))}
+                <>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id.toString()} textValue={role.name}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </>
               </Select>
 
               {/* Status Filter */}
               <Select
-                placeholder={t("users.status")}
+                aria-label={t("users.status")}
                 className="w-full sm:w-32"
+                placeholder={t("users.status")}
                 selectedKeys={
-                  filters.isVisible === undefined 
-                    ? ["all"] 
-                    : filters.isVisible 
-                      ? ["active"] 
+                  filters.isVisible === undefined
+                    ? ["all"]
+                    : filters.isVisible
+                      ? ["active"]
                       : ["inactive"]
                 }
                 onSelectionChange={(keys) => {
                   const status = Array.from(keys)[0] as string;
                   handleStatusFilter(status);
                 }}
-                aria-label={t("users.status")}
               >
-                <SelectItem key="all" value="all" textValue={t("common.all")}>
+                <SelectItem key="all" textValue={t("common.all")}> 
                   {t("common.all")}
                 </SelectItem>
-                <SelectItem key="active" value="active" textValue={t("users.activeUsers")}>
+                <SelectItem key="active" textValue={t("users.activeUsers")}> 
                   {t("users.activeUsers")}
                 </SelectItem>
-                <SelectItem key="inactive" value="inactive" textValue={t("users.inactiveUsers")}>
+                <SelectItem key="inactive" textValue={t("users.inactiveUsers")}> 
                   {t("users.inactiveUsers")}
                 </SelectItem>
               </Select>
             </div>
 
+            {/* Page Size Selector */}
+            {!loading && pagination.total > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-default-600">
+                  {t("common.show")}:
+                </span>
+                <Select
+                  className="w-24"
+                  selectedKeys={[effectivePageSize.toString()]}
+                  size="sm"
+                  onSelectionChange={(keys) => {
+                    const newSizeStr = Array.from(keys)[0] as string;
+                    if (!newSizeStr) return;
+                    const newSize = parseInt(newSizeStr, 10);
+                    if (!Number.isNaN(newSize)) {
+                      handlePageSizeChange(newSize);
+                    }
+                  }}
+                >
+                  {PAGE_SIZE_OPTIONS.map((opt) => {
+                    const val = opt.toString();
+                    return (
+                      <SelectItem key={val} textValue={val}>
+                        {val}
+                      </SelectItem>
+                    );
+                  })}
+                </Select>
+                <span className="text-sm text-default-600">
+                  {t("pagination.perPage")}
+                </span>
+              </div>
+            )}
             {/* Add User Button */}
             <Button
+              className="w-full sm:w-auto"
               color="primary"
               startContent={<PlusIcon />}
               onPress={handleAddUser}
-              className="w-full sm:w-auto"
             >
               {t("users.addUser")}
             </Button>
           </div>
         </div>
 
+
         {/* Users Table */}
         <Card>
           <CardBody className="p-0">
+            {/* Results info */}
+            {!loading && pagination.total > 0 && (
+              <div className="text-sm text-default-600 px-4 pt-4">
+                {t("pagination.showing")} {((pagination.page - 1) * pagination.limit) + 1} {t("pagination.to")} {Math.min(pagination.page * pagination.limit, pagination.total)} {t("pagination.of")} {pagination.total} {t("users.totalUsers")}
+              </div>
+            )}
             {loading ? (
               <div className="flex justify-center items-center h-40">
                 <Spinner size="lg" />
@@ -368,13 +448,27 @@ export default function UsersPage() {
             ) : (
               <Table aria-label="Users table">
                 <TableHeader>
-                  <TableColumn className="min-w-[200px]">{t("users.userName")}</TableColumn>
-                  <TableColumn className="min-w-[200px]">{t("users.fullName")}</TableColumn>
-                  <TableColumn className="min-w-[120px]">{t("users.militaryNumber")}</TableColumn>
-                  <TableColumn className="min-w-[100px]">{t("users.gradeName")}</TableColumn>
-                  <TableColumn className="min-w-[150px]">{t("users.roles")}</TableColumn>
-                  <TableColumn className="min-w-[100px]">{t("users.status")}</TableColumn>
-                  <TableColumn className="min-w-[80px]">{t("users.actions")}</TableColumn>
+                  <TableColumn className="min-w-[200px]">
+                    {t("users.userName")}
+                  </TableColumn>
+                  <TableColumn className="min-w-[200px]">
+                    {t("users.fullName")}
+                  </TableColumn>
+                  <TableColumn className="min-w-[120px]">
+                    {t("users.militaryNumber")}
+                  </TableColumn>
+                  <TableColumn className="min-w-[100px]">
+                    {t("users.gradeName")}
+                  </TableColumn>
+                  <TableColumn className="min-w-[150px]">
+                    {t("users.roles")}
+                  </TableColumn>
+                  <TableColumn className="min-w-[100px]">
+                    {t("users.status")}
+                  </TableColumn>
+                  <TableColumn className="min-w-[80px]">
+                    {t("users.actions")}
+                  </TableColumn>
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => (
@@ -382,9 +476,9 @@ export default function UsersPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar
-                            size="sm"
-                            name={user.employee?.fullName || user.userName}
                             className="flex-shrink-0"
+                            name={user.employee?.fullName || user.userName}
+                            size="sm"
                           />
                           <div className="flex flex-col">
                             <p className="font-semibold">{user.userName}</p>
@@ -392,29 +486,37 @@ export default function UsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium">{user.employee?.fullName || "N/A"}</p>
+                        <p className="font-medium">
+                          {user.employee?.fullName || "N/A"}
+                        </p>
                       </TableCell>
-                      <TableCell>{user.employee?.militaryNumber || "N/A"}</TableCell>
+                      <TableCell>
+                        {user.employee?.militaryNumber || "N/A"}
+                      </TableCell>
                       <TableCell>{user.employee?.gradeName || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {user.roles?.slice(0, 1).map((role) => ( // Show only primary role
-                            <Chip
-                              key={role.id}
-                              size="sm"
-                              variant="flat"
-                              color="primary"
-                            >
-                              {role.name}
-                            </Chip>
-                          ))}
+                          {user.roles?.slice(0, 1).map(
+                            (
+                              role, // Show only primary role
+                            ) => (
+                              <Chip
+                                key={role.id}
+                                color="primary"
+                                size="sm"
+                                variant="flat"
+                              >
+                                {role.name}
+                              </Chip>
+                            ),
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <Chip
                           color={getStatusColor(user.isVisible)}
-                          variant="flat"
                           size="sm"
+                          variant="flat"
                         >
                           {getStatusText(user.isVisible)}
                         </Chip>
@@ -455,25 +557,27 @@ export default function UsersPage() {
         </Card>
 
         {/* Pagination */}
-        <div className="flex justify-center py-6">
-          <GlobalPagination
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            totalItems={pagination.total}
-            pageSize={pagination.limit}
-            onPageChange={(page) => loadUsers(page, pagination.limit)}
-            isLoading={loading}
-            showInfo={true}
-            className="w-full max-w-md"
-          />
-        </div>
+        {pagination.total > effectivePageSize && (
+          <div className="flex justify-center py-6">
+            <GlobalPagination
+              className="w-full max-w-md"
+              currentPage={pagination.page}
+              isLoading={loading}
+              pageSize={effectivePageSize}
+              showInfo={false}
+              totalItems={pagination.total}
+              totalPages={pagination.totalPages}
+              onPageChange={(page) => loadUsers(page, effectivePageSize)}
+            />
+          </div>
+        )}
 
         {/* Add/Edit User Modal */}
-        <Modal 
-          isOpen={isOpen} 
-          onOpenChange={onOpenChange}
-          size="2xl"
+        <Modal
+          isOpen={isOpen}
           scrollBehavior="inside"
+          size="2xl"
+          onOpenChange={onOpenChange}
         >
           <ModalContent>
             {(onClose) => (
@@ -486,31 +590,36 @@ export default function UsersPage() {
                     {/* Employee Selection */}
                     <div>
                       <Autocomplete
+                        isClearable
+                        isRequired
+                        isLoading={employeeSearchLoading}
+                        items={employeeOptions}
                         label={t("users.selectEmployee")}
+                        menuTrigger="input"
                         placeholder={t("users.searchEmployees")}
-                        inputValue={employeeSearch}
-                        onInputChange={handleEmployeeSearch}
                         selectedKey={selectedEmployee?.id.toString()}
+                        onInputChange={searchEmployees}
                         onSelectionChange={(key) => {
                           if (key) {
-                            const employee = employeeOptions.find(e => e.id.toString() === key);
+                            const employee = employeeOptions.find(
+                              (e) => e.id.toString() === key,
+                            );
+
                             if (employee) {
                               handleEmployeeSelect(employee);
                             }
                           }
                         }}
-                        isRequired
-                        isClearable
-                        menuTrigger="input"
                       >
                         {employeeOptions.map((employee) => (
-                          <AutocompleteItem 
-                            key={employee.id.toString()} 
-                            value={employee.id.toString()}
+                          <AutocompleteItem
+                            key={employee.id.toString()}
                             textValue={`${employee.fullName} (${employee.militaryNumber})`}
                           >
                             <div className="flex flex-col">
-                              <span className="font-medium">{employee.fullName}</span>
+                              <span className="font-medium">
+                                {employee.fullName}
+                              </span>
                               <span className="text-small text-default-500">
                                 {employee.militaryNumber} • {employee.gradeName}
                               </span>
@@ -526,20 +635,36 @@ export default function UsersPage() {
                         <CardBody>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <p className="text-small text-default-500">{t("users.fullName")}</p>
-                              <p className="font-medium">{selectedEmployee.fullName}</p>
+                              <p className="text-small text-default-500">
+                                {t("users.fullName")}
+                              </p>
+                              <p className="font-medium">
+                                {selectedEmployee.fullName}
+                              </p>
                             </div>
                             <div>
-                              <p className="text-small text-default-500">{t("users.userName")}</p>
-                              <p className="font-medium">{selectedEmployee.userName}</p>
+                              <p className="text-small text-default-500">
+                                {t("users.userName")}
+                              </p>
+                              <p className="font-medium">
+                                {selectedEmployee.userName}
+                              </p>
                             </div>
                             <div>
-                              <p className="text-small text-default-500">{t("users.militaryNumber")}</p>
-                              <p className="font-medium">{selectedEmployee.militaryNumber}</p>
+                              <p className="text-small text-default-500">
+                                {t("users.militaryNumber")}
+                              </p>
+                              <p className="font-medium">
+                                {selectedEmployee.militaryNumber}
+                              </p>
                             </div>
                             <div>
-                              <p className="text-small text-default-500">{t("users.gradeName")}</p>
-                              <p className="font-medium">{selectedEmployee.gradeName}</p>
+                              <p className="text-small text-default-500">
+                                {t("users.gradeName")}
+                              </p>
+                              <p className="font-medium">
+                                {selectedEmployee.gradeName}
+                              </p>
                             </div>
                           </div>
                         </CardBody>
@@ -550,8 +675,8 @@ export default function UsersPage() {
                     <div className="flex items-center gap-3">
                       <Switch
                         isSelected={isVisible}
-                        onValueChange={setIsVisible}
                         size="sm"
+                        onValueChange={setIsVisible}
                       >
                         {t("users.isVisible")}
                       </Switch>
@@ -560,28 +685,34 @@ export default function UsersPage() {
                     {/* Role Selection (Single Role) */}
                     <div>
                       <Select
+                        isRequired
+                        aria-label={t("users.assignRoles")}
                         label={t("users.assignRoles")}
                         placeholder={t("roles.selectRole")}
-                        selectedKeys={selectedRole ? new Set([selectedRole.toString()]) : new Set()}
+                        selectedKeys={
+                          selectedRole
+                            ? new Set([selectedRole.toString()])
+                            : new Set()
+                        }
                         onSelectionChange={(keys) => {
                           const selectedKeys = Array.from(keys);
                           const roleId = selectedKeys[0] as string;
+
                           setSelectedRole(roleId ? parseInt(roleId) : null);
                           // Reset additional actions when role changes
                           setSelectedAdditionalActions([]);
                         }}
-                        isRequired
-                        aria-label={t("users.assignRoles")}
                       >
                         {roles.map((role) => (
-                          <SelectItem 
+                          <SelectItem
                             key={role.id.toString()}
                             textValue={role.name}
                           >
                             <div className="flex flex-col">
                               <span className="font-medium">{role.name}</span>
                               <span className="text-small text-default-500">
-                                {role.actions?.length || 0} {t("actions.defaultActions")}
+                                {role.actions?.length || 0}{" "}
+                                {t("actions.defaultActions")}
                               </span>
                             </div>
                           </SelectItem>
@@ -593,7 +724,8 @@ export default function UsersPage() {
                     {selectedRole && (
                       <div>
                         <p className="text-small text-default-500 mb-2">
-                          {t("actions.defaultActionsForRole")} "{getSelectedRoleData()?.name}"
+                          {t("actions.defaultActionsForRole")} &quot;
+                          {getSelectedRoleData()?.name}&quot;
                         </p>
                         <Card className="bg-default-50">
                           <CardBody className="py-3">
@@ -601,10 +733,12 @@ export default function UsersPage() {
                               {getRoleDefaultActions().map((action) => (
                                 <Chip
                                   key={action.id}
-                                  size="sm"
-                                  variant="flat"
                                   color="success"
-                                  startContent={<span className="text-success">✓</span>}
+                                  size="sm"
+                                  startContent={
+                                    <span className="text-success">✓</span>
+                                  }
+                                  variant="flat"
                                 >
                                   {action.name}
                                 </Chip>
@@ -619,54 +753,79 @@ export default function UsersPage() {
                     )}
 
                     {/* Additional Action Selection */}
-                    {selectedRole && getAvailableAdditionalActions().length > 0 && (
-                      <div>
-                        <p className="text-small text-default-500 mb-2">
-                          {t("users.assignAdditionalActions")}
-                        </p>
-                        <div className="space-y-3 max-h-48 overflow-y-auto border border-default-200 rounded-lg p-3 bg-default-50">
-                          {Object.entries(
-                            getAvailableAdditionalActions().reduce((acc, action) => {
-                              if (!acc[action.categoryName]) {
-                                acc[action.categoryName] = [];
-                              }
-                              acc[action.categoryName].push(action);
-                              return acc;
-                            }, {} as { [categoryName: string]: Action[] })
-                          ).map(([category, categoryActions]) => (
-                            <div key={category} className="bg-white rounded-md p-3 shadow-sm">
-                              <p className="font-medium text-small mb-2 text-primary">{category}</p>
-                              <CheckboxGroup
-                                value={selectedAdditionalActions.map(String)}
-                                onValueChange={(value) => setSelectedAdditionalActions(value.map(Number))}
-                                classNames={{
-                                  wrapper: "gap-1"
-                                }}
+                    {selectedRole &&
+                      getAvailableAdditionalActions().length > 0 && (
+                        <div>
+                          <p className="text-small text-default-500 mb-2">
+                            {t("users.assignAdditionalActions")}
+                          </p>
+                          <div className="space-y-3 max-h-48 overflow-y-auto border border-default-200 rounded-lg p-3 bg-default-50">
+                            {Object.entries(
+                              getAvailableAdditionalActions().reduce(
+                                (acc, action) => {
+                                  if (!acc[action.categoryName]) {
+                                    acc[action.categoryName] = [];
+                                  }
+                                  acc[action.categoryName].push(action);
+
+                                  return acc;
+                                },
+                                {} as { [categoryName: string]: Action[] },
+                              ),
+                            ).map(([category, categoryActions]) => (
+                              <div
+                                key={category}
+                                className="bg-white rounded-md p-3 shadow-sm"
                               >
-                                {categoryActions.slice(0, 5).map((action) => (
-                                  <Checkbox key={action.id} value={action.id.toString()} size="sm">
-                                    <div>
-                                      <p className="text-small">{action.name}</p>
-                                      <p className="text-tiny text-default-500">{action.description}</p>
-                                    </div>
-                                  </Checkbox>
-                                ))}
-                                {categoryActions.length > 5 && (
-                                  <p className="text-tiny text-default-400 mt-2">
-                                    +{categoryActions.length - 5} more actions available
-                                  </p>
-                                )}
-                              </CheckboxGroup>
+                                <p className="font-medium text-small mb-2 text-primary">
+                                  {category}
+                                </p>
+                                <CheckboxGroup
+                                  classNames={{
+                                    wrapper: "gap-1",
+                                  }}
+                                  value={selectedAdditionalActions.map(String)}
+                                  onValueChange={(value) =>
+                                    setSelectedAdditionalActions(
+                                      value.map(Number),
+                                    )
+                                  }
+                                >
+                                  {categoryActions.slice(0, 5).map((action) => (
+                                    <Checkbox
+                                      key={action.id}
+                                      size="sm"
+                                      value={action.id.toString()}
+                                    >
+                                      <div>
+                                        <p className="text-small">
+                                          {action.name}
+                                        </p>
+                                        <p className="text-tiny text-default-500">
+                                          {action.description}
+                                        </p>
+                                      </div>
+                                    </Checkbox>
+                                  ))}
+                                  {categoryActions.length > 5 && (
+                                    <p className="text-tiny text-default-400 mt-2">
+                                      +{categoryActions.length - 5} more actions
+                                      available
+                                    </p>
+                                  )}
+                                </CheckboxGroup>
+                              </div>
+                            ))}
+                            <div className="text-center pt-2">
+                              <p className="text-tiny text-default-500">
+                                {t("actions.scrollToSeeMore")} •{" "}
+                                {getAvailableAdditionalActions().length}{" "}
+                                {t("actions.totalAvailable")}
+                              </p>
                             </div>
-                          ))}
-                          <div className="text-center pt-2">
-                            <p className="text-tiny text-default-500">
-                              {t("actions.scrollToSeeMore")} • {getAvailableAdditionalActions().length} {t("actions.totalAvailable")}
-                            </p>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Summary of All Permissions */}
                     {selectedRole && (
@@ -679,18 +838,22 @@ export default function UsersPage() {
                             <div className="space-y-2">
                               <div>
                                 <p className="text-small font-medium text-primary">
-                                  {t("roles.role")}: {getSelectedRoleData()?.name}
+                                  {t("roles.role")}:{" "}
+                                  {getSelectedRoleData()?.name}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-tiny text-default-600">
-                                  {t("actions.totalActions")}: {getAllUserActions().length}
+                                  {t("actions.totalActions")}:{" "}
+                                  {getAllUserActions().length}
                                 </p>
                                 <p className="text-tiny text-default-600">
-                                  {t("actions.defaultFromRole")}: {getRoleDefaultActions().length}
+                                  {t("actions.defaultFromRole")}:{" "}
+                                  {getRoleDefaultActions().length}
                                 </p>
                                 <p className="text-tiny text-default-600">
-                                  {t("actions.additionalSelected")}: {selectedAdditionalActions.length}
+                                  {t("actions.additionalSelected")}:{" "}
+                                  {selectedAdditionalActions.length}
                                 </p>
                               </div>
                             </div>
@@ -704,10 +867,10 @@ export default function UsersPage() {
                   <Button color="danger" variant="light" onPress={onClose}>
                     {t("common.cancel")}
                   </Button>
-                  <Button 
-                    color="primary" 
-                    onPress={handleSaveUser}
+                  <Button
+                    color="primary"
                     isDisabled={!selectedEmployee || !selectedRole}
+                    onPress={handleSaveUser}
                   >
                     {isEditing ? t("common.save") : t("users.addUser")}
                   </Button>
@@ -726,9 +889,7 @@ export default function UsersPage() {
                   {t("users.confirmDelete")}
                 </ModalHeader>
                 <ModalBody>
-                  <p>
-                    {t("users.deleteConfirmMessage")}
-                  </p>
+                  <p>{t("users.deleteConfirmMessage")}</p>
                   {selectedUser && (
                     <p className="font-semibold">
                       {selectedUser.employee?.fullName || selectedUser.userName}

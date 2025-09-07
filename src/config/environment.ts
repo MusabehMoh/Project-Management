@@ -4,7 +4,8 @@
 export const APP_CONFIG = {
   name: import.meta.env.VITE_APP_NAME || "Project Management Application",
   version: import.meta.env.VITE_APP_VERSION || "1.0.0",
-  description: import.meta.env.VITE_APP_DESCRIPTION || "Project Management System",
+  description:
+    import.meta.env.VITE_APP_DESCRIPTION || "Project Management System",
   environment: import.meta.env.MODE || "development",
 } as const;
 
@@ -25,7 +26,10 @@ export const AUTH_CONFIG = {
 // File Upload Configuration
 export const UPLOAD_CONFIG = {
   maxFileSize: parseInt(import.meta.env.VITE_MAX_FILE_SIZE || "10485760"), // 10MB
-  allowedTypes: (import.meta.env.VITE_ALLOWED_FILE_TYPES || ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif").split(","),
+  allowedTypes: (
+    import.meta.env.VITE_ALLOWED_FILE_TYPES ||
+    ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+  ).split(","),
 } as const;
 
 // Feature Flags
@@ -40,7 +44,9 @@ export const FEATURE_FLAGS = {
 // Localization Configuration
 export const LOCALE_CONFIG = {
   defaultLanguage: import.meta.env.VITE_DEFAULT_LANGUAGE || "en",
-  supportedLanguages: (import.meta.env.VITE_SUPPORTED_LANGUAGES || "en,ar").split(","),
+  supportedLanguages: (
+    import.meta.env.VITE_SUPPORTED_LANGUAGES || "en,ar"
+  ).split(","),
   fallbackLanguage: import.meta.env.VITE_FALLBACK_LANGUAGE || "en",
 } as const;
 
@@ -53,14 +59,20 @@ export const THEME_CONFIG = {
 // Performance Configuration
 export const PERFORMANCE_CONFIG = {
   debounceDelay: parseInt(import.meta.env.VITE_DEBOUNCE_DELAY || "300"),
-  paginationDefaultLimit: parseInt(import.meta.env.VITE_PAGINATION_DEFAULT_LIMIT || "20"),
-  paginationMaxLimit: parseInt(import.meta.env.VITE_PAGINATION_MAX_LIMIT || "100"),
+  paginationDefaultLimit: parseInt(
+    import.meta.env.VITE_PAGINATION_DEFAULT_LIMIT || "20",
+  ),
+  paginationMaxLimit: parseInt(
+    import.meta.env.VITE_PAGINATION_MAX_LIMIT || "100",
+  ),
 } as const;
 
 // Security Configuration
 export const SECURITY_CONFIG = {
   csrfProtection: import.meta.env.VITE_CSRF_PROTECTION === "true",
-  rateLimitRequests: parseInt(import.meta.env.VITE_RATE_LIMIT_REQUESTS || "100"),
+  rateLimitRequests: parseInt(
+    import.meta.env.VITE_RATE_LIMIT_REQUESTS || "100",
+  ),
   rateLimitWindow: parseInt(import.meta.env.VITE_RATE_LIMIT_WINDOW || "900000"),
 } as const;
 
@@ -81,13 +93,11 @@ export const validateEnvironment = () => {
   const errors: string[] = [];
 
   // Required environment variables
-  const requiredVars = [
-    "VITE_API_URL",
-  ];
+  const requiredVars = ["VITE_API_URL"];
 
   // Check for required variables in production
   if (isProduction()) {
-    requiredVars.forEach(varName => {
+    requiredVars.forEach((varName) => {
       if (!(import.meta.env as any)[varName]) {
         errors.push(`Missing required environment variable: ${varName}`);
       }
@@ -106,13 +116,14 @@ export const validateEnvironment = () => {
   // Validate numeric values
   const numericVars = [
     "VITE_API_TIMEOUT",
-    "VITE_AUTH_TIMEOUT", 
+    "VITE_AUTH_TIMEOUT",
     "VITE_SESSION_TIMEOUT",
     "VITE_MAX_FILE_SIZE",
   ];
 
-  numericVars.forEach(varName => {
+  numericVars.forEach((varName) => {
     const value = (import.meta.env as any)[varName];
+
     if (value && isNaN(parseInt(value))) {
       errors.push(`Invalid numeric value for ${varName}: ${value}`);
     }
@@ -127,7 +138,7 @@ export const validateEnvironment = () => {
 // Configuration summary for debugging
 export const getConfigSummary = () => {
   if (!DEV_CONFIG.enableConsoleLog) return;
-  
+
   console.group("🔧 Application Configuration");
   console.log("App:", APP_CONFIG);
   console.log("API:", API_CONFIG);
@@ -141,10 +152,11 @@ export const getConfigSummary = () => {
 // Initialize configuration validation and logging
 if (isDevelopment()) {
   const validation = validateEnvironment();
+
   if (!validation.isValid) {
     console.error("❌ Environment Configuration Errors:", validation.errors);
   }
-  
+
   if (DEV_CONFIG.enableConsoleLog) {
     getConfigSummary();
   }

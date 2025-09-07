@@ -1,4 +1,3 @@
-import { apiClient } from "./client";
 import type {
   User,
   Role,
@@ -13,6 +12,8 @@ import type {
   ApiResponse,
 } from "@/types/user";
 
+import { apiClient } from "./client";
+
 /**
  * User Management Service
  * Handles all user-related API operations including CRUD, roles, and permissions
@@ -26,17 +27,22 @@ export class UserService {
   async getUsers(
     filters?: UserFilters,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<ApiResponse<User[]>> {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...(filters && Object.entries(filters).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          acc[key] = value.toString();
-        }
-        return acc;
-      }, {} as Record<string, string>))
+      ...(filters &&
+        Object.entries(filters).reduce(
+          (acc, [key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+              acc[key] = value.toString();
+            }
+
+            return acc;
+          },
+          {} as Record<string, string>,
+        )),
     });
 
     return apiClient.get<User[]>(`${this.baseUrl}?${params}`);
@@ -80,8 +86,11 @@ export class UserService {
   /**
    * Search employees by username, military number, or full name
    */
-  async searchEmployees(query: string): Promise<ApiResponse<EmployeeSearchResult[]>> {
+  async searchEmployees(
+    query: string,
+  ): Promise<ApiResponse<EmployeeSearchResult[]>> {
     const params = new URLSearchParams({ q: query });
+
     return apiClient.get<EmployeeSearchResult[]>(`/employees/search?${params}`);
   }
 
@@ -90,6 +99,7 @@ export class UserService {
    */
   async getEmployeeDetails(identifier: string): Promise<ApiResponse<Employee>> {
     const params = new URLSearchParams({ identifier });
+
     return apiClient.get<Employee>(`/employees/details?${params}`);
   }
 
@@ -110,36 +120,56 @@ export class UserService {
   /**
    * Check if user has specific permission
    */
-  async checkPermission(action: string, resource: string): Promise<ApiResponse<boolean>> {
+  async checkPermission(
+    action: string,
+    resource: string,
+  ): Promise<ApiResponse<boolean>> {
     const params = new URLSearchParams({ action, resource });
-    return apiClient.get<boolean>(`${this.baseUrl}/me/permissions/check?${params}`);
+
+    return apiClient.get<boolean>(
+      `${this.baseUrl}/me/permissions/check?${params}`,
+    );
   }
 
   /**
    * Assign roles to user
    */
-  async assignRoles(userId: number, roleIds: number[]): Promise<ApiResponse<void>> {
+  async assignRoles(
+    userId: number,
+    roleIds: number[],
+  ): Promise<ApiResponse<void>> {
     return apiClient.post<void>(`${this.baseUrl}/${userId}/roles`, { roleIds });
   }
 
   /**
    * Remove roles from user
    */
-  async removeRoles(userId: number, roleIds: number[]): Promise<ApiResponse<void>> {
+  async removeRoles(
+    userId: number,
+    roleIds: number[],
+  ): Promise<ApiResponse<void>> {
     return apiClient.delete<void>(`${this.baseUrl}/${userId}/roles`);
   }
 
   /**
    * Assign actions to user
    */
-  async assignActions(userId: number, actionIds: number[]): Promise<ApiResponse<void>> {
-    return apiClient.post<void>(`${this.baseUrl}/${userId}/actions`, { actionIds });
+  async assignActions(
+    userId: number,
+    actionIds: number[],
+  ): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`${this.baseUrl}/${userId}/actions`, {
+      actionIds,
+    });
   }
 
   /**
    * Remove actions from user
    */
-  async removeActions(userId: number, actionIds: number[]): Promise<ApiResponse<void>> {
+  async removeActions(
+    userId: number,
+    actionIds: number[],
+  ): Promise<ApiResponse<void>> {
     return apiClient.delete<void>(`${this.baseUrl}/${userId}/actions`);
   }
 }
@@ -167,7 +197,7 @@ export class RoleService {
   /**
    * Create new role
    */
-  async createRole(roleData: Omit<Role, 'id'>): Promise<ApiResponse<Role>> {
+  async createRole(roleData: Omit<Role, "id">): Promise<ApiResponse<Role>> {
     return apiClient.post<Role>(this.baseUrl, roleData);
   }
 
@@ -188,14 +218,22 @@ export class RoleService {
   /**
    * Assign actions to role
    */
-  async assignActions(roleId: number, actionIds: number[]): Promise<ApiResponse<void>> {
-    return apiClient.post<void>(`${this.baseUrl}/${roleId}/actions`, { actionIds });
+  async assignActions(
+    roleId: number,
+    actionIds: number[],
+  ): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`${this.baseUrl}/${roleId}/actions`, {
+      actionIds,
+    });
   }
 
   /**
    * Remove actions from role
    */
-  async removeActions(roleId: number, actionIds: number[]): Promise<ApiResponse<void>> {
+  async removeActions(
+    roleId: number,
+    actionIds: number[],
+  ): Promise<ApiResponse<void>> {
     return apiClient.delete<void>(`${this.baseUrl}/${roleId}/actions`);
   }
 }
@@ -216,8 +254,11 @@ export class ActionService {
   /**
    * Get actions by category
    */
-  async getActionsByCategory(categoryName: string): Promise<ApiResponse<Action[]>> {
+  async getActionsByCategory(
+    categoryName: string,
+  ): Promise<ApiResponse<Action[]>> {
     const params = new URLSearchParams({ category: categoryName });
+
     return apiClient.get<Action[]>(`${this.baseUrl}?${params}`);
   }
 
@@ -231,7 +272,9 @@ export class ActionService {
   /**
    * Create new action
    */
-  async createAction(actionData: Omit<Action, 'id'>): Promise<ApiResponse<Action>> {
+  async createAction(
+    actionData: Omit<Action, "id">,
+  ): Promise<ApiResponse<Action>> {
     return apiClient.post<Action>(this.baseUrl, actionData);
   }
 

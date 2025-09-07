@@ -54,9 +54,10 @@ export default function IndexPage() {
 
   // Function to get progress color based on value
   const getProgressColor = (progress: number) => {
-    if (progress >= 70) return "success";  // Green for high progress
-    if (progress >= 40) return "warning";  // Orange for medium progress
-    return "danger";                       // Red for low progress
+    if (progress >= 70) return "success"; // Green for high progress
+    if (progress >= 40) return "warning"; // Orange for medium progress
+
+    return "danger"; // Red for low progress
   };
 
   // Helper function to translate status
@@ -232,7 +233,7 @@ export default function IndexPage() {
             <Button color="primary" size="lg">
               {t("dashboard.newProject")}
             </Button>
-            <Button variant="bordered" size="lg">
+            <Button size="lg" variant="bordered">
               {t("dashboard.importData")}
             </Button>
           </div>
@@ -292,8 +293,8 @@ export default function IndexPage() {
                   </div>
                   <Chip
                     color={getStatusColor(project.status)}
-                    variant="flat"
                     size="sm"
+                    variant="flat"
                   >
                     {getStatusText(project.status)}
                   </Chip>
@@ -306,10 +307,10 @@ export default function IndexPage() {
                       <span>{project.progress}%</span>
                     </div>
                     <Progress
-                      value={project.progress}
-                      color={getProgressColor(project.progress)}
-                      className="w-full"
                       aria-label={`${t("common.progress")}: ${project.progress}%`}
+                      className="w-full"
+                      color={getProgressColor(project.progress)}
+                      value={project.progress}
                     />
                   </div>
 
@@ -324,17 +325,17 @@ export default function IndexPage() {
                     </AvatarGroup>
                   </div>
 
-                  <Badge content={project.tasks.length} color="primary">
-                    <Button variant="flat" size="sm" fullWidth>
+                  <Badge color="primary" content={project.tasks.length}>
+                    <Button fullWidth size="sm" variant="flat">
                       {t("dashboard.tasks")}
                     </Button>
                   </Badge>
                 </CardBody>
                 <CardFooter>
                   <Button
+                    fullWidth
                     color="primary"
                     variant="light"
-                    fullWidth
                     onPress={() => openProjectDetails(project)}
                   >
                     {t("dashboard.viewDetails")}
@@ -356,17 +357,17 @@ export default function IndexPage() {
               <AccordionItem
                 key={project.id}
                 aria-label={project.name}
-                title={project.name}
-                subtitle={`${project.tasks.length} ${t("dashboard.tasks")}`}
                 startContent={
                   <Chip
                     color={getStatusColor(project.status)}
-                    variant="dot"
                     size="sm"
+                    variant="dot"
                   >
                     {getStatusText(project.status)}
                   </Chip>
                 }
+                subtitle={`${project.tasks.length} ${t("dashboard.tasks")}`}
+                title={project.name}
               >
                 <div className="space-y-3">
                   {project.tasks.map((task) => (
@@ -384,15 +385,15 @@ export default function IndexPage() {
                         <div className="flex items-center gap-2">
                           <Chip
                             color={getStatusColor(task.status)}
-                            variant="flat"
                             size="sm"
+                            variant="flat"
                           >
                             {getStatusText(task.status)}
                           </Chip>
                           <Chip
                             color={getPriorityColor(task.priority)}
-                            variant="dot"
                             size="sm"
+                            variant="dot"
                           >
                             {getPriorityText(task.priority)}
                           </Chip>
@@ -411,7 +412,7 @@ export default function IndexPage() {
       </div>
 
       {/* Project Details Modal */}
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl">
+      <Modal isOpen={isOpen} size="2xl" onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
             <>
@@ -442,9 +443,9 @@ export default function IndexPage() {
                         <span>{selectedProject.progress}%</span>
                       </div>
                       <Progress
-                        value={selectedProject.progress}
-                        color={getProgressColor(selectedProject.progress)}
                         aria-label={`${t("common.progress")}: ${selectedProject.progress}%`}
+                        color={getProgressColor(selectedProject.progress)}
+                        value={selectedProject.progress}
                       />
                     </div>
 
@@ -479,8 +480,8 @@ export default function IndexPage() {
                               <TableCell>
                                 <Chip
                                   color={getStatusColor(task.status)}
-                                  variant="flat"
                                   size="sm"
+                                  variant="flat"
                                 >
                                   {getStatusText(task.status)}
                                 </Chip>
@@ -488,8 +489,8 @@ export default function IndexPage() {
                               <TableCell>
                                 <Chip
                                   color={getPriorityColor(task.priority)}
-                                  variant="dot"
                                   size="sm"
+                                  variant="dot"
                                 >
                                   {getPriorityText(task.priority)}
                                 </Chip>

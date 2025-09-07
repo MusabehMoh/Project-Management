@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+
 import { useAuth } from "@/hooks/useUsers";
 
 interface PermissionGateProps {
@@ -13,12 +14,12 @@ interface PermissionGateProps {
  * Permission Gate Component
  * Controls access to UI elements based on user permissions
  */
-export const PermissionGate = ({ 
-  action, 
-  resource, 
-  role, 
-  children, 
-  fallback = null 
+export const PermissionGate = ({
+  action,
+  resource,
+  role,
+  children,
+  fallback = null,
 }: PermissionGateProps) => {
   const { hasPermission, hasRole } = useAuth();
 
@@ -43,7 +44,9 @@ export const AccessDenied = () => {
     <div className="flex flex-col items-center justify-center h-64 text-center">
       <div className="text-6xl mb-4">🔒</div>
       <h2 className="text-2xl font-bold text-foreground mb-2">Access Denied</h2>
-      <p className="text-default-600">You don't have permission to access this resource.</p>
+      <p className="text-default-600">
+        You don't have permission to access this resource.
+      </p>
     </div>
   );
 };

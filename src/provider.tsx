@@ -4,6 +4,7 @@ import { HeroUIProvider } from "@heroui/system";
 import { useHref, useNavigate } from "react-router-dom";
 
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { SearchProvider } from "@/contexts/SearchContext";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
@@ -17,7 +18,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
       <HeroUIProvider navigate={navigate} useHref={useHref}>
-        {children}
+        <SearchProvider>{children}</SearchProvider>
       </HeroUIProvider>
     </LanguageProvider>
   );

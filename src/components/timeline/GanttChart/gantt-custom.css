@@ -1,0 +1,61 @@
+
+
+/* Sprint bars */
+
+.wx-bar.summary .wx-progress-percent {
+
+  background-color: #4caf50 !important;
+
+}
+
+
+
+/* Task bars */
+
+.wx-bar.task .wx-progress-percent {
+
+  background-color: #2196f3 !important;
+
+}
+
+
+
+/* Subtask bars */
+
+.wx-bar.subtask .wx-progress-percent {
+
+  background-color: #ff9800 !important;
+
+}
+
+
+
+/* Selected skin highlighting */
+
+.wxl-skin.selected {
+
+  border: 2px solid #007bff;
+
+  border-radius: 4px;
+
+  padding: 2px 6px;
+
+}
+
+
+
+/* Dark theme overrides */
+
+.wx-willow-dark-theme .wx-bar.summary .wx-progress-percent { background-color: #81c784 !important; }
+
+.wx-willow-dark-theme .wx-bar.task .wx-progress-percent { background-color: #64b5f6 !important; }
+
+.wx-willow-dark-theme .wx-bar.subtask .wx-progress-percent { background-color: #ffb74d !important; } 
+
+
+
+.wx-bar.summary .wx-progress-percent { background-color: #4caf50 !important; }
+
+.wx-bar.task .wx-progress-percent { background-color: #2196f3 !important; }
+
+.wx-bar.subtask .wx-progress-percent { background-color: #ff9800 !important; }

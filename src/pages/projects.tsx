@@ -1,3 +1,7 @@
+import type { Unit } from "@/types/unit";
+import type { EmployeeSearchResult } from "@/types/user";
+import type { MemberSearchResult } from "@/types/timeline";
+
 import { useState, useEffect } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -8,8 +12,6 @@ import { DatePicker } from "@heroui/date-picker";
 import { Avatar } from "@heroui/avatar";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Spinner } from "@heroui/spinner";
-import { Pagination } from "@heroui/react";
-import { Tooltip } from "@heroui/tooltip";
 import {
   Modal,
   ModalContent,
@@ -33,13 +35,29 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 import { parseDate } from "@internationalized/date";
+import toast from "react-hot-toast";
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PlusIcon, EditIcon, DeleteIcon, MoreVerticalIcon, CalendarIcon } from "@/components/icons";
+import { projectService } from "@/services/api";
+import {
+  PlusIcon,
+  EditIcon,
+  DeleteIcon,
+  MoreVerticalIcon,
+  CalendarIcon,
+  InfoIcon,
+  SendIcon,
+  DownloadIcon,
+} from "@/components/icons";
 import { GlobalPagination } from "@/components/GlobalPagination";
+import { UnitSelector } from "@/components/UnitSelector";
+import { ProjectDetailsModal } from "@/components/ProjectDetailsModal";
 import { useProjects } from "@/hooks/useProjects";
-import { Project, ProjectFormData, User } from "@/types/project";
+import { useProjectStatus } from "@/hooks/useProjectStatus";
+import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
+import useTeamSearch from "@/hooks/useTeamSearch";
+import { Project, ProjectFormData } from "@/types/project";
 
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
@@ -48,6 +66,11 @@ export default function ProjectsPage() {
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
     onOpenChange: onDeleteOpenChange,
+  } = useDisclosure();
+  const {
+    isOpen: isDetailsOpen,
+    onOpen: onDetailsOpen,
+    onOpenChange: onDetailsOpenChange,
   } = useDisclosure();
 
   // Use the projects hook for data management
@@ -73,166 +96,281 @@ export default function ProjectsPage() {
     handlePageSizeChange,
   } = useProjects();
 
-  // Initialize search results when users are loaded
-  useEffect(() => {
-    if (users.length > 0) {
-      // Initialize with empty search to show all users initially
-      handleOwnerSearch("");
-      handleAlternativeOwnerSearch("");
-    }
-  }, [users]);
+  // Phases hook for dynamic phase management
+  const {
+    phases,
+    loading: phasesLoading,
+    getProjectStatusName,
+  } = useProjectStatus();
+
+  // Employee search hooks for project owner and alternative owner
+  const {
+    employees: ownerEmployees,
+    loading: ownerSearchLoading,
+    searchEmployees: searchOwnerEmployees,
+    clearResults: clearOwnerResults,
+  } = useEmployeeSearch({
+    minLength: 1,
+    maxResults: 20,
+    loadInitialResults: false,
+  });
+
+  const {
+    employees: alternativeOwnerEmployees,
+    loading: alternativeOwnerSearchLoading,
+    searchEmployees: searchAlternativeOwnerEmployees,
+    clearResults: clearAlternativeOwnerResults,
+  } = useEmployeeSearch({
+    minLength: 1,
+    maxResults: 20,
+    loadInitialResults: false,
+  });
+
+  // Team search hook for analysts selection
+  const {
+    employees: analystEmployees,
+    loading: analystSearchLoading,
+    searchEmployees: searchAnalystEmployees,
+    clearResults: clearAnalystResults,
+  } = useTeamSearch({
+    minLength: 1,
+    maxResults: 20,
+    loadInitialResults: false,
+  });
+
+  // State for selected employees
+  const [selectedOwner, setSelectedOwner] =
+    useState<EmployeeSearchResult | null>(null);
+  const [selectedAlternativeOwner, setSelectedAlternativeOwner] =
+    useState<EmployeeSearchResult | null>(null);
+
+  // State for selected analysts (multiple selection)
+  const [selectedAnalysts, setSelectedAnalysts] = useState<
+    MemberSearchResult[]
+  >([]);
+  const [analystInputValue, setAnalystInputValue] = useState<string>("");
+
+  // State for input values to handle manual typing and clearing
+  const [ownerInputValue, setOwnerInputValue] = useState<string>("");
+  const [alternativeOwnerInputValue, setAlternativeOwnerInputValue] =
+    useState<string>("");
+
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState<{
+    applicationName?: string;
+    projectOwner?: string;
+    owningUnit?: string;
+    startDate?: string;
+    expectedCompletionDate?: string;
+  }>({});
 
   // Keyboard shortcuts for pagination
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only handle if no input is focused
-      if (document.activeElement?.tagName === 'INPUT') return;
-      
-      if (event.key === 'ArrowLeft' && event.ctrlKey && currentPage > 1) {
+      if (document.activeElement?.tagName === "INPUT") return;
+
+      if (event.key === "ArrowLeft" && event.ctrlKey && currentPage > 1) {
         event.preventDefault();
         handlePageChange(currentPage - 1);
-      } else if (event.key === 'ArrowRight' && event.ctrlKey && currentPage < totalPages) {
+      } else if (
+        event.key === "ArrowRight" &&
+        event.ctrlKey &&
+        currentPage < totalPages
+      ) {
         event.preventDefault();
         handlePageChange(currentPage + 1);
-      } else if (event.key === 'Home' && event.ctrlKey && currentPage > 1) {
+      } else if (event.key === "Home" && event.ctrlKey && currentPage > 1) {
         event.preventDefault();
         handlePageChange(1);
-      } else if (event.key === 'End' && event.ctrlKey && currentPage < totalPages) {
+      } else if (
+        event.key === "End" &&
+        event.ctrlKey &&
+        currentPage < totalPages
+      ) {
         event.preventDefault();
         handlePageChange(totalPages);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [currentPage, totalPages, handlePageChange]);
 
-  // Search functionality for users - matching users tab pattern
-  const [ownerSearchValue, setOwnerSearchValue] = useState("");
-  const [alternativeOwnerSearchValue, setAlternativeOwnerSearchValue] = useState("");
-  const [ownerSearchResults, setOwnerSearchResults] = useState<User[]>([]);
-  const [alternativeOwnerSearchResults, setAlternativeOwnerSearchResults] = useState<User[]>([]);
-  const [selectedOwner, setSelectedOwner] = useState<User | null>(null);
-  const [selectedAlternativeOwner, setSelectedAlternativeOwner] = useState<User | null>(null);
-
-  // Handle owner search - matching users tab pattern
-  const handleOwnerSearch = async (value: string) => {
-    setOwnerSearchValue(value);
-    
-    // Filter users based on search value
-    try {
-      const results = filterUsers(value);
-      setOwnerSearchResults(results);
-    } catch (error) {
-      console.error("Error searching owner:", error);
-      setOwnerSearchResults([]);
-    }
-  };
-
-  // Handle alternative owner search - matching users tab pattern  
-  const handleAlternativeOwnerSearch = async (value: string) => {
-    setAlternativeOwnerSearchValue(value);
-    
-    // Filter users based on search value
-    try {
-      const results = filterUsers(value);
-      setAlternativeOwnerSearchResults(results);
-    } catch (error) {
-      console.error("Error searching alternative owner:", error);
-      setAlternativeOwnerSearchResults([]);
-    }
-  };
-
   // Handle owner selection
-  const handleOwnerSelect = (user: User) => {
-    setSelectedOwner(user);
-    setOwnerSearchValue(user.name);
-    setFormData({ ...formData, projectOwner: user.name });
+  const handleOwnerSelect = (employee: EmployeeSearchResult) => {
+    setSelectedOwner(employee);
+    setOwnerInputValue(`${employee.gradeName} ${employee.fullName}`);
+    setFormData({ ...formData, projectOwner: employee.id });
   };
 
   // Handle alternative owner selection
-  const handleAlternativeOwnerSelect = (user: User) => {
-    setSelectedAlternativeOwner(user);
-    setAlternativeOwnerSearchValue(user.name);
-    setFormData({ ...formData, alternativeOwner: user.name });
+  const handleAlternativeOwnerSelect = (employee: EmployeeSearchResult) => {
+    setSelectedAlternativeOwner(employee);
+    setAlternativeOwnerInputValue(`${employee.gradeName} ${employee.fullName}`);
+    setFormData({ ...formData, alternativeOwner: employee.id });
+  };
+
+  // Handle analyst selection (multiple)
+  const handleAnalystSelect = (analyst: MemberSearchResult) => {
+    // Check if analyst is already selected
+    const isAlreadySelected = selectedAnalysts.some(
+      (selected) => selected.id === analyst.id,
+    );
+
+    if (!isAlreadySelected) {
+      const updatedAnalysts = [...selectedAnalysts, analyst];
+      setSelectedAnalysts(updatedAnalysts);
+      setFormData({
+        ...formData,
+        analysts: updatedAnalysts.map((a) => a.id),
+      });
+    }
+
+    // Clear the input
+    setAnalystInputValue("");
+  };
+
+  // Handle analyst removal
+  const handleAnalystRemove = (analystId: number) => {
+    const updatedAnalysts = selectedAnalysts.filter(
+      (analyst) => analyst.id !== analystId,
+    );
+    setSelectedAnalysts(updatedAnalysts);
+    setFormData({
+      ...formData,
+      analysts: updatedAnalysts.map((a) => a.id),
+    });
   };
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedProjectForDetails, setSelectedProjectForDetails] =
+    useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<Unit | undefined>(undefined);
   const [formData, setFormData] = useState<ProjectFormData>({
     applicationName: "",
-    projectOwner: "",
-    alternativeOwner: "",
-    owningUnit: "",
+    projectOwner: 0, // Changed to numeric ID
+    alternativeOwner: 0, // Changed to numeric ID
+    owningUnit: 0, // Changed to numeric ID
+    analysts: [], // Array of analyst IDs
     startDate: null,
     expectedCompletionDate: null,
     description: "",
     remarks: "",
-    status: "planning",
+    status: 1, // Default to phase 1 (Under Study)
   });
 
-  const statusOptions = [
-    { key: "planning", label: "Planning" },
-    { key: "active", label: "Active" },
-    { key: "on-hold", label: "On Hold" },
-    { key: "completed", label: "Completed" },
-    { key: "cancelled", label: "Cancelled" },
-  ];
+  // Validation function
+  const validateForm = () => {
+    const errors: typeof validationErrors = {};
 
-  const getStatusColor = (status: string) => {
+    if (!formData.applicationName.trim()) {
+      errors.applicationName = t("projects.validation.applicationNameRequired");
+    }
+
+    if (!formData.projectOwner || formData.projectOwner === 0) {
+      errors.projectOwner = t("projects.validation.projectOwnerRequired");
+    }
+
+    if (!formData.owningUnit) {
+      errors.owningUnit = t("projects.validation.owningUnitRequired");
+    }
+
+    if (!formData.startDate) {
+      errors.startDate = t("projects.validation.startDateRequired");
+    }
+
+    if (!formData.expectedCompletionDate) {
+      errors.expectedCompletionDate = t(
+        "projects.validation.expectedCompletionRequired",
+      );
+    }
+
+    setValidationErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
+  // Helper function to get user name by ID
+  const getUserNameById = (userId: number): string => {
+    if (!userId) return "Unknown";
+    const user = users.find((u) => u.id === userId);
+
+    return user?.name || `User #${userId}`;
+  };
+
+  // Helper function to get user by ID
+  const getUserById = (userId: number) => {
+    if (!userId) return null;
+
+    return users.find((u) => u.id === userId) || null;
+  };
+
+  // Helper function to get unit name by ID
+  const getUnitNameById = (unitId: number): string => {
+    if (!unitId) return "Unknown Unit";
+    // TODO: This should use actual units data when available
+    // For now, return a placeholder based on the ID
+    const unitNames = {
+      1: "Information Technology Division",
+      2: "Finance and Budgeting",
+      3: "Operations and Strategic Planning",
+      4: "Research and Development",
+      5: "Human Resources Division",
+    };
+
+    return unitNames[unitId as keyof typeof unitNames] || `Unit #${unitId}`;
+  };
+
+  const getStatusColor = (status: number) => {
     switch (status) {
-      case "active":
-        return "success";
-      case "completed":
-        return "primary";
-      case "on-hold":
-        return "warning";
-      case "planning":
+      case 1: // Under Study
         return "secondary";
-      case "cancelled":
-        return "danger";
+      case 2: // Under Development
+        return "primary";
+      case 3: // Testing Environment
+        return "warning";
+      case 4: // Operating Environment
+        return "success";
+      case 5: // Production Environment
+        return "success";
       default:
         return "default";
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "planning":
-        return "Planning";
-      case "active":
-        return "Active";
-      case "on-hold":
-        return "On Hold";
-      case "completed":
-        return "Completed";
-      case "cancelled":
-        return "Cancelled";
-      default:
-        return status;
-    }
+  const getStatusText = (status: number) => {
+    return getProjectStatusName(status);
   };
 
   const handleAddProject = () => {
     setIsEditing(false);
     setSelectedProject(null);
-    setOwnerSearchValue("");
-    setAlternativeOwnerSearchValue("");
-    setOwnerSearchResults([]);
-    setAlternativeOwnerSearchResults([]);
+    setSelectedUnit(undefined);
     setSelectedOwner(null);
     setSelectedAlternativeOwner(null);
+    setSelectedAnalysts([]);
+    setOwnerInputValue("");
+    setAlternativeOwnerInputValue("");
+    setAnalystInputValue("");
+    setValidationErrors({});
+    clearOwnerResults();
+    clearAlternativeOwnerResults();
+    clearAnalystResults();
     setFormData({
       applicationName: "",
-      projectOwner: "",
-      alternativeOwner: "",
-      owningUnit: "",
+      projectOwner: 0, // Reset to 0 for numeric ID
+      alternativeOwner: 0, // Reset to 0 for numeric ID
+      owningUnit: 0, // Reset to 0 for numeric ID
+      analysts: [], // Reset analysts array
       startDate: null,
       expectedCompletionDate: null,
       description: "",
       remarks: "",
-      status: "planning",
+      status: 1, // Default to phase 1 (Under Study)
     });
     onOpen();
   };
@@ -240,26 +378,101 @@ export default function ProjectsPage() {
   const handleEditProject = (project: Project) => {
     setIsEditing(true);
     setSelectedProject(project);
-    setOwnerSearchValue(project.projectOwner);
-    setAlternativeOwnerSearchValue(project.alternativeOwner);
-    
-    // Initialize search results for editing
-    const ownerResults = filterUsers(project.projectOwner);
-    const altOwnerResults = filterUsers(project.alternativeOwner);
-    setOwnerSearchResults(ownerResults);
-    setAlternativeOwnerSearchResults(altOwnerResults);
-    
-    // Set selected users for editing
-    setSelectedOwner(ownerResults.find(u => u.name === project.projectOwner) || null);
-    setSelectedAlternativeOwner(altOwnerResults.find(u => u.name === project.alternativeOwner) || null);
-    
+    setValidationErrors({});
+
+    // Find the unit by ID from project.owningUnitId
+    // For now, create a mock unit object based on the ID
+    // TODO: Replace this with actual unit lookup when units hook is available
+    const mockUnit = {
+      id: project.owningUnitId,
+      name: project.owningUnit,
+      nameAr: project.owningUnit, // TODO: Add Arabic names
+      code: `UNIT${project.owningUnitId}`,
+      parentId: undefined,
+      level: 1,
+      isActive: true,
+      children: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setSelectedUnit(mockUnit);
+
+    // Find the employees by their IDs and set them as selected
+    const ownerEmployee = users.find((u) => u.id === project.projectOwnerId);
+    const altOwnerEmployee = users.find(
+      (u) => u.id === project.alternativeOwnerId,
+    );
+
+    // Convert User objects to EmployeeSearchResult objects
+    const ownerResult = ownerEmployee
+      ? {
+          id: ownerEmployee.id,
+          userName: ownerEmployee.userName,
+          fullName: ownerEmployee.fullName,
+          militaryNumber: ownerEmployee.militaryNumber,
+          gradeName: ownerEmployee.gradeName,
+          statusId: ownerEmployee.isVisible ? 1 : 0,
+        }
+      : null;
+
+    const altOwnerResult = altOwnerEmployee
+      ? {
+          id: altOwnerEmployee.id,
+          userName: altOwnerEmployee.userName,
+          fullName: altOwnerEmployee.fullName,
+          militaryNumber: altOwnerEmployee.militaryNumber,
+          gradeName: altOwnerEmployee.gradeName,
+          statusId: altOwnerEmployee.isVisible ? 1 : 0,
+        }
+      : null;
+
+    setSelectedOwner(ownerResult);
+    setSelectedAlternativeOwner(altOwnerResult);
+
+    // Handle analysts if they exist in the project
+    const analystResults: MemberSearchResult[] = [];
+    if (project.analystIds && project.analystIds.length > 0) {
+      // Convert analyst IDs to MemberSearchResult objects
+      project.analystIds.forEach((analystId) => {
+        const analystUser = users.find((u) => u.id === analystId);
+
+        if (analystUser) {
+          analystResults.push({
+            id: analystUser.id,
+            userName: analystUser.userName,
+            fullName: analystUser.fullName,
+            militaryNumber: analystUser.militaryNumber,
+            gradeName: analystUser.gradeName,
+            statusId: analystUser.isVisible ? 1 : 0,
+            department: analystUser.department,
+          });
+        }
+      });
+    }
+    setSelectedAnalysts(analystResults);
+
+    // Set input values
+    setOwnerInputValue(
+      ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : "",
+    );
+    setAlternativeOwnerInputValue(
+      altOwnerResult
+        ? `${altOwnerResult.gradeName} ${altOwnerResult.fullName}`
+        : "",
+    );
+    setAnalystInputValue("");
+
     setFormData({
       applicationName: project.applicationName,
-      projectOwner: project.projectOwner,
-      alternativeOwner: project.alternativeOwner,
-      owningUnit: project.owningUnit,
+      projectOwner: project.projectOwnerId, // Use numeric ID
+      alternativeOwner: project.alternativeOwnerId, // Use numeric ID
+      owningUnit: project.owningUnitId, // Use numeric ID
+      analysts: project.analystIds || [], // Use analyst IDs or empty array
       startDate: parseDate(project.startDate),
-      expectedCompletionDate: parseDate(project.expectedCompletionDate),
+      expectedCompletionDate: project.expectedCompletionDate
+        ? parseDate(project.expectedCompletionDate)
+        : null,
       description: project.description,
       remarks: project.remarks,
       status: project.status,
@@ -272,14 +485,50 @@ export default function ProjectsPage() {
     onDeleteOpen();
   };
 
+  const handleSendProject = async (project: Project) => {
+    try {
+      const result = await projectService.sendProject(project.id);
+
+      if (result.success) {
+        toast.success(
+          t("projects.sendSuccess") || "Project sent for review successfully",
+        );
+        refreshData(); // Refresh the project list to show updated status
+      } else {
+        toast.error(
+          result.message ||
+            t("projects.sendError") ||
+            "Failed to send project for review",
+        );
+      }
+    } catch (error) {
+      console.error("Error sending project for review:", error);
+      toast.error(
+        t("common.unexpectedError") || "An unexpected error occurred",
+      );
+    }
+  };
+
+  const handleViewDetails = (project: Project) => {
+    setSelectedProjectForDetails(project);
+    onDetailsOpen();
+  };
+
+  const handleDetailsClose = () => {
+    setSelectedProjectForDetails(null);
+    onDetailsOpenChange();
+  };
+
   const confirmDelete = async () => {
     if (projectToDelete) {
       try {
         const success = await deleteProject(projectToDelete.id);
+
         if (success) {
           console.log("Project deleted successfully");
           // If we're on the last page and it becomes empty, go to previous page
           const remainingOnPage = projects.length - 1;
+
           if (remainingOnPage === 0 && currentPage > 1) {
             handlePageChange(currentPage - 1);
           } else {
@@ -296,6 +545,11 @@ export default function ProjectsPage() {
   };
 
   const handleSave = async () => {
+    // Validate form before saving
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       if (isEditing && selectedProject) {
         // Edit existing project
@@ -303,11 +557,14 @@ export default function ProjectsPage() {
           id: selectedProject.id,
           ...formData,
           startDate: formData.startDate?.toString() || "",
-          expectedCompletionDate: formData.expectedCompletionDate?.toString() || "",
-          status: formData.status as Project["status"],
+          expectedCompletionDate:
+            formData.expectedCompletionDate?.toString() || "",
+          status: formData.status, // Already numeric
+          analysts: formData.analysts, // Include analysts array
         };
-        
+
         const updatedProject = await updateProject(updateData);
+
         if (updatedProject) {
           console.log("Project updated successfully");
           // Stay on current page after update
@@ -318,11 +575,14 @@ export default function ProjectsPage() {
         const createData = {
           ...formData,
           startDate: formData.startDate?.toString() || "",
-          expectedCompletionDate: formData.expectedCompletionDate?.toString() || "",
-          status: formData.status as Project["status"],
+          expectedCompletionDate:
+            formData.expectedCompletionDate?.toString() || "",
+          status: formData.status, // Already numeric
+          analysts: formData.analysts, // Include analysts array
         };
-        
+
         const newProject = await createProject(createData);
+
         if (newProject) {
           console.log("Project created successfully");
           // Go to first page to see the new project (assuming newest first)
@@ -335,7 +595,73 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleExportData = () => {
+    try {
+      // Check if there are projects to export
+      if (!projects || projects.length === 0) {
+        toast.error(
+          t("projects.noDataToExport") || "No projects available to export",
+        );
+        return;
+      }
 
+      // Prepare the data for export
+      const exportData = projects.map((project) => ({
+        "Application Name": project.applicationName,
+        "Project Owner": project.projectOwner || "Unknown",
+        "Alternative Owner": project.alternativeOwner || "Unknown",
+        "Owning Unit": project.owningUnit || "Unknown Unit",
+        "Start Date": project.startDate,
+        "Expected Completion Date": project.expectedCompletionDate,
+        Status: getStatusText(project.status),
+        Description: project.description || "",
+        Remarks: project.remarks || "",
+      }));
+
+      // Convert to CSV format
+      const headers = Object.keys(exportData[0] || {});
+      const csvContent = [
+        headers.join(","),
+        ...exportData.map((row) =>
+          headers
+            .map((header) => {
+              const value = row[header as keyof typeof row] || "";
+
+              // Escape commas and quotes in CSV
+              return `"${String(value).replace(/"/g, '""')}"`;
+            })
+            .join(","),
+        ),
+      ].join("\n");
+
+      // Add UTF-8 BOM for proper Arabic text encoding
+      const BOM = "\uFEFF";
+      const csvWithBOM = BOM + csvContent;
+
+      // Create and download the file
+      const blob = new Blob([csvWithBOM], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `projects_export_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      link.style.visibility = "hidden";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(
+        t("projects.exportSuccess") || "Projects exported successfully",
+      );
+    } catch (error) {
+      console.error("Error exporting projects:", error);
+      toast.error(t("projects.exportError") || "Failed to export projects");
+    }
+  };
 
   return (
     <DefaultLayout>
@@ -347,13 +673,15 @@ export default function ProjectsPage() {
               <div className="flex items-center gap-3">
                 <div className="text-danger">⚠️</div>
                 <div>
-                  <p className="text-danger font-medium">Error Loading Projects</p>
+                  <p className="text-danger font-medium">
+                    Error Loading Projects
+                  </p>
                   <p className="text-sm text-default-600">{error}</p>
-                  <Button 
-                    size="sm" 
-                    color="danger" 
-                    variant="light" 
+                  <Button
                     className="mt-2"
+                    color="danger"
+                    size="sm"
+                    variant="light"
                     onPress={() => {
                       clearError();
                       refreshData();
@@ -372,59 +700,91 @@ export default function ProjectsPage() {
           <h1 className="text-4xl font-bold text-foreground">
             {t("projects.title")}
           </h1>
-          <p className="text-lg text-default-600">
-            {t("projects.subtitle")}
-          </p>
+          <p className="text-lg text-default-600">{t("projects.subtitle")}</p>
 
           <div className="flex gap-4 justify-center">
-            <Button 
-              color="primary" 
-              size="lg" 
-              startContent={<PlusIcon />} 
-              onPress={handleAddProject}
+            <Button
+              color="primary"
               isDisabled={loading}
+              size="lg"
+              startContent={<PlusIcon />}
+              onPress={handleAddProject}
             >
               {t("projects.newProject")}
             </Button>
-            <Button variant="bordered" size="lg" isDisabled={loading}>
-              {t("projects.importProjects")}
-            </Button>
-            <Button variant="bordered" size="lg">
+
+            <Button
+              isDisabled={loading || projects.length === 0}
+              onPress={handleExportData}
+              size="lg"
+              startContent={<DownloadIcon />}
+              variant="bordered"
+            >
               {t("projects.exportData")}
             </Button>
           </div>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <Card className="p-4">
             <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-primary">{stats.total}</p>
-              <p className="text-sm text-default-600">{t("projects.totalProjects")}</p>
+              <p className="text-3xl font-bold text-primary">
+                {stats?.total || 0}
+              </p>
+              <p className="text-sm text-default-600">
+                {t("projects.totalProjects")}
+              </p>
             </div>
           </Card>
           <Card className="p-4">
             <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-success">{stats.active}</p>
-              <p className="text-sm text-default-600">{t("projects.active")}</p>
+              <p className="text-3xl font-bold text-secondary">
+                {stats?.new || 0}
+              </p>
+              <p className="text-sm text-default-600">
+                {language === "ar" ? "جديد" : "New"}
+              </p>
             </div>
           </Card>
           <Card className="p-4">
             <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-secondary">{stats.planning}</p>
-              <p className="text-sm text-default-600">{t("projects.planning")}</p>
+              <p className="text-3xl font-bold text-warning">
+                {stats?.delayed || 0}
+              </p>
+              <p className="text-sm text-default-600">
+                {language === "ar" ? "مؤجل" : "Delayed"}
+              </p>
             </div>
           </Card>
           <Card className="p-4">
             <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-warning">{stats.onHold}</p>
-              <p className="text-sm text-default-600">{t("projects.onHold")}</p>
+              <p className="text-3xl font-bold text-secondary">
+                {stats?.underReview || 0}
+              </p>
+              <p className="text-sm text-default-600">
+                {language === "ar" ? "قيد الدراسة" : "Under Review"}
+              </p>
             </div>
           </Card>
           <Card className="p-4">
             <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-primary">{stats.completed}</p>
-              <p className="text-sm text-default-600">{t("projects.completed")}</p>
+              <p className="text-3xl font-bold text-primary">
+                {stats?.underDevelopment || 0}
+              </p>
+              <p className="text-sm text-default-600">
+                {language === "ar" ? "قيد التطوير" : "Under Development"}
+              </p>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-center space-y-2">
+              <p className="text-3xl font-bold text-success">
+                {stats?.production || 0}
+              </p>
+              <p className="text-sm text-default-600">
+                {language === "ar" ? "بيئة الانتاج" : "Production Environment"}
+              </p>
             </div>
           </Card>
         </div>
@@ -435,16 +795,19 @@ export default function ProjectsPage() {
             <h2 className="text-2xl font-semibold text-foreground">
               {t("projects.allProjects")}
             </h2>
-            
+
             {/* Page Size Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-default-600">{t("common.show")}:</span>
+              <span className="text-sm text-default-600">
+                {t("common.show")}:
+              </span>
               <Select
-                size="sm"
                 className="w-20"
                 selectedKeys={[pageSize.toString()]}
+                size="sm"
                 onSelectionChange={(keys) => {
                   const newSize = parseInt(Array.from(keys)[0] as string);
+
                   handlePageSizeChange(newSize);
                 }}
               >
@@ -454,14 +817,20 @@ export default function ProjectsPage() {
                 <SelectItem key="50">50</SelectItem>
                 <SelectItem key="100">100</SelectItem>
               </Select>
-              <span className="text-sm text-default-600">{t("pagination.perPage")}</span>
+              <span className="text-sm text-default-600">
+                {t("pagination.perPage")}
+              </span>
             </div>
           </div>
 
           {/* Results info */}
           {!loading && (
             <div className="text-sm text-default-600">
-              {t("pagination.showing")} {((currentPage - 1) * pageSize) + 1} {t("pagination.to")} {Math.min(currentPage * pageSize, totalProjects)} {t("pagination.of")} {totalProjects} {t("projects.totalProjects").toLowerCase()}
+              {t("pagination.showing")} {(currentPage - 1) * pageSize + 1}{" "}
+              {t("pagination.to")}{" "}
+              {Math.min(currentPage * pageSize, totalProjects)}{" "}
+              {t("pagination.of")} {totalProjects}{" "}
+              {t("projects.totalProjects").toLowerCase()}
             </div>
           )}
 
@@ -470,11 +839,16 @@ export default function ProjectsPage() {
               {loading ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="text-center space-y-4">
-                    <Spinner size="lg" color="primary" />
+                    <Spinner color="primary" size="lg" />
                     <div>
                       <p className="text-default-600">{t("common.loading")}</p>
                       <p className="text-sm text-default-500">
-                        {currentPage > 1 ? t("pagination.loadingPage").replace("{page}", currentPage.toString()) : t("common.pleaseWait")}
+                        {currentPage > 1
+                          ? t("pagination.loadingPage").replace(
+                              "{page}",
+                              currentPage.toString(),
+                            )
+                          : t("common.pleaseWait")}
                       </p>
                     </div>
                   </div>
@@ -484,18 +858,21 @@ export default function ProjectsPage() {
                   <div className="text-center space-y-4">
                     <div className="text-6xl">📋</div>
                     <div>
-                      <p className="text-lg text-default-600">{t("projects.noProjectsFound") || "No projects found"}</p>
+                      <p className="text-lg text-default-600">
+                        {t("projects.noProjectsFound") || "No projects found"}
+                      </p>
                       <p className="text-sm text-default-500">
-                        {totalProjects > 0 
-                          ? t("projects.noProjectsOnPage") || `No projects on page ${currentPage}. Try a different page.`
-                          : t("projects.startFirstProject") || 'Start by creating your first project.'
-                        }
+                        {totalProjects > 0
+                          ? t("projects.noProjectsOnPage") ||
+                            `No projects on page ${currentPage}. Try a different page.`
+                          : t("projects.startFirstProject") ||
+                            "Start by creating your first project."}
                       </p>
                     </div>
-                    <Button 
-                      color="primary" 
-                      onPress={handleAddProject}
+                    <Button
+                      color="primary"
                       startContent={<PlusIcon />}
+                      onPress={handleAddProject}
                     >
                       {t("projects.newProject")}
                     </Button>
@@ -504,88 +881,128 @@ export default function ProjectsPage() {
               ) : (
                 <Table aria-label="Projects table">
                   <TableHeader>
-                    <TableColumn className="min-w-[200px]">{t("projects.applicationName")}</TableColumn>
-                    <TableColumn className="min-w-[150px]">{t("projects.projectOwner")}</TableColumn>
-                    <TableColumn className="min-w-[150px]">{t("projects.alternativeOwner")}</TableColumn>
-                    <TableColumn className="min-w-[120px]">{t("projects.owningUnit")}</TableColumn>
-                    <TableColumn className="min-w-[110px]">{t("projects.startDate")}</TableColumn>
-                    <TableColumn className="min-w-[120px]">{t("projects.expectedCompletion")}</TableColumn>
-                    <TableColumn className="min-w-[100px]">{t("projects.status")}</TableColumn>
-                    <TableColumn className="min-w-[80px]">{t("projects.actions")}</TableColumn>
+                    <TableColumn className="min-w-[200px]">
+                      {t("projects.applicationName")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[150px]">
+                      {t("projects.projectOwner")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[150px]">
+                      {t("projects.alternativeOwner")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[120px]">
+                      {t("projects.owningUnit")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[110px]">
+                      {t("projects.startDate")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[120px]">
+                      {t("projects.expectedCompletion")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[100px]">
+                      {t("projects.status")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[80px]">
+                      {t("projects.actions")}
+                    </TableColumn>
                   </TableHeader>
                   <TableBody>
                     {projects.map((project) => (
-                    <TableRow key={project.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <p className="font-semibold">{project.applicationName}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar name={project.projectOwner} size="sm" />
-                          <span>{project.projectOwner}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar name={project.alternativeOwner} size="sm" />
-                          <span>{project.alternativeOwner}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{project.owningUnit}</TableCell>
-                      <TableCell>{project.startDate}</TableCell>
-                      <TableCell>{project.expectedCompletionDate}</TableCell>
-                      <TableCell>
-                        <Chip
-                          color={getStatusColor(project.status)}
-                          variant="flat"
-                          size="sm"
-                        >
-                          {getStatusText(project.status)}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button isIconOnly variant="light" size="sm">
-                              <MoreVerticalIcon />
-                            </Button>
-                          </DropdownTrigger>
-                          <DropdownMenu aria-label="Project actions">
-                            <DropdownItem
-                              key="timeline"
-                              startContent={<CalendarIcon />}
-                              onPress={() => {
-                                // Navigate to timeline with project ID
-                                window.location.href = `/timeline?projectId=${project.id}`;
-                              }}
-                            >
-                              View Timeline
-                            </DropdownItem>
-                            <DropdownItem
-                              key="edit"
-                              startContent={<EditIcon />}
-                              onPress={() => handleEditProject(project)}
-                            >
-                              {t("projects.editProject")}
-                            </DropdownItem>
-                            <DropdownItem
-                              key="delete"
-                              className="text-danger"
-                              color="danger"
-                              startContent={<DeleteIcon />}
-                              onPress={() => handleDeleteProject(project)}
-                            >
-                              {t("projects.deleteProject")}
-                            </DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      <TableRow key={project.id}>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <p className="font-semibold">
+                              {project.applicationName}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar
+                              name={project.projectOwner || "Unknown"}
+                              size="sm"
+                            />
+                            <span>{project.projectOwner || "Unknown"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar
+                              name={project.alternativeOwner || "Unknown"}
+                              size="sm"
+                            />
+                            <span>{project.alternativeOwner || "Unknown"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {project.owningUnit || "Unknown Unit"}
+                        </TableCell>
+                        <TableCell>{project.startDate}</TableCell>
+                        <TableCell>{project.expectedCompletionDate}</TableCell>
+                        <TableCell>
+                          <Chip
+                            color={getStatusColor(project.status)}
+                            size="sm"
+                            variant="flat"
+                          >
+                            {getStatusText(project.status)}
+                          </Chip>
+                        </TableCell>
+                        <TableCell>
+                          <Dropdown>
+                            <DropdownTrigger>
+                              <Button isIconOnly size="sm" variant="light">
+                                <MoreVerticalIcon />
+                              </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu aria-label="Project actions">
+                              <DropdownItem
+                                key="details"
+                                startContent={<InfoIcon />}
+                                onPress={() => handleViewDetails(project)}
+                              >
+                                {t("projects.viewDetails")}
+                              </DropdownItem>
+                              <DropdownItem
+                                key="timeline"
+                                startContent={<CalendarIcon />}
+                                onPress={() => {
+                                  // Navigate to timeline with project ID
+                                  window.location.href = `/timeline?projectId=${project.id}`;
+                                }}
+                              >
+                                View Timeline
+                              </DropdownItem>
+                              <DropdownItem
+                                key="edit"
+                                startContent={<EditIcon />}
+                                onPress={() => handleEditProject(project)}
+                              >
+                                {t("projects.editProject")}
+                              </DropdownItem>
+                              <DropdownItem
+                                key="send"
+                                startContent={<SendIcon />}
+                                onPress={() => handleSendProject(project)}
+                              >
+                                {t("projects.send")}
+                              </DropdownItem>
+                              <DropdownItem
+                                key="delete"
+                                className="text-danger"
+                                color="danger"
+                                startContent={<DeleteIcon />}
+                                onPress={() => handleDeleteProject(project)}
+                              >
+                                {t("projects.deleteProject")}
+                              </DropdownItem>
+                            </DropdownMenu>
+                          </Dropdown>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
             </CardBody>
           </Card>
@@ -593,26 +1010,33 @@ export default function ProjectsPage() {
           {/* Pagination */}
           <div className="flex justify-center py-6">
             <GlobalPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={totalProjects}
-              pageSize={pageSize}
-              onPageChange={handlePageChange}
-              isLoading={loading}
-              showInfo={true}
               className="w-full max-w-md"
+              currentPage={currentPage}
+              isLoading={loading}
+              pageSize={pageSize}
+              showInfo={true}
+              totalItems={totalProjects}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
             />
           </div>
         </div>
       </div>
 
       {/* Add/Edit Project Modal */}
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="3xl" scrollBehavior="inside">
+      <Modal
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="3xl"
+        onOpenChange={onOpenChange}
+      >
         <ModalContent>
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                {isEditing ? t("projects.editProject") : t("projects.addProject")}
+                {isEditing
+                  ? t("projects.editProject")
+                  : t("projects.addProject")}
                 <p className="text-sm text-default-500 font-normal">
                   {isEditing
                     ? t("projects.updateProjectInfo")
@@ -622,47 +1046,101 @@ export default function ProjectsPage() {
               <ModalBody>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
+                    errorMessage={validationErrors.applicationName}
+                    isInvalid={!!validationErrors.applicationName}
                     label={t("projects.applicationName")}
                     placeholder={t("projects.applicationName")}
                     value={formData.applicationName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, applicationName: e.target.value })
-                    }
-                    isRequired
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        applicationName: e.target.value,
+                      });
+                      // Clear validation error when user starts typing
+                      if (validationErrors.applicationName) {
+                        setValidationErrors({
+                          ...validationErrors,
+                          applicationName: undefined,
+                        });
+                      }
+                    }}
                   />
                   <Autocomplete
+                    isClearable
+                    errorMessage={validationErrors.projectOwner}
+                    inputValue={ownerInputValue}
+                    isInvalid={!!validationErrors.projectOwner}
+                    isLoading={ownerSearchLoading}
+                    items={ownerEmployees}
                     label={t("projects.projectOwner")}
+                    menuTrigger="input"
                     placeholder={t("projects.searchByName")}
-                    inputValue={ownerSearchValue}
-                    onInputChange={handleOwnerSearch}
                     selectedKey={selectedOwner?.id.toString()}
+                    onInputChange={(value) => {
+                      setOwnerInputValue(value);
+                      // Clear selection if input doesn't match the selected owner
+                      if (
+                        selectedOwner &&
+                        value !==
+                          `${selectedOwner.gradeName} ${selectedOwner.fullName}`
+                      ) {
+                        setSelectedOwner(null);
+                        setFormData({ ...formData, projectOwner: 0 });
+                      }
+                      // Clear validation error when user starts typing
+                      if (validationErrors.projectOwner) {
+                        setValidationErrors({
+                          ...validationErrors,
+                          projectOwner: undefined,
+                        });
+                      }
+                      // Search for employees
+                      searchOwnerEmployees(value);
+                    }}
                     onSelectionChange={(key) => {
                       if (key) {
-                        const selectedUser = ownerSearchResults.find(u => u.id.toString() === key);
-                        if (selectedUser) {
-                          handleOwnerSelect(selectedUser);
+                        const selectedEmployee = ownerEmployees.find(
+                          (e) => e.id.toString() === key,
+                        );
+
+                        if (selectedEmployee) {
+                          handleOwnerSelect(selectedEmployee);
                         }
+                      } else {
+                        // Clear selection
+                        setSelectedOwner(null);
+                        setOwnerInputValue("");
+                        setFormData({ ...formData, projectOwner: 0 });
+                      }
+                      // Clear validation error when user selects
+                      if (validationErrors.projectOwner) {
+                        setValidationErrors({
+                          ...validationErrors,
+                          projectOwner: undefined,
+                        });
                       }
                     }}
-                    isRequired
-                    isClearable
-                    menuTrigger="input"
                   >
-                    {ownerSearchResults.map((user) => (
-                      <AutocompleteItem 
-                        key={user.id.toString()}
-                        value={user.id.toString()}
-                        textValue={`${user.name} (${user.militaryNumber})`}
+                    {ownerEmployees.map((employee) => (
+                      <AutocompleteItem
+                        key={employee.id.toString()}
+                        textValue={`${employee.gradeName} ${employee.fullName}`}
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar name={user.name || 'Unknown'} size="sm" />
+                          <Avatar
+                            name={employee.fullName || "Unknown"}
+                            size="sm"
+                          />
                           <div className="flex flex-col">
-                            <span className="font-medium">{user.name || 'Unknown User'}</span>
+                            <span className="font-medium">
+                              {employee.gradeName}{" "}
+                              {employee.fullName || "Unknown User"}
+                            </span>
                             <span className="text-sm text-default-500">
-                              {user.militaryNumber || 'N/A'} | @{user.username || 'unknown'}
+                              {employee.militaryNumber || "N/A"}
                             </span>
                             <span className="text-xs text-default-400">
-                              {user.rank || 'N/A'} - {user.department || 'N/A'}
+                              @{employee.userName || "unknown"}
                             </span>
                           </div>
                         </div>
@@ -670,86 +1148,205 @@ export default function ProjectsPage() {
                     ))}
                   </Autocomplete>
                   <Autocomplete
+                    isClearable
+                    inputValue={alternativeOwnerInputValue}
+                    isLoading={alternativeOwnerSearchLoading}
+                    items={alternativeOwnerEmployees}
                     label={t("projects.alternativeOwner")}
+                    menuTrigger="input"
                     placeholder={t("projects.searchByName")}
-                    inputValue={alternativeOwnerSearchValue}
-                    onInputChange={handleAlternativeOwnerSearch}
                     selectedKey={selectedAlternativeOwner?.id.toString()}
+                    onInputChange={(value) => {
+                      setAlternativeOwnerInputValue(value);
+                      // Clear selection if input doesn't match the selected alternative owner
+                      if (
+                        selectedAlternativeOwner &&
+                        value !==
+                          `${selectedAlternativeOwner.gradeName} ${selectedAlternativeOwner.fullName}`
+                      ) {
+                        setSelectedAlternativeOwner(null);
+                        setFormData({ ...formData, alternativeOwner: 0 });
+                      }
+                      // Search for employees
+                      searchAlternativeOwnerEmployees(value);
+                    }}
                     onSelectionChange={(key) => {
                       if (key) {
-                        const selectedUser = alternativeOwnerSearchResults.find(u => u.id.toString() === key);
-                        if (selectedUser) {
-                          handleAlternativeOwnerSelect(selectedUser);
+                        const selectedEmployee = alternativeOwnerEmployees.find(
+                          (e) => e.id.toString() === key,
+                        );
+
+                        if (selectedEmployee) {
+                          handleAlternativeOwnerSelect(selectedEmployee);
                         }
+                      } else {
+                        // Clear selection
+                        setSelectedAlternativeOwner(null);
+                        setAlternativeOwnerInputValue("");
+                        setFormData({ ...formData, alternativeOwner: 0 });
                       }
                     }}
-                    isClearable
-                    menuTrigger="input"
                   >
-                    {alternativeOwnerSearchResults.map((user) => (
-                      <AutocompleteItem 
-                        key={user.id.toString()}
-                        value={user.id.toString()}
-                        textValue={`${user.name} (${user.militaryNumber})`}
+                    {alternativeOwnerEmployees.map((employee) => (
+                      <AutocompleteItem
+                        key={employee.id.toString()}
+                        textValue={`${employee.gradeName} ${employee.fullName}`}
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar name={user.name || 'Unknown'} size="sm" />
+                          <Avatar
+                            name={employee.fullName || "Unknown"}
+                            size="sm"
+                          />
                           <div className="flex flex-col">
-                            <span className="font-medium">{user.name || 'Unknown User'}</span>
+                            <span className="font-medium">
+                              {employee.gradeName}{" "}
+                              {employee.fullName || "Unknown User"}
+                            </span>
                             <span className="text-sm text-default-500">
-                              {user.militaryNumber || 'N/A'} | @{user.username || 'unknown'}
+                              {employee.militaryNumber || "N/A"}
                             </span>
                             <span className="text-xs text-default-400">
-                              {user.rank || 'N/A'} - {user.department || 'N/A'}
+                              @{employee.userName || "unknown"}
                             </span>
                           </div>
                         </div>
                       </AutocompleteItem>
                     ))}
                   </Autocomplete>
-                  <Select
+
+                  {/* Analysts Selection Field */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("projects.analysts")}
+                    </label>
+                    <Autocomplete
+                      allowsCustomValue
+                      className="max-w-full"
+                      inputValue={analystInputValue}
+                      isLoading={analystSearchLoading}
+                      items={analystEmployees}
+                      label={t("projects.selectAnalysts")}
+                      placeholder={t("projects.searchAnalysts")}
+                      onInputChange={(value) => {
+                        setAnalystInputValue(value);
+                        searchAnalystEmployees(value);
+                      }}
+                      onSelectionChange={(key) => {
+                        if (key) {
+                          const selectedEmployee = analystEmployees.find(
+                            (e) => e.id.toString() === key,
+                          );
+                          if (selectedEmployee) {
+                            handleAnalystSelect(selectedEmployee);
+                          }
+                        }
+                      }}
+                    >
+                      {analystEmployees.map((employee) => (
+                        <AutocompleteItem
+                          key={employee.id.toString()}
+                          textValue={`${employee.gradeName} ${employee.fullName}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar
+                              name={employee.fullName || "Unknown"}
+                              size="sm"
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {employee.gradeName}{" "}
+                                {employee.fullName || "Unknown User"}
+                              </span>
+                              <span className="text-sm text-default-500">
+                                {employee.militaryNumber || "N/A"}
+                              </span>
+                              <span className="text-xs text-default-400">
+                                @{employee.userName || "unknown"}
+                              </span>
+                            </div>
+                          </div>
+                        </AutocompleteItem>
+                      ))}
+                    </Autocomplete>
+
+                    {/* Selected Analysts Display */}
+                    {selectedAnalysts.length > 0 && (
+                      <div className="space-y-2">
+                        <span className="text-sm text-default-600">
+                          {t("projects.selectedAnalysts")}:
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedAnalysts.map((analyst) => (
+                            <Chip
+                              key={analyst.id}
+                              color="primary"
+                              variant="flat"
+                              onClose={() => handleAnalystRemove(analyst.id)}
+                            >
+                              {analyst.gradeName} {analyst.fullName}
+                            </Chip>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <UnitSelector
+                    allowClear
+                    errorMessage={validationErrors.owningUnit}
+                    isInvalid={!!validationErrors.owningUnit}
                     label={t("projects.owningUnit")}
                     placeholder={t("projects.owningUnit")}
-                    selectedKeys={formData.owningUnit ? [formData.owningUnit] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-                      setFormData({ ...formData, owningUnit: selected || "" });
+                    selectedUnit={selectedUnit}
+                    onUnitSelect={(unit) => {
+                      setSelectedUnit(unit);
+                      setFormData({
+                        ...formData,
+                        owningUnit: unit ? unit.id : 0,
+                      });
+                      // Clear validation error when user selects
+                      if (validationErrors.owningUnit) {
+                        setValidationErrors({
+                          ...validationErrors,
+                          owningUnit: undefined,
+                        });
+                      }
                     }}
-                    isRequired
-                  >
-                    {owningUnits.map((unit) => (
-                      <SelectItem 
-                        key={unit.name} 
-                        value={unit.name}
-                        textValue={unit.name}
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-medium">{unit.name}</span>
-                          <span className="text-sm text-default-500">
-                            {unit.code} {unit.commander ? `• ${unit.commander}` : ''}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <DatePicker
-                    label={t("projects.startDate")}
-                    value={formData.startDate}
-                    onChange={(date) =>
-                      setFormData({ ...formData, startDate: date })
-                    }
-                    isRequired
                   />
                   <DatePicker
+                    errorMessage={validationErrors.startDate}
+                    isInvalid={!!validationErrors.startDate}
+                    label={t("projects.startDate")}
+                    value={formData.startDate}
+                    onChange={(date) => {
+                      setFormData({ ...formData, startDate: date });
+                      // Clear validation error when user selects
+                      if (validationErrors.startDate) {
+                        setValidationErrors({
+                          ...validationErrors,
+                          startDate: undefined,
+                        });
+                      }
+                    }}
+                  />
+                  <DatePicker
+                    errorMessage={validationErrors.expectedCompletionDate}
+                    isInvalid={!!validationErrors.expectedCompletionDate}
                     label={t("projects.expectedCompletion")}
                     value={formData.expectedCompletionDate}
-                    onChange={(date) =>
+                    onChange={(date) => {
                       setFormData({
                         ...formData,
                         expectedCompletionDate: date,
-                      })
-                    }
-                    isRequired
+                      });
+                      // Clear validation error when user selects
+                      if (validationErrors.expectedCompletionDate) {
+                        setValidationErrors({
+                          ...validationErrors,
+                          expectedCompletionDate: undefined,
+                        });
+                      }
+                    }}
                   />
                   <div className="md:col-span-2">
                     <Input
@@ -757,9 +1354,11 @@ export default function ProjectsPage() {
                       placeholder={t("projects.description")}
                       value={formData.description}
                       onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
                       }
-                      isRequired
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -773,18 +1372,24 @@ export default function ProjectsPage() {
                     />
                   </div>
                   <Select
+                    isLoading={phasesLoading}
                     label={t("projects.status")}
                     placeholder={t("projects.status")}
-                    selectedKeys={formData.status ? [formData.status] : []}
+                    selectedKeys={
+                      formData.status ? [formData.status.toString()] : []
+                    }
                     onSelectionChange={(keys) => {
                       const selected = Array.from(keys)[0] as string;
-                      setFormData({ ...formData, status: selected || "planning" });
+
+                      setFormData({
+                        ...formData,
+                        status: selected ? parseInt(selected) : 1,
+                      });
                     }}
-                    isRequired
                   >
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status.key}>
-                        {t(`projectStatus.${status.key}`)}
+                    {phases.map((phase) => (
+                      <SelectItem key={phase.code.toString()}>
+                        {language === "ar" ? phase.nameAr : phase.nameEn}
                       </SelectItem>
                     ))}
                   </Select>
@@ -796,19 +1401,12 @@ export default function ProjectsPage() {
                 </Button>
                 <Button
                   color="primary"
-                  onPress={handleSave}
                   isLoading={loading}
-                  isDisabled={
-                    loading ||
-                    !formData.applicationName ||
-                    !formData.projectOwner ||
-                    !formData.owningUnit ||
-                    !formData.startDate ||
-                    !formData.expectedCompletionDate ||
-                    !formData.description
-                  }
+                  onPress={handleSave}
                 >
-                  {isEditing ? t("projects.updateProject") : t("projects.addProject")}
+                  {isEditing
+                    ? t("projects.updateProject")
+                    : t("projects.addProject")}
                 </Button>
               </ModalFooter>
             </>
@@ -817,7 +1415,7 @@ export default function ProjectsPage() {
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal isOpen={isDeleteOpen} onOpenChange={onDeleteOpenChange} size="md">
+      <Modal isOpen={isDeleteOpen} size="md" onOpenChange={onDeleteOpenChange}>
         <ModalContent>
           {(onClose) => (
             <>
@@ -826,19 +1424,25 @@ export default function ProjectsPage() {
               </ModalHeader>
               <ModalBody>
                 <p>
-                  {t("projects.deleteConfirmMessage")} "
-                  <strong>{projectToDelete?.applicationName}</strong>"? {t("projects.actionCannotBeUndone")}
+                  {t("projects.deleteConfirmMessage")}
+                  <strong>{projectToDelete?.applicationName}</strong>?{" "}
+                  {t("projects.actionCannotBeUndone")}
                 </p>
               </ModalBody>
               <ModalFooter>
-                <Button color="default" variant="light" onPress={onClose} isDisabled={loading}>
+                <Button
+                  color="default"
+                  isDisabled={loading}
+                  variant="light"
+                  onPress={onClose}
+                >
                   {t("common.cancel")}
                 </Button>
-                <Button 
-                  color="danger" 
-                  onPress={confirmDelete}
-                  isLoading={loading}
+                <Button
+                  color="danger"
                   isDisabled={loading}
+                  isLoading={loading}
+                  onPress={confirmDelete}
                 >
                   {t("projects.deleteProject")}
                 </Button>
@@ -847,6 +1451,13 @@ export default function ProjectsPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* Project Details Modal */}
+      <ProjectDetailsModal
+        isOpen={isDetailsOpen}
+        project={selectedProjectForDetails}
+        onOpenChange={handleDetailsClose}
+      />
     </DefaultLayout>
   );
 }

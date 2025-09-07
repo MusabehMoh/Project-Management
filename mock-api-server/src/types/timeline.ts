@@ -2,6 +2,7 @@ export interface Timeline {
   id: number;
   treeId: string;
   projectId: number;
+  projectRequirementId?: number;
   name: string;
   description: string;
   startDate: string;
@@ -22,7 +23,7 @@ export interface Sprint {
   duration: number; // in days
   statusId: number;
   departmentId?: number;
-  requirements: Requirement[];
+  tasks: Task[];
   createdAt: string;
   updatedAt: string;
 }
@@ -53,7 +54,7 @@ export interface Requirement {
 export interface Task {
   id: number;
   treeId: string;
-  requirementId: number;
+  sprintId: number;
   name: string;
   description?: string;
   startDate: string;
@@ -61,11 +62,16 @@ export interface Task {
   duration: number; // in days
   subtasks?: Subtask[]; // Optional for backward compatibility with mock data
   notes?: string;
+  assigneeId?: number;
+  assigneeName?: string;
   departmentId?: string | number;
   resources?: string[];
   statusId: number;
   priorityId: number;
-  progress: number; // 0-100
+  estimatedHours?: number;
+  actualHours?: number;
+  dependencies?: number[];
+  progress?: number; // 0-100
   createdAt?: string;
   updatedAt?: string;
   dependentTasks: Task[];
