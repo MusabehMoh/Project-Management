@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { logger } from "../utils/logger.js";
 
 // Mock roles data
-const mockRoles = [
+export const mockRoles = [
   {
     id: 1,
     name: "System Admin",

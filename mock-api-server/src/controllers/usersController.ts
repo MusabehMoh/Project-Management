@@ -2,6 +2,10 @@ import { Request, Response } from "express";
 
 import { logger } from "../utils/logger.js";
 
+// Import mock data from other controllers for lookups
+import { mockRoles } from "./rolesController.js";
+import { mockActions } from "./actionsController.js";
+
 // Mock users data
 const mockUsers = [
   {
@@ -566,9 +570,46 @@ export class UsersController {
         });
       }
 
+      // Handle roleIds conversion to roles objects
+      let roles = mockUsers[userIndex].roles;
+
+      if (updateData.roleIds && Array.isArray(updateData.roleIds)) {
+        roles = mockRoles
+          .filter((role) => updateData.roleIds.includes(role.id))
+          .map((role) => ({
+            id: role.id,
+            name: role.name,
+            active: role.isActive,
+            roleOrder: role.id,
+          }));
+      }
+
+      // Handle actionIds conversion to actions objects
+      let actions = mockUsers[userIndex].actions;
+
+      if (updateData.actionIds && Array.isArray(updateData.actionIds)) {
+        actions = mockActions
+          .filter((action) => updateData.actionIds.includes(action.id))
+          .map((action, index) => ({
+            id: action.id,
+            name: action.name,
+            categoryName: action.category,
+            categoryType: "System",
+            description: action.description,
+            isActive: action.isActive,
+            actionOrder: index + 1,
+          }));
+      }
+
+      // Remove roleIds and actionIds from updateData since we're replacing them with roles and actions
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { roleIds, actionIds, ...filteredUpdateData } = updateData;
+
       mockUsers[userIndex] = {
         ...mockUsers[userIndex],
-        ...updateData,
+        ...filteredUpdateData,
+        roles,
+        actions,
         updatedAt: new Date().toISOString(),
       };
 

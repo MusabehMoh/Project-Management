@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { logger } from "../utils/logger.js";
 
 // Mock actions data
-const mockActions = [
+export const mockActions = [
   {
     id: 1,
     name: "users.create",
