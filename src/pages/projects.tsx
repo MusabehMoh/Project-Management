@@ -40,6 +40,8 @@ import { addToast } from "@heroui/toast";
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { hasPermission } from "@/utils/permissions";
 import { projectService } from "@/services/api";
 import {
   PlusIcon,
@@ -62,6 +64,7 @@ import { Project, ProjectFormData } from "@/types/project";
 
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
+  const { user: currentUser } = useCurrentUser();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
@@ -492,7 +495,8 @@ export default function ProjectsPage() {
 
       if (result.success) {
         addToast({
-          title: t("projects.sendSuccess") || "Project sent for review successfully",
+          title:
+            t("projects.sendSuccess") || "Project sent for review successfully",
           color: "success",
         });
         refreshData(); // Refresh the project list to show updated status
@@ -605,7 +609,8 @@ export default function ProjectsPage() {
       // Check if there are projects to export
       if (!projects || projects.length === 0) {
         addToast({
-          title: t("projects.noDataToExport") || "No projects available to export",
+          title:
+            t("projects.noDataToExport") || "No projects available to export",
           color: "danger",
         });
         return;
@@ -713,15 +718,17 @@ export default function ProjectsPage() {
           <p className="text-lg text-default-600">{t("projects.subtitle")}</p>
 
           <div className="flex gap-4 justify-center">
-            <Button
-              color="primary"
-              isDisabled={loading}
-              size="lg"
-              startContent={<PlusIcon />}
-              onPress={handleAddProject}
-            >
-              {t("projects.newProject")}
-            </Button>
+            {hasPermission(currentUser, { actions: ["projects.create"] }) && (
+              <Button
+                color="primary"
+                isDisabled={loading}
+                size="lg"
+                startContent={<PlusIcon />}
+                onPress={handleAddProject}
+              >
+                {t("projects.newProject")}
+              </Button>
+            )}
 
             <Button
               isDisabled={loading || projects.length === 0}
@@ -983,28 +990,35 @@ export default function ProjectsPage() {
                               >
                                 View Timeline
                               </DropdownItem>
-                              <DropdownItem
-                                key="edit"
-                                startContent={<EditIcon />}
-                                onPress={() => handleEditProject(project)}
-                              >
-                                {t("projects.editProject")}
-                              </DropdownItem>
+                              {hasPermission(currentUser, {
+                                actions: ["projects.update"],
+                              }) ? (
+                                <DropdownItem
+                                  key="edit"
+                                  startContent={<EditIcon />}
+                                  onPress={() => handleEditProject(project)}
+                                >
+                                  {t("projects.editProject")}
+                                </DropdownItem>
+                              ) : null}
                               <DropdownItem
                                 key="send"
                                 startContent={<SendIcon />}
                                 onPress={() => handleSendProject(project)}
                               >
-                                {t("projects.send")}
-                              </DropdownItem>
-                              <DropdownItem
-                                key="delete"
-                                className="text-danger"
-                                color="danger"
-                                startContent={<DeleteIcon />}
-                                onPress={() => handleDeleteProject(project)}
-                              >
-                                {t("projects.deleteProject")}
+                                {hasPermission(currentUser, {
+                                  actions: ["projects.delete"],
+                                }) ? (
+                                  <DropdownItem
+                                    key="delete"
+                                    className="text-danger"
+                                    color="danger"
+                                    startContent={<DeleteIcon />}
+                                    onPress={() => handleDeleteProject(project)}
+                                  >
+                                    {t("projects.deleteProject")}
+                                  </DropdownItem>
+                                ) : null}
                               </DropdownItem>
                             </DropdownMenu>
                           </Dropdown>
@@ -1246,6 +1260,7 @@ export default function ProjectsPage() {
                           const selectedEmployee = analystEmployees.find(
                             (e) => e.id.toString() === key,
                           );
+
                           if (selectedEmployee) {
                             handleAnalystSelect(selectedEmployee);
                           }

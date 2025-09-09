@@ -35,7 +35,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useNotifications } from "@/hooks/useNotifications";
 import { hasPermission, isAdmin } from "@/utils/permissions";
-
 // Import both logo versions
 import logoImageLight from "@/assets/ChatGPT Image Aug 13, 2025, 11_15_09 AM.png";
 import logoImageDark from "@/assets/whitemodlogo.png";
@@ -124,9 +123,9 @@ const AnimatedNavItem = ({
         )}
         color="foreground"
         href={item.href}
+        onClick={(e) => onNavigate(e, item.href)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={(e) => onNavigate(e, item.href)}
       >
         <span className="relative z-10">{item.label}</span>
 
@@ -149,19 +148,30 @@ const AnimatedNavItem = ({
 const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
   const baseItems = [
     { label: t("nav.dashboard"), href: "/" },
-    { label: t("nav.projects"), href: "/projects" },
     { label: t("nav.requirements"), href: "/requirements" },
     { label: t("nav.timeline"), href: "/timeline" },
     { label: t("nav.tasks"), href: "/tasks" },
   ];
 
-  const adminItems = [];
+  const conditionalItems = [];
 
-  // Add users link if user has admin role or user management permission
+  // Add projects link if user has admin role or project read permission
   if (
     isAdmin(currentUser) ||
     hasPermission(currentUser, {
-      actions: ["User Management", "Manage Users"],
+      actions: ["projects.read"],
+    })
+  ) {
+    conditionalItems.push({ label: t("nav.projects"), href: "/projects" });
+  }
+
+  const adminItems = [];
+
+  // Add users link if user has admin role or user read permission
+  if (
+    isAdmin(currentUser) ||
+    hasPermission(currentUser, {
+      actions: ["users.read"],
     })
   ) {
     adminItems.push({ label: t("nav.users"), href: "/users" });
@@ -177,7 +187,7 @@ const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
     adminItems.push({ label: t("nav.departments"), href: "/departments" });
   }
 
-  return [...baseItems, ...adminItems];
+  return [...baseItems, ...conditionalItems, ...adminItems];
 };
 
 export const Navbar = () => {

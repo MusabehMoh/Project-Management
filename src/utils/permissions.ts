@@ -22,7 +22,7 @@ export const hasPermission = (
 
   const userRoles = user.roles?.map((role) => role.name) || [];
   const userActions = user.actions?.map((action) => action.name) || [];
- 
+  
   // Check roles
   let hasRequiredRoles = true;
 
@@ -137,6 +137,17 @@ export const isSuperAdmin = (user: User | null): boolean => {
 };
 
 /**
+ * Alias to check permissions using object-literal style at call-sites.
+ * Example: asPermission(currentUser, { actions: ["projects.create"] })
+ */
+export const asPermission = (
+  user: User | null,
+  permission: PermissionCheck,
+): boolean => {
+  return hasPermission(user, permission);
+};
+
+/**
  * Common permission presets for easy use
  */
 export const Permissions = {
@@ -146,16 +157,34 @@ export const Permissions = {
 
   // User management permissions
   USER_MANAGEMENT: { actions: ["User Management", "Manage Users"] },
-  USER_CREATE: { actions: ["Create User", "Add User"] },
-  USER_EDIT: { actions: ["Edit User", "Update User"] },
-  USER_DELETE: { actions: ["Delete User", "Remove User"] },
+  USER_CREATE: { actions: ["Create User", "Add User", "users.create"] },
+  USER_READ: { actions: ["View User", "Read User", "users.read"] },
+  USER_UPDATE: { actions: ["Edit User", "Update User", "users.update"] },
+  USER_DELETE: { actions: ["Delete User", "Remove User", "users.delete"] },
+  USER_FULL_ACCESS: {
+    actions: [
+      "User Management",
+      "Manage Users",
+      "users.create",
+      "users.read",
+      "users.update",
+      "users.delete",
+    ],
+  },
 
   // Project permissions
   PROJECT_MANAGEMENT: { actions: ["Project Management", "Manage Projects"] },
-  PROJECT_CREATE: { actions: ["Create Project", "Add Project"] },
-  PROJECT_EDIT: { actions: ["Edit Project", "Update Project"] },
-  PROJECT_DELETE: { actions: ["Delete Project", "Remove Project"] },
-  PROJECT_VIEW: { actions: ["View Project", "Read Project"] },
+  PROJECT_CREATE: {
+    actions: ["Create Project", "Add Project", "projects.create"],
+  },
+  PROJECT_READ: { actions: ["View Project", "Read Project", "projects.read"] },
+  PROJECT_UPDATE: {
+    actions: ["Edit Project", "Update Project", "projects.update"],
+  },
+  PROJECT_DELETE: {
+    actions: ["Delete Project", "Remove Project", "projects.delete"],
+  },
+  PROJECT_VIEW: { actions: ["View Project", "Read Project", "projects.read"] },
 
   // Role management permissions
   ROLE_MANAGEMENT: { actions: ["Role Management", "Manage Roles"] },
