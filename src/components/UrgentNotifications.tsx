@@ -102,8 +102,8 @@ export const UrgentNotifications: React.FC<UrgentNotificationProps> = ({
           {urgentNotifications.length > 0 && (
             <Button 
               size="sm" 
-              variant="flat"
-              color="danger"
+              variant="light"
+              color="primary"
               className="px-2 text-xs"
               onClick={() => urgentNotifications.forEach(n => handleMarkAsRead(n.id))}
             >
@@ -140,8 +140,8 @@ export const UrgentNotifications: React.FC<UrgentNotificationProps> = ({
                         </Chip>
                         <Button 
                           size="sm" 
-                          variant="solid" 
-                          color="default"
+                          variant="light" 
+                          color="primary"
                           className="min-w-0 px-2 text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
