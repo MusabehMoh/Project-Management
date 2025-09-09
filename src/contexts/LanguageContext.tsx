@@ -45,6 +45,16 @@ const translations = {
     "nav.noNotifications": "No notifications",
     "nav.markAllRead": "Mark all as read",
 
+    // Urgent Notifications
+    "notifications.urgent": "Urgent",
+    "notifications.minimize": "Minimize",
+    "notifications.markAsRead": "Mark as read",
+    "dashboard.urgentNotifications": "Urgent Notifications",
+    
+    // Common Date References
+    "common.today": "Today",
+    "common.yesterday": "Yesterday",
+
     // Global Search
     "search.title": "Global Search",
     "search.placeholder": "Search projects, users, timelines, tasks...",
@@ -884,6 +894,16 @@ const translations = {
       "ابدأ الكتابة للبحث في المشاريع والمهام وأعضاء الفريق...",
     "nav.noNotifications": "لا توجد إشعارات",
     "nav.markAllRead": "تحديد الكل كمقروء",
+
+    // Urgent Notifications
+    "notifications.urgent": "عاجل",
+    "notifications.minimize": "تصغير",
+    "notifications.markAsRead": "تعليم كمقروء",
+    "dashboard.urgentNotifications": "إشعارات عاجلة",
+    
+    // Common Date References
+    "common.today": "اليوم",
+    "common.yesterday": "أمس",
 
     // Global Search Arabic
     "search.title": "البحث الشامل",

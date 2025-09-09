@@ -26,6 +26,7 @@ import {
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
+import UrgentNotifications from "@/components/UrgentNotifications";
 
 interface Project {
   id: number;
@@ -346,11 +347,13 @@ export default function IndexPage() {
           </div>
         </div>
 
-        {/* Recent Tasks Accordion */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">
-            {t("dashboard.recentTasks")}
-          </h2>
+        {/* Recent Tasks and Notifications Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Column - Recent Tasks */}
+          <div className="lg:col-span-2 space-y-4">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t("dashboard.recentTasks")}
+            </h2>
 
           <Accordion variant="splitted">
             {projects.map((project) => (
@@ -408,6 +411,15 @@ export default function IndexPage() {
               </AccordionItem>
             ))}
           </Accordion>
+        </div>
+          
+          {/* Side Column - Urgent Notifications */}
+          <div className="lg:col-span-1">
+            <UrgentNotifications 
+              maxNotifications={5} 
+              useMockData={true}
+            />
+          </div>
         </div>
       </div>
 
