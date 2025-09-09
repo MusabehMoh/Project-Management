@@ -16,8 +16,8 @@ import { taskRoutes } from "./tasks.js";
 import { sprintRoutes } from "./sprints.js";
 import { requirementRoutes } from "./requirements.js";
 import { projectRequirementRoutes } from "./projectRequirements.js";
-import membersTasksRoutes from "./membersTasksRoutes";
-import notificationsRoutes from "./notifications.js"; 
+import membersTasksRoutes from "./membersTasksRoutes.js";
+import notificationsRoutes from "./notifications.js";
 export const routes = Router();
 
 // Health check for API
@@ -67,5 +67,5 @@ routes.use("/tasks", taskRoutes);
 routes.use("/sprints", sprintRoutes);
 routes.use("/requirements", requirementRoutes);
 routes.use("/project-requirements", projectRequirementRoutes);
-routes.use("/members-tasks", membersTasksRoutes); 
+routes.use("/members-tasks", membersTasksRoutes);
 routes.use("/notifications", notificationsRoutes);
