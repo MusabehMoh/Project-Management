@@ -16,7 +16,6 @@ import { Avatar } from "@heroui/avatar";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Spinner } from "@heroui/spinner";
 import { Switch } from "@heroui/switch";
-import { CheckboxGroup, Checkbox } from "@heroui/checkbox";
 import {
   Modal,
   ModalContent,
@@ -61,6 +60,11 @@ export default function UsersPage() {
     onOpen: onDeleteOpen,
     onOpenChange: onDeleteOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isActionsModalOpen,
+    onOpen: onActionsModalOpen,
+    onOpenChange: onActionsModalOpenChange,
+  } = useDisclosure();
 
   // Use the users hook for data management
   const {
@@ -103,6 +107,8 @@ export default function UsersPage() {
     number[]
   >([]); // Additional actions only
   const [isVisible, setIsVisible] = useState(true);
+  const [actionSearchQuery, setActionSearchQuery] = useState("");
+  const [selectedActionCategory, setSelectedActionCategory] = useState<string>("all");
 
   // Helper functions for role and action management
   const getSelectedRoleData = () => {
@@ -121,6 +127,59 @@ export default function UsersPage() {
     return actions.filter(
       (action) => !roleDefaultActionIds.includes(action.id),
     );
+  };
+
+  // Filter actions based on search and category
+  const getFilteredAdditionalActions = () => {
+    let filteredActions = getAvailableAdditionalActions();
+
+    // Filter by search query
+    if (actionSearchQuery.trim()) {
+      const query = actionSearchQuery.toLowerCase();
+      filteredActions = filteredActions.filter(
+        (action) =>
+          action.name.toLowerCase().includes(query) ||
+          action.description.toLowerCase().includes(query) ||
+          action.categoryName.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by category
+    if (selectedActionCategory !== "all") {
+      filteredActions = filteredActions.filter(
+        (action) => action.categoryName === selectedActionCategory
+      );
+    }
+
+    return filteredActions;
+  };
+
+  // Get unique categories from available actions
+  const getActionCategories = () => {
+    const availableActions = getAvailableAdditionalActions();
+    const categories = [...new Set(availableActions.map(action => action.categoryName))];
+    return categories.sort();
+  };
+
+  // Handle bulk selection for a category
+  const handleCategoryBulkSelection = (categoryName: string, selectAll: boolean) => {
+    const categoryActions = getAvailableAdditionalActions().filter(
+      action => action.categoryName === categoryName
+    );
+    const categoryActionIds = categoryActions.map(action => action.id);
+
+    if (selectAll) {
+      // Add all category actions that aren't already selected
+      const newActions = categoryActionIds.filter(
+        id => !selectedAdditionalActions.includes(id)
+      );
+      setSelectedAdditionalActions([...selectedAdditionalActions, ...newActions]);
+    } else {
+      // Remove all category actions
+      setSelectedAdditionalActions(
+        selectedAdditionalActions.filter(id => !categoryActionIds.includes(id))
+      );
+    }
   };
 
   const getAllUserActions = () => {
@@ -258,6 +317,8 @@ export default function UsersPage() {
     setSelectedRole(null);
     setSelectedAdditionalActions([]);
     setIsVisible(true);
+    setActionSearchQuery("");
+    setSelectedActionCategory("all");
     clearEmployeeResults(); // Clear any search results
   };
 
@@ -752,78 +813,73 @@ export default function UsersPage() {
                       </div>
                     )}
 
-                    {/* Additional Action Selection */}
+                    {/* Additional Action Selection - Improved UX */}
                     {selectedRole &&
                       getAvailableAdditionalActions().length > 0 && (
                         <div>
-                          <p className="text-small text-default-500 mb-2">
-                            {t("users.assignAdditionalActions")}
-                          </p>
-                          <div className="space-y-3 max-h-48 overflow-y-auto border border-default-200 rounded-lg p-3 bg-default-50">
-                            {Object.entries(
-                              getAvailableAdditionalActions().reduce(
-                                (acc, action) => {
-                                  if (!acc[action.categoryName]) {
-                                    acc[action.categoryName] = [];
-                                  }
-                                  acc[action.categoryName].push(action);
-
-                                  return acc;
-                                },
-                                {} as { [categoryName: string]: Action[] },
-                              ),
-                            ).map(([category, categoryActions]) => (
-                              <div
-                                key={category}
-                                className="bg-white rounded-md p-3 shadow-sm"
-                              >
-                                <p className="font-medium text-small mb-2 text-primary">
-                                  {category}
-                                </p>
-                                <CheckboxGroup
-                                  classNames={{
-                                    wrapper: "gap-1",
-                                  }}
-                                  value={selectedAdditionalActions.map(String)}
-                                  onValueChange={(value) =>
-                                    setSelectedAdditionalActions(
-                                      value.map(Number),
-                                    )
-                                  }
-                                >
-                                  {categoryActions.slice(0, 5).map((action) => (
-                                    <Checkbox
-                                      key={action.id}
-                                      size="sm"
-                                      value={action.id.toString()}
-                                    >
-                                      <div>
-                                        <p className="text-small">
-                                          {action.name}
-                                        </p>
-                                        <p className="text-tiny text-default-500">
-                                          {action.description}
-                                        </p>
-                                      </div>
-                                    </Checkbox>
-                                  ))}
-                                  {categoryActions.length > 5 && (
-                                    <p className="text-tiny text-default-400 mt-2">
-                                      +{categoryActions.length - 5} more actions
-                                      available
-                                    </p>
-                                  )}
-                                </CheckboxGroup>
-                              </div>
-                            ))}
-                            <div className="text-center pt-2">
-                              <p className="text-tiny text-default-500">
-                                {t("actions.scrollToSeeMore")} •{" "}
-                                {getAvailableAdditionalActions().length}{" "}
-                                {t("actions.totalAvailable")}
-                              </p>
-                            </div>
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-small text-default-500">
+                              {t("users.assignAdditionalActions")}
+                            </p>
+                            <Button
+                              color="primary"
+                              size="sm"
+                              variant="flat"
+                              onPress={onActionsModalOpen}
+                            >
+                              {selectedAdditionalActions.length > 0
+                                ? `${selectedAdditionalActions.length} ${t("actions.selected")}`
+                                : t("actions.selectActions")}
+                            </Button>
                           </div>
+                          
+                          {/* Selected Actions Display */}
+                          {selectedAdditionalActions.length > 0 && (
+                            <Card className="bg-success-50 border border-success-200">
+                              <CardBody className="py-3">
+                                <div className="flex flex-wrap gap-2">
+                                  {actions
+                                    .filter((action) =>
+                                      selectedAdditionalActions.includes(action.id)
+                                    )
+                                    .map((action) => (
+                                      <Chip
+                                        key={action.id}
+                                        color="success"
+                                        size="sm"
+                                        variant="flat"
+                                        onClose={() => {
+                                          setSelectedAdditionalActions(
+                                            selectedAdditionalActions.filter(
+                                              (id) => id !== action.id
+                                            )
+                                          );
+                                        }}
+                                      >
+                                        {action.name}
+                                      </Chip>
+                                    ))}
+                                </div>
+                                <p className="text-tiny text-success-600 mt-2">
+                                  {selectedAdditionalActions.length} {t("actions.additionalActionsSelected")}
+                                </p>
+                              </CardBody>
+                            </Card>
+                          )}
+                          
+                          {/* No additional actions selected */}
+                          {selectedAdditionalActions.length === 0 && (
+                            <Card className="bg-default-100 border border-default-200">
+                              <CardBody className="py-3 text-center">
+                                <p className="text-small text-default-500">
+                                  {t("actions.noAdditionalActionsSelected")}
+                                </p>
+                                <p className="text-tiny text-default-400 mt-1">
+                                  {getAvailableAdditionalActions().length} {t("actions.totalAvailable")}
+                                </p>
+                              </CardBody>
+                            </Card>
+                          )}
                         </div>
                       )}
 
@@ -873,6 +929,211 @@ export default function UsersPage() {
                     onPress={handleSaveUser}
                   >
                     {isEditing ? t("common.save") : t("users.addUser")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* Actions Selection Modal */}
+        <Modal
+          isOpen={isActionsModalOpen}
+          scrollBehavior="inside"
+          size="3xl"
+          onOpenChange={onActionsModalOpenChange}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  <h3>{t("actions.selectAdditionalActions")}</h3>
+                  <p className="text-small text-default-500 font-normal">
+                    {t("actions.selectAdditionalActionsDescription")}
+                  </p>
+                </ModalHeader>
+                <ModalBody>
+                  <div className="space-y-4">
+                    {/* Search and Filter Controls */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Input
+                        className="flex-1"
+                        placeholder={t("actions.searchActions")}
+                        startContent={
+                          <SearchIcon className="text-default-400" size={18} />
+                        }
+                        value={actionSearchQuery}
+                        onChange={(e) => setActionSearchQuery(e.target.value)}
+                      />
+                      <Select
+                        className="w-full sm:w-48"
+                        placeholder={t("actions.allCategories")}
+                        selectedKeys={[selectedActionCategory]}
+                        onSelectionChange={(keys) => {
+                          const category = Array.from(keys)[0] as string;
+                          setSelectedActionCategory(category || "all");
+                        }}
+                      >
+                        <SelectItem key="all" textValue={t("common.all")}>
+                          {t("common.all")}
+                        </SelectItem>
+                        {getActionCategories().map((category) => (
+                          <SelectItem key={category} textValue={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+
+                    {/* Selection Summary */}
+                    <Card className="bg-primary-50 border border-primary-200">
+                      <CardBody className="py-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-small font-medium text-primary">
+                              {selectedAdditionalActions.length} {t("actions.actionsSelected")}
+                            </p>
+                            <p className="text-tiny text-default-600">
+                              {getFilteredAdditionalActions().length} {t("actions.availableActions")}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              onPress={() => setSelectedAdditionalActions([])}
+                            >
+                              {t("actions.clearAll")}
+                            </Button>
+                            <Button
+                              color="primary"
+                              size="sm"
+                              variant="flat"
+                              onPress={() => {
+                                const allAvailableIds = getFilteredAdditionalActions().map(a => a.id);
+                                const newSelections = allAvailableIds.filter(
+                                  id => !selectedAdditionalActions.includes(id)
+                                );
+                                setSelectedAdditionalActions([
+                                  ...selectedAdditionalActions,
+                                  ...newSelections
+                                ]);
+                              }}
+                            >
+                              {t("actions.selectAll")}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+
+                    {/* Actions List by Category */}
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                      {Object.entries(
+                        getFilteredAdditionalActions().reduce(
+                          (acc, action) => {
+                            if (!acc[action.categoryName]) {
+                              acc[action.categoryName] = [];
+                            }
+                            acc[action.categoryName].push(action);
+                            return acc;
+                          },
+                          {} as { [categoryName: string]: Action[] }
+                        )
+                      ).map(([category, categoryActions]) => (
+                        <Card key={category} className="border border-default-200">
+                          <CardBody className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="font-medium text-primary">{category}</h4>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="light"
+                                  onPress={() => handleCategoryBulkSelection(category, false)}
+                                >
+                                  {t("actions.selectNone")}
+                                </Button>
+                                <Button
+                                  color="primary"
+                                  size="sm"
+                                  variant="light"
+                                  onPress={() => handleCategoryBulkSelection(category, true)}
+                                >
+                                  {t("actions.selectAll")}
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {categoryActions.map((action) => (
+                                <Card
+                                  key={action.id}
+                                  className={`cursor-pointer transition-all ${
+                                    selectedAdditionalActions.includes(action.id)
+                                      ? "bg-success-50 border-success-200 border-2"
+                                      : "bg-default-50 border-default-200 hover:bg-default-100"
+                                  }`}
+                                  isPressable
+                                  onPress={() => {
+                                    if (selectedAdditionalActions.includes(action.id)) {
+                                      setSelectedAdditionalActions(
+                                        selectedAdditionalActions.filter(id => id !== action.id)
+                                      );
+                                    } else {
+                                      setSelectedAdditionalActions([
+                                        ...selectedAdditionalActions,
+                                        action.id
+                                      ]);
+                                    }
+                                  }}
+                                >
+                                  <CardBody className="p-3">
+                                    <div className="flex items-start gap-3">
+                                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                                        selectedAdditionalActions.includes(action.id)
+                                          ? "bg-success border-success"
+                                          : "border-default-300"
+                                      }`}>
+                                        {selectedAdditionalActions.includes(action.id) && (
+                                          <span className="text-white text-xs">✓</span>
+                                        )}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-small text-foreground">
+                                          {action.name}
+                                        </p>
+                                        <p className="text-tiny text-default-500 mt-1">
+                                          {action.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </CardBody>
+                                </Card>
+                              ))}
+                            </div>
+                          </CardBody>
+                        </Card>
+                      ))}
+                      
+                      {getFilteredAdditionalActions().length === 0 && (
+                        <Card className="border border-default-200">
+                          <CardBody className="p-8 text-center">
+                            <p className="text-default-500">
+                              {actionSearchQuery.trim() || selectedActionCategory !== "all"
+                                ? t("actions.noActionsFound")
+                                : t("actions.noAdditionalActionsAvailable")}
+                            </p>
+                          </CardBody>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="danger" variant="light" onPress={onClose}>
+                    {t("common.cancel")}
+                  </Button>
+                  <Button color="primary" onPress={onClose}>
+                    {t("actions.confirmSelection")} ({selectedAdditionalActions.length})
                   </Button>
                 </ModalFooter>
               </>

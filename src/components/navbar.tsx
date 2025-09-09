@@ -34,6 +34,7 @@ import { GlobalSearchModal } from "@/components/GlobalSearchModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useNotifications } from "@/hooks/useNotifications";
+import { hasPermission, isAdmin } from "@/utils/permissions";
 
 // Import both logo versions
 import logoImageLight from "@/assets/ChatGPT Image Aug 13, 2025, 11_15_09 AM.png";
@@ -145,22 +146,46 @@ const AnimatedNavItem = ({
 };
 
 // Project management specific nav items
-const getProjectNavItems = (t: (key: string) => string) => [
-  { label: t("nav.dashboard"), href: "/" },
-  { label: t("nav.projects"), href: "/projects" },
-  { label: t("nav.requirements"), href: "/requirements" },
-  { label: t("nav.users"), href: "/users" },
-  { label: t("nav.timeline"), href: "/timeline" },
-  { label: t("nav.tasks"), href: "/tasks" },
-  { label: t("nav.departments"), href: "/departments" },
-];
+const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
+  const baseItems = [
+    { label: t("nav.dashboard"), href: "/" },
+    { label: t("nav.projects"), href: "/projects" },
+    { label: t("nav.requirements"), href: "/requirements" },
+    { label: t("nav.timeline"), href: "/timeline" },
+    { label: t("nav.tasks"), href: "/tasks" },
+  ];
+
+  const adminItems = [];
+
+  // Add users link if user has admin role or user management permission
+  if (
+    isAdmin(currentUser) ||
+    hasPermission(currentUser, {
+      actions: ["User Management", "Manage Users"],
+    })
+  ) {
+    adminItems.push({ label: t("nav.users"), href: "/users" });
+  }
+
+  // Add departments link if user has admin role or department management permission
+  if (
+    isAdmin(currentUser) ||
+    hasPermission(currentUser, {
+      actions: ["Department Management", "Manage Departments"],
+    })
+  ) {
+    adminItems.push({ label: t("nav.departments"), href: "/departments" });
+  }
+
+  return [...baseItems, ...adminItems];
+};
 
 export const Navbar = () => {
   const { t } = useLanguage();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
   const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } =
     useNotifications();
-  const projectNavItems = getProjectNavItems(t);
+  const projectNavItems = getProjectNavItems(t, currentUser);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
@@ -528,6 +553,39 @@ export const Navbar = () => {
                   {t("user.settings")}
                 </DropdownItem>
               </DropdownSection>
+              
+              {/* Conditionally render admin section */}
+              {isAdmin(currentUser) ? (
+                <DropdownSection showDivider title={t("user.administration")}>
+                  <DropdownItem
+                    key="admin-users"
+                    className="transition-all duration-200 hover:bg-primary/10"
+                    description={t("user.userManagementDesc")}
+                    startContent={
+                      <Users
+                        className="transition-colors duration-200"
+                        size={16}
+                      />
+                    }
+                  >
+                    {t("user.userManagement")}
+                  </DropdownItem>
+                  <DropdownItem
+                    key="admin-system"
+                    className="transition-all duration-200 hover:bg-primary/10"
+                    description={t("user.systemSettingsDesc")}
+                    startContent={
+                      <Settings
+                        className="transition-colors duration-200"
+                        size={16}
+                      />
+                    }
+                  >
+                    {t("user.systemSettings")}
+                  </DropdownItem>
+                </DropdownSection>
+              ) : null}
+              
               <DropdownSection title={t("user.workspace")}>
                 <DropdownItem
                   key="departments"

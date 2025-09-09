@@ -1,38 +1,112 @@
 import { ReactNode } from "react";
 
-import { useAuth } from "@/hooks/useUsers";
+import { usePermissions } from "@/hooks/usePermissions";
+import type { PermissionCheck } from "@/utils/permissions";
 
 interface PermissionGateProps {
-  action: string;
-  resource?: string;
-  role?: string;
   children: ReactNode;
+  permission?: PermissionCheck;
+  role?: string;
+  roles?: string[];
+  action?: string;
+  actions?: string[];
+  requireAll?: boolean;
   fallback?: ReactNode;
+  adminOnly?: boolean;
+  superAdminOnly?: boolean;
 }
 
 /**
- * Permission Gate Component
+ * Permission Gate Component - Enhanced version
  * Controls access to UI elements based on user permissions
+ * 
+ * Examples:
+ * <PermissionGate adminOnly>
+ *   <AdminPanel />
+ * </PermissionGate>
+ * 
+ * <PermissionGate role="Administrator">
+ *   <UserManagement />
+ * </PermissionGate>
+ * 
+ * <PermissionGate action="Create User">
+ *   <CreateUserButton />
+ * </PermissionGate>
+ * 
+ * <PermissionGate permission={{ roles: ["Admin", "Manager"], requireAll: false }}>
+ *   <SomeComponent />
+ * </PermissionGate>
  */
 export const PermissionGate = ({
-  action,
-  resource,
-  role,
   children,
+  permission,
+  role,
+  roles,
+  action,
+  actions,
+  requireAll = false,
   fallback = null,
+  adminOnly = false,
+  superAdminOnly = false,
 }: PermissionGateProps) => {
-  const { hasPermission, hasRole } = useAuth();
+  const { 
+    hasPermission, 
+    hasRole, 
+    hasAnyRole, 
+    hasAction, 
+    hasAnyAction, 
+    isAdmin, 
+    isSuperAdmin,
+    loading 
+  } = usePermissions();
 
-  // Check role-based access
-  if (role && !hasRole(role)) {
+  // Show loading state or nothing while checking permissions
+  if (loading) {
     return <>{fallback}</>;
   }
 
-  // Check permission-based access
-  if (!hasPermission(action, resource)) {
-    return <>{fallback}</>;
+  // Check for super admin only
+  if (superAdminOnly) {
+    return isSuperAdmin() ? <>{children}</> : <>{fallback}</>;
   }
 
+  // Check for admin only
+  if (adminOnly) {
+    return isAdmin() ? <>{children}</> : <>{fallback}</>;
+  }
+
+  // Use custom permission object
+  if (permission) {
+    return hasPermission(permission) ? <>{children}</> : <>{fallback}</>;
+  }
+
+  // Check single role
+  if (role) {
+    return hasRole(role) ? <>{children}</> : <>{fallback}</>;
+  }
+
+  // Check multiple roles
+  if (roles && roles.length > 0) {
+    const hasRequiredRoles = requireAll 
+      ? roles.every(r => hasRole(r))
+      : hasAnyRole(roles);
+    return hasRequiredRoles ? <>{children}</> : <>{fallback}</>;
+  }
+
+  // Check single action
+  if (action) {
+    return hasAction(action) ? <>{children}</> : <>{fallback}</>;
+  }
+
+  // Check multiple actions
+  if (actions && actions.length > 0) {
+    const hasRequiredActions = requireAll
+      ? actions.every(a => hasAction(a))
+      : hasAnyAction(actions);
+    return hasRequiredActions ? <>{children}</> : <>{fallback}</>;
+  }
+
+  // If no permission checks specified, render children
   return <>{children}</>;
 };
 
