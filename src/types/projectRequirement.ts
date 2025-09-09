@@ -4,6 +4,7 @@ export interface ProjectRequirement {
   name: string;
   description: string;
   priority: "low" | "medium" | "high" | "critical";
+  type: "new" | "change request";
   status: "draft" | "pending" | "approved" | "in-development" | "completed";
   createdBy: number;
   assignedTo?: number;
@@ -44,6 +45,7 @@ export interface CreateProjectRequirementRequest {
   name: string;
   description: string;
   priority: "low" | "medium" | "high" | "critical";
+  type: "new" | "change request";
   expectedCompletionDate: any;
   assignedTo?: number;
   projectId: number;
@@ -59,6 +61,7 @@ export interface UpdateProjectRequirementRequest {
   name?: string;
   description?: string;
   priority?: "low" | "medium" | "high" | "critical";
+  type?: "new" | "change request";
   status?: "draft" | "in_development" | "completed";
   assignedTo?: number;
   dueDate?: string;

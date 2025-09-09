@@ -973,23 +973,6 @@ export default function ProjectsPage() {
                               </Button>
                             </DropdownTrigger>
                             <DropdownMenu aria-label="Project actions">
-                              <DropdownItem
-                                key="details"
-                                startContent={<InfoIcon />}
-                                onPress={() => handleViewDetails(project)}
-                              >
-                                {t("projects.viewDetails")}
-                              </DropdownItem>
-                              <DropdownItem
-                                key="timeline"
-                                startContent={<CalendarIcon />}
-                                onPress={() => {
-                                  // Navigate to timeline with project ID
-                                  window.location.href = `/timeline?projectId=${project.id}`;
-                                }}
-                              >
-                                View Timeline
-                              </DropdownItem>
                               {hasPermission(currentUser, {
                                 actions: ["projects.update"],
                               }) ? (
@@ -1001,25 +984,32 @@ export default function ProjectsPage() {
                                   {t("projects.editProject")}
                                 </DropdownItem>
                               ) : null}
-                              <DropdownItem
-                                key="send"
-                                startContent={<SendIcon />}
-                                onPress={() => handleSendProject(project)}
-                              >
-                                {hasPermission(currentUser, {
-                                  actions: ["projects.delete"],
-                                }) ? (
-                                  <DropdownItem
-                                    key="delete"
-                                    className="text-danger"
-                                    color="danger"
-                                    startContent={<DeleteIcon />}
-                                    onPress={() => handleDeleteProject(project)}
-                                  >
-                                    {t("projects.deleteProject")}
-                                  </DropdownItem>
-                                ) : null}
-                              </DropdownItem>
+
+                              {hasPermission(currentUser, {
+                                actions: ["projects.sendToAnylsis"],
+                              }) ? (
+                                <DropdownItem
+                                  key="send"
+                                  startContent={<SendIcon />}
+                                  onPress={() => handleSendProject(project)}
+                                >
+                                  {t("projects.send")}
+                                </DropdownItem>
+                              ) : null}
+
+                              {hasPermission(currentUser, {
+                                actions: ["projects.delete"],
+                              }) ? (
+                                <DropdownItem
+                                  key="delete"
+                                  className="text-danger"
+                                  color="danger"
+                                  startContent={<DeleteIcon />}
+                                  onPress={() => handleDeleteProject(project)}
+                                >
+                                  {t("projects.deleteProject")}
+                                </DropdownItem>
+                              ) : null}
                             </DropdownMenu>
                           </Dropdown>
                         </TableCell>

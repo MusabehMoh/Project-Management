@@ -61,6 +61,7 @@ interface RequirementFormData {
   name: string;
   description: string;
   priority: "low" | "medium" | "high" | "critical";
+  type: "new" | "change request";
   expectedCompletionDate: any;
   attachments: string[];
 }
@@ -173,6 +174,7 @@ export default function ProjectRequirementsPage() {
       name: "",
       description: "",
       priority: "medium",
+      type: "new",
       expectedCompletionDate: null,
       attachments: [],
     });
@@ -191,6 +193,7 @@ export default function ProjectRequirementsPage() {
       name: requirement.name,
       description: requirement.description,
       priority: requirement.priority,
+      type: requirement.type,
       expectedCompletionDate: parseDate(requirement.expectedCompletionDate),
       attachments: [],
     });
@@ -212,6 +215,7 @@ export default function ProjectRequirementsPage() {
         name: formData.name,
         description: formData.description,
         priority: formData.priority,
+        type: formData.type,
         expectedCompletionDate:
           formData.expectedCompletionDate?.toString() || "",
         attachments: formData.attachments,
@@ -474,6 +478,7 @@ export default function ProjectRequirementsPage() {
               <Table aria-label="Requirements table">
                 <TableHeader>
                   <TableColumn>{t("requirements.requirementName")}</TableColumn>
+                  <TableColumn>{t("requirements.type")}</TableColumn>
                   <TableColumn>{t("requirements.priority")}</TableColumn>
                   <TableColumn>{t("requirements.status")}</TableColumn>
                   <TableColumn>
@@ -493,6 +498,19 @@ export default function ProjectRequirementsPage() {
                             {requirement.description}
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          color={
+                            requirement.type === "new" ? "success" : "warning"
+                          }
+                          size="sm"
+                          variant="flat"
+                        >
+                          {requirement.type === "new"
+                            ? t("requirements.new")
+                            : t("requirements.changeRequest")}
+                        </Chip>
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -663,6 +681,24 @@ export default function ProjectRequirementsPage() {
                       {t("requirements.medium")}
                     </SelectItem>
                     <SelectItem key="low">{t("requirements.low")}</SelectItem>
+                  </Select>
+
+                  <Select
+                    label={t("requirements.type")}
+                    placeholder={t("requirements.selectType")}
+                    selectedKeys={[formData.type]}
+                    onSelectionChange={(keys) =>
+                      setFormData({
+                        ...formData,
+                        type: Array.from(keys)[0] as any,
+                      })
+                    }
+                    isRequired
+                  >
+                    <SelectItem key="new">{t("requirements.new")}</SelectItem>
+                    <SelectItem key="change request">
+                      {t("requirements.changeRequest")}
+                    </SelectItem>
                   </Select>
 
                   <DatePicker

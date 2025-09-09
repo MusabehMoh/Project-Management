@@ -4,7 +4,7 @@ import { ToastProvider } from "@heroui/toast";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AccessDenied } from "@/components/AccessDenied";
-import IndexPage from "@/pages/index";
+import DashboardPage from "@/pages/dashboard";
 import DocsPage from "@/pages/docs";
 import PricingPage from "@/pages/pricing";
 import BlogPage from "@/pages/blog";
@@ -17,6 +17,7 @@ import ProjectRequirementsPage from "@/pages/project-requirements";
 import TimelinePage from "@/pages/timeline";
 import MembersTasksPage from "@/pages/members-tasks";
 import { TasksTest } from "@/components/TasksTest";
+import IndexPage from "./pages";
 function App() {
   const { user, loading } = useCurrentUser();
   const { t } = useLanguage();

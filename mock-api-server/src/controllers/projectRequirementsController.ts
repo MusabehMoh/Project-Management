@@ -171,15 +171,26 @@ export class ProjectRequirementsController {
   async createRequirement(req: Request, res: Response) {
     try {
       const { projectId } = req.params;
-      const { name, description, priority, expectedCompletionDate, attachments } = req.body;
+      const { name, description, priority, type, expectedCompletionDate, attachments } = req.body;
       const currentUserId = parseInt(req.query.userId as string) || 1; // Default user
 
       // Validate required fields
-      if (!name || !description || !priority || !expectedCompletionDate) {
+      if (!name || !description || !priority || !type || !expectedCompletionDate) {
         return res.status(400).json({
           success: false,
           error: {
             message: "Missing required fields",
+            code: "VALIDATION_ERROR",
+          },
+        });
+      }
+
+      // Validate type field
+      if (!["new", "change request"].includes(type)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: "Invalid requirement type. Must be 'new' or 'change request'",
             code: "VALIDATION_ERROR",
           },
         });
@@ -204,6 +215,7 @@ export class ProjectRequirementsController {
         name,
         description,
         priority,
+        type,
         expectedCompletionDate,
         status: "draft" as const,
         createdAt: new Date().toISOString(),
@@ -221,7 +233,7 @@ export class ProjectRequirementsController {
 
       mockProjectRequirements.push(newRequirement);
 
-      logger.info(`Created new requirement: ${newRequirement.name} for project ${projectId}`);
+      logger.info(`Created new requirement: ${newRequirement.name} (type: ${type}) for project ${projectId}`);
 
       res.status(201).json({
         success: true,
@@ -244,10 +256,10 @@ export class ProjectRequirementsController {
   async updateRequirement(req: Request, res: Response) {
     try {
       const { requirementId } = req.params;
-      const { name, description, priority, expectedCompletionDate, status } = req.body;
+      const { name, description, priority, type, expectedCompletionDate, status } = req.body;
 
       const requirementIndex = mockProjectRequirements.findIndex(
-        r => r.id === parseInt(requirementId)
+        (r) => r.id === parseInt(requirementId),
       );
 
       if (requirementIndex === -1) {
@@ -260,17 +272,29 @@ export class ProjectRequirementsController {
         });
       }
 
+      // Validate type field if provided
+      if (type && !["new", "change request"].includes(type)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: "Invalid requirement type. Must be 'new' or 'change request'",
+            code: "VALIDATION_ERROR",
+          },
+        });
+      }
+
       // Update requirement fields
       const requirement = mockProjectRequirements[requirementIndex];
       if (name !== undefined) requirement.name = name;
       if (description !== undefined) requirement.description = description;
       if (priority !== undefined) requirement.priority = priority;
+      if (type !== undefined) requirement.type = type;
       if (expectedCompletionDate !== undefined) requirement.expectedCompletionDate = expectedCompletionDate;
       if (status !== undefined) requirement.status = status;
       
       requirement.updatedAt = new Date().toISOString();
 
-      logger.info(`Updated requirement ${requirementId}: ${requirement.name}`);
+      logger.info(`Updated requirement ${requirementId}: ${requirement.name} (type: ${requirement.type})`);
 
       res.json({
         success: true,
@@ -303,7 +327,7 @@ export class ProjectRequirementsController {
       }
 
       // Update requirement status to pending (sent to development manager)
-      requirement.status = "pending";
+      requirement.status = "in-development";
       requirement.updatedAt = new Date().toISOString();
 
       // Send notification to development managers and project stakeholders

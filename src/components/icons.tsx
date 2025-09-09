@@ -922,7 +922,7 @@ export const ClockIcon: React.FC<IconSvgProps> = ({
 );
 
 export const SendIcon: React.FC<IconSvgProps> = ({
-  size = 24,
+  size = 18,
   width,
   height,
   ...props
