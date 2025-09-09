@@ -50,6 +50,7 @@ const translations = {
     "notifications.minimize": "Minimize",
     "notifications.markAsRead": "Mark as read",
     "dashboard.urgentNotifications": "Urgent Notifications",
+    "dashboard.updates": "Updates",
     
     // Common Date References
     "common.today": "Today",
@@ -900,6 +901,7 @@ const translations = {
     "notifications.minimize": "تصغير",
     "notifications.markAsRead": "تعليم كمقروء",
     "dashboard.urgentNotifications": "إشعارات عاجلة",
+    "dashboard.updates": "التحديثات",
     
     // Common Date References
     "common.today": "اليوم",

@@ -415,10 +415,15 @@ export default function IndexPage() {
           
           {/* Side Column - Urgent Notifications */}
           <div className="lg:col-span-1">
-            <UrgentNotifications 
-              maxNotifications={5} 
-              useMockData={true}
-            />
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold text-foreground">
+                {t("dashboard.updates")}
+              </h2>
+              <UrgentNotifications 
+                maxNotifications={5} 
+                useMockData={true}
+              />
+            </div>
           </div>
         </div>
       </div>

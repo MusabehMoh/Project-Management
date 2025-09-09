@@ -4,6 +4,7 @@ import { Badge } from "@heroui/badge";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
+import { ScrollShadow } from "@heroui/scroll-shadow";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { mockUrgentNotifications } from "@/utils/mockNotifications";
@@ -60,19 +61,20 @@ export const UrgentNotifications: React.FC<UrgentNotificationProps> = ({
 
   return (
     <div className={language === 'ar' ? 'rtl' : 'ltr'}>
-      <Card className="w-full shadow-sm overflow-hidden">
-        <CardHeader className="flex items-center justify-between bg-primary-50 dark:bg-primary-900/20 py-2">
+      <Card className="w-full shadow-md border border-default-200">
+        <CardHeader className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2">
             <Badge color="danger" content={urgentNotifications.length} size="sm">
               <div className="w-5 h-5" />
             </Badge>
-            <h3 className="text-md font-medium">{t("dashboard.urgentNotifications")}</h3>
+            <h3 className="text-md font-medium text-foreground">{t("dashboard.urgentNotifications")}</h3>
           </div>
           {urgentNotifications.length > 0 && (
             <Button 
               size="sm" 
-              variant="light"
-              color="primary"
+              variant="flat"
+              color="danger"
+              className="px-2 text-xs"
               onClick={() => urgentNotifications.forEach(n => handleMarkAsRead(n.id))}
             >
               {t("nav.markAllRead")}
@@ -80,45 +82,50 @@ export const UrgentNotifications: React.FC<UrgentNotificationProps> = ({
           )}
         </CardHeader>
         
+        <Divider />
+        
         <CardBody className="px-0 py-0">
           {urgentNotifications.length === 0 ? (
-            <div className="p-3 text-center text-default-500 text-sm">
+            <div className="p-4 text-center text-default-500 text-sm">
               {t("nav.noNotifications")}
             </div>
           ) : (
-            <div className="max-h-64 overflow-y-auto">
+            <ScrollShadow hideScrollBar size={20} className="max-h-64">
               {urgentNotifications.map((notification, index) => (
                 <React.Fragment key={notification.id}>
                   {index > 0 && <Divider className="my-0" />}
                   <div 
-                    className="p-3 hover:bg-default-100 dark:hover:bg-default-50/10 transition-colors cursor-pointer"
+                    className="p-4 hover:bg-default-100 dark:hover:bg-default-50/10 transition-colors"
+                    style={{ cursor: notification.projectId ? 'pointer' : 'default' }}
                     onClick={() => notification.projectId && handleNavigateToProject(notification.projectId)}
                   >
-                    <div className="flex items-start justify-between mb-1">
-                      <p className="text-sm font-medium">{notification.message}</p>
-                      <Chip size="sm" color="warning" variant="dot" className="ml-2 shrink-0">
-                        {t("notifications.urgent")}
-                      </Chip>
-                    </div>
-                    <div className="flex justify-between items-center mt-2">
-                      <p className="text-xs text-default-500">{formatDate(new Date(notification.timestamp))}</p>
-                      <Button 
-                        size="sm" 
-                        variant="light" 
-                        color="default"
-                        className="min-w-0 h-6 px-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMarkAsRead(notification.id);
-                        }}
-                      >
-                        {t("notifications.markAsRead")}
-                      </Button>
+                    <div className="flex items-start gap-2">
+                      <div className="flex-grow">
+                        <p className="text-sm font-medium text-foreground mb-1">{notification.message}</p>
+                        <p className="text-xs text-default-500">{formatDate(new Date(notification.timestamp))}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <Chip size="sm" color="danger" variant="flat">
+                          {t("notifications.urgent")}
+                        </Chip>
+                        <Button 
+                          size="sm" 
+                          variant="solid" 
+                          color="default"
+                          className="min-w-0 px-2 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkAsRead(notification.id);
+                          }}
+                        >
+                          {t("notifications.markAsRead")}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </React.Fragment>
               ))}
-            </div>
+            </ScrollShadow>
           )}
         </CardBody>
       </Card>
