@@ -19,6 +19,7 @@ const ENDPOINTS = {
     `/project-requirements/requirements/${requirementId}/send`,
   REQUIREMENT_STATS: (projectId: number) =>
     `/project-requirements/projects/${projectId}/stats`,
+  DEVELOPMENT_REQUIREMENTS: "/project-requirements/development-requirements",
 };
 
 class ProjectRequirementsService {
@@ -185,6 +186,50 @@ class ProjectRequirementsService {
     );
 
     return result.data;
+  }
+
+  /**
+   * Get all requirements with status "in development"
+   */
+  async getDevelopmentRequirements(
+    filters?: ProjectRequirementFilters & {
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{
+    data: ProjectRequirement[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, String(value));
+        }
+      });
+    }
+
+    const endpoint = params.toString()
+      ? `${ENDPOINTS.DEVELOPMENT_REQUIREMENTS}?${params.toString()}`
+      : ENDPOINTS.DEVELOPMENT_REQUIREMENTS;
+
+    const result = await apiClient.get<ProjectRequirement[]>(endpoint);
+
+    return {
+      data: result.data ?? [],
+      pagination: result.pagination ?? {
+        page: (filters as any)?.page ?? 1,
+        limit: (filters as any)?.limit ?? 20,
+        total: (result.data ?? []).length,
+        totalPages: 1,
+      },
+    };
   }
 }
 

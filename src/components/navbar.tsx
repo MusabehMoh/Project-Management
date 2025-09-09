@@ -149,6 +149,10 @@ const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
   const baseItems = [
     { label: t("nav.dashboard"), href: "/" },
     { label: t("nav.requirements"), href: "/requirements" },
+    {
+      label: t("nav.developmentRequirements"),
+      href: "/development-requirements",
+    },
     { label: t("nav.timeline"), href: "/timeline" },
     { label: t("nav.tasks"), href: "/tasks" },
   ];

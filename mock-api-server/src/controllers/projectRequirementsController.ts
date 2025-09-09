@@ -103,7 +103,7 @@ export class ProjectRequirementsController {
   async getProjectRequirements(req: Request, res: Response) {
     try {
       const { projectId } = req.params;
-      const { page = 1, limit = 20, status, priority, search } = req.query;
+  const { page = 1, limit = 20, status, priority, search, projectId: qProjectId } = req.query;
 
       let filteredRequirements = mockProjectRequirements.filter(
         (req) => req.projectId === parseInt(projectId),
@@ -431,6 +431,76 @@ export class ProjectRequirementsController {
       });
     } catch (error) {
       logger.error("Error getting requirement stats:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  /**
+   * Get all requirements with status "in development"
+   */
+  async getDevelopmentRequirements(req: Request, res: Response) {
+    try {
+  const { page = 1, limit = 20, status, priority, search, projectId: qProjectId } = req.query;
+
+      // Filter requirements with status "in-development"
+      let filteredRequirements = mockProjectRequirements.filter(
+        (req) => req.status === "in-development",
+      );
+
+      // Apply additional filters
+      if (qProjectId) {
+        const pid = Number(qProjectId);
+        filteredRequirements = filteredRequirements.filter((r) =>
+          // support both top-level projectId and nested project object
+          (r as any).projectId === pid || (r.project && r.project.id === pid),
+        );
+      }
+
+      if (priority) {
+        filteredRequirements = filteredRequirements.filter(
+          (req) => req.priority === priority,
+        );
+      }
+
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        filteredRequirements = filteredRequirements.filter(
+          (req) =>
+            req.name.toLowerCase().includes(searchTerm) ||
+            req.description.toLowerCase().includes(searchTerm),
+        );
+      }
+
+      // Apply pagination
+      const startIndex = ((page as number) - 1) * (limit as number);
+      const endIndex = startIndex + (limit as number);
+      const paginatedRequirements = filteredRequirements.slice(
+        startIndex,
+        endIndex,
+      );
+
+      logger.info(
+        `Retrieved ${paginatedRequirements.length} development requirements`,
+      );
+
+      res.json({
+        success: true,
+        data: paginatedRequirements,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: filteredRequirements.length,
+          totalPages: Math.ceil(
+            filteredRequirements.length / (limit as number),
+          ),
+        },
+      });
+    } catch (error) {
+      logger.error("Error getting development requirements:", error);
       res.status(500).json({
         success: false,
         message: "Internal server error",

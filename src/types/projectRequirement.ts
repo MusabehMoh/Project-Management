@@ -73,6 +73,7 @@ export interface UpdateProjectRequirementRequest {
 
 export interface ProjectRequirementFilters {
   status?: string;
+  projectId?: number;
   priority?: string;
   assignedTo?: number;
   createdBy?: number;

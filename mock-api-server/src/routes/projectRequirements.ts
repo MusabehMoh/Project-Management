@@ -45,3 +45,9 @@ projectRequirementRoutes.get(
   "/projects/:projectId/stats",
   projectRequirementsController.getRequirementStats.bind(projectRequirementsController),
 );
+
+// GET /api/project-requirements/development-requirements - Get all requirements with status "in development"
+projectRequirementRoutes.get(
+  "/development-requirements",
+  projectRequirementsController.getDevelopmentRequirements.bind(projectRequirementsController),
+);

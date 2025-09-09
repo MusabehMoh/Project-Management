@@ -14,6 +14,7 @@ import UsersPage from "@/pages/users";
 import DepartmentsPage from "@/pages/departments";
 import RequirementsPage from "@/pages/requirements";
 import ProjectRequirementsPage from "@/pages/project-requirements";
+import DevelopmentRequirementsPage from "@/pages/development-requirements";
 import TimelinePage from "@/pages/timeline";
 import MembersTasksPage from "@/pages/members-tasks";
 import { TasksTest } from "@/components/TasksTest";
@@ -43,6 +44,10 @@ function App() {
         <Route
           element={<ProjectRequirementsPage />}
           path="/requirements/:projectId"
+        />
+        <Route
+          element={<DevelopmentRequirementsPage />}
+          path="/development-requirements"
         />
         <Route element={<UsersPage />} path="/users" />
         <Route element={<DepartmentsPage />} path="/departments" />

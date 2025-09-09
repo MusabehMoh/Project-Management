@@ -788,6 +788,9 @@ export default function UsersPage() {
                     <div>
                       <Select
                         isRequired
+                        scrollShadowProps={{
+                          isEnabled: true,
+                        }}
                         aria-label={t("users.assignRoles")}
                         label={t("users.assignRoles")}
                         placeholder={t("roles.selectRole")}
@@ -929,7 +932,7 @@ export default function UsersPage() {
                       )}
 
                     {/* Summary of All Permissions */}
-                    {selectedRole && (
+                    {/*{selectedRole && (
                       <div>
                         <p className="text-small text-default-500 mb-2">
                           {t("users.permissionsSummary")}
@@ -961,7 +964,7 @@ export default function UsersPage() {
                           </CardBody>
                         </Card>
                       </div>
-                    )}
+                    )}*/}
                   </div>
                 </ModalBody>
                 <ModalFooter>
