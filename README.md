@@ -1,50 +1,136 @@
-# Vite & HeroUI Template
+# Project Management Application (PMA)
 
-This is a template for creating applications using Vite and HeroUI (v2).
+A comprehensive project management application built with modern web technologies. This application provides tools for managing projects, tasks, timelines, and team collaboration.
 
-[Try it on CodeSandbox](https://githubbox.com/frontio-ai/vite-template)
+## Features
+
+- 📊 Project management and tracking
+- ✅ Task planning and assignment
+- 📅 Timeline visualization
+- 👥 Team collaboration
+- 🔍 Advanced search functionality
+- 📱 Responsive design
+- 🌐 Multi-language support
 
 ## Technologies Used
 
-- [Vite](https://vitejs.dev/guide/)
-- [HeroUI](https://heroui.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Tailwind Variants](https://tailwind-variants.org)
-- [TypeScript](https://www.typescriptlang.org)
-- [Framer Motion](https://www.framer.com/motion)
+- [React](https://reactjs.org) - Frontend framework
+- [TypeScript](https://www.typescriptlang.org) - Type-safe JavaScript
+- [Vite](https://vitejs.dev/guide/) - Build tool and dev server
+- [HeroUI](https://heroui.com) - UI component library
+- [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
+- [Tailwind Variants](https://tailwind-variants.org) - Component variants
+- [Framer Motion](https://www.framer.com/motion) - Animation library
+- [Node.js](https://nodejs.org) - Backend runtime
+- [Express.js](https://expressjs.com) - Backend framework
 
-## How to Use
+## Getting Started
 
-To clone the project, run the following command:
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm, yarn, or pnpm
+
+### Installation
+
+1. Clone the repository:
 
 ```bash
-git clone https://github.com/frontio-ai/vite-template.git
+git clone https://github.com/MusabehMoh/Project-Management.git
+cd Project-Management
 ```
 
-### Install dependencies
-
-You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `npm`:
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-### Run the development server
+3. Install mock API server dependencies:
+
+```bash
+cd mock-api-server
+npm install
+cd ..
+```
+
+### Running the Application
+
+1. Start the mock API server (in one terminal):
+
+```bash
+cd mock-api-server
+npm run dev
+```
+
+2. Start the frontend development server (in another terminal):
 
 ```bash
 npm run dev
 ```
 
-### Setup pnpm (optional)
+The application will be available at `http://localhost:5173`
+The mock API server will run on `http://localhost:3001`
 
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
+## Project Structure
 
-```bash
-public-hoist-pattern[]=*@heroui/*
+```
+PMA-main/
+├── src/                    # Frontend source code
+│   ├── components/         # Reusable UI components
+│   ├── pages/             # Application pages
+│   ├── hooks/             # Custom React hooks
+│   ├── services/          # API services
+│   ├── contexts/          # React contexts
+│   └── utils/             # Utility functions
+├── mock-api-server/       # Backend mock API
+│   ├── src/
+│   │   ├── controllers/   # API controllers
+│   │   ├── routes/        # API routes
+│   │   ├── services/      # Business logic
+│   │   └── data/          # Mock data
+└── public/                # Static assets
 ```
 
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are installed correctly.
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Team Collaboration
+
+### Basic Git Workflow
+
+1. Before starting work:
+```bash
+git pull origin master
+```
+
+2. After making changes:
+```bash
+git add .
+git commit -m "Describe your changes"
+git push origin master
+```
+
+### For Feature Development
+
+1. Create a new branch:
+```bash
+git checkout -b feature/your-feature-name
+```
+
+2. Work on your feature and commit changes
+3. Push your branch:
+```bash
+git push origin feature/your-feature-name
+```
+
+4. Create a Pull Request on GitHub
 
 ## License
 
-Licensed under the [MIT license](https://github.com/frontio-ai/vite-template/blob/main/LICENSE).
+Licensed under the [MIT license](LICENSE).
