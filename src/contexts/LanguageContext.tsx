@@ -51,6 +51,12 @@ const translations = {
     "notifications.markAsRead": "Mark as read",
     "dashboard.urgentNotifications": "Urgent Notifications",
     "dashboard.updates": "Updates",
+    "dashboard.projectPipeline": "Project Pipeline",
+    
+    // Project Pipeline
+    "pipeline.planning": "Planning",
+    "pipeline.inProgress": "In Progress",
+    "pipeline.completed": "Completed",
     
     // Common Date References
     "common.today": "Today",
@@ -937,6 +943,12 @@ const translations = {
     "notifications.markAsRead": "تعليم كمقروء",
     "dashboard.urgentNotifications": "إشعارات عاجلة",
     "dashboard.updates": "التحديثات",
+    "dashboard.projectPipeline": "خط سير المشروع",
+    
+    // Project Pipeline
+    "pipeline.planning": "التخطيط",
+    "pipeline.inProgress": "قيد التنفيذ",
+    "pipeline.completed": "مكتمل",
     
     // Common Date References
     "common.today": "اليوم",

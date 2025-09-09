@@ -1,9 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardBody, CardHeader, CardFooter } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { Progress } from "@heroui/progress";
+import { Progress, CircularProgress } from "@heroui/progress";
 import { Avatar, AvatarGroup } from "@heroui/avatar";
+import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Badge } from "@heroui/badge";
 import { Divider } from "@heroui/divider";
@@ -59,6 +60,52 @@ export default function IndexPage() {
     if (progress >= 40) return "warning"; // Orange for medium progress
 
     return "danger"; // Red for low progress
+  };
+  
+  // Reusable project card component with improved progress indicators
+  const renderProjectCard = (project: Project) => {
+    return (
+      <Card className="mb-3 shadow-sm">
+        <CardBody className="p-3">
+          <div className="flex justify-between items-start">
+            <p className="font-medium">{project.name}</p>
+            <CircularProgress
+              size="sm"
+              value={project.progress}
+              color={getProgressColor(project.progress)}
+              showValueLabel={true}
+              aria-label={`${project.name} progress: ${project.progress}%`}
+              classNames={{
+                svg: "w-10 h-10",
+                value: "text-xs font-semibold"
+              }}
+            />
+          </div>
+          <Progress
+            size="sm"
+            value={project.progress}
+            color={getProgressColor(project.progress)}
+            className="w-full mt-2"
+            aria-label={`${project.name} progress bar`}
+            showValueLabel={false}
+            radius="md"
+            isStriped={true}
+          />
+          <div className="flex justify-between items-center mt-3">
+            <p className="text-xs text-default-500">{project.dueDate}</p>
+            <Button 
+              size="sm" 
+              variant="flat" 
+              color="primary"
+              className="min-w-0 px-2 text-xs"
+              onPress={() => openProjectDetails(project)}
+            >
+              {t("dashboard.viewDetails")}
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+    );
   };
 
   // Helper function to translate status
@@ -347,71 +394,85 @@ export default function IndexPage() {
           </div>
         </div>
 
-        {/* Recent Tasks and Notifications Layout */}
+        {/* Project Pipeline and Notifications Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Column - Recent Tasks */}
+          {/* Main Column - Project Pipeline */}
           <div className="lg:col-span-2 space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">
-              {t("dashboard.recentTasks")}
+              {t("dashboard.projectPipeline")}
             </h2>
 
-          <Accordion variant="splitted">
-            {projects.map((project) => (
-              <AccordionItem
-                key={project.id}
-                aria-label={project.name}
-                startContent={
-                  <Chip
-                    color={getStatusColor(project.status)}
-                    size="sm"
-                    variant="dot"
-                  >
-                    {getStatusText(project.status)}
-                  </Chip>
-                }
-                subtitle={`${project.tasks.length} ${t("dashboard.tasks")}`}
-                title={project.name}
-              >
-                <div className="space-y-3">
-                  {project.tasks.map((task) => (
-                    <Card key={task.id} className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Avatar name={task.assignee} size="sm" />
-                          <div>
-                            <p className="font-medium">{task.title}</p>
-                            <p className="text-sm text-default-500">
-                              {t("dashboard.assignedTo")} {task.assignee}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Chip
-                            color={getStatusColor(task.status)}
-                            size="sm"
-                            variant="flat"
-                          >
-                            {getStatusText(task.status)}
-                          </Chip>
-                          <Chip
-                            color={getPriorityColor(task.priority)}
-                            size="sm"
-                            variant="dot"
-                          >
-                            {getPriorityText(task.priority)}
-                          </Chip>
-                          <span className="text-sm text-default-500">
-                            {task.dueDate}
-                          </span>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
+            <div className="grid grid-cols-1 gap-4">
+              {/* Pipeline Stages */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Planning Stage */}
+                <Card className="border-t-4 border-t-primary">
+                  <CardHeader className="pb-1">
+                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.planning")}</h3>
+                    <Chip size="sm" color="primary" variant="flat" className="ml-2">
+                      {projects.filter(p => p.status === "on-hold" || p.status === "todo").length}
+                    </Chip>
+                  </CardHeader>
+                  <Divider />
+                  <CardBody className="gap-3 p-2 overflow-hidden">
+                    <ScrollShadow hideScrollBar className="max-h-64 p-2">
+                      {projects
+                        .filter(project => project.status === "on-hold" || project.status === "todo")
+                        .map(project => (
+                          <React.Fragment key={project.id}>
+                            {renderProjectCard(project)}
+                          </React.Fragment>
+                        ))}
+                    </ScrollShadow>
+                  </CardBody>
+                </Card>
+                
+                {/* In Progress Stage */}
+                <Card className="border-t-4 border-t-warning">
+                  <CardHeader className="pb-1">
+                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.inProgress")}</h3>
+                    <Chip size="sm" color="warning" variant="flat" className="ml-2">
+                      {projects.filter(p => p.status === "in-progress" || p.status === "active").length}
+                    </Chip>
+                  </CardHeader>
+                  <Divider />
+                  <CardBody className="gap-3 p-2 overflow-hidden">
+                    <ScrollShadow hideScrollBar className="max-h-64 p-2">
+                      {projects
+                        .filter(project => project.status === "in-progress" || project.status === "active")
+                        .map(project => (
+                          <React.Fragment key={project.id}>
+                            {renderProjectCard(project)}
+                          </React.Fragment>
+                        ))}
+                    </ScrollShadow>
+                  </CardBody>
+                </Card>
+                
+                {/* Completed Stage */}
+                <Card className="border-t-4 border-t-success">
+                  <CardHeader className="pb-1">
+                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.completed")}</h3>
+                    <Chip size="sm" color="success" variant="flat" className="ml-2">
+                      {projects.filter(p => p.status === "completed" || p.status === "cancelled").length}
+                    </Chip>
+                  </CardHeader>
+                  <Divider />
+                  <CardBody className="gap-3 p-2 overflow-hidden">
+                    <ScrollShadow hideScrollBar className="max-h-64 p-2">
+                      {projects
+                        .filter(project => project.status === "completed" || project.status === "cancelled")
+                        .map(project => (
+                          <React.Fragment key={project.id}>
+                            {renderProjectCard(project)}
+                          </React.Fragment>
+                        ))}
+                    </ScrollShadow>
+                  </CardBody>
+                </Card>
+              </div>
+            </div>
+          </div>
           
           {/* Side Column - Urgent Notifications */}
           <div className="lg:col-span-1">
