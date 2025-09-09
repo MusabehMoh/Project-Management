@@ -35,6 +35,7 @@ const translations = {
     "nav.reports": "Reports",
     "nav.newProject": "New Project",
     "nav.notifications": "Notifications",
+    "nav.notificationsTitle": "Notifications",
     "nav.search": "Search projects, tasks, people...",
     "nav.searchModal": "Search",
     "nav.searchPlaceholder": "Search projects, tasks, team members...",
@@ -290,7 +291,8 @@ const translations = {
     "requirements.sendToDevelopment": "Send to Development",
     "requirements.cancel": "Cancel",
     "requirements.requirementNamePlaceholder": "e.g. PDF Invoice Generation",
-    "requirements.requirementDescriptionPlaceholder": "Describe the requirement details...",
+    "requirements.requirementDescriptionPlaceholder":
+      "Describe the requirement details...",
     "requirements.selectPriority": "Select Priority",
     "requirements.selectExpectedDate": "Select Expected Completion Date",
     "requirements.uploadAttachment": "Upload Attachment",
@@ -311,7 +313,8 @@ const translations = {
     "requirements.filterByPriority": "Filter by Priority",
     "requirements.searchRequirements": "Search requirements...",
     "requirements.confirmDelete": "Confirm Delete",
-    "requirements.deleteConfirmMessage": "Are you sure you want to delete this requirement?",
+    "requirements.deleteConfirmMessage":
+      "Are you sure you want to delete this requirement?",
     "requirements.actionCannotBeUndone": "This action cannot be undone.",
     "requirements.sent": "Sent",
     "requirements.draft": "Draft",
@@ -336,9 +339,11 @@ const translations = {
     "requirements.validation.nameRequired": "Requirement name is required",
     "requirements.validation.descriptionRequired": "Description is required",
     "requirements.validation.priorityRequired": "Priority is required",
-    "requirements.validation.expectedDateRequired": "Expected completion date is required",
+    "requirements.validation.expectedDateRequired":
+      "Expected completion date is required",
     "requirements.emptyState.title": "No Requirements Yet",
-    "requirements.emptyState.description": "Start by adding your first requirement for this project",
+    "requirements.emptyState.description":
+      "Start by adding your first requirement for this project",
     "requirements.emptyState.action": "Add First Requirement",
 
     // Task Plan
@@ -800,46 +805,46 @@ const translations = {
     "timeline.searchTask": "Search for a task",
 
     // Members Tasks Dashboard
-    "membersTasksDashboard": "Members Tasks Dashboard",
-    "tasksOverview": "Tasks Overview",
-    
+    membersTasksDashboard: "Members Tasks Dashboard",
+    tasksOverview: "Tasks Overview",
+
     // Filters
-    "filterByAssignees": "Filter by Assignees",
-    "filterByDepartment": "Filter by Department",
-    "filterByStatus": "Filter by Status",
-    "filterByPriority": "Filter by Priority",
-    "filterByDateRange": "Filter by Date Range",
-    "showOverdueOnly": "Show Overdue Only",
-    "anyAssigneeMode": "Tasks with ANY selected assignee",
-    "allAssigneesMode": "Tasks with ALL selected assignees",
-    "clearAllFilters": "Clear All Filters",
-    "activeFilters": "Active Filters",
-    
+    filterByAssignees: "Filter by Assignees",
+    filterByDepartment: "Filter by Department",
+    filterByStatus: "Filter by Status",
+    filterByPriority: "Filter by Priority",
+    filterByDateRange: "Filter by Date Range",
+    showOverdueOnly: "Show Overdue Only",
+    anyAssigneeMode: "Tasks with ANY selected assignee",
+    allAssigneesMode: "Tasks with ALL selected assignees",
+    clearAllFilters: "Clear All Filters",
+    activeFilters: "Active Filters",
+
     // Task Card
-    "primaryAssignee": "Primary Assignee",
-    "otherAssignees": "Other Assignees",
-    "moreAssignees": "more assignees",
-    "taskProgress": "Progress",
-    "timeSpent": "Time Spent",
-    "estimatedTime": "Estimated Time",
-    "taskTags": "Tags",
-    "overdueTask": "Overdue",
-    "taskDetails": "Task Details",
-    
+    primaryAssignee: "Primary Assignee",
+    otherAssignees: "Other Assignees",
+    moreAssignees: "more assignees",
+    taskProgress: "Progress",
+    timeSpent: "Time Spent",
+    estimatedTime: "Estimated Time",
+    taskTags: "Tags",
+    overdueTask: "Overdue",
+    taskDetails: "Task Details",
+
     // Export
-    "exportTasks": "Export Tasks",
-    "exportAsCSV": "Export as CSV",
-    "exportAsPDF": "Export as PDF",
-    "exportAsExcel": "Export as Excel",
-    
+    exportTasks: "Export Tasks",
+    exportAsCSV: "Export as CSV",
+    exportAsPDF: "Export as PDF",
+    exportAsExcel: "Export as Excel",
+
     // States
-    "noTasksFound": "No tasks found",
-    "adjustFiltersMessage": "Try adjusting your filters to see more results",
-    "loadingTasks": "Loading tasks...",
-    "errorLoadingTasks": "Error loading tasks",
-    "selectDepartment": "Select Department",
-    "selectStatus": "Select Status",
-    "selectPriority": "Select Priority",
+    noTasksFound: "No tasks found",
+    adjustFiltersMessage: "Try adjusting your filters to see more results",
+    loadingTasks: "Loading tasks...",
+    errorLoadingTasks: "Error loading tasks",
+    selectDepartment: "Select Department",
+    selectStatus: "Select Status",
+    selectPriority: "Select Priority",
   },
   ar: {
     // Navbar
@@ -854,6 +859,7 @@ const translations = {
     "nav.reports": "التقارير",
     "nav.newProject": "مشروع جديد",
     "nav.notifications": "الإشعارات",
+    "nav.notificationsTitle": "الإشعارات",
     "nav.search": "البحث في المشاريع والمهام والأشخاص...",
     "nav.searchModal": "البحث",
     "nav.searchPlaceholder": "البحث في المشاريع والمهام وأعضاء الفريق...",
@@ -1152,7 +1158,8 @@ const translations = {
     "requirements.validation.nameRequired": "اسم المتطلب مطلوب",
     "requirements.validation.descriptionRequired": "الوصف مطلوب",
     "requirements.validation.priorityRequired": "الأولوية مطلوبة",
-    "requirements.validation.expectedDateRequired": "تاريخ الإنجاز المتوقع مطلوب",
+    "requirements.validation.expectedDateRequired":
+      "تاريخ الإنجاز المتوقع مطلوب",
     "requirements.emptyState.title": "لا توجد متطلبات بعد",
     "requirements.emptyState.description": "ابدأ بإضافة أول متطلب لهذا المشروع",
     "requirements.emptyState.action": "إضافة أول متطلب",
@@ -1607,46 +1614,46 @@ const translations = {
     "timeline.searchTask": "البحث عن مهمة",
 
     // Members Tasks Dashboard
-    "membersTasksDashboard": "لوحة مهام الأعضاء",
-    "tasksOverview": "نظرة عامة على المهام",
-    
+    membersTasksDashboard: "لوحة مهام الأعضاء",
+    tasksOverview: "نظرة عامة على المهام",
+
     // Filters
-    "filterByAssignees": "تصفية حسب المعينين",
-    "filterByDepartment": "تصفية حسب القسم",
-    "filterByStatus": "تصفية حسب الحالة",
-    "filterByPriority": "تصفية حسب الأولوية",
-    "filterByDateRange": "تصفية حسب النطاق الزمني",
-    "showOverdueOnly": "إظهار المتأخرة فقط",
-    "anyAssigneeMode": "المهام مع أي من المعينين المحددين",
-    "allAssigneesMode": "المهام مع جميع المعينين المحددين",
-    "clearAllFilters": "مسح جميع المرشحات",
-    "activeFilters": "المرشحات النشطة",
-    
+    filterByAssignees: "تصفية حسب المعينين",
+    filterByDepartment: "تصفية حسب القسم",
+    filterByStatus: "تصفية حسب الحالة",
+    filterByPriority: "تصفية حسب الأولوية",
+    filterByDateRange: "تصفية حسب النطاق الزمني",
+    showOverdueOnly: "إظهار المتأخرة فقط",
+    anyAssigneeMode: "المهام مع أي من المعينين المحددين",
+    allAssigneesMode: "المهام مع جميع المعينين المحددين",
+    clearAllFilters: "مسح جميع المرشحات",
+    activeFilters: "المرشحات النشطة",
+
     // Task Card
-    "primaryAssignee": "المعين الأساسي",
-    "otherAssignees": "المعينون الآخرون",
-    "moreAssignees": "معين إضافي",
-    "taskProgress": "التقدم",
-    "timeSpent": "الوقت المستغرق",
-    "estimatedTime": "الوقت المقدر",
-    "taskTags": "العلامات",
-    "overdueTask": "متأخر",
-    "taskDetails": "تفاصيل المهمة",
-    
+    primaryAssignee: "المعين الأساسي",
+    otherAssignees: "المعينون الآخرون",
+    moreAssignees: "معين إضافي",
+    taskProgress: "التقدم",
+    timeSpent: "الوقت المستغرق",
+    estimatedTime: "الوقت المقدر",
+    taskTags: "العلامات",
+    overdueTask: "متأخر",
+    taskDetails: "تفاصيل المهمة",
+
     // Export
-    "exportTasks": "تصدير المهام",
-    "exportAsCSV": "تصدير كـ CSV",
-    "exportAsPDF": "تصدير كـ PDF",
-    "exportAsExcel": "تصدير كـ Excel",
-    
+    exportTasks: "تصدير المهام",
+    exportAsCSV: "تصدير كـ CSV",
+    exportAsPDF: "تصدير كـ PDF",
+    exportAsExcel: "تصدير كـ Excel",
+
     // States
-    "noTasksFound": "لم يتم العثور على مهام",
-    "adjustFiltersMessage": "حاول تعديل المرشحات لرؤية المزيد من النتائج",
-    "loadingTasks": "جاري تحميل المهام...",
-    "errorLoadingTasks": "خطأ في تحميل المهام",
-    "selectDepartment": "اختر القسم",
-    "selectStatus": "اختر الحالة",
-    "selectPriority": "اختر الأولوية",
+    noTasksFound: "لم يتم العثور على مهام",
+    adjustFiltersMessage: "حاول تعديل المرشحات لرؤية المزيد من النتائج",
+    loadingTasks: "جاري تحميل المهام...",
+    errorLoadingTasks: "خطأ في تحميل المهام",
+    selectDepartment: "اختر القسم",
+    selectStatus: "اختر الحالة",
+    selectPriority: "اختر الأولوية",
   },
 };
 

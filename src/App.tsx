@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import { ToastProvider } from "@heroui/toast";
 
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -14,8 +14,6 @@ import UsersPage from "@/pages/users";
 import DepartmentsPage from "@/pages/departments";
 import RequirementsPage from "@/pages/requirements";
 import ProjectRequirementsPage from "@/pages/project-requirements";
-import TimelinePlanningPage from "@/pages/timeline-planning";
-import TaskPlanPage from "@/pages/task-plan";
 import TimelinePage from "@/pages/timeline";
 import MembersTasksPage from "@/pages/members-tasks";
 import { TasksTest } from "@/components/TasksTest";
@@ -45,8 +43,6 @@ function App() {
           element={<ProjectRequirementsPage />}
           path="/requirements/:projectId"
         />
-        <Route element={<TimelinePlanningPage />} path="/timeline-planning" />
-        <Route element={<TaskPlanPage />} path="/task-plan" />
         <Route element={<UsersPage />} path="/users" />
         <Route element={<DepartmentsPage />} path="/departments" />
         <Route element={<TimelinePage />} path="/timeline" />
@@ -58,16 +54,7 @@ function App() {
         <Route element={<BlogPage />} path="/blog" />
         <Route element={<AboutPage />} path="/about" />
       </Routes>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#363636",
-            color: "#fff",
-          },
-        }}
-      />
+      <ToastProvider placement="bottom-right" />
     </>
   );
 }

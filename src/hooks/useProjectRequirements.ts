@@ -8,7 +8,7 @@ import type {
 } from "@/types/projectRequirement";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import toast from "react-hot-toast";
+import { addToast } from "@heroui/toast";
 
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 
@@ -85,7 +85,11 @@ export function useProjectRequirements({
             : "Failed to load assigned projects";
 
         setError(errorMessage);
-        toast.error(errorMessage);
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
       } finally {
         setLoading(false);
   assignedInFlightKeyRef.current = null;
@@ -122,7 +126,11 @@ export function useProjectRequirements({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load requirements";
       setError(errorMessage);
-      toast.error(errorMessage);
+      addToast({
+        title: "Error",
+        description: errorMessage,
+        color: "danger",
+      });
     } finally {
       setLoading(false);
       inFlightKeyRef.current = null;
@@ -155,11 +163,19 @@ export function useProjectRequirements({
         const newRequirement = await projectRequirementsService.createRequirement(projectId, data);
         setRequirements((prev) => [newRequirement, ...prev]);
         await loadStats(); // Refresh stats
-        toast.success("Requirement created successfully");
+        addToast({
+          title: "Success",
+          description: "Requirement created successfully",
+          color: "success",
+        });
         return newRequirement;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to create requirement";
-        toast.error(errorMessage);
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
         throw err;
       } finally {
         setLoading(false);
@@ -184,11 +200,19 @@ export function useProjectRequirements({
           prev.map((req) => (req.id === requirementId ? updatedRequirement : req))
         );
         await loadStats(); // Refresh stats
-        toast.success("Requirement updated successfully");
+        addToast({
+          title: "Success",
+          description: "Requirement updated successfully",
+          color: "success",
+        });
         return updatedRequirement;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to update requirement";
-        toast.error(errorMessage);
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
         throw err;
       } finally {
         setLoading(false);
@@ -207,10 +231,18 @@ export function useProjectRequirements({
         await projectRequirementsService.deleteRequirement(requirementId);
         setRequirements((prev) => prev.filter((req) => req.id !== requirementId));
         await loadStats(); // Refresh stats
-        toast.success("Requirement deleted successfully");
+        addToast({
+          title: "Success", 
+          description: "Requirement deleted successfully",
+          color: "success",
+        });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to delete requirement";
-        toast.error(errorMessage);
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
         throw err;
       } finally {
         setLoading(false);
@@ -231,11 +263,19 @@ export function useProjectRequirements({
           prev.map((req) => (req.id === requirementId ? updatedRequirement : req))
         );
         await loadStats(); // Refresh stats
-        toast.success("Requirement sent to development successfully");
+        addToast({
+          title: "Success",
+          description: "Requirement sent to development successfully",
+          color: "success",
+        });
         return updatedRequirement;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to send requirement";
-        toast.error(errorMessage);
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
         throw err;
       } finally {
         setLoading(false);

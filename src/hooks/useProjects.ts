@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import {
   Project,
@@ -29,80 +29,185 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
   const [pageSize, setPageSize] = useState(10);
 
   // Load projects from API with pagination
+  const inFlightProjectsRef = useRef<{
+    key: string;
+    promise: Promise<void>;
+  } | null>(null);
+  const inFlightUsersRef = useRef<Promise<void> | null>(null);
+  const inFlightOwningUnitsRef = useRef<Promise<void> | null>(null);
+  const inFlightStatsRef = useRef<Promise<void> | null>(null);
+
+  const recentCallsRef = useRef<{ key: string; t: number }[]>([]);
+
   const loadProjects = useCallback(
     async (page = 1, limit = pageSize) => {
-      try {
-        setLoading(true);
-        setError(null);
+      const key = JSON.stringify({ filters, page, limit });
 
-        const response = await projectService.getProjects(filters, page, limit);
-
-        if (response.success) {
-          setProjects(response.data);
-          // Set pagination info from API response
-          setCurrentPage(response.pagination?.page || page);
-          setTotalPages(response.pagination?.totalPages || 1);
-          setTotalProjects(response.pagination?.total || response.data.length);
-          setPageSize(response.pagination?.limit || limit);
-        } else {
-          throw new Error(response.message || "Failed to load projects");
+      // Rate-limit / loop protection (same params >5 times within 5s)
+      const now = Date.now();
+      const recent = recentCallsRef.current;
+      // purge old
+      while (recent.length && now - recent[0].t > 5000) recent.shift();
+      recent.push({ key, t: now });
+      const sameKeyCount = recent.filter((r) => r.key === key).length;
+      if (sameKeyCount > 5) {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.warn(
+            "loadProjects aborted to prevent potential infinite loop (same params >5 times in 5s)",
+            key,
+          );
         }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load projects";
-
-        setError(errorMessage);
-        console.error("Error loading projects:", err);
-      } finally {
-        setLoading(false);
+        return;
       }
+
+      // Dedupe identical in-flight requests (prevents StrictMode double-call spam)
+      if (inFlightProjectsRef.current?.key === key) {
+        return inFlightProjectsRef.current.promise;
+      }
+
+      const exec = (async () => {
+        try {
+          setLoading(true);
+          setError(null);
+
+          const response = await projectService.getProjects(
+            filters,
+            page,
+            limit,
+          );
+
+          if (response.success) {
+            // Deduplicate projects by id to avoid React key collisions if API returns duplicates
+            const seen = new Set<number>();
+            const duplicates: number[] = [];
+            const unique = response.data.filter((p: Project) => {
+              if (seen.has(p.id)) {
+                duplicates.push(p.id);
+
+                return false;
+              }
+              seen.add(p.id);
+
+              return true;
+            });
+
+            if (duplicates.length && process.env.NODE_ENV !== "production") {
+              // eslint-disable-next-line no-console
+              console.warn(
+                "Duplicate project IDs detected in API response (deduplicated locally):",
+                Array.from(new Set(duplicates)),
+              );
+            }
+            setProjects(unique);
+            // Set pagination info from API response
+            setCurrentPage(response.pagination?.page || page);
+            setTotalPages(response.pagination?.totalPages || 1);
+            setTotalProjects(
+              response.pagination?.total || response.data.length,
+            );
+            setPageSize(response.pagination?.limit || limit);
+          } else {
+            throw new Error(response.message || "Failed to load projects");
+          }
+        } catch (err) {
+          const errorMessage =
+            err instanceof Error ? err.message : "Failed to load projects";
+
+          setError(errorMessage);
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.error("Error loading projects:", err);
+          }
+        } finally {
+          setLoading(false);
+          // Clear in-flight reference when done
+          if (inFlightProjectsRef.current?.key === key) {
+            inFlightProjectsRef.current = null;
+          }
+        }
+      })();
+
+  inFlightProjectsRef.current = { key, promise: exec };
+
+  return exec;
     },
     [filters, pageSize],
   );
 
   // Load users from API
   const loadUsers = useCallback(async () => {
-    try {
-      const response = await projectService.getProjectUsers();
-
-      if (response.success) {
-        setUsers(response.data);
-      } else {
-        throw new Error(response.message || "Failed to load users");
+    if (inFlightUsersRef.current) return inFlightUsersRef.current;
+    const run = (async () => {
+      try {
+        const response = await projectService.getProjectUsers();
+        if (response.success) {
+          setUsers(response.data);
+        } else {
+          throw new Error(response.message || "Failed to load users");
+        }
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Error loading users:", err);
+        }
+      } finally {
+        inFlightUsersRef.current = null;
       }
-    } catch (err) {
-      console.error("Error loading users:", err);
-    }
+    })();
+  inFlightUsersRef.current = run;
+
+  return run;
   }, []);
 
   // Load owning units from API
   const loadOwningUnits = useCallback(async () => {
-    try {
-      const response = await projectService.getOwningUnits();
-
-      if (response.success) {
-        setOwningUnits(response.data);
-      } else {
-        throw new Error(response.message || "Failed to load owning units");
+    if (inFlightOwningUnitsRef.current) return inFlightOwningUnitsRef.current;
+    const run = (async () => {
+      try {
+        const response = await projectService.getOwningUnits();
+        if (response.success) {
+          setOwningUnits(response.data);
+        } else {
+          throw new Error(response.message || "Failed to load owning units");
+        }
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Error loading owning units:", err);
+        }
+      } finally {
+        inFlightOwningUnitsRef.current = null;
       }
-    } catch (err) {
-      console.error("Error loading owning units:", err);
-    }
+    })();
+  inFlightOwningUnitsRef.current = run;
+
+  return run;
   }, []);
 
   // Load project statistics
   const loadStats = useCallback(async () => {
-    try {
-      const response = await projectService.getProjectStats();
-
-      if (response.success) {
-        setStats(response.data);
-      } else {
-        throw new Error(response.message || "Failed to load statistics");
+    if (inFlightStatsRef.current) return inFlightStatsRef.current;
+    const run = (async () => {
+      try {
+        const response = await projectService.getProjectStats();
+        if (response.success) {
+          setStats(response.data);
+        } else {
+          throw new Error(response.message || "Failed to load statistics");
+        }
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Error loading stats:", err);
+        }
+      } finally {
+        inFlightStatsRef.current = null;
       }
-    } catch (err) {
-      console.error("Error loading stats:", err);
-    }
+    })();
+  inFlightStatsRef.current = run;
+
+  return run;
   }, []);
 
   // Create a new project
@@ -128,7 +233,10 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
           err instanceof Error ? err.message : "Failed to create project";
 
         setError(errorMessage);
-        console.error("Error creating project:", err);
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Error creating project:", err);
+        }
 
         return null;
       } finally {
@@ -163,7 +271,10 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
           err instanceof Error ? err.message : "Failed to update project";
 
         setError(errorMessage);
-        console.error("Error updating project:", err);
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Error updating project:", err);
+        }
 
         return null;
       } finally {
@@ -196,7 +307,10 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
           err instanceof Error ? err.message : "Failed to delete project";
 
         setError(errorMessage);
-        console.error("Error deleting project:", err);
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Error deleting project:", err);
+        }
 
         return false;
       } finally {
@@ -251,15 +365,26 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
     };
   }, [projects]);
 
-  // Initial data load - only run once on mount
-  useEffect(() => {
-    refreshData();
-  }, []); // ✅ Empty dependency array - run only once
+  // Track first render to avoid duplicate initial load (esp. under StrictMode)
+  const firstRenderRef = useRef(true);
 
-  // Reload projects when filters change
+  // Initial data load - only run once on mount
+  const didInitRef = useRef(false);
   useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
+    refreshData(); // includes loadProjects
+  }, [refreshData]);
+
+  // Reload projects when filters change (skip very first render because refreshData already did it)
+  useEffect(() => {
+    if (firstRenderRef.current) {
+      firstRenderRef.current = false;
+
+      return;
+    }
     loadProjects(1); // Reset to first page when filters change
-  }, [JSON.stringify(filters)]); // ✅ Only when filters actually change
+  }, [filters, loadProjects]);
 
   // Pagination functions
   const handlePageChange = useCallback(

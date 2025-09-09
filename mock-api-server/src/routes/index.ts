@@ -17,10 +17,7 @@ import { sprintRoutes } from "./sprints.js";
 import { requirementRoutes } from "./requirements.js";
 import { projectRequirementRoutes } from "./projectRequirements.js";
 import membersTasksRoutes from "./membersTasksRoutes";
-import notificationsRoutes from "./notifications.js";
-import { taskPlanRoutes } from "./taskPlan.js";
-import timelineRequirementRoutes from "./timelineRequirements.js";
-
+import notificationsRoutes from "./notifications.js"; 
 export const routes = Router();
 
 // Health check for API
@@ -46,7 +43,6 @@ routes.get("/", (req, res) => {
       sprints: "/sprints",
       requirements: "/requirements",
       "project-requirements": "/project-requirements",
-      "timeline-requirements": "/timeline-requirements",
       "members-tasks": "/members-tasks",
       notifications: "/notifications",
       "task-plan": "/task-plan",
@@ -71,7 +67,5 @@ routes.use("/tasks", taskRoutes);
 routes.use("/sprints", sprintRoutes);
 routes.use("/requirements", requirementRoutes);
 routes.use("/project-requirements", projectRequirementRoutes);
-routes.use("/timeline-requirements", timelineRequirementRoutes);
-routes.use("/members-tasks", membersTasksRoutes);
-routes.use("/task-plan", taskPlanRoutes);
+routes.use("/members-tasks", membersTasksRoutes); 
 routes.use("/notifications", notificationsRoutes);

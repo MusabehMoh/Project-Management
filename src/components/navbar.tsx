@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Kbd } from "@heroui/kbd";
 import { Link } from "@heroui/link";
@@ -23,8 +23,9 @@ import {
   NavbarMenuItem,
 } from "@heroui/navbar";
 import clsx from "clsx";
-import { Bell, User, Settings, Users, CreditCard, LogOut } from "lucide-react";
+import { Bell, CreditCard, LogOut, Settings, User, Users } from "lucide-react";
 import { useTheme } from "@heroui/use-theme";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -103,9 +104,11 @@ const ThemeLogo = ({ className }: { className?: string }) => {
 const AnimatedNavItem = ({
   item,
   isActive = false,
+  onNavigate,
 }: {
   item: { label: string; href: string };
   isActive?: boolean;
+  onNavigate: (e: React.MouseEvent, href: string) => void;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -122,6 +125,7 @@ const AnimatedNavItem = ({
         href={item.href}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onClick={(e) => onNavigate(e, item.href)}
       >
         <span className="relative z-10">{item.label}</span>
 
@@ -145,8 +149,6 @@ const getProjectNavItems = (t: (key: string) => string) => [
   { label: t("nav.dashboard"), href: "/" },
   { label: t("nav.projects"), href: "/projects" },
   { label: t("nav.requirements"), href: "/requirements" },
-  { label: t("nav.timelinePlanning"), href: "/timeline-planning" },
-  { label: t("nav.taskPlan"), href: "/task-plan" },
   { label: t("nav.users"), href: "/users" },
   { label: t("nav.timeline"), href: "/timeline" },
   { label: t("nav.tasks"), href: "/tasks" },
@@ -156,23 +158,14 @@ const getProjectNavItems = (t: (key: string) => string) => [
 export const Navbar = () => {
   const { t } = useLanguage();
   const { user: currentUser, loading: userLoading } = useCurrentUser();
-  const { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    markAllAsRead, 
-    clearNotification,
-    isConnected 
-  } = useNotifications();
-  
-  // Debug logging
-  console.log("Navbar notifications:", notifications);
-  console.log("Navbar unreadCount:", unreadCount);
-  console.log("Navbar isConnected:", isConnected);
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } =
+    useNotifications();
   const projectNavItems = getProjectNavItems(t);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Handle scroll effect
   useEffect(() => {
@@ -187,10 +180,22 @@ export const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Track current path for active state
+  // Track current path reactively (SPA navigation)
   useEffect(() => {
-    setCurrentPath(window.location.pathname);
-  }, []);
+    setCurrentPath(location.pathname);
+  }, [location.pathname]);
+
+  // Central navigation handler to prevent full page reloads
+  const handleNav = (e: React.MouseEvent, href: string) => {
+    // Allow modifier clicks (open in new tab, etc.)
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      return;
+    }
+    e.preventDefault();
+    if (href !== currentPath) {
+      navigate(href);
+    }
+  };
 
   // Handle keyboard shortcut
   useEffect(() => {
@@ -295,6 +300,7 @@ export const Navbar = () => {
             )}
             color="foreground"
             href="/"
+            onClick={(e) => handleNav(e, "/")}
           >
             <ThemeLogo
               className={clsx(
@@ -316,6 +322,7 @@ export const Navbar = () => {
               <AnimatedNavItem
                 isActive={currentPath === item.href}
                 item={item}
+                onNavigate={handleNav}
               />
             </div>
           ))}
@@ -340,46 +347,45 @@ export const Navbar = () => {
         >
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
-              <div className="relative">
-                <Badge 
-                  color={unreadCount > 0 ? "danger" : "default"} 
-                  content={unreadCount > 0 ? unreadCount : ""} 
+              <Button
+                isIconOnly
+                aria-label={t("nav.notifications")}
+                className={clsx(
+                  "relative transition-all duration-300 hover:scale-110 active:scale-95",
+                  unreadCount > 0
+                    ? "hover:bg-danger/10 hover:text-danger"
+                    : "hover:bg-default/10",
+                  // Removed opacity-50 so icon isn't pale when offline; we already show a warning dot
+                )}
+                size="sm"
+                variant="light"
+              >
+                <Badge
+                  color={unreadCount > 0 ? "danger" : "default"}
+                  content={unreadCount > 0 ? unreadCount : ""}
+                  isInvisible={unreadCount === 0}
+                  placement="top-right"
                   size="sm"
-                  className={unreadCount === 0 ? "opacity-0" : ""}
                 >
-                  <Button
-                    isIconOnly
-                    aria-label={t("nav.notifications")}
+                  <Bell
                     className={clsx(
-                      "transition-all duration-300 hover:scale-110 active:scale-95",
-                      unreadCount > 0 
-                        ? "hover:bg-danger/10 hover:text-danger" 
-                        : "hover:bg-default/10",
-                      !isConnected && "opacity-50"
+                      "transition-transform duration-300",
+                      unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse",
                     )}
-                    size="sm"
-                    variant="light"
-                  >
-                    <Bell
-                      className={clsx(
-                        "transition-transform duration-300",
-                        unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse"
-                      )}
-                      size={16}
-                    />
-                  </Button>
+                    size={16}
+                  />
                 </Badge>
                 {!isConnected && (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-warning rounded-full animate-pulse" />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-warning rounded-full animate-pulse" />
                 )}
-              </div>
+              </Button>
             </DropdownTrigger>
             <DropdownMenu
               aria-label="Notifications"
               className="w-80 max-h-96 overflow-y-auto"
               variant="flat"
             >
-              <DropdownSection title="Notifications">
+              <DropdownSection title={t("nav.notificationsTitle")}>
                 {notifications.length === 0 ? (
                   <DropdownItem
                     key="no-notifications"
@@ -396,8 +402,8 @@ export const Navbar = () => {
                       <DropdownItem
                         key="mark-all-read"
                         className="text-primary border-b border-divider mb-1"
-                        onPress={markAllAsRead}
                         textValue="Mark all as read"
+                        onPress={markAllAsRead}
                       >
                         <div className="text-sm font-medium">
                           {t("nav.markAllRead")}
@@ -409,16 +415,21 @@ export const Navbar = () => {
                         key={notification.id}
                         className={clsx(
                           "py-3 px-2 cursor-pointer",
-                          !notification.read && "bg-primary/5 border-l-2 border-primary"
+                          !notification.read &&
+                            "bg-primary/5 border-l-2 border-primary",
                         )}
-                        onPress={() => markAsRead(notification.id)}
                         textValue={notification.message}
+                        onPress={() => markAsRead(notification.id)}
                       >
                         <div className="flex flex-col gap-1">
-                          <div className={clsx(
-                            "text-sm",
-                            !notification.read ? "font-semibold" : "font-normal"
-                          )}>
+                          <div
+                            className={clsx(
+                              "text-sm",
+                              !notification.read
+                                ? "font-semibold"
+                                : "font-normal",
+                            )}
+                          >
                             {notification.message}
                           </div>
                           <div className="text-xs text-default-400">
@@ -565,21 +576,21 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-        <Badge 
-          color={unreadCount > 0 ? "danger" : "default"} 
-          content={unreadCount > 0 ? unreadCount : ""} 
-          size="sm"
+        <Badge
           className={unreadCount === 0 ? "opacity-0" : ""}
+          color={unreadCount > 0 ? "danger" : "default"}
+          content={unreadCount > 0 ? unreadCount : ""}
+          size="sm"
         >
           <Button
             isIconOnly
             aria-label={t("nav.notifications")}
             className={clsx(
               "transition-all duration-300 hover:scale-110 active:scale-95",
-              unreadCount > 0 
-                ? "hover:bg-danger/10 hover:text-danger" 
+              unreadCount > 0
+                ? "hover:bg-danger/10 hover:text-danger"
                 : "hover:bg-default/10",
-              !isConnected && "opacity-50"
+              !isConnected && "opacity-50",
             )}
             size="sm"
             variant="light"
@@ -587,7 +598,7 @@ export const Navbar = () => {
             <Bell
               className={clsx(
                 "transition-transform duration-300",
-                unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse"
+                unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse",
               )}
               size={16}
             />
@@ -622,6 +633,7 @@ export const Navbar = () => {
                 color={currentPath === item.href ? "primary" : "foreground"}
                 href={item.href}
                 size="lg"
+                onClick={(e) => handleNav(e, item.href)}
               >
                 {item.label}
               </Link>

@@ -34,8 +34,9 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
+
 import { parseDate } from "@internationalized/date";
-import toast from "react-hot-toast";
+import { addToast } from "@heroui/toast";
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -490,22 +491,26 @@ export default function ProjectsPage() {
       const result = await projectService.sendProject(project.id);
 
       if (result.success) {
-        toast.success(
-          t("projects.sendSuccess") || "Project sent for review successfully",
-        );
+        addToast({
+          title: t("projects.sendSuccess") || "Project sent for review successfully",
+          color: "success",
+        });
         refreshData(); // Refresh the project list to show updated status
       } else {
-        toast.error(
-          result.message ||
+        addToast({
+          title:
+            result.message ||
             t("projects.sendError") ||
             "Failed to send project for review",
-        );
+          color: "danger",
+        });
       }
     } catch (error) {
       console.error("Error sending project for review:", error);
-      toast.error(
-        t("common.unexpectedError") || "An unexpected error occurred",
-      );
+      addToast({
+        title: t("common.unexpectedError") || "An unexpected error occurred",
+        color: "danger",
+      });
     }
   };
 
@@ -599,9 +604,10 @@ export default function ProjectsPage() {
     try {
       // Check if there are projects to export
       if (!projects || projects.length === 0) {
-        toast.error(
-          t("projects.noDataToExport") || "No projects available to export",
-        );
+        addToast({
+          title: t("projects.noDataToExport") || "No projects available to export",
+          color: "danger",
+        });
         return;
       }
 
@@ -654,12 +660,16 @@ export default function ProjectsPage() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success(
-        t("projects.exportSuccess") || "Projects exported successfully",
-      );
+      addToast({
+        title: t("projects.exportSuccess") || "Projects exported successfully",
+        color: "success",
+      });
     } catch (error) {
       console.error("Error exporting projects:", error);
-      toast.error(t("projects.exportError") || "Failed to export projects");
+      addToast({
+        title: t("projects.exportError") || "Failed to export projects",
+        color: "danger",
+      });
     }
   };
 

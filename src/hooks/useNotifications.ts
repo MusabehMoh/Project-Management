@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import * as signalR from "@microsoft/signalr";
 
 import {
   notificationService,
@@ -29,36 +30,99 @@ export interface UseNotifications {
 
 export function useNotifications(): UseNotifications {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCountState, setUnreadCountState] = useState<number>(0);
   const [isConnected, setIsConnected] = useState(false);
   const [, setLoading] = useState(true);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   // Load initial notifications from API
   const loadNotifications = useCallback(async () => {
     try {
       console.log("Loading notifications from API...");
+      // Always request first page explicitly; some backends require page param
       const response = await notificationService.getNotifications({
+        page: 1,
         limit: 50,
       });
 
       console.log("API response:", response);
 
       if (response.success && response.data) {
-        const apiNotifications = response.data.notifications.map(
-          (apiNotif: ApiNotification) => ({
-            id: apiNotif.id,
-            type: apiNotif.type,
-            message: apiNotif.message,
-            timestamp: new Date(apiNotif.timestamp),
-            read: apiNotif.read,
-            projectId: apiNotif.projectId,
-            targetUsernames: apiNotif.targetUsernames,
-          }),
-        );
+        // Some backends might wrap data differently; handle a few shapes defensively.
+        // Normal expected: response.data.notifications
+        // Fallbacks tried if empty: response.data.data?.notifications or response.data.items
+        const rawContainer: any = response.data as any;
+        let rawList: ApiNotification[] = [];
 
-        console.log("Processed notifications:", apiNotifications);
-        setNotifications(apiNotifications);
+        if (Array.isArray(rawContainer.notifications)) {
+          rawList = rawContainer.notifications;
+        } else if (
+          rawContainer.data &&
+          Array.isArray(rawContainer.data.notifications)
+        ) {
+          rawList = rawContainer.data.notifications;
+        } else if (Array.isArray(rawContainer.items)) {
+          rawList = rawContainer.items; // generic fallback key
+        }
+
+        const apiNotifications = rawList.map((apiNotif: ApiNotification) => ({
+          id: apiNotif.id,
+          type: apiNotif.type,
+          message: apiNotif.message,
+          timestamp: new Date(apiNotif.timestamp),
+          // Support alternative backend field names like isRead
+          read: (apiNotif as any).read ?? (apiNotif as any).isRead ?? false,
+          projectId: apiNotif.projectId,
+          targetUsernames: apiNotif.targetUsernames,
+        }));
+
+  console.log("Processed notifications (parsed):", apiNotifications);
+  setNotifications(apiNotifications);
+        // Prefer unreadCount from API if provided (more accurate server-side)
+        const apiUnread = (rawContainer.unreadCount ??
+          rawContainer.data?.unreadCount) as number | undefined;
+
+        if (typeof apiUnread === "number") {
+          setUnreadCountState(apiUnread);
+        } else {
+          setUnreadCountState(apiNotifications.filter((n) => !n.read).length);
+        }
+
+        // Fallback: if server reports unread > 0 but we received no notifications, try unread-only fetch
+        if (apiNotifications.length === 0 && (apiUnread ?? 0) > 0) {
+          console.warn(
+            "Unread count > 0 but notifications list empty; attempting unread-only fallback fetch",
+          );
+          try {
+            const retry = await notificationService.getNotifications({
+              page: 1,
+              limit: Math.min(50, (apiUnread as number) || 50),
+              unreadOnly: true,
+            });
+            if (retry.success && retry.data?.notifications?.length) {
+              const retryList = retry.data.notifications.map(
+                (apiNotif: ApiNotification) => ({
+                  id: apiNotif.id,
+                  type: apiNotif.type,
+                  message: apiNotif.message,
+                  timestamp: new Date(apiNotif.timestamp),
+                  read: apiNotif.read,
+                  projectId: apiNotif.projectId,
+                  targetUsernames: apiNotif.targetUsernames,
+                }),
+              );
+
+              console.log("Fallback fetched notifications:", retryList);
+
+              setNotifications(retryList);
+              setUnreadCountState(retryList.filter((n) => !n.read).length);
+            }
+          } catch (fallbackErr) {
+            console.error("Fallback unread-only fetch failed", fallbackErr);
+          }
+        }
       } else {
-        console.log("Failed to load notifications:", response.message);
+        console.log("Failed to load notifications", response.message);
       }
     } catch (error) {
       console.error("Error loading notifications:", error);
@@ -68,139 +132,204 @@ export function useNotifications(): UseNotifications {
   }, []);
 
   useEffect(() => {
-    // Load initial notifications
     loadNotifications();
 
-    // Get current user info (you might want to get this from a user context)
+    if (!API_CONFIG.ENABLE_SIGNALR) {
+      console.log("SignalR disabled via VITE_ENABLE_SIGNALR flag");
+      setIsConnected(false);
+
+      return; // Skip websocket setup entirely
+    }
+
     const currentUser = localStorage.getItem("currentUser");
-    const username = currentUser
-      ? JSON.parse(currentUser).username
-      : "anonymous";
+    const user = currentUser ? JSON.parse(currentUser) : null;
+    const username = user?.username || "anonymous";
+    const userId = user?.id ?? null;
 
-    // Create WebSocket connection with authentication
-    const ws = new WebSocket(`${API_CONFIG.WS_URL}?username=${username}`);
+    // Build SignalR connection
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${API_CONFIG.WS_URL}?username=${encodeURIComponent(username)}`)
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: (ctx: signalR.RetryContext) => {
+          if (ctx.previousRetryCount < 5) {
+            return 1000 * (ctx.previousRetryCount + 1); // exponential-ish
+          }
 
-    ws.onopen = () => {
-      console.log("Connected to notification server");
-      setIsConnected(true);
+          return null; // stop retrying
+        },
+      })
+      .configureLogging(signalR.LogLevel.Information)
+      .build();
 
-      // Send authentication message
-      ws.send(
-        JSON.stringify({
-          type: "authenticate",
-          username: username,
-          userId: currentUser ? JSON.parse(currentUser).id : null,
-        }),
-      );
-    };
+    connectionRef.current = connection;
 
-    ws.onmessage = (event) => {
+    // Handlers
+    connection.on("Notification", (notificationData: any) => {
       try {
-        const notificationData = JSON.parse(event.data);
-
-        // Create a new notification object
         const newNotification: Notification = {
           id: `${Date.now()}-${Math.random()}`,
-          type: notificationData.type,
-          message: notificationData.message,
-          timestamp: new Date(),
+          // Fallbacks in case server's shape differs
+          type:
+            notificationData.type || notificationData.eventType || "UNKNOWN",
+          message: notificationData.message || notificationData.text || "",
+          timestamp: new Date(notificationData.timestamp || Date.now()),
           read: false,
           projectId: notificationData.projectId,
           targetUsernames: notificationData.targetUsernames,
         };
 
-        // Add to notifications list
-        setNotifications((prev) => [newNotification, ...prev.slice(0, 49)]); // Keep only last 50 notifications
+        setNotifications((prev) => {
+          const updated = [newNotification, ...prev.slice(0, 49)];
 
-        // Handle different notification types
-        switch (notificationData.type) {
+          setUnreadCountState((c) => c + 1); // increment unread optimistically
+
+          return updated;
+        });
+
+        switch (newNotification.type) {
           case "PROJECT_SENT_FOR_REVIEW":
-            // You can add additional logic here like showing a toast
             console.log(
               "Project notification received:",
-              notificationData.message,
+              newNotification.message,
             );
             break;
           default:
-            console.log("Unknown notification type:", notificationData.type);
+            console.log("Notification received:", newNotification.type);
         }
-      } catch (error) {
-        console.error("Error processing notification:", error);
+      } catch (err) {
+        console.error("Error processing SignalR notification", err);
       }
-    };
+    });
 
-    ws.onclose = (event) => {
-      console.log("Disconnected from notification server", {
-        code: event.code,
-        reason: event.reason,
-        wasClean: event.wasClean,
+    // Optional generic message handler if server uses SendAsync("ReceiveMessage", ...)
+    connection.on("ReceiveMessage", (type: string, payload: any) => {
+      console.log("ReceiveMessage raw:", type, payload);
+      const newNotification: Notification = {
+        id: `${Date.now()}-${Math.random()}`,
+        type,
+        message: payload?.message || payload?.text || "",
+        timestamp: new Date(),
+        read: false,
+        projectId: payload?.projectId,
+        targetUsernames: payload?.targetUsernames,
+      };
+
+      setNotifications((prev) => {
+        const updated = [newNotification, ...prev.slice(0, 49)];
+
+        setUnreadCountState((c) => c + 1);
+
+        return updated;
       });
-      setIsConnected(false);
-    };
+    });
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      console.error("WebSocket readyState:", ws.readyState);
-      console.error("WebSocket URL:", ws.url);
+    async function startConnection() {
+      try {
+        await connection.start();
+        console.log("SignalR connected");
+        setIsConnected(true);
+        // Send authenticate if server expects an invocation
+        try {
+          await connection.invoke("Authenticate", { username, userId });
+        } catch (authErr) {
+          console.warn(
+            "Authenticate invocation failed (may be fine if server doesn't require it)",
+            authErr,
+          );
+        }
+      } catch (startErr) {
+        console.error("Failed to start SignalR connection", startErr);
+        setIsConnected(false);
+      }
+    }
+
+    startConnection();
+
+    connection.onreconnecting((err: Error | undefined) => {
+      console.warn("SignalR reconnecting", err);
       setIsConnected(false);
-    };
+    });
+
+    connection.onreconnected(() => {
+      console.log("SignalR reconnected");
+      setIsConnected(true);
+    });
+
+    connection.onclose((err: Error | undefined) => {
+      console.log("SignalR closed", err);
+      setIsConnected(false);
+    });
 
     return () => {
-      ws.close();
+      connection
+        .stop()
+        .catch((e: Error) => console.error("Error stopping SignalR", e));
     };
-  }, []);
+  }, [loadNotifications]);
 
   const markAsRead = useCallback(async (id: string) => {
-    // Update local state immediately for better UX
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification,
-      ),
-    );
+    setNotifications((prev) => {
+      const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
 
-    // Call API to persist the change
+      setUnreadCountState(updated.filter((n) => !n.read).length);
+
+      return updated;
+    });
     try {
       await notificationService.markAsRead(id);
     } catch (error) {
       console.error("Error marking notification as read:", error);
-      // Revert the change if API call fails
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === id
-            ? { ...notification, read: false }
-            : notification,
-        ),
-      );
+      setNotifications((prev) => {
+        const reverted = prev.map((n) =>
+          n.id === id ? { ...n, read: false } : n,
+        );
+
+        setUnreadCountState(reverted.filter((n) => !n.read).length);
+
+        return reverted;
+      });
     }
   }, []);
 
   const markAllAsRead = useCallback(async () => {
-    // Update local state immediately
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, read: true })),
-    );
+    setNotifications((prev) => {
+      const updated = prev.map((n) => ({ ...n, read: true }));
 
-    // Call API to persist the change
+      setUnreadCountState(0);
+
+      return updated;
+    });
     try {
       await notificationService.markAllAsRead();
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
-      // Reload notifications if API call fails
       loadNotifications();
     }
   }, [loadNotifications]);
 
   const clearNotification = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id),
-    );
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
   const clearAllNotifications = useCallback(() => {
     setNotifications([]);
   }, []);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Prefer server-provided unread count state (kept in sync with local changes)
+  // If we actually have the list, prefer deriving from it (guards against stale server count)
+  const derivedUnread = notifications.length
+    ? notifications.filter((n) => !n.read).length
+    : unreadCountState;
+  const unreadCount = derivedUnread;
+
+  // Expose for manual debugging in browser console (no side effects in prod build tree-shaken)
+  if (typeof window !== "undefined") {
+    (window as any).__NOTIFICATIONS_DEBUG__ = {
+      notifications,
+      unreadCount,
+      isConnected,
+    };
+  }
 
   return {
     notifications,

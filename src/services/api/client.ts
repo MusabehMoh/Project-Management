@@ -10,6 +10,7 @@ export const API_CONFIG = {
   },
   USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API === "true",
   ENABLE_LOGS: import.meta.env.VITE_ENABLE_CONSOLE_LOGS === "true",
+  ENABLE_SIGNALR: import.meta.env.VITE_ENABLE_SIGNALR === "true",
 };
 
 // HTTP methods enum
