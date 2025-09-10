@@ -28,6 +28,7 @@ import {
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UrgentNotifications from "@/components/UrgentNotifications";
+import RequirementOverview from "@/components/RequirementOverview";
 
 interface Project {
   id: number;
@@ -474,16 +475,24 @@ export default function IndexPage() {
             </div>
           </div>
           
-          {/* Side Column - Urgent Notifications */}
+          {/* Side Column - Urgent Notifications and Requirement Overview */}
           <div className="lg:col-span-1">
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {t("dashboard.updates")}
-              </h2>
-              <UrgentNotifications 
-                maxNotifications={5} 
-                useMockData={true}
-              />
+            <div className="space-y-6">
+              {/* Updates Section */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold text-foreground">
+                  {t("dashboard.updates")}
+                </h2>
+                <UrgentNotifications 
+                  maxNotifications={5} 
+                  useMockData={true}
+                />
+              </div>
+              
+              {/* Requirement Overview Section */}
+              <div className="space-y-4">
+                <RequirementOverview useMockData={true} />
+              </div>
             </div>
           </div>
         </div>

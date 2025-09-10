@@ -59,6 +59,12 @@ const translations = {
     "pipeline.inProgress": "In Progress",
     "pipeline.completed": "Completed",
     
+    // Requirement Overview
+    "dashboard.requirementOverview": "Requirement Overview",
+    "requirements.ongoing": "Ongoing Requirements",
+    "requirements.active": "Active Requirements",
+    "requirements.pendingApprovals": "Pending Approvals",
+    
     // Common Date References
     "common.today": "Today",
     "common.yesterday": "Yesterday",
@@ -957,6 +963,10 @@ const translations = {
     "dashboard.urgentNotifications": "إشعارات عاجلة",
     "dashboard.updates": "التحديثات",
     "dashboard.projectPipeline": "خط سير المشروع",
+    "dashboard.requirementOverview": "نظرة عامة على المتطلبات",
+    "requirements.ongoing": "متطلبات قيد التنفيذ",
+    "requirements.active": "المتطلبات النشطة",
+    "requirements.pendingApprovals": "موافقات معلقة",
     
     // Project Pipeline
     "pipeline.planning": "التخطيط",
