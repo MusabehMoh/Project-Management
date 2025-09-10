@@ -115,7 +115,7 @@ export const RequirementOverview: React.FC<RequirementOverviewProps> = ({
             <div className={`${language === 'ar' ? 'border-e pe-4' : 'border-s ps-4'} border-default-200 flex flex-col justify-center`} dir="ltr">
               {/* Active Requirements */}
               <div className="text-center mb-3">
-                <p className="text-sm text-default-600">{t("requirements.active")}</p>
+                <p className="text-sm font-medium">{t("requirements.active")}</p>
                 <p className="text-2xl font-bold text-primary">{data.activeRequirements}</p>
               </div>
               
@@ -123,7 +123,7 @@ export const RequirementOverview: React.FC<RequirementOverviewProps> = ({
               
               {/* Pending Approvals */}
               <div className="text-center mt-3">
-                <p className="text-sm text-default-600">{t("requirements.pendingApprovals")}</p>
+                <p className="text-sm font-medium">{t("requirements.pendingApprovals")}</p>
                 <p className="text-2xl font-bold text-warning">{data.pendingApprovals}</p>
               </div>
             </div>
