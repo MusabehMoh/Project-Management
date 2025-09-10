@@ -70,6 +70,11 @@ const translations = {
     "pipeline.liveProduction": "Live Production",
     "pipeline.maintenance": "Maintenance",
     "pipeline.ongoingSupport": "Ongoing Support",
+    "pipeline.noProjects": "No projects in this stage",
+
+    // Common
+    "common.owner": "Owner",
+    "common.tryAgainLater": "Please try again later",
     
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
@@ -1008,6 +1013,11 @@ const translations = {
     "pipeline.planning": "التخطيط",
     "pipeline.inProgress": "قيد التنفيذ",
     "pipeline.completed": "مكتمل",
+    "pipeline.noProjects": "لا توجد مشاريع في هذه المرحلة",
+
+    // Common
+    "common.owner": "المالك",
+    "common.tryAgainLater": "يرجى المحاولة مرة أخرى لاحقاً",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",

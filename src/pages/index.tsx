@@ -1,15 +1,13 @@
 import React from "react";
 import { Card, CardHeader, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
-import { Divider } from "@heroui/divider";
-import { ScrollShadow } from "@heroui/scroll-shadow";
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UrgentNotifications from "@/components/UrgentNotifications";
 import RequirementOverview from "@/components/RequirementOverview";
 import TeamWorkloadPerformance from "@/components/TeamWorkloadPerformanceNew";
+import ProjectPipeline from "@/components/ProjectPipeline";
 
 export default function IndexPage() {
   const { t, language } = useLanguage();
@@ -85,110 +83,7 @@ export default function IndexPage() {
             <h2 className="text-2xl font-semibold text-foreground">
               {t("dashboard.projectPipeline")}
             </h2>
-
-            <div className="grid grid-cols-1 gap-4">
-              {/* Pipeline Stages */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Planning Stage */}
-                <Card className="border-t-4 border-t-primary">
-                  <CardHeader className="pb-1">
-                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.planning")}</h3>
-                    <Chip size="sm" color="primary" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
-                      5
-                    </Chip>
-                  </CardHeader>
-                  <Divider />
-                  <CardBody className="gap-3 p-2 overflow-hidden">
-                    <ScrollShadow hideScrollBar className="max-h-64 p-2">
-                      <div className="space-y-2">
-                        <Card className="mb-3 shadow-sm">
-                          <CardBody className="p-3">
-                            <div className="flex justify-between items-start">
-                              <p className="font-medium text-sm">{t("pipeline.initiatePlanning")}</p>
-                            </div>
-                            <p className="text-xs text-default-500 mt-1">{t("pipeline.reviewRequirements")}</p>
-                          </CardBody>
-                        </Card>
-                        <Card className="mb-3 shadow-sm">
-                          <CardBody className="p-3">
-                            <div className="flex justify-between items-start">
-                              <p className="font-medium text-sm">{t("pipeline.resourceAllocation")}</p>
-                            </div>
-                            <p className="text-xs text-default-500 mt-1">{t("pipeline.assignTeamMembers")}</p>
-                          </CardBody>
-                        </Card>
-                      </div>
-                    </ScrollShadow>
-                  </CardBody>
-                </Card>
-
-                {/* In Progress Stage */}
-                <Card className="border-t-4 border-t-warning">
-                  <CardHeader className="pb-1">
-                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.inProgress")}</h3>
-                    <Chip size="sm" color="warning" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
-                      8
-                    </Chip>
-                  </CardHeader>
-                  <Divider />
-                  <CardBody className="gap-3 p-2 overflow-hidden">
-                    <ScrollShadow hideScrollBar className="max-h-64 p-2">
-                      <div className="space-y-2">
-                        <Card className="mb-3 shadow-sm">
-                          <CardBody className="p-3">
-                            <div className="flex justify-between items-start">
-                              <p className="font-medium text-sm">{t("pipeline.activeDevelopment")}</p>
-                            </div>
-                            <p className="text-xs text-default-500 mt-1">{t("pipeline.codingPhase")}</p>
-                          </CardBody>
-                        </Card>
-                        <Card className="mb-3 shadow-sm">
-                          <CardBody className="p-3">
-                            <div className="flex justify-between items-start">
-                              <p className="font-medium text-sm">{t("pipeline.testing")}</p>
-                            </div>
-                            <p className="text-xs text-default-500 mt-1">{t("pipeline.qualityAssurance")}</p>
-                          </CardBody>
-                        </Card>
-                      </div>
-                    </ScrollShadow>
-                  </CardBody>
-                </Card>
-
-                {/* Completed Stage */}
-                <Card className="border-t-4 border-t-success">
-                  <CardHeader className="pb-1">
-                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.completed")}</h3>
-                    <Chip size="sm" color="success" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
-                      12
-                    </Chip>
-                  </CardHeader>
-                  <Divider />
-                  <CardBody className="gap-3 p-2 overflow-hidden">
-                    <ScrollShadow hideScrollBar className="max-h-64 p-2">
-                      <div className="space-y-2">
-                        <Card className="mb-3 shadow-sm">
-                          <CardBody className="p-3">
-                            <div className="flex justify-between items-start">
-                              <p className="font-medium text-sm">{t("pipeline.deployment")}</p>
-                            </div>
-                            <p className="text-xs text-default-500 mt-1">{t("pipeline.liveProduction")}</p>
-                          </CardBody>
-                        </Card>
-                        <Card className="mb-3 shadow-sm">
-                          <CardBody className="p-3">
-                            <div className="flex justify-between items-start">
-                              <p className="font-medium text-sm">{t("pipeline.maintenance")}</p>
-                            </div>
-                            <p className="text-xs text-default-500 mt-1">{t("pipeline.ongoingSupport")}</p>
-                          </CardBody>
-                        </Card>
-                      </div>
-                    </ScrollShadow>
-                  </CardBody>
-                </Card>
-              </div>
-            </div>
+            <ProjectPipeline />
           </div>
           
           {/* Side Column - Urgent Notifications and Requirement Overview */}
