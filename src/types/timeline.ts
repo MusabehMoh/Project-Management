@@ -201,6 +201,7 @@ export interface TimelineResponse {
 
 export interface CreateTimelineRequest {
   projectId: number;
+  projectRequirementId?: number;
   name: string;
   description?: string;
   startDate: string;

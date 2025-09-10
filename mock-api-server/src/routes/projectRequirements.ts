@@ -53,6 +53,12 @@ projectRequirementRoutes.delete(
   ),
 );
 
+// POST /api/project-requirements/requirements/:requirementId/tasks - Create task for a requirement
+projectRequirementRoutes.post(
+  "/requirements/:requirementId/tasks",
+  projectRequirementsController.createTask.bind(projectRequirementsController),
+);
+
 // GET /api/project-requirements/projects/:projectId/stats - Get requirement statistics for a project
 projectRequirementRoutes.get(
   "/projects/:projectId/stats",

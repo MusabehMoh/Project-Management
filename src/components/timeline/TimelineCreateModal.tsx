@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { DatePicker } from "@heroui/date-picker";
@@ -24,6 +24,8 @@ interface TimelineCreateModalProps {
   onCreateTimeline: (data: CreateTimelineRequest) => Promise<Timeline | null>;
   projectId?: number;
   loading?: boolean;
+  initialName?: string;
+  initialDescription?: string;
 }
 
 export default function TimelineCreateModal({
@@ -32,6 +34,8 @@ export default function TimelineCreateModal({
   onCreateTimeline,
   projectId,
   loading = false,
+  initialName = "",
+  initialDescription = "",
 }: TimelineCreateModalProps) {
   const { t, direction } = useLanguage();
 
@@ -43,6 +47,17 @@ export default function TimelineCreateModal({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Update form data when initial values change
+  useEffect(() => {
+    if (isOpen && (initialName || initialDescription)) {
+      setFormData((prev) => ({
+        ...prev,
+        name: initialName || "",
+        description: initialDescription || "",
+      }));
+    }
+  }, [isOpen, initialName, initialDescription]);
 
   const handleInputChange = (field: keyof TimelineFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

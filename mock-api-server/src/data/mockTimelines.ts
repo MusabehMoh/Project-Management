@@ -555,4 +555,58 @@ export const mockTimelines: Timeline[] = [
       },
     ],
   },
+  {
+    id: 2,
+    treeId: "timeline-2",
+    projectId: 2,
+    projectRequirementId: 3, // Mobile App Push Notifications
+    name: "Mobile Banking Notifications Timeline",
+    description: "Development timeline for push notification system",
+    startDate: "2025-01-20",
+    endDate: "2025-03-30",
+    createdAt: "2025-01-12T15:00:00Z",
+    updatedAt: "2025-01-12T15:00:00Z",
+    sprints: [
+      {
+        id: 3,
+        treeId: "sprint-3",
+        timelineId: 2,
+        name: "Notification Backend Sprint",
+        description: "Backend development for push notifications",
+        startDate: "2025-01-20",
+        endDate: "2025-02-20",
+        duration: 31,
+        statusId: 2, // active
+        departmentId: 3, // Information Technology
+        createdAt: "2025-01-12T15:00:00Z",
+        updatedAt: "2025-01-12T15:00:00Z",
+        tasks: [
+          {
+            id: 5,
+            treeId: "task-5",
+            sprintId: 3,
+            name: "Setup Firebase Cloud Messaging",
+            description: "Configure FCM for push notifications",
+            assigneeId: 6,
+            assigneeName: "ياسر المحمد",
+            statusId: 2, // in-progress
+            priorityId: 3, // high
+            departmentId: 3,
+            estimatedHours: 16,
+            actualHours: 8,
+            startDate: "2025-01-20",
+            endDate: "2025-01-25",
+            duration: 5,
+            dependencies: [],
+            createdAt: "2025-01-12T15:00:00Z",
+            updatedAt: "2025-01-20T10:00:00Z",
+            subtasks: [],
+            dependentTasks: [],
+            members: [],
+            depTasks: [],
+          },
+        ],
+      },
+    ],
+  },
 ];

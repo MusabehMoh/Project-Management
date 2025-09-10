@@ -6,6 +6,7 @@ import type {
 } from "@/types/projectRequirement";
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -35,7 +36,11 @@ import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDevelopmentRequirements } from "@/hooks/useDevelopmentRequirements";
 import useTeamSearch from "@/hooks/useTeamSearch";
+import { useTimeline } from "@/hooks/useTimeline";
 import type { MemberSearchResult } from "@/types/timeline";
+import type { CreateTimelineRequest } from "@/types/timeline";
+import { projectRequirementsService } from "@/services/api/projectRequirementsService";
+import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 
 import { GlobalPagination } from "@/components/GlobalPagination";
 
@@ -81,17 +86,19 @@ const RequirementCard = ({
   requirement,
   onViewDetails,
   onCreateTask,
+  onCreateTimeline,
 }: { 
   requirement: ProjectRequirement;
   onViewDetails: (requirement: ProjectRequirement) => void;
   onCreateTask: (requirement: ProjectRequirement) => void;
+  onCreateTimeline: (requirement: ProjectRequirement) => void;
 }) => {
   const { t } = useLanguage();
 
   // Using the formatDate function defined above
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full gap-3">
           <div className="flex-1 min-w-0">
@@ -121,8 +128,8 @@ const RequirementCard = ({
         </div>
       </CardHeader>
 
-      <CardBody className="pt-0">
-        <div className="space-y-4">
+      <CardBody className="pt-0 flex-1 flex flex-col">
+        <div className="space-y-4 flex-1">
           <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
             <p className="text-sm line-clamp-4">{requirement.description}</p>
           </div>
@@ -133,29 +140,49 @@ const RequirementCard = ({
               {formatDate(requirement.expectedCompletionDate)}
             </span>
           </div>
+        </div>
 
-          {/* Detail and Task Creation Buttons */}
-          <div className="flex justify-between items-center pt-2 gap-2">
-            <Button
-              size="sm"
-              variant="flat"
-              color={requirement.task ? "warning" : "success"}
-              startContent={requirement.task ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              onPress={() => onCreateTask(requirement)}
-            >
-              {requirement.task ? t("common.edit") + " Task" : t("common.create") + " Task"}
-            </Button>
+          {/* Detail, Task, and Timeline Creation Buttons */}
+          <div className="flex items-center pt-2 gap-2 mt-auto">
             <Button
               size="sm"
               variant="flat"
               color="primary"
               startContent={<Eye className="w-4 h-4" />}
               onPress={() => onViewDetails(requirement)}
+              className="flex-1"
             >
               {t("common.viewDetails")}
             </Button>
+            
+            {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
+            {!requirement.timeline && (
+              <Button
+                size="sm"
+                variant="flat"
+                color={requirement.task ? "warning" : "success"}
+                startContent={requirement.task ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                onPress={() => onCreateTask(requirement)}
+                className="flex-1"
+              >
+                {requirement.task ? t("common.view") + " Task" : t("common.create") + " Task"}
+              </Button>
+            )}
+            
+            {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
+            {!requirement.task && (
+              <Button
+                size="sm"
+                variant="flat"
+                color={requirement.timeline ? "primary" : "secondary"}
+                startContent={<Calendar className="w-4 h-4" />}
+                onPress={() => onCreateTimeline(requirement)}
+                className="flex-1"
+              >
+                {requirement.timeline ? t("common.view") + " Timeline" : t("common.create") + " Timeline"}
+              </Button>
+            )}
           </div>
-        </div>
       </CardBody>
     </Card>
   );
@@ -171,6 +198,7 @@ interface RequirementFormData {
 
 export default function DevelopmentRequirementsPage() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   
   // Grid-only view
 
@@ -204,19 +232,40 @@ export default function DevelopmentRequirementsPage() {
   const [selectedDeveloper, setSelectedDeveloper] = useState<MemberSearchResult | null>(null);
   const [selectedQC, setSelectedQC] = useState<MemberSearchResult | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+  // Controlled input values for Autocomplete components (needed by HeroUI Autocomplete)
+  const [developerInputValue, setDeveloperInputValue] = useState<string>("");
+  const [qcInputValue, setQcInputValue] = useState<string>("");
+
+  // Timeline creation modal state
+  const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
+  const [timelineRequirement, setTimelineRequirement] = useState<ProjectRequirement | null>(null);
+
+  // Timeline hook for creating timelines
+  const { createTimeline, loading: timelineLoading } = useTimeline();
 
   // Team search hooks for developers and QC
   const {
     employees: developers,
     loading: loadingDevelopers,
     searchEmployees: searchDevelopers,
-  } = useTeamSearch({ minLength: 2, maxResults: 15 });
+    searchResults: developerResults,
+  } = useTeamSearch({
+    minLength: 2,
+    maxResults: 15,
+  });
 
   const {
     employees: qcMembers,
     loading: loadingQC,
     searchEmployees: searchQC,
-  } = useTeamSearch({ minLength: 2, maxResults: 15 });
+    searchResults: qcResults,
+  } = useTeamSearch({
+    minLength: 2,
+    maxResults: 15,
+  });
+
+  // Debug: log team search results to help diagnose autocomplete issues
+  // Debug hooks intentionally left out to keep production linting clean.
 
   // Function to open drawer with requirement details
   const openRequirementDetails = (requirement: ProjectRequirement) => {
@@ -237,6 +286,38 @@ export default function DevelopmentRequirementsPage() {
     }
   };
 
+  // Function to handle timeline creation or navigation
+  const openTimelineModal = (requirement: ProjectRequirement) => {
+    if (requirement.timeline) {
+      // If timeline exists, navigate to timeline details page
+      navigate(`/timeline?projectId=${requirement.project?.id}&timelineId=${requirement.timeline.id}&requirementId=${requirement.id}`);
+    } else {
+      // If no timeline exists, open creation modal
+      setTimelineRequirement(requirement);
+      setIsTimelineModalOpen(true);
+    }
+  };
+
+  // Function to handle timeline creation submission
+  const handleTimelineCreate = async (data: CreateTimelineRequest): Promise<any> => {
+    try {
+      const timelineData = {
+        ...data,
+        projectRequirementId: timelineRequirement?.id,
+      };
+      const result = await createTimeline(timelineData);
+      if (result) {
+        setIsTimelineModalOpen(false);
+        setTimelineRequirement(null);
+        // Refresh data to get updated timeline information
+        await refreshData();
+      }
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   // Function to handle task creation/update
   const handleTaskSubmit = async () => {
     if (!selectedRequirement) return;
@@ -249,18 +330,22 @@ export default function DevelopmentRequirementsPage() {
         qcId: selectedQC?.id,
       };
 
-      // TODO: Call API to create/update task
-      console.log('Creating/updating task:', taskData);
-      
-      // For now, simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Call API to create/update task
+      await projectRequirementsService.createRequirementTask(
+        selectedRequirement.id,
+        taskData,
+      );
+
       setIsTaskModalOpen(false);
       setSelectedDeveloper(null);
       setSelectedQC(null);
-      // TODO: Refresh requirements data to get updated task info
+      setDeveloperInputValue("");
+      setQcInputValue("");
+
+      // Refresh requirements data to get updated task info
+      refreshData();
     } catch (error) {
-      console.error('Error creating/updating task:', error);
+      // Handle error appropriately
     } finally {
       setIsCreatingTask(false);
     }
@@ -272,6 +357,8 @@ export default function DevelopmentRequirementsPage() {
     setSelectedDeveloper(null);
     setSelectedQC(null);
     setSelectedRequirement(null);
+    setDeveloperInputValue("");
+    setQcInputValue("");
   };
 
   // edit/delete removed; grid is read-only
@@ -460,16 +547,14 @@ export default function DevelopmentRequirementsPage() {
         ) : (
           <>
             {/* Grid View */}
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              style={{ alignItems: "start" }}
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {requirements.map((requirement) => (
                 <RequirementCard 
                   key={requirement.id} 
                   requirement={requirement}
                   onViewDetails={openRequirementDetails}
                   onCreateTask={openTaskModal}
+                  onCreateTimeline={openTimelineModal}
                 />
               ))}
             </div>
@@ -652,7 +737,15 @@ export default function DevelopmentRequirementsPage() {
         </Drawer>
 
         {/* Task Creation/Edit Modal */}
-        <Modal isOpen={isTaskModalOpen} onOpenChange={setIsTaskModalOpen} size="2xl">
+        <Modal 
+          isOpen={isTaskModalOpen} 
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              resetTaskModal();
+            }
+          }} 
+          size="2xl"
+        >
           <ModalContent>
             {(onClose) => (
               <>
@@ -672,17 +765,34 @@ export default function DevelopmentRequirementsPage() {
                         {t("tasks.developer")}
                       </label>
                       <Autocomplete
+                        menuTrigger="input"
+                        defaultFilter={() => true}
+                        inputValue={developerInputValue}
                         placeholder={t("tasks.selectDeveloper")}
-                        selectedKey={selectedDeveloper?.userName || ""}
+                        selectedKey={selectedDeveloper?.id?.toString() || ""}
+                        onInputChange={(value) => {
+                          setDeveloperInputValue(value);
+                          // clear selection if input no longer matches selected
+                          if (
+                            selectedDeveloper &&
+                            value !== `${selectedDeveloper.gradeName} ${selectedDeveloper.fullName}`
+                          ) {
+                            setSelectedDeveloper(null);
+                          }
+                          searchDevelopers(value);
+                        }}
                         onSelectionChange={(key) => {
-                          const developer = developers.find(dev => dev.userName === key);
+                          const developer = developers.find(dev => dev.id.toString() === String(key));
                           setSelectedDeveloper(developer || null);
                         }}
-                        onInputChange={searchDevelopers}
                         isLoading={loadingDevelopers}
                       >
                         {developers.map((developer) => (
-                          <AutocompleteItem key={developer.userName} value={developer.userName}>
+                          <AutocompleteItem
+                            key={developer.id.toString()}
+                            value={developer.id.toString()}
+                            textValue={`${developer.gradeName} ${developer.fullName} ${developer.userName} ${developer.militaryNumber}`}
+                          >
                             <div className="flex flex-col">
                               <span className="text-sm font-medium">{developer.fullName}</span>
                               <span className="text-xs text-default-500">
@@ -707,17 +817,33 @@ export default function DevelopmentRequirementsPage() {
                         {t("tasks.qcMember")}
                       </label>
                       <Autocomplete
+                        menuTrigger="input"
+                        defaultFilter={() => true}
+                        inputValue={qcInputValue}
                         placeholder={t("tasks.selectQC")}
-                        selectedKey={selectedQC?.userName || ""}
+                        selectedKey={selectedQC?.id?.toString() || ""}
+                        onInputChange={(value) => {
+                          setQcInputValue(value);
+                          if (
+                            selectedQC &&
+                            value !== `${selectedQC.gradeName} ${selectedQC.fullName}`
+                          ) {
+                            setSelectedQC(null);
+                          }
+                          searchQC(value);
+                        }}
                         onSelectionChange={(key) => {
-                          const qc = qcMembers.find(member => member.userName === key);
+                          const qc = qcMembers.find(member => member.id.toString() === String(key));
                           setSelectedQC(qc || null);
                         }}
-                        onInputChange={searchQC}
                         isLoading={loadingQC}
                       >
                         {qcMembers.map((qcMember) => (
-                          <AutocompleteItem key={qcMember.userName} value={qcMember.userName}>
+                          <AutocompleteItem
+                            key={qcMember.id.toString()}
+                            value={qcMember.id.toString()}
+                            textValue={`${qcMember.gradeName} ${qcMember.fullName} ${qcMember.userName} ${qcMember.militaryNumber}`}
+                          >
                             <div className="flex flex-col">
                               <span className="text-sm font-medium">{qcMember.fullName}</span>
                               <span className="text-xs text-default-500">
@@ -754,6 +880,17 @@ export default function DevelopmentRequirementsPage() {
             )}
           </ModalContent>
         </Modal>
+
+        {/* Timeline Creation Modal */}
+        <TimelineCreateModal
+          isOpen={isTimelineModalOpen}
+          onOpenChange={setIsTimelineModalOpen}
+          onCreateTimeline={handleTimelineCreate}
+          projectId={timelineRequirement?.project?.id}
+          loading={timelineLoading}
+          initialName={timelineRequirement?.name}
+          initialDescription={timelineRequirement?.description}
+        />
       </div>
 
     </DefaultLayout>

@@ -119,7 +119,7 @@ export class TimelineController {
     await mockDelayHandler();
 
     try {
-      const { projectId, name, description, startDate, endDate } = req.body;
+      const { projectId, projectRequirementId, name, description, startDate, endDate } = req.body;
 
       if (!projectId || !name || !startDate || !endDate) {
         return res.status(400).json({
@@ -136,6 +136,7 @@ export class TimelineController {
         id: numericId,
         treeId: "timeline-" + numericId,
         projectId,
+        projectRequirementId,
         name,
         description: description || "",
         startDate,

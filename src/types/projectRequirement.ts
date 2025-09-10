@@ -19,6 +19,11 @@ export interface ProjectRequirement {
   attachments?: ProjectRequirementAttachment[];
   // Task information if exists
   task?: RequirementTask;
+  // Timeline information if exists
+  timeline?: {
+    id: number;
+    name: string;
+  };
   // Project information for display
   project?: {
     id: number;

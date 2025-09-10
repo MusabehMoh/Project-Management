@@ -1,3 +1,16 @@
+export interface RequirementTask {
+  id: number;
+  requirementId: number;
+  developerId?: number;
+  developerName?: string;
+  qcId?: number;
+  qcName?: string;
+  status: "not-started" | "in-progress" | "testing" | "completed";
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+}
+
 export interface ProjectRequirement {
   id: number;
   projectId: number;
@@ -12,6 +25,13 @@ export interface ProjectRequirement {
   updatedAt: string;
   createdBy: number;
   assignedAnalyst?: number;
+  // Task information if exists
+  task?: RequirementTask;
+  // Timeline information if exists
+  timeline?: {
+    id: number;
+    name: string;
+  };
   // Project information for display
   project?: {
     id: number;
@@ -49,6 +69,11 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     updatedAt: "2025-01-10T09:00:00Z",
     createdBy: 1,
     assignedAnalyst: 2,
+    // This requirement has a timeline (from mockTimelines.ts)
+    timeline: {
+      id: 1,
+      name: "Customer Portal Phase 1",
+    },
     project: {
       id: 1,
       applicationName: "Customer Portal System",
@@ -74,7 +99,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
         fileName: "auth_specs.docx",
         originalName: "Authentication Technical Specifications.docx",
         fileSize: 1024768,
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         uploadedAt: "2025-01-10T10:00:00Z",
         uploadedBy: 1,
       },
@@ -94,6 +120,19 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     updatedAt: "2025-01-11T10:30:00Z",
     createdBy: 1,
     assignedAnalyst: 2,
+    // This requirement has a task assigned
+    task: {
+      id: 1,
+      requirementId: 2,
+      developerId: 4,
+      developerName: "خالد الأحمد",
+      qcId: 5,
+      qcName: "منى السالم",
+      status: "in-progress",
+      createdAt: "2025-01-11T11:00:00Z",
+      updatedAt: "2025-01-11T14:30:00Z",
+      createdBy: 1,
+    },
     project: {
       id: 1,
       applicationName: "Customer Portal System",
@@ -119,7 +158,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
         fileName: "qr_integration.docx",
         originalName: "QR Code Integration Specs.docx",
         fileSize: 768000,
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         uploadedAt: "2025-01-11T11:30:00Z",
         uploadedBy: 1,
       },
@@ -139,6 +179,11 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     updatedAt: "2025-01-12T16:45:00Z",
     createdBy: 3,
     assignedAnalyst: 6,
+    // This requirement has a timeline
+    timeline: {
+      id: 2,
+      name: "Mobile Banking Notifications Timeline",
+    },
     project: {
       id: 2,
       applicationName: "Mobile Banking App",
@@ -184,6 +229,19 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     updatedAt: "2025-01-15T09:30:00Z",
     createdBy: 3,
     assignedAnalyst: 7,
+    // This requirement has a task assigned
+    task: {
+      id: 2,
+      requirementId: 4,
+      developerId: 6,
+      developerName: "ياسر المحمد",
+      qcId: 4,
+      qcName: "نور الدين",
+      status: "testing",
+      createdAt: "2025-01-13T12:00:00Z",
+      updatedAt: "2025-01-15T09:30:00Z",
+      createdBy: 3,
+    },
     project: {
       id: 2,
       applicationName: "Mobile Banking App",
@@ -209,7 +267,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
         fileName: "security_protocols.docx",
         originalName: "Biometric Security Protocols.docx",
         fileSize: 950000,
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         uploadedAt: "2025-01-13T13:00:00Z",
         uploadedBy: 3,
       },
@@ -254,9 +313,45 @@ export const mockProjectRequirements: ProjectRequirement[] = [
         fileName: "reporting_requirements.xlsx",
         originalName: "Reporting Requirements Matrix.xlsx",
         fileSize: 850000,
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         uploadedAt: "2025-01-14T10:00:00Z",
         uploadedBy: 5,
+      },
+    ],
+  },
+  {
+    id: 6,
+    projectId: 2,
+    name: "Biometric Authentication3",
+    description:
+      "Integrate fingerprint and face recognition authentication for enhanced security in the mobile banking application.",
+    priority: "high",
+    type: "change request",
+    expectedCompletionDate: "2025-05-15",
+    status: "in-development",
+    createdAt: "2025-01-13T11:00:00Z",
+    updatedAt: "2025-01-15T09:30:00Z",
+    createdBy: 3,
+    assignedAnalyst: 7,
+    project: {
+      id: 2,
+      applicationName: "Mobile Banking App",
+      projectOwner: "محمد أحمد الخالد",
+      owningUnit: "Finance and Budgeting",
+      analysts: "ياسر المحمد, نور الدين",
+      analystIds: [6, 4],
+    },
+    attachments: [
+      {
+        id: 8,
+        requirementId: 4,
+        fileName: "biometric_design.pdf",
+        originalName: "Biometric Authentication UI Design.pdf",
+        fileSize: 2400000,
+        mimeType: "application/pdf",
+        uploadedAt: "2025-01-13T12:00:00Z",
+        uploadedBy: 3,
       },
     ],
   },

@@ -51,6 +51,8 @@ export class TimelineService {
 
   async create(timeline: Timeline): Promise<Timeline> {
     TimelineService.timelines.push(timeline);
+    // Also update the original mockTimelines array to keep in sync
+    mockTimelines.push(timeline);
 
     return timeline;
   }
@@ -74,6 +76,19 @@ export class TimelineService {
       updatedAt: new Date().toISOString(),
     };
 
+    // Also update the original mockTimelines array to keep in sync
+    const mockIndex = mockTimelines.findIndex(
+      (timeline) => timeline.id === timelineId,
+    );
+
+    if (mockIndex !== -1) {
+      mockTimelines[mockIndex] = {
+        ...mockTimelines[mockIndex],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
     return TimelineService.timelines[index];
   }
 
@@ -88,6 +103,15 @@ export class TimelineService {
     }
 
     TimelineService.timelines.splice(index, 1);
+    
+    // Also update the original mockTimelines array to keep in sync
+    const mockIndex = mockTimelines.findIndex(
+      (timeline) => timeline.id === timelineId,
+    );
+
+    if (mockIndex !== -1) {
+      mockTimelines.splice(mockIndex, 1);
+    }
 
     return true;
   }

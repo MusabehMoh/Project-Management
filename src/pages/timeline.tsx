@@ -42,6 +42,12 @@ export default function TimelinePage() {
   const projectId = searchParams.get("projectId")
     ? parseInt(searchParams.get("projectId")!)
     : undefined;
+  const timelineId = searchParams.get("timelineId")
+    ? parseInt(searchParams.get("timelineId")!)
+    : undefined;
+  const requirementId = searchParams.get("requirementId")
+    ? parseInt(searchParams.get("requirementId")!)
+    : undefined;
   const [selectedProjectId, setSelectedProjectId] = useState<
     number | undefined
   >(projectId);
@@ -309,7 +315,40 @@ export default function TimelinePage() {
   // Auto-select timeline when data loads and we have a selected project
   useEffect(() => {
     if (selectedProjectId && !selectedTimeline) {
-      // Priority 1: Use timelines from useTimelines hook (more up-to-date)
+      // Priority 1: If timelineId is provided in URL, find and select that specific timeline
+      if (timelineId) {
+        // First try to find in timelines from useTimelines hook (more up-to-date)
+        if (timelines.length > 0) {
+          const urlTimeline = timelines.find((t) => t.id === timelineId);
+
+          if (urlTimeline) {
+            setSelectedTimeline(urlTimeline);
+
+            return;
+          }
+        }
+
+        // Fallback: Try to find in projectsWithTimelines
+        if (projectsWithTimelines.length > 0) {
+          for (const projectWithTimelines of projectsWithTimelines) {
+            const urlTimeline = projectWithTimelines.timelines.find(
+              (t) => t.id === timelineId,
+            );
+
+            if (urlTimeline) {
+              // Also update the selected project if the timeline belongs to a different project
+              if (projectWithTimelines.project.id !== selectedProjectId) {
+                setSelectedProjectId(projectWithTimelines.project.id);
+              }
+              setSelectedTimeline(urlTimeline);
+
+              return;
+            }
+          }
+        }
+      }
+
+      // Priority 2: Use timelines from useTimelines hook (more up-to-date)
       if (timelines.length > 0) {
         // Auto-select the first timeline (newest is at index 0 due to [newTimeline, ...prev])
         const latestTimeline = timelines[0];
@@ -319,7 +358,7 @@ export default function TimelinePage() {
         return;
       }
 
-      // Priority 2: Fall back to projectsWithTimelines if timelines not loaded yet
+      // Priority 3: Fall back to projectsWithTimelines if timelines not loaded yet
       if (projectsWithTimelines.length > 0) {
         const projectWithTimelines = projectsWithTimelines.find(
           (p) => p.project.id === selectedProjectId,
@@ -332,10 +371,12 @@ export default function TimelinePage() {
     }
   }, [
     selectedProjectId,
+    timelineId,
     timelines,
     projectsWithTimelines,
     selectedTimeline,
     setSelectedTimeline,
+    setSelectedProjectId,
     t,
   ]);
 

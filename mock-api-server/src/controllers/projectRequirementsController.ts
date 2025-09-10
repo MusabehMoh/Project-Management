@@ -5,6 +5,8 @@ import { mockProjectRequirements } from "../data/mockProjectRequirements.js";
 import { mockProjects } from "../data/mockProjects.js";
 import { mockUsers } from "../data/mockUsers.js";
 import { sendNotification } from "../signalR/notificationHub.js";
+import { mockTimelines } from "../data/mockTimelines.js";
+import { mockRequirementTasks } from "../data/mockRequirementTasks.js";
 
 export class ProjectRequirementsController {
   /**
@@ -277,6 +279,71 @@ export class ProjectRequirementsController {
   }
 
   /**
+   * Create a task for a specific requirement (stores a lightweight RequirementTask)
+   */
+  async createTask(req: Request, res: Response) {
+    try {
+      const { requirementId } = req.params;
+      const { developerId, qcId } = req.body as {
+        developerId?: number;
+        qcId?: number;
+      };
+
+      const requirement = mockProjectRequirements.find(
+        (r) => r.id === parseInt(requirementId),
+      );
+
+      if (!requirement) {
+        return res.status(404).json({
+          success: false,
+          error: { message: "Requirement not found", code: "NOT_FOUND" },
+        });
+      }
+
+      // Create a simple RequirementTask object and attach to requirement
+      const newTaskId = Math.max(0, ...mockProjectRequirements.flatMap(r => r.task ? [r.task.id] : [])) + 1;
+
+      const now = new Date().toISOString();
+
+      const task = {
+        id: newTaskId,
+        requirementId: requirement.id,
+        developerId: developerId || undefined,
+        developerName: developerId
+          ? (requirement.project?.analysts ? undefined : undefined)
+          : undefined,
+        qcId: qcId || undefined,
+        qcName: qcId ? undefined : undefined,
+        status: "not-started",
+        createdAt: now,
+        updatedAt: now,
+        createdBy: parseInt(req.query.userId as string) || 1,
+      };
+
+      // Attach task to requirement
+      (requirement as any).task = task;
+
+      // Notify stakeholders (if any)
+      try {
+        sendNotification({
+          type: "REQUIREMENT_TASK_CREATED",
+          message: `Task created for requirement \"${requirement.name}\"`,
+          projectId: requirement.projectId,
+        });
+      } catch (notifyErr) {
+        logger.warn("Failed to send notification for requirement task creation", notifyErr);
+      }
+
+      logger.info(`Created task ${task.id} for requirement ${requirement.id}`);
+
+      res.status(201).json({ success: true, data: task, message: "Task created" });
+    } catch (error) {
+      logger.error("Error creating requirement task:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  /**
    * Update an existing requirement
    */
   async updateRequirement(req: Request, res: Response) {
@@ -544,13 +611,36 @@ export class ProjectRequirementsController {
         endIndex,
       );
 
+      // Add timeline and task information to each requirement
+      const requirementsWithTimelines = paginatedRequirements.map(
+        (requirement) => {
+          // Find timeline for this requirement
+          const timeline = mockTimelines.find(
+            (t) => t.projectRequirementId === requirement.id,
+          );
+
+          // Find task for this requirement
+          const task = mockRequirementTasks.find(
+            (t) => t.requirementId === requirement.id,
+          );
+
+          return {
+            ...requirement,
+            timeline: timeline
+              ? { id: timeline.id, name: timeline.name }
+              : undefined,
+            task: task || requirement.task,
+          };
+        },
+      );
+
       logger.info(
         `Retrieved ${paginatedRequirements.length} development requirements`,
       );
 
       res.json({
         success: true,
-        data: paginatedRequirements,
+        data: requirementsWithTimelines,
         pagination: {
           page: Number(page),
           limit: Number(limit),

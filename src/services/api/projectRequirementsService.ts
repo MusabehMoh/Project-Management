@@ -5,6 +5,8 @@ import type {
   UpdateProjectRequirementRequest,
   ProjectRequirementFilters,
   ProjectRequirementStats,
+  CreateRequirementTaskRequest,
+  RequirementTask,
 } from "@/types/projectRequirement";
 
 import { apiClient } from "./client";
@@ -20,6 +22,8 @@ const ENDPOINTS = {
   REQUIREMENT_STATS: (projectId: number) =>
     `/project-requirements/projects/${projectId}/stats`,
   DEVELOPMENT_REQUIREMENTS: "/project-requirements/development-requirements",
+  CREATE_REQUIREMENT_TASK: (requirementId: number) =>
+    `/project-requirements/requirements/${requirementId}/tasks`,
 };
 
 class ProjectRequirementsService {
@@ -230,6 +234,21 @@ class ProjectRequirementsService {
         totalPages: 1,
       },
     };
+  }
+
+  /**
+   * Create a task for a requirement
+   */
+  async createRequirementTask(
+    requirementId: number,
+    data: CreateRequirementTaskRequest,
+  ): Promise<RequirementTask> {
+    const result = await apiClient.post<RequirementTask>(
+      ENDPOINTS.CREATE_REQUIREMENT_TASK(requirementId),
+      data,
+    );
+
+    return result.data;
   }
 }
 
