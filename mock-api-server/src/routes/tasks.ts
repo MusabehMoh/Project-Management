@@ -12,7 +12,10 @@ taskRoutes.post("/", tasksController.createTask.bind(tasksController));
 taskRoutes.post("/:id/move", tasksController.moveTask.bind(tasksController));
 
 // POST /api/tasks/:id/move-to-sprint - Move task to another sprint
-taskRoutes.post("/:id/move-to-sprint", tasksController.moveTaskToSprint.bind(tasksController));
+taskRoutes.post(
+  "/:id/move-to-sprint",
+  tasksController.moveTaskToSprint.bind(tasksController),
+);
 
 // PUT /api/tasks/:id - Update task
 taskRoutes.put("/:id", tasksController.updateTask.bind(tasksController));

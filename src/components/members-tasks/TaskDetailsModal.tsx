@@ -8,18 +8,17 @@ import {
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Progress } from "@heroui/progress";
-import { Avatar, AvatarGroup } from "@heroui/avatar";
+import { Avatar } from "@heroui/avatar";
 import { Badge } from "@heroui/badge";
 import { Card, CardBody } from "@heroui/card";
-import { Divider } from "@heroui/divider";
-import { 
-  CalendarDays, 
-  Clock, 
-  Users, 
-  Tag, 
+import {
+  CalendarDays,
+  Clock,
+  Users,
+  Tag,
   Building2,
   FileText,
-  CheckCircle2
+  CheckCircle2,
 } from "lucide-react";
 
 import { MemberTask } from "@/types/membersTasks";
@@ -31,7 +30,11 @@ interface TaskDetailsModalProps {
   task: MemberTask | null;
 }
 
-export const TaskDetailsModal = ({ isOpen, onClose, task }: TaskDetailsModalProps) => {
+export const TaskDetailsModal = ({
+  isOpen,
+  onClose,
+  task,
+}: TaskDetailsModalProps) => {
   const { t } = useLanguage();
 
   if (!task) return null;
@@ -40,14 +43,15 @@ export const TaskDetailsModal = ({ isOpen, onClose, task }: TaskDetailsModalProp
     if (progress >= 80) return "success";
     if (progress >= 60) return "primary";
     if (progress >= 40) return "warning";
+
     return "danger";
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -56,12 +60,7 @@ export const TaskDetailsModal = ({ isOpen, onClose, task }: TaskDetailsModalProp
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose}
-      size="3xl"
-      scrollBehavior="inside"
-    >
+    <Modal isOpen={isOpen} scrollBehavior="inside" size="3xl" onClose={onClose}>
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
           <div className="flex items-start justify-between gap-4">
@@ -85,11 +84,7 @@ export const TaskDetailsModal = ({ isOpen, onClose, task }: TaskDetailsModalProp
               </div>
             </div>
             <div className="flex flex-col gap-2 items-end">
-              <Chip
-                color={task.status.color as any}
-                size="md"
-                variant="flat"
-              >
+              <Chip color={task.status.color as any} size="md" variant="flat">
                 {task.status.label}
               </Chip>
               <Chip
@@ -132,10 +127,10 @@ export const TaskDetailsModal = ({ isOpen, onClose, task }: TaskDetailsModalProp
                 </span>
               </div>
               <Progress
+                className="mb-2"
                 color={getProgressColor(task.progress)}
                 size="lg"
                 value={task.progress}
-                className="mb-2"
               />
             </CardBody>
           </Card>
@@ -149,20 +144,18 @@ export const TaskDetailsModal = ({ isOpen, onClose, task }: TaskDetailsModalProp
                   {t("filterByAssignees")}
                 </span>
               </div>
-              
+
               {task.primaryAssignee && (
                 <div className="mb-4">
                   <p className="text-xs text-foreground-500 mb-2 uppercase tracking-wide">
                     {t("primaryAssignee")}
                   </p>
                   <div className="flex items-center gap-3 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
-                    <Avatar
-                      size="md"
-                      name={task.primaryAssignee.fullName}
-                    />
+                    <Avatar name={task.primaryAssignee.fullName} size="md" />
                     <div className="flex flex-col">
                       <span className="font-medium text-primary-700 dark:text-primary-300">
-                        {task.primaryAssignee.gradeName} {task.primaryAssignee.fullName}
+                        {task.primaryAssignee.gradeName}{" "}
+                        {task.primaryAssignee.fullName}
                       </span>
                       <span className="text-sm text-primary-500 dark:text-primary-400">
                         {task.primaryAssignee.department}
@@ -183,10 +176,7 @@ export const TaskDetailsModal = ({ isOpen, onClose, task }: TaskDetailsModalProp
                         key={member.id}
                         className="flex items-center gap-3 p-3 bg-default-100 rounded-lg"
                       >
-                        <Avatar
-                          size="sm"
-                          name={member.fullName}
-                        />
+                        <Avatar name={member.fullName} size="sm" />
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="font-medium text-foreground truncate">
                             {member.gradeName} {member.fullName}

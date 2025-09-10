@@ -30,12 +30,9 @@ import {
   useDisclosure,
 } from "@heroui/modal";
 import { DatePicker } from "@heroui/date-picker";
-import { Spinner } from "@heroui/spinner";
-import { Divider } from "@heroui/divider";
 import {
   Plus,
   Search,
-  Filter,
   MoreVertical,
   ArrowLeft,
   Edit,
@@ -51,6 +48,7 @@ import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { GlobalPagination } from "@/components/GlobalPagination";
+
 import type {
   ProjectRequirement,
   CreateProjectRequirementRequest,
@@ -156,6 +154,7 @@ export default function ProjectRequirementsPage() {
     }
     // For ReactQuill, check if content is empty (only contains HTML tags without text)
     const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
+
     if (!stripHtml(formData.description)) {
       errors.description = t("requirements.validation.descriptionRequired");
     }
@@ -166,6 +165,7 @@ export default function ProjectRequirementsPage() {
     }
 
     setValidationErrors(errors);
+
     return Object.keys(errors).length === 0;
   };
 
@@ -306,6 +306,7 @@ export default function ProjectRequirementsPage() {
 
   if (!projectId) {
     navigate("/requirements");
+
     return null;
   }
 
@@ -328,8 +329,8 @@ export default function ProjectRequirementsPage() {
           <div className="flex items-center gap-4">
             <Button
               isIconOnly
-              variant="light"
               size="sm"
+              variant="light"
               onPress={() => navigate("/requirements")}
             >
               <ArrowLeft className="w-4 h-4" />
@@ -394,16 +395,16 @@ export default function ProjectRequirementsPage() {
           <CardBody>
             <div className="flex flex-col md:flex-row gap-4 items-end">
               <Input
+                className="md:max-w-xs"
                 placeholder={t("requirements.searchRequirements")}
                 startContent={<Search className="w-4 h-4" />}
                 value={searchTerm}
                 onValueChange={setSearchTerm}
-                className="md:max-w-xs"
               />
 
               <Select
-                placeholder={t("requirements.filterByStatus")}
                 className="md:max-w-xs"
+                placeholder={t("requirements.filterByStatus")}
                 selectedKeys={statusFilter ? [statusFilter] : []}
                 onSelectionChange={(keys) =>
                   setStatusFilter((Array.from(keys)[0] as string) || "")
@@ -420,8 +421,8 @@ export default function ProjectRequirementsPage() {
               </Select>
 
               <Select
-                placeholder={t("requirements.filterByPriority")}
                 className="md:max-w-xs"
+                placeholder={t("requirements.filterByPriority")}
                 selectedKeys={priorityFilter ? [priorityFilter] : []}
                 onSelectionChange={(keys) =>
                   setPriorityFilter((Array.from(keys)[0] as string) || "")
@@ -436,11 +437,11 @@ export default function ProjectRequirementsPage() {
               </Select>
 
               <Button
+                className="min-w-fit"
                 color="primary"
+                size="lg"
                 startContent={<Plus className="w-4 h-4" />}
                 onPress={handleCreateRequirement}
-                size="lg"
-                className="min-w-fit"
               >
                 {t("requirements.addRequirement")}
               </Button>
@@ -592,10 +593,10 @@ export default function ProjectRequirementsPage() {
         {totalPages > 1 && (
           <GlobalPagination
             currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={totalRequirements}
             totalPages={totalPages}
             onPageChange={handlePageChange}
-            totalItems={totalRequirements}
-            pageSize={pageSize}
           />
         )}
       </div>
@@ -603,11 +604,11 @@ export default function ProjectRequirementsPage() {
       {/* Create/Edit Modal */}
       <Modal
         isOpen={isCreateOpen || isEditOpen}
+        scrollBehavior="inside"
+        size="2xl"
         onOpenChange={
           selectedRequirement ? onEditOpenChange : onCreateOpenChange
         }
-        size="2xl"
-        scrollBehavior="inside"
       >
         <ModalContent>
           {(onClose) => (
@@ -620,15 +621,15 @@ export default function ProjectRequirementsPage() {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
+                    isRequired
+                    errorMessage={validationErrors.name}
+                    isInvalid={!!validationErrors.name}
                     label={t("requirements.requirementName")}
                     placeholder={t("requirements.requirementNamePlaceholder")}
                     value={formData.name}
                     onValueChange={(value) =>
                       setFormData({ ...formData, name: value })
                     }
-                    isInvalid={!!validationErrors.name}
-                    errorMessage={validationErrors.name}
-                    isRequired
                   />
 
                   <div className="space-y-2">
@@ -636,14 +637,6 @@ export default function ProjectRequirementsPage() {
                       {t("requirements.requirementDescription")} *
                     </label>
                     <ReactQuill
-                      theme="snow"
-                      value={formData.description}
-                      onChange={(value) =>
-                        setFormData({ ...formData, description: value })
-                      }
-                      placeholder={t(
-                        "requirements.requirementDescriptionPlaceholder",
-                      )}
                       modules={{
                         toolbar: [
                           ["bold", "italic", "underline"],
@@ -651,11 +644,19 @@ export default function ProjectRequirementsPage() {
                           ["clean"],
                         ],
                       }}
+                      placeholder={t(
+                        "requirements.requirementDescriptionPlaceholder",
+                      )}
                       style={{
                         borderColor: validationErrors.description
                           ? "#f31260"
                           : undefined,
                       }}
+                      theme="snow"
+                      value={formData.description}
+                      onChange={(value) =>
+                        setFormData({ ...formData, description: value })
+                      }
                     />
                     {validationErrors.description && (
                       <p className="text-tiny text-danger">
@@ -665,6 +666,7 @@ export default function ProjectRequirementsPage() {
                   </div>
 
                   <Select
+                    isRequired
                     label={t("requirements.priority")}
                     placeholder={t("requirements.selectPriority")}
                     selectedKeys={[formData.priority]}
@@ -674,7 +676,6 @@ export default function ProjectRequirementsPage() {
                         priority: Array.from(keys)[0] as any,
                       })
                     }
-                    isRequired
                   >
                     <SelectItem key="high">{t("requirements.high")}</SelectItem>
                     <SelectItem key="medium">
@@ -684,6 +685,7 @@ export default function ProjectRequirementsPage() {
                   </Select>
 
                   <Select
+                    isRequired
                     label={t("requirements.type")}
                     placeholder={t("requirements.selectType")}
                     selectedKeys={[formData.type]}
@@ -693,7 +695,6 @@ export default function ProjectRequirementsPage() {
                         type: Array.from(keys)[0] as any,
                       })
                     }
-                    isRequired
                   >
                     <SelectItem key="new">{t("requirements.new")}</SelectItem>
                     <SelectItem key="change request">
@@ -702,14 +703,14 @@ export default function ProjectRequirementsPage() {
                   </Select>
 
                   <DatePicker
+                    isRequired
+                    errorMessage={validationErrors.expectedCompletionDate}
+                    isInvalid={!!validationErrors.expectedCompletionDate}
                     label={t("requirements.expectedCompletion")}
                     value={formData.expectedCompletionDate}
                     onChange={(date) =>
                       setFormData({ ...formData, expectedCompletionDate: date })
                     }
-                    isInvalid={!!validationErrors.expectedCompletionDate}
-                    errorMessage={validationErrors.expectedCompletionDate}
-                    isRequired
                   />
                 </div>
               </ModalBody>
@@ -719,15 +720,15 @@ export default function ProjectRequirementsPage() {
                 </Button>
                 <Button
                   color="default"
-                  onPress={() => handleSaveRequirement(true)}
                   isLoading={loading}
+                  onPress={() => handleSaveRequirement(true)}
                 >
                   {t("requirements.saveAsDraft")}
                 </Button>
                 <Button
                   color="primary"
-                  onPress={handleSendToDevelopment}
                   isLoading={loading}
+                  onPress={handleSendToDevelopment}
                 >
                   {t("requirements.sendToDevelopment")}
                 </Button>
@@ -770,8 +771,8 @@ export default function ProjectRequirementsPage() {
                 </Button>
                 <Button
                   color="danger"
-                  onPress={confirmDelete}
                   isLoading={loading}
+                  onPress={confirmDelete}
                 >
                   {t("common.delete")}
                 </Button>

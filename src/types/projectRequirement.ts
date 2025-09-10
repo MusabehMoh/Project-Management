@@ -16,14 +16,53 @@ export interface ProjectRequirement {
   actualHours?: number;
   expectedCompletionDate: any;
   tags?: string[];
-  attachments?: string[];
+  attachments?: ProjectRequirementAttachment[];
+  // Task information if exists
+  task?: RequirementTask;
   // Project information for display
   project?: {
     id: number;
     applicationName: string;
     projectOwner: string;
     owningUnit: string;
+    analysts?: string; // Display names for analysts (comma-separated)
+    analystIds?: number[]; // Actual IDs for analysts
   };
+}
+
+export interface ProjectRequirementAttachment {
+  id: number;
+  requirementId: number;
+  fileName: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: string;
+  uploadedBy: number;
+}
+
+// Task creation for requirements
+export interface RequirementTask {
+  id: number;
+  requirementId: number;
+  developerId?: number;
+  developerName?: string;
+  qcId?: number;
+  qcName?: string;
+  status: "not-started" | "in-progress" | "testing" | "completed";
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+}
+
+export interface CreateRequirementTaskRequest {
+  requirementId: number;
+  developerId?: number;
+  qcId?: number;
+}
+
+export interface UpdateRequirementTaskRequest extends CreateRequirementTaskRequest {
+  id: number;
 }
 
 export interface AssignedProject {

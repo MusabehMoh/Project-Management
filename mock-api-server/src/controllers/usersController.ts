@@ -100,7 +100,7 @@ const mockUsers = [
         description: "Configure system settings",
         isActive: true,
         actionOrder: 7,
-      }, 
+      },
       {
         id: 8,
         name: "projects.sendToAnylsis",

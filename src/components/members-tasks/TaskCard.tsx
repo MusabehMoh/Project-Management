@@ -20,6 +20,7 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
     if (progress >= 80) return "success";
     if (progress >= 60) return "primary";
     if (progress >= 40) return "warning";
+
     return "danger";
   };
 
@@ -35,191 +36,182 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
 
   return (
     <Card
+      isPressable
       className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg ${
         task.isOverdue
           ? "border-l-4 border-l-danger-500 bg-danger-50/30 dark:bg-danger-900/20"
           : ""
       }`}
-      isPressable
       onPress={handleCardClick}
     >
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-start w-full gap-3">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-foreground truncate">
-                {task.name}
-              </h3>
-              <p className="text-sm text-foreground-600 line-clamp-2 mt-1">
-                {task.description}
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 items-end flex-shrink-0">
-              <Chip
-                color={task.status.color as any}
-                size="sm"
-                variant="flat"
-              >
-                {task.status.label}
-              </Chip>
-              <Chip
-                color={task.priority.color as any}
-                size="sm"
-                variant="solid"
-              >
-                {task.priority.label}
-              </Chip>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardBody className="pt-0">
-          {/* Department indicator */}
-          <div className="flex items-center gap-2 mb-3">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: task.department.color }}
-            />
-            <span className="text-sm text-foreground-600">
-              {task.department.name}
-            </span>
-            {task.isOverdue && (
-              <Badge color="danger" size="sm" variant="flat">
-                {t("overdueTask")}
-              </Badge>
-            )}
-          </div>
-
-          {/* Assignees Display */}
-          <div className="mb-4">
-            <p className="text-xs text-foreground-500 mb-2 uppercase tracking-wide">
-              {t("filterByAssignees")}
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start w-full gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-foreground truncate">
+              {task.name}
+            </h3>
+            <p className="text-sm text-foreground-600 line-clamp-2 mt-1">
+              {task.description}
             </p>
-            
-            {task.primaryAssignee && (
-              <div className="flex items-center gap-2 mb-2 p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
-                <Avatar
-                  size="sm"
-                  name={task.primaryAssignee.fullName}
-                  className="flex-shrink-0"
-                />
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-xs font-medium text-primary-700 dark:text-primary-300 truncate">
-                    {task.primaryAssignee.gradeName} {task.primaryAssignee.fullName}
-                  </span>
-                  <span className="text-xs text-primary-500 dark:text-primary-400">
-                    {t("primaryAssignee")}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {task.assignedMembers.length > 1 && (
-              <div className="flex items-center gap-2">
-                <AvatarGroup 
-                  isBordered
-                  max={3}
-                  size="sm"
-                  className="flex-shrink-0"
-                >
-                  {task.assignedMembers.slice(1).map((member) => (
-                    <Avatar
-                      key={member.id}
-                      name={member.fullName}
-                      className="text-xs"
-                    />
-                  ))}
-                </AvatarGroup>
-                {task.assignedMembers.length > 4 && (
-                  <Chip size="sm" variant="flat">
-                    +{task.assignedMembers.length - 4} {t("moreAssignees")}
-                  </Chip>
-                )}
-              </div>
-            )}
           </div>
+          <div className="flex flex-col gap-2 items-end flex-shrink-0">
+            <Chip color={task.status.color as any} size="sm" variant="flat">
+              {task.status.label}
+            </Chip>
+            <Chip color={task.priority.color as any} size="sm" variant="solid">
+              {task.priority.label}
+            </Chip>
+          </div>
+        </div>
+      </CardHeader>
 
-          {/* Progress */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-foreground-600">
-                {t("taskProgress")}
-              </span>
-              <span className="text-sm font-medium text-foreground">
-                {task.progress}%
-              </span>
+      <CardBody className="pt-0">
+        {/* Department indicator */}
+        <div className="flex items-center gap-2 mb-3">
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: task.department.color }}
+          />
+          <span className="text-sm text-foreground-600">
+            {task.department.name}
+          </span>
+          {task.isOverdue && (
+            <Badge color="danger" size="sm" variant="flat">
+              {t("overdueTask")}
+            </Badge>
+          )}
+        </div>
+
+        {/* Assignees Display */}
+        <div className="mb-4">
+          <p className="text-xs text-foreground-500 mb-2 uppercase tracking-wide">
+            {t("filterByAssignees")}
+          </p>
+
+          {task.primaryAssignee && (
+            <div className="flex items-center gap-2 mb-2 p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+              <Avatar
+                className="flex-shrink-0"
+                name={task.primaryAssignee.fullName}
+                size="sm"
+              />
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-xs font-medium text-primary-700 dark:text-primary-300 truncate">
+                  {task.primaryAssignee.gradeName}{" "}
+                  {task.primaryAssignee.fullName}
+                </span>
+                <span className="text-xs text-primary-500 dark:text-primary-400">
+                  {t("primaryAssignee")}
+                </span>
+              </div>
             </div>
-            <Progress
-              color={getProgressColor(task.progress)}
-              size="sm"
-              value={task.progress}
-              className="mb-1"
-            />
-          </div>
+          )}
 
-          {/* Time tracking */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          {task.assignedMembers.length > 1 && (
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-foreground-500" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-foreground-500">
-                  {t("timeSpent")}
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {task.timeSpent}h
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-foreground-500" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-foreground-500">
-                  {t("estimatedTime")}
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {task.estimatedTime}h
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Dates */}
-          <div className="flex justify-between items-center text-xs text-foreground-500 mb-3">
-            <span>
-              {formatDate(task.startDate)} - {formatDate(task.endDate)}
-            </span>
-          </div>
-
-          {/* Tags */}
-          {task.tags.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <Tag className="w-3 h-3 text-foreground-500" />
-              {task.tags.slice(0, 3).map((tag, index) => (
-                <Chip key={index} size="sm" variant="flat">
-                  {tag}
-                </Chip>
-              ))}
-              {task.tags.length > 3 && (
+              <AvatarGroup
+                isBordered
+                className="flex-shrink-0"
+                max={3}
+                size="sm"
+              >
+                {task.assignedMembers.slice(1).map((member) => (
+                  <Avatar
+                    key={member.id}
+                    className="text-xs"
+                    name={member.fullName}
+                  />
+                ))}
+              </AvatarGroup>
+              {task.assignedMembers.length > 4 && (
                 <Chip size="sm" variant="flat">
-                  +{task.tags.length - 3}
+                  +{task.assignedMembers.length - 4} {t("moreAssignees")}
                 </Chip>
               )}
             </div>
           )}
+        </div>
 
-          {/* Project & Requirement info */}
-          <div className="mt-3 pt-3 border-t border-divider">
-            <div className="text-xs text-foreground-500 space-y-1">
-              <div>
-                <span className="font-medium">Project: </span>
-                <span>{task.project.name}</span>
-              </div>
-              <div>
-                <span className="font-medium">Requirement: </span>
-                <span>{task.requirement.name}</span>
-              </div>
+        {/* Progress */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-foreground-600">
+              {t("taskProgress")}
+            </span>
+            <span className="text-sm font-medium text-foreground">
+              {task.progress}%
+            </span>
+          </div>
+          <Progress
+            className="mb-1"
+            color={getProgressColor(task.progress)}
+            size="sm"
+            value={task.progress}
+          />
+        </div>
+
+        {/* Time tracking */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-foreground-500" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-foreground-500">{t("timeSpent")}</p>
+              <p className="text-sm font-medium text-foreground">
+                {task.timeSpent}h
+              </p>
             </div>
           </div>
-        </CardBody>
-      </Card>
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-foreground-500" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-foreground-500">
+                {t("estimatedTime")}
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                {task.estimatedTime}h
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Dates */}
+        <div className="flex justify-between items-center text-xs text-foreground-500 mb-3">
+          <span>
+            {formatDate(task.startDate)} - {formatDate(task.endDate)}
+          </span>
+        </div>
+
+        {/* Tags */}
+        {task.tags.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Tag className="w-3 h-3 text-foreground-500" />
+            {task.tags.slice(0, 3).map((tag, index) => (
+              <Chip key={index} size="sm" variant="flat">
+                {tag}
+              </Chip>
+            ))}
+            {task.tags.length > 3 && (
+              <Chip size="sm" variant="flat">
+                +{task.tags.length - 3}
+              </Chip>
+            )}
+          </div>
+        )}
+
+        {/* Project & Requirement info */}
+        <div className="mt-3 pt-3 border-t border-divider">
+          <div className="text-xs text-foreground-500 space-y-1">
+            <div>
+              <span className="font-medium">Project: </span>
+              <span>{task.project.name}</span>
+            </div>
+            <div>
+              <span className="font-medium">Requirement: </span>
+              <span>{task.requirement.name}</span>
+            </div>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
   );
 };

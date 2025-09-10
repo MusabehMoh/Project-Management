@@ -41,7 +41,6 @@ import {
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  EditIcon,
   DeleteIcon,
   MoreVerticalIcon,
   SearchIcon,

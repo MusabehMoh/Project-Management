@@ -5,7 +5,6 @@ import { Chip } from "@heroui/chip";
 import { Progress, CircularProgress } from "@heroui/progress";
 import { Avatar, AvatarGroup } from "@heroui/avatar";
 import { ScrollShadow } from "@heroui/scroll-shadow";
-import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Badge } from "@heroui/badge";
 import { Divider } from "@heroui/divider";
 import {
@@ -62,7 +61,7 @@ export default function IndexPage() {
 
     return "danger"; // Red for low progress
   };
-  
+
   // Reusable project card component with improved progress indicators
   const renderProjectCard = (project: Project) => {
     return (
@@ -71,34 +70,34 @@ export default function IndexPage() {
           <div className="flex justify-between items-start">
             <p className="font-medium">{project.name}</p>
             <CircularProgress
-              size="sm"
-              value={project.progress}
-              color={getProgressColor(project.progress)}
-              showValueLabel={true}
               aria-label={`${project.name} progress: ${project.progress}%`}
               classNames={{
                 svg: "w-10 h-10",
-                value: "text-xs font-semibold"
+                value: "text-xs font-semibold",
               }}
+              color={getProgressColor(project.progress)}
+              showValueLabel={true}
+              size="sm"
+              value={project.progress}
             />
           </div>
           <Progress
+            aria-label={`${project.name} progress bar`}
+            className="w-full mt-2"
+            color={getProgressColor(project.progress)}
+            isStriped={true}
+            radius="md"
+            showValueLabel={false}
             size="sm"
             value={project.progress}
-            color={getProgressColor(project.progress)}
-            className="w-full mt-2"
-            aria-label={`${project.name} progress bar`}
-            showValueLabel={false}
-            radius="md"
-            isStriped={true}
           />
           <div className="flex justify-between items-center mt-3">
             <p className="text-xs text-default-500">{project.dueDate}</p>
-            <Button 
-              size="sm" 
-              variant="flat" 
-              color="primary"
+            <Button
               className="min-w-0 px-2 text-xs"
+              color="primary"
+              size="sm"
+              variant="flat"
               onPress={() => openProjectDetails(project)}
             >
               {t("dashboard.viewDetails")}
@@ -418,8 +417,12 @@ export default function IndexPage() {
                   <CardBody className="gap-3 p-2 overflow-hidden">
                     <ScrollShadow hideScrollBar className="max-h-64 p-2">
                       {projects
-                        .filter(project => project.status === "on-hold" || project.status === "todo")
-                        .map(project => (
+                        .filter(
+                          (project) =>
+                            project.status === "on-hold" ||
+                            project.status === "todo",
+                        )
+                        .map((project) => (
                           <React.Fragment key={project.id}>
                             {renderProjectCard(project)}
                           </React.Fragment>
@@ -427,7 +430,7 @@ export default function IndexPage() {
                     </ScrollShadow>
                   </CardBody>
                 </Card>
-                
+
                 {/* In Progress Stage */}
                 <Card className="border-t-4 border-t-warning">
                   <CardHeader className="pb-1">
@@ -440,8 +443,12 @@ export default function IndexPage() {
                   <CardBody className="gap-3 p-2 overflow-hidden">
                     <ScrollShadow hideScrollBar className="max-h-64 p-2">
                       {projects
-                        .filter(project => project.status === "in-progress" || project.status === "active")
-                        .map(project => (
+                        .filter(
+                          (project) =>
+                            project.status === "in-progress" ||
+                            project.status === "active",
+                        )
+                        .map((project) => (
                           <React.Fragment key={project.id}>
                             {renderProjectCard(project)}
                           </React.Fragment>
@@ -449,7 +456,7 @@ export default function IndexPage() {
                     </ScrollShadow>
                   </CardBody>
                 </Card>
-                
+
                 {/* Completed Stage */}
                 <Card className="border-t-4 border-t-success">
                   <CardHeader className="pb-1">
@@ -462,8 +469,12 @@ export default function IndexPage() {
                   <CardBody className="gap-3 p-2 overflow-hidden">
                     <ScrollShadow hideScrollBar className="max-h-64 p-2">
                       {projects
-                        .filter(project => project.status === "completed" || project.status === "cancelled")
-                        .map(project => (
+                        .filter(
+                          (project) =>
+                            project.status === "completed" ||
+                            project.status === "cancelled",
+                        )
+                        .map((project) => (
                           <React.Fragment key={project.id}>
                             {renderProjectCard(project)}
                           </React.Fragment>

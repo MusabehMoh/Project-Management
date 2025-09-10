@@ -24,7 +24,9 @@ export function useProjectRequirements({
   pageSize = 20,
 }: UseProjectRequirementsProps = {}) {
   const [requirements, setRequirements] = useState<ProjectRequirement[]>([]);
-  const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>([]);
+  const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>(
+    [],
+  );
   const [stats, setStats] = useState<ProjectRequirementStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,16 +42,22 @@ export function useProjectRequirements({
   const [totalRequirements, setTotalRequirements] = useState(0);
 
   // Pagination for assigned projects
-  const [assignedProjectsCurrentPage, setAssignedProjectsCurrentPage] = useState(1);
-  const [assignedProjectsTotalPages, setAssignedProjectsTotalPages] = useState(1);
+  const [assignedProjectsCurrentPage, setAssignedProjectsCurrentPage] =
+    useState(1);
+  const [assignedProjectsTotalPages, setAssignedProjectsTotalPages] =
+    useState(1);
   const [totalAssignedProjects, setTotalAssignedProjects] = useState(0);
-  const [assignedProjectsPageSize, setAssignedProjectsPageSize] = useState(pageSize);
+  const [assignedProjectsPageSize, setAssignedProjectsPageSize] =
+    useState(pageSize);
   // Assigned projects filters
   const [assignedProjectsSearch, setAssignedProjectsSearch] = useState("");
-  const [assignedProjectsProjectId, setAssignedProjectsProjectId] = useState<number | undefined>(undefined);
+  const [assignedProjectsProjectId, setAssignedProjectsProjectId] = useState<
+    number | undefined
+  >(undefined);
 
   // Filters
-  const [filters, setFilters] = useState<ProjectRequirementFilters>(initialFilters);
+  const [filters, setFilters] =
+    useState<ProjectRequirementFilters>(initialFilters);
 
   /**
    * Load assigned projects for the current analyst
@@ -57,6 +65,7 @@ export function useProjectRequirements({
   const loadAssignedProjects = useCallback(
     async (userId?: number) => {
       const key = `${userId || "current"}|${assignedProjectsCurrentPage}|${assignedProjectsPageSize}|${assignedProjectsSearch}|${assignedProjectsProjectId || "all"}`;
+
       if (assignedInFlightKeyRef.current === key) {
         return; // prevent duplicate identical request
       }
@@ -92,10 +101,15 @@ export function useProjectRequirements({
         });
       } finally {
         setLoading(false);
-  assignedInFlightKeyRef.current = null;
+        assignedInFlightKeyRef.current = null;
       }
     },
-  [assignedProjectsCurrentPage, assignedProjectsPageSize, assignedProjectsSearch, assignedProjectsProjectId],
+    [
+      assignedProjectsCurrentPage,
+      assignedProjectsPageSize,
+      assignedProjectsSearch,
+      assignedProjectsProjectId,
+    ],
   );
 
   /**
@@ -104,6 +118,7 @@ export function useProjectRequirements({
   const loadRequirements = useCallback(async () => {
     if (!projectId) return;
     const key = `${projectId}|${currentPage}|${pageSize}|${JSON.stringify(filters)}`;
+
     if (inFlightKeyRef.current === key) {
       // Duplicate call with identical params; skip
       return;
@@ -114,17 +129,22 @@ export function useProjectRequirements({
     setError(null);
 
     try {
-      const result = await projectRequirementsService.getProjectRequirements(projectId, {
-        ...filters,
-        page: currentPage,
-        limit: pageSize,
-      });
+      const result = await projectRequirementsService.getProjectRequirements(
+        projectId,
+        {
+          ...filters,
+          page: currentPage,
+          limit: pageSize,
+        },
+      );
 
       setRequirements(result.data);
       setTotalPages(result.pagination.totalPages);
       setTotalRequirements(result.pagination.total);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load requirements";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load requirements";
+
       setError(errorMessage);
       addToast({
         title: "Error",
@@ -144,7 +164,9 @@ export function useProjectRequirements({
     if (!projectId) return;
 
     try {
-      const projectStats = await projectRequirementsService.getRequirementStats(projectId);
+      const projectStats =
+        await projectRequirementsService.getRequirementStats(projectId);
+
       setStats(projectStats);
     } catch (err) {
       console.error("Failed to load requirement stats:", err);
@@ -160,7 +182,9 @@ export function useProjectRequirements({
 
       setLoading(true);
       try {
-        const newRequirement = await projectRequirementsService.createRequirement(projectId, data);
+        const newRequirement =
+          await projectRequirementsService.createRequirement(projectId, data);
+
         setRequirements((prev) => [newRequirement, ...prev]);
         await loadStats(); // Refresh stats
         addToast({
@@ -168,9 +192,12 @@ export function useProjectRequirements({
           description: "Requirement created successfully",
           color: "success",
         });
+
         return newRequirement;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to create requirement";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create requirement";
+
         addToast({
           title: "Error",
           description: errorMessage,
@@ -181,7 +208,7 @@ export function useProjectRequirements({
         setLoading(false);
       }
     },
-    [projectId, loadStats]
+    [projectId, loadStats],
   );
 
   /**
@@ -191,13 +218,16 @@ export function useProjectRequirements({
     async (requirementId: number, data: UpdateProjectRequirementRequest) => {
       setLoading(true);
       try {
-        const updatedRequirement = await projectRequirementsService.updateRequirement(
-          requirementId,
-          data
-        );
+        const updatedRequirement =
+          await projectRequirementsService.updateRequirement(
+            requirementId,
+            data,
+          );
 
         setRequirements((prev) =>
-          prev.map((req) => (req.id === requirementId ? updatedRequirement : req))
+          prev.map((req) =>
+            req.id === requirementId ? updatedRequirement : req,
+          ),
         );
         await loadStats(); // Refresh stats
         addToast({
@@ -205,9 +235,12 @@ export function useProjectRequirements({
           description: "Requirement updated successfully",
           color: "success",
         });
+
         return updatedRequirement;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to update requirement";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update requirement";
+
         addToast({
           title: "Error",
           description: errorMessage,
@@ -218,7 +251,7 @@ export function useProjectRequirements({
         setLoading(false);
       }
     },
-    [loadStats]
+    [loadStats],
   );
 
   /**
@@ -229,15 +262,19 @@ export function useProjectRequirements({
       setLoading(true);
       try {
         await projectRequirementsService.deleteRequirement(requirementId);
-        setRequirements((prev) => prev.filter((req) => req.id !== requirementId));
+        setRequirements((prev) =>
+          prev.filter((req) => req.id !== requirementId),
+        );
         await loadStats(); // Refresh stats
         addToast({
-          title: "Success", 
+          title: "Success",
           description: "Requirement deleted successfully",
           color: "success",
         });
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to delete requirement";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to delete requirement";
+
         addToast({
           title: "Error",
           description: errorMessage,
@@ -248,7 +285,7 @@ export function useProjectRequirements({
         setLoading(false);
       }
     },
-    [loadStats]
+    [loadStats],
   );
 
   /**
@@ -258,9 +295,13 @@ export function useProjectRequirements({
     async (requirementId: number) => {
       setLoading(true);
       try {
-        const updatedRequirement = await projectRequirementsService.sendRequirement(requirementId);
+        const updatedRequirement =
+          await projectRequirementsService.sendRequirement(requirementId);
+
         setRequirements((prev) =>
-          prev.map((req) => (req.id === requirementId ? updatedRequirement : req))
+          prev.map((req) =>
+            req.id === requirementId ? updatedRequirement : req,
+          ),
         );
         await loadStats(); // Refresh stats
         addToast({
@@ -268,9 +309,12 @@ export function useProjectRequirements({
           description: "Requirement sent to development successfully",
           color: "success",
         });
+
         return updatedRequirement;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to send requirement";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to send requirement";
+
         addToast({
           title: "Error",
           description: errorMessage,
@@ -281,7 +325,7 @@ export function useProjectRequirements({
         setLoading(false);
       }
     },
-    [loadStats]
+    [loadStats],
   );
 
   /**
@@ -318,10 +362,13 @@ export function useProjectRequirements({
   /**
    * Handle assigned projects project filter change
    */
-  const handleAssignedProjectsProjectIdChange = useCallback((projectId?: number) => {
-    setAssignedProjectsCurrentPage(1);
-    setAssignedProjectsProjectId(projectId);
-  }, []);
+  const handleAssignedProjectsProjectIdChange = useCallback(
+    (projectId?: number) => {
+      setAssignedProjectsCurrentPage(1);
+      setAssignedProjectsProjectId(projectId);
+    },
+    [],
+  );
 
   /**
    * Handle page change
@@ -362,7 +409,6 @@ export function useProjectRequirements({
 
     loadRequirements();
     loadStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, JSON.stringify(filters), currentPage, pageSize]);
 
   // Effect for assigned projects pagination
@@ -370,7 +416,12 @@ export function useProjectRequirements({
     if (projectId) return; // Only for assigned projects view
 
     loadAssignedProjects();
-  }, [assignedProjectsCurrentPage, assignedProjectsPageSize, loadAssignedProjects, projectId]);
+  }, [
+    assignedProjectsCurrentPage,
+    assignedProjectsPageSize,
+    loadAssignedProjects,
+    projectId,
+  ]);
 
   return {
     // Data
@@ -391,8 +442,8 @@ export function useProjectRequirements({
     assignedProjectsTotalPages,
     totalAssignedProjects,
     assignedProjectsPageSize,
-  assignedProjectsSearch,
-  assignedProjectsProjectId,
+    assignedProjectsSearch,
+    assignedProjectsProjectId,
 
     // Filters
     filters,
@@ -409,8 +460,8 @@ export function useProjectRequirements({
     handlePageSizeChange,
     handleAssignedProjectsPageChange,
     handleAssignedProjectsPageSizeChange,
-  handleAssignedProjectsSearchChange,
-  handleAssignedProjectsProjectIdChange,
+    handleAssignedProjectsSearchChange,
+    handleAssignedProjectsProjectIdChange,
     clearError,
     refreshData,
   };

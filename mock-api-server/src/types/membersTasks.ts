@@ -44,14 +44,14 @@ export interface TaskSearchParams {
   limit?: number;
   search?: string; // Task name search
   memberIds?: number[]; // Multiple assignee filtering
-  memberFilterMode?: 'any' | 'all'; // AND/OR logic for assignees
+  memberFilterMode?: "any" | "all"; // AND/OR logic for assignees
   departmentIds?: string[];
   statusIds?: number[];
   priorityIds?: number[];
   isOverdue?: boolean;
   dateRange?: { start: string; end: string };
-  sortBy?: 'name' | 'startDate' | 'endDate' | 'priority' | 'progress';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "name" | "startDate" | "endDate" | "priority" | "progress";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface TasksResponse {

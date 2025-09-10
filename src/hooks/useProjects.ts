@@ -46,10 +46,12 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
       // Rate-limit / loop protection (same params >5 times within 5s)
       const now = Date.now();
       const recent = recentCallsRef.current;
+
       // purge old
       while (recent.length && now - recent[0].t > 5000) recent.shift();
       recent.push({ key, t: now });
       const sameKeyCount = recent.filter((r) => r.key === key).length;
+
       if (sameKeyCount > 5) {
         if (process.env.NODE_ENV !== "production") {
           // eslint-disable-next-line no-console
@@ -58,6 +60,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
             key,
           );
         }
+
         return;
       }
 
@@ -128,9 +131,9 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
         }
       })();
 
-  inFlightProjectsRef.current = { key, promise: exec };
+      inFlightProjectsRef.current = { key, promise: exec };
 
-  return exec;
+      return exec;
     },
     [filters, pageSize],
   );
@@ -141,6 +144,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
     const run = (async () => {
       try {
         const response = await projectService.getProjectUsers();
+
         if (response.success) {
           setUsers(response.data);
         } else {
@@ -155,9 +159,10 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
         inFlightUsersRef.current = null;
       }
     })();
-  inFlightUsersRef.current = run;
 
-  return run;
+    inFlightUsersRef.current = run;
+
+    return run;
   }, []);
 
   // Load owning units from API
@@ -166,6 +171,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
     const run = (async () => {
       try {
         const response = await projectService.getOwningUnits();
+
         if (response.success) {
           setOwningUnits(response.data);
         } else {
@@ -180,9 +186,10 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
         inFlightOwningUnitsRef.current = null;
       }
     })();
-  inFlightOwningUnitsRef.current = run;
 
-  return run;
+    inFlightOwningUnitsRef.current = run;
+
+    return run;
   }, []);
 
   // Load project statistics
@@ -191,6 +198,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
     const run = (async () => {
       try {
         const response = await projectService.getProjectStats();
+
         if (response.success) {
           setStats(response.data);
         } else {
@@ -205,9 +213,10 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
         inFlightStatsRef.current = null;
       }
     })();
-  inFlightStatsRef.current = run;
 
-  return run;
+    inFlightStatsRef.current = run;
+
+    return run;
   }, []);
 
   // Create a new project
@@ -370,6 +379,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
 
   // Initial data load - only run once on mount
   const didInitRef = useRef(false);
+
   useEffect(() => {
     if (didInitRef.current) return;
     didInitRef.current = true;

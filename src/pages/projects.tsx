@@ -34,7 +34,6 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
-
 import { parseDate } from "@internationalized/date";
 import { addToast } from "@heroui/toast";
 
@@ -48,8 +47,6 @@ import {
   EditIcon,
   DeleteIcon,
   MoreVerticalIcon,
-  CalendarIcon,
-  InfoIcon,
   SendIcon,
   DownloadIcon,
 } from "@/components/icons";
@@ -225,6 +222,7 @@ export default function ProjectsPage() {
 
     if (!isAlreadySelected) {
       const updatedAnalysts = [...selectedAnalysts, analyst];
+
       setSelectedAnalysts(updatedAnalysts);
       setFormData({
         ...formData,
@@ -241,6 +239,7 @@ export default function ProjectsPage() {
     const updatedAnalysts = selectedAnalysts.filter(
       (analyst) => analyst.id !== analystId,
     );
+
     setSelectedAnalysts(updatedAnalysts);
     setFormData({
       ...formData,
@@ -436,6 +435,7 @@ export default function ProjectsPage() {
 
     // Handle analysts if they exist in the project
     const analystResults: MemberSearchResult[] = [];
+
     if (project.analystIds && project.analystIds.length > 0) {
       // Convert analyst IDs to MemberSearchResult objects
       project.analystIds.forEach((analystId) => {
@@ -613,6 +613,7 @@ export default function ProjectsPage() {
             t("projects.noDataToExport") || "No projects available to export",
           color: "danger",
         });
+
         return;
       }
 
@@ -732,10 +733,10 @@ export default function ProjectsPage() {
 
             <Button
               isDisabled={loading || projects.length === 0}
-              onPress={handleExportData}
               size="lg"
               startContent={<DownloadIcon />}
               variant="bordered"
+              onPress={handleExportData}
             >
               {t("projects.exportData")}
             </Button>

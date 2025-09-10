@@ -10,7 +10,7 @@ import { Avatar, AvatarGroup } from "@heroui/avatar";
 import { Chip } from "@heroui/chip";
 import { Progress } from "@heroui/progress";
 import { Badge } from "@heroui/badge";
-import { CalendarDays, Clock, Tag, Users } from "lucide-react";
+import { CalendarDays, Clock } from "lucide-react";
 
 import { MemberTask } from "@/types/membersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -27,6 +27,7 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
     if (progress >= 80) return "success";
     if (progress >= 60) return "primary";
     if (progress >= 40) return "warning";
+
     return "danger";
   };
 
@@ -101,7 +102,7 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
           <div className="flex items-center gap-2">
             {task.assignedMembers && task.assignedMembers.length > 0 ? (
               <>
-                <AvatarGroup size="sm" max={3}>
+                <AvatarGroup max={3} size="sm">
                   {task.assignedMembers.map((assignee) => (
                     <Avatar
                       key={assignee.id}
@@ -111,7 +112,7 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
                   ))}
                 </AvatarGroup>
                 {task.assignedMembers.length > 3 && (
-                  <Badge color="primary" variant="flat" size="sm">
+                  <Badge color="primary" size="sm" variant="flat">
                     +{task.assignedMembers.length - 3}
                   </Badge>
                 )}
@@ -126,11 +127,11 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
         return (
           <Chip
             size="sm"
-            variant="flat"
             style={{
               backgroundColor: `${task.department.color}20`,
               color: task.department.color,
             }}
+            variant="flat"
           >
             {task.department.name}
           </Chip>
@@ -139,8 +140,8 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
       case "status":
         return (
           <Chip
-            size="sm"
             color={getStatusColor(task.status.label)}
+            size="sm"
             variant="flat"
           >
             {task.status.label}
@@ -150,8 +151,8 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
       case "priority":
         return (
           <Chip
-            size="sm"
             color={getPriorityColor(task.priority.label)}
+            size="sm"
             variant="flat"
           >
             {task.priority.label}
@@ -162,10 +163,10 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
         return (
           <div className="flex flex-col gap-1 min-w-[120px]">
             <Progress
-              value={task.progress}
+              showValueLabel
               color={getProgressColor(task.progress)}
               size="sm"
-              showValueLabel
+              value={task.progress}
             />
           </div>
         );
@@ -197,15 +198,15 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
                 {task.tags.slice(0, 2).map((tag, index) => (
                   <Chip
                     key={index}
+                    className="text-tiny"
                     size="sm"
                     variant="bordered"
-                    className="text-tiny"
                   >
                     {tag}
                   </Chip>
                 ))}
                 {task.tags.length > 2 && (
-                  <Badge color="default" variant="flat" size="sm">
+                  <Badge color="default" size="sm" variant="flat">
                     +{task.tags.length - 2}
                   </Badge>
                 )}
@@ -225,10 +226,10 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
     <div className="w-full">
       <Table
         aria-label="Tasks table"
-        selectionMode="none"
         classNames={{
           wrapper: "min-h-[400px]",
         }}
+        selectionMode="none"
       >
         <TableHeader columns={columns}>
           {(column) => (

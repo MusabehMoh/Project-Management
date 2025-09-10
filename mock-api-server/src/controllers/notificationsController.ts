@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+
 import { logger } from "../utils/logger.js";
 
 // Mock notifications storage (in a real app, this would be a database)
@@ -57,29 +58,38 @@ export class NotificationsController {
 
       // Filter notifications for the current user
       let userNotifications = mockNotifications.filter(
-        (notification) => 
-          notification.userId === userId || 
-          (notification.targetUsernames && notification.targetUsernames.includes("john.doe"))
+        (notification) =>
+          notification.userId === userId ||
+          (notification.targetUsernames &&
+            notification.targetUsernames.includes("john.doe")),
       );
 
       // Filter by read status if requested
-      if (unreadOnly === 'true') {
-        userNotifications = userNotifications.filter(n => !n.read);
+      if (unreadOnly === "true") {
+        userNotifications = userNotifications.filter((n) => !n.read);
       }
 
       // Sort by timestamp (newest first)
-      userNotifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      userNotifications.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      );
 
       // Pagination
       const pageNum = parseInt(page as string);
       const limitNum = parseInt(limit as string);
       const startIndex = (pageNum - 1) * limitNum;
       const endIndex = startIndex + limitNum;
-      const paginatedNotifications = userNotifications.slice(startIndex, endIndex);
+      const paginatedNotifications = userNotifications.slice(
+        startIndex,
+        endIndex,
+      );
 
-      const unreadCount = userNotifications.filter(n => !n.read).length;
+      const unreadCount = userNotifications.filter((n) => !n.read).length;
 
-      logger.info(`Retrieved ${paginatedNotifications.length} notifications for user ${userId}`);
+      logger.info(
+        `Retrieved ${paginatedNotifications.length} notifications for user ${userId}`,
+      );
 
       res.json({
         success: true,
@@ -113,8 +123,10 @@ export class NotificationsController {
       const userId = 1; // This should come from auth middleware
 
       const notification = mockNotifications.find(
-        (n) => n.id === notificationId && 
-        (n.userId === userId || (n.targetUsernames && n.targetUsernames.includes("john.doe")))
+        (n) =>
+          n.id === notificationId &&
+          (n.userId === userId ||
+            (n.targetUsernames && n.targetUsernames.includes("john.doe"))),
       );
 
       if (!notification) {
@@ -126,7 +138,9 @@ export class NotificationsController {
 
       notification.read = true;
 
-      logger.info(`Marked notification ${notificationId} as read for user ${userId}`);
+      logger.info(
+        `Marked notification ${notificationId} as read for user ${userId}`,
+      );
 
       res.json({
         success: true,
@@ -151,12 +165,13 @@ export class NotificationsController {
 
       // Mark all user notifications as read
       const userNotifications = mockNotifications.filter(
-        (notification) => 
-          notification.userId === userId || 
-          (notification.targetUsernames && notification.targetUsernames.includes("john.doe"))
+        (notification) =>
+          notification.userId === userId ||
+          (notification.targetUsernames &&
+            notification.targetUsernames.includes("john.doe")),
       );
 
-      userNotifications.forEach(notification => {
+      userNotifications.forEach((notification) => {
         notification.read = true;
       });
 
@@ -185,8 +200,10 @@ export class NotificationsController {
       const userId = 1; // This should come from auth middleware
 
       const index = mockNotifications.findIndex(
-        (n) => n.id === notificationId && 
-        (n.userId === userId || (n.targetUsernames && n.targetUsernames.includes("john.doe")))
+        (n) =>
+          n.id === notificationId &&
+          (n.userId === userId ||
+            (n.targetUsernames && n.targetUsernames.includes("john.doe"))),
       );
 
       if (index === -1) {
@@ -232,13 +249,14 @@ export class NotificationsController {
     };
 
     mockNotifications.unshift(newNotification); // Add to beginning
-    
+
     // Keep only the latest 100 notifications
     if (mockNotifications.length > 100) {
       mockNotifications.splice(100);
     }
 
     logger.info(`Added new notification: ${notification.type}`);
+
     return newNotification;
   }
 }

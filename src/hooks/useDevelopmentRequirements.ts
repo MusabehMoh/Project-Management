@@ -4,11 +4,11 @@ import type {
   ProjectRequirementFilters,
 } from "@/types/projectRequirement";
 
-import { useState, useEffect, useCallback, useRef } from "react";  
-import { addToast } from "@heroui/toast";  
-  
-import { projectRequirementsService } from "@/services/api/projectRequirementsService";  
-import { useProjectRequirements } from "@/hooks/useProjectRequirements";  
+import { useState, useEffect, useCallback, useRef } from "react";
+import { addToast } from "@heroui/toast";
+
+import { projectRequirementsService } from "@/services/api/projectRequirementsService";
+import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 
 interface UseDevelopmentRequirementsProps {
   initialFilters?: ProjectRequirementFilters;
@@ -40,7 +40,8 @@ export function useDevelopmentRequirements({
   });
 
   // Projects (for project filter dropdown)
-  const { assignedProjects: projects, loadAssignedProjects } = useProjectRequirements();
+  const { assignedProjects: projects, loadAssignedProjects } =
+    useProjectRequirements();
 
   // Load projects when hook initializes (for dropdown)
   useEffect(() => {
@@ -63,11 +64,12 @@ export function useDevelopmentRequirements({
     setError(null);
 
     try {
-      const result = await projectRequirementsService.getDevelopmentRequirements({
-        ...filters,
-        page: currentPage,
-        limit: pageSizeState,
-      });
+      const result =
+        await projectRequirementsService.getDevelopmentRequirements({
+          ...filters,
+          page: currentPage,
+          limit: pageSizeState,
+        });
 
       setRequirements(result.data);
       setTotalPages(result.pagination.totalPages);
@@ -97,10 +99,11 @@ export function useDevelopmentRequirements({
     async (requirementId: number, data: UpdateProjectRequirementRequest) => {
       setLoading(true);
       try {
-        const updatedRequirement = await projectRequirementsService.updateRequirement(
-          requirementId,
-          data,
-        );
+        const updatedRequirement =
+          await projectRequirementsService.updateRequirement(
+            requirementId,
+            data,
+          );
 
         setRequirements((prev) =>
           prev.map((req) =>
@@ -135,34 +138,31 @@ export function useDevelopmentRequirements({
   /**
    * Delete a requirement
    */
-  const deleteRequirement = useCallback(
-    async (requirementId: number) => {
-      setLoading(true);
-      try {
-        await projectRequirementsService.deleteRequirement(requirementId);
-        setRequirements((prev) => prev.filter((req) => req.id !== requirementId));
+  const deleteRequirement = useCallback(async (requirementId: number) => {
+    setLoading(true);
+    try {
+      await projectRequirementsService.deleteRequirement(requirementId);
+      setRequirements((prev) => prev.filter((req) => req.id !== requirementId));
 
-        addToast({
-          title: "Success",
-          description: "Requirement deleted successfully",
-          color: "success",
-        });
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to delete requirement";
+      addToast({
+        title: "Success",
+        description: "Requirement deleted successfully",
+        color: "success",
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete requirement";
 
-        addToast({
-          title: "Error",
-          description: errorMessage,
-          color: "danger",
-        });
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+      addToast({
+        title: "Error",
+        description: errorMessage,
+        color: "danger",
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   /**
    * Update filters and reset to first page
@@ -178,9 +178,12 @@ export function useDevelopmentRequirements({
   /**
    * Set project filter (used by UI dropdown). Accepts undefined to clear filter.
    */
-  const setProjectFilter = useCallback((projectId?: number) => {
-    updateFilters({ ...(filters || {}), projectId });
-  }, [filters, updateFilters]);
+  const setProjectFilter = useCallback(
+    (projectId?: number) => {
+      updateFilters({ ...(filters || {}), projectId });
+    },
+    [filters, updateFilters],
+  );
 
   /**
    * Handle page change
@@ -218,19 +221,19 @@ export function useDevelopmentRequirements({
     requirements,
     loading,
     error,
-  // Projects for dropdown
-  projects,
+    // Projects for dropdown
+    projects,
 
     // Pagination
     currentPage,
     totalPages,
     totalRequirements,
-  pageSize: pageSizeState,
-  handlePageSizeChange,
+    pageSize: pageSizeState,
+    handlePageSizeChange,
 
     // Filters
     filters,
-  setProjectFilter,
+    setProjectFilter,
 
     // Actions
     loadRequirements,

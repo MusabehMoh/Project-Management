@@ -53,7 +53,7 @@ const translations = {
     "dashboard.urgentNotifications": "Urgent Notifications",
     "dashboard.updates": "Updates",
     "dashboard.projectPipeline": "Project Pipeline",
-    
+
     // Project Pipeline
     "pipeline.planning": "Planning",
     "pipeline.inProgress": "In Progress",
@@ -404,6 +404,18 @@ const translations = {
     "requirements.deleteError": "Failed to delete requirement",
     "requirements.sendError": "Failed to send requirement",
     "requirements.loadError": "Failed to load requirements",
+  // Missing keys used by development-requirements page
+  "requirements.description": "Description",
+  "requirements.id": "ID",
+  "requirements.created": "Created",
+  "common.viewDetails": "View Details",
+  // Task creation keys
+  "tasks.createTask": "Create Task",
+  "tasks.editTask": "Edit Task",
+  "tasks.developer": "Developer",
+  "tasks.qcMember": "QC Member",
+  "tasks.selectDeveloper": "Search for developer...",
+  "tasks.selectQC": "Search for QC member...",
     "requirements.validation.nameRequired": "Requirement name is required",
     "requirements.validation.descriptionRequired": "Description is required",
     "requirements.validation.priorityRequired": "Priority is required",
@@ -972,7 +984,7 @@ const translations = {
     "pipeline.planning": "التخطيط",
     "pipeline.inProgress": "قيد التنفيذ",
     "pipeline.completed": "مكتمل",
-    
+
     // Common Date References
     "common.today": "اليوم",
     "common.yesterday": "أمس",
@@ -1307,6 +1319,18 @@ const translations = {
     "requirements.deleteError": "فشل في حذف المتطلب",
     "requirements.sendError": "فشل في إرسال المتطلب",
     "requirements.loadError": "فشل في تحميل المتطلبات",
+  // Missing keys used by development-requirements page (Arabic)
+  "requirements.description": "الوصف",
+  "requirements.id": "المعرّف",
+  "requirements.created": "تاريخ الإنشاء",
+  "common.viewDetails": "عرض التفاصيل",
+  // Task creation keys (Arabic)
+  "tasks.createTask": "إنشاء مهمة",
+  "tasks.editTask": "تحرير المهمة",
+  "tasks.developer": "المطور",
+  "tasks.qcMember": "مسؤول ضمان الجودة",
+  "tasks.selectDeveloper": "البحث عن مطور...",
+  "tasks.selectQC": "البحث عن مسؤول ضمان الجودة...",
     "requirements.validation.nameRequired": "اسم المتطلب مطلوب",
     "requirements.validation.descriptionRequired": "الوصف مطلوب",
     "requirements.validation.priorityRequired": "الأولوية مطلوبة",

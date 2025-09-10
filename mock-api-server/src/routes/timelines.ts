@@ -46,7 +46,7 @@ router.get(
   timelineController.getSprintTasks.bind(timelineController),
 );
 router.post(
-  "/sprints/:sprintId/tasks", 
+  "/sprints/:sprintId/tasks",
   timelineController.createTaskForSprint.bind(timelineController),
 );
 

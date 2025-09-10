@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { v4 as uuidv4 } from "uuid";
 
 import { mockDelayHandler } from "../utils/mockDelay.js";
 import { TimelineService } from "../services/timelineService.js";
@@ -132,7 +131,7 @@ export class TimelineController {
           },
         });
       }
-     const numericId = Math.floor(100000 + Math.random() * 900000);
+      const numericId = Math.floor(100000 + Math.random() * 900000);
       const timeline = await timelineService.create({
         id: numericId,
         treeId: "timeline-" + numericId,

@@ -75,7 +75,7 @@ const mockLookups = {
   ],
 };
 
-  // Mock project status data matching the interface from frontend
+// Mock project status data matching the interface from frontend
 const mockProjectStatuses = [
   {
     id: 1,
@@ -119,7 +119,6 @@ const mockProjectStatuses = [
   },
 ];
 
- 
 export class LookupsController {
   /**
    * Get all lookups
@@ -179,23 +178,23 @@ export class LookupsController {
   async getStatuses(req: Request, res: Response) {
     try {
       logger.info("[ProjectStatusController] Getting all project statuses");
-      
+
       res.json({
         success: true,
-        data: mockProjectStatuses
+        data: mockProjectStatuses,
       });
     } catch (error) {
-      logger.error("[ProjectStatusController] Error getting project statuses:", error);
+      logger.error(
+        "[ProjectStatusController] Error getting project statuses:",
+        error,
+      );
       res.status(500).json({
         success: false,
         error: {
           message: "Failed to fetch project statuses",
-          code: "FETCH_ERROR"
-        }
+          code: "FETCH_ERROR",
+        },
       });
     }
   }
-
-
 }
-

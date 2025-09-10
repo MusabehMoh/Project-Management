@@ -36,7 +36,8 @@ export class TasksController {
         return res.status(400).json({
           success: false,
           error: {
-            message: "Missing required fields: sprintId, name, startDate, endDate",
+            message:
+              "Missing required fields: sprintId, name, startDate, endDate",
             code: "VALIDATION_ERROR",
           },
         });
@@ -104,7 +105,10 @@ export class TasksController {
         });
       }
 
-      const result = await this.timelineService.moveTask(taskId, targetSprintId);
+      const result = await this.timelineService.moveTask(
+        taskId,
+        targetSprintId,
+      );
 
       if (!result) {
         return res.status(404).json({

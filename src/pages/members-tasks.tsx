@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useDisclosure } from "@heroui/modal";
@@ -10,12 +10,9 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 import { Select, SelectItem } from "@heroui/select";
-import { Chip } from "@heroui/chip";
 import { Badge } from "@heroui/badge";
 import {
   FileDown,
-  SortAsc,
-  SortDesc,
   RefreshCw,
   FileSpreadsheet,
   FileText,
@@ -33,7 +30,7 @@ import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
 import DefaultLayout from "@/layouts/default";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MemberTask, TaskSearchParams } from "@/types/membersTasks";
+import { MemberTask } from "@/types/membersTasks";
 import { Department } from "@/types/timeline";
 
 // Mock departments - in real app, this would come from context or API
@@ -91,6 +88,7 @@ export default function MembersTasksPage() {
   const handleSortChange = (keys: any) => {
     const sortValue = Array.from(keys)[0] as string;
     const [sortBy, sortOrder] = sortValue.split("-");
+
     setFilters({
       ...filters,
       sortBy: sortBy as any,
@@ -114,6 +112,7 @@ export default function MembersTasksPage() {
 
   const getActiveFiltersCount = () => {
     let count = 0;
+
     if (filters.search) count++;
     if (filters.memberIds?.length) count++;
     if (filters.departmentIds?.length) count++;
@@ -121,6 +120,7 @@ export default function MembersTasksPage() {
     if (filters.priorityIds?.length) count++;
     if (filters.dateRange) count++;
     if (filters.isOverdue) count++;
+
     return count;
   };
 
@@ -137,6 +137,7 @@ export default function MembersTasksPage() {
               : filters.sortBy === "progress"
                 ? "Progress"
                 : "Date";
+
     return `${sortLabel} (${filters.sortOrder === "asc" ? "A-Z" : "Z-A"})`;
   };
 
@@ -158,8 +159,8 @@ export default function MembersTasksPage() {
               <Dropdown>
                 <DropdownTrigger>
                   <Button
-                    variant="flat"
                     startContent={<FileDown className="w-4 h-4" />}
+                    variant="flat"
                   >
                     {t("exportTasks")}
                   </Button>
@@ -191,10 +192,10 @@ export default function MembersTasksPage() {
 
               {/* Refresh Button */}
               <Button
-                variant="flat"
-                startContent={<RefreshCw className="w-4 h-4" />}
-                onPress={handleRefresh}
                 isLoading={loading}
+                startContent={<RefreshCw className="w-4 h-4" />}
+                variant="flat"
+                onPress={handleRefresh}
               >
                 Refresh
               </Button>
@@ -253,12 +254,12 @@ export default function MembersTasksPage() {
 
         {/* Filters */}
         <TaskFilters
+          allEmployees={allEmployees}
           filters={filters}
           filtersData={filtersData}
-          allEmployees={allEmployees}
+          loading={loading}
           onFiltersChange={setFilters}
           onSearchEmployees={searchEmployees}
-          loading={loading}
         />
 
         {/* Controls Bar */}
@@ -267,32 +268,32 @@ export default function MembersTasksPage() {
             {/* View Toggle */}
             <div className="flex items-center bg-content2 rounded-lg p-1">
               <Button
-                size="sm"
-                variant={viewType === "grid" ? "solid" : "light"}
-                color={viewType === "grid" ? "primary" : "default"}
-                startContent={<Grid3X3 className="w-4 h-4" />}
-                onPress={() => setViewType("grid")}
                 className="min-w-unit-16"
+                color={viewType === "grid" ? "primary" : "default"}
+                size="sm"
+                startContent={<Grid3X3 className="w-4 h-4" />}
+                variant={viewType === "grid" ? "solid" : "light"}
+                onPress={() => setViewType("grid")}
               >
                 Grid
               </Button>
               <Button
-                size="sm"
-                variant={viewType === "list" ? "solid" : "light"}
-                color={viewType === "list" ? "primary" : "default"}
-                startContent={<List className="w-4 h-4" />}
-                onPress={() => setViewType("list")}
                 className="min-w-unit-16"
+                color={viewType === "list" ? "primary" : "default"}
+                size="sm"
+                startContent={<List className="w-4 h-4" />}
+                variant={viewType === "list" ? "solid" : "light"}
+                onPress={() => setViewType("list")}
               >
                 List
               </Button>
               <Button
-                size="sm"
-                variant={viewType === "gantt" ? "solid" : "light"}
-                color={viewType === "gantt" ? "primary" : "default"}
-                startContent={<BarChart3 className="w-4 h-4" />}
-                onPress={() => setViewType("gantt")}
                 className="min-w-unit-16"
+                color={viewType === "gantt" ? "primary" : "default"}
+                size="sm"
+                startContent={<BarChart3 className="w-4 h-4" />}
+                variant={viewType === "gantt" ? "solid" : "light"}
+                onPress={() => setViewType("gantt")}
               >
                 Gantt
               </Button>
@@ -320,9 +321,9 @@ export default function MembersTasksPage() {
           <div className="flex items-center gap-3">
             <span className="text-sm text-foreground-600">Sort by:</span>
             <Select
-              size="sm"
               className="min-w-[180px]"
               selectedKeys={[`${filters.sortBy}-${filters.sortOrder}`]}
+              size="sm"
               onSelectionChange={handleSortChange}
             >
               <SelectItem key="name-asc">Name (A-Z)</SelectItem>
@@ -352,9 +353,9 @@ export default function MembersTasksPage() {
               </p>
               <p className="text-foreground-600 mt-2">{error}</p>
               <Button
+                className="mt-4"
                 color="danger"
                 variant="flat"
-                className="mt-4"
                 onPress={handleRefresh}
               >
                 Try Again
@@ -421,11 +422,11 @@ export default function MembersTasksPage() {
             {(viewType === "grid" || viewType === "list") && totalPages > 1 && (
               <div className="flex justify-center">
                 <Pagination
-                  total={totalPages}
-                  page={currentPage}
-                  onChange={handlePageChange}
                   showControls
                   showShadow
+                  page={currentPage}
+                  total={totalPages}
+                  onChange={handlePageChange}
                 />
               </div>
             )}
@@ -435,8 +436,8 @@ export default function MembersTasksPage() {
         {/* Task Details Modal */}
         <TaskDetailsModal
           isOpen={isDetailsOpen}
-          onClose={onDetailsClose}
           task={selectedTask}
+          onClose={onDetailsClose}
         />
       </div>
     </DefaultLayout>

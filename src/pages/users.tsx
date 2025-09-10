@@ -42,7 +42,7 @@ import {
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { hasPermission, Permissions } from "@/utils/permissions";
+import { hasPermission } from "@/utils/permissions";
 import {
   PlusIcon,
   EditIcon,
@@ -788,12 +788,12 @@ export default function UsersPage() {
                     <div>
                       <Select
                         isRequired
-                        scrollShadowProps={{
-                          isEnabled: true,
-                        }}
                         aria-label={t("users.assignRoles")}
                         label={t("users.assignRoles")}
                         placeholder={t("roles.selectRole")}
+                        scrollShadowProps={{
+                          isEnabled: true,
+                        }}
                         selectedKeys={
                           selectedRole
                             ? new Set([selectedRole.toString()])
@@ -1026,7 +1026,6 @@ export default function UsersPage() {
                         <SelectItem key="all" textValue={t("common.all")}>
                           {t("common.all")}
                         </SelectItem>
-                      
                       </Select>
                     </div>
 

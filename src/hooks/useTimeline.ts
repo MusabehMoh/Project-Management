@@ -41,6 +41,7 @@ export function useTimeline(projectId?: number) {
             await timelineApi.getProjectTimelines(filterProjectId);
 
           const data = response.data || [];
+
           setTimelines(data);
 
           // If we have a specific project ID and found timelines for it, set the first one as current
@@ -93,12 +94,15 @@ export function useTimeline(projectId?: number) {
 
         if (response.success && response.data) {
           const newTimeline = response.data;
+
           setTimelines((prev) => [...prev, newTimeline]);
           setCurrentTimeline(newTimeline);
+
           return newTimeline;
         }
 
         setError(response.message || "Failed to create timeline");
+
         return null;
       } catch (err) {
         setError(
@@ -125,6 +129,7 @@ export function useTimeline(projectId?: number) {
 
         if (response.success && response.data) {
           const updatedTimeline = response.data;
+
           setTimelines((prev) =>
             prev.map((t) =>
               t.id.toString() === data.id ? updatedTimeline : t,
@@ -133,6 +138,7 @@ export function useTimeline(projectId?: number) {
           if (currentTimeline?.id.toString() === data.id) {
             setCurrentTimeline(updatedTimeline);
           }
+
           return updatedTimeline;
         }
 
@@ -164,6 +170,7 @@ export function useTimeline(projectId?: number) {
               timelines.find((t) => t.id.toString() !== id) || null,
             );
           }
+
           return true;
         }
 

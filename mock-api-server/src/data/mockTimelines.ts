@@ -269,7 +269,8 @@ export const mockTimelines: Timeline[] = [
                 treeId: "subtask-6",
                 taskId: 4,
                 name: "Form Components",
-                description: "Build input fields, dropdowns, and form validation",
+                description:
+                  "Build input fields, dropdowns, and form validation",
                 assigneeId: 2,
                 assigneeName: "أحمد محمد الزهراني",
                 statusId: 1, // todo
@@ -458,7 +459,8 @@ export const mockTimelines: Timeline[] = [
             treeId: "task-10",
             sprintId: 2,
             name: "Authenticator App Support",
-            description: "Add support for Google Authenticator and similar apps",
+            description:
+              "Add support for Google Authenticator and similar apps",
             assigneeId: 4,
             assigneeName: "خالد عبدالرحمن القحطاني",
             statusId: 2, // in_progress
