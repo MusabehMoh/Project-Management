@@ -409,7 +409,7 @@ export default function IndexPage() {
                 <Card className="border-t-4 border-t-primary">
                   <CardHeader className="pb-1">
                     <h3 className="text-lg font-medium text-foreground">{t("pipeline.planning")}</h3>
-                    <Chip size="sm" color="primary" variant="flat" className="ml-2">
+                    <Chip size="sm" color="primary" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
                       {projects.filter(p => p.status === "on-hold" || p.status === "todo").length}
                     </Chip>
                   </CardHeader>
@@ -431,7 +431,7 @@ export default function IndexPage() {
                 <Card className="border-t-4 border-t-warning">
                   <CardHeader className="pb-1">
                     <h3 className="text-lg font-medium text-foreground">{t("pipeline.inProgress")}</h3>
-                    <Chip size="sm" color="warning" variant="flat" className="ml-2">
+                    <Chip size="sm" color="warning" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
                       {projects.filter(p => p.status === "in-progress" || p.status === "active").length}
                     </Chip>
                   </CardHeader>
@@ -453,7 +453,7 @@ export default function IndexPage() {
                 <Card className="border-t-4 border-t-success">
                   <CardHeader className="pb-1">
                     <h3 className="text-lg font-medium text-foreground">{t("pipeline.completed")}</h3>
-                    <Chip size="sm" color="success" variant="flat" className="ml-2">
+                    <Chip size="sm" color="success" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
                       {projects.filter(p => p.status === "completed" || p.status === "cancelled").length}
                     </Chip>
                   </CardHeader>
