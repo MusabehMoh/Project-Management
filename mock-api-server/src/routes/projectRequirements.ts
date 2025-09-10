@@ -45,6 +45,14 @@ projectRequirementRoutes.post(
   ),
 );
 
+// POST /api/project-requirements/requirements/:requirementId/start-development - Start development on approved requirement
+projectRequirementRoutes.post(
+  "/requirements/:requirementId/start-development",
+  projectRequirementsController.startDevelopment.bind(
+    projectRequirementsController,
+  ),
+);
+
 // DELETE /api/project-requirements/requirements/:requirementId - Delete requirement
 projectRequirementRoutes.delete(
   "/requirements/:requirementId",

@@ -373,6 +373,7 @@ const translations = {
     "requirements.status": "Status",
     "requirements.saveAsDraft": "Save as Draft",
     "requirements.sendToDevelopment": "Send to Development",
+    "requirements.startDevelopment": "Start Development",
     "requirements.cancel": "Cancel",
     "requirements.requirementNamePlaceholder": "e.g. PDF Invoice Generation",
     "requirements.requirementDescriptionPlaceholder":
@@ -1320,6 +1321,7 @@ const translations = {
     "requirements.status": "الحالة",
     "requirements.saveAsDraft": "حفظ كمسودة",
     "requirements.sendToDevelopment": "إرسال لمدير التطوير",
+    "requirements.startDevelopment": "بدء التطوير",
     "requirements.cancel": "إلغاء",
     "requirements.requirementNamePlaceholder": "مثال: إصدار فاتورة PDF",
     "requirements.requirementDescriptionPlaceholder": "اكتب تفاصيل المتطلب...",

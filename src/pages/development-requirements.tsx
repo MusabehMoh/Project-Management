@@ -62,6 +62,10 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case "draft":
       return "default";
+    case "pending":
+      return "warning";
+    case "approved":
+      return "primary";
     case "in_development":
     case "in-development":
       return "secondary";

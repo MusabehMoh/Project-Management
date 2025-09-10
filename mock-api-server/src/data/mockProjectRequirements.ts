@@ -20,7 +20,7 @@ export interface ProjectRequirement {
   type: "new" | "change request";
   expectedCompletionDate: string;
   attachments?: ProjectRequirementAttachment[];
-  status: "draft" | "pending" | "in-development" | "completed";
+  status: "draft" | "pending" | "approved" | "in-development" | "completed";
   createdAt: string;
   updatedAt: string;
   createdBy: number;
@@ -64,7 +64,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-03-15",
-    status: "draft",
+    status: "pending",
     createdAt: "2025-01-10T09:00:00Z",
     updatedAt: "2025-01-10T09:00:00Z",
     createdBy: 1,
@@ -283,7 +283,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     priority: "medium",
     type: "new",
     expectedCompletionDate: "2025-06-01",
-    status: "draft",
+    status: "approved",
     createdAt: "2025-01-14T08:45:00Z",
     updatedAt: "2025-01-14T08:45:00Z",
     createdBy: 5,
@@ -320,6 +320,52 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       },
     ],
   },
+  {
+    id: 6,
+    projectId: 2,
+    name: "Biometric Authentication",
+    description:
+      "Integrate fingerprint and face recognition authentication for enhanced security in the mobile banking application.",
+    priority: "high",
+    type: "change request",
+    expectedCompletionDate: "2025-05-15",
+    status: "in-development",
+    createdAt: "2025-01-13T11:00:00Z",
+    updatedAt: "2025-01-15T09:30:00Z",
+    createdBy: 3,
+    assignedAnalyst: 7,
+    project: {
+      id: 2,
+      applicationName: "Mobile Banking App",
+      projectOwner: "محمد أحمد الخالد",
+      owningUnit: "Finance and Budgeting",
+      analysts: "ياسر المحمد, نور الدين",
+      analystIds: [6, 4],
+    },
+    attachments: [
+      {
+        id: 8,
+        requirementId: 4,
+        fileName: "biometric_design.pdf",
+        originalName: "Biometric Authentication UI Design.pdf",
+        fileSize: 2400000,
+        mimeType: "application/pdf",
+        uploadedAt: "2025-01-13T12:00:00Z",
+        uploadedBy: 3,
+      },
+      {
+        id: 9,
+        requirementId: 4,
+        fileName: "security_protocols.docx",
+        originalName: "Biometric Security Protocols.docx",
+        fileSize: 950000,
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        uploadedAt: "2025-01-13T13:00:00Z",
+        uploadedBy: 3,
+      },
+    ],
+  }
 ];
 
 export const mockRequirementAttachments: ProjectRequirementAttachment[] = [

@@ -25,6 +25,7 @@ export class ProjectRequirementsController {
           const totalRequirements = userRequirements.length;
           const draftRequirements = userRequirements.filter(req => req.status === "draft").length;
           const pendingRequirements = userRequirements.filter(req => req.status === "pending").length;
+          const approvedRequirements = userRequirements.filter(req => req.status === "approved").length;
           const inProgressRequirements = userRequirements.filter(req => req.status === "in-development").length;
           const completedRequirements = userRequirements.filter(req => req.status === "completed").length;
           
@@ -46,6 +47,7 @@ export class ProjectRequirementsController {
               totalRequirements,
               draft: draftRequirements,
               pending: pendingRequirements,
+              approved: approvedRequirements,
               inProgress: inProgressRequirements,
               completed: completedRequirements,
               performance: Math.min(performanceScore, 100) // Cap at 100%
@@ -496,8 +498,8 @@ export class ProjectRequirementsController {
         });
       }
 
-      // Update requirement status to pending (sent to development manager)
-      requirement.status = "in-development";
+      // Update requirement status to approved (sent to development manager)
+      requirement.status = "approved";
       requirement.updatedAt = new Date().toISOString();
 
       // Send notification to development managers and project stakeholders
@@ -536,6 +538,92 @@ export class ProjectRequirementsController {
       });
     } catch (error) {
       logger.error("Error sending requirement for development:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  /**
+   * Start development on an approved requirement
+   */
+  async startDevelopment(req: Request, res: Response): Promise<void> {
+    try {
+      const { requirementId } = req.params;
+
+      // Find the requirement
+      const requirement = mockProjectRequirements.find(
+        (req) => req.id === parseInt(requirementId),
+      );
+
+      if (!requirement) {
+        res.status(404).json({
+          success: false,
+          message: "Requirement not found",
+        });
+        return;
+      }
+
+      // Check if requirement is approved
+      if (requirement.status !== "approved") {
+        res.status(400).json({
+          success: false,
+          message: "Only approved requirements can be started for development",
+        });
+        return;
+      }
+
+      // Update requirement status to in-development
+      requirement.status = "in-development";
+      requirement.updatedAt = new Date().toISOString();
+
+      // Send notification to project stakeholders
+      const targetUsernames: string[] = [];
+
+      // Add project owner to notifications
+      const project = mockProjects.find((p) => p.id === requirement.projectId);
+
+      if (project) {
+        const projectOwner = mockUsers.find(
+          (u) => u.userName === project.projectOwner,
+        );
+
+        if (projectOwner) {
+          targetUsernames.push(projectOwner.userName);
+        }
+
+        // Add assigned analysts to notifications
+        if (project.analystIds && project.analystIds.length > 0) {
+          const analysts = mockUsers.filter((u) =>
+            project.analystIds!.includes(u.id),
+          );
+
+          targetUsernames.push(...analysts.map((a) => a.userName));
+        }
+      }
+
+      // Send notification
+      sendNotification({
+        type: "REQUIREMENT_DEVELOPMENT_STARTED",
+        message: `Development has started for requirement "${requirement.name}"`,
+        projectId: requirement.projectId,
+        targetUsernames:
+          targetUsernames.length > 0 ? targetUsernames : undefined,
+      });
+
+      logger.info(
+        `Development started for requirement ${requirementId}: ${requirement.name}. Notified users: ${targetUsernames.join(", ")}`,
+      );
+
+      res.json({
+        success: true,
+        data: requirement,
+        message: "Development started successfully",
+      });
+    } catch (error) {
+      logger.error("Error starting development:", error);
       res.status(500).json({
         success: false,
         message: "Internal server error",
@@ -597,6 +685,8 @@ export class ProjectRequirementsController {
       const stats = {
         total: projectRequirements.length,
         draft: projectRequirements.filter((r) => r.status === "draft").length,
+        pending: projectRequirements.filter((r) => r.status === "pending").length,
+        approved: projectRequirements.filter((r) => r.status === "approved").length,
         inDevelopment: projectRequirements.filter(
           (r) => r.status === "in-development",
         ).length,

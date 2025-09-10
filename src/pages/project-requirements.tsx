@@ -38,6 +38,7 @@ import {
   Edit,
   Trash2,
   Send,
+  Play,
   Calendar,
   FileText,
   AlertCircle,
@@ -263,6 +264,29 @@ export default function ProjectRequirementsPage() {
       await sendRequirement(requirement.id);
     } catch (err) {
       console.error("Error sending requirement:", err);
+    }
+  };
+
+  const handleStartDevelopment = async (requirement: ProjectRequirement) => {
+    try {
+      const response = await fetch(
+        `/api/project-requirements/requirements/${requirement.id}/start-development`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to start development");
+      }
+
+      // Refresh the requirements list
+      refreshData();
+    } catch (err) {
+      console.error("Error starting development:", err);
     }
   };
 
@@ -565,6 +589,17 @@ export default function ProjectRequirementsPage() {
                                 }
                               >
                                 {t("requirements.sendToDevelopment")}
+                              </DropdownItem>
+                            ) : null}
+                            {requirement.status === "approved" ? (
+                              <DropdownItem
+                                key="start-development"
+                                startContent={<Play className="w-4 h-4" />}
+                                onPress={() =>
+                                  handleStartDevelopment(requirement)
+                                }
+                              >
+                                {t("requirements.startDevelopment")}
                               </DropdownItem>
                             ) : null}
                             <DropdownItem
