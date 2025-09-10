@@ -58,6 +58,18 @@ const translations = {
     "pipeline.planning": "Planning",
     "pipeline.inProgress": "In Progress",
     "pipeline.completed": "Completed",
+    "pipeline.initiatePlanning": "Initiate Planning",
+    "pipeline.reviewRequirements": "Review Requirements",
+    "pipeline.resourceAllocation": "Resource Allocation",
+    "pipeline.assignTeamMembers": "Assign Team Members",
+    "pipeline.activeDevelopment": "Active Development",
+    "pipeline.codingPhase": "Coding Phase",
+    "pipeline.testing": "Testing",
+    "pipeline.qualityAssurance": "Quality Assurance",
+    "pipeline.deployment": "Deployment",
+    "pipeline.liveProduction": "Live Production",
+    "pipeline.maintenance": "Maintenance",
+    "pipeline.ongoingSupport": "Ongoing Support",
     
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
@@ -123,6 +135,7 @@ const translations = {
     "dashboard.underReview": "Under Review",
     "dashboard.analysisInProgress": "Analysis in Progress",
     "dashboard.awaitingDev": "Awaiting Dev",
+    "dashboard.teamWorkload": "Team Workload",
     "dashboard.teamWorkloadPerformance": "Team Workload & Performance",
     "dashboard.viewAllProjects": "View All Projects",
     "dashboard.teamName": "Team Name",
@@ -156,6 +169,14 @@ const translations = {
     "dashboard.priority": "Priority",
     "dashboard.dueDate": "Due Date",
     "dashboard.assignedTo": "Assigned to",
+
+    // Team Workload
+    "team.member": "Team Member",
+    "team.department": "Department",
+    "team.total": "Total",
+    "team.inProgress": "In Progress",
+    "team.completed": "Completed",
+    "team.performance": "Performance",
 
     // Project Status
     "status.active": "Active",
@@ -199,6 +220,9 @@ const translations = {
     "common.pleaseWait": "Please wait...",
     "common.noDataFound": "No data found",
     "common.unexpectedError": "An unexpected error occurred",
+
+    // Table
+    "table.noData": "No data available",
 
     // Pagination
     "pagination.showing": "Showing",
@@ -984,6 +1008,18 @@ const translations = {
     "pipeline.planning": "التخطيط",
     "pipeline.inProgress": "قيد التنفيذ",
     "pipeline.completed": "مكتمل",
+    "pipeline.initiatePlanning": "بدء التخطيط",
+    "pipeline.reviewRequirements": "مراجعة المتطلبات",
+    "pipeline.resourceAllocation": "تخصيص الموارد",
+    "pipeline.assignTeamMembers": "تعيين أعضاء الفريق",
+    "pipeline.activeDevelopment": "التطوير النشط",
+    "pipeline.codingPhase": "مرحلة البرمجة",
+    "pipeline.testing": "الاختبار",
+    "pipeline.qualityAssurance": "ضمان الجودة",
+    "pipeline.deployment": "النشر",
+    "pipeline.liveProduction": "الإنتاج المباشر",
+    "pipeline.maintenance": "الصيانة",
+    "pipeline.ongoingSupport": "الدعم المستمر",
 
     // Common Date References
     "common.today": "اليوم",
@@ -1043,6 +1079,7 @@ const translations = {
     "dashboard.underReview": "قيد المراجعة",
     "dashboard.analysisInProgress": "التحليل قيد التقدم",
     "dashboard.awaitingDev": "في انتظار التطوير",
+    "dashboard.teamWorkload": "عبء العمل للفريق",
     "dashboard.teamWorkloadPerformance": "عبء العمل والأداء للفريق",
     "dashboard.viewAllProjects": "عرض جميع المشاريع",
     "dashboard.teamName": "اسم الفريق",
@@ -1076,6 +1113,14 @@ const translations = {
     "dashboard.priority": "الأولوية",
     "dashboard.dueDate": "تاريخ الاستحقاق",
     "dashboard.assignedTo": "مُعين إلى",
+
+    // Team Workload
+    "team.member": "عضو الفريق",
+    "team.department": "القسم",
+    "team.total": "المجموع",
+    "team.inProgress": "قيد التنفيذ",
+    "team.completed": "مكتمل",
+    "team.performance": "الأداء",
 
     // Project Status
     "status.active": "نشط",
@@ -1119,6 +1164,9 @@ const translations = {
     "common.pleaseWait": "يرجى الانتظار...",
     "common.noDataFound": "لا توجد بيانات",
     "common.unexpectedError": "حدث خطأ غير متوقع",
+
+    // Table
+    "table.noData": "لا توجد بيانات متاحة",
 
     // Pagination
     "pagination.showing": "عرض",
