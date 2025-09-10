@@ -1,13 +1,13 @@
 import type {
   ProjectRequirement,
   AssignedProject,
-  RequirementTask,
   CreateRequirementTaskRequest,
 } from "@/types/projectRequirement";
+import type { MemberSearchResult } from "@/types/timeline";
+import type { CreateTimelineRequest } from "@/types/timeline";
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -29,19 +29,26 @@ import {
   DrawerBody,
   DrawerFooter,
 } from "@heroui/drawer";
-import { Search, Calendar, Code, Eye, Users, Paperclip, Download, Plus, Edit } from "lucide-react";
-import { RefreshIcon } from "@/components/icons";
+import {
+  Search,
+  Calendar,
+  Code,
+  Eye,
+  Users,
+  Paperclip,
+  Download,
+  Plus,
+  Edit,
+} from "lucide-react";
 
+import { RefreshIcon } from "@/components/icons";
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDevelopmentRequirements } from "@/hooks/useDevelopmentRequirements";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { useTimeline } from "@/hooks/useTimeline";
-import type { MemberSearchResult } from "@/types/timeline";
-import type { CreateTimelineRequest } from "@/types/timeline";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
-
 import { GlobalPagination } from "@/components/GlobalPagination";
 
 // Utility functions for color mapping
@@ -62,8 +69,6 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case "draft":
       return "default";
-    case "pending":
-      return "warning";
     case "approved":
       return "primary";
     case "in_development":
@@ -86,12 +91,12 @@ const formatDate = (dateString: string) => {
 };
 
 // RequirementCard component
-const RequirementCard = ({ 
+const RequirementCard = ({
   requirement,
   onViewDetails,
   onCreateTask,
   onCreateTimeline,
-}: { 
+}: {
   requirement: ProjectRequirement;
   onViewDetails: (requirement: ProjectRequirement) => void;
   onCreateTask: (requirement: ProjectRequirement) => void;
@@ -146,47 +151,57 @@ const RequirementCard = ({
           </div>
         </div>
 
-          {/* Detail, Task, and Timeline Creation Buttons */}
-          <div className="flex items-center pt-2 gap-2 mt-auto">
+        {/* Detail, Task, and Timeline Creation Buttons */}
+        <div className="flex items-center pt-2 gap-2 mt-auto">
+          <Button
+            className="flex-1"
+            color="primary"
+            size="sm"
+            startContent={<Eye className="w-4 h-4" />}
+            variant="flat"
+            onPress={() => onViewDetails(requirement)}
+          >
+            {t("common.viewDetails")}
+          </Button>
+
+          {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
+          {!requirement.timeline && (
             <Button
-              size="sm"
-              variant="flat"
-              color="primary"
-              startContent={<Eye className="w-4 h-4" />}
-              onPress={() => onViewDetails(requirement)}
               className="flex-1"
+              color={requirement.task ? "warning" : "success"}
+              size="sm"
+              startContent={
+                requirement.task ? (
+                  <Edit className="w-4 h-4" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )
+              }
+              variant="flat"
+              onPress={() => onCreateTask(requirement)}
             >
-              {t("common.viewDetails")}
+              {requirement.task
+                ? t("common.view") + " Task"
+                : t("common.create") + " Task"}
             </Button>
-            
-            {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
-            {!requirement.timeline && (
-              <Button
-                size="sm"
-                variant="flat"
-                color={requirement.task ? "warning" : "success"}
-                startContent={requirement.task ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                onPress={() => onCreateTask(requirement)}
-                className="flex-1"
-              >
-                {requirement.task ? t("common.view") + " Task" : t("common.create") + " Task"}
-              </Button>
-            )}
-            
-            {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
-            {!requirement.task && (
-              <Button
-                size="sm"
-                variant="flat"
-                color={requirement.timeline ? "primary" : "secondary"}
-                startContent={<Calendar className="w-4 h-4" />}
-                onPress={() => onCreateTimeline(requirement)}
-                className="flex-1"
-              >
-                {requirement.timeline ? t("common.view") + " Timeline" : t("common.create") + " Timeline"}
-              </Button>
-            )}
-          </div>
+          )}
+
+          {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
+          {!requirement.task && (
+            <Button
+              className="flex-1"
+              color={requirement.timeline ? "primary" : "secondary"}
+              size="sm"
+              startContent={<Calendar className="w-4 h-4" />}
+              variant="flat"
+              onPress={() => onCreateTimeline(requirement)}
+            >
+              {requirement.timeline
+                ? t("common.view") + " Timeline"
+                : t("common.create") + " Timeline"}
+            </Button>
+          )}
+        </div>
       </CardBody>
     </Card>
   );
@@ -203,7 +218,7 @@ interface RequirementFormData {
 export default function DevelopmentRequirementsPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  
+
   // Grid-only view
 
   const {
@@ -215,7 +230,7 @@ export default function DevelopmentRequirementsPage() {
     totalRequirements,
     pageSize,
     filters,
-  // updateRequirement, deleteRequirement removed (read-only grid)
+    // updateRequirement, deleteRequirement removed (read-only grid)
     updateFilters,
     handlePageChange,
     handlePageSizeChange,
@@ -229,11 +244,13 @@ export default function DevelopmentRequirementsPage() {
 
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedRequirement, setSelectedRequirement] = useState<ProjectRequirement | null>(null);
+  const [selectedRequirement, setSelectedRequirement] =
+    useState<ProjectRequirement | null>(null);
 
   // Task creation modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [selectedDeveloper, setSelectedDeveloper] = useState<MemberSearchResult | null>(null);
+  const [selectedDeveloper, setSelectedDeveloper] =
+    useState<MemberSearchResult | null>(null);
   const [selectedQC, setSelectedQC] = useState<MemberSearchResult | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   // Controlled input values for Autocomplete components (needed by HeroUI Autocomplete)
@@ -242,7 +259,8 @@ export default function DevelopmentRequirementsPage() {
 
   // Timeline creation modal state
   const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
-  const [timelineRequirement, setTimelineRequirement] = useState<ProjectRequirement | null>(null);
+  const [timelineRequirement, setTimelineRequirement] =
+    useState<ProjectRequirement | null>(null);
 
   // Timeline hook for creating timelines
   const { createTimeline, loading: timelineLoading } = useTimeline();
@@ -283,8 +301,13 @@ export default function DevelopmentRequirementsPage() {
     setIsTaskModalOpen(true);
     // If task exists, pre-populate the form
     if (requirement.task) {
-      const existingDev = developers.find(dev => dev.id === requirement.task?.developerId);
-      const existingQC = qcMembers.find(qc => qc.id === requirement.task?.qcId);
+      const existingDev = developers.find(
+        (dev) => dev.id === requirement.task?.developerId,
+      );
+      const existingQC = qcMembers.find(
+        (qc) => qc.id === requirement.task?.qcId,
+      );
+
       setSelectedDeveloper(existingDev || null);
       setSelectedQC(existingQC || null);
     }
@@ -294,7 +317,9 @@ export default function DevelopmentRequirementsPage() {
   const openTimelineModal = (requirement: ProjectRequirement) => {
     if (requirement.timeline) {
       // If timeline exists, navigate to timeline details page
-      navigate(`/timeline?projectId=${requirement.project?.id}&timelineId=${requirement.timeline.id}&requirementId=${requirement.id}`);
+      navigate(
+        `/timeline?projectId=${requirement.project?.id}&timelineId=${requirement.timeline.id}&requirementId=${requirement.id}`,
+      );
     } else {
       // If no timeline exists, open creation modal
       setTimelineRequirement(requirement);
@@ -303,19 +328,34 @@ export default function DevelopmentRequirementsPage() {
   };
 
   // Function to handle timeline creation submission
-  const handleTimelineCreate = async (data: CreateTimelineRequest): Promise<any> => {
+  const handleTimelineCreate = async (
+    data: CreateTimelineRequest,
+  ): Promise<any> => {
     try {
       const timelineData = {
         ...data,
         projectRequirementId: timelineRequirement?.id,
       };
       const result = await createTimeline(timelineData);
+
       if (result) {
+        // Update requirement status to in_development after timeline creation
+        if (timelineRequirement?.status === "approved") {
+          await projectRequirementsService.updateRequirement(
+            timelineRequirement.id,
+            {
+              id: timelineRequirement.id,
+              status: "in_development",
+            },
+          );
+        }
+
         setIsTimelineModalOpen(false);
         setTimelineRequirement(null);
         // Refresh data to get updated timeline information
         await refreshData();
       }
+
       return result;
     } catch (error) {
       throw error;
@@ -340,6 +380,17 @@ export default function DevelopmentRequirementsPage() {
         taskData,
       );
 
+      // Update requirement status to in_development after task creation
+      if (selectedRequirement.status === "approved") {
+        await projectRequirementsService.updateRequirement(
+          selectedRequirement.id,
+          {
+            id: selectedRequirement.id,
+            status: "in_development",
+          },
+        );
+      }
+
       setIsTaskModalOpen(false);
       setSelectedDeveloper(null);
       setSelectedQC(null);
@@ -348,7 +399,7 @@ export default function DevelopmentRequirementsPage() {
 
       // Refresh requirements data to get updated task info
       refreshData();
-    } catch (error) {
+    } catch {
       // Handle error appropriately
     } finally {
       setIsCreatingTask(false);
@@ -393,7 +444,7 @@ export default function DevelopmentRequirementsPage() {
     return (
       <DefaultLayout>
         <div className="flex justify-center items-center min-h-96">
-          <Spinner size="lg" label={t("common.loading")} />
+          <Spinner label={t("common.loading")} size="lg" />
         </div>
       </DefaultLayout>
     );
@@ -413,28 +464,6 @@ export default function DevelopmentRequirementsPage() {
               {t("requirements.developmentRequirementsSubtitle")}
             </p>
           </div>
-
-          {/* Stats Card */}
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-secondary/10 rounded-full flex items-center justify-center">
-                  <Code className="w-5 h-5 text-secondary" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-secondary">
-                    {totalRequirements}
-                  </div>
-                  <div className="text-sm text-default-500">
-                    {t("requirements.totalInDevelopment")}
-                  </div>
-                </div>
-              </div>
-              <Chip color="secondary" variant="flat">
-                {t("requirements.inDevelopment")}
-              </Chip>
-            </div>
-          </Card>
         </div>
 
         {/* Filters and Search */}
@@ -442,32 +471,39 @@ export default function DevelopmentRequirementsPage() {
           <CardBody>
             <div className="flex flex-col md:flex-row gap-4 items-end">
               <Input
+                className="md:w-100"
                 placeholder={t("requirements.searchRequirements")}
                 startContent={<Search className="w-4 h-4" />}
                 value={searchTerm}
                 onValueChange={setSearchTerm}
-                className="md:w-100"
               />
 
               {/* Project filter dropdown - appears before Priority */}
               <Select
-                placeholder={t("taskPlan.filterByProject")}
                 className="md:w-86"
-                selectedKeys={filters.projectId ? [String(filters.projectId)] : []}
+                placeholder={t("taskPlan.filterByProject")}
+                selectedKeys={
+                  filters.projectId ? [String(filters.projectId)] : []
+                }
                 onSelectionChange={(keys) => {
                   const val = Array.from(keys)[0] as string;
+
                   setProjectFilter(val ? Number(val) : undefined);
                 }}
               >
                 <SelectItem key="">{t("taskPlan.allProjects")}</SelectItem>
-                {projects?.map((p: AssignedProject) => (
-                  <SelectItem key={String(p.id)}>{p.applicationName}</SelectItem>
-                ))}
+                <>
+                  {projects?.map((p: AssignedProject) => (
+                    <SelectItem key={String(p.id)}>
+                      {p.applicationName}
+                    </SelectItem>
+                  ))}
+                </>
               </Select>
 
               <Select
-                placeholder={t("requirements.filterByPriority")}
                 className="md:w-40"
+                placeholder={t("requirements.filterByPriority")}
                 selectedKeys={priorityFilter ? [priorityFilter] : []}
                 onSelectionChange={(keys) =>
                   setPriorityFilter((Array.from(keys)[0] as string) || "")
@@ -482,16 +518,19 @@ export default function DevelopmentRequirementsPage() {
               </Select>
 
               {/* Grid-only view (no toggle) */}
-                
+
               {/* Page size selector */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-default-600">{t("common.show")}</span>
+                <span className="text-sm text-default-600">
+                  {t("common.show")}
+                </span>
                 <Select
                   className="w-20"
-                  size="sm"
                   selectedKeys={[pageSize.toString()]}
+                  size="sm"
                   onSelectionChange={(keys) => {
                     const newSize = parseInt(Array.from(keys)[0] as string);
+
                     handlePageSizeChange(newSize);
                   }}
                 >
@@ -500,9 +539,11 @@ export default function DevelopmentRequirementsPage() {
                   <SelectItem key="50">50</SelectItem>
                   <SelectItem key="100">100</SelectItem>
                 </Select>
-                <span className="text-sm text-default-600">{t("pagination.perPage")}</span>
+                <span className="text-sm text-default-600">
+                  {t("pagination.perPage")}
+                </span>
               </div>
-              
+
               {/* Reset filters button */}
               <div>
                 <Button
@@ -553,16 +594,16 @@ export default function DevelopmentRequirementsPage() {
             {/* Grid View */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {requirements.map((requirement) => (
-                <RequirementCard 
-                  key={requirement.id} 
+                <RequirementCard
+                  key={requirement.id}
                   requirement={requirement}
-                  onViewDetails={openRequirementDetails}
                   onCreateTask={openTaskModal}
                   onCreateTimeline={openTimelineModal}
+                  onViewDetails={openRequirementDetails}
                 />
               ))}
             </div>
-            
+
             {/* Grid-only UI (list view removed) */}
           </>
         )}
@@ -585,9 +626,9 @@ export default function DevelopmentRequirementsPage() {
         {/* Requirement Details Drawer */}
         <Drawer
           isOpen={isDrawerOpen}
-          onOpenChange={setIsDrawerOpen}
-          size="lg"
           placement="right"
+          size="lg"
+          onOpenChange={setIsDrawerOpen}
         >
           <DrawerContent>
             <DrawerHeader className="flex flex-col gap-1">
@@ -615,7 +656,9 @@ export default function DevelopmentRequirementsPage() {
                       size="sm"
                       variant="flat"
                     >
-                      {t(`requirements.${selectedRequirement.status.replace("-", "")}`)}
+                      {t(
+                        `requirements.${selectedRequirement.status.replace("-", "")}`,
+                      )}
                     </Chip>
                   </div>
 
@@ -657,7 +700,9 @@ export default function DevelopmentRequirementsPage() {
                         {t("requirements.created")}
                       </h4>
                       <p className="text-sm">
-                        {selectedRequirement.createdAt ? formatDate(selectedRequirement.createdAt) : "N/A"}
+                        {selectedRequirement.createdAt
+                          ? formatDate(selectedRequirement.createdAt)
+                          : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -671,60 +716,68 @@ export default function DevelopmentRequirementsPage() {
                       </h3>
                       <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
                         <div className="flex flex-wrap gap-2">
-                          {selectedRequirement.project.analysts.split(', ').map((analyst, index) => (
-                            <Chip
-                              key={index}
-                              size="sm"
-                              variant="flat"
-                              color="secondary"
-                            >
-                              {analyst}
-                            </Chip>
-                          ))}
+                          {selectedRequirement.project.analysts
+                            .split(", ")
+                            .map((analyst, index) => (
+                              <Chip
+                                key={index}
+                                color="secondary"
+                                size="sm"
+                                variant="flat"
+                              >
+                                {analyst}
+                              </Chip>
+                            ))}
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* Attachments */}
-                  {selectedRequirement.attachments && selectedRequirement.attachments.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                        <Paperclip className="w-5 h-5 text-default-400" />
-                        {t("requirements.attachments")}
-                      </h3>
-                      <div className="space-y-2">
-                        {selectedRequirement.attachments.map((attachment) => (
-                          <div
-                            key={attachment.id}
-                            className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                                <Paperclip className="w-4 h-4 text-primary" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium">
-                                  {attachment.originalName}
-                                </p>
-                                <p className="text-xs text-default-500">
-                                  {(attachment.fileSize / 1024 / 1024).toFixed(2)} MB
-                                </p>
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="light"
-                              color="primary"
-                              startContent={<Download className="w-4 h-4" />}
+                  {selectedRequirement.attachments &&
+                    selectedRequirement.attachments.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Paperclip className="w-5 h-5 text-default-400" />
+                          {t("requirements.attachments")}
+                        </h3>
+                        <div className="space-y-2">
+                          {selectedRequirement.attachments.map((attachment) => (
+                            <div
+                              key={attachment.id}
+                              className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg"
                             >
-                              {t("projects.downloadFile")}
-                            </Button>
-                          </div>
-                        ))}
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                                  <Paperclip className="w-4 h-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {attachment.originalName}
+                                  </p>
+                                  <p className="text-xs text-default-500">
+                                    {(
+                                      attachment.fileSize /
+                                      1024 /
+                                      1024
+                                    ).toFixed(2)}{" "}
+                                    MB
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                color="primary"
+                                size="sm"
+                                startContent={<Download className="w-4 h-4" />}
+                                variant="light"
+                              >
+                                {t("projects.downloadFile")}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
             </DrawerBody>
@@ -741,21 +794,23 @@ export default function DevelopmentRequirementsPage() {
         </Drawer>
 
         {/* Task Creation/Edit Modal */}
-        <Modal 
-          isOpen={isTaskModalOpen} 
+        <Modal
+          isOpen={isTaskModalOpen}
+          size="2xl"
           onOpenChange={(isOpen) => {
             if (!isOpen) {
               resetTaskModal();
             }
-          }} 
-          size="2xl"
+          }}
         >
           <ModalContent>
-            {(onClose) => (
+            {(_onClose) => (
               <>
                 <ModalHeader className="flex flex-col gap-1">
                   <h2 className="text-xl font-semibold">
-                    {selectedRequirement?.task ? t("tasks.editTask") : t("tasks.createTask")}
+                    {selectedRequirement?.task
+                      ? t("tasks.editTask")
+                      : t("tasks.createTask")}
                   </h2>
                   <p className="text-sm text-default-500">
                     {selectedRequirement?.name}
@@ -769,9 +824,10 @@ export default function DevelopmentRequirementsPage() {
                         {t("tasks.developer")}
                       </label>
                       <Autocomplete
-                        menuTrigger="input"
                         defaultFilter={() => true}
                         inputValue={developerInputValue}
+                        isLoading={loadingDevelopers}
+                        menuTrigger="input"
                         placeholder={t("tasks.selectDeveloper")}
                         selectedKey={selectedDeveloper?.id?.toString() || ""}
                         onInputChange={(value) => {
@@ -779,28 +835,33 @@ export default function DevelopmentRequirementsPage() {
                           // clear selection if input no longer matches selected
                           if (
                             selectedDeveloper &&
-                            value !== `${selectedDeveloper.gradeName} ${selectedDeveloper.fullName}`
+                            value !==
+                              `${selectedDeveloper.gradeName} ${selectedDeveloper.fullName}`
                           ) {
                             setSelectedDeveloper(null);
                           }
                           searchDevelopers(value);
                         }}
                         onSelectionChange={(key) => {
-                          const developer = developers.find(dev => dev.id.toString() === String(key));
+                          const developer = developers.find(
+                            (dev) => dev.id.toString() === String(key),
+                          );
+
                           setSelectedDeveloper(developer || null);
                         }}
-                        isLoading={loadingDevelopers}
                       >
                         {developers.map((developer) => (
                           <AutocompleteItem
                             key={developer.id.toString()}
-                            value={developer.id.toString()}
                             textValue={`${developer.gradeName} ${developer.fullName} ${developer.userName} ${developer.militaryNumber}`}
                           >
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium">{developer.fullName}</span>
+                              <span className="text-sm font-medium">
+                                {developer.fullName}
+                              </span>
                               <span className="text-xs text-default-500">
-                                {developer.militaryNumber} - {developer.gradeName}
+                                {developer.militaryNumber} -{" "}
+                                {developer.gradeName}
                               </span>
                             </div>
                           </AutocompleteItem>
@@ -808,7 +869,7 @@ export default function DevelopmentRequirementsPage() {
                       </Autocomplete>
                       {selectedDeveloper && (
                         <div className="mt-2">
-                          <Chip size="sm" color="primary" variant="flat">
+                          <Chip color="primary" size="sm" variant="flat">
                             {selectedDeveloper.fullName}
                           </Chip>
                         </div>
@@ -821,35 +882,40 @@ export default function DevelopmentRequirementsPage() {
                         {t("tasks.qcMember")}
                       </label>
                       <Autocomplete
-                        menuTrigger="input"
                         defaultFilter={() => true}
                         inputValue={qcInputValue}
+                        isLoading={loadingQC}
+                        menuTrigger="input"
                         placeholder={t("tasks.selectQC")}
                         selectedKey={selectedQC?.id?.toString() || ""}
                         onInputChange={(value) => {
                           setQcInputValue(value);
                           if (
                             selectedQC &&
-                            value !== `${selectedQC.gradeName} ${selectedQC.fullName}`
+                            value !==
+                              `${selectedQC.gradeName} ${selectedQC.fullName}`
                           ) {
                             setSelectedQC(null);
                           }
                           searchQC(value);
                         }}
                         onSelectionChange={(key) => {
-                          const qc = qcMembers.find(member => member.id.toString() === String(key));
+                          const qc = qcMembers.find(
+                            (member) => member.id.toString() === String(key),
+                          );
+
                           setSelectedQC(qc || null);
                         }}
-                        isLoading={loadingQC}
                       >
                         {qcMembers.map((qcMember) => (
                           <AutocompleteItem
                             key={qcMember.id.toString()}
-                            value={qcMember.id.toString()}
                             textValue={`${qcMember.gradeName} ${qcMember.fullName} ${qcMember.userName} ${qcMember.militaryNumber}`}
                           >
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium">{qcMember.fullName}</span>
+                              <span className="text-sm font-medium">
+                                {qcMember.fullName}
+                              </span>
                               <span className="text-xs text-default-500">
                                 {qcMember.militaryNumber} - {qcMember.gradeName}
                               </span>
@@ -859,7 +925,7 @@ export default function DevelopmentRequirementsPage() {
                       </Autocomplete>
                       {selectedQC && (
                         <div className="mt-2">
-                          <Chip size="sm" color="secondary" variant="flat">
+                          <Chip color="secondary" size="sm" variant="flat">
                             {selectedQC.fullName}
                           </Chip>
                         </div>
@@ -868,16 +934,22 @@ export default function DevelopmentRequirementsPage() {
                   </div>
                 </ModalBody>
                 <ModalFooter>
-                  <Button color="danger" variant="light" onPress={resetTaskModal}>
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={resetTaskModal}
+                  >
                     {t("common.cancel")}
                   </Button>
-                  <Button 
-                    color="primary" 
-                    onPress={handleTaskSubmit}
-                    isLoading={isCreatingTask}
+                  <Button
+                    color="primary"
                     isDisabled={!selectedDeveloper && !selectedQC}
+                    isLoading={isCreatingTask}
+                    onPress={handleTaskSubmit}
                   >
-                    {selectedRequirement?.task ? t("common.update") : t("common.create")}
+                    {selectedRequirement?.task
+                      ? t("common.update")
+                      : t("common.create")}
                   </Button>
                 </ModalFooter>
               </>
@@ -887,16 +959,15 @@ export default function DevelopmentRequirementsPage() {
 
         {/* Timeline Creation Modal */}
         <TimelineCreateModal
-          isOpen={isTimelineModalOpen}
-          onOpenChange={setIsTimelineModalOpen}
-          onCreateTimeline={handleTimelineCreate}
-          projectId={timelineRequirement?.project?.id}
-          loading={timelineLoading}
-          initialName={timelineRequirement?.name}
           initialDescription={timelineRequirement?.description}
+          initialName={timelineRequirement?.name}
+          isOpen={isTimelineModalOpen}
+          loading={timelineLoading}
+          projectId={timelineRequirement?.project?.id}
+          onCreateTimeline={handleTimelineCreate}
+          onOpenChange={setIsTimelineModalOpen}
         />
       </div>
-
     </DefaultLayout>
   );
 }

@@ -676,7 +676,7 @@ export default function TimelinePage() {
           <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <Select
-                className="min-w-[300px]"
+                className="min-w-[400px]"
                 label={t("timeline.selectProjectTimeline")}
                 placeholder={t("timeline.chooseProjectTimeline")}
                 selectedKeys={(() => {

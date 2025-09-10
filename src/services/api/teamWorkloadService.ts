@@ -13,7 +13,6 @@ export interface TeamMemberMetrics {
   metrics: {
     totalRequirements: number;
     draft: number;
-    pending: number;
     inProgress: number;
     completed: number;
     performance: number;

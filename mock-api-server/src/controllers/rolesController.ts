@@ -6,8 +6,8 @@ import { logger } from "../utils/logger.js";
 export const mockRoles = [
   {
     id: 1,
-    name: "System Admin",
-    description: "Full system access and user management",
+  name: "System Administrator",
+  description: "Full system access and user management",
     isActive: true,
     actions: [
       {
@@ -88,7 +88,7 @@ export const mockRoles = [
   },
   {
     id: 2,
-    name: "Analyst Dept Mgr",
+    name: "Analyst Department Manager",
     description: "Manages analyst department and requirements",
     isActive: true,
     permissions: [
@@ -135,7 +135,7 @@ export const mockRoles = [
   },
   {
     id: 3,
-    name: "Analyst Team Member",
+    name: "Analyst",
     description: "Works on requirements and tasks as assigned",
     isActive: true,
     permissions: [
@@ -171,7 +171,7 @@ export const mockRoles = [
   },
   {
     id: 4,
-    name: "Dev Manager",
+    name: "Development Manager",
     description: "Manages development team and tasks",
     isActive: true,
     permissions: [
@@ -204,7 +204,7 @@ export const mockRoles = [
   },
   {
     id: 5,
-    name: "Developer",
+    name: "Software Developer",
     description: "Works on assigned development tasks",
     isActive: true,
     permissions: [
@@ -226,7 +226,7 @@ export const mockRoles = [
   },
   {
     id: 6,
-    name: "QC Manager",
+    name: "Quality Control Manager",
     description: "Manages quality control team and tasks",
     isActive: true,
     permissions: [
@@ -253,7 +253,7 @@ export const mockRoles = [
   },
   {
     id: 7,
-    name: "QC Team Member",
+    name: "Quality Control Team Member",
     description: "Works on assigned QC tasks",
     isActive: true,
     permissions: [

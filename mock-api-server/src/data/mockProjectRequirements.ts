@@ -20,7 +20,7 @@ export interface ProjectRequirement {
   type: "new" | "change request";
   expectedCompletionDate: string;
   attachments?: ProjectRequirementAttachment[];
-  status: "draft" | "pending" | "approved" | "in-development" | "completed";
+  status: "draft" | "approved" | "in-development" | "completed";
   createdAt: string;
   updatedAt: string;
   createdBy: number;
@@ -64,7 +64,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-03-15",
-    status: "pending",
+    status: "completed",
     createdAt: "2025-01-10T09:00:00Z",
     updatedAt: "2025-01-10T09:00:00Z",
     createdBy: 1,
@@ -329,7 +329,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     priority: "high",
     type: "change request",
     expectedCompletionDate: "2025-05-15",
-    status: "in-development",
+    status: "approved",
     createdAt: "2025-01-13T11:00:00Z",
     updatedAt: "2025-01-15T09:30:00Z",
     createdBy: 3,
@@ -365,7 +365,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
         uploadedBy: 3,
       },
     ],
-  }
+  },
 ];
 
 export const mockRequirementAttachments: ProjectRequirementAttachment[] = [

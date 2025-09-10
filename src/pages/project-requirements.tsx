@@ -38,7 +38,6 @@ import {
   Edit,
   Trash2,
   Send,
-  Play,
   Calendar,
   FileText,
   AlertCircle,
@@ -87,7 +86,6 @@ export default function ProjectRequirementsPage() {
     sendRequirement,
     updateFilters,
     handlePageChange,
-    clearError,
     refreshData,
   } = useProjectRequirements({
     projectId: projectId ? parseInt(projectId) : undefined,
@@ -120,6 +118,7 @@ export default function ProjectRequirementsPage() {
     name: "",
     description: "",
     priority: "medium",
+    type: "new",
     expectedCompletionDate: null,
     attachments: [],
   });
@@ -245,6 +244,12 @@ export default function ProjectRequirementsPage() {
 
   const handleSendToDevelopment = async () => {
     await handleSaveRequirement(false);
+    // Ensure stats and list refresh after sending to development
+    try {
+      await refreshData();
+    } catch (e) {
+      // ignore
+    }
   };
 
   const confirmDelete = async () => {
@@ -267,28 +272,7 @@ export default function ProjectRequirementsPage() {
     }
   };
 
-  const handleStartDevelopment = async (requirement: ProjectRequirement) => {
-    try {
-      const response = await fetch(
-        `/api/project-requirements/requirements/${requirement.id}/start-development`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to start development");
-      }
-
-      // Refresh the requirements list
-      refreshData();
-    } catch (err) {
-      console.error("Error starting development:", err);
-    }
-  };
+  // ...start development removed
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -307,8 +291,6 @@ export default function ProjectRequirementsPage() {
     switch (status) {
       case "draft":
         return "default";
-      case "pending":
-        return "warning";
       case "approved":
         return "primary";
       case "in-development":
@@ -369,7 +351,7 @@ export default function ProjectRequirementsPage() {
 
           {/* Stats Cards */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
               <Card className="p-3">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
@@ -387,6 +369,16 @@ export default function ProjectRequirementsPage() {
                   </div>
                   <div className="text-xs text-default-500">
                     {t("requirements.draft")}
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {stats.approved}
+                  </div>
+                  <div className="text-xs text-default-500">
+                    {t("requirements.approved")}
                   </div>
                 </div>
               </Card>
@@ -591,17 +583,7 @@ export default function ProjectRequirementsPage() {
                                 {t("requirements.sendToDevelopment")}
                               </DropdownItem>
                             ) : null}
-                            {requirement.status === "approved" ? (
-                              <DropdownItem
-                                key="start-development"
-                                startContent={<Play className="w-4 h-4" />}
-                                onPress={() =>
-                                  handleStartDevelopment(requirement)
-                                }
-                              >
-                                {t("requirements.startDevelopment")}
-                              </DropdownItem>
-                            ) : null}
+                            {/* start development action removed */}
                             <DropdownItem
                               key="delete"
                               className="text-danger"
@@ -753,20 +735,40 @@ export default function ProjectRequirementsPage() {
                 <Button variant="light" onPress={onClose}>
                   {t("requirements.cancel")}
                 </Button>
-                <Button
-                  color="default"
-                  isLoading={loading}
-                  onPress={() => handleSaveRequirement(true)}
-                >
-                  {t("requirements.saveAsDraft")}
-                </Button>
-                <Button
-                  color="primary"
-                  isLoading={loading}
-                  onPress={handleSendToDevelopment}
-                >
-                  {t("requirements.sendToDevelopment")}
-                </Button>
+                {/* When editing an approved requirement, hide draft/send actions */}
+                {!(
+                  selectedRequirement &&
+                  selectedRequirement.status === "approved"
+                ) && (
+                  <>
+                    <Button
+                      color="default"
+                      isLoading={loading}
+                      onPress={() => handleSaveRequirement(true)}
+                    >
+                      {t("requirements.saveAsDraft")}
+                    </Button>
+                    <Button
+                      color="primary"
+                      isLoading={loading}
+                      onPress={async () => {
+                        if (selectedRequirement && selectedRequirement.status === "draft") {
+                          try {
+                            await handleSendRequirement(selectedRequirement);
+                            // Close edit modal when send succeeds
+                            onEditOpenChange();
+                          } catch (err) {
+                            // error already logged in handler
+                          }
+                        } else {
+                          await handleSendToDevelopment();
+                        }
+                      }}
+                    >
+                      {t("requirements.sendToDevelopment")}
+                    </Button>
+                  </>
+                )}
               </ModalFooter>
             </>
           )}

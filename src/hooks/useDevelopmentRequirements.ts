@@ -36,7 +36,7 @@ export function useDevelopmentRequirements({
   // Filters
   const [filters, setFilters] = useState<ProjectRequirementFilters>({
     ...initialFilters,
-    status: "in-development", // Always filter by in-development status
+    status: "approved", // Always filter by approved status
   });
 
   // Projects (for project filter dropdown)
@@ -170,7 +170,7 @@ export function useDevelopmentRequirements({
   const updateFilters = useCallback((newFilters: ProjectRequirementFilters) => {
     setFilters({
       ...newFilters,
-      status: "in-development", // Always maintain in-development status filter
+      status: "approved", // Always maintain approved status filter
     });
     setCurrentPage(1);
   }, []);

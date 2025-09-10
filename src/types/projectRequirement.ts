@@ -5,7 +5,7 @@ export interface ProjectRequirement {
   description: string;
   priority: "low" | "medium" | "high" | "critical";
   type: "new" | "change request";
-  status: "draft" | "pending" | "approved" | "in-development" | "completed";
+  status: "draft" | "approved" | "in-development" | "completed";
   createdBy: number;
   assignedTo?: number;
   assignedAnalyst?: number;
@@ -82,7 +82,6 @@ export interface AssignedProject {
   description?: string;
   createdAt?: string;
   updatedAt?: string;
-  pendingRequirementsCount?: number;
 }
 
 export interface CreateProjectRequirementRequest {
@@ -130,11 +129,11 @@ export interface ProjectRequirementFilters {
 export interface ProjectRequirementStats {
   total: number;
   draft: number;
+  approved: number;
   inDevelopment: number;
   completed: number;
   byStatus: {
     draft: number;
-    pending: number;
     approved: number;
     rejected: number;
     in_development: number;

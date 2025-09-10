@@ -24,7 +24,6 @@ export class ProjectRequirementsController {
           // Calculate metrics
           const totalRequirements = userRequirements.length;
           const draftRequirements = userRequirements.filter(req => req.status === "draft").length;
-          const pendingRequirements = userRequirements.filter(req => req.status === "pending").length;
           const approvedRequirements = userRequirements.filter(req => req.status === "approved").length;
           const inProgressRequirements = userRequirements.filter(req => req.status === "in-development").length;
           const completedRequirements = userRequirements.filter(req => req.status === "completed").length;
@@ -46,7 +45,6 @@ export class ProjectRequirementsController {
             metrics: {
               totalRequirements,
               draft: draftRequirements,
-              pending: pendingRequirements,
               approved: approvedRequirements,
               inProgress: inProgressRequirements,
               completed: completedRequirements,
@@ -685,7 +683,6 @@ export class ProjectRequirementsController {
       const stats = {
         total: projectRequirements.length,
         draft: projectRequirements.filter((r) => r.status === "draft").length,
-        pending: projectRequirements.filter((r) => r.status === "pending").length,
         approved: projectRequirements.filter((r) => r.status === "approved").length,
         inDevelopment: projectRequirements.filter(
           (r) => r.status === "in-development",
@@ -726,7 +723,7 @@ export class ProjectRequirementsController {
 
       // Filter requirements with status "in-development"
       let filteredRequirements = mockProjectRequirements.filter(
-        (req) => req.status === "in-development",
+        (req) => req.status === "in-development" || req.status === "approved",
       );
 
       // Apply additional filters
@@ -755,6 +752,14 @@ export class ProjectRequirementsController {
             req.description.toLowerCase().includes(searchTerm),
         );
       }
+
+      // Sort requirements: approved first, then in-development
+      filteredRequirements.sort((a, b) => {
+        if (a.status === "approved" && b.status !== "approved") return -1;
+        if (a.status !== "approved" && b.status === "approved") return 1;
+        // If both have same status priority, sort by creation date (newest first)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
 
       // Apply pagination
       const startIndex = ((page as number) - 1) * (limit as number);
