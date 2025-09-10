@@ -231,6 +231,7 @@ export class ProjectsController {
 
       // Generate analyst display names from IDs (mock implementation)
       let analystNames = "";
+
       if (analysts && analysts.length > 0) {
         analystNames = analysts.map((id: number) => `User #${id}`).join(", ");
       }
@@ -321,14 +322,18 @@ export class ProjectsController {
 
       // Update project fields
       const project = mockProjects[projectIndex];
-      if (applicationName !== undefined) project.applicationName = applicationName;
+
+      if (applicationName !== undefined)
+        project.applicationName = applicationName;
       if (projectOwner !== undefined) {
         project.projectOwnerId = projectOwner;
         project.projectOwner = `User #${projectOwner}`; // TODO: Get actual user name
       }
       if (alternativeOwner !== undefined) {
         project.alternativeOwnerId = alternativeOwner;
-        project.alternativeOwner = alternativeOwner ? `User #${alternativeOwner}` : "";
+        project.alternativeOwner = alternativeOwner
+          ? `User #${alternativeOwner}`
+          : "";
       }
       if (owningUnit !== undefined) {
         project.owningUnitId = owningUnit;
@@ -336,16 +341,18 @@ export class ProjectsController {
       }
       if (analysts !== undefined) {
         project.analystIds = analysts;
-        project.analysts = analysts.length > 0 
-          ? analysts.map((id: number) => `User #${id}`).join(", ")
-          : "";
+        project.analysts =
+          analysts.length > 0
+            ? analysts.map((id: number) => `User #${id}`).join(", ")
+            : "";
       }
       if (startDate !== undefined) project.startDate = startDate;
-      if (expectedCompletionDate !== undefined) project.expectedCompletionDate = expectedCompletionDate;
+      if (expectedCompletionDate !== undefined)
+        project.expectedCompletionDate = expectedCompletionDate;
       if (description !== undefined) project.description = description;
       if (remarks !== undefined) project.remarks = remarks;
       if (status !== undefined) project.status = status;
-      
+
       project.updatedAt = new Date().toISOString();
 
       logger.info(`Updated project ${projectId}: ${project.applicationName}`);
@@ -381,9 +388,12 @@ export class ProjectsController {
       }
 
       const deletedProject = mockProjects[index];
+
       mockProjects.splice(index, 1);
 
-      logger.info(`Deleted project ${projectId}: ${deletedProject.applicationName}`);
+      logger.info(
+        `Deleted project ${projectId}: ${deletedProject.applicationName}`,
+      );
 
       res.json({
         success: true,
@@ -421,9 +431,11 @@ export class ProjectsController {
 
       // Get analyst usernames from the project's analystIds
       const analystUsernames: string[] = [];
+
       if (project.analystIds && project.analystIds.length > 0) {
         project.analystIds.forEach((analystId) => {
           const analyst = mockUsers.find((user) => user.id === analystId);
+
           if (analyst) {
             analystUsernames.push(analyst.userName);
           }
@@ -432,9 +444,12 @@ export class ProjectsController {
 
       // Send notification to specific analysts and project owner
       const targetUsernames = [...analystUsernames];
-      
+
       // Also notify project owner if we have their info
-      const projectOwner = mockUsers.find((user) => user.id === project.projectOwnerId);
+      const projectOwner = mockUsers.find(
+        (user) => user.id === project.projectOwnerId,
+      );
+
       if (projectOwner) {
         targetUsernames.push(projectOwner.userName);
       }
@@ -443,11 +458,12 @@ export class ProjectsController {
         type: "PROJECT_SENT_FOR_REVIEW",
         message: `Project "${project.applicationName}" has been sent for review`,
         projectId: project.id,
-        targetUsernames: targetUsernames.length > 0 ? targetUsernames : undefined,
+        targetUsernames:
+          targetUsernames.length > 0 ? targetUsernames : undefined,
       });
 
       logger.info(
-        `Project ${projectId} sent for review: ${project.applicationName}. Notified users: ${targetUsernames.join(", ")}`
+        `Project ${projectId} sent for review: ${project.applicationName}. Notified users: ${targetUsernames.join(", ")}`,
       );
 
       res.json({

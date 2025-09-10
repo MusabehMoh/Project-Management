@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
+
 import { logger } from "../utils/logger.js";
-import { mockProjectRequirements, mockRequirementAttachments } from "../data/mockProjectRequirements.js";
+import { mockProjectRequirements } from "../data/mockProjectRequirements.js";
 import { mockProjects } from "../data/mockProjects.js";
 import { mockUsers } from "../data/mockUsers.js";
 import { sendNotification } from "../signalR/notificationHub.js";
@@ -87,7 +88,7 @@ export class ProjectRequirementsController {
 
       res.json(responseData);
     } catch (error) {
-  logger.error("API DEBUG: Error:", error);
+      logger.error("API DEBUG: Error:", error);
       logger.error("Error getting assigned projects:", error);
       res.status(500).json({
         success: false,
@@ -103,7 +104,14 @@ export class ProjectRequirementsController {
   async getProjectRequirements(req: Request, res: Response) {
     try {
       const { projectId } = req.params;
-  const { page = 1, limit = 20, status, priority, search, projectId: qProjectId } = req.query;
+      const {
+        page = 1,
+        limit = 20,
+        status,
+        priority,
+        search,
+        projectId: qProjectId,
+      } = req.query;
 
       let filteredRequirements = mockProjectRequirements.filter(
         (req) => req.projectId === parseInt(projectId),
@@ -124,6 +132,7 @@ export class ProjectRequirementsController {
 
       if (search) {
         const searchTerm = (search as string).toLowerCase();
+
         filteredRequirements = filteredRequirements.filter(
           (req) =>
             req.name.toLowerCase().includes(searchTerm) ||
@@ -171,11 +180,24 @@ export class ProjectRequirementsController {
   async createRequirement(req: Request, res: Response) {
     try {
       const { projectId } = req.params;
-      const { name, description, priority, type, expectedCompletionDate, attachments } = req.body;
+      const {
+        name,
+        description,
+        priority,
+        type,
+        expectedCompletionDate,
+        attachments,
+      } = req.body;
       const currentUserId = parseInt(req.query.userId as string) || 1; // Default user
 
       // Validate required fields
-      if (!name || !description || !priority || !type || !expectedCompletionDate) {
+      if (
+        !name ||
+        !description ||
+        !priority ||
+        !type ||
+        !expectedCompletionDate
+      ) {
         return res.status(400).json({
           success: false,
           error: {
@@ -190,14 +212,16 @@ export class ProjectRequirementsController {
         return res.status(400).json({
           success: false,
           error: {
-            message: "Invalid requirement type. Must be 'new' or 'change request'",
+            message:
+              "Invalid requirement type. Must be 'new' or 'change request'",
             code: "VALIDATION_ERROR",
           },
         });
       }
 
       // Find the project to get project info
-      const project = mockProjects.find(p => p.id === parseInt(projectId));
+      const project = mockProjects.find((p) => p.id === parseInt(projectId));
+
       if (!project) {
         return res.status(404).json({
           success: false,
@@ -210,7 +234,7 @@ export class ProjectRequirementsController {
 
       // Create new requirement
       const newRequirement = {
-        id: Math.max(...mockProjectRequirements.map(r => r.id), 0) + 1,
+        id: Math.max(...mockProjectRequirements.map((r) => r.id), 0) + 1,
         projectId: parseInt(projectId),
         name,
         description,
@@ -226,14 +250,16 @@ export class ProjectRequirementsController {
           id: project.id,
           applicationName: project.applicationName,
           projectOwner: project.projectOwner,
-          owningUnit: project.owningUnit
+          owningUnit: project.owningUnit,
         },
-        attachments: []
+        attachments: [],
       };
 
       mockProjectRequirements.push(newRequirement);
 
-      logger.info(`Created new requirement: ${newRequirement.name} (type: ${type}) for project ${projectId}`);
+      logger.info(
+        `Created new requirement: ${newRequirement.name} (type: ${type}) for project ${projectId}`,
+      );
 
       res.status(201).json({
         success: true,
@@ -256,7 +282,14 @@ export class ProjectRequirementsController {
   async updateRequirement(req: Request, res: Response) {
     try {
       const { requirementId } = req.params;
-      const { name, description, priority, type, expectedCompletionDate, status } = req.body;
+      const {
+        name,
+        description,
+        priority,
+        type,
+        expectedCompletionDate,
+        status,
+      } = req.body;
 
       const requirementIndex = mockProjectRequirements.findIndex(
         (r) => r.id === parseInt(requirementId),
@@ -277,7 +310,8 @@ export class ProjectRequirementsController {
         return res.status(400).json({
           success: false,
           error: {
-            message: "Invalid requirement type. Must be 'new' or 'change request'",
+            message:
+              "Invalid requirement type. Must be 'new' or 'change request'",
             code: "VALIDATION_ERROR",
           },
         });
@@ -285,16 +319,20 @@ export class ProjectRequirementsController {
 
       // Update requirement fields
       const requirement = mockProjectRequirements[requirementIndex];
+
       if (name !== undefined) requirement.name = name;
       if (description !== undefined) requirement.description = description;
       if (priority !== undefined) requirement.priority = priority;
       if (type !== undefined) requirement.type = type;
-      if (expectedCompletionDate !== undefined) requirement.expectedCompletionDate = expectedCompletionDate;
+      if (expectedCompletionDate !== undefined)
+        requirement.expectedCompletionDate = expectedCompletionDate;
       if (status !== undefined) requirement.status = status;
-      
+
       requirement.updatedAt = new Date().toISOString();
 
-      logger.info(`Updated requirement ${requirementId}: ${requirement.name} (type: ${requirement.type})`);
+      logger.info(
+        `Updated requirement ${requirementId}: ${requirement.name} (type: ${requirement.type})`,
+      );
 
       res.json({
         success: true,
@@ -317,7 +355,9 @@ export class ProjectRequirementsController {
   async sendRequirement(req: Request, res: Response) {
     try {
       const { requirementId } = req.params;
-      const requirement = mockProjectRequirements.find(r => r.id === parseInt(requirementId));
+      const requirement = mockProjectRequirements.find(
+        (r) => r.id === parseInt(requirementId),
+      );
 
       if (!requirement) {
         return res.status(404).json({
@@ -332,11 +372,15 @@ export class ProjectRequirementsController {
 
       // Send notification to development managers and project stakeholders
       const targetUsernames: string[] = [];
-      
+
       // Add project owner to notifications
-      const project = mockProjects.find(p => p.id === requirement.projectId);
+      const project = mockProjects.find((p) => p.id === requirement.projectId);
+
       if (project) {
-        const projectOwner = mockUsers.find(user => user.id === project.projectOwnerId);
+        const projectOwner = mockUsers.find(
+          (user) => user.id === project.projectOwnerId,
+        );
+
         if (projectOwner) {
           targetUsernames.push(projectOwner.userName);
         }
@@ -347,11 +391,12 @@ export class ProjectRequirementsController {
         type: "REQUIREMENT_SENT_FOR_DEVELOPMENT",
         message: `Requirement "${requirement.name}" has been sent for development review`,
         projectId: requirement.projectId,
-        targetUsernames: targetUsernames.length > 0 ? targetUsernames : undefined,
+        targetUsernames:
+          targetUsernames.length > 0 ? targetUsernames : undefined,
       });
 
       logger.info(
-        `Requirement ${requirementId} sent for development: ${requirement.name}. Notified users: ${targetUsernames.join(", ")}`
+        `Requirement ${requirementId} sent for development: ${requirement.name}. Notified users: ${targetUsernames.join(", ")}`,
       );
 
       res.json({
@@ -376,7 +421,7 @@ export class ProjectRequirementsController {
     try {
       const { requirementId } = req.params;
       const requirementIndex = mockProjectRequirements.findIndex(
-        r => r.id === parseInt(requirementId)
+        (r) => r.id === parseInt(requirementId),
       );
 
       if (requirementIndex === -1) {
@@ -387,9 +432,12 @@ export class ProjectRequirementsController {
       }
 
       const deletedRequirement = mockProjectRequirements[requirementIndex];
+
       mockProjectRequirements.splice(requirementIndex, 1);
 
-      logger.info(`Deleted requirement ${requirementId}: ${deletedRequirement.name}`);
+      logger.info(
+        `Deleted requirement ${requirementId}: ${deletedRequirement.name}`,
+      );
 
       res.json({
         success: true,
@@ -413,14 +461,17 @@ export class ProjectRequirementsController {
     try {
       const { projectId } = req.params;
       const projectRequirements = mockProjectRequirements.filter(
-        req => req.projectId === parseInt(projectId)
+        (req) => req.projectId === parseInt(projectId),
       );
 
       const stats = {
         total: projectRequirements.length,
-        draft: projectRequirements.filter(r => r.status === 'draft').length,
-        inDevelopment: projectRequirements.filter(r => r.status === 'in-development').length,
-        completed: projectRequirements.filter(r => r.status === 'completed').length,
+        draft: projectRequirements.filter((r) => r.status === "draft").length,
+        inDevelopment: projectRequirements.filter(
+          (r) => r.status === "in-development",
+        ).length,
+        completed: projectRequirements.filter((r) => r.status === "completed")
+          .length,
       };
 
       logger.info(`Retrieved requirement statistics for project ${projectId}`);
@@ -444,7 +495,14 @@ export class ProjectRequirementsController {
    */
   async getDevelopmentRequirements(req: Request, res: Response) {
     try {
-  const { page = 1, limit = 20, status, priority, search, projectId: qProjectId } = req.query;
+      const {
+        page = 1,
+        limit = 20,
+        status,
+        priority,
+        search,
+        projectId: qProjectId,
+      } = req.query;
 
       // Filter requirements with status "in-development"
       let filteredRequirements = mockProjectRequirements.filter(
@@ -454,9 +512,11 @@ export class ProjectRequirementsController {
       // Apply additional filters
       if (qProjectId) {
         const pid = Number(qProjectId);
-        filteredRequirements = filteredRequirements.filter((r) =>
-          // support both top-level projectId and nested project object
-          (r as any).projectId === pid || (r.project && r.project.id === pid),
+
+        filteredRequirements = filteredRequirements.filter(
+          (r) =>
+            // support both top-level projectId and nested project object
+            (r as any).projectId === pid || (r.project && r.project.id === pid),
         );
       }
 
@@ -468,6 +528,7 @@ export class ProjectRequirementsController {
 
       if (search) {
         const searchTerm = (search as string).toLowerCase();
+
         filteredRequirements = filteredRequirements.filter(
           (req) =>
             req.name.toLowerCase().includes(searchTerm) ||

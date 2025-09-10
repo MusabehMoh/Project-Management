@@ -204,13 +204,14 @@ export class DepartmentsController {
     try {
       const { id } = req.params;
       const { page = 1, limit = 10 } = req.query;
-      
+
       const departmentId = Number(id);
       const pageNum = Number(page);
       const limitNum = Number(limit);
 
       // Check if department exists
       const department = mockDepartments.find((d) => d.id === departmentId);
+
       if (!department) {
         return res.status(404).json({
           success: false,
@@ -220,7 +221,7 @@ export class DepartmentsController {
 
       // Filter members by department
       const departmentMembers = mockDepartmentMembers.filter(
-        (member) => member.departmentId === departmentId && member.isActive
+        (member) => member.departmentId === departmentId && member.isActive,
       );
 
       // Pagination
@@ -228,7 +229,9 @@ export class DepartmentsController {
       const endIndex = startIndex + limitNum;
       const paginatedMembers = departmentMembers.slice(startIndex, endIndex);
 
-      logger.info(`Retrieved ${paginatedMembers.length} members for department ${id}`);
+      logger.info(
+        `Retrieved ${paginatedMembers.length} members for department ${id}`,
+      );
 
       res.json({
         success: true,
@@ -254,11 +257,12 @@ export class DepartmentsController {
     try {
       const { id } = req.params;
       const { userId, role } = req.body;
-      
+
       const departmentId = Number(id);
 
       // Check if department exists
       const department = mockDepartments.find((d) => d.id === departmentId);
+
       if (!department) {
         return res.status(404).json({
           success: false,
@@ -268,9 +272,10 @@ export class DepartmentsController {
 
       // Check if user is already a member
       const existingMember = mockDepartmentMembers.find(
-        (member) => member.departmentId === departmentId && member.userId === userId
+        (member) =>
+          member.departmentId === departmentId && member.userId === userId,
       );
-      
+
       if (existingMember) {
         return res.status(400).json({
           success: false,
@@ -280,7 +285,7 @@ export class DepartmentsController {
 
       // Create new member
       const newMember = {
-        id: Math.max(...mockDepartmentMembers.map(m => m.id), 0) + 1,
+        id: Math.max(...mockDepartmentMembers.map((m) => m.id), 0) + 1,
         departmentId,
         userId: Number(userId),
         role: role || "Member",
@@ -323,13 +328,14 @@ export class DepartmentsController {
     try {
       const { id, memberId } = req.params;
       const { role, isActive } = req.body;
-      
+
       const departmentId = Number(id);
       const memberIdNum = Number(memberId);
 
       // Find the member
       const memberIndex = mockDepartmentMembers.findIndex(
-        (member) => member.id === memberIdNum && member.departmentId === departmentId
+        (member) =>
+          member.id === memberIdNum && member.departmentId === departmentId,
       );
 
       if (memberIndex === -1) {
@@ -341,7 +347,8 @@ export class DepartmentsController {
 
       // Update member
       if (role !== undefined) mockDepartmentMembers[memberIndex].role = role;
-      if (isActive !== undefined) mockDepartmentMembers[memberIndex].isActive = isActive;
+      if (isActive !== undefined)
+        mockDepartmentMembers[memberIndex].isActive = isActive;
 
       logger.info(`Updated member ${memberId} in department ${id}`);
 
@@ -366,13 +373,14 @@ export class DepartmentsController {
   async removeDepartmentMember(req: Request, res: Response) {
     try {
       const { id, memberId } = req.params;
-      
+
       const departmentId = Number(id);
       const memberIdNum = Number(memberId);
 
       // Find the member
       const memberIndex = mockDepartmentMembers.findIndex(
-        (member) => member.id === memberIdNum && member.departmentId === departmentId
+        (member) =>
+          member.id === memberIdNum && member.departmentId === departmentId,
       );
 
       if (memberIndex === -1) {

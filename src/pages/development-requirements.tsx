@@ -1,69 +1,94 @@
 import type {
   ProjectRequirement,
   AssignedProject,
+  RequirementTask,
+  CreateRequirementTaskRequest,
 } from "@/types/projectRequirement";
 
 import React, { useState } from "react";
 
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
-// ...existing code...
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
-// modal removed
 import { Spinner } from "@heroui/spinner";
 import { Chip } from "@heroui/chip";
 import {
-  Search,
-  Calendar,
-  Code,
-} from "lucide-react";
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+} from "@heroui/drawer";
+import { Search, Calendar, Code, Eye, Users, Paperclip, Download, Plus, Edit } from "lucide-react";
 import { RefreshIcon } from "@/components/icons";
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDevelopmentRequirements } from "@/hooks/useDevelopmentRequirements";
+import useTeamSearch from "@/hooks/useTeamSearch";
+import type { MemberSearchResult } from "@/types/timeline";
 
 import { GlobalPagination } from "@/components/GlobalPagination";
 
+// Utility functions for color mapping
+const getPriorityColor = (priority: string) => {
+  switch (priority) {
+    case "high":
+      return "danger";
+    case "medium":
+      return "warning";
+    case "low":
+      return "success";
+    default:
+      return "default";
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "draft":
+      return "default";
+    case "in_development":
+    case "in-development":
+      return "secondary";
+    case "completed":
+      return "success";
+    default:
+      return "default";
+  }
+};
+
+// Format date helper
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 // RequirementCard component
-const RequirementCard = ({ requirement }: { requirement: ProjectRequirement }) => {
+const RequirementCard = ({ 
+  requirement,
+  onViewDetails,
+  onCreateTask,
+}: { 
+  requirement: ProjectRequirement;
+  onViewDetails: (requirement: ProjectRequirement) => void;
+  onCreateTask: (requirement: ProjectRequirement) => void;
+}) => {
   const { t } = useLanguage();
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "danger";
-      case "medium":
-        return "warning";
-      case "low":
-        return "success";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "draft":
-        return "default";
-      case "in_development":
-      case "in-development":
-        return "secondary";
-      case "completed":
-        return "success";
-      default:
-        return "default";
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  // Using the formatDate function defined above
 
   return (
     <Card className="h-full">
@@ -109,7 +134,27 @@ const RequirementCard = ({ requirement }: { requirement: ProjectRequirement }) =
             </span>
           </div>
 
-          {/* actions removed */}
+          {/* Detail and Task Creation Buttons */}
+          <div className="flex justify-between items-center pt-2 gap-2">
+            <Button
+              size="sm"
+              variant="flat"
+              color={requirement.task ? "warning" : "success"}
+              startContent={requirement.task ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              onPress={() => onCreateTask(requirement)}
+            >
+              {requirement.task ? t("common.edit") + " Task" : t("common.create") + " Task"}
+            </Button>
+            <Button
+              size="sm"
+              variant="flat"
+              color="primary"
+              startContent={<Eye className="w-4 h-4" />}
+              onPress={() => onViewDetails(requirement)}
+            >
+              {t("common.viewDetails")}
+            </Button>
+          </div>
         </div>
       </CardBody>
     </Card>
@@ -149,6 +194,85 @@ export default function DevelopmentRequirementsPage() {
   } = useDevelopmentRequirements({
     pageSize: 20,
   });
+
+  // Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedRequirement, setSelectedRequirement] = useState<ProjectRequirement | null>(null);
+
+  // Task creation modal state
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedDeveloper, setSelectedDeveloper] = useState<MemberSearchResult | null>(null);
+  const [selectedQC, setSelectedQC] = useState<MemberSearchResult | null>(null);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
+
+  // Team search hooks for developers and QC
+  const {
+    employees: developers,
+    loading: loadingDevelopers,
+    searchEmployees: searchDevelopers,
+  } = useTeamSearch({ minLength: 2, maxResults: 15 });
+
+  const {
+    employees: qcMembers,
+    loading: loadingQC,
+    searchEmployees: searchQC,
+  } = useTeamSearch({ minLength: 2, maxResults: 15 });
+
+  // Function to open drawer with requirement details
+  const openRequirementDetails = (requirement: ProjectRequirement) => {
+    setSelectedRequirement(requirement);
+    setIsDrawerOpen(true);
+  };
+
+  // Function to open task creation modal
+  const openTaskModal = (requirement: ProjectRequirement) => {
+    setSelectedRequirement(requirement);
+    setIsTaskModalOpen(true);
+    // If task exists, pre-populate the form
+    if (requirement.task) {
+      const existingDev = developers.find(dev => dev.id === requirement.task?.developerId);
+      const existingQC = qcMembers.find(qc => qc.id === requirement.task?.qcId);
+      setSelectedDeveloper(existingDev || null);
+      setSelectedQC(existingQC || null);
+    }
+  };
+
+  // Function to handle task creation/update
+  const handleTaskSubmit = async () => {
+    if (!selectedRequirement) return;
+
+    setIsCreatingTask(true);
+    try {
+      const taskData: CreateRequirementTaskRequest = {
+        requirementId: selectedRequirement.id,
+        developerId: selectedDeveloper?.id,
+        qcId: selectedQC?.id,
+      };
+
+      // TODO: Call API to create/update task
+      console.log('Creating/updating task:', taskData);
+      
+      // For now, simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setIsTaskModalOpen(false);
+      setSelectedDeveloper(null);
+      setSelectedQC(null);
+      // TODO: Refresh requirements data to get updated task info
+    } catch (error) {
+      console.error('Error creating/updating task:', error);
+    } finally {
+      setIsCreatingTask(false);
+    }
+  };
+
+  // Function to reset task modal
+  const resetTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setSelectedDeveloper(null);
+    setSelectedQC(null);
+    setSelectedRequirement(null);
+  };
 
   // edit/delete removed; grid is read-only
 
@@ -341,7 +465,12 @@ export default function DevelopmentRequirementsPage() {
               style={{ alignItems: "start" }}
             >
               {requirements.map((requirement) => (
-                <RequirementCard key={requirement.id} requirement={requirement} />
+                <RequirementCard 
+                  key={requirement.id} 
+                  requirement={requirement}
+                  onViewDetails={openRequirementDetails}
+                  onCreateTask={openTaskModal}
+                />
               ))}
             </div>
             
@@ -363,9 +492,270 @@ export default function DevelopmentRequirementsPage() {
             />
           </div>
         )}
+
+        {/* Requirement Details Drawer */}
+        <Drawer
+          isOpen={isDrawerOpen}
+          onOpenChange={setIsDrawerOpen}
+          size="lg"
+          placement="right"
+        >
+          <DrawerContent>
+            <DrawerHeader className="flex flex-col gap-1">
+              <h2 className="text-xl font-semibold">
+                {selectedRequirement?.name}
+              </h2>
+              <p className="text-sm text-default-500">
+                {selectedRequirement?.project?.applicationName || "N/A"}
+              </p>
+            </DrawerHeader>
+            <DrawerBody>
+              {selectedRequirement && (
+                <div className="space-y-6">
+                  {/* Status and Priority */}
+                  <div className="flex gap-4">
+                    <Chip
+                      color={getPriorityColor(selectedRequirement.priority)}
+                      size="sm"
+                      variant="flat"
+                    >
+                      {t(`requirements.${selectedRequirement.priority}`)}
+                    </Chip>
+                    <Chip
+                      color={getStatusColor(selectedRequirement.status)}
+                      size="sm"
+                      variant="flat"
+                    >
+                      {t(`requirements.${selectedRequirement.status.replace("-", "")}`)}
+                    </Chip>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {t("requirements.description")}
+                    </h3>
+                    <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
+                      <p className="text-sm leading-relaxed">
+                        {selectedRequirement.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Expected Completion Date */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {t("requirements.expectedCompletion")}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-default-400" />
+                      <span className="text-sm">
+                        {formatDate(selectedRequirement.expectedCompletionDate)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Additional Details */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-default-600 mb-1">
+                        {t("requirements.id")}
+                      </h4>
+                      <p className="text-sm">{selectedRequirement.id}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-default-600 mb-1">
+                        {t("requirements.created")}
+                      </h4>
+                      <p className="text-sm">
+                        {selectedRequirement.createdAt ? formatDate(selectedRequirement.createdAt) : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Analysts Team */}
+                  {selectedRequirement.project?.analysts && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-default-400" />
+                        {t("projects.analysts")}
+                      </h3>
+                      <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
+                        <div className="flex flex-wrap gap-2">
+                          {selectedRequirement.project.analysts.split(', ').map((analyst, index) => (
+                            <Chip
+                              key={index}
+                              size="sm"
+                              variant="flat"
+                              color="secondary"
+                            >
+                              {analyst}
+                            </Chip>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Attachments */}
+                  {selectedRequirement.attachments && selectedRequirement.attachments.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        <Paperclip className="w-5 h-5 text-default-400" />
+                        {t("requirements.attachments")}
+                      </h3>
+                      <div className="space-y-2">
+                        {selectedRequirement.attachments.map((attachment) => (
+                          <div
+                            key={attachment.id}
+                            className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                                <Paperclip className="w-4 h-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {attachment.originalName}
+                                </p>
+                                <p className="text-xs text-default-500">
+                                  {(attachment.fileSize / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="light"
+                              color="primary"
+                              startContent={<Download className="w-4 h-4" />}
+                            >
+                              {t("projects.downloadFile")}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </DrawerBody>
+            <DrawerFooter>
+              <Button
+                color="danger"
+                variant="light"
+                onPress={() => setIsDrawerOpen(false)}
+              >
+                {t("common.close")}
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+
+        {/* Task Creation/Edit Modal */}
+        <Modal isOpen={isTaskModalOpen} onOpenChange={setIsTaskModalOpen} size="2xl">
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  <h2 className="text-xl font-semibold">
+                    {selectedRequirement?.task ? t("tasks.editTask") : t("tasks.createTask")}
+                  </h2>
+                  <p className="text-sm text-default-500">
+                    {selectedRequirement?.name}
+                  </p>
+                </ModalHeader>
+                <ModalBody>
+                  <div className="space-y-4">
+                    {/* Developer Selection */}
+                    <div>
+                      <label className="text-sm font-medium text-default-700 mb-2 block">
+                        {t("tasks.developer")}
+                      </label>
+                      <Autocomplete
+                        placeholder={t("tasks.selectDeveloper")}
+                        selectedKey={selectedDeveloper?.userName || ""}
+                        onSelectionChange={(key) => {
+                          const developer = developers.find(dev => dev.userName === key);
+                          setSelectedDeveloper(developer || null);
+                        }}
+                        onInputChange={searchDevelopers}
+                        isLoading={loadingDevelopers}
+                      >
+                        {developers.map((developer) => (
+                          <AutocompleteItem key={developer.userName} value={developer.userName}>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{developer.fullName}</span>
+                              <span className="text-xs text-default-500">
+                                {developer.militaryNumber} - {developer.gradeName}
+                              </span>
+                            </div>
+                          </AutocompleteItem>
+                        ))}
+                      </Autocomplete>
+                      {selectedDeveloper && (
+                        <div className="mt-2">
+                          <Chip size="sm" color="primary" variant="flat">
+                            {selectedDeveloper.fullName}
+                          </Chip>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* QC Selection */}
+                    <div>
+                      <label className="text-sm font-medium text-default-700 mb-2 block">
+                        {t("tasks.qcMember")}
+                      </label>
+                      <Autocomplete
+                        placeholder={t("tasks.selectQC")}
+                        selectedKey={selectedQC?.userName || ""}
+                        onSelectionChange={(key) => {
+                          const qc = qcMembers.find(member => member.userName === key);
+                          setSelectedQC(qc || null);
+                        }}
+                        onInputChange={searchQC}
+                        isLoading={loadingQC}
+                      >
+                        {qcMembers.map((qcMember) => (
+                          <AutocompleteItem key={qcMember.userName} value={qcMember.userName}>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{qcMember.fullName}</span>
+                              <span className="text-xs text-default-500">
+                                {qcMember.militaryNumber} - {qcMember.gradeName}
+                              </span>
+                            </div>
+                          </AutocompleteItem>
+                        ))}
+                      </Autocomplete>
+                      {selectedQC && (
+                        <div className="mt-2">
+                          <Chip size="sm" color="secondary" variant="flat">
+                            {selectedQC.fullName}
+                          </Chip>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="danger" variant="light" onPress={resetTaskModal}>
+                    {t("common.cancel")}
+                  </Button>
+                  <Button 
+                    color="primary" 
+                    onPress={handleTaskSubmit}
+                    isLoading={isCreatingTask}
+                    isDisabled={!selectedDeveloper && !selectedQC}
+                  >
+                    {selectedRequirement?.task ? t("common.update") : t("common.create")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       </div>
 
-  {/* edit/delete modals removed */}
     </DefaultLayout>
   );
 }

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
+
 import {
   MemberTask,
   TaskSearchParams,
-  TasksResponse,
   TaskFiltersData,
 } from "@/types/membersTasks";
 import { Department, MemberSearchResult } from "@/types/timeline";

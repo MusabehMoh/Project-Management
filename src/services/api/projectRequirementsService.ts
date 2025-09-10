@@ -44,15 +44,15 @@ class ProjectRequirementsService {
     };
   }> {
     const params = new URLSearchParams();
-    
+
     if (userId) {
       params.append("userId", userId.toString());
     }
-    
+
     if (options?.page) {
       params.append("page", options.page.toString());
     }
-    
+
     if (options?.limit) {
       params.append("limit", options.limit.toString());
     }
@@ -62,7 +62,7 @@ class ProjectRequirementsService {
     if (options?.projectId) {
       params.append("projectId", options.projectId.toString());
     }
-    
+
     const endpoint = `${ENDPOINTS.ASSIGNED_PROJECTS}${params.toString() ? "?" + params.toString() : ""}`;
     // ApiResponse<AssignedProject[]> shape: { success, data, pagination? }
     const result = await apiClient.get<AssignedProject[]>(endpoint);

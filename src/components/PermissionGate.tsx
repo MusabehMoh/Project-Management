@@ -1,7 +1,8 @@
+import type { PermissionCheck } from "@/utils/permissions";
+
 import { ReactNode } from "react";
 
 import { usePermissions } from "@/hooks/usePermissions";
-import type { PermissionCheck } from "@/utils/permissions";
 
 interface PermissionGateProps {
   children: ReactNode;
@@ -19,20 +20,20 @@ interface PermissionGateProps {
 /**
  * Permission Gate Component - Enhanced version
  * Controls access to UI elements based on user permissions
- * 
+ *
  * Examples:
  * <PermissionGate adminOnly>
  *   <AdminPanel />
  * </PermissionGate>
- * 
+ *
  * <PermissionGate role="Administrator">
  *   <UserManagement />
  * </PermissionGate>
- * 
+ *
  * <PermissionGate action="Create User">
  *   <CreateUserButton />
  * </PermissionGate>
- * 
+ *
  * <PermissionGate permission={{ roles: ["Admin", "Manager"], requireAll: false }}>
  *   <SomeComponent />
  * </PermissionGate>
@@ -49,15 +50,15 @@ export const PermissionGate = ({
   adminOnly = false,
   superAdminOnly = false,
 }: PermissionGateProps) => {
-  const { 
-    hasPermission, 
-    hasRole, 
-    hasAnyRole, 
-    hasAction, 
-    hasAnyAction, 
-    isAdmin, 
+  const {
+    hasPermission,
+    hasRole,
+    hasAnyRole,
+    hasAction,
+    hasAnyAction,
+    isAdmin,
     isSuperAdmin,
-    loading 
+    loading,
   } = usePermissions();
 
   // Show loading state or nothing while checking permissions
@@ -87,9 +88,10 @@ export const PermissionGate = ({
 
   // Check multiple roles
   if (roles && roles.length > 0) {
-    const hasRequiredRoles = requireAll 
-      ? roles.every(r => hasRole(r))
+    const hasRequiredRoles = requireAll
+      ? roles.every((r) => hasRole(r))
       : hasAnyRole(roles);
+
     return hasRequiredRoles ? <>{children}</> : <>{fallback}</>;
   }
 
@@ -101,8 +103,9 @@ export const PermissionGate = ({
   // Check multiple actions
   if (actions && actions.length > 0) {
     const hasRequiredActions = requireAll
-      ? actions.every(a => hasAction(a))
+      ? actions.every((a) => hasAction(a))
       : hasAnyAction(actions);
+
     return hasRequiredActions ? <>{children}</> : <>{fallback}</>;
   }
 

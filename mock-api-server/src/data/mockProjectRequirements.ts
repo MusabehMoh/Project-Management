@@ -18,6 +18,8 @@ export interface ProjectRequirement {
     applicationName: string;
     projectOwner: string;
     owningUnit: string;
+    analysts?: string; // Display names for analysts (comma-separated)
+    analystIds?: number[]; // Actual IDs for analysts
   };
 }
 
@@ -52,6 +54,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       applicationName: "Customer Portal System",
       projectOwner: "أحمد محمد العتيبي",
       owningUnit: "Information Technology Division",
+      analysts: "خالد الأحمد, منى السالم",
+      analystIds: [4, 5],
     },
     attachments: [
       {
@@ -62,6 +66,16 @@ export const mockProjectRequirements: ProjectRequirement[] = [
         fileSize: 2048576,
         mimeType: "application/pdf",
         uploadedAt: "2025-01-10T09:15:00Z",
+        uploadedBy: 1,
+      },
+      {
+        id: 2,
+        requirementId: 1,
+        fileName: "auth_specs.docx",
+        originalName: "Authentication Technical Specifications.docx",
+        fileSize: 1024768,
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        uploadedAt: "2025-01-10T10:00:00Z",
         uploadedBy: 1,
       },
     ],
@@ -85,7 +99,31 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       applicationName: "Customer Portal System",
       projectOwner: "أحمد محمد العتيبي",
       owningUnit: "Information Technology Division",
+      analysts: "خالد الأحمد, منى السالم",
+      analystIds: [4, 5],
     },
+    attachments: [
+      {
+        id: 4,
+        requirementId: 2,
+        fileName: "invoice_template.pdf",
+        originalName: "Invoice Template Design.pdf",
+        fileSize: 1536000,
+        mimeType: "application/pdf",
+        uploadedAt: "2025-01-11T11:00:00Z",
+        uploadedBy: 1,
+      },
+      {
+        id: 5,
+        requirementId: 2,
+        fileName: "qr_integration.docx",
+        originalName: "QR Code Integration Specs.docx",
+        fileSize: 768000,
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        uploadedAt: "2025-01-11T11:30:00Z",
+        uploadedBy: 1,
+      },
+    ],
   },
   {
     id: 3,
@@ -106,7 +144,31 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       applicationName: "Mobile Banking App",
       projectOwner: "محمد أحمد الخالد",
       owningUnit: "Finance and Budgeting",
+      analysts: "ياسر المحمد, نور الدين",
+      analystIds: [6, 4],
     },
+    attachments: [
+      {
+        id: 6,
+        requirementId: 3,
+        fileName: "notification_flow.png",
+        originalName: "Push Notification Flow Diagram.png",
+        fileSize: 512000,
+        mimeType: "image/png",
+        uploadedAt: "2025-01-12T15:30:00Z",
+        uploadedBy: 3,
+      },
+      {
+        id: 7,
+        requirementId: 3,
+        fileName: "push_notification_specs.pdf",
+        originalName: "Push Notification Technical Specifications.pdf",
+        fileSize: 1200000,
+        mimeType: "application/pdf",
+        uploadedAt: "2025-01-12T16:00:00Z",
+        uploadedBy: 3,
+      },
+    ],
   },
   {
     id: 4,
@@ -127,7 +189,31 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       applicationName: "Mobile Banking App",
       projectOwner: "محمد أحمد الخالد",
       owningUnit: "Finance and Budgeting",
+      analysts: "ياسر المحمد, نور الدين",
+      analystIds: [6, 4],
     },
+    attachments: [
+      {
+        id: 8,
+        requirementId: 4,
+        fileName: "biometric_design.pdf",
+        originalName: "Biometric Authentication UI Design.pdf",
+        fileSize: 2400000,
+        mimeType: "application/pdf",
+        uploadedAt: "2025-01-13T12:00:00Z",
+        uploadedBy: 3,
+      },
+      {
+        id: 9,
+        requirementId: 4,
+        fileName: "security_protocols.docx",
+        originalName: "Biometric Security Protocols.docx",
+        fileSize: 950000,
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        uploadedAt: "2025-01-13T13:00:00Z",
+        uploadedBy: 3,
+      },
+    ],
   },
   {
     id: 5,
@@ -148,7 +234,31 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       applicationName: "ERP System Upgrade",
       projectOwner: "خالد سعد المطيري",
       owningUnit: "Operations and Strategic Planning",
+      analysts: "محمد التميمي, سعاد العتيبي",
+      analystIds: [5, 6],
     },
+    attachments: [
+      {
+        id: 10,
+        requirementId: 5,
+        fileName: "dashboard_mockups.pdf",
+        originalName: "Advanced Dashboard Mockups.pdf",
+        fileSize: 3200000,
+        mimeType: "application/pdf",
+        uploadedAt: "2025-01-14T09:30:00Z",
+        uploadedBy: 5,
+      },
+      {
+        id: 11,
+        requirementId: 5,
+        fileName: "reporting_requirements.xlsx",
+        originalName: "Reporting Requirements Matrix.xlsx",
+        fileSize: 850000,
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        uploadedAt: "2025-01-14T10:00:00Z",
+        uploadedBy: 5,
+      },
+    ],
   },
 ];
 

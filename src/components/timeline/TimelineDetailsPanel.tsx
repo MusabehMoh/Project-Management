@@ -61,7 +61,7 @@ export default function TimelineDetailsPanel({
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editModalType, setEditModalType] = useState<
-    "timeline" | "sprint"  | "task" | "subtask"
+    "timeline" | "sprint" | "task" | "subtask"
   >("timeline");
   const [editModalInitialValues, setEditModalInitialValues] =
     useState<TimelineEditModalFormData>({
@@ -159,7 +159,6 @@ export default function TimelineDetailsPanel({
 
       return sprint || timeline;
     }
- 
 
     if (selectedItemType === "task") {
       for (const sprint of timeline.sprints) {
@@ -181,6 +180,7 @@ export default function TimelineDetailsPanel({
         }
       }
     }
+
     return timeline;
   }, [timeline, selectedItem, selectedItemType]);
 

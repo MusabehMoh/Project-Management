@@ -194,7 +194,7 @@ export const TaskGanttView = ({ tasks, onTaskClick }: TaskGanttViewProps) => {
                   {/* Assignees - Compact */}
                   <div className="col-span-2">
                     {task.assignedMembers && task.assignedMembers.length > 0 ? (
-                      <AvatarGroup size="sm" max={2}>
+                      <AvatarGroup max={2} size="sm">
                         {task.assignedMembers.map((assignee) => (
                           <Avatar
                             key={assignee.id}

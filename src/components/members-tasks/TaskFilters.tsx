@@ -13,7 +13,6 @@ import { parseDate } from "@internationalized/date";
 import {
   Search,
   Filter,
-  X,
   Users,
   Building2,
   Calendar,
@@ -22,7 +21,7 @@ import {
 } from "lucide-react";
 
 import { TaskSearchParams, TaskFiltersData } from "@/types/membersTasks";
-import { MemberSearchResult, Department } from "@/types/timeline";
+import { MemberSearchResult } from "@/types/timeline";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TaskFiltersProps {
@@ -57,6 +56,7 @@ export const TaskFilters = ({
 
   const handleMemberAdd = (employee: MemberSearchResult) => {
     const currentMemberIds = filters.memberIds || [];
+
     if (!currentMemberIds.includes(employee.id)) {
       onFiltersChange({
         ...filters,
@@ -70,6 +70,7 @@ export const TaskFilters = ({
 
   const handleMemberRemove = (memberId: number) => {
     const currentMemberIds = filters.memberIds || [];
+
     onFiltersChange({
       ...filters,
       memberIds: currentMemberIds.filter((id) => id !== memberId),
@@ -79,16 +80,19 @@ export const TaskFilters = ({
 
   const handleDepartmentChange = (selectedKeys: any) => {
     const departmentIds = Array.from(selectedKeys) as string[];
+
     onFiltersChange({ ...filters, departmentIds, page: 1 });
   };
 
   const handleStatusChange = (selectedKeys: any) => {
     const statusIds = Array.from(selectedKeys).map((id) => Number(id));
+
     onFiltersChange({ ...filters, statusIds, page: 1 });
   };
 
   const handlePriorityChange = (selectedKeys: any) => {
     const priorityIds = Array.from(selectedKeys).map((id) => Number(id));
+
     onFiltersChange({ ...filters, priorityIds, page: 1 });
   };
 
@@ -104,6 +108,7 @@ export const TaskFilters = ({
       });
     } else {
       const { dateRange, ...filtersWithoutDate } = filters;
+
       onFiltersChange(filtersWithoutDate);
     }
   };
@@ -113,6 +118,7 @@ export const TaskFilters = ({
       onFiltersChange({ ...filters, isOverdue: true, page: 1 });
     } else {
       const { isOverdue, ...filtersWithoutOverdue } = filters;
+
       onFiltersChange(filtersWithoutOverdue);
     }
   };
@@ -139,11 +145,13 @@ export const TaskFilters = ({
 
   const getSelectedMembers = () => {
     const memberIds = filters.memberIds || [];
+
     return allEmployees.filter((emp) => memberIds.includes(emp.id));
   };
 
   const getActiveFiltersCount = () => {
     let count = 0;
+
     if (filters.search) count++;
     if (filters.memberIds?.length) count++;
     if (filters.departmentIds?.length) count++;
@@ -151,6 +159,7 @@ export const TaskFilters = ({
     if (filters.priorityIds?.length) count++;
     if (filters.dateRange) count++;
     if (filters.isOverdue) count++;
+
     return count;
   };
 
@@ -175,10 +184,10 @@ export const TaskFilters = ({
           <div className="flex items-center gap-2">
             {activeFiltersCount > 0 && (
               <Button
-                size="sm"
-                variant="flat"
                 color="danger"
+                size="sm"
                 startContent={<RotateCcw className="w-4 h-4" />}
+                variant="flat"
                 onPress={clearAllFilters}
               >
                 {t("clearAllFilters")}
@@ -199,11 +208,11 @@ export const TaskFilters = ({
         {/* Search Input - Always visible */}
         <div className="mb-4">
           <Input
+            isClearable
             placeholder={t("search.placeholder")}
+            startContent={<Search className="w-4 h-4 text-foreground-500" />}
             value={filters.search || ""}
             onChange={(e) => handleSearchChange(e.target.value)}
-            startContent={<Search className="w-4 h-4 text-foreground-500" />}
-            isClearable
             onClear={() => handleSearchChange("")}
           />
         </div>
@@ -219,8 +228,8 @@ export const TaskFilters = ({
                   {t("filterByAssignees")}
                 </span>
                 <Switch
-                  size="sm"
                   isSelected={filters.memberFilterMode === "all"}
+                  size="sm"
                   onValueChange={handleFilterModeToggle}
                 >
                   <span className="text-xs text-foreground-600 ml-2">
@@ -232,8 +241,8 @@ export const TaskFilters = ({
               </div>
 
               <Autocomplete
-                placeholder="Search members..."
                 inputValue={employeeInputValue}
+                placeholder="Search members..."
                 selectedKey={selectedEmployee?.id.toString()}
                 onInputChange={(value) => {
                   setEmployeeInputValue(value);
@@ -244,6 +253,7 @@ export const TaskFilters = ({
                     const employee = allEmployees.find(
                       (emp) => emp.id.toString() === key,
                     );
+
                     if (employee) {
                       handleMemberAdd(employee);
                     }
@@ -253,7 +263,7 @@ export const TaskFilters = ({
                 {allEmployees.map((employee) => (
                   <AutocompleteItem
                     key={employee.id.toString()}
-                    startContent={<Avatar size="sm" name={employee.fullName} />}
+                    startContent={<Avatar name={employee.fullName} size="sm" />}
                   >
                     {employee.gradeName} {employee.fullName}
                   </AutocompleteItem>
@@ -266,8 +276,8 @@ export const TaskFilters = ({
                   {selectedMembers.map((member) => (
                     <Chip
                       key={member.id}
+                      startContent={<Avatar name={member.fullName} size="sm" />}
                       onClose={() => handleMemberRemove(member.id)}
-                      startContent={<Avatar size="sm" name={member.fullName} />}
                     >
                       {member.gradeName} {member.fullName}
                     </Chip>
@@ -286,8 +296,8 @@ export const TaskFilters = ({
               </div>
               <Select
                 placeholder={t("selectDepartment")}
-                selectionMode="multiple"
                 selectedKeys={new Set(filters.departmentIds || [])}
+                selectionMode="multiple"
                 onSelectionChange={handleDepartmentChange}
               >
                 {filtersData.departments.map((dept) => (
@@ -313,10 +323,10 @@ export const TaskFilters = ({
               </div>
               <Select
                 placeholder={t("selectStatus")}
-                selectionMode="multiple"
                 selectedKeys={
                   new Set(filters.statusIds?.map((id) => id.toString()) || [])
                 }
+                selectionMode="multiple"
                 onSelectionChange={handleStatusChange}
               >
                 {filtersData.statuses.map((status) => (
@@ -338,10 +348,10 @@ export const TaskFilters = ({
               </div>
               <Select
                 placeholder={t("selectPriority")}
-                selectionMode="multiple"
                 selectedKeys={
                   new Set(filters.priorityIds?.map((id) => id.toString()) || [])
                 }
+                selectionMode="multiple"
                 onSelectionChange={handlePriorityChange}
               >
                 {filtersData.priorities.map((priority) => (

@@ -129,13 +129,13 @@ export default function TimelineItemCreateModal({
     if (isOpen) {
       setFormData(getInitialFormData());
       setErrors({}); // Clear errors when modal opens
-  // Reset selections
-  setSelectedMembers([]);
-  setSelectedTasks([]);
-  setSelectedEmployee(null);
-  setSelectedTask(null);
-  setEmployeeInputValue("");
-  setTaskInputValue("");
+      // Reset selections
+      setSelectedMembers([]);
+      setSelectedTasks([]);
+      setSelectedEmployee(null);
+      setSelectedTask(null);
+      setEmployeeInputValue("");
+      setTaskInputValue("");
     }
   }, [isOpen]);
 

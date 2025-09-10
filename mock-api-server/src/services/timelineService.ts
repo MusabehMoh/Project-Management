@@ -372,9 +372,7 @@ export class TimelineService {
       if (timeline.sprints) {
         for (const sprint of timeline.sprints) {
           if (sprint.tasks) {
-            const taskIndex = sprint.tasks.findIndex(
-              (t) => t.id === taskIdNum,
-            );
+            const taskIndex = sprint.tasks.findIndex((t) => t.id === taskIdNum);
 
             if (taskIndex !== -1) {
               const task = sprint.tasks[taskIndex];
@@ -441,12 +439,11 @@ export class TimelineService {
       if (timeline.sprints) {
         for (const sprint of timeline.sprints) {
           if (sprint.tasks) {
-            const taskIndex = sprint.tasks.findIndex(
-              (t) => t.id === taskIdNum,
-            );
+            const taskIndex = sprint.tasks.findIndex((t) => t.id === taskIdNum);
 
             if (taskIndex !== -1) {
               sprint.tasks.splice(taskIndex, 1);
+
               return true;
             }
           }
@@ -653,10 +650,7 @@ export class TimelineService {
     }
   }
 
-  async moveTask(
-    taskId: string,
-    targetSprintId: string,
-  ): Promise<any | null> {
+  async moveTask(taskId: string, targetSprintId: string): Promise<any | null> {
     const taskIdNum = parseInt(taskId, 10);
     const targetSprintIdNum = parseInt(targetSprintId, 10);
 
@@ -670,9 +664,7 @@ export class TimelineService {
       if (timeline.sprints) {
         for (const sprint of timeline.sprints) {
           if (sprint.tasks) {
-            const taskIndex = sprint.tasks.findIndex(
-              (t) => t.id === taskIdNum,
-            );
+            const taskIndex = sprint.tasks.findIndex((t) => t.id === taskIdNum);
 
             if (taskIndex !== -1) {
               sourceTask = sprint.tasks[taskIndex];
@@ -690,6 +682,7 @@ export class TimelineService {
     for (const timeline of TimelineService.timelines) {
       if (timeline.sprints) {
         const sprint = timeline.sprints.find((s) => s.id === targetSprintIdNum);
+
         if (sprint) {
           targetSprint = sprint;
           break;
@@ -707,9 +700,7 @@ export class TimelineService {
     }
 
     // Remove from source sprint
-    const taskIndex = sourceSprint.tasks!.findIndex(
-      (t) => t.id === taskIdNum,
-    );
+    const taskIndex = sourceSprint.tasks!.findIndex((t) => t.id === taskIdNum);
 
     sourceSprint.tasks!.splice(taskIndex, 1);
 

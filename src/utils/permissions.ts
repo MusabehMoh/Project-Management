@@ -22,7 +22,7 @@ export const hasPermission = (
 
   const userRoles = user.roles?.map((role) => role.name) || [];
   const userActions = user.actions?.map((action) => action.name) || [];
-  
+
   // Check roles
   let hasRequiredRoles = true;
 

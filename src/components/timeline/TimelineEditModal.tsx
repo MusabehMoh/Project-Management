@@ -449,8 +449,8 @@ export default function TimelineEditModal({
                     >
                       <div className="flex items-center gap-3">
                         <X
-                          size={24} // optional size
                           color="red" // optional color
+                          size={24} // optional size
                           style={{ cursor: "pointer" }} // show pointer on hover
                           onClick={() => {
                             setSelectedTasks(
@@ -474,11 +474,14 @@ export default function TimelineEditModal({
                 </div>
                 <label>{t("timeline.selectPredecessors")}</label>
                 <Autocomplete
+                  isClearable
+                  errorMessage={"test error message"}
+                  isInvalid={false}
+                  isLoading={taskSearchLoading}
                   label={t("timeline.selectPredecessors")}
+                  menuTrigger="input"
                   placeholder={t("timeline.selectPredecessorsPlaceholder")}
-                  inputValue={taskInputValue}
-                  // Disable client-side filtering; we already filter on the server
-                  defaultFilter={(textValue, input) => true}
+                  selectedKey={selectedTask?.id.toString()}
                   onInputChange={(value) => {
                     setTaskInputValue(value);
                     // Clear selection if input doesn't match the selected owner
@@ -495,7 +498,6 @@ export default function TimelineEditModal({
                     // Search for "tasks"
                     searchTasks(value);
                   }}
-                  selectedKey={selectedTask?.id.toString()}
                   onSelectionChange={(key) => {
                     if (key) {
                       const selectedTask = tasks.find(
@@ -517,11 +519,9 @@ export default function TimelineEditModal({
                     //   setValidationErrors({ ...validationErrors, projectOwner: undefined });
                     // }
                   }}
-                  isLoading={taskSearchLoading}
-                  isInvalid={false}
-                  errorMessage={"test error message"}
-                  isClearable
-                  menuTrigger="input"
+                  inputValue={taskInputValue}
+                  // Disable client-side filtering; we already filter on the server
+                  defaultFilter={(textValue, input) => true}
                 >
                   {tasks.map((task) => (
                     <AutocompleteItem
@@ -571,8 +571,8 @@ export default function TimelineEditModal({
                     >
                       <div className="flex items-center gap-3">
                         <X
-                          size={24} // optional size
                           color="red" // optional color
+                          size={24} // optional size
                           style={{ cursor: "pointer" }} // show pointer on hover
                           onClick={() => {
                             setSelectedMembers(
@@ -599,11 +599,14 @@ export default function TimelineEditModal({
                 </div>
                 <label>{t("users.selectEmployee")}</label>
                 <Autocomplete
+                  isClearable
+                  errorMessage={"test error message"}
+                  isInvalid={false}
+                  isLoading={employeeSearchLoading}
                   label={t("users.selectEmployee")}
+                  menuTrigger="input"
                   placeholder={t("users.searchEmployees")}
-                  inputValue={employeeInputValue}
-                  // Disable client-side filtering; we already filter on the server
-                  defaultFilter={(textValue, input) => true}
+                  selectedKey={selectedEmployee?.id.toString()}
                   onInputChange={(value) => {
                     setEmployeeInputValue(value);
                     // Clear selection if input doesn't match the selected owner
@@ -624,7 +627,6 @@ export default function TimelineEditModal({
                     // Search for "employees"
                     searchEmployees(value);
                   }}
-                  selectedKey={selectedEmployee?.id.toString()}
                   onSelectionChange={(key) => {
                     if (key) {
                       const selectedEmployee = employees.find(
@@ -646,11 +648,9 @@ export default function TimelineEditModal({
                     //   setValidationErrors({ ...validationErrors, projectOwner: undefined });
                     // }
                   }}
-                  isLoading={employeeSearchLoading}
-                  isInvalid={false}
-                  errorMessage={"test error message"}
-                  isClearable
-                  menuTrigger="input"
+                  inputValue={employeeInputValue}
+                  // Disable client-side filtering; we already filter on the server
+                  defaultFilter={(textValue, input) => true}
                 >
                   {employees.map((employee) => (
                     <AutocompleteItem

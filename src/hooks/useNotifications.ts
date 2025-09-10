@@ -76,8 +76,8 @@ export function useNotifications(): UseNotifications {
           targetUsernames: apiNotif.targetUsernames,
         }));
 
-  console.log("Processed notifications (parsed):", apiNotifications);
-  setNotifications(apiNotifications);
+        console.log("Processed notifications (parsed):", apiNotifications);
+        setNotifications(apiNotifications);
         // Prefer unreadCount from API if provided (more accurate server-side)
         const apiUnread = (rawContainer.unreadCount ??
           rawContainer.data?.unreadCount) as number | undefined;
@@ -99,6 +99,7 @@ export function useNotifications(): UseNotifications {
               limit: Math.min(50, (apiUnread as number) || 50),
               unreadOnly: true,
             });
+
             if (retry.success && retry.data?.notifications?.length) {
               const retryList = retry.data.notifications.map(
                 (apiNotif: ApiNotification) => ({

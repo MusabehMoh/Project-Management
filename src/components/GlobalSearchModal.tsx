@@ -20,6 +20,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import {
   GlobalSearchResult,
@@ -85,6 +86,7 @@ export function GlobalSearchModal({
   // Load recent searches from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("recentSearches");
+
     if (saved) {
       setRecentSearches(JSON.parse(saved));
     }
@@ -99,6 +101,7 @@ export function GlobalSearchModal({
         query,
         ...recentSearches.filter((s) => s !== query),
       ].slice(0, 5);
+
       setRecentSearches(updated);
       localStorage.setItem("recentSearches", JSON.stringify(updated));
     },
@@ -116,10 +119,12 @@ export function GlobalSearchModal({
     async (query: string) => {
       if (!query.trim() || query.length < 2) {
         clearResults();
+
         return;
       }
 
       const filters: SearchFilters = {};
+
       if (selectedTypes.length > 0) {
         filters.types = selectedTypes as any[];
       }
@@ -163,6 +168,7 @@ export function GlobalSearchModal({
   const handleSearch = useCallback(
     (query?: string) => {
       const searchTerm = query || searchQuery;
+
       if (searchTerm.trim()) {
         saveRecentSearch(searchTerm.trim());
         performSearch(searchTerm);
@@ -295,7 +301,6 @@ export function GlobalSearchModal({
             )}
             {result.metadata?.priority && (
               <Chip
-                size="sm"
                 color={
                   result.metadata.priority === "high"
                     ? "danger"
@@ -303,6 +308,7 @@ export function GlobalSearchModal({
                       ? "warning"
                       : "default"
                 }
+                size="sm"
                 variant="flat"
               >
                 {result.metadata.priority} priority

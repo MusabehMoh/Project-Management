@@ -1,10 +1,11 @@
 import { Route, Routes } from "react-router-dom";
 import { ToastProvider } from "@heroui/toast";
 
+import IndexPage from "./pages";
+
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AccessDenied } from "@/components/AccessDenied";
-import DashboardPage from "@/pages/dashboard";
 import DocsPage from "@/pages/docs";
 import PricingPage from "@/pages/pricing";
 import BlogPage from "@/pages/blog";
@@ -18,7 +19,6 @@ import DevelopmentRequirementsPage from "@/pages/development-requirements";
 import TimelinePage from "@/pages/timeline";
 import MembersTasksPage from "@/pages/members-tasks";
 import { TasksTest } from "@/components/TasksTest";
-import IndexPage from "./pages";
 function App() {
   const { user, loading } = useCurrentUser();
   const { t } = useLanguage();

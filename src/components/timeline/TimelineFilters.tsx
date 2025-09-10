@@ -32,8 +32,11 @@ export default function TimelineFilters({
 
   // Employee search for member filtering
   const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
-  const [selectedEmployee, setSelectedEmployee] = useState<MemberSearchResult | null>(null);
-  const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>([]);
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<MemberSearchResult | null>(null);
+  const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
+    [],
+  );
   const {
     employees,
     loading: employeeSearchLoading,
@@ -113,9 +116,13 @@ export default function TimelineFilters({
   };
 
   const handleRemoveMember = (memberId: string) => {
-    const newSelectedMembers = selectedMembers.filter(m => m.id.toString() !== memberId);
+    const newSelectedMembers = selectedMembers.filter(
+      (m) => m.id.toString() !== memberId,
+    );
+
     setSelectedMembers(newSelectedMembers);
-    const newMemberIds = newSelectedMembers.map(m => m.id.toString());
+    const newMemberIds = newSelectedMembers.map((m) => m.id.toString());
+
     onFiltersChange({ members: newMemberIds });
   };
 
@@ -159,28 +166,34 @@ export default function TimelineFilters({
           ))}
         </div>
         <Autocomplete
-          label={t("timeline.filters.searchUsers")}
-          placeholder={t("users.searchEmployees")}
-          inputValue={employeeInputValue}
+          isClearable
           defaultFilter={() => true}
+          inputValue={employeeInputValue}
+          isLoading={employeeSearchLoading}
+          label={t("timeline.filters.searchUsers")}
+          menuTrigger="input"
+          placeholder={t("users.searchEmployees")}
+          selectedKey={selectedEmployee?.id?.toString()}
           onInputChange={(value) => {
             setEmployeeInputValue(value);
             if (
               selectedEmployee &&
-              value !== `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
+              value !==
+                `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
             ) {
               setSelectedEmployee(null);
             }
             searchEmployees(value);
           }}
-          selectedKey={selectedEmployee?.id?.toString()}
           onSelectionChange={(key) => {
             if (!key) {
               setSelectedEmployee(null);
               setEmployeeInputValue("");
+
               return;
             }
             const found = employees.find((e) => e.id.toString() === key);
+
             if (found) {
               handleAddMember(found);
               // Reset for next pick
@@ -188,9 +201,6 @@ export default function TimelineFilters({
               setEmployeeInputValue("");
             }
           }}
-          isLoading={employeeSearchLoading}
-          isClearable
-          menuTrigger="input"
         >
           {employees.map((employee) => (
             <AutocompleteItem
@@ -260,8 +270,7 @@ export default function TimelineFilters({
                 variant="flat"
                 onClose={() => handleRemoveMember(member.id.toString())}
               >
-                {t("timeline.filters.member")}:{" "}
-                {member.fullName}
+                {t("timeline.filters.member")}: {member.fullName}
               </Chip>
             ))}
             {filters.status.map((status) => (

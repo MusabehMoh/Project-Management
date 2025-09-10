@@ -9,8 +9,6 @@ import {
   Sprint,
   Task,
   Department,
-  TaskStatus,
-  TaskPriority,
   CreateTimelineRequest,
   CreateSprintRequest,
   CreateTaskRequest,

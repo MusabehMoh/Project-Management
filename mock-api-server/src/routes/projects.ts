@@ -16,7 +16,10 @@ router.get(
 );
 
 // Send project for review
-router.post("/:id/send", projectsController.sendProject.bind(projectsController));
+router.post(
+  "/:id/send",
+  projectsController.sendProject.bind(projectsController),
+);
 
 // Project search endpoint
 router.get(
@@ -66,7 +69,10 @@ router.get("/:id", projectsController.getProjectById.bind(projectsController));
 router.put("/:id", projectsController.updateProject.bind(projectsController));
 
 // Delete project by ID
-router.delete("/:id", projectsController.deleteProject.bind(projectsController));
+router.delete(
+  "/:id",
+  projectsController.deleteProject.bind(projectsController),
+);
 
 // Get timelines for a specific project
 router.get("/:id/timelines", async (req: Request, res: Response) => {

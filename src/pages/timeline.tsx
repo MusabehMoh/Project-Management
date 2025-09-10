@@ -191,7 +191,7 @@ export default function TimelinePage() {
       try {
         // Clear current selection to ensure new timeline gets selected
         setSelectedTimeline(null);
-        
+
         const newTimeline = await createTimeline(timelineData);
 
         if (newTimeline) {
@@ -744,7 +744,7 @@ export default function TimelinePage() {
                       (acc: number, sprint: any) => {
                         // Count direct sprint tasks
                         const directTasks = (sprint.tasks || []).length;
-                        
+
                         // Count tasks in requirements structure
                         const requirementTasks = (
                           sprint.requirements || []
