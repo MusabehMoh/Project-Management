@@ -112,7 +112,7 @@ export const RequirementOverview: React.FC<RequirementOverviewProps> = ({
             </div>
             
             {/* Right column - count stats */}
-            <div className={`${language === 'ar' ? 'border-e pe-4' : 'border-s ps-4'} border-default-200 flex flex-col justify-center`} dir="ltr">
+            <div className={`${language === 'ar' ? 'border-r pe-4' : 'border-l ps-4'} border-default-200 flex flex-col justify-center`}>
               {/* Active Requirements */}
               <div className="text-center mb-3">
                 <p className="text-sm font-medium">{t("requirements.active")}</p>
