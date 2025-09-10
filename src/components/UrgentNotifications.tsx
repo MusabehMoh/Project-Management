@@ -84,6 +84,47 @@ export const UrgentNotifications: React.FC<UrgentNotificationProps> = ({
   const formatDate = (date: Date): string => {
     return format(date, "MMM d, yyyy");
   };
+  
+  // Get highlight color and styling based on notification type
+  const getNotificationStyles = (type: string) => {
+    if (type.includes("OVERDUE")) {
+      return {
+        bgColor: "bg-danger-50 dark:bg-danger-900/20",
+        borderColor: "border-l-4 border-l-danger",
+        chipColor: "danger"
+      };
+    } else if (type.includes("CRITICAL")) {
+      return {
+        bgColor: "bg-danger-50 dark:bg-danger-900/20",
+        borderColor: "border-l-4 border-l-danger",
+        chipColor: "danger"
+      };
+    } else if (type.includes("URGENT")) {
+      return {
+        bgColor: "bg-danger-50 dark:bg-danger-900/20",
+        borderColor: "border-l-4 border-l-danger",
+        chipColor: "danger"
+      };
+    } else if (type.includes("HIGH_PRIORITY")) {
+      return {
+        bgColor: "bg-warning-50 dark:bg-warning-900/20",
+        borderColor: "border-l-4 border-l-warning",
+        chipColor: "warning"
+      };
+    } else if (type.includes("DEADLINE")) {
+      return {
+        bgColor: "bg-warning-50 dark:bg-warning-900/20",
+        borderColor: "border-l-4 border-l-warning",
+        chipColor: "warning"
+      };
+    } else {
+      return {
+        bgColor: "bg-primary-50 dark:bg-primary-900/20",
+        borderColor: "border-l-4 border-l-primary",
+        chipColor: "primary"
+      };
+    }
+  };
 
   if (urgentNotifications.length === 0) {
     return null;
@@ -121,40 +162,43 @@ export const UrgentNotifications: React.FC<UrgentNotificationProps> = ({
             </div>
           ) : (
             <ScrollShadow hideScrollBar size={20} className="max-h-64">
-              {urgentNotifications.map((notification, index) => (
-                <React.Fragment key={notification.id}>
-                  {index > 0 && <Divider className="my-0" />}
-                  <div 
-                    className="p-4 hover:bg-default-100 dark:hover:bg-default-50/10 transition-colors"
-                    style={{ cursor: notification.projectId ? 'pointer' : 'default' }}
-                    onClick={() => notification.projectId && handleNavigateToProject(notification.projectId)}
-                  >
-                    <div className="flex items-start gap-2">
-                      <div className="flex-grow">
-                        <p className="text-sm font-medium text-foreground mb-1">{notification.message}</p>
-                        <p className="text-xs text-default-500">{formatDate(new Date(notification.timestamp))}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        <Chip size="sm" color="danger" variant="flat">
-                          {t("notifications.urgent")}
-                        </Chip>
-                        <Button 
-                          size="sm" 
-                          variant="light" 
-                          color="primary"
-                          className="min-w-0 px-2 text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMarkAsRead(notification.id);
-                          }}
-                        >
-                          {t("notifications.markAsRead")}
-                        </Button>
+              {urgentNotifications.map((notification, index) => {
+                const styles = getNotificationStyles(notification.type);
+                return (
+                  <React.Fragment key={notification.id}>
+                    {index > 0 && <Divider className="my-0" />}
+                    <div 
+                      className={`p-4 hover:bg-default-100 dark:hover:bg-default-50/10 transition-colors ${styles.bgColor} ${styles.borderColor}`}
+                      style={{ cursor: notification.projectId ? 'pointer' : 'default' }}
+                      onClick={() => notification.projectId && handleNavigateToProject(notification.projectId)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-grow">
+                          <p className="text-sm font-medium text-foreground mb-1">{notification.message}</p>
+                          <p className="text-xs text-default-500">{formatDate(new Date(notification.timestamp))}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <Chip size="sm" color={styles.chipColor as any} variant="flat">
+                            {t("notifications.urgent")}
+                          </Chip>
+                          <Button 
+                            size="sm" 
+                            variant="light" 
+                            color="primary"
+                            className="min-w-0 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkAsRead(notification.id);
+                            }}
+                          >
+                            {t("notifications.markAsRead")}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </React.Fragment>
-              ))}
+                  </React.Fragment>
+                );
+              })}
             </ScrollShadow>
           )}
         </CardBody>
