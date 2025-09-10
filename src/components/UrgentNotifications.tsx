@@ -85,41 +85,35 @@ export const UrgentNotifications: React.FC<UrgentNotificationProps> = ({
     return format(date, "MMM d, yyyy");
   };
   
-  // Get highlight color and styling based on notification type
+  // Get styling based on notification type (borders and chip colors only)
   const getNotificationStyles = (type: string) => {
     if (type.includes("OVERDUE")) {
       return {
-        bgColor: "bg-danger-50 dark:bg-danger-900/20",
         borderColor: "border-l-4 border-l-danger",
         chipColor: "danger"
       };
     } else if (type.includes("CRITICAL")) {
       return {
-        bgColor: "bg-danger-50 dark:bg-danger-900/20",
         borderColor: "border-l-4 border-l-danger",
         chipColor: "danger"
       };
     } else if (type.includes("URGENT")) {
       return {
-        bgColor: "bg-danger-50 dark:bg-danger-900/20",
         borderColor: "border-l-4 border-l-danger",
         chipColor: "danger"
       };
     } else if (type.includes("HIGH_PRIORITY")) {
       return {
-        bgColor: "bg-warning-50 dark:bg-warning-900/20",
         borderColor: "border-l-4 border-l-warning",
         chipColor: "warning"
       };
     } else if (type.includes("DEADLINE")) {
       return {
-        bgColor: "bg-warning-50 dark:bg-warning-900/20",
         borderColor: "border-l-4 border-l-warning",
         chipColor: "warning"
       };
     } else {
       return {
-        bgColor: "bg-primary-50 dark:bg-primary-900/20",
         borderColor: "border-l-4 border-l-primary",
         chipColor: "primary"
       };
@@ -168,7 +162,7 @@ export const UrgentNotifications: React.FC<UrgentNotificationProps> = ({
                   <React.Fragment key={notification.id}>
                     {index > 0 && <Divider className="my-0" />}
                     <div 
-                      className={`p-4 hover:bg-default-100 dark:hover:bg-default-50/10 transition-colors ${styles.bgColor} ${styles.borderColor}`}
+                      className={`p-4 hover:bg-default-100 dark:hover:bg-default-50/10 transition-colors ${styles.borderColor}`}
                       style={{ cursor: notification.projectId ? 'pointer' : 'default' }}
                       onClick={() => notification.projectId && handleNavigateToProject(notification.projectId)}
                     >
