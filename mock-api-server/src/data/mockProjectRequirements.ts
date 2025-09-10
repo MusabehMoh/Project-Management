@@ -320,41 +320,6 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       },
     ],
   },
-  {
-    id: 6,
-    projectId: 2,
-    name: "Biometric Authentication3",
-    description:
-      "Integrate fingerprint and face recognition authentication for enhanced security in the mobile banking application.",
-    priority: "high",
-    type: "change request",
-    expectedCompletionDate: "2025-05-15",
-    status: "in-development",
-    createdAt: "2025-01-13T11:00:00Z",
-    updatedAt: "2025-01-15T09:30:00Z",
-    createdBy: 3,
-    assignedAnalyst: 7,
-    project: {
-      id: 2,
-      applicationName: "Mobile Banking App",
-      projectOwner: "محمد أحمد الخالد",
-      owningUnit: "Finance and Budgeting",
-      analysts: "ياسر المحمد, نور الدين",
-      analystIds: [6, 4],
-    },
-    attachments: [
-      {
-        id: 8,
-        requirementId: 4,
-        fileName: "biometric_design.pdf",
-        originalName: "Biometric Authentication UI Design.pdf",
-        fileSize: 2400000,
-        mimeType: "application/pdf",
-        uploadedAt: "2025-01-13T12:00:00Z",
-        uploadedBy: 3,
-      },
-    ],
-  },
 ];
 
 export const mockRequirementAttachments: ProjectRequirementAttachment[] = [

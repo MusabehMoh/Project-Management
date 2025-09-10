@@ -10,6 +10,69 @@ import { mockRequirementTasks } from "../data/mockRequirementTasks.js";
 
 export class ProjectRequirementsController {
   /**
+   * Get team workload and performance metrics
+   */
+  async getTeamWorkloadPerformance(req: Request, res: Response) {
+    try {
+      // Calculate workload and performance for each user who has created requirements
+      const teamMetrics = mockUsers
+        .filter(user => user.isVisible)
+        .map(user => {
+          // Get requirements created by this user
+          const userRequirements = mockProjectRequirements.filter(req => req.createdBy === user.id);
+          
+          // Calculate metrics
+          const totalRequirements = userRequirements.length;
+          const draftRequirements = userRequirements.filter(req => req.status === "draft").length;
+          const pendingRequirements = userRequirements.filter(req => req.status === "pending").length;
+          const inProgressRequirements = userRequirements.filter(req => req.status === "in-development").length;
+          const completedRequirements = userRequirements.filter(req => req.status === "completed").length;
+          
+          // Calculate performance score (completion rate + timeliness factor)
+          const completionRate = totalRequirements > 0 ? (completedRequirements / totalRequirements) * 100 : 0;
+          
+          // Mock timeliness factor (in real app, this would be based on expected vs actual completion dates)
+          const timelinessScore = Math.random() * 20 + 80; // Random score between 80-100
+          
+          // Overall performance (70% completion rate + 30% timeliness)
+          const performanceScore = Math.round((completionRate * 0.7) + (timelinessScore * 0.3));
+          
+          return {
+            userId: user.id,
+            fullName: user.fullName,
+            department: user.department,
+            gradeName: user.gradeName,
+            metrics: {
+              totalRequirements,
+              draft: draftRequirements,
+              pending: pendingRequirements,
+              inProgress: inProgressRequirements,
+              completed: completedRequirements,
+              performance: Math.min(performanceScore, 100) // Cap at 100%
+            }
+          };
+        })
+        .filter(user => user.metrics.totalRequirements > 0) // Only include users with requirements
+        .sort((a, b) => b.metrics.performance - a.metrics.performance); // Sort by performance desc
+
+      logger.info(`Retrieved team workload performance for ${teamMetrics.length} team members`);
+
+      res.json({
+        success: true,
+        data: teamMetrics,
+        message: "Team workload performance retrieved successfully"
+      });
+    } catch (error) {
+      logger.error("Error getting team workload performance:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  /**
    * Get projects assigned to current analyst (based on analystIds in projects)
    */
   async getAssignedProjects(req: Request, res: Response) {
