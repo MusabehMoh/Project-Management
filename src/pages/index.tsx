@@ -27,6 +27,7 @@ import {
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UrgentNotifications from "@/components/UrgentNotifications";
+import RequirementOverview from "@/components/RequirementOverview";
 
 interface Project {
   id: number;
@@ -407,20 +408,9 @@ export default function IndexPage() {
                 {/* Planning Stage */}
                 <Card className="border-t-4 border-t-primary">
                   <CardHeader className="pb-1">
-                    <h3 className="text-lg font-medium text-foreground">
-                      {t("pipeline.planning")}
-                    </h3>
-                    <Chip
-                      className="ml-2"
-                      color="primary"
-                      size="sm"
-                      variant="flat"
-                    >
-                      {
-                        projects.filter(
-                          (p) => p.status === "on-hold" || p.status === "todo",
-                        ).length
-                      }
+                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.planning")}</h3>
+                    <Chip size="sm" color="primary" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
+                      {projects.filter(p => p.status === "on-hold" || p.status === "todo").length}
                     </Chip>
                   </CardHeader>
                   <Divider />
@@ -444,21 +434,9 @@ export default function IndexPage() {
                 {/* In Progress Stage */}
                 <Card className="border-t-4 border-t-warning">
                   <CardHeader className="pb-1">
-                    <h3 className="text-lg font-medium text-foreground">
-                      {t("pipeline.inProgress")}
-                    </h3>
-                    <Chip
-                      className="ml-2"
-                      color="warning"
-                      size="sm"
-                      variant="flat"
-                    >
-                      {
-                        projects.filter(
-                          (p) =>
-                            p.status === "in-progress" || p.status === "active",
-                        ).length
-                      }
+                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.inProgress")}</h3>
+                    <Chip size="sm" color="warning" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
+                      {projects.filter(p => p.status === "in-progress" || p.status === "active").length}
                     </Chip>
                   </CardHeader>
                   <Divider />
@@ -482,22 +460,9 @@ export default function IndexPage() {
                 {/* Completed Stage */}
                 <Card className="border-t-4 border-t-success">
                   <CardHeader className="pb-1">
-                    <h3 className="text-lg font-medium text-foreground">
-                      {t("pipeline.completed")}
-                    </h3>
-                    <Chip
-                      className="ml-2"
-                      color="success"
-                      size="sm"
-                      variant="flat"
-                    >
-                      {
-                        projects.filter(
-                          (p) =>
-                            p.status === "completed" ||
-                            p.status === "cancelled",
-                        ).length
-                      }
+                    <h3 className="text-lg font-medium text-foreground">{t("pipeline.completed")}</h3>
+                    <Chip size="sm" color="success" variant="flat" className={language === "ar" ? "mr-2" : "ml-2"}>
+                      {projects.filter(p => p.status === "completed" || p.status === "cancelled").length}
                     </Chip>
                   </CardHeader>
                   <Divider />
@@ -520,14 +485,25 @@ export default function IndexPage() {
               </div>
             </div>
           </div>
-
-          {/* Side Column - Urgent Notifications */}
+          
+          {/* Side Column - Urgent Notifications and Requirement Overview */}
           <div className="lg:col-span-1">
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {t("dashboard.updates")}
-              </h2>
-              <UrgentNotifications maxNotifications={5} useMockData={true} />
+            <div className="space-y-6">
+              {/* Updates Section */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-semibold text-foreground">
+                  {t("dashboard.updates")}
+                </h2>
+                <UrgentNotifications 
+                  maxNotifications={5} 
+                  useMockData={true}
+                />
+              </div>
+              
+              {/* Requirement Overview Section */}
+              <div className="space-y-4">
+                <RequirementOverview useMockData={true} />
+              </div>
             </div>
           </div>
         </div>
