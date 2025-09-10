@@ -146,16 +146,7 @@ const AnimatedNavItem = ({
 
 // Project management specific nav items
 const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
-  const baseItems = [
-    { label: t("nav.dashboard"), href: "/" },
-    { label: t("nav.requirements"), href: "/requirements" },
-    {
-      label: t("nav.developmentRequirements"),
-      href: "/development-requirements",
-    },
-    { label: t("nav.timeline"), href: "/timeline" },
-    { label: t("nav.tasks"), href: "/tasks" },
-  ];
+  const baseItems = [{ label: t("nav.dashboard"), href: "/" }];
 
   const conditionalItems = [];
 
@@ -191,7 +182,18 @@ const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
     adminItems.push({ label: t("nav.departments"), href: "/departments" });
   }
 
-  return [...baseItems, ...conditionalItems, ...adminItems];
+  return [
+    ...baseItems,
+    ...conditionalItems,
+    { label: t("nav.requirements"), href: "/requirements" },
+    {
+      label: t("nav.developmentRequirements"),
+      href: "/development-requirements",
+    },
+    { label: t("nav.timeline"), href: "/timeline" },
+    { label: t("nav.tasks"), href: "/tasks" },
+    ...adminItems,
+  ];
 };
 
 export const Navbar = () => {
@@ -567,7 +569,7 @@ export const Navbar = () => {
                   {t("user.settings")}
                 </DropdownItem>
               </DropdownSection>
-              
+
               {/* Conditionally render admin section */}
               {isAdmin(currentUser) ? (
                 <DropdownSection showDivider title={t("user.administration")}>
@@ -599,7 +601,7 @@ export const Navbar = () => {
                   </DropdownItem>
                 </DropdownSection>
               ) : null}
-              
+
               <DropdownSection title={t("user.workspace")}>
                 <DropdownItem
                   key="departments"

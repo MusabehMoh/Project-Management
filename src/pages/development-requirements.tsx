@@ -5,41 +5,17 @@ import type {
 
 import React, { useState } from "react";
 
-import { Card, CardBody } from "@heroui/card";
+import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@heroui/table";
-import { Chip } from "@heroui/chip";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-} from "@heroui/dropdown";
+// ...existing code...
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-} from "@heroui/modal";
+// modal removed
 import { Spinner } from "@heroui/spinner";
+import { Chip } from "@heroui/chip";
 import {
   Search,
-  MoreVertical,
-  Edit,
-  Trash2,
   Calendar,
-  AlertCircle,
   Code,
 } from "lucide-react";
 import { RefreshIcon } from "@/components/icons";
@@ -50,157 +26,9 @@ import { useDevelopmentRequirements } from "@/hooks/useDevelopmentRequirements";
 
 import { GlobalPagination } from "@/components/GlobalPagination";
 
-// Form data type for editing requirements
-interface RequirementFormData {
-  name: string;
-  description: string;
-  priority: "low" | "medium" | "high" | "critical";
-  status: "draft" | "in_development" | "completed";
-}
-
-export default function DevelopmentRequirementsPage() {
+// RequirementCard component
+const RequirementCard = ({ requirement }: { requirement: ProjectRequirement }) => {
   const { t } = useLanguage();
-
-  const {
-    requirements,
-    loading,
-    error,
-    currentPage,
-    totalPages,
-    totalRequirements,
-    pageSize,
-    filters,
-    updateRequirement,
-    deleteRequirement,
-    updateFilters,
-    handlePageChange,
-  handlePageSizeChange,
-    clearError,
-    refreshData,
-  projects,
-  setProjectFilter,
-  } = useDevelopmentRequirements({
-    pageSize: 20,
-  });
-
-  // Modal states
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onOpenChange: onEditOpenChange,
-  } = useDisclosure();
-  const {
-    isOpen: isDeleteOpen,
-    onOpen: onDeleteOpen,
-    onOpenChange: onDeleteOpenChange,
-  } = useDisclosure();
-
-  // Form states
-  const [selectedRequirement, setSelectedRequirement] =
-    useState<ProjectRequirement | null>(null);
-  const [requirementToDelete, setRequirementToDelete] =
-    useState<ProjectRequirement | null>(null);
-  const [formData, setFormData] = useState<RequirementFormData>({
-    name: "",
-    description: "",
-    priority: "medium",
-    status: "in_development",
-  });
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
-
-  // Search and filter states
-  const [searchTerm, setSearchTerm] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState<string>("");
-
-  // Update filters when search/filter states change (with debouncing)
-  React.useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const newFilters = {
-        ...(searchTerm && { search: searchTerm }),
-        ...(priorityFilter && { priority: priorityFilter }),
-      };
-
-      updateFilters(newFilters);
-    }, 300); // 300ms debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, priorityFilter, updateFilters]);
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      errors.name = t("requirements.validation.nameRequired");
-    }
-
-    if (!formData.description.trim()) {
-      errors.description = t("requirements.validation.descriptionRequired");
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      priority: "medium",
-      status: "in_development",
-    });
-    setValidationErrors({});
-    setSelectedRequirement(null);
-  };
-
-  const handleEditRequirement = (requirement: ProjectRequirement) => {
-    setSelectedRequirement(requirement);
-    setFormData({
-      name: requirement.name,
-      description: requirement.description,
-      priority: requirement.priority,
-      status:
-        requirement.status === "in-development"
-          ? "in_development"
-          : (requirement.status as "draft" | "in_development" | "completed"),
-    });
-    setValidationErrors({});
-    onEditOpen();
-  };
-
-  const handleDeleteRequirement = (requirement: ProjectRequirement) => {
-    setRequirementToDelete(requirement);
-    onDeleteOpen();
-  };
-
-  const handleSaveRequirement = async () => {
-    if (!validateForm() || !selectedRequirement) return;
-
-    try {
-      await updateRequirement(selectedRequirement.id, {
-        ...formData,
-        id: selectedRequirement.id,
-      });
-
-      resetForm();
-      onEditOpenChange();
-    } catch {
-      // Error handled by hook
-    }
-  };
-
-  const confirmDelete = async () => {
-    if (requirementToDelete) {
-      try {
-        await deleteRequirement(requirementToDelete.id);
-        setRequirementToDelete(null);
-        onDeleteOpenChange();
-      } catch {
-        // Error handled by hook
-      }
-    }
-  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -220,6 +48,7 @@ export default function DevelopmentRequirementsPage() {
       case "draft":
         return "default";
       case "in_development":
+      case "in-development":
         return "secondary";
       case "completed":
         return "success";
@@ -235,6 +64,115 @@ export default function DevelopmentRequirementsPage() {
       day: "numeric",
     });
   };
+
+  return (
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start w-full gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-foreground truncate">
+              {requirement.name}
+            </h3>
+            <p className="text-sm text-default-500 line-clamp-2 mt-1">
+              {requirement.project?.applicationName || "N/A"}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 items-end flex-shrink-0">
+            <Chip
+              color={getPriorityColor(requirement.priority)}
+              size="sm"
+              variant="flat"
+            >
+              {t(`requirements.${requirement.priority}`)}
+            </Chip>
+            <Chip
+              color={getStatusColor(requirement.status)}
+              size="sm"
+              variant="flat"
+            >
+              {t(`requirements.${requirement.status.replace("-", "")}`)}
+            </Chip>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardBody className="pt-0">
+        <div className="space-y-4">
+          <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
+            <p className="text-sm line-clamp-4">{requirement.description}</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-default-400" />
+            <span className="text-sm">
+              {formatDate(requirement.expectedCompletionDate)}
+            </span>
+          </div>
+
+          {/* actions removed */}
+        </div>
+      </CardBody>
+    </Card>
+  );
+};
+
+// Form data type for editing requirements
+interface RequirementFormData {
+  name: string;
+  description: string;
+  priority: "low" | "medium" | "high" | "critical";
+  status: "draft" | "in_development" | "completed";
+}
+
+export default function DevelopmentRequirementsPage() {
+  const { t } = useLanguage();
+  
+  // Grid-only view
+
+  const {
+    requirements,
+    loading,
+    error,
+    currentPage,
+    totalPages,
+    totalRequirements,
+    pageSize,
+    filters,
+  // updateRequirement, deleteRequirement removed (read-only grid)
+    updateFilters,
+    handlePageChange,
+    handlePageSizeChange,
+    clearError,
+    refreshData,
+    projects,
+    setProjectFilter,
+  } = useDevelopmentRequirements({
+    pageSize: 20,
+  });
+
+  // edit/delete removed; grid is read-only
+
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState<string>("");
+
+  // Update filters when search/filter states change (with debouncing)
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const newFilters = {
+        ...(searchTerm && { search: searchTerm }),
+        ...(priorityFilter && { priority: priorityFilter }),
+      };
+
+      updateFilters(newFilters);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, priorityFilter, updateFilters]);
+
+  // edit/delete handlers removed - grid is read-only
+
+  // (Helpers are defined within RequirementCard where needed)
 
   if (loading && requirements.length === 0) {
     return (
@@ -328,7 +266,9 @@ export default function DevelopmentRequirementsPage() {
                 <SelectItem key="low">{t("requirements.low")}</SelectItem>
               </Select>
 
-              {/* Page size selector (like projects page) */}
+              {/* Grid-only view (no toggle) */}
+                
+              {/* Page size selector */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-default-600">{t("common.show")}</span>
                 <Select
@@ -347,6 +287,7 @@ export default function DevelopmentRequirementsPage() {
                 </Select>
                 <span className="text-sm text-default-600">{t("pagination.perPage")}</span>
               </div>
+              
               {/* Reset filters button */}
               <div>
                 <Button
@@ -371,10 +312,10 @@ export default function DevelopmentRequirementsPage() {
           </CardBody>
         </Card>
 
-        {/* Requirements Table */}
-        <Card>
-          <CardBody className="p-0">
-            {requirements.length === 0 ? (
+        {/* Requirements Content */}
+        {requirements.length === 0 ? (
+          <Card>
+            <CardBody>
               <div className="text-center py-12">
                 <div className="flex flex-col items-center space-y-4">
                   <div className="w-24 h-24 bg-default-100 rounded-full flex items-center justify-center">
@@ -390,261 +331,41 @@ export default function DevelopmentRequirementsPage() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <Table aria-label="Development requirements table">
-                <TableHeader>
-                  <TableColumn>{t("requirements.requirementName")}</TableColumn>
-                  <TableColumn>{t("requirements.project")}</TableColumn>
-                  <TableColumn>{t("requirements.priority")}</TableColumn>
-                  <TableColumn>{t("requirements.status")}</TableColumn>
-                  <TableColumn>
-                    {t("requirements.expectedCompletion")}
-                  </TableColumn>
-                  <TableColumn align="center">
-                    {t("common.actions")}
-                  </TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {requirements.map((requirement) => (
-                    <TableRow key={requirement.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{requirement.name}</div>
-                          <div className="text-sm text-default-500 line-clamp-2">
-                            {requirement.description}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {requirement.project?.applicationName || "N/A"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          color={getPriorityColor(requirement.priority)}
-                          size="sm"
-                          variant="flat"
-                        >
-                          {t(`requirements.${requirement.priority}`)}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          color={getStatusColor(requirement.status)}
-                          size="sm"
-                          variant="flat"
-                        >
-                          {t(`requirements.${requirement.status.replace("-", "")}`)}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-default-400" />
-                          <span>
-                            {formatDate(requirement.expectedCompletionDate)}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button isIconOnly size="sm" variant="light">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownTrigger>
-                          <DropdownMenu>
-                            <DropdownItem
-                              key="edit"
-                              startContent={<Edit className="w-4 h-4" />}
-                              onPress={() => handleEditRequirement(requirement)}
-                            >
-                              {t("common.edit")}
-                            </DropdownItem>
-                            <DropdownItem
-                              key="delete"
-                              className="text-danger"
-                              color="danger"
-                              startContent={<Trash2 className="w-4 h-4" />}
-                              onPress={() =>
-                                handleDeleteRequirement(requirement)
-                              }
-                            >
-                              {t("common.delete")}
-                            </DropdownItem>
-                          </DropdownMenu>
-                        </Dropdown>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
+        ) : (
+          <>
+            {/* Grid View */}
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              style={{ alignItems: "start" }}
+            >
+              {requirements.map((requirement) => (
+                <RequirementCard key={requirement.id} requirement={requirement} />
+              ))}
+            </div>
+            
+            {/* Grid-only UI (list view removed) */}
+          </>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <GlobalPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            totalItems={totalRequirements}
-            pageSize={pageSize}
-            isLoading={loading}
-            showInfo={true}
-          />
+          <div className="mt-8">
+            <GlobalPagination
+              currentPage={currentPage}
+              isLoading={loading}
+              pageSize={pageSize}
+              showInfo={true}
+              totalItems={totalRequirements}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
         )}
       </div>
 
-      {/* Edit Modal */}
-      <Modal
-        isOpen={isEditOpen}
-        onOpenChange={onEditOpenChange}
-        size="2xl"
-        scrollBehavior="inside"
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>
-                {t("requirements.editRequirement")}
-              </ModalHeader>
-              <ModalBody>
-                <div className="space-y-4">
-                  <Input
-                    label={t("requirements.requirementName")}
-                    placeholder={t("requirements.requirementNamePlaceholder")}
-                    value={formData.name}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, name: value })
-                    }
-                    isInvalid={!!validationErrors.name}
-                    errorMessage={validationErrors.name}
-                    isRequired
-                  />
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      {t("requirements.requirementDescription")} *
-                    </label>
-                    <textarea
-                      className="w-full p-3 border border-default-200 rounded-lg resize-none"
-                      rows={4}
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
-                      placeholder={t("requirements.requirementDescriptionPlaceholder")}
-                    />
-                    {validationErrors.description && (
-                      <p className="text-tiny text-danger">
-                        {validationErrors.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <Select
-                    label={t("requirements.priority")}
-                    placeholder={t("requirements.selectPriority")}
-                    selectedKeys={[formData.priority]}
-                    onSelectionChange={(keys) =>
-                      setFormData({
-                        ...formData,
-                        priority: Array.from(keys)[0] as any,
-                      })
-                    }
-                    isRequired
-                  >
-                    <SelectItem key="high">{t("requirements.high")}</SelectItem>
-                    <SelectItem key="medium">
-                      {t("requirements.medium")}
-                    </SelectItem>
-                    <SelectItem key="low">{t("requirements.low")}</SelectItem>
-                  </Select>
-
-                  <Select
-                    label={t("requirements.status")}
-                    placeholder={t("requirements.selectStatus")}
-                    selectedKeys={[formData.status]}
-                    onSelectionChange={(keys) =>
-                      setFormData({
-                        ...formData,
-                        status: Array.from(keys)[0] as any,
-                      })
-                    }
-                    isRequired
-                  >
-                    <SelectItem key="draft">{t("requirements.draft")}</SelectItem>
-                    <SelectItem key="in_development">
-                      {t("requirements.inDevelopment")}
-                    </SelectItem>
-                    <SelectItem key="completed">
-                      {t("requirements.completed")}
-                    </SelectItem>
-                  </Select>
-                </div>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  {t("requirements.cancel")}
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={handleSaveRequirement}
-                  isLoading={loading}
-                >
-                  {t("requirements.save")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal isOpen={isDeleteOpen} onOpenChange={onDeleteOpenChange}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-danger" />
-                  {t("requirements.confirmDelete")}
-                </div>
-              </ModalHeader>
-              <ModalBody>
-                <p>{t("requirements.deleteConfirmMessage")}</p>
-                {requirementToDelete && (
-                  <div className="p-3 bg-default-100 rounded-lg">
-                    <div className="font-medium">
-                      {requirementToDelete.name}
-                    </div>
-                    <div className="text-sm text-default-500">
-                      {requirementToDelete.description}
-                    </div>
-                  </div>
-                )}
-                <p className="text-sm text-default-500">
-                  {t("requirements.actionCannotBeUndone")}
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  {t("common.cancel")}
-                </Button>
-                <Button
-                  color="danger"
-                  onPress={confirmDelete}
-                  isLoading={loading}
-                >
-                  {t("common.delete")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+  {/* edit/delete modals removed */}
     </DefaultLayout>
   );
 }
