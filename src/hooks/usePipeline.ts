@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { pipelineService, type PipelineProject, type PipelineStats } from "@/services/api/pipelineService";
+import { pipelineService, type PipelineProject } from "@/services/api/pipelineService";
 
 interface UsePipelineReturn {
   planning: PipelineProject[];
   inProgress: PipelineProject[];
   completed: PipelineProject[];
-  stats: PipelineStats;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -15,7 +14,6 @@ export const usePipeline = (): UsePipelineReturn => {
   const [planning, setPlanning] = useState<PipelineProject[]>([]);
   const [inProgress, setInProgress] = useState<PipelineProject[]>([]);
   const [completed, setCompleted] = useState<PipelineProject[]>([]);
-  const [stats, setStats] = useState<PipelineStats>({ planning: 0, inProgress: 0, completed: 0 });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +28,6 @@ export const usePipeline = (): UsePipelineReturn => {
         setPlanning(response.data.planning);
         setInProgress(response.data.inProgress);
         setCompleted(response.data.completed);
-        setStats(response.data.stats);
       } else {
         setError(response.message || "Failed to fetch pipeline data");
       }
@@ -50,7 +47,6 @@ export const usePipeline = (): UsePipelineReturn => {
     planning,
     inProgress,
     completed,
-    stats,
     loading,
     error,
     refetch: fetchPipelineData,

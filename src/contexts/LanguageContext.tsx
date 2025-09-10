@@ -74,6 +74,7 @@ const translations = {
 
     // Common
     "common.owner": "Owner",
+    "common.lastActivity": "Last Activity",
     "common.tryAgainLater": "Please try again later",
     
     // Requirement Overview
@@ -1017,6 +1018,7 @@ const translations = {
 
     // Common
     "common.owner": "المالك",
+    "common.lastActivity": "آخر نشاط",
     "common.tryAgainLater": "يرجى المحاولة مرة أخرى لاحقاً",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",

@@ -5,32 +5,11 @@ import { Divider } from "@heroui/divider";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Spinner } from "@heroui/spinner";
 import { Progress } from "@heroui/progress";
+import { Button } from "@heroui/button";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePipeline } from "@/hooks/usePipeline";
 import type { PipelineProject } from "@/services/api/pipelineService";
-
-// Helper function to get priority color
-const getPriorityColor = (priority: string) => {
-  switch (priority.toLowerCase()) {
-    case "high":
-    case "critical":
-      return "danger";
-    case "medium":
-      return "warning";
-    case "low":
-      return "success";
-    default:
-      return "default";
-  }
-};
-
-// Helper function to get progress color
-const getProgressColor = (progress: number) => {
-  if (progress >= 80) return "success";
-  if (progress >= 50) return "primary";
-  if (progress >= 25) return "warning";
-  return "danger";
-};
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -45,53 +24,84 @@ const formatDate = (dateString: string) => {
 // Project card component
 const ProjectCard: React.FC<{ project: PipelineProject }> = ({ project }) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  const handleViewRequirements = () => {
+    navigate(`/requirements/${project.id}`);
+  };
+
+  // Calculate completion percentage
+  const completionPercentage = project.requirementsCount > 0 
+    ? Math.round((project.completedRequirements / project.requirementsCount) * 100) 
+    : 0;
 
   return (
-    <Card className="mb-3 shadow-sm hover:shadow-md transition-shadow duration-200 border border-default-200">
+    <Card 
+      className="mb-3 shadow-sm hover:shadow-md transition-shadow duration-200 border border-default-200 cursor-pointer" 
+      isPressable
+      onPress={handleViewRequirements}
+    >
       <CardBody className="p-4">
         <div className="space-y-3">
-          {/* Header with title and priority */}
+          {/* Header with title */}
           <div className="flex justify-between items-start gap-2">
             <h4 className="font-semibold text-sm text-foreground leading-tight flex-1">
               {project.applicationName}
             </h4>
-            <Chip
-              size="sm"
-              variant="flat"
-              color={getPriorityColor(project.priority)}
-              className="shrink-0"
-            >
-              {project.priority}
-            </Chip>
           </div>
 
-          {/* Project owner */}
-          <p className="text-xs text-default-600 truncate">
-            <span className="font-medium">{t("common.owner")}:</span> {project.projectOwner}
-          </p>
+          {/* Project owner and unit */}
+          <div className="space-y-1">
+            <p className="text-xs text-default-600 truncate">
+              <span className="font-medium">{t("common.owner")}:</span> {project.projectOwner}
+            </p>
+            <p className="text-xs text-default-500 truncate">
+              {project.owningUnit}
+            </p>
+          </div>
 
-          {/* Progress bar */}
+          {/* Requirements Info */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="text-center">
+              <div className="text-lg font-bold text-primary">
+                {project.requirementsCount || 0}
+              </div>
+              <div className="text-xs text-default-500">
+                {t("requirements.requirementsCount")}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-success">
+                {project.completedRequirements || 0}
+              </div>
+              <div className="text-xs text-default-500">
+                {t("requirements.completedRequirements")}
+              </div>
+            </div>
+          </div>
+
+          {/* Requirements progress */}
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-default-600">{t("common.progress")}</span>
-              <span className="font-medium text-foreground">{project.progress}%</span>
+              <span className="font-medium text-foreground">{completionPercentage}%</span>
             </div>
             <Progress
               size="sm"
-              value={project.progress}
-              color={getProgressColor(project.progress)}
+              value={completionPercentage}
+              color={completionPercentage >= 80 ? "success" : completionPercentage >= 50 ? "primary" : "warning"}
               className="w-full"
-              aria-label={`Progress: ${project.progress}%`}
+              aria-label={`Requirements completion: ${completionPercentage}%`}
             />
           </div>
 
-          {/* Due date and budget */}
+          {/* Last activity and action */}
           <div className="flex justify-between items-center text-xs">
             <span className="text-default-500">
-              {t("common.due")}: {formatDate(project.expectedCompletionDate)}
+              {t("common.lastActivity")}: {formatDate(project.lastActivity)}
             </span>
-            <span className="font-medium text-primary">
-              ${project.budget.toLocaleString()}
+            <span className="text-primary font-medium">
+              {t("requirements.viewRequirements")}
             </span>
           </div>
         </div>
@@ -103,11 +113,10 @@ const ProjectCard: React.FC<{ project: PipelineProject }> = ({ project }) => {
 // Pipeline stage component
 const PipelineStage: React.FC<{
   title: string;
-  count: number;
   projects: PipelineProject[];
   color: "primary" | "warning" | "success";
   borderColor: string;
-}> = ({ title, count, projects, color, borderColor }) => {
+}> = ({ title, projects, color, borderColor }) => {
   const { t, language } = useLanguage();
 
   return (
@@ -121,7 +130,7 @@ const PipelineStage: React.FC<{
             variant="flat" 
             className={language === "ar" ? "mr-2" : "ml-2"}
           >
-            {count}
+            {projects.length}
           </Chip>
         </div>
       </CardHeader>
@@ -148,7 +157,7 @@ const PipelineStage: React.FC<{
 // Main pipeline component
 const ProjectPipeline: React.FC = () => {
   const { t } = useLanguage();
-  const { planning, inProgress, completed, stats, loading, error } = usePipeline();
+  const { planning, inProgress, completed, loading, error } = usePipeline();
 
   if (loading) {
     return (
@@ -169,47 +178,22 @@ const ProjectPipeline: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* Pipeline overview stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card className="bg-primary-50 border border-primary-200">
-          <CardBody className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{stats.planning}</div>
-            <div className="text-sm text-primary-600">{t("pipeline.planning")}</div>
-          </CardBody>
-        </Card>
-        <Card className="bg-warning-50 border border-warning-200">
-          <CardBody className="p-4 text-center">
-            <div className="text-2xl font-bold text-warning">{stats.inProgress}</div>
-            <div className="text-sm text-warning-600">{t("pipeline.inProgress")}</div>
-          </CardBody>
-        </Card>
-        <Card className="bg-success-50 border border-success-200">
-          <CardBody className="p-4 text-center">
-            <div className="text-2xl font-bold text-success">{stats.completed}</div>
-            <div className="text-sm text-success-600">{t("pipeline.completed")}</div>
-          </CardBody>
-        </Card>
-      </div>
-
       {/* Pipeline stages */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <PipelineStage
           title={t("pipeline.planning")}
-          count={stats.planning}
           projects={planning}
           color="primary"
           borderColor="border-t-primary"
         />
         <PipelineStage
           title={t("pipeline.inProgress")}
-          count={stats.inProgress}
           projects={inProgress}
           color="warning"
           borderColor="border-t-warning"
         />
         <PipelineStage
           title={t("pipeline.completed")}
-          count={stats.completed}
           projects={completed}
           color="success"
           borderColor="border-t-success"
