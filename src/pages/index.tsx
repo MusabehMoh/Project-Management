@@ -28,6 +28,7 @@ import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UrgentNotifications from "@/components/UrgentNotifications";
 import RequirementOverview from "@/components/RequirementOverview";
+import TeamWorkloadPerformance from "@/components/TeamWorkloadPerformanceNew";
 
 interface Project {
   id: number;
@@ -503,6 +504,11 @@ export default function IndexPage() {
               {/* Requirement Overview Section */}
               <div className="space-y-4">
                 <RequirementOverview useMockData={true} />
+              </div>
+              
+              {/* Team Workload Performance Section */}
+              <div className="space-y-4">
+                <TeamWorkloadPerformance />
               </div>
             </div>
           </div>

@@ -22,6 +22,7 @@ export { DepartmentService } from "./departmentService";
 export { ProjectDetailsApiService } from "./projectDetailsService";
 export { lookupService } from "./lookupService";
 export { membersTasksService } from "./membersTasksService";
+export { teamWorkloadService } from "./teamWorkloadService";
 
 // Export the service instances
 export const projectService = projectsApi;

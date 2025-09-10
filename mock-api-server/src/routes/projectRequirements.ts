@@ -68,3 +68,11 @@ projectRequirementRoutes.get(
     projectRequirementsController,
   ),
 );
+
+// GET /api/project-requirements/team-workload-performance - Get team workload and performance metrics
+projectRequirementRoutes.get(
+  "/team-workload-performance",
+  projectRequirementsController.getTeamWorkloadPerformance.bind(
+    projectRequirementsController,
+  ),
+);

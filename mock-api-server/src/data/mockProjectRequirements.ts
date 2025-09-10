@@ -260,6 +260,81 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       },
     ],
   },
+  {
+    id: 6,
+    projectId: 1,
+    name: "Email Notification System",
+    description:
+      "Implement automated email notifications for various user actions and system events.",
+    priority: "medium",
+    type: "new",
+    expectedCompletionDate: "2025-05-01",
+    status: "completed",
+    createdAt: "2025-01-20T11:00:00Z",
+    updatedAt: "2025-03-01T15:00:00Z",
+    createdBy: 3,
+    attachments: []
+  },
+  {
+    id: 7,
+    projectId: 2,
+    name: "Transaction History Export",
+    description:
+      "Allow users to export their transaction history in multiple formats (PDF, CSV, Excel).",
+    priority: "low",
+    type: "change request",
+    expectedCompletionDate: "2025-07-01",
+    status: "draft",
+    createdAt: "2025-02-01T09:30:00Z",
+    updatedAt: "2025-02-01T09:30:00Z",
+    createdBy: 4,
+    attachments: []
+  },
+  {
+    id: 8,
+    projectId: 3,
+    name: "Inventory Management Module",
+    description:
+      "Create a comprehensive inventory tracking and management system with real-time updates.",
+    priority: "high",
+    type: "new",
+    expectedCompletionDate: "2025-08-15",
+    status: "in-development",
+    createdAt: "2025-02-10T14:00:00Z",
+    updatedAt: "2025-03-10T16:00:00Z",
+    createdBy: 5,
+    attachments: []
+  },
+  {
+    id: 9,
+    projectId: 1,
+    name: "Multi-language Support",
+    description:
+      "Add support for multiple languages including Arabic, English, and French.",
+    priority: "medium",
+    type: "change request",
+    expectedCompletionDate: "2025-06-30",
+    status: "pending",
+    createdAt: "2025-02-15T10:45:00Z",
+    updatedAt: "2025-02-20T11:00:00Z",
+    createdBy: 6,
+    attachments: []
+  },
+  {
+    id: 10,
+    projectId: 2,
+    name: "Account Balance Alerts",
+    description:
+      "Implement configurable alerts for low account balances and unusual transactions.",
+    priority: "high",
+    type: "new",
+    expectedCompletionDate: "2025-04-15",
+    status: "completed",
+    createdAt: "2025-01-25T13:20:00Z",
+    updatedAt: "2025-03-25T17:30:00Z",
+    createdBy: 7,
+    attachments: []
+  }
 ];
 
 export const mockRequirementAttachments: ProjectRequirementAttachment[] = [
