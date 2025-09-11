@@ -9,8 +9,7 @@ import TimelineEditModal, {
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimelineHelpers } from "@/hooks/useTimelineHelpers";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { hasPermission } from "@/utils/permissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   Timeline,
   Sprint,
@@ -48,7 +47,7 @@ export default function TimelineDetailsPanel({
   loading = false,
 }: TimelineDetailsPanelProps) {
   const { t, direction } = useLanguage();
-  const { user: currentUser } = useCurrentUser();
+  const { hasPermission } = usePermissions();
   const {
     getStatusColor,
     getProgressColor,
@@ -243,7 +242,7 @@ export default function TimelineDetailsPanel({
         </div>
       </div>
 
-      {hasPermission(currentUser, {
+      {hasPermission({
         actions: ["timelines.update"],
       }) && (
         <Button
@@ -334,7 +333,7 @@ export default function TimelineDetailsPanel({
           )}
         </div>
 
-        {hasPermission(currentUser, {
+        {hasPermission({
           actions: ["sprints.update"],
         }) && (
           <Button
@@ -482,7 +481,7 @@ export default function TimelineDetailsPanel({
           )}
         </div>
 
-        {hasPermission(currentUser, {
+        {hasPermission({
           actions: ["timelines.tasks.update"],
         }) && (
           <Button
@@ -599,7 +598,7 @@ export default function TimelineDetailsPanel({
           )}
         </div>
 
-        {hasPermission(currentUser, {
+        {hasPermission({
           actions: ["timelines.subtasks.update"],
         }) && (
           <Button

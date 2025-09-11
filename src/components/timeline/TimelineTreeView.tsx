@@ -31,8 +31,7 @@ import TimelineItemCreateModal, {
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimelineHelpers } from "@/hooks/useTimelineHelpers";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { hasPermission } from "@/utils/permissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   Timeline,
   Sprint,
@@ -106,7 +105,7 @@ export default function TimelineTreeView({
   loading = false,
 }: TimelineTreeViewProps) {
   const { t, direction } = useLanguage();
-  const { user: currentUser } = useCurrentUser();
+  const { hasPermission } = usePermissions();
   const containerRef = useRef<HTMLDivElement>(null);
   // Some backends may omit treeId immediately after creation; ensure a stable fallback
   const safeTimelineTreeId = useMemo(() => {
@@ -836,7 +835,7 @@ export default function TimelineTreeView({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {hasPermission(currentUser, { actions: ["timelines.update"] }) && (
+          {hasPermission({ actions: ["timelines.update"] }) && (
             <Button
               color="default"
               size="sm"
@@ -849,7 +848,7 @@ export default function TimelineTreeView({
               {t("timeline.treeView.timelineLabel")}
             </Button>
           )}
-          {hasPermission(currentUser, { actions: ["sprints.create"] }) && (
+          {hasPermission({ actions: ["sprints.create"] }) && (
             <Button
               color="primary"
               isLoading={loading}
@@ -945,7 +944,7 @@ export default function TimelineTreeView({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {hasPermission(currentUser, { actions: ["timelines.tasks.create"] }) && (
+            {hasPermission({ actions: ["timelines.tasks.create"] }) && (
               <Button
                 color="primary"
                 isLoading={loading}
@@ -958,8 +957,8 @@ export default function TimelineTreeView({
                 {t("timeline.treeView.addTask")}
               </Button>
             )}
-            {(hasPermission(currentUser, { actions: ["sprints.update"] }) ||
-              hasPermission(currentUser, { actions: ["sprints.delete"] })) && (
+            {(hasPermission({ actions: ["sprints.update"] }) ||
+              hasPermission({ actions: ["sprints.delete"] })) && (
               <Dropdown>
                 <DropdownTrigger>
                   <Button
@@ -980,12 +979,12 @@ export default function TimelineTreeView({
                     }
                   }}
                 >
-                  {hasPermission(currentUser, { actions: ["sprints.update"] }) && (
+                  {hasPermission({ actions: ["sprints.update"] }) && (
                     <DropdownItem key="edit" startContent={<EditIcon />}>
                       {t("timeline.treeView.editSprint")}
                     </DropdownItem>
                   )}
-                  {hasPermission(currentUser, { actions: ["sprints.delete"] }) && (
+                  {hasPermission({ actions: ["sprints.delete"] }) && (
                     <DropdownItem
                       key="delete"
                       className="text-danger"
@@ -1060,7 +1059,7 @@ export default function TimelineTreeView({
                   {t("timeline.moveTask.quickMoveOptions")}
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
-                  {hasPermission(currentUser, {
+                  {hasPermission({
                     actions: ["timelines.tasks.move"],
                   }) && (
                     <Button
@@ -1073,7 +1072,7 @@ export default function TimelineTreeView({
                       +1 {t("timeline.moveTask.movePlus1Day")}
                     </Button>
                   )}
-                  {hasPermission(currentUser, {
+                  {hasPermission({
                     actions: ["timelines.tasks.move"],
                   }) && (
                     <Button
@@ -1086,7 +1085,7 @@ export default function TimelineTreeView({
                       -1 {t("timeline.moveTask.moveMinus1Day")}
                     </Button>
                   )}
-                  {hasPermission(currentUser, {
+                  {hasPermission({
                     actions: ["timelines.tasks.move"],
                   }) && (
                     <Button
@@ -1099,7 +1098,7 @@ export default function TimelineTreeView({
                       +7 {t("timeline.moveTask.movePlus1Week")}
                     </Button>
                   )}
-                  {hasPermission(currentUser, {
+                  {hasPermission({
                     actions: ["timelines.tasks.move"],
                   }) && (
                     <Button
@@ -1272,21 +1271,21 @@ export default function TimelineTreeView({
                 }
               }}
             >
-              {hasPermission(currentUser, {
+              {hasPermission({
                 actions: ["timelines.tasks.update"],
               }) && (
                 <DropdownItem key="edit" startContent={<EditIcon />}>
                   {t("timeline.treeView.editTask")}
                 </DropdownItem>
               )}
-              {hasPermission(currentUser, {
+              {hasPermission({
                 actions: ["timelines.tasks.move"],
               }) && (
                 <DropdownItem key="move" startContent={<MoveIcon />}>
                   {t("timeline.treeView.moveTaskToSprint")}
                 </DropdownItem>
               )}
-              {hasPermission(currentUser, {
+              {hasPermission({
                 actions: ["timelines.tasks.delete"],
               }) && (
                 <DropdownItem
@@ -1412,12 +1411,12 @@ export default function TimelineTreeView({
                 }
               }}
             >
-              {hasPermission(currentUser, { actions: ["subtasks.update"] }) && (
+              {hasPermission({ actions: ["subtasks.update"] }) && (
                 <DropdownItem key="edit" startContent={<EditIcon />}>
                   {t("timeline.treeView.editSubtask")}
                 </DropdownItem>
               )}
-              {hasPermission(currentUser, { actions: ["subtasks.delete"] }) && (
+              {hasPermission({ actions: ["subtasks.delete"] }) && (
                 <DropdownItem
                   key="delete"
                   className="text-danger"

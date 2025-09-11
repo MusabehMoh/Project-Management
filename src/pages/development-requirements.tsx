@@ -47,8 +47,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useDevelopmentRequirements } from "@/hooks/useDevelopmentRequirements";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { useTimeline } from "@/hooks/useTimeline";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { hasPermission } from "@/utils/permissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import { GlobalPagination } from "@/components/GlobalPagination";
@@ -98,14 +97,13 @@ const RequirementCard = ({
   onViewDetails,
   onCreateTask,
   onCreateTimeline,
-  currentUser,
 }: {
   requirement: ProjectRequirement;
   onViewDetails: (requirement: ProjectRequirement) => void;
   onCreateTask: (requirement: ProjectRequirement) => void;
   onCreateTimeline: (requirement: ProjectRequirement) => void;
-  currentUser: any;
 }) => {
+  const { hasPermission } = usePermissions();
   const { t } = useLanguage();
 
   // Using the formatDate function defined above
@@ -162,7 +160,7 @@ const RequirementCard = ({
 
         {/* Detail, Task, and Timeline Creation Buttons */}
         <div className="flex items-center pt-2 gap-2 mt-auto">
-          {hasPermission(currentUser, {
+          {hasPermission({
             actions: ["requirements.view"],
           }) && (
             <Button
@@ -179,7 +177,7 @@ const RequirementCard = ({
 
           {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
           {!requirement.timeline &&
-            hasPermission(currentUser, {
+            hasPermission({
               actions: requirement.task
                 ? ["requirements.tasks.update"]
                 : ["requirements.tasks.create"],
@@ -206,7 +204,7 @@ const RequirementCard = ({
 
           {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
           {!requirement.task &&
-            hasPermission(currentUser, {
+            hasPermission({
               actions: requirement.timeline
                 ? ["requirements.timelines.update"]
                 : ["requirements.timelines.create"],
@@ -247,7 +245,7 @@ const RequirementCard = ({
 export default function DevelopmentRequirementsPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { user: currentUser } = useCurrentUser();
+  const { hasPermission } = usePermissions();
 
   // Grid-only view
 
@@ -622,7 +620,6 @@ export default function DevelopmentRequirementsPage() {
               {requirements.map((requirement) => (
                 <RequirementCard
                   key={requirement.id}
-                  currentUser={currentUser}
                   requirement={requirement}
                   onCreateTask={openTaskModal}
                   onCreateTimeline={openTimelineModal}
@@ -795,7 +792,7 @@ export default function DevelopmentRequirementsPage() {
                                   </p>
                                 </div>
                               </div>
-                              {hasPermission(currentUser, {
+                              {hasPermission({
                                 actions: ["requirements.attachments.download"],
                               }) && (
                                 <Button
@@ -977,7 +974,7 @@ export default function DevelopmentRequirementsPage() {
                   >
                     {t("common.cancel")}
                   </Button>
-                  {hasPermission(currentUser, {
+                  {hasPermission({
                     actions: selectedRequirement?.task
                       ? ["requirements.tasks.update"]
                       : ["requirements.tasks.create"],
@@ -1000,7 +997,7 @@ export default function DevelopmentRequirementsPage() {
         </Modal>
 
         {/* Timeline Creation Modal */}
-        {hasPermission(currentUser, {
+        {hasPermission({
           actions: ["requirements.timelines.create"],
         }) && (
           <TimelineCreateModal

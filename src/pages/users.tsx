@@ -41,8 +41,7 @@ import {
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { hasPermission } from "@/utils/permissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   PlusIcon,
   EditIcon,
@@ -56,7 +55,7 @@ import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 
 export default function UsersPage() {
   const { t, language } = useLanguage();
-  const { user: currentUser } = useCurrentUser();
+  const { hasPermission } = usePermissions();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
@@ -497,7 +496,7 @@ export default function UsersPage() {
               </div>
             )}
             {/* Add User Button */}
-            {hasPermission(currentUser, { actions: ["users.create"] }) && (
+            {hasPermission({ actions: ["users.create"] }) && (
               <Button
                 className="w-full sm:w-auto"
                 color="primary"
@@ -598,10 +597,10 @@ export default function UsersPage() {
                         </Chip>
                       </TableCell>
                       <TableCell>
-                        {(hasPermission(currentUser, {
+                        {(hasPermission({
                           actions: ["users.update"],
                         }) ||
-                          hasPermission(currentUser, {
+                          hasPermission({
                             actions: ["users.delete"],
                           })) && (
                           <Dropdown>
@@ -616,7 +615,7 @@ export default function UsersPage() {
                               </Button>
                             </DropdownTrigger>
                             <DropdownMenu>
-                              {hasPermission(currentUser, {
+                              {hasPermission({
                                 actions: ["users.update"],
                               }) ? (
                                 <DropdownItem
@@ -630,7 +629,7 @@ export default function UsersPage() {
                                   {t("users.editUser")}
                                 </DropdownItem>
                               ) : null}
-                              {hasPermission(currentUser, {
+                              {hasPermission({
                                 actions: ["users.delete"],
                               }) ? (
                                 <DropdownItem

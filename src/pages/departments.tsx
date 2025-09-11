@@ -49,10 +49,12 @@ import {
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { useDepartments, useDepartmentMembers } from "@/hooks/useDepartments";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // Import test utility for debugging
 export default function DepartmentsPage() {
   const { t, language } = useLanguage();
+  const { hasPermission } = usePermissions();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
@@ -444,9 +446,13 @@ export default function DepartmentsPage() {
                       value={memberListSearchTerm}
                       onChange={(e) => setMemberListSearchTerm(e.target.value)}
                     />
-                    <Button color="primary" onPress={handleAddMember}>
-                      {t("departments.members.addMember")}
-                    </Button>
+                    {hasPermission({
+                      actions: ["departments.members.create"],
+                    }) && (
+                      <Button color="primary" onPress={handleAddMember}>
+                        {t("departments.members.addMember")}
+                      </Button>
+                    )}
                   </div>
 
                   {/* Members Table */}
@@ -510,15 +516,19 @@ export default function DepartmentsPage() {
                                   </Button>
                                 </DropdownTrigger>
                                 <DropdownMenu aria-label="Member actions">
-                                  <DropdownItem
-                                    key="remove"
-                                    className="text-danger"
-                                    color="danger"
-                                    startContent={<DeleteIcon size={16} />}
-                                    onPress={() => handleDeleteMember(member)}
-                                  >
-                                    {t("departments.members.removeMember")}
-                                  </DropdownItem>
+                                  {hasPermission({
+                                    actions: ["departments.members.delete"],
+                                  }) ? (
+                                    <DropdownItem
+                                      key="remove"
+                                      className="text-danger"
+                                      color="danger"
+                                      startContent={<DeleteIcon size={16} />}
+                                      onPress={() => handleDeleteMember(member)}
+                                    >
+                                      {t("departments.members.removeMember")}
+                                    </DropdownItem>
+                                  ) : null}
                                 </DropdownMenu>
                               </Dropdown>
                             </TableCell>

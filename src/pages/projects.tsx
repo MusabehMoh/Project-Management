@@ -39,8 +39,7 @@ import { addToast } from "@heroui/toast";
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { hasPermission } from "@/utils/permissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import { projectService } from "@/services/api";
 import {
   PlusIcon,
@@ -61,7 +60,7 @@ import { Project, ProjectFormData } from "@/types/project";
 
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
-  const { user: currentUser } = useCurrentUser();
+  const { hasPermission } = usePermissions();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
@@ -719,7 +718,7 @@ export default function ProjectsPage() {
           <p className="text-lg text-default-600">{t("projects.subtitle")}</p>
 
           <div className="flex gap-4 justify-center">
-            {hasPermission(currentUser, { actions: ["projects.create"] }) && (
+            {hasPermission({ actions: ["projects.create"] }) && (
               <Button
                 color="primary"
                 isDisabled={loading}
@@ -974,7 +973,7 @@ export default function ProjectsPage() {
                               </Button>
                             </DropdownTrigger>
                             <DropdownMenu aria-label="Project actions">
-                              {hasPermission(currentUser, {
+                              {hasPermission({
                                 actions: ["projects.update"],
                               }) ? (
                                 <DropdownItem
@@ -986,7 +985,7 @@ export default function ProjectsPage() {
                                 </DropdownItem>
                               ) : null}
 
-                              {hasPermission(currentUser, {
+                              {hasPermission({
                                 actions: ["projects.sendToAnylsis"],
                               }) ? (
                                 <DropdownItem
@@ -998,7 +997,7 @@ export default function ProjectsPage() {
                                 </DropdownItem>
                               ) : null}
 
-                              {hasPermission(currentUser, {
+                              {hasPermission({
                                 actions: ["projects.delete"],
                               }) ? (
                                 <DropdownItem

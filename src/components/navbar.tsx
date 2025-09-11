@@ -32,9 +32,8 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { SearchIcon } from "@/components/icons";
 import { GlobalSearchModal } from "@/components/GlobalSearchModal";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useNotifications } from "@/hooks/useNotifications";
-import { hasPermission, isAdmin } from "@/utils/permissions";
 // Import both logo versions
 import logoImageLight from "@/assets/ChatGPT Image Aug 13, 2025, 11_15_09 AM.png";
 import logoImageDark from "@/assets/whitemodlogo.png";
@@ -145,15 +144,20 @@ const AnimatedNavItem = ({
 };
 
 // Project management specific nav items
-const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
+const getProjectNavItems = (
+  t: (key: string) => string,
+  hasPermission: any,
+  isAdmin: any,
+  hasAnyRole: any,
+) => {
   const baseItems = [{ label: t("nav.dashboard"), href: "/" }];
 
   const conditionalItems = [];
 
   // Add projects link if user has admin role or project read permission
   if (
-    isAdmin(currentUser) ||
-    hasPermission(currentUser, {
+    isAdmin() ||
+    hasPermission({
       actions: ["projects.read"],
     })
   ) {
@@ -164,8 +168,8 @@ const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
 
   // Add users link if user has admin role or user read permission
   if (
-    isAdmin(currentUser) ||
-    hasPermission(currentUser, {
+    isAdmin() ||
+    hasPermission({
       actions: ["users.read"],
     })
   ) {
@@ -174,23 +178,40 @@ const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
 
   // Add departments link if user has admin role or department management permission
   if (
-    isAdmin(currentUser) ||
-    hasPermission(currentUser, {
+    isAdmin() ||
+    hasPermission({
       actions: ["Department Management", "Manage Departments"],
     })
   ) {
     adminItems.push({ label: t("nav.departments"), href: "/departments" });
   }
 
+  // Development Manager specific items
+  const developmentItems = [];
+
+  if (hasAnyRole(["Development Manager", "Administrator"])) {
+    developmentItems.push({
+      label: t("nav.developmentRequirements"),
+      href: "/development-requirements",
+    });
+    developmentItems.push({ label: t("nav.timeline"), href: "/timeline" });
+  }
+
+  // Requirements specific items
+  const requirementsItems = [];
+
+  if (hasAnyRole(["Administrator", "Analyst", "Analyst Department Manager"])) {
+    requirementsItems.push({
+      label: t("nav.requirements"),
+      href: "/requirements",
+    });
+  }
+
   return [
     ...baseItems,
     ...conditionalItems,
-    { label: t("nav.requirements"), href: "/requirements" },
-    {
-      label: t("nav.developmentRequirements"),
-      href: "/development-requirements",
-    },
-    { label: t("nav.timeline"), href: "/timeline" },
+    ...requirementsItems,
+    ...developmentItems,
     { label: t("nav.tasks"), href: "/tasks" },
     ...adminItems,
   ];
@@ -198,10 +219,21 @@ const getProjectNavItems = (t: (key: string) => string, currentUser: any) => {
 
 export const Navbar = () => {
   const { t } = useLanguage();
-  const { user: currentUser, loading: userLoading } = useCurrentUser();
+  const {
+    user: currentUser,
+    loading: userLoading,
+    hasPermission,
+    isAdmin,
+    hasAnyRole,
+  } = usePermissions();
   const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } =
     useNotifications();
-  const projectNavItems = getProjectNavItems(t, currentUser);
+  const projectNavItems = getProjectNavItems(
+    t,
+    hasPermission,
+    isAdmin,
+    hasAnyRole,
+  );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
@@ -571,7 +603,7 @@ export const Navbar = () => {
               </DropdownSection>
 
               {/* Conditionally render admin section */}
-              {isAdmin(currentUser) ? (
+              {isAdmin() ? (
                 <DropdownSection showDivider title={t("user.administration")}>
                   <DropdownItem
                     key="admin-users"

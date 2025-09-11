@@ -165,7 +165,7 @@ export const mockRoles = [
       },
       {
         id: 18,
-        name: "projects.requirements.view",
+        name: "requirements.view",
         categoryName: "Requirements Management",
         categoryType: "Requirements",
         description: "View project requirements",

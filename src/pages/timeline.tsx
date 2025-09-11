@@ -645,14 +645,14 @@ export default function TimelinePage() {
           </div>
 
           <div className="flex gap-2">
-            <Button
+            {/* <Button
               color="primary"
               isDisabled={loading}
               startContent={<PlusIcon />}
               onPress={onCreateOpen}
             >
               {t("timeline.newTimeline")}
-            </Button>
+            </Button> */}
             <Button
               startContent={<FilterIcon />}
               variant="bordered"
@@ -825,13 +825,13 @@ export default function TimelinePage() {
                       : t("timeline.noTimelinesGeneral")}
                   </p>
                 </div>
-                <Button
+                {/* <Button
                   color="primary"
                   startContent={<PlusIcon />}
                   onPress={onCreateOpen}
                 >
                   {t("timeline.createTimeline")}
-                </Button>
+                </Button> */}
               </div>
             </CardBody>
           </Card>

@@ -51,6 +51,7 @@ import { parseDate } from "@internationalized/date";
 
 import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { GlobalPagination } from "@/components/GlobalPagination";
 
@@ -102,6 +103,8 @@ export default function ProjectRequirementsPage() {
     projectId: projectId ? parseInt(projectId) : undefined,
     pageSize: 20,
   });
+
+  const { hasPermission } = usePermissions();
 
   // Modal states
   const {
@@ -523,15 +526,19 @@ export default function ProjectRequirementsPage() {
                 <SelectItem key="low">{t("requirements.low")}</SelectItem>
               </Select>
 
-              <Button
-                className="min-w-fit"
-                color="primary"
-                size="lg"
-                startContent={<Plus className="w-4 h-4" />}
-                onPress={handleCreateRequirement}
-              >
-                {t("requirements.addRequirement")}
-              </Button>
+              {hasPermission({
+                actions: ["requirements.create"],
+              }) ? (
+                <Button
+                  className="min-w-fit"
+                  color="primary"
+                  size="lg"
+                  startContent={<Plus className="w-4 h-4" />}
+                  onPress={handleCreateRequirement}
+                >
+                  {t("requirements.addRequirement")}
+                </Button>
+              ) : null}
             </div>
           </CardBody>
         </Card>
@@ -553,13 +560,17 @@ export default function ProjectRequirementsPage() {
                       {t("requirements.emptyState.description")}
                     </p>
                   </div>
-                  <Button
-                    color="primary"
-                    startContent={<Plus className="w-4 h-4" />}
-                    onPress={handleCreateRequirement}
-                  >
-                    {t("requirements.emptyState.action")}
-                  </Button>
+                  {hasPermission({
+                    actions: ["requirements.create"],
+                  }) ? (
+                    <Button
+                      color="primary"
+                      startContent={<Plus className="w-4 h-4" />}
+                      onPress={handleCreateRequirement}
+                    >
+                      {t("requirements.emptyState.action")}
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             ) : (
@@ -641,36 +652,50 @@ export default function ProjectRequirementsPage() {
                             </Button>
                           </DropdownTrigger>
                           <DropdownMenu>
-                            <DropdownItem
-                              key="edit"
-                              startContent={<Edit className="w-4 h-4" />}
-                              onPress={() => handleEditRequirement(requirement)}
-                            >
-                              {t("common.edit")}
-                            </DropdownItem>
-                            {requirement.status === "draft" ? (
+                            {hasPermission({
+                              actions: ["requirements.update"],
+                            }) ? (
                               <DropdownItem
-                                key="send"
-                                startContent={<Send className="w-4 h-4" />}
+                                key="edit"
+                                startContent={<Edit className="w-4 h-4" />}
                                 onPress={() =>
-                                  handleSendRequirement(requirement)
+                                  handleEditRequirement(requirement)
                                 }
                               >
-                                {t("requirements.sendToDevelopment")}
+                                {t("common.edit")}
                               </DropdownItem>
                             ) : null}
+                            {requirement.status === "draft" ? (
+                              hasPermission({
+                                actions: ["requirements.send"],
+                              }) ? (
+                                <DropdownItem
+                                  key="send"
+                                  startContent={<Send className="w-4 h-4" />}
+                                  onPress={() =>
+                                    handleSendRequirement(requirement)
+                                  }
+                                >
+                                  {t("requirements.sendToDevelopment")}
+                                </DropdownItem>
+                              ) : null
+                            ) : null}
                             {/* start development action removed */}
-                            <DropdownItem
-                              key="delete"
-                              className="text-danger"
-                              color="danger"
-                              startContent={<Trash2 className="w-4 h-4" />}
-                              onPress={() =>
-                                handleDeleteRequirement(requirement)
-                              }
-                            >
-                              {t("common.delete")}
-                            </DropdownItem>
+                            {hasPermission({
+                              actions: ["requirements.delete"],
+                            }) ? (
+                              <DropdownItem
+                                key="delete"
+                                className="text-danger"
+                                color="danger"
+                                startContent={<Trash2 className="w-4 h-4" />}
+                                onPress={() =>
+                                  handleDeleteRequirement(requirement)
+                                }
+                              >
+                                {t("common.delete")}
+                              </DropdownItem>
+                            ) : null}
                           </DropdownMenu>
                         </Dropdown>
                       </TableCell>
