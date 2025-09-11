@@ -861,12 +861,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   variant="bordered"
                 />
                 {!eventForm.isAllDay && (
-                  <TimeInput
-                    label={t("calendar.startTime")}
-                    value={eventForm.startTime}
-                    onChange={(time) => setEventForm({...eventForm, startTime: time})}
-                    isRequired
-                  />
+                  <div className="time-input-ltr">
+                    <TimeInput
+                      label={t("calendar.startTime")}
+                      value={eventForm.startTime}
+                      onChange={(time) => setEventForm({...eventForm, startTime: time})}
+                      isRequired
+                    />
+                  </div>
                 )}
               </div>
 
@@ -880,11 +882,13 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   variant="bordered"
                 />
                 {!eventForm.isAllDay && (
-                  <TimeInput
-                    label={t("calendar.endTime")}
-                    value={eventForm.endTime}
-                    onChange={(time) => setEventForm({...eventForm, endTime: time})}
-                  />
+                  <div className="time-input-ltr">
+                    <TimeInput
+                      label={t("calendar.endTime")}
+                      value={eventForm.endTime}
+                      onChange={(time) => setEventForm({...eventForm, endTime: time})}
+                    />
+                  </div>
                 )}
               </div>
             </div>
