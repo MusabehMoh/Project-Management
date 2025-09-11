@@ -76,6 +76,7 @@ const translations = {
     "common.owner": "Owner",
     "common.lastActivity": "Last Activity",
     "common.tryAgainLater": "Please try again later",
+    "common.projectManagement": "Project Management",
     
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
@@ -457,6 +458,11 @@ const translations = {
     "requirements.emptyState.description":
       "Start by adding your first requirement for this project",
     "requirements.emptyState.action": "Add First Requirement",
+    
+    // File Upload Keys
+    "requirements.uploadFiles": "Click to upload files",
+    "requirements.existingAttachments": "Existing Attachments",
+    "requirements.newFiles": "New Files",
 
     // Task Plan
     "taskPlan.title": "Task Plan",
@@ -1021,6 +1027,7 @@ const translations = {
     "common.owner": "المالك",
     "common.lastActivity": "آخر نشاط",
     "common.tryAgainLater": "يرجى المحاولة مرة أخرى لاحقاً",
+    "common.projectManagement": "إدارة المشاريع",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",
@@ -1402,6 +1409,11 @@ const translations = {
     "requirements.emptyState.title": "لا توجد متطلبات بعد",
     "requirements.emptyState.description": "ابدأ بإضافة أول متطلب لهذا المشروع",
     "requirements.emptyState.action": "إضافة أول متطلب",
+    
+    // File Upload Keys (Arabic)
+    "requirements.uploadFiles": "انقر لرفع الملفات",
+    "requirements.existingAttachments": "المرفقات الموجودة",
+    "requirements.newFiles": "الملفات الجديدة",
 
     // Task Plan
     "taskPlan.title": "خطة المهام",

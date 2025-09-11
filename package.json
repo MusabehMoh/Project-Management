@@ -8,6 +8,7 @@
     "dev:api": "cd mock-api-server && npm run dev",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:api\" --names \"Frontend,API\" --prefix-colors \"cyan,magenta\"",
     "build": "tsc && vite build",
+    "build:force": "vite build",
     "lint": "eslint --fix",
     "preview": "vite preview"
   },

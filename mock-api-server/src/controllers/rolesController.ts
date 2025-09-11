@@ -6,8 +6,8 @@ import { logger } from "../utils/logger.js";
 export const mockRoles = [
   {
     id: 1,
-  name: "System Administrator",
-  description: "Full system access and user management",
+    name: "Administrator",
+    description: "Full system access and user management",
     isActive: true,
     actions: [
       {

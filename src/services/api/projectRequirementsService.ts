@@ -7,6 +7,7 @@ import type {
   ProjectRequirementStats,
   CreateRequirementTaskRequest,
   RequirementTask,
+  ProjectRequirementAttachment,
 } from "@/types/projectRequirement";
 
 import { apiClient } from "./client";
@@ -24,6 +25,12 @@ const ENDPOINTS = {
   DEVELOPMENT_REQUIREMENTS: "/project-requirements/development-requirements",
   CREATE_REQUIREMENT_TASK: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/tasks`,
+  UPLOAD_ATTACHMENT: (requirementId: number) =>
+    `/project-requirements/requirements/${requirementId}/attachments`,
+  DELETE_ATTACHMENT: (requirementId: number, attachmentId: number) =>
+    `/project-requirements/requirements/${requirementId}/attachments/${attachmentId}`,
+  DOWNLOAD_ATTACHMENT: (requirementId: number, attachmentId: number) =>
+    `/project-requirements/requirements/${requirementId}/attachments/${attachmentId}/download`,
 };
 
 class ProjectRequirementsService {
@@ -249,6 +256,58 @@ class ProjectRequirementsService {
     );
 
     return result.data;
+  }
+
+  /**
+   * Upload attachments for a requirement
+   */
+  async uploadAttachments(
+    requirementId: number,
+    files: File[],
+  ): Promise<ProjectRequirementAttachment[]> {
+    // For mock API, we'll send file metadata instead of actual files
+    const fileData = files.map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    }));
+
+    const result = await apiClient.post<ProjectRequirementAttachment[]>(
+      ENDPOINTS.UPLOAD_ATTACHMENT(requirementId),
+      { files: fileData },
+    );
+
+    return result.data;
+  }
+
+  /**
+   * Delete an attachment from a requirement
+   */
+  async deleteAttachment(
+    requirementId: number,
+    attachmentId: number,
+  ): Promise<void> {
+    await apiClient.delete(
+      ENDPOINTS.DELETE_ATTACHMENT(requirementId, attachmentId),
+    );
+  }
+
+  /**
+   * Download an attachment
+   */
+  async downloadAttachment(
+    requirementId: number,
+    attachmentId: number,
+  ): Promise<Blob> {
+    const response = await fetch(
+      `/api${ENDPOINTS.DOWNLOAD_ATTACHMENT(requirementId, attachmentId)}`,
+    );
+    
+    if (!response.ok) {
+      throw new Error('Download failed');
+    }
+    
+    return response.blob();
   }
 }
 
