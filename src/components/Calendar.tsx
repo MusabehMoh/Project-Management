@@ -224,24 +224,24 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     
     // Validation
     if (!eventForm.title.trim()) {
-      setFormError("Event title is required");
+      setFormError(t("calendar.validation.titleRequired"));
       return;
     }
     
     if (!eventForm.startDate) {
-      setFormError("Start date is required");
+      setFormError(t("calendar.validation.startDateRequired"));
       return;
     }
 
     // Validate time if not all day
     if (!eventForm.isAllDay && !eventForm.startTime) {
-      setFormError("Start time is required");
+      setFormError(t("calendar.validation.startTimeRequired"));
       return;
     }
 
     // Validate end date and time if provided
     if (eventForm.endDate && eventForm.endDate.compare(eventForm.startDate) < 0) {
-      setFormError("End date cannot be before start date");
+      setFormError(t("calendar.validation.endDateBeforeStart"));
       return;
     }
 
@@ -251,7 +251,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         eventForm.endTime &&
         eventForm.endDate.compare(eventForm.startDate) === 0 && 
         eventForm.endTime.compare(eventForm.startTime!) <= 0) {
-      setFormError("End time must be after start time for same-day events");
+      setFormError(t("calendar.validation.endTimeBeforeStart"));
       return;
     }
 
@@ -300,7 +300,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       setShowCreateModal(false);
       resetForm();
     } else {
-      setFormError("Failed to save event. Please try again.");
+      setFormError(t("calendar.validation.saveFailed"));
     }
   };
 
@@ -660,7 +660,11 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         <Modal 
           isOpen={!!showEventDetails} 
           onClose={() => setShowEventDetails(null)}
-          size="2xl"
+          size="3xl"
+          classNames={{
+            base: "max-h-[60vh] max-w-[900px]",
+            body: "p-6"
+          }}
         >
           <ModalContent>
             <ModalHeader>
@@ -764,8 +768,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           setShowCreateModal(false);
           resetForm();
         }}
-        size="2xl"
+        size="5xl"
         scrollBehavior="inside"
+        classNames={{
+          base: "max-h-[90vh] max-w-[95vw] lg:max-w-[1200px]",
+          body: "p-0",
+          header: "border-b border-divider px-6 py-4",
+          footer: "border-t border-divider px-6 py-4"
+        }}
       >
         <ModalContent>
           <ModalHeader>
@@ -773,158 +783,198 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               {editingEvent ? t("calendar.editEvent") : t("calendar.addEvent")}
             </h3>
           </ModalHeader>
-          <ModalBody className="space-y-4">
-            {/* Title */}
-            <Input
-              label={t("calendar.eventTitle")}
-              placeholder={t("calendar.titlePlaceholder")}
-              value={eventForm.title}
-              onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
-              isRequired
-            />
+          <ModalBody className="px-6 py-6">
+            <div className="space-y-6">
+              {/* Title and Description Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Input
+                  label={t("calendar.eventTitle")}
+                  placeholder={t("calendar.titlePlaceholder")}
+                  value={eventForm.title}
+                  onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
+                  isRequired
+                  classNames={{
+                    label: "text-foreground-600",
+                    input: "text-foreground"
+                  }}
+                />
+                <Input
+                  label={t("calendar.description")}
+                  placeholder={t("calendar.descriptionPlaceholder")}
+                  value={eventForm.description}
+                  onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
+                  classNames={{
+                    label: "text-foreground-600",
+                    input: "text-foreground"
+                  }}
+                />
+              </div>
 
-            {/* Description */}
-            <Input
-              label={t("calendar.description")}
-              placeholder={t("calendar.descriptionPlaceholder")}
-              value={eventForm.description}
-              onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
-            />
+              {/* Type and Priority */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label={t("calendar.type")}
+                  selectedKeys={[eventForm.type]}
+                  onSelectionChange={(keys) => {
+                    const key = Array.from(keys)[0] as CalendarEvent['type'];
+                    setEventForm({...eventForm, type: key});
+                  }}
+                  classNames={{
+                    label: "text-foreground-600"
+                  }}
+                >
+                  <SelectItem key="project">
+                    {t("calendar.type.project")}
+                  </SelectItem>
+                  <SelectItem key="requirement">
+                    {t("calendar.type.requirement")}
+                  </SelectItem>
+                  <SelectItem key="meeting">
+                    {t("calendar.type.meeting")}
+                  </SelectItem>
+                  <SelectItem key="deadline">
+                    {t("calendar.type.deadline")}
+                  </SelectItem>
+                  <SelectItem key="milestone">
+                    {t("calendar.type.milestone")}
+                  </SelectItem>
+                </Select>
 
-            {/* Type and Priority */}
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                label={t("calendar.type")}
-                selectedKeys={[eventForm.type]}
-                onSelectionChange={(keys) => {
-                  const key = Array.from(keys)[0] as CalendarEvent['type'];
-                  setEventForm({...eventForm, type: key});
-                }}
-              >
-                <SelectItem key="project">
-                  {t("calendar.type.project")}
-                </SelectItem>
-                <SelectItem key="requirement">
-                  {t("calendar.type.requirement")}
-                </SelectItem>
-                <SelectItem key="meeting">
-                  {t("calendar.type.meeting")}
-                </SelectItem>
-                <SelectItem key="deadline">
-                  {t("calendar.type.deadline")}
-                </SelectItem>
-                <SelectItem key="milestone">
-                  {t("calendar.type.milestone")}
-                </SelectItem>
-              </Select>
+                <Select
+                  label={t("calendar.priority")}
+                  selectedKeys={[eventForm.priority]}
+                  onSelectionChange={(keys) => {
+                    const key = Array.from(keys)[0] as CalendarEvent['priority'];
+                    setEventForm({...eventForm, priority: key});
+                  }}
+                  classNames={{
+                    label: "text-foreground-600"
+                  }}
+                >
+                  <SelectItem key="low">
+                    {t("calendar.priority.low")}
+                  </SelectItem>
+                  <SelectItem key="medium">
+                    {t("calendar.priority.medium")}
+                  </SelectItem>
+                  <SelectItem key="high">
+                    {t("calendar.priority.high")}
+                  </SelectItem>
+                  <SelectItem key="critical">
+                    {t("calendar.priority.critical")}
+                  </SelectItem>
+                </Select>
+              </div>
 
-              <Select
-                label={t("calendar.priority")}
-                selectedKeys={[eventForm.priority]}
-                onSelectionChange={(keys) => {
-                  const key = Array.from(keys)[0] as CalendarEvent['priority'];
-                  setEventForm({...eventForm, priority: key});
-                }}
-              >
-                <SelectItem key="low">
-                  {t("calendar.priority.low")}
-                </SelectItem>
-                <SelectItem key="medium">
-                  {t("calendar.priority.medium")}
-                </SelectItem>
-                <SelectItem key="high">
-                  {t("calendar.priority.high")}
-                </SelectItem>
-                <SelectItem key="critical">
-                  {t("calendar.priority.critical")}
-                </SelectItem>
-              </Select>
-            </div>
-
-            {/* Dates and Times */}
-            <div className="space-y-4">
-              {/* Start Date and Time */}
-              <div className="grid grid-cols-1 gap-4">
-                <DatePicker
-                  label={t("calendar.startDate")}
-                  value={eventForm.startDate}
-                  onChange={(date) => {
+              {/* All Day Toggle */}
+              <div className="flex items-center gap-3 p-4 bg-content2 rounded-lg">
+                <Switch
+                  isSelected={eventForm.isAllDay}
+                  onValueChange={(checked) => {
                     setEventForm({
                       ...eventForm, 
-                      startDate: date,
-                      // Auto-set end date to same day if not set
-                      endDate: eventForm.endDate || date
+                      isAllDay: checked,
+                      // Clear time values when switching to all day
+                      startTime: checked ? null : eventForm.startTime || new Time(9, 0),
+                      endTime: checked ? null : eventForm.endTime || new Time(17, 0)
                     });
                   }}
-                  isRequired
-                  showMonthAndYearPickers
-                  variant="bordered"
+                  size="sm"
                 />
-                {!eventForm.isAllDay && (
-                  <div className="time-input-ltr">
-                    <TimeInput
-                      label={t("calendar.startTime")}
-                      value={eventForm.startTime}
-                      onChange={(time) => setEventForm({...eventForm, startTime: time})}
-                      isRequired
-                    />
-                  </div>
-                )}
+                <span className="text-sm font-medium">{t("calendar.allDay")}</span>
               </div>
 
-              {/* End Date and Time */}
-              <div className="grid grid-cols-1 gap-4">
-                <DatePicker
-                  label={t("calendar.endDate")}
-                  value={eventForm.endDate}
-                  onChange={(date) => setEventForm({...eventForm, endDate: date})}
-                  showMonthAndYearPickers
-                  variant="bordered"
-                />
-                {!eventForm.isAllDay && (
-                  <div className="time-input-ltr">
-                    <TimeInput
-                      label={t("calendar.endTime")}
-                      value={eventForm.endTime}
-                      onChange={(time) => setEventForm({...eventForm, endTime: time})}
-                    />
-                  </div>
-                )}
+              {/* Dates and Times */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Start Date and Time */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-foreground-600 border-b border-divider pb-2">
+                    {t("calendar.startDateTime")}
+                  </h4>
+                  <DatePicker
+                    label={t("calendar.startDate")}
+                    value={eventForm.startDate}
+                    onChange={(date) => {
+                      setEventForm({
+                        ...eventForm, 
+                        startDate: date,
+                        // Auto-set end date to same day if not set
+                        endDate: eventForm.endDate || date
+                      });
+                    }}
+                    isRequired
+                    showMonthAndYearPickers
+                    classNames={{
+                      label: "text-foreground-600"
+                    }}
+                  />
+                  {!eventForm.isAllDay && (
+                    <div className="time-input-ltr">
+                      <TimeInput
+                        label={t("calendar.startTime")}
+                        value={eventForm.startTime}
+                        onChange={(time) => setEventForm({...eventForm, startTime: time})}
+                        isRequired
+                        classNames={{
+                          label: "text-foreground-600",
+                          input: "text-foreground"
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* End Date and Time */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-foreground-600 border-b border-divider pb-2">
+                    {t("calendar.endDateTime")}
+                  </h4>
+                  <DatePicker
+                    label={t("calendar.endDate")}
+                    value={eventForm.endDate}
+                    onChange={(date) => setEventForm({...eventForm, endDate: date})}
+                    showMonthAndYearPickers
+                    classNames={{
+                      label: "text-foreground-600"
+                    }}
+                  />
+                  {!eventForm.isAllDay && (
+                    <div className="time-input-ltr">
+                      <TimeInput
+                        label={t("calendar.endTime")}
+                        value={eventForm.endTime}
+                        onChange={(time) => setEventForm({...eventForm, endTime: time})}
+                        classNames={{
+                          label: "text-foreground-600",
+                          input: "text-foreground"
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Location */}
-            <Input
-              label={t("calendar.location")}
-              placeholder={t("calendar.locationPlaceholder")}
-              value={eventForm.location}
-              onChange={(e) => setEventForm({...eventForm, location: e.target.value})}
-            />
-
-            {/* All Day Toggle */}
-            <div className="flex items-center gap-2">
-              <Switch
-                isSelected={eventForm.isAllDay}
-                onValueChange={(checked) => {
-                  setEventForm({
-                    ...eventForm, 
-                    isAllDay: checked,
-                    // Clear time values when switching to all day
-                    startTime: checked ? null : eventForm.startTime || new Time(9, 0),
-                    endTime: checked ? null : eventForm.endTime || new Time(17, 0)
-                  });
+              {/* Location */}
+              <Input
+                label={t("calendar.location")}
+                placeholder={t("calendar.locationPlaceholder")}
+                value={eventForm.location}
+                onChange={(e) => setEventForm({...eventForm, location: e.target.value})}
+                classNames={{
+                  label: "text-foreground-600",
+                  input: "text-foreground"
                 }}
               />
-              <span className="text-sm">{t("calendar.allDay")}</span>
-            </div>
 
-            {formError && (
-              <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg">
-                <p className="text-danger text-sm">{formError}</p>
-              </div>
-            )}
+              {/* Error Message */}
+              {formError && (
+                <div className="p-4 bg-danger-50 border border-danger-200 rounded-lg">
+                  <p className="text-danger text-sm font-medium">{formError}</p>
+                </div>
+              )}
+            </div>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter className="flex gap-2 justify-end">
             <Button 
               variant="ghost" 
               onPress={() => {

@@ -91,6 +91,8 @@ const translations = {
     "calendar.description": "Description",
     "calendar.startDate": "Start Date",
     "calendar.endDate": "End Date",
+    "calendar.startDateTime": "Start Date & Time",
+    "calendar.endDateTime": "End Date & Time",
     "calendar.startTime": "Start Time",
     "calendar.endTime": "End Time",
     "calendar.status": "Status",
@@ -123,6 +125,14 @@ const translations = {
     "calendar.descriptionPlaceholder": "Enter event description",
     "calendar.locationPlaceholder": "Enter location",
     "calendar.allDay": "All Day",
+
+    // Calendar Validation Messages
+    "calendar.validation.titleRequired": "Event title is required",
+    "calendar.validation.startDateRequired": "Start date is required",
+    "calendar.validation.startTimeRequired": "Start time is required",
+    "calendar.validation.endDateBeforeStart": "End date cannot be before start date",
+    "calendar.validation.endTimeBeforeStart": "End time must be after start time for same-day events",
+    "calendar.validation.saveFailed": "Failed to save event. Please try again.",
 
     // Common
     "common.owner": "Owner",
@@ -1113,6 +1123,8 @@ const translations = {
     "calendar.description": "الوصف",
     "calendar.startDate": "تاريخ البداية",
     "calendar.endDate": "تاريخ النهاية",
+    "calendar.startDateTime": "تاريخ ووقت البداية",
+    "calendar.endDateTime": "تاريخ ووقت النهاية",
     "calendar.startTime": "وقت البداية",
     "calendar.endTime": "وقت النهاية",
     "calendar.status": "الحالة",
@@ -1145,6 +1157,14 @@ const translations = {
     "calendar.descriptionPlaceholder": "أدخل وصف الحدث",
     "calendar.locationPlaceholder": "أدخل الموقع",
     "calendar.allDay": "طوال اليوم",
+
+    // Calendar Validation Messages
+    "calendar.validation.titleRequired": "عنوان الحدث مطلوب",
+    "calendar.validation.startDateRequired": "تاريخ البداية مطلوب",
+    "calendar.validation.startTimeRequired": "وقت البداية مطلوب",
+    "calendar.validation.endDateBeforeStart": "لا يمكن أن يكون تاريخ النهاية قبل تاريخ البداية",
+    "calendar.validation.endTimeBeforeStart": "يجب أن يكون وقت النهاية بعد وقت البداية لأحداث نفس اليوم",
+    "calendar.validation.saveFailed": "فشل في حفظ الحدث. يرجى المحاولة مرة أخرى.",
 
     // Common Date References
     "common.today": "اليوم",
