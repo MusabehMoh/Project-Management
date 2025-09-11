@@ -286,7 +286,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   <div
                     key={`${weekIndex}-${dayIndex}`}
                     className={`
-                      min-h-[80px] p-1 border border-default-200 
+                      min-h-[80px] p-1 border border-default-200 rounded-lg
                       ${day.isCurrentMonth ? 'bg-content1' : 'bg-default-50'}
                       ${day.isToday ? 'bg-primary-50 border-primary-200' : ''}
                       hover:bg-default-100 cursor-pointer transition-colors
