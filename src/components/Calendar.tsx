@@ -8,17 +8,12 @@ import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
-import { DatePicker } from "@heroui/react";
+import { DatePicker, TimeInput } from "@heroui/react";
 import { Switch } from "@heroui/switch";
 import { 
   parseDate, 
-  parseTime, 
-  getLocalTimeZone, 
-  today,
-  now,
   Time,
-  CalendarDate,
-  CalendarDateTime 
+  CalendarDate
 } from "@internationalized/date";
 import { 
   ChevronLeft, 
@@ -71,12 +66,70 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   const [showEventDetails, setShowEventDetails] = useState<CalendarEvent | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  // Validation functions
+  const validateField = (field: string, value: any) => {
+    const errors: Record<string, string> = {};
+
+    switch (field) {
+      case 'title':
+        if (!value.trim()) {
+          errors.title = t("calendar.validation.titleRequired");
+        } else if (value.trim().length < 3) {
+          errors.title = t("calendar.validation.titleTooShort");
+        }
+        break;
+      case 'startDate':
+        if (!value) {
+          errors.startDate = t("calendar.validation.startDateRequired");
+        }
+        break;
+      case 'startTime':
+        if (!eventForm.isAllDay && !value) {
+          errors.startTime = t("calendar.validation.startTimeRequired");
+        }
+        break;
+      case 'endDate':
+        if (value && eventForm.startDate && value.compare(eventForm.startDate) < 0) {
+          errors.endDate = t("calendar.validation.endDateBeforeStart");
+        }
+        break;
+      case 'endTime':
+        if (!eventForm.isAllDay && value && eventForm.startTime && 
+            eventForm.endDate && eventForm.startDate &&
+            eventForm.endDate.compare(eventForm.startDate) === 0 && 
+            value.compare(eventForm.startTime) <= 0) {
+          errors.endTime = t("calendar.validation.endTimeBeforeStart");
+        }
+        break;
+    }
+
+    setFieldErrors(prev => ({ ...prev, [field]: errors[field] || '' }));
+    return !errors[field];
+  };
+
+  const handleFieldChange = (field: string, value: any) => {
+    setEventForm(prev => ({ ...prev, [field]: value }));
+    
+    // Validate on change if field has been touched
+    if (touchedFields[field]) {
+      validateField(field, value);
+    }
+  };
+
+  const handleFieldBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+    validateField(field, eventForm[field as keyof typeof eventForm]);
+  };
   const [eventForm, setEventForm] = useState({
     title: "",
     description: "",
-    startDateTime: null as CalendarDateTime | null,
-    endDateTime: null as CalendarDateTime | null,
+    startDate: null as CalendarDate | null,
+    startTime: null as Time | null,
+    endDate: null as CalendarDate | null,
+    endTime: null as Time | null,
     type: "meeting" as CalendarEvent['type'],
     priority: "medium" as CalendarEvent['priority'],
     location: "",
@@ -176,15 +229,18 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     setEventForm({
       title: "",
       description: "",
-      startDateTime: null,
-      endDateTime: null,
+      startDate: null,
+      startTime: null,
+      endDate: null,
+      endTime: null,
       type: "meeting",
       priority: "medium",
       location: "",
       isAllDay: false,
     });
     setEditingEvent(null);
-    setFormError(null);
+    setFieldErrors({});
+    setTouchedFields({});
   };
 
   const openCreateModal = () => {
@@ -196,71 +252,91 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     const startDate = new Date(event.startDate);
     const endDate = event.endDate ? new Date(event.endDate) : null;
     
-    // Convert to CalendarDateTime objects
-    const calendarStartDateTime = new CalendarDateTime(
-      startDate.getFullYear(),
-      startDate.getMonth() + 1,
-      startDate.getDate(),
-      startDate.getHours(),
-      startDate.getMinutes()
-    );
+    // Convert to CalendarDate and Time objects
+    const calendarStartDate = parseDate(startDate.toISOString().split("T")[0]);
+    const startTime = new Time(startDate.getHours(), startDate.getMinutes());
     
-    const calendarEndDateTime = endDate ? new CalendarDateTime(
-      endDate.getFullYear(),
-      endDate.getMonth() + 1,
-      endDate.getDate(),
-      endDate.getHours(),
-      endDate.getMinutes()
-    ) : null;
+    const calendarEndDate = endDate 
+      ? parseDate(endDate.toISOString().split("T")[0]) 
+      : null;
+    const endTime = endDate 
+      ? new Time(endDate.getHours(), endDate.getMinutes()) 
+      : null;
     
     setEventForm({
       title: event.title,
       description: event.description || "",
-      startDateTime: calendarStartDateTime,
-      endDateTime: calendarEndDateTime,
+      startDate: calendarStartDate,
+      startTime: startTime,
+      endDate: calendarEndDate,
+      endTime: endTime,
       type: event.type,
       priority: event.priority,
       location: event.location || "",
       isAllDay: event.isAllDay || false,
     });
     setEditingEvent(event);
+    setFieldErrors({});
+    setTouchedFields({});
     setShowCreateModal(true);
   };
 
   const handleSaveEvent = async () => {
     // Clear previous errors
-    setFormError(null);
-    
-    // Validation
-    if (!eventForm.title.trim()) {
-      setFormError("Event title is required");
-      return;
+    setFieldErrors({});
+
+    // Validate all fields
+    const fieldsToValidate = ["title", "startDate"];
+    if (!eventForm.isAllDay) {
+      fieldsToValidate.push("startTime");
     }
-    
-    if (!eventForm.startDateTime) {
-      setFormError("Start date and time is required");
-      return;
+    if (eventForm.endDate) {
+      fieldsToValidate.push("endDate");
+    }
+    if (eventForm.endTime && !eventForm.isAllDay) {
+      fieldsToValidate.push("endTime");
     }
 
-    // Validate end date if provided
-    if (eventForm.endDateTime && eventForm.endDateTime.compare(eventForm.startDateTime) <= 0) {
-      setFormError("End date and time must be after start date and time");
-      return;
-    }
+    let hasErrors = false;
+    fieldsToValidate.forEach((field) => {
+      if (!validateField(field, eventForm[field as keyof typeof eventForm])) {
+        hasErrors = true;
+      }
+    });
 
-    const eventData = {
+    if (hasErrors) {
+      return;
+    }    // Create ISO date strings
+    const createISOString = (date: CalendarDate, time?: Time | null, isAllDay?: boolean) => {
+      if (isAllDay) {
+        return `${date.toString()}T00:00:00.000Z`;
+      }
+      if (time) {
+        return `${date.toString()}T${time.toString()}:00.000Z`;
+      }
+      return `${date.toString()}T00:00:00.000Z`;
+    };
+
+    const startDateTime = createISOString(
+      eventForm.startDate!, 
+      eventForm.startTime, 
+      eventForm.isAllDay
+    );
+    const endDateTime = eventForm.endDate
+      ? createISOString(
+          eventForm.endDate, 
+          eventForm.endTime, 
+          eventForm.isAllDay
+        )
+      : (eventForm.isAllDay
+          ? `${eventForm.startDate!.toString()}T23:59:59.999Z`
+          : eventForm.startTime 
+            ? `${eventForm.startDate!.toString()}T${eventForm.startTime.add({hours: 1}).toString()}:00.000Z`
+            : `${eventForm.startDate!.toString()}T01:00:00.000Z`);    const eventData = {
       title: eventForm.title.trim(),
       description: eventForm.description.trim(),
-      startDate: eventForm.isAllDay 
-        ? `${eventForm.startDateTime!.toDate(getLocalTimeZone()).toISOString().split('T')[0]}T00:00:00.000Z`
-        : eventForm.startDateTime!.toDate(getLocalTimeZone()).toISOString(),
-      endDate: eventForm.endDateTime 
-        ? (eventForm.isAllDay 
-            ? `${eventForm.endDateTime.toDate(getLocalTimeZone()).toISOString().split('T')[0]}T23:59:59.999Z`
-            : eventForm.endDateTime.toDate(getLocalTimeZone()).toISOString())
-        : (eventForm.isAllDay 
-            ? `${eventForm.startDateTime!.toDate(getLocalTimeZone()).toISOString().split('T')[0]}T23:59:59.999Z`
-            : eventForm.startDateTime!.add({hours: 1}).toDate(getLocalTimeZone()).toISOString()), // Default 1 hour duration
+      startDate: startDateTime,
+      endDate: endDateTime,
       type: eventForm.type,
       status: "upcoming" as CalendarEvent['status'],
       priority: eventForm.priority,
@@ -281,7 +357,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       setShowCreateModal(false);
       resetForm();
     } else {
-      setFormError("Failed to save event. Please try again.");
+      // Handle save failure - could show a toast notification here
+      // For now, we'll just keep the modal open so user can try again
     }
   };
 
@@ -638,10 +715,12 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
 
       {/* Event Details Modal */}
       {showEventDetails && (
-        <Modal 
-          isOpen={!!showEventDetails} 
+        <Modal
+          isOpen={!!showEventDetails}
           onClose={() => setShowEventDetails(null)}
-          size="2xl"
+          classNames={{
+            body: "p-6"
+          }}
         >
           <ModalContent>
             <ModalHeader>
@@ -739,14 +818,18 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       )}
 
       {/* Create/Edit Event Modal */}
-      <Modal 
-        isOpen={showCreateModal} 
+      <Modal
+        isOpen={showCreateModal}
         onClose={() => {
           setShowCreateModal(false);
           resetForm();
         }}
-        size="2xl"
         scrollBehavior="inside"
+        classNames={{
+          body: "p-0",
+          header: "border-b border-divider px-6 py-4",
+          footer: "border-t border-divider px-6 py-4"
+        }}
       >
         <ModalContent>
           <ModalHeader>
@@ -754,143 +837,200 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               {editingEvent ? t("calendar.editEvent") : t("calendar.addEvent")}
             </h3>
           </ModalHeader>
-          <ModalBody className="space-y-4">
-            {/* Title */}
-            <Input
-              label={t("calendar.eventTitle")}
-              placeholder={t("calendar.titlePlaceholder")}
-              value={eventForm.title}
-              onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
-              isRequired
-            />
-
-            {/* Description */}
-            <Input
-              label={t("calendar.description")}
-              placeholder={t("calendar.descriptionPlaceholder")}
-              value={eventForm.description}
-              onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
-            />
-
-            {/* Type and Priority */}
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                label={t("calendar.type")}
-                selectedKeys={[eventForm.type]}
-                onSelectionChange={(keys) => {
-                  const key = Array.from(keys)[0] as CalendarEvent['type'];
-                  setEventForm({...eventForm, type: key});
-                }}
-              >
-                <SelectItem key="project">
-                  {t("calendar.type.project")}
-                </SelectItem>
-                <SelectItem key="requirement">
-                  {t("calendar.type.requirement")}
-                </SelectItem>
-                <SelectItem key="meeting">
-                  {t("calendar.type.meeting")}
-                </SelectItem>
-                <SelectItem key="deadline">
-                  {t("calendar.type.deadline")}
-                </SelectItem>
-                <SelectItem key="milestone">
-                  {t("calendar.type.milestone")}
-                </SelectItem>
-              </Select>
-
-              <Select
-                label={t("calendar.priority")}
-                selectedKeys={[eventForm.priority]}
-                onSelectionChange={(keys) => {
-                  const key = Array.from(keys)[0] as CalendarEvent['priority'];
-                  setEventForm({...eventForm, priority: key});
-                }}
-              >
-                <SelectItem key="low">
-                  {t("calendar.priority.low")}
-                </SelectItem>
-                <SelectItem key="medium">
-                  {t("calendar.priority.medium")}
-                </SelectItem>
-                <SelectItem key="high">
-                  {t("calendar.priority.high")}
-                </SelectItem>
-                <SelectItem key="critical">
-                  {t("calendar.priority.critical")}
-                </SelectItem>
-              </Select>
-            </div>
-
-            {/* Dates and Times */}
-            <div className="space-y-4">
-              {/* Start Date and Time */}
-              <DatePicker
-                label={t("calendar.startDate")}
-                value={eventForm.startDateTime}
-                onChange={(dateTime) => {
-                  setEventForm({
-                    ...eventForm, 
-                    startDateTime: dateTime,
-                    // Auto-set end date to same day + 1 hour if not set
-                    endDateTime: eventForm.endDateTime || (dateTime ? dateTime.add({hours: 1}) : null)
-                  });
-                }}
-                isRequired
-                hideTimeZone
-                showMonthAndYearPickers
-                variant="bordered"
-                granularity={eventForm.isAllDay ? "day" : "minute"}
-              />
-
-              {/* End Date and Time */}
-              <DatePicker
-                label={t("calendar.endDate")}
-                value={eventForm.endDateTime}
-                onChange={(dateTime) => setEventForm({...eventForm, endDateTime: dateTime})}
-                hideTimeZone
-                showMonthAndYearPickers
-                variant="bordered"
-                granularity={eventForm.isAllDay ? "day" : "minute"}
-              />
-            </div>
-
-            {/* Location */}
-            <Input
-              label={t("calendar.location")}
-              placeholder={t("calendar.locationPlaceholder")}
-              value={eventForm.location}
-              onChange={(e) => setEventForm({...eventForm, location: e.target.value})}
-            />
-
-            {/* All Day Toggle */}
-            <div className="flex items-center gap-2">
-              <Switch
-                isSelected={eventForm.isAllDay}
-                onValueChange={(checked) => {
-                  setEventForm({
-                    ...eventForm, 
-                    isAllDay: checked,
-                    // When toggling to all day, convert to date-only values
-                    startDateTime: checked && eventForm.startDateTime 
-                      ? eventForm.startDateTime.set({hour: 0, minute: 0, second: 0})
-                      : eventForm.startDateTime,
-                    endDateTime: checked && eventForm.endDateTime 
-                      ? eventForm.endDateTime.set({hour: 23, minute: 59, second: 59})
-                      : eventForm.endDateTime
-                  });
-                }}
-              />
-              <span className="text-sm">{t("calendar.allDay")}</span>
-            </div>
-
-            {formError && (
-              <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg">
-                <p className="text-danger text-sm">{formError}</p>
+          <ModalBody className="px-6 py-6">
+            <div className="space-y-6">
+              {/* Title and Description Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Input
+                  label={t("calendar.eventTitle")}
+                  placeholder={t("calendar.titlePlaceholder")}
+                  value={eventForm.title}
+                  onChange={(e) => handleFieldChange('title', e.target.value)}
+                  onBlur={() => handleFieldBlur('title')}
+                  isRequired
+                  isInvalid={!!fieldErrors.title}
+                  errorMessage={fieldErrors.title}
+                  classNames={{
+                    label: "text-foreground-600",
+                    input: "text-foreground"
+                  }}
+                />
+                <Input
+                  label={t("calendar.description")}
+                  placeholder={t("calendar.descriptionPlaceholder")}
+                  value={eventForm.description}
+                  onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
+                  classNames={{
+                    label: "text-foreground-600",
+                    input: "text-foreground"
+                  }}
+                />
               </div>
-            )}
+
+              {/* Type and Priority */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select
+                  label={t("calendar.type")}
+                  selectedKeys={[eventForm.type]}
+                  onSelectionChange={(keys) => {
+                    const key = Array.from(keys)[0] as CalendarEvent['type'];
+                    setEventForm({...eventForm, type: key});
+                  }}
+                  classNames={{
+                    label: "text-foreground-600"
+                  }}
+                >
+                  <SelectItem key="project">
+                    {t("calendar.type.project")}
+                  </SelectItem>
+                  <SelectItem key="requirement">
+                    {t("calendar.type.requirement")}
+                  </SelectItem>
+                  <SelectItem key="meeting">
+                    {t("calendar.type.meeting")}
+                  </SelectItem>
+                  <SelectItem key="deadline">
+                    {t("calendar.type.deadline")}
+                  </SelectItem>
+                  <SelectItem key="milestone">
+                    {t("calendar.type.milestone")}
+                  </SelectItem>
+                </Select>
+
+                <Select
+                  label={t("calendar.priority")}
+                  selectedKeys={[eventForm.priority]}
+                  onSelectionChange={(keys) => {
+                    const key = Array.from(keys)[0] as CalendarEvent['priority'];
+                    setEventForm({...eventForm, priority: key});
+                  }}
+                  classNames={{
+                    label: "text-foreground-600"
+                  }}
+                >
+                  <SelectItem key="low">
+                    {t("calendar.priority.low")}
+                  </SelectItem>
+                  <SelectItem key="medium">
+                    {t("calendar.priority.medium")}
+                  </SelectItem>
+                  <SelectItem key="high">
+                    {t("calendar.priority.high")}
+                  </SelectItem>
+                  <SelectItem key="critical">
+                    {t("calendar.priority.critical")}
+                  </SelectItem>
+                </Select>
+              </div>
+
+              {/* All Day Toggle */}
+              <div className="flex items-center gap-3 p-4 bg-content2 rounded-lg">
+                <Switch
+                  isSelected={eventForm.isAllDay}
+                  onValueChange={(checked) => {
+                    setEventForm({
+                      ...eventForm, 
+                      isAllDay: checked,
+                      // Clear time values when switching to all day
+                      startTime: checked ? null : eventForm.startTime || new Time(9, 0),
+                      endTime: checked ? null : eventForm.endTime || new Time(17, 0)
+                    });
+                  }}
+                  size="sm"
+                />
+                <span className="text-sm font-medium">{t("calendar.allDay")}</span>
+              </div>
+
+              {/* Dates and Times */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Start Date and Time */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-foreground-600 border-b border-divider pb-2">
+                    {t("calendar.startDateTime")}
+                  </h4>
+                  <DatePicker
+                    label={t("calendar.startDate")}
+                    value={eventForm.startDate}
+                    onChange={(date) => handleFieldChange('startDate', date)}
+                    onBlur={() => handleFieldBlur('startDate')}
+                    isRequired
+                    isInvalid={!!fieldErrors.startDate}
+                    errorMessage={fieldErrors.startDate}
+                    showMonthAndYearPickers
+                    classNames={{
+                      label: "text-foreground-600"
+                    }}
+                  />
+                  {!eventForm.isAllDay && (
+                    <div className="time-input-ltr">
+                      <TimeInput
+                        label={t("calendar.startTime")}
+                        value={eventForm.startTime}
+                        onChange={(time) => handleFieldChange('startTime', time)}
+                        onBlur={() => handleFieldBlur('startTime')}
+                        isRequired
+                        isInvalid={!!fieldErrors.startTime}
+                        errorMessage={fieldErrors.startTime}
+                        classNames={{
+                          label: "text-foreground-600",
+                          input: "text-foreground"
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* End Date and Time */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-foreground-600 border-b border-divider pb-2">
+                    {t("calendar.endDateTime")}
+                  </h4>
+                  <DatePicker
+                    label={t("calendar.endDate")}
+                    value={eventForm.endDate}
+                    onChange={(date) => handleFieldChange('endDate', date)}
+                    onBlur={() => handleFieldBlur('endDate')}
+                    isInvalid={!!fieldErrors.endDate}
+                    errorMessage={fieldErrors.endDate}
+                    showMonthAndYearPickers
+                    classNames={{
+                      label: "text-foreground-600"
+                    }}
+                  />
+                  {!eventForm.isAllDay && (
+                    <div className="time-input-ltr">
+                      <TimeInput
+                        label={t("calendar.endTime")}
+                        value={eventForm.endTime}
+                        onChange={(time) => handleFieldChange('endTime', time)}
+                        onBlur={() => handleFieldBlur('endTime')}
+                        isInvalid={!!fieldErrors.endTime}
+                        errorMessage={fieldErrors.endTime}
+                        classNames={{
+                          label: "text-foreground-600",
+                          input: "text-foreground"
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Location */}
+              <Input
+                label={t("calendar.location")}
+                placeholder={t("calendar.locationPlaceholder")}
+                value={eventForm.location}
+                onChange={(e) => setEventForm({...eventForm, location: e.target.value})}
+                classNames={{
+                  label: "text-foreground-600",
+                  input: "text-foreground"
+                }}
+              />
+
+            </div>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter className="flex gap-2 justify-end">
             <Button 
               variant="ghost" 
               onPress={() => {
