@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, CardHeader, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 
 import DefaultLayout from "@/layouts/default";
@@ -9,6 +8,7 @@ import RequirementOverview from "@/components/RequirementOverview";
 import TeamWorkloadPerformance from "@/components/TeamWorkloadPerformanceNew";
 import ProjectPipeline from "@/components/ProjectPipeline";
 import Calendar from "@/components/Calendar";
+import ModernQuickStats from "@/components/ModernQuickStats";
 
 export default function IndexPage() {
   const { t, language } = useLanguage();
@@ -34,40 +34,7 @@ export default function IndexPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-success">3</p>
-              <p className="text-sm text-default-600">
-                {t("dashboard.activeProjects")}
-              </p>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-primary">8</p>
-              <p className="text-sm text-default-600">
-                {t("dashboard.totalTasks")}
-              </p>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-warning">5</p>
-              <p className="text-sm text-default-600">
-                {t("dashboard.inProgress")}
-              </p>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-danger">2</p>
-              <p className="text-sm text-default-600">
-                {t("dashboard.overdue")}
-              </p>
-            </div>
-          </Card>
-        </div>
+        <ModernQuickStats />
 
         {/* Team Workload Performance and Calendar */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -82,7 +49,7 @@ export default function IndexPage() {
             <h2 className="text-2xl font-semibold text-foreground">
               {t("calendar.title")}
             </h2>
-            <Calendar showSidebar={false} maxHeight="500px" />
+            <Calendar maxHeight="500px" showSidebar={false} />
           </div>
         </div>
 
@@ -104,10 +71,7 @@ export default function IndexPage() {
                 <h2 className="text-2xl font-semibold text-foreground">
                   {t("dashboard.updates")}
                 </h2>
-                <UrgentNotifications 
-                  maxNotifications={5} 
-                  useMockData={true}
-                />
+                <UrgentNotifications maxNotifications={5} useMockData={true} />
               </div>
               
               {/* Requirement Overview Section */}
