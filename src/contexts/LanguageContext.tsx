@@ -115,6 +115,11 @@ const translations = {
     "calendar.priority.medium": "Medium",
     "calendar.priority.high": "High",
     "calendar.priority.critical": "Critical",
+    "calendar.eventTitle": "Title",
+    "calendar.titlePlaceholder": "Enter event title",
+    "calendar.descriptionPlaceholder": "Enter event description",
+    "calendar.locationPlaceholder": "Enter location",
+    "calendar.allDay": "All Day",
 
     // Common
     "common.owner": "Owner",
@@ -262,6 +267,7 @@ const translations = {
     "common.add": "Add",
     "common.create": "Create",
     "common.update": "Update",
+    "common.error": "Error",
     "common.all": "All",
     "common.inactive": "Inactive",
     "common.show": "Show",
@@ -1121,6 +1127,11 @@ const translations = {
     "calendar.priority.medium": "متوسط",
     "calendar.priority.high": "عالي",
     "calendar.priority.critical": "حرج",
+    "calendar.eventTitle": "العنوان",
+    "calendar.titlePlaceholder": "أدخل عنوان الحدث",
+    "calendar.descriptionPlaceholder": "أدخل وصف الحدث",
+    "calendar.locationPlaceholder": "أدخل الموقع",
+    "calendar.allDay": "طوال اليوم",
 
     // Common Date References
     "common.today": "اليوم",
@@ -1257,6 +1268,7 @@ const translations = {
     "common.add": "إضافة",
     "common.create": "إنشاء",
     "common.update": "تحديث",
+    "common.error": "خطأ",
     "common.all": "الكل",
     "common.inactive": "غير نشط",
     "common.show": "عرض",

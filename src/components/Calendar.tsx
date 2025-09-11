@@ -52,11 +52,26 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     getEventsForDate,
     refreshCalendar,
     clearError,
+    createEvent,
+    updateEvent,
+    deleteEvent,
   } = useCalendar();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState<CalendarEvent | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [eventForm, setEventForm] = useState({
+    title: "",
+    description: "",
+    startDate: "",
+    endDate: "",
+    type: "meeting" as CalendarEvent['type'],
+    priority: "medium" as CalendarEvent['priority'],
+    location: "",
+    isAllDay: false,
+  });
 
   // Get color for event type
   const getEventTypeColor = (type: CalendarEvent['type']) => {
@@ -146,6 +161,110 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     return days;
   };
 
+  // Form handling functions
+  const resetForm = () => {
+    setEventForm({
+      title: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      type: "meeting",
+      priority: "medium",
+      location: "",
+      isAllDay: false,
+    });
+    setEditingEvent(null);
+    setFormError(null);
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setShowCreateModal(true);
+  };
+
+  const openEditModal = (event: CalendarEvent) => {
+    const startDate = new Date(event.startDate);
+    const endDate = event.endDate ? new Date(event.endDate) : null;
+    
+    setEventForm({
+      title: event.title,
+      description: event.description || "",
+      startDate: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      endDate: endDate ? endDate.toISOString().split('T')[0] : "",
+      type: event.type,
+      priority: event.priority,
+      location: event.location || "",
+      isAllDay: event.isAllDay || false,
+    });
+    setEditingEvent(event);
+    setShowCreateModal(true);
+  };
+
+  const handleSaveEvent = async () => {
+    // Clear previous errors
+    setFormError(null);
+    
+    // Validation
+    if (!eventForm.title.trim()) {
+      setFormError("Event title is required");
+      return;
+    }
+    
+    if (!eventForm.startDate) {
+      setFormError("Start date is required");
+      return;
+    }
+
+    // Validate end date if provided
+    if (eventForm.endDate && eventForm.endDate < eventForm.startDate) {
+      setFormError("End date cannot be before start date");
+      return;
+    }
+
+    const eventData = {
+      title: eventForm.title.trim(),
+      description: eventForm.description.trim(),
+      startDate: eventForm.isAllDay 
+        ? `${eventForm.startDate}T00:00:00.000Z`
+        : `${eventForm.startDate}T09:00:00.000Z`, // Default to 9 AM if not all day
+      endDate: eventForm.endDate 
+        ? (eventForm.isAllDay 
+            ? `${eventForm.endDate}T23:59:59.999Z`
+            : `${eventForm.endDate}T17:00:00.000Z`) // Default to 5 PM if not all day
+        : (eventForm.isAllDay 
+            ? `${eventForm.startDate}T23:59:59.999Z`
+            : `${eventForm.startDate}T18:00:00.000Z`), // Default end time 1 hour later or end of day
+      type: eventForm.type,
+      status: "upcoming" as CalendarEvent['status'],
+      priority: eventForm.priority,
+      location: eventForm.location.trim() || undefined,
+      isAllDay: eventForm.isAllDay,
+      createdBy: 1, // Current user ID - should come from user context
+      assignedTo: [1], // Current user - should be selectable
+    };
+
+    let success = false;
+    if (editingEvent) {
+      success = await updateEvent(editingEvent.id, eventData);
+    } else {
+      success = await createEvent(eventData);
+    }
+
+    if (success) {
+      setShowCreateModal(false);
+      resetForm();
+    } else {
+      setFormError("Failed to save event. Please try again.");
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: number) => {
+    const success = await deleteEvent(eventId);
+    if (success) {
+      setShowEventDetails(null);
+    }
+  };
+
   if (loading && events.length === 0) {
     return (
       <Card className="w-full">
@@ -225,7 +344,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               size="sm"
               color="primary"
               startContent={<Plus className="w-4 h-4" />}
-              onPress={() => setShowCreateModal(true)}
+              onPress={openCreateModal}
             >
               {t("calendar.addEvent")}
             </Button>
@@ -571,13 +690,171 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               <Button variant="ghost" onPress={() => setShowEventDetails(null)}>
                 {t("common.close")}
               </Button>
-              <Button color="primary">
+              <Button 
+                color="danger" 
+                variant="light"
+                onPress={() => handleDeleteEvent(showEventDetails.id)}
+              >
+                {t("common.delete")}
+              </Button>
+              <Button 
+                color="primary"
+                onPress={() => {
+                  openEditModal(showEventDetails);
+                  setShowEventDetails(null);
+                }}
+              >
                 {t("calendar.editEvent")}
               </Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
       )}
+
+      {/* Create/Edit Event Modal */}
+      <Modal 
+        isOpen={showCreateModal} 
+        onClose={() => {
+          setShowCreateModal(false);
+          resetForm();
+        }}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h3 className="text-lg font-semibold">
+              {editingEvent ? t("calendar.editEvent") : t("calendar.addEvent")}
+            </h3>
+          </ModalHeader>
+          <ModalBody className="space-y-4">
+            {/* Title */}
+            <Input
+              label={t("calendar.eventTitle")}
+              placeholder={t("calendar.titlePlaceholder")}
+              value={eventForm.title}
+              onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
+              isRequired
+            />
+
+            {/* Description */}
+            <Input
+              label={t("calendar.description")}
+              placeholder={t("calendar.descriptionPlaceholder")}
+              value={eventForm.description}
+              onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
+            />
+
+            {/* Type and Priority */}
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                label={t("calendar.type")}
+                selectedKeys={[eventForm.type]}
+                onSelectionChange={(keys) => {
+                  const key = Array.from(keys)[0] as CalendarEvent['type'];
+                  setEventForm({...eventForm, type: key});
+                }}
+              >
+                <SelectItem key="project">
+                  {t("calendar.type.project")}
+                </SelectItem>
+                <SelectItem key="requirement">
+                  {t("calendar.type.requirement")}
+                </SelectItem>
+                <SelectItem key="meeting">
+                  {t("calendar.type.meeting")}
+                </SelectItem>
+                <SelectItem key="deadline">
+                  {t("calendar.type.deadline")}
+                </SelectItem>
+                <SelectItem key="milestone">
+                  {t("calendar.type.milestone")}
+                </SelectItem>
+              </Select>
+
+              <Select
+                label={t("calendar.priority")}
+                selectedKeys={[eventForm.priority]}
+                onSelectionChange={(keys) => {
+                  const key = Array.from(keys)[0] as CalendarEvent['priority'];
+                  setEventForm({...eventForm, priority: key});
+                }}
+              >
+                <SelectItem key="low">
+                  {t("calendar.priority.low")}
+                </SelectItem>
+                <SelectItem key="medium">
+                  {t("calendar.priority.medium")}
+                </SelectItem>
+                <SelectItem key="high">
+                  {t("calendar.priority.high")}
+                </SelectItem>
+                <SelectItem key="critical">
+                  {t("calendar.priority.critical")}
+                </SelectItem>
+              </Select>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                type="date"
+                label={t("calendar.startDate")}
+                value={eventForm.startDate}
+                onChange={(e) => setEventForm({...eventForm, startDate: e.target.value})}
+                isRequired
+              />
+              <Input
+                type="date"
+                label={t("calendar.endDate")}
+                value={eventForm.endDate}
+                onChange={(e) => setEventForm({...eventForm, endDate: e.target.value})}
+              />
+            </div>
+
+            {/* Location */}
+            <Input
+              label={t("calendar.location")}
+              placeholder={t("calendar.locationPlaceholder")}
+              value={eventForm.location}
+              onChange={(e) => setEventForm({...eventForm, location: e.target.value})}
+            />
+
+            {/* All Day Toggle */}
+            <div className="flex items-center gap-2">
+              <Switch
+                isSelected={eventForm.isAllDay}
+                onValueChange={(checked) => setEventForm({...eventForm, isAllDay: checked})}
+              />
+              <span className="text-sm">{t("calendar.allDay")}</span>
+            </div>
+
+            {formError && (
+              <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg">
+                <p className="text-danger text-sm">{formError}</p>
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              variant="ghost" 
+              onPress={() => {
+                setShowCreateModal(false);
+                resetForm();
+              }}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button 
+              color="primary" 
+              onPress={handleSaveEvent}
+              isLoading={loading}
+            >
+              {editingEvent ? t("common.update") : t("common.create")}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
