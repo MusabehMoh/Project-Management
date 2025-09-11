@@ -90,3 +90,27 @@ projectRequirementRoutes.get(
     projectRequirementsController,
   ),
 );
+
+// POST /api/project-requirements/requirements/:requirementId/attachments - Upload files for a requirement
+projectRequirementRoutes.post(
+  "/requirements/:requirementId/attachments",
+  projectRequirementsController.uploadAttachment.bind(
+    projectRequirementsController,
+  ),
+);
+
+// DELETE /api/project-requirements/requirements/:requirementId/attachments/:attachmentId - Delete attachment
+projectRequirementRoutes.delete(
+  "/requirements/:requirementId/attachments/:attachmentId",
+  projectRequirementsController.deleteAttachment.bind(
+    projectRequirementsController,
+  ),
+);
+
+// GET /api/project-requirements/requirements/:requirementId/attachments/:attachmentId/download - Download attachment
+projectRequirementRoutes.get(
+  "/requirements/:requirementId/attachments/:attachmentId/download",
+  projectRequirementsController.downloadAttachment.bind(
+    projectRequirementsController,
+  ),
+);

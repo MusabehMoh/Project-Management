@@ -21,6 +21,7 @@ import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import "./project-requirements.css";
 import {
   Modal,
   ModalContent,
@@ -30,6 +31,7 @@ import {
   useDisclosure,
 } from "@heroui/modal";
 import { DatePicker } from "@heroui/date-picker";
+import { Divider } from "@heroui/divider";
 import {
   Plus,
   Search,
@@ -41,6 +43,9 @@ import {
   Calendar,
   FileText,
   AlertCircle,
+  Upload,
+  X,
+  Download,
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
@@ -52,6 +57,7 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import type {
   ProjectRequirement,
   CreateProjectRequirementRequest,
+  ProjectRequirementAttachment,
 } from "@/types/projectRequirement";
 
 // Form data type for creating/editing requirements
@@ -62,6 +68,8 @@ interface RequirementFormData {
   type: "new" | "change request";
   expectedCompletionDate: any;
   attachments: string[];
+  uploadedFiles: File[];
+  existingAttachments: ProjectRequirementAttachment[];
 }
 
 export default function ProjectRequirementsPage() {
@@ -87,6 +95,9 @@ export default function ProjectRequirementsPage() {
     updateFilters,
     handlePageChange,
     refreshData,
+    uploadAttachments,
+    deleteAttachment,
+    downloadAttachment,
   } = useProjectRequirements({
     projectId: projectId ? parseInt(projectId) : undefined,
     pageSize: 20,
@@ -121,6 +132,8 @@ export default function ProjectRequirementsPage() {
     type: "new",
     expectedCompletionDate: null,
     attachments: [],
+    uploadedFiles: [],
+    existingAttachments: [],
   });
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -177,6 +190,8 @@ export default function ProjectRequirementsPage() {
       type: "new",
       expectedCompletionDate: null,
       attachments: [],
+      uploadedFiles: [],
+      existingAttachments: [],
     });
     setValidationErrors({});
     setSelectedRequirement(null);
@@ -196,6 +211,8 @@ export default function ProjectRequirementsPage() {
       type: requirement.type,
       expectedCompletionDate: parseDate(requirement.expectedCompletionDate),
       attachments: [],
+      uploadedFiles: [],
+      existingAttachments: requirement.attachments || [],
     });
     setValidationErrors({});
     onEditOpen();
@@ -221,14 +238,34 @@ export default function ProjectRequirementsPage() {
         attachments: formData.attachments,
       };
 
+      let savedRequirement: ProjectRequirement;
+
       if (selectedRequirement) {
-        await updateRequirement(selectedRequirement.id, {
+        savedRequirement = await updateRequirement(selectedRequirement.id, {
           ...requestData,
           id: selectedRequirement.id,
           status: saveAsDraft ? "draft" : "in_development",
         });
       } else {
-        await createRequirement(requestData);
+        savedRequirement = await createRequirement(requestData);
+      }
+
+      // Upload new files if any
+      if (formData.uploadedFiles.length > 0) {
+        await uploadAttachments(savedRequirement.id, formData.uploadedFiles);
+      }
+
+      // Handle removed existing attachments
+      const removedAttachments =
+        selectedRequirement?.attachments?.filter(
+          (existing) =>
+            !formData.existingAttachments.find(
+              (kept) => kept.id === existing.id,
+            ),
+        ) || [];
+
+      for (const removed of removedAttachments) {
+        await deleteAttachment(savedRequirement.id, removed.id);
       }
 
       resetForm();
@@ -273,6 +310,40 @@ export default function ProjectRequirementsPage() {
   };
 
   // ...start development removed
+
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+    setFormData((prev) => ({
+      ...prev,
+      uploadedFiles: [...prev.uploadedFiles, ...newFiles],
+    }));
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      uploadedFiles: prev.uploadedFiles.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleRemoveExistingAttachment = (attachmentId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      existingAttachments: prev.existingAttachments.filter(
+        (att) => att.id !== attachmentId,
+      ),
+    }));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -512,7 +583,12 @@ export default function ProjectRequirementsPage() {
                         <div>
                           <div className="font-medium">{requirement.name}</div>
                           <div className="text-sm text-default-500 line-clamp-2">
-                            {requirement.description}
+                            <p
+                              dangerouslySetInnerHTML={{
+                                __html: requirement.description,
+                              }}
+                              className="text-sm leading-relaxed"
+                            />
                           </div>
                         </div>
                       </TableCell>
@@ -654,6 +730,7 @@ export default function ProjectRequirementsPage() {
                       {t("requirements.requirementDescription")} *
                     </label>
                     <ReactQuill
+                      className="rtl-editor"
                       modules={{
                         toolbar: [
                           ["bold", "italic", "underline"],
@@ -729,6 +806,132 @@ export default function ProjectRequirementsPage() {
                       setFormData({ ...formData, expectedCompletionDate: date })
                     }
                   />
+
+                  {/* File Upload Section */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-foreground">
+                      {t("requirements.attachments")}
+                    </label>
+
+                    {/* File Upload Input */}
+                    <div className="border-2 border-dashed border-default-300 rounded-lg p-4 hover:border-default-400 transition-colors">
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.rar"
+                        onChange={(e) => handleFileSelect(e.target.files)}
+                        className="hidden"
+                        id="file-upload"
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                      >
+                        <Upload className="w-8 h-8 text-default-400" />
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-default-700">
+                            {t("requirements.uploadFiles")}
+                          </p>
+                          <p className="text-xs text-default-500">
+                            PDF, DOC, XLS, PPT, Images, ZIP (Max 10MB each)
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Existing Attachments */}
+                    {formData.existingAttachments.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-default-700">
+                          {t("requirements.existingAttachments")}
+                        </h4>
+                        {formData.existingAttachments.map((attachment) => (
+                          <div
+                            key={attachment.id}
+                            className="flex items-center justify-between p-3 bg-default-50 rounded-lg"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <FileText className="w-4 h-4 text-default-500" />
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {attachment.originalName}
+                                </p>
+                                <p className="text-xs text-default-500">
+                                  {formatFileSize(attachment.fileSize)} •{" "}
+                                  {new Date(
+                                    attachment.uploadedAt,
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="light"
+                                onPress={() => {
+                                  downloadAttachment(
+                                    selectedRequirement?.id || 0,
+                                    attachment.id,
+                                    attachment.originalName,
+                                  );
+                                }}
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="light"
+                                color="danger"
+                                onPress={() =>
+                                  handleRemoveExistingAttachment(attachment.id)
+                                }
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* New Uploaded Files */}
+                    {formData.uploadedFiles.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-default-700">
+                          {t("requirements.newFiles")}
+                        </h4>
+                        {formData.uploadedFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 bg-primary-50 rounded-lg"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <FileText className="w-4 h-4 text-primary-500" />
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {file.name}
+                                </p>
+                                <p className="text-xs text-default-500">
+                                  {formatFileSize(file.size)}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="light"
+                              color="danger"
+                              onPress={() => handleRemoveFile(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </ModalBody>
               <ModalFooter>
@@ -752,7 +955,10 @@ export default function ProjectRequirementsPage() {
                       color="primary"
                       isLoading={loading}
                       onPress={async () => {
-                        if (selectedRequirement && selectedRequirement.status === "draft") {
+                        if (
+                          selectedRequirement &&
+                          selectedRequirement.status === "draft"
+                        ) {
                           try {
                             await handleSendRequirement(selectedRequirement);
                             // Close edit modal when send succeeds

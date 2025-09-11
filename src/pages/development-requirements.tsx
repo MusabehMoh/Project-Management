@@ -140,7 +140,12 @@ const RequirementCard = ({
       <CardBody className="pt-0 flex-1 flex flex-col">
         <div className="space-y-4 flex-1">
           <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
-            <p className="text-sm line-clamp-4">{requirement.description}</p>
+            <p
+              dangerouslySetInnerHTML={{
+                __html: requirement.description,
+              }}
+              className="text-sm line-clamp-4"
+            />
           </div>
 
           <div className="flex items-center gap-2">
@@ -155,10 +160,10 @@ const RequirementCard = ({
         <div className="flex items-center pt-2 gap-2 mt-auto">
           <Button
             className="flex-1"
-            color="primary"
+            color="default"
             size="sm"
-            startContent={<Eye className="w-4 h-4" />}
-            variant="flat"
+            startContent={<Eye className="w-3 h-3 flex-shrink-0" />}
+            variant="faded"
             onPress={() => onViewDetails(requirement)}
           >
             {t("common.viewDetails")}
@@ -168,16 +173,16 @@ const RequirementCard = ({
           {!requirement.timeline && (
             <Button
               className="flex-1"
-              color={requirement.task ? "warning" : "success"}
+              color="default"
               size="sm"
               startContent={
                 requirement.task ? (
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3 h-3 flex-shrink-0" />
                 ) : (
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3 h-3 flex-shrink-0" />
                 )
               }
-              variant="flat"
+              variant="faded"
               onPress={() => onCreateTask(requirement)}
             >
               {requirement.task
@@ -190,10 +195,16 @@ const RequirementCard = ({
           {!requirement.task && (
             <Button
               className="flex-1"
-              color={requirement.timeline ? "primary" : "secondary"}
+              color="default"
               size="sm"
-              startContent={<Calendar className="w-4 h-4" />}
-              variant="flat"
+              startContent={
+                requirement.timeline ? (
+                  <Edit className="w-3 h-3 flex-shrink-0" />
+                ) : (
+                  <Plus className="w-3 h-3 flex-shrink-0" />
+                )
+              }
+              variant="faded"
               onPress={() => onCreateTimeline(requirement)}
             >
               {requirement.timeline
@@ -668,9 +679,12 @@ export default function DevelopmentRequirementsPage() {
                       {t("requirements.description")}
                     </h3>
                     <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                      <p className="text-sm leading-relaxed">
-                        {selectedRequirement.description}
-                      </p>
+                      <p
+                        dangerouslySetInnerHTML={{
+                          __html: selectedRequirement.description,
+                        }}
+                        className="text-sm leading-relaxed"
+                      />
                     </div>
                   </div>
 

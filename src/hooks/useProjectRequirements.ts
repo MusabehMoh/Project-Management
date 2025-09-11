@@ -423,6 +423,134 @@ export function useProjectRequirements({
     projectId,
   ]);
 
+  /**
+   * Upload attachments for a requirement
+   */
+  const uploadAttachments = useCallback(
+    async (requirementId: number, files: File[]) => {
+      if (files.length === 0) return [];
+
+      setLoading(true);
+      try {
+        const uploadedAttachments = 
+          await projectRequirementsService.uploadAttachments(requirementId, files);
+        
+        // Update the requirement in the local state to include new attachments
+        setRequirements(prev => prev.map(req => 
+          req.id === requirementId 
+            ? { 
+                ...req, 
+                attachments: [...(req.attachments || []), ...uploadedAttachments]
+              }
+            : req
+        ));
+
+        addToast({
+          title: "Success",
+          description: `${uploadedAttachments.length} file(s) uploaded successfully`,
+          color: "success",
+        });
+
+        return uploadedAttachments;
+      } catch (err) {
+        const errorMessage = 
+          err instanceof Error ? err.message : "Failed to upload files";
+        
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  /**
+   * Delete an attachment from a requirement
+   */
+  const deleteAttachment = useCallback(
+    async (requirementId: number, attachmentId: number) => {
+      setLoading(true);
+      try {
+        await projectRequirementsService.deleteAttachment(requirementId, attachmentId);
+        
+        // Update the requirement in the local state to remove the attachment
+        setRequirements(prev => prev.map(req => 
+          req.id === requirementId 
+            ? { 
+                ...req, 
+                attachments: req.attachments?.filter(att => att.id !== attachmentId) || []
+              }
+            : req
+        ));
+
+        addToast({
+          title: "Success",
+          description: "Attachment deleted successfully",
+          color: "success",
+        });
+      } catch (err) {
+        const errorMessage = 
+          err instanceof Error ? err.message : "Failed to delete attachment";
+        
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  /**
+   * Download an attachment
+   */
+  const downloadAttachment = useCallback(
+    async (requirementId: number, attachmentId: number, filename: string) => {
+      try {
+        const blob = await projectRequirementsService.downloadAttachment(
+          requirementId, 
+          attachmentId
+        );
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+
+        addToast({
+          title: "Success",
+          description: "File downloaded successfully",
+          color: "success",
+        });
+      } catch (err) {
+        const errorMessage = 
+          err instanceof Error ? err.message : "Failed to download file";
+        
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          color: "danger",
+        });
+        throw err;
+      }
+    },
+    [],
+  );
+
   return {
     // Data
     requirements,
@@ -464,5 +592,8 @@ export function useProjectRequirements({
     handleAssignedProjectsProjectIdChange,
     clearError,
     refreshData,
+    uploadAttachments,
+    deleteAttachment,
+    downloadAttachment,
   };
 }

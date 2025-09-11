@@ -817,4 +817,203 @@ export class ProjectRequirementsController {
       });
     }
   }
+
+  /**
+   * Upload attachment for a requirement (mock implementation)
+   */
+  async uploadAttachment(req: Request, res: Response) {
+    try {
+      const { requirementId } = req.params;
+      const currentUserId = parseInt(req.query.userId as string) || 1;
+
+      // Find the requirement
+      const requirement = mockProjectRequirements.find(
+        (r) => r.id === parseInt(requirementId),
+      );
+
+      if (!requirement) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: "Requirement not found",
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      // Mock file processing - in real implementation, would handle multipart/form-data
+      // For now, we'll simulate with dummy data based on body
+      const { files } = req.body as { files: Array<{ name: string; size: number; type: string }> };
+
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: "No files provided",
+            code: "VALIDATION_ERROR",
+          },
+        });
+      }
+
+      const uploadedAttachments = files.map((file, index) => {
+        const newAttachmentId = Math.max(
+          ...mockProjectRequirements.flatMap(r => r.attachments?.map(a => a.id) || []),
+          0
+        ) + index + 1;
+
+        return {
+          id: newAttachmentId,
+          requirementId: parseInt(requirementId),
+          fileName: `${Date.now()}_${file.name}`,
+          originalName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: currentUserId,
+        };
+      });
+
+      // Add attachments to requirement
+      if (!requirement.attachments) {
+        requirement.attachments = [];
+      }
+      requirement.attachments.push(...uploadedAttachments);
+
+      logger.info(`Uploaded ${uploadedAttachments.length} attachments for requirement ${requirementId}`);
+
+      res.status(201).json({
+        success: true,
+        data: uploadedAttachments,
+        message: "Files uploaded successfully",
+      });
+    } catch (error) {
+      logger.error("Error uploading attachment:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  /**
+   * Delete attachment from a requirement
+   */
+  async deleteAttachment(req: Request, res: Response) {
+    try {
+      const { requirementId, attachmentId } = req.params;
+
+      // Find the requirement
+      const requirement = mockProjectRequirements.find(
+        (r) => r.id === parseInt(requirementId),
+      );
+
+      if (!requirement) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: "Requirement not found",
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      if (!requirement.attachments) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: "Attachment not found",
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      const attachmentIndex = requirement.attachments.findIndex(
+        (a) => a.id === parseInt(attachmentId),
+      );
+
+      if (attachmentIndex === -1) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: "Attachment not found",
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      // Remove attachment
+      const deletedAttachment = requirement.attachments.splice(attachmentIndex, 1)[0];
+
+      logger.info(`Deleted attachment ${attachmentId} from requirement ${requirementId}`);
+
+      res.json({
+        success: true,
+        data: deletedAttachment,
+        message: "Attachment deleted successfully",
+      });
+    } catch (error) {
+      logger.error("Error deleting attachment:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  /**
+   * Download attachment (mock implementation)
+   */
+  async downloadAttachment(req: Request, res: Response) {
+    try {
+      const { requirementId, attachmentId } = req.params;
+
+      // Find the requirement and attachment
+      const requirement = mockProjectRequirements.find(
+        (r) => r.id === parseInt(requirementId),
+      );
+
+      if (!requirement || !requirement.attachments) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: "Requirement or attachment not found",
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      const attachment = requirement.attachments.find(
+        (a) => a.id === parseInt(attachmentId),
+      );
+
+      if (!attachment) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: "Attachment not found",
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      // Mock download - in real implementation, would stream file
+      res.setHeader('Content-Disposition', `attachment; filename="${attachment.originalName}"`);
+      res.setHeader('Content-Type', attachment.mimeType);
+      res.setHeader('Content-Length', attachment.fileSize.toString());
+
+      // Send mock file content
+      res.send(`Mock file content for ${attachment.originalName}`);
+
+      logger.info(`Downloaded attachment ${attachmentId} from requirement ${requirementId}`);
+    } catch (error) {
+      logger.error("Error downloading attachment:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
 }
