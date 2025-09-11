@@ -47,6 +47,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useDevelopmentRequirements } from "@/hooks/useDevelopmentRequirements";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { useTimeline } from "@/hooks/useTimeline";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { hasPermission } from "@/utils/permissions";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import { GlobalPagination } from "@/components/GlobalPagination";
@@ -96,11 +98,13 @@ const RequirementCard = ({
   onViewDetails,
   onCreateTask,
   onCreateTimeline,
+  currentUser,
 }: {
   requirement: ProjectRequirement;
   onViewDetails: (requirement: ProjectRequirement) => void;
   onCreateTask: (requirement: ProjectRequirement) => void;
   onCreateTimeline: (requirement: ProjectRequirement) => void;
+  currentUser: any;
 }) => {
   const { t } = useLanguage();
 
@@ -158,60 +162,74 @@ const RequirementCard = ({
 
         {/* Detail, Task, and Timeline Creation Buttons */}
         <div className="flex items-center pt-2 gap-2 mt-auto">
-          <Button
-            className="flex-1"
-            color="default"
-            size="sm"
-            startContent={<Eye className="w-3 h-3 flex-shrink-0" />}
-            variant="faded"
-            onPress={() => onViewDetails(requirement)}
-          >
-            {t("common.viewDetails")}
-          </Button>
+          {hasPermission(currentUser, {
+            actions: ["requirements.view"],
+          }) && (
+            <Button
+              className="flex-1"
+              color="default"
+              size="sm"
+              startContent={<Eye className="w-3 h-3 flex-shrink-0" />}
+              variant="faded"
+              onPress={() => onViewDetails(requirement)}
+            >
+              {t("common.viewDetails")}
+            </Button>
+          )}
 
           {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
-          {!requirement.timeline && (
-            <Button
-              className="flex-1"
-              color="default"
-              size="sm"
-              startContent={
-                requirement.task ? (
-                  <Edit className="w-3 h-3 flex-shrink-0" />
-                ) : (
-                  <Plus className="w-3 h-3 flex-shrink-0" />
-                )
-              }
-              variant="faded"
-              onPress={() => onCreateTask(requirement)}
-            >
-              {requirement.task
-                ? t("common.view") + " Task"
-                : t("common.create") + " Task"}
-            </Button>
-          )}
+          {!requirement.timeline &&
+            hasPermission(currentUser, {
+              actions: requirement.task
+                ? ["requirements.tasks.update"]
+                : ["requirements.tasks.create"],
+            }) && (
+              <Button
+                className="flex-1"
+                color="default"
+                size="sm"
+                startContent={
+                  requirement.task ? (
+                    <Edit className="w-3 h-3 flex-shrink-0" />
+                  ) : (
+                    <Plus className="w-3 h-3 flex-shrink-0" />
+                  )
+                }
+                variant="faded"
+                onPress={() => onCreateTask(requirement)}
+              >
+                {requirement.task
+                  ? t("common.view") + " Task"
+                  : t("common.create") + " Task"}
+              </Button>
+            )}
 
           {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
-          {!requirement.task && (
-            <Button
-              className="flex-1"
-              color="default"
-              size="sm"
-              startContent={
-                requirement.timeline ? (
-                  <Edit className="w-3 h-3 flex-shrink-0" />
-                ) : (
-                  <Plus className="w-3 h-3 flex-shrink-0" />
-                )
-              }
-              variant="faded"
-              onPress={() => onCreateTimeline(requirement)}
-            >
-              {requirement.timeline
-                ? t("common.view") + " Timeline"
-                : t("common.create") + " Timeline"}
-            </Button>
-          )}
+          {!requirement.task &&
+            hasPermission(currentUser, {
+              actions: requirement.timeline
+                ? ["requirements.timelines.update"]
+                : ["requirements.timelines.create"],
+            }) && (
+              <Button
+                className="flex-1"
+                color="default"
+                size="sm"
+                startContent={
+                  requirement.timeline ? (
+                    <Edit className="w-3 h-3 flex-shrink-0" />
+                  ) : (
+                    <Plus className="w-3 h-3 flex-shrink-0" />
+                  )
+                }
+                variant="faded"
+                onPress={() => onCreateTimeline(requirement)}
+              >
+                {requirement.timeline
+                  ? t("common.view") + " Timeline"
+                  : t("common.create") + " Timeline"}
+              </Button>
+            )}
         </div>
       </CardBody>
     </Card>
@@ -219,23 +237,23 @@ const RequirementCard = ({
 };
 
 // Form data type for editing requirements
-interface RequirementFormData {
-  name: string;
-  description: string;
-  priority: "low" | "medium" | "high" | "critical";
-  status: "draft" | "in_development" | "completed";
-}
+// interface RequirementFormData {
+//   name: string;
+//   description: string;
+//   priority: "low" | "medium" | "high" | "critical";
+//   status: "draft" | "in_development" | "completed";
+// }
 
 export default function DevelopmentRequirementsPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user: currentUser } = useCurrentUser();
 
   // Grid-only view
 
   const {
     requirements,
     loading,
-    error,
     currentPage,
     totalPages,
     totalRequirements,
@@ -245,7 +263,6 @@ export default function DevelopmentRequirementsPage() {
     updateFilters,
     handlePageChange,
     handlePageSizeChange,
-    clearError,
     refreshData,
     projects,
     setProjectFilter,
@@ -281,7 +298,6 @@ export default function DevelopmentRequirementsPage() {
     employees: developers,
     loading: loadingDevelopers,
     searchEmployees: searchDevelopers,
-    searchResults: developerResults,
   } = useTeamSearch({
     minLength: 2,
     maxResults: 15,
@@ -291,7 +307,6 @@ export default function DevelopmentRequirementsPage() {
     employees: qcMembers,
     loading: loadingQC,
     searchEmployees: searchQC,
-    searchResults: qcResults,
   } = useTeamSearch({
     minLength: 2,
     maxResults: 15,
@@ -607,6 +622,7 @@ export default function DevelopmentRequirementsPage() {
               {requirements.map((requirement) => (
                 <RequirementCard
                   key={requirement.id}
+                  currentUser={currentUser}
                   requirement={requirement}
                   onCreateTask={openTaskModal}
                   onCreateTimeline={openTimelineModal}
@@ -779,14 +795,20 @@ export default function DevelopmentRequirementsPage() {
                                   </p>
                                 </div>
                               </div>
-                              <Button
-                                color="primary"
-                                size="sm"
-                                startContent={<Download className="w-4 h-4" />}
-                                variant="light"
-                              >
-                                {t("projects.downloadFile")}
-                              </Button>
+                              {hasPermission(currentUser, {
+                                actions: ["requirements.attachments.download"],
+                              }) && (
+                                <Button
+                                  color="primary"
+                                  size="sm"
+                                  startContent={
+                                    <Download className="w-4 h-4" />
+                                  }
+                                  variant="light"
+                                >
+                                  {t("projects.downloadFile")}
+                                </Button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -955,16 +977,22 @@ export default function DevelopmentRequirementsPage() {
                   >
                     {t("common.cancel")}
                   </Button>
-                  <Button
-                    color="primary"
-                    isDisabled={!selectedDeveloper && !selectedQC}
-                    isLoading={isCreatingTask}
-                    onPress={handleTaskSubmit}
-                  >
-                    {selectedRequirement?.task
-                      ? t("common.update")
-                      : t("common.create")}
-                  </Button>
+                  {hasPermission(currentUser, {
+                    actions: selectedRequirement?.task
+                      ? ["requirements.tasks.update"]
+                      : ["requirements.tasks.create"],
+                  }) && (
+                    <Button
+                      color="primary"
+                      isDisabled={!selectedDeveloper && !selectedQC}
+                      isLoading={isCreatingTask}
+                      onPress={handleTaskSubmit}
+                    >
+                      {selectedRequirement?.task
+                        ? t("common.update")
+                        : t("common.create")}
+                    </Button>
+                  )}
                 </ModalFooter>
               </>
             )}
@@ -972,15 +1000,19 @@ export default function DevelopmentRequirementsPage() {
         </Modal>
 
         {/* Timeline Creation Modal */}
-        <TimelineCreateModal
-          initialDescription={timelineRequirement?.description}
-          initialName={timelineRequirement?.name}
-          isOpen={isTimelineModalOpen}
-          loading={timelineLoading}
-          projectId={timelineRequirement?.project?.id}
-          onCreateTimeline={handleTimelineCreate}
-          onOpenChange={setIsTimelineModalOpen}
-        />
+        {hasPermission(currentUser, {
+          actions: ["requirements.timelines.create"],
+        }) && (
+          <TimelineCreateModal
+            initialDescription={timelineRequirement?.description}
+            initialName={timelineRequirement?.name}
+            isOpen={isTimelineModalOpen}
+            loading={timelineLoading}
+            projectId={timelineRequirement?.project?.id}
+            onCreateTimeline={handleTimelineCreate}
+            onOpenChange={setIsTimelineModalOpen}
+          />
+        )}
       </div>
     </DefaultLayout>
   );

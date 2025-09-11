@@ -31,6 +31,8 @@ import TimelineItemCreateModal, {
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimelineHelpers } from "@/hooks/useTimelineHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { hasPermission } from "@/utils/permissions";
 import {
   Timeline,
   Sprint,
@@ -104,6 +106,7 @@ export default function TimelineTreeView({
   loading = false,
 }: TimelineTreeViewProps) {
   const { t, direction } = useLanguage();
+  const { user: currentUser } = useCurrentUser();
   const containerRef = useRef<HTMLDivElement>(null);
   // Some backends may omit treeId immediately after creation; ensure a stable fallback
   const safeTimelineTreeId = useMemo(() => {
@@ -833,27 +836,31 @@ export default function TimelineTreeView({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            color="default"
-            size="sm"
-            startContent={<EditIcon />}
-            variant="light"
-            onClick={(e) => e.stopPropagation()}
-            onPress={() => handleOpenEditModal("timeline", timeline)}
-          >
-            {t("timeline.treeView.editModalTitle")}{" "}
-            {t("timeline.treeView.timelineLabel")}
-          </Button>
-          <Button
-            color="primary"
-            isLoading={loading}
-            size="sm"
-            startContent={<PlusIcon />}
-            onClick={(e) => e.stopPropagation()}
-            onPress={handleCreateSprint}
-          >
-            {t("timeline.treeView.addSprint")}
-          </Button>
+          {hasPermission(currentUser, { actions: ["timelines.update"] }) && (
+            <Button
+              color="default"
+              size="sm"
+              startContent={<EditIcon />}
+              variant="light"
+              onClick={(e) => e.stopPropagation()}
+              onPress={() => handleOpenEditModal("timeline", timeline)}
+            >
+              {t("timeline.treeView.editModalTitle")}{" "}
+              {t("timeline.treeView.timelineLabel")}
+            </Button>
+          )}
+          {hasPermission(currentUser, { actions: ["sprints.create"] }) && (
+            <Button
+              color="primary"
+              isLoading={loading}
+              size="sm"
+              startContent={<PlusIcon />}
+              onClick={(e) => e.stopPropagation()}
+              onPress={handleCreateSprint}
+            >
+              {t("timeline.treeView.addSprint")}
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -938,50 +945,59 @@ export default function TimelineTreeView({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              color="primary"
-              isLoading={loading}
-              size="sm"
-              startContent={<PlusIcon />}
-              variant="light"
-              onClick={(e) => e.stopPropagation()}
-              onPress={() => handleCreateTask(sprint.id.toString())}
-            >
-              {t("timeline.treeView.addTask")}
-            </Button>
-            <Dropdown>
-              <DropdownTrigger>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVerticalIcon />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                onAction={(key) => {
-                  if (key === "edit") {
-                    handleOpenEditModal("sprint", sprint);
-                  } else if (key === "delete") {
-                    handleDelete(sprint.id.toString(), "sprint");
-                  }
-                }}
+            {hasPermission(currentUser, { actions: ["timelines.tasks.create"] }) && (
+              <Button
+                color="primary"
+                isLoading={loading}
+                size="sm"
+                startContent={<PlusIcon />}
+                variant="light"
+                onClick={(e) => e.stopPropagation()}
+                onPress={() => handleCreateTask(sprint.id.toString())}
               >
-                <DropdownItem key="edit" startContent={<EditIcon />}>
-                  {t("timeline.treeView.editSprint")}
-                </DropdownItem>
-                <DropdownItem
-                  key="delete"
-                  className="text-danger"
-                  color="danger"
-                  startContent={<DeleteIcon />}
+                {t("timeline.treeView.addTask")}
+              </Button>
+            )}
+            {(hasPermission(currentUser, { actions: ["sprints.update"] }) ||
+              hasPermission(currentUser, { actions: ["sprints.delete"] })) && (
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVerticalIcon />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  onAction={(key) => {
+                    if (key === "edit") {
+                      handleOpenEditModal("sprint", sprint);
+                    } else if (key === "delete") {
+                      handleDelete(sprint.id.toString(), "sprint");
+                    }
+                  }}
                 >
-                  {t("timeline.treeView.deleteSprint")}
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+                  {hasPermission(currentUser, { actions: ["sprints.update"] }) && (
+                    <DropdownItem key="edit" startContent={<EditIcon />}>
+                      {t("timeline.treeView.editSprint")}
+                    </DropdownItem>
+                  )}
+                  {hasPermission(currentUser, { actions: ["sprints.delete"] }) && (
+                    <DropdownItem
+                      key="delete"
+                      className="text-danger"
+                      color="danger"
+                      startContent={<DeleteIcon />}
+                    >
+                      {t("timeline.treeView.deleteSprint")}
+                    </DropdownItem>
+                  )}
+                </DropdownMenu>
+              </Dropdown>
+            )}
           </div>
         </div>
       </div>
@@ -1044,42 +1060,58 @@ export default function TimelineTreeView({
                   {t("timeline.moveTask.quickMoveOptions")}
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    color="primary"
-                    size="sm"
-                    startContent={<CalendarDaysIcon size={14} />}
-                    variant="flat"
-                    onPress={() => handleQuickMoveTask(task, 1)}
-                  >
-                    +1 {t("timeline.moveTask.movePlus1Day")}
-                  </Button>
-                  <Button
-                    color="warning"
-                    size="sm"
-                    startContent={<CalendarDaysIcon size={14} />}
-                    variant="flat"
-                    onPress={() => handleQuickMoveTask(task, -1)}
-                  >
-                    -1 {t("timeline.moveTask.moveMinus1Day")}
-                  </Button>
-                  <Button
-                    color="primary"
-                    size="sm"
-                    startContent={<ClockIcon size={14} />}
-                    variant="flat"
-                    onPress={() => handleQuickMoveTask(task, 7)}
-                  >
-                    +7 {t("timeline.moveTask.movePlus1Week")}
-                  </Button>
-                  <Button
-                    color="warning"
-                    size="sm"
-                    startContent={<ClockIcon size={14} />}
-                    variant="flat"
-                    onPress={() => handleQuickMoveTask(task, -7)}
-                  >
-                    -7 {t("timeline.moveTask.moveMinus1Week")}
-                  </Button>
+                  {hasPermission(currentUser, {
+                    actions: ["timelines.tasks.move"],
+                  }) && (
+                    <Button
+                      color="primary"
+                      size="sm"
+                      startContent={<CalendarDaysIcon size={14} />}
+                      variant="flat"
+                      onPress={() => handleQuickMoveTask(task, 1)}
+                    >
+                      +1 {t("timeline.moveTask.movePlus1Day")}
+                    </Button>
+                  )}
+                  {hasPermission(currentUser, {
+                    actions: ["timelines.tasks.move"],
+                  }) && (
+                    <Button
+                      color="warning"
+                      size="sm"
+                      startContent={<CalendarDaysIcon size={14} />}
+                      variant="flat"
+                      onPress={() => handleQuickMoveTask(task, -1)}
+                    >
+                      -1 {t("timeline.moveTask.moveMinus1Day")}
+                    </Button>
+                  )}
+                  {hasPermission(currentUser, {
+                    actions: ["timelines.tasks.move"],
+                  }) && (
+                    <Button
+                      color="primary"
+                      size="sm"
+                      startContent={<ClockIcon size={14} />}
+                      variant="flat"
+                      onPress={() => handleQuickMoveTask(task, 7)}
+                    >
+                      +7 {t("timeline.moveTask.movePlus1Week")}
+                    </Button>
+                  )}
+                  {hasPermission(currentUser, {
+                    actions: ["timelines.tasks.move"],
+                  }) && (
+                    <Button
+                      color="warning"
+                      size="sm"
+                      startContent={<ClockIcon size={14} />}
+                      variant="flat"
+                      onPress={() => handleQuickMoveTask(task, -7)}
+                    >
+                      -7 {t("timeline.moveTask.moveMinus1Week")}
+                    </Button>
+                  )}
                 </div>
                 <Divider />
                 {/* Custom move */}
@@ -1240,20 +1272,32 @@ export default function TimelineTreeView({
                 }
               }}
             >
-              <DropdownItem key="edit" startContent={<EditIcon />}>
-                {t("timeline.treeView.editTask")}
-              </DropdownItem>
-              <DropdownItem key="move" startContent={<MoveIcon />}>
-                {t("timeline.treeView.moveTaskToSprint")}
-              </DropdownItem>
-              <DropdownItem
-                key="delete"
-                className="text-danger"
-                color="danger"
-                startContent={<DeleteIcon />}
-              >
-                {t("timeline.treeView.deleteTask")}
-              </DropdownItem>
+              {hasPermission(currentUser, {
+                actions: ["timelines.tasks.update"],
+              }) && (
+                <DropdownItem key="edit" startContent={<EditIcon />}>
+                  {t("timeline.treeView.editTask")}
+                </DropdownItem>
+              )}
+              {hasPermission(currentUser, {
+                actions: ["timelines.tasks.move"],
+              }) && (
+                <DropdownItem key="move" startContent={<MoveIcon />}>
+                  {t("timeline.treeView.moveTaskToSprint")}
+                </DropdownItem>
+              )}
+              {hasPermission(currentUser, {
+                actions: ["timelines.tasks.delete"],
+              }) && (
+                <DropdownItem
+                  key="delete"
+                  className="text-danger"
+                  color="danger"
+                  startContent={<DeleteIcon />}
+                >
+                  {t("timeline.treeView.deleteTask")}
+                </DropdownItem>
+              )}
             </DropdownMenu>
           </Dropdown>
         </div>
@@ -1368,17 +1412,21 @@ export default function TimelineTreeView({
                 }
               }}
             >
-              <DropdownItem key="edit" startContent={<EditIcon />}>
-                {t("timeline.treeView.editSubtask")}
-              </DropdownItem>
-              <DropdownItem
-                key="delete"
-                className="text-danger"
-                color="danger"
-                startContent={<DeleteIcon />}
-              >
-                {t("timeline.treeView.deleteSubtask")}
-              </DropdownItem>
+              {hasPermission(currentUser, { actions: ["subtasks.update"] }) && (
+                <DropdownItem key="edit" startContent={<EditIcon />}>
+                  {t("timeline.treeView.editSubtask")}
+                </DropdownItem>
+              )}
+              {hasPermission(currentUser, { actions: ["subtasks.delete"] }) && (
+                <DropdownItem
+                  key="delete"
+                  className="text-danger"
+                  color="danger"
+                  startContent={<DeleteIcon />}
+                >
+                  {t("timeline.treeView.deleteSubtask")}
+                </DropdownItem>
+              )}
             </DropdownMenu>
           </Dropdown>
         </div>

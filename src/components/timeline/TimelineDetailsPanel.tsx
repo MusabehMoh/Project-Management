@@ -9,6 +9,8 @@ import TimelineEditModal, {
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimelineHelpers } from "@/hooks/useTimelineHelpers";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { hasPermission } from "@/utils/permissions";
 import {
   Timeline,
   Sprint,
@@ -46,6 +48,7 @@ export default function TimelineDetailsPanel({
   loading = false,
 }: TimelineDetailsPanelProps) {
   const { t, direction } = useLanguage();
+  const { user: currentUser } = useCurrentUser();
   const {
     getStatusColor,
     getProgressColor,
@@ -137,7 +140,6 @@ export default function TimelineDetailsPanel({
         });
       }
     } catch (error) {
-      console.error(`Failed to update ${editModalType}:`, error);
       throw error; // Re-throw to let the modal handle it
     }
   };
@@ -222,12 +224,7 @@ export default function TimelineDetailsPanel({
               {timeline.sprints.reduce((acc, sprint) => {
                 // Count from requirements structure
                 const reqSubtasks = (sprint.tasks || []).reduce(
-                  (reqAcc, req) =>
-                    reqAcc +
-                    (req.subtasks || []).reduce(
-                      (taskAcc, task) => taskAcc + (task.subtasks?.length || 0),
-                      0,
-                    ),
+                  (reqAcc, req) => reqAcc + (req.subtasks?.length || 0),
                   0,
                 );
                 // Count from direct sprint tasks (for current mock data)
@@ -246,19 +243,23 @@ export default function TimelineDetailsPanel({
         </div>
       </div>
 
-      <Button
-        color="primary"
-        isDisabled={loading}
-        size="sm"
-        startContent={<EditIcon />}
-        variant="light"
-        onPress={() => {
-          handleOpenEditModal("timeline", timeline);
-        }}
-      >
-        {t("timeline.treeView.editModalTitle")}{" "}
-        {t("timeline.treeView.timelineLabel")}
-      </Button>
+      {hasPermission(currentUser, {
+        actions: ["timelines.update"],
+      }) && (
+        <Button
+          color="primary"
+          isDisabled={loading}
+          size="sm"
+          startContent={<EditIcon />}
+          variant="light"
+          onPress={() => {
+            handleOpenEditModal("timeline", timeline);
+          }}
+        >
+          {t("timeline.treeView.editModalTitle")}{" "}
+          {t("timeline.treeView.timelineLabel")}
+        </Button>
+      )}
     </div>
   );
 
@@ -333,18 +334,22 @@ export default function TimelineDetailsPanel({
           )}
         </div>
 
-        <Button
-          color="primary"
-          isDisabled={loading}
-          size="sm"
-          startContent={<EditIcon />}
-          variant="light"
-          onPress={() => {
-            handleOpenEditModal("sprint", currentItem);
-          }}
-        >
-          {t("timeline.treeView.editModalTitle")} {t("timeline.sprint")}
-        </Button>
+        {hasPermission(currentUser, {
+          actions: ["sprints.update"],
+        }) && (
+          <Button
+            color="primary"
+            isDisabled={loading}
+            size="sm"
+            startContent={<EditIcon />}
+            variant="light"
+            onPress={() => {
+              handleOpenEditModal("sprint", currentItem);
+            }}
+          >
+            {t("timeline.treeView.editModalTitle")} {t("timeline.sprint")}
+          </Button>
+        )}
       </div>
     );
   };
@@ -477,18 +482,22 @@ export default function TimelineDetailsPanel({
           )}
         </div>
 
-        <Button
-          color="primary"
-          isDisabled={loading}
-          size="sm"
-          startContent={<EditIcon />}
-          variant="light"
-          onPress={() => {
-            handleOpenEditModal("task", currentItem);
-          }}
-        >
-          {t("timeline.treeView.editModalTitle")} {t("timeline.task")}
-        </Button>
+        {hasPermission(currentUser, {
+          actions: ["timelines.tasks.update"],
+        }) && (
+          <Button
+            color="primary"
+            isDisabled={loading}
+            size="sm"
+            startContent={<EditIcon />}
+            variant="light"
+            onPress={() => {
+              handleOpenEditModal("task", currentItem);
+            }}
+          >
+            {t("timeline.treeView.editModalTitle")} {t("timeline.task")}
+          </Button>
+        )}
       </div>
     );
   };
@@ -590,18 +599,22 @@ export default function TimelineDetailsPanel({
           )}
         </div>
 
-        <Button
-          color="primary"
-          isDisabled={loading}
-          size="sm"
-          startContent={<EditIcon />}
-          variant="light"
-          onPress={() => {
-            handleOpenEditModal("subtask", currentItem);
-          }}
-        >
-          {t("timeline.treeView.editModalTitle")} {t("timeline.subtask")}
-        </Button>
+        {hasPermission(currentUser, {
+          actions: ["timelines.subtasks.update"],
+        }) && (
+          <Button
+            color="primary"
+            isDisabled={loading}
+            size="sm"
+            startContent={<EditIcon />}
+            variant="light"
+            onPress={() => {
+              handleOpenEditModal("subtask", currentItem);
+            }}
+          >
+            {t("timeline.treeView.editModalTitle")} {t("timeline.subtask")}
+          </Button>
+        )}
       </div>
     );
   };
