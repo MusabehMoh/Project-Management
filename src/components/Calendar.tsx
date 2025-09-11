@@ -235,8 +235,9 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         <Divider />
 
         <CardBody className="p-6">
-          {/* Calendar Header with Navigation */}
-          <div className="flex justify-between items-center mb-6">
+          <ScrollShadow hideScrollBar>
+            {/* Calendar Header with Navigation */}
+            <div className="flex justify-between items-center mb-6">
             <Button
               variant="ghost"
               isIconOnly
@@ -325,7 +326,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
 
           {/* Week/Day View - Event List */}
           {(viewMode === 'week' || viewMode === 'day') && (
-            <ScrollShadow className="max-h-96">
+            <ScrollShadow className="max-h-96" hideScrollBar>
               <div className="space-y-2">
                 {events.length === 0 ? (
                   <div className="text-center py-8 text-default-500">
@@ -379,6 +380,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               </div>
             </ScrollShadow>
           )}
+          </ScrollShadow>
         </CardBody>
       </Card>
 
@@ -420,7 +422,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               <h3 className="text-lg font-semibold">{t("calendar.upcomingEvents")}</h3>
             </CardHeader>
             <CardBody>
-              <ScrollShadow className="max-h-60">
+              <ScrollShadow className="max-h-60" hideScrollBar>
                 <div className="space-y-2">
                   {upcomingEvents.length === 0 ? (
                     <div className="text-center py-4 text-default-500">
@@ -463,7 +465,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 <h3 className="text-lg font-semibold text-danger">{t("calendar.overdueEvents")}</h3>
               </CardHeader>
               <CardBody>
-                <ScrollShadow className="max-h-40">
+                <ScrollShadow className="max-h-40" hideScrollBar>
                   <div className="space-y-2">
                     {overdueEvents.map(event => (
                       <div
