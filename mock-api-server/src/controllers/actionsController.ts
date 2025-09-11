@@ -178,7 +178,7 @@ export const mockActions = [
   },
   {
     id: 18,
-    name: "projects.requirements.view",
+    name: "requirements.view",
     description: "View project requirements",
     category: "Requirements Management",
     resource: "projects.requirements",

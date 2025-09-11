@@ -178,9 +178,7 @@ const RequirementCard = ({
           {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
           {!requirement.timeline &&
             hasPermission({
-              actions: requirement.task
-                ? ["requirements.tasks.update"]
-                : ["requirements.tasks.create"],
+              actions: ["requirements.tasks.create"],
             }) && (
               <Button
                 className="flex-1"
@@ -205,9 +203,7 @@ const RequirementCard = ({
           {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
           {!requirement.task &&
             hasPermission({
-              actions: requirement.timeline
-                ? ["requirements.timelines.update"]
-                : ["requirements.timelines.create"],
+              actions: ["requirements.timelines.create"],
             }) && (
               <Button
                 className="flex-1"
