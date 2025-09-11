@@ -8,13 +8,14 @@ import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
-import { DatePicker } from "@heroui/date-picker";
+import { DatePicker } from "@heroui/react";
 import { Switch } from "@heroui/switch";
 import { 
   parseDate, 
   parseTime, 
   getLocalTimeZone, 
   today,
+  now,
   Time,
   CalendarDate,
   CalendarDateTime 
@@ -74,10 +75,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   const [eventForm, setEventForm] = useState({
     title: "",
     description: "",
-    startDate: null as CalendarDate | null,
-    startTime: "09:00",
-    endDate: null as CalendarDate | null,
-    endTime: "17:00",
+    startDateTime: null as CalendarDateTime | null,
+    endDateTime: null as CalendarDateTime | null,
     type: "meeting" as CalendarEvent['type'],
     priority: "medium" as CalendarEvent['priority'],
     location: "",
@@ -177,10 +176,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     setEventForm({
       title: "",
       description: "",
-      startDate: null,
-      startTime: "09:00",
-      endDate: null,
-      endTime: "17:00",
+      startDateTime: null,
+      endDateTime: null,
       type: "meeting",
       priority: "medium",
       location: "",
@@ -199,19 +196,28 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     const startDate = new Date(event.startDate);
     const endDate = event.endDate ? new Date(event.endDate) : null;
     
-    // Convert to CalendarDate and extract time strings
-    const calendarStartDate = parseDate(startDate.toISOString().split('T')[0]);
-    const startTime = `${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`;
-    const calendarEndDate = endDate ? parseDate(endDate.toISOString().split('T')[0]) : null;
-    const endTime = endDate ? `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}` : "17:00";
+    // Convert to CalendarDateTime objects
+    const calendarStartDateTime = new CalendarDateTime(
+      startDate.getFullYear(),
+      startDate.getMonth() + 1,
+      startDate.getDate(),
+      startDate.getHours(),
+      startDate.getMinutes()
+    );
+    
+    const calendarEndDateTime = endDate ? new CalendarDateTime(
+      endDate.getFullYear(),
+      endDate.getMonth() + 1,
+      endDate.getDate(),
+      endDate.getHours(),
+      endDate.getMinutes()
+    ) : null;
     
     setEventForm({
       title: event.title,
       description: event.description || "",
-      startDate: calendarStartDate,
-      startTime: startTime,
-      endDate: calendarEndDate,
-      endTime: endTime,
+      startDateTime: calendarStartDateTime,
+      endDateTime: calendarEndDateTime,
       type: event.type,
       priority: event.priority,
       location: event.location || "",
@@ -231,23 +237,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       return;
     }
     
-    if (!eventForm.startDate) {
-      setFormError("Start date is required");
+    if (!eventForm.startDateTime) {
+      setFormError("Start date and time is required");
       return;
     }
 
     // Validate end date if provided
-    if (eventForm.endDate && eventForm.endDate.compare(eventForm.startDate) < 0) {
-      setFormError("End date cannot be before start date");
-      return;
-    }
-
-    // Validate end time if same day and not all day
-    if (!eventForm.isAllDay && 
-        eventForm.endDate && 
-        eventForm.endDate.compare(eventForm.startDate) === 0 && 
-        eventForm.endTime <= eventForm.startTime) {
-      setFormError("End time must be after start time for same-day events");
+    if (eventForm.endDateTime && eventForm.endDateTime.compare(eventForm.startDateTime) <= 0) {
+      setFormError("End date and time must be after start date and time");
       return;
     }
 
@@ -255,15 +252,15 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       title: eventForm.title.trim(),
       description: eventForm.description.trim(),
       startDate: eventForm.isAllDay 
-        ? `${eventForm.startDate!.toString()}T00:00:00.000Z`
-        : `${eventForm.startDate!.toString()}T${eventForm.startTime}:00.000Z`,
-      endDate: eventForm.endDate 
+        ? `${eventForm.startDateTime!.toDate(getLocalTimeZone()).toISOString().split('T')[0]}T00:00:00.000Z`
+        : eventForm.startDateTime!.toDate(getLocalTimeZone()).toISOString(),
+      endDate: eventForm.endDateTime 
         ? (eventForm.isAllDay 
-            ? `${eventForm.endDate.toString()}T23:59:59.999Z`
-            : `${eventForm.endDate.toString()}T${eventForm.endTime}:00.000Z`)
+            ? `${eventForm.endDateTime.toDate(getLocalTimeZone()).toISOString().split('T')[0]}T23:59:59.999Z`
+            : eventForm.endDateTime.toDate(getLocalTimeZone()).toISOString())
         : (eventForm.isAllDay 
-            ? `${eventForm.startDate!.toString()}T23:59:59.999Z`
-            : `${eventForm.startDate!.toString()}T${eventForm.endTime}:00.000Z`), // Use end time on same day if no end date
+            ? `${eventForm.startDateTime!.toDate(getLocalTimeZone()).toISOString().split('T')[0]}T23:59:59.999Z`
+            : eventForm.startDateTime!.add({hours: 1}).toDate(getLocalTimeZone()).toISOString()), // Default 1 hour duration
       type: eventForm.type,
       status: "upcoming" as CalendarEvent['status'],
       priority: eventForm.priority,
@@ -828,48 +825,34 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
             {/* Dates and Times */}
             <div className="space-y-4">
               {/* Start Date and Time */}
-              <div className="grid grid-cols-2 gap-4">
-                <DatePicker
-                  label={t("calendar.startDate")}
-                  value={eventForm.startDate}
-                  onChange={(date) => {
-                    setEventForm({
-                      ...eventForm, 
-                      startDate: date,
-                      // Auto-set end date to same day if not set
-                      endDate: eventForm.endDate || date
-                    });
-                  }}
-                  isRequired
-                  showMonthAndYearPickers
-                />
-                {!eventForm.isAllDay && (
-                  <Input
-                    type="time"
-                    label={t("calendar.startTime")}
-                    value={eventForm.startTime}
-                    onChange={(e) => setEventForm({...eventForm, startTime: e.target.value})}
-                  />
-                )}
-              </div>
+              <DatePicker
+                label={t("calendar.startDate")}
+                value={eventForm.startDateTime}
+                onChange={(dateTime) => {
+                  setEventForm({
+                    ...eventForm, 
+                    startDateTime: dateTime,
+                    // Auto-set end date to same day + 1 hour if not set
+                    endDateTime: eventForm.endDateTime || (dateTime ? dateTime.add({hours: 1}) : null)
+                  });
+                }}
+                isRequired
+                hideTimeZone
+                showMonthAndYearPickers
+                variant="bordered"
+                granularity={eventForm.isAllDay ? "day" : "minute"}
+              />
 
               {/* End Date and Time */}
-              <div className="grid grid-cols-2 gap-4">
-                <DatePicker
-                  label={t("calendar.endDate")}
-                  value={eventForm.endDate}
-                  onChange={(date) => setEventForm({...eventForm, endDate: date})}
-                  showMonthAndYearPickers
-                />
-                {!eventForm.isAllDay && (
-                  <Input
-                    type="time"
-                    label={t("calendar.endTime")}
-                    value={eventForm.endTime}
-                    onChange={(e) => setEventForm({...eventForm, endTime: e.target.value})}
-                  />
-                )}
-              </div>
+              <DatePicker
+                label={t("calendar.endDate")}
+                value={eventForm.endDateTime}
+                onChange={(dateTime) => setEventForm({...eventForm, endDateTime: dateTime})}
+                hideTimeZone
+                showMonthAndYearPickers
+                variant="bordered"
+                granularity={eventForm.isAllDay ? "day" : "minute"}
+              />
             </div>
 
             {/* Location */}
@@ -884,7 +867,19 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
             <div className="flex items-center gap-2">
               <Switch
                 isSelected={eventForm.isAllDay}
-                onValueChange={(checked) => setEventForm({...eventForm, isAllDay: checked})}
+                onValueChange={(checked) => {
+                  setEventForm({
+                    ...eventForm, 
+                    isAllDay: checked,
+                    // When toggling to all day, convert to date-only values
+                    startDateTime: checked && eventForm.startDateTime 
+                      ? eventForm.startDateTime.set({hour: 0, minute: 0, second: 0})
+                      : eventForm.startDateTime,
+                    endDateTime: checked && eventForm.endDateTime 
+                      ? eventForm.endDateTime.set({hour: 23, minute: 59, second: 59})
+                      : eventForm.endDateTime
+                  });
+                }}
               />
               <span className="text-sm">{t("calendar.allDay")}</span>
             </div>
