@@ -16,6 +16,7 @@ import { taskRoutes } from "./tasks.js";
 import { sprintRoutes } from "./sprints.js";
 import { requirementRoutes } from "./requirements.js";
 import { projectRequirementRoutes } from "./projectRequirements.js";
+import { calendarRoutes } from "./calendar.js";
 import membersTasksRoutes from "./membersTasksRoutes.js";
 import notificationsRoutes from "./notifications.js";
 export const routes = Router();
@@ -43,6 +44,7 @@ routes.get("/", (req, res) => {
       sprints: "/sprints",
       requirements: "/requirements",
       "project-requirements": "/project-requirements",
+      calendar: "/calendar",
       "members-tasks": "/members-tasks",
       notifications: "/notifications",
       "task-plan": "/task-plan",
@@ -67,5 +69,6 @@ routes.use("/tasks", taskRoutes);
 routes.use("/sprints", sprintRoutes);
 routes.use("/requirements", requirementRoutes);
 routes.use("/project-requirements", projectRequirementRoutes);
+routes.use("/calendar", calendarRoutes);
 routes.use("/members-tasks", membersTasksRoutes);
 routes.use("/notifications", notificationsRoutes);

@@ -8,6 +8,7 @@ import UrgentNotifications from "@/components/UrgentNotifications";
 import RequirementOverview from "@/components/RequirementOverview";
 import TeamWorkloadPerformance from "@/components/TeamWorkloadPerformanceNew";
 import ProjectPipeline from "@/components/ProjectPipeline";
+import Calendar from "@/components/Calendar";
 
 export default function IndexPage() {
   const { t, language } = useLanguage();
@@ -68,12 +69,21 @@ export default function IndexPage() {
           </Card>
         </div>
 
-        {/* Team Workload Performance */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-semibold text-foreground">
-            {t("dashboard.teamWorkload")}
-          </h2>
-          <TeamWorkloadPerformance />
+        {/* Team Workload Performance and Calendar */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t("dashboard.teamWorkload")}
+            </h2>
+            <TeamWorkloadPerformance />
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t("calendar.title")}
+            </h2>
+            <Calendar showSidebar={false} maxHeight="500px" />
+          </div>
         </div>
 
         {/* Project Pipeline Layout */}
