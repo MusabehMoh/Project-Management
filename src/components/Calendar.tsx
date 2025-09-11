@@ -66,7 +66,63 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   const [showEventDetails, setShowEventDetails] = useState<CalendarEvent | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  // Validation functions
+  const validateField = (field: string, value: any) => {
+    const errors: Record<string, string> = {};
+
+    switch (field) {
+      case 'title':
+        if (!value.trim()) {
+          errors.title = t("calendar.validation.titleRequired");
+        } else if (value.trim().length < 3) {
+          errors.title = t("calendar.validation.titleTooShort");
+        }
+        break;
+      case 'startDate':
+        if (!value) {
+          errors.startDate = t("calendar.validation.startDateRequired");
+        }
+        break;
+      case 'startTime':
+        if (!eventForm.isAllDay && !value) {
+          errors.startTime = t("calendar.validation.startTimeRequired");
+        }
+        break;
+      case 'endDate':
+        if (value && eventForm.startDate && value.compare(eventForm.startDate) < 0) {
+          errors.endDate = t("calendar.validation.endDateBeforeStart");
+        }
+        break;
+      case 'endTime':
+        if (!eventForm.isAllDay && value && eventForm.startTime && 
+            eventForm.endDate && eventForm.startDate &&
+            eventForm.endDate.compare(eventForm.startDate) === 0 && 
+            value.compare(eventForm.startTime) <= 0) {
+          errors.endTime = t("calendar.validation.endTimeBeforeStart");
+        }
+        break;
+    }
+
+    setFieldErrors(prev => ({ ...prev, [field]: errors[field] || '' }));
+    return !errors[field];
+  };
+
+  const handleFieldChange = (field: string, value: any) => {
+    setEventForm(prev => ({ ...prev, [field]: value }));
+    
+    // Validate on change if field has been touched
+    if (touchedFields[field]) {
+      validateField(field, value);
+    }
+  };
+
+  const handleFieldBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+    validateField(field, eventForm[field as keyof typeof eventForm]);
+  };
   const [eventForm, setEventForm] = useState({
     title: "",
     description: "",
@@ -183,7 +239,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       isAllDay: false,
     });
     setEditingEvent(null);
-    setFormError(null);
+    setFieldErrors({});
+    setTouchedFields({});
   };
 
   const openCreateModal = () => {
@@ -196,11 +253,15 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     const endDate = event.endDate ? new Date(event.endDate) : null;
     
     // Convert to CalendarDate and Time objects
-    const calendarStartDate = parseDate(startDate.toISOString().split('T')[0]);
+    const calendarStartDate = parseDate(startDate.toISOString().split("T")[0]);
     const startTime = new Time(startDate.getHours(), startDate.getMinutes());
     
-    const calendarEndDate = endDate ? parseDate(endDate.toISOString().split('T')[0]) : null;
-    const endTime = endDate ? new Time(endDate.getHours(), endDate.getMinutes()) : null;
+    const calendarEndDate = endDate 
+      ? parseDate(endDate.toISOString().split("T")[0]) 
+      : null;
+    const endTime = endDate 
+      ? new Time(endDate.getHours(), endDate.getMinutes()) 
+      : null;
     
     setEventForm({
       title: event.title,
@@ -215,47 +276,37 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       isAllDay: event.isAllDay || false,
     });
     setEditingEvent(event);
+    setFieldErrors({});
+    setTouchedFields({});
     setShowCreateModal(true);
   };
 
   const handleSaveEvent = async () => {
     // Clear previous errors
-    setFormError(null);
-    
-    // Validation
-    if (!eventForm.title.trim()) {
-      setFormError(t("calendar.validation.titleRequired"));
-      return;
+    setFieldErrors({});
+
+    // Validate all fields
+    const fieldsToValidate = ["title", "startDate"];
+    if (!eventForm.isAllDay) {
+      fieldsToValidate.push("startTime");
     }
-    
-    if (!eventForm.startDate) {
-      setFormError(t("calendar.validation.startDateRequired"));
-      return;
+    if (eventForm.endDate) {
+      fieldsToValidate.push("endDate");
+    }
+    if (eventForm.endTime && !eventForm.isAllDay) {
+      fieldsToValidate.push("endTime");
     }
 
-    // Validate time if not all day
-    if (!eventForm.isAllDay && !eventForm.startTime) {
-      setFormError(t("calendar.validation.startTimeRequired"));
-      return;
-    }
+    let hasErrors = false;
+    fieldsToValidate.forEach((field) => {
+      if (!validateField(field, eventForm[field as keyof typeof eventForm])) {
+        hasErrors = true;
+      }
+    });
 
-    // Validate end date and time if provided
-    if (eventForm.endDate && eventForm.endDate.compare(eventForm.startDate) < 0) {
-      setFormError(t("calendar.validation.endDateBeforeStart"));
+    if (hasErrors) {
       return;
-    }
-
-    // Validate end time for same day events
-    if (!eventForm.isAllDay && 
-        eventForm.endDate && 
-        eventForm.endTime &&
-        eventForm.endDate.compare(eventForm.startDate) === 0 && 
-        eventForm.endTime.compare(eventForm.startTime!) <= 0) {
-      setFormError(t("calendar.validation.endTimeBeforeStart"));
-      return;
-    }
-
-    // Create ISO date strings
+    }    // Create ISO date strings
     const createISOString = (date: CalendarDate, time?: Time | null, isAllDay?: boolean) => {
       if (isAllDay) {
         return `${date.toString()}T00:00:00.000Z`;
@@ -266,16 +317,22 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       return `${date.toString()}T00:00:00.000Z`;
     };
 
-    const startDateTime = createISOString(eventForm.startDate, eventForm.startTime, eventForm.isAllDay);
-    const endDateTime = eventForm.endDate 
-      ? createISOString(eventForm.endDate, eventForm.endTime, eventForm.isAllDay)
-      : (eventForm.isAllDay 
-          ? `${eventForm.startDate.toString()}T23:59:59.999Z`
+    const startDateTime = createISOString(
+      eventForm.startDate!, 
+      eventForm.startTime, 
+      eventForm.isAllDay
+    );
+    const endDateTime = eventForm.endDate
+      ? createISOString(
+          eventForm.endDate, 
+          eventForm.endTime, 
+          eventForm.isAllDay
+        )
+      : (eventForm.isAllDay
+          ? `${eventForm.startDate!.toString()}T23:59:59.999Z`
           : eventForm.startTime 
-            ? `${eventForm.startDate.toString()}T${eventForm.startTime.add({hours: 1}).toString()}:00.000Z`
-            : `${eventForm.startDate.toString()}T01:00:00.000Z`);
-
-    const eventData = {
+            ? `${eventForm.startDate!.toString()}T${eventForm.startTime.add({hours: 1}).toString()}:00.000Z`
+            : `${eventForm.startDate!.toString()}T01:00:00.000Z`);    const eventData = {
       title: eventForm.title.trim(),
       description: eventForm.description.trim(),
       startDate: startDateTime,
@@ -300,7 +357,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       setShowCreateModal(false);
       resetForm();
     } else {
-      setFormError(t("calendar.validation.saveFailed"));
+      // Handle save failure - could show a toast notification here
+      // For now, we'll just keep the modal open so user can try again
     }
   };
 
@@ -657,12 +715,10 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
 
       {/* Event Details Modal */}
       {showEventDetails && (
-        <Modal 
-          isOpen={!!showEventDetails} 
+        <Modal
+          isOpen={!!showEventDetails}
           onClose={() => setShowEventDetails(null)}
-          size="3xl"
           classNames={{
-            base: "max-h-[60vh] max-w-[900px]",
             body: "p-6"
           }}
         >
@@ -762,16 +818,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       )}
 
       {/* Create/Edit Event Modal */}
-      <Modal 
-        isOpen={showCreateModal} 
+      <Modal
+        isOpen={showCreateModal}
         onClose={() => {
           setShowCreateModal(false);
           resetForm();
         }}
-        size="5xl"
         scrollBehavior="inside"
         classNames={{
-          base: "max-h-[90vh] max-w-[95vw] lg:max-w-[1200px]",
           body: "p-0",
           header: "border-b border-divider px-6 py-4",
           footer: "border-t border-divider px-6 py-4"
@@ -791,8 +845,11 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   label={t("calendar.eventTitle")}
                   placeholder={t("calendar.titlePlaceholder")}
                   value={eventForm.title}
-                  onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
+                  onChange={(e) => handleFieldChange('title', e.target.value)}
+                  onBlur={() => handleFieldBlur('title')}
                   isRequired
+                  isInvalid={!!fieldErrors.title}
+                  errorMessage={fieldErrors.title}
                   classNames={{
                     label: "text-foreground-600",
                     input: "text-foreground"
@@ -894,15 +951,11 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   <DatePicker
                     label={t("calendar.startDate")}
                     value={eventForm.startDate}
-                    onChange={(date) => {
-                      setEventForm({
-                        ...eventForm, 
-                        startDate: date,
-                        // Auto-set end date to same day if not set
-                        endDate: eventForm.endDate || date
-                      });
-                    }}
+                    onChange={(date) => handleFieldChange('startDate', date)}
+                    onBlur={() => handleFieldBlur('startDate')}
                     isRequired
+                    isInvalid={!!fieldErrors.startDate}
+                    errorMessage={fieldErrors.startDate}
                     showMonthAndYearPickers
                     classNames={{
                       label: "text-foreground-600"
@@ -913,8 +966,11 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                       <TimeInput
                         label={t("calendar.startTime")}
                         value={eventForm.startTime}
-                        onChange={(time) => setEventForm({...eventForm, startTime: time})}
+                        onChange={(time) => handleFieldChange('startTime', time)}
+                        onBlur={() => handleFieldBlur('startTime')}
                         isRequired
+                        isInvalid={!!fieldErrors.startTime}
+                        errorMessage={fieldErrors.startTime}
                         classNames={{
                           label: "text-foreground-600",
                           input: "text-foreground"
@@ -932,7 +988,10 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   <DatePicker
                     label={t("calendar.endDate")}
                     value={eventForm.endDate}
-                    onChange={(date) => setEventForm({...eventForm, endDate: date})}
+                    onChange={(date) => handleFieldChange('endDate', date)}
+                    onBlur={() => handleFieldBlur('endDate')}
+                    isInvalid={!!fieldErrors.endDate}
+                    errorMessage={fieldErrors.endDate}
                     showMonthAndYearPickers
                     classNames={{
                       label: "text-foreground-600"
@@ -943,7 +1002,10 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                       <TimeInput
                         label={t("calendar.endTime")}
                         value={eventForm.endTime}
-                        onChange={(time) => setEventForm({...eventForm, endTime: time})}
+                        onChange={(time) => handleFieldChange('endTime', time)}
+                        onBlur={() => handleFieldBlur('endTime')}
+                        isInvalid={!!fieldErrors.endTime}
+                        errorMessage={fieldErrors.endTime}
                         classNames={{
                           label: "text-foreground-600",
                           input: "text-foreground"
@@ -966,12 +1028,6 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 }}
               />
 
-              {/* Error Message */}
-              {formError && (
-                <div className="p-4 bg-danger-50 border border-danger-200 rounded-lg">
-                  <p className="text-danger text-sm font-medium">{formError}</p>
-                </div>
-              )}
             </div>
           </ModalBody>
           <ModalFooter className="flex gap-2 justify-end">
