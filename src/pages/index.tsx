@@ -19,19 +19,11 @@ export default function IndexPage() {
   }
 
   // Check if user has Analyst Department Manager role
-  const hasAccess = hasAnyRole(["Analyst Department Manager"]);
-
-  if (!hasAccess) {
-    return (
-      <DefaultLayout>
-        <div />
-      </DefaultLayout>
-    );
-  }
+  const hasAccess = hasAnyRole(["Analyst Department Manager", "Administrator"]);
 
   return (
     <DefaultLayout>
-      <AnalystManagerDashboard />
+      {hasAccess ? <AnalystManagerDashboard /> : <div />}
     </DefaultLayout>
   );
 }
