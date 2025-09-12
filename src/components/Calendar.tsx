@@ -30,6 +30,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCalendar } from "@/hooks/useCalendar";
 import type { CalendarEvent } from "@/services/api/calendarService";
+import { Accordion, AccordionItem } from "@heroui/react";
 
 interface CalendarComponentProps {
   showSidebar?: boolean;
@@ -682,82 +683,86 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           )}
 
           {/* Color Legend */}
-          <div className="mb-4 p-3 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
-            <h4 className="text-sm font-semibold mb-2 text-foreground-600">{t("calendar.colorLegend")}</h4>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-              {/* Event Types */}
-              <div>
-                <p className="font-medium mb-1">{t("calendar.type")}:</p>
-                <div className="space-y-1">
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 rounded bg-primary-100 border border-primary-200"></div>
-                    <span>{t("calendar.eventTypes.project")}</span>
+          <Accordion isCompact defaultExpandedKeys={["legend"]} className="mb-4">
+            <AccordionItem key="legend" title={t("calendar.colorLegend")}> 
+              <div className="mb-4 p-3 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
+                <h4 className="text-sm font-semibold mb-2 text-foreground-600">{t("calendar.colorLegend")}</h4>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                  {/* Event Types */}
+                  <div>
+                    <p className="font-medium mb-1">{t("calendar.type")}:</p>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-primary-100 border border-primary-200"></div>
+                        <span>{t("calendar.eventTypes.project")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-success-100 border border-success-200"></div>
+                        <span>{t("calendar.eventTypes.meeting")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-danger-100 border border-danger-200"></div>
+                        <span>{t("calendar.eventTypes.deadline")}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 rounded bg-success-100 border border-success-200"></div>
-                    <span>{t("calendar.eventTypes.meeting")}</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 rounded bg-danger-100 border border-danger-200"></div>
-                    <span>{t("calendar.eventTypes.deadline")}</span>
-                  </div>
-                </div>
-              </div>
 
-              {/* Priority Levels */}
-              <div>
-                <p className="font-medium mb-1">{t("calendar.priority")}:</p>
-                <div className="space-y-1">
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-3 h-3 rounded bg-danger-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-danger-500`}></div>
-                    <span>{t("calendar.priorities.urgent")}</span>
+                  {/* Priority Levels */}
+                  <div>
+                    <p className="font-medium mb-1">{t("calendar.priority")}:</p>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-danger-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-danger-500`}></div>
+                        <span>{t("calendar.priorities.urgent")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-warning-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-warning-500`}></div>
+                        <span>{t("calendar.priorities.high")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-primary-100 ${direction === 'rtl' ? 'border-r-2' : 'border-l-2'} border-primary-500`}></div>
+                        <span>{t("calendar.priorities.medium")}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-3 h-3 rounded bg-warning-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-warning-500`}></div>
-                    <span>{t("calendar.priorities.high")}</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-3 h-3 rounded bg-primary-100 ${direction === 'rtl' ? 'border-r-2' : 'border-l-2'} border-primary-500`}></div>
-                    <span>{t("calendar.priorities.medium")}</span>
-                  </div>
-                </div>
-              </div>
 
-              {/* Status Indicators */}
-              <div>
-                <p className="font-medium mb-1">{t("calendar.status")}:</p>
-                <div className="space-y-1">
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 animate-pulse"></div>
-                    <span>{t("calendar.overdue")}</span>
+                  {/* Status Indicators */}
+                  <div>
+                    <p className="font-medium mb-1">{t("calendar.status")}:</p>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 animate-pulse"></div>
+                        <span>{t("calendar.overdue")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-warning-100 border border-warning-200"></div>
+                        <span>{t("calendar.status.in-progress")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-success-100 border border-success-200"></div>
+                        <span>{t("calendar.status.completed")}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 rounded bg-warning-100 border border-warning-200"></div>
-                    <span>{t("calendar.status.in-progress")}</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 rounded bg-success-100 border border-success-200"></div>
-                    <span>{t("calendar.status.completed")}</span>
-                  </div>
-                </div>
-              </div>
 
-              {/* Visual Effects */}
-              <div>
-                <p className="font-medium mb-1">{t("calendar.visualEffects")}:</p>
-                <div className="space-y-1">
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 shadow-md"></div>
-                    <span>{t("calendar.criticalShadow")}</span>
-                  </div>
-                  <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-3 h-3 rounded bg-default-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-primary-500`}></div>
-                    <span>{t("calendar.priorityBorder")}</span>
+                  {/* Visual Effects */}
+                  <div>
+                    <p className="font-medium mb-1">{t("calendar.visualEffects")}:</p>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 shadow-md"></div>
+                        <span>{t("calendar.criticalShadow")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-default-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-primary-500`}></div>
+                        <span>{t("calendar.priorityBorder")}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </AccordionItem>
+          </Accordion>
 
           {/* Calendar Grid (Month View) */}
           {viewMode === 'month' && (
