@@ -142,6 +142,12 @@ const translations = {
     "calendar.priorities.high": "High",
     "calendar.priorities.urgent": "Urgent",
 
+    // Calendar Color Legend
+    "calendar.colorLegend": "Color Legend",
+    "calendar.visualEffects": "Visual Effects",
+    "calendar.criticalShadow": "Critical Priority",
+    "calendar.priorityBorder": "Priority Border",
+
     // Calendar Validation Messages
     "calendar.validation.titleRequired": "Event title is required",
     "calendar.validation.startDateRequired": "Start date is required",
@@ -1210,6 +1216,12 @@ const translations = {
     "calendar.priorities.medium": "متوسط",
     "calendar.priorities.high": "عالي",
     "calendar.priorities.urgent": "عاجل",
+
+    // Calendar Color Legend
+    "calendar.colorLegend": "مفتاح الألوان",
+    "calendar.visualEffects": "التأثيرات البصرية",
+    "calendar.criticalShadow": "أولوية حرجة",
+    "calendar.priorityBorder": "حدود الأولوية",
 
     // Calendar Validation Messages
     "calendar.validation.titleRequired": "عنوان الحدث مطلوب",
