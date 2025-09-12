@@ -692,7 +692,7 @@ const DHTMLXGantt: FC<{
         ref={el}
         style={{
           width: "100%",
-          height: isFullScreen ? "calc(100vh - 140px)" : "auto",
+          height: isFullScreen ? "calc(90vh - 140px)" : "auto",
           direction: "ltr", // Gantt handles RTL internally
         }}
       />
