@@ -805,7 +805,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                               {getPriorityIcon(event.priority)}
                             </div>
                             <div className={`flex items-center justify-between text-xs opacity-70 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                              <span className="capitalize">{event.type}</span>
+                              <span className="capitalize">{t(`calendar.type.${event.type}`)}</span>
                               {event.status === 'overdue' && (
                                 <span className="text-danger-600 font-medium">!</span>
                               )}
