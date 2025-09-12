@@ -180,6 +180,28 @@ export class TimelineApiService {
   }
 
   // Task operations
+  /**
+   * delete sprint , requirement , task , subtask
+   */
+  async deleteEntity(id: string, type: string): Promise<ApiResponse<void>> {
+    console.log("---->> delete Entity API Call");
+
+    return apiClient.delete<void>(`/entity/${id}/${type}`);
+  }
+
+  /**
+   * update sprint , requirement , task , subtask
+   */
+  async updateEntity(
+    id: string,
+    type: string,
+    data: any,
+  ): Promise<ApiResponse<void>> {
+    console.log("---->> update Entity API Call");
+    console.log(data);
+
+    return apiClient.put<any>(`/entity/${id}/${type}`, data);
+  }
   async createTask(data: CreateTaskRequest): Promise<ApiResponse<Task>> {
     // Use the new sprint-based endpoint for creating tasks
     return apiClient.post<Task>(ENDPOINTS.TASKS, data);

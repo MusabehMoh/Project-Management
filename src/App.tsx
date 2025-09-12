@@ -19,6 +19,7 @@ import DevelopmentRequirementsPage from "@/pages/development-requirements";
 import TimelinePage from "@/pages/timeline";
 import MembersTasksPage from "@/pages/members-tasks";
 import { TasksTest } from "@/components/TasksTest";
+import GanttChartFullScreen from "./pages/GanttChartFullScreen";
 function App() {
   const { user, loading } = useCurrentUser();
   const { t } = useLanguage();
@@ -59,6 +60,7 @@ function App() {
         <Route element={<PricingPage />} path="/pricing" />
         <Route element={<BlogPage />} path="/blog" />
         <Route element={<AboutPage />} path="/about" />
+        <Route element={<GanttChartFullScreen />} path="/ganttChart" />
       </Routes>
       <ToastProvider placement="bottom-right" />
     </>

@@ -33,6 +33,60 @@ export const useTimelines = (projectId?: number) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  ///Delete sprint , req , task , subTask
+  const deleteEntity = async (id: string, type: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await timelineService.deleteEntity(id, type);
+
+      console.log("---->> response is :");
+      console.log(response);
+
+      if (response.success) {
+        // Refresh timelines to get updated data
+        await loadTimelines();
+      }
+
+      return response.success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete task");
+
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  ///update sprint , req , task , subTask
+  const updateEntity = async (
+    id: string,
+    type: string,
+    data: any,
+  ): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await timelineService.updateEntity(id, type, data);
+
+      if (response.success) {
+        console.log("-->>>> begin to load timelines");
+        // Refresh timelines to get updated data
+        await loadTimelines();
+      }
+
+      return response.success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete task");
+
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load initial data - only trigger when projectId changes
   const loadTimelines = useCallback(async () => {
     try {
@@ -450,5 +504,7 @@ export const useTimelines = (projectId?: number) => {
     clearError,
     refreshData,
     loadTimelines,
+    deleteEntity,
+    updateEntity,
   };
 };

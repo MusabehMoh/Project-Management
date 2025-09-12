@@ -1,0 +1,40 @@
+.gantt-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.gantt-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.gantt-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.gantt-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Dark mode scrollbar */
+.dark .gantt-container::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.dark .gantt-container::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.dark .gantt-container::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Force RTL by flipping the chart */
+.gantt-container.rtl-mode .google-visualization-gantt-chart {
+  transform: scaleX(-1);
+}
+
+.gantt-container.rtl-mode .google-visualization-gantt-tooltip {
+  transform: scaleX(-1);
+  direction: rtl;
+}

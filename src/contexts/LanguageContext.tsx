@@ -75,7 +75,7 @@ const translations = {
     // Calendar
     "calendar.title": "Calendar",
     "calendar.month": "Month",
-    "calendar.week": "Week", 
+    "calendar.week": "Week",
     "calendar.day": "Day",
     "calendar.today": "Today",
     "calendar.addEvent": "Add Event",
@@ -133,7 +133,7 @@ const translations = {
     "calendar.allPriorities": "All Priorities",
     "calendar.clearFilters": "Clear Filters",
     "calendar.eventTypes.meeting": "Meeting",
-    "calendar.eventTypes.task": "Task", 
+    "calendar.eventTypes.task": "Task",
     "calendar.eventTypes.deadline": "Deadline",
     "calendar.eventTypes.project": "Project",
     "calendar.eventTypes.requirement": "Requirement",
@@ -146,8 +146,10 @@ const translations = {
     "calendar.validation.titleRequired": "Event title is required",
     "calendar.validation.startDateRequired": "Start date is required",
     "calendar.validation.startTimeRequired": "Start time is required",
-    "calendar.validation.endDateBeforeStart": "End date cannot be before start date",
-    "calendar.validation.endTimeBeforeStart": "End time must be after start time for same-day events",
+    "calendar.validation.endDateBeforeStart":
+      "End date cannot be before start date",
+    "calendar.validation.endTimeBeforeStart":
+      "End time must be after start time for same-day events",
     "calendar.validation.saveFailed": "Failed to save event. Please try again.",
 
     // Common
@@ -155,13 +157,13 @@ const translations = {
     "common.lastActivity": "Last Activity",
     "common.tryAgainLater": "Please try again later",
     "common.projectManagement": "Project Management",
-    
+
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
     "requirements.ongoing": "Ongoing Requirements",
     "requirements.active": "Active Requirements",
     "requirements.pendingApprovals": "Pending Approvals",
-    
+
     // Common Date References
     "common.today": "Today",
     "common.yesterday": "Yesterday",
@@ -515,18 +517,18 @@ const translations = {
     "requirements.deleteError": "Failed to delete requirement",
     "requirements.sendError": "Failed to send requirement",
     "requirements.loadError": "Failed to load requirements",
-  // Missing keys used by development-requirements page
-  "requirements.description": "Description",
-  "requirements.id": "ID",
-  "requirements.created": "Created",
-  "common.viewDetails": "View Details",
-  // Task creation keys
-  "tasks.createTask": "Create Task",
-  "tasks.editTask": "Edit Task",
-  "tasks.developer": "Developer",
-  "tasks.qcMember": "QC Member",
-  "tasks.selectDeveloper": "Search for developer...",
-  "tasks.selectQC": "Search for QC member...",
+    // Missing keys used by development-requirements page
+    "requirements.description": "Description",
+    "requirements.id": "ID",
+    "requirements.created": "Created",
+    "common.viewDetails": "View Details",
+    // Task creation keys
+    "tasks.createTask": "Create Task",
+    "tasks.editTask": "Edit Task",
+    "tasks.developer": "Developer",
+    "tasks.qcMember": "QC Member",
+    "tasks.selectDeveloper": "Search for developer...",
+    "tasks.selectQC": "Search for QC member...",
     "requirements.validation.nameRequired": "Requirement name is required",
     "requirements.validation.descriptionRequired": "Description is required",
     "requirements.validation.priorityRequired": "Priority is required",
@@ -537,7 +539,7 @@ const translations = {
     "requirements.emptyState.description":
       "Start by adding your first requirement for this project",
     "requirements.emptyState.action": "Add First Requirement",
-    
+
     // File Upload Keys
     "requirements.uploadFiles": "Click to upload files",
     "requirements.existingAttachments": "Existing Attachments",
@@ -1018,6 +1020,25 @@ const translations = {
     "timeline.selectPredecessorsPlaceholder": "Choose a predecessor task...",
     "timeline.searchTask": "Search for a task",
 
+    ///Gantt view
+    "timeline.taskName": "Task Name",
+    "timeline.startDate": "Start Date",
+    "timeline.duration": "Duration",
+    "timelane.back": "Back",
+    "timeline.month": "Mohth",
+    "timeline.day": "Day",
+    "timeline.week": "Week",
+    "timeline.year": "Year",
+    "timeline.normalSize": "Normal Size",
+    "timeline.largeSize": "Large Size",
+    "timeline.controlCellHeight": "Control Size",
+    "timeline.gantt.description": "Description",
+    "timeline.gantt.period": "Duration",
+    "timeline.gantt.save": "Save",
+    "timeline.gantt.cancel": "Cancel",
+    "timeline.gantt.delete": "Delete",
+    "timeline.gantt.progress": "Progess",
+    "timeline.gantt.editTask": "Update Task",
     // Members Tasks Dashboard
     membersTasksDashboard: "Members Tasks Dashboard",
     tasksOverview: "Tasks Overview",
@@ -1095,7 +1116,7 @@ const translations = {
     "requirements.ongoing": "متطلبات قيد التنفيذ",
     "requirements.active": "المتطلبات النشطة",
     "requirements.pendingApprovals": "موافقات معلقة",
-    
+
     // Project Pipeline
     "pipeline.planning": "التخطيط",
     "pipeline.inProgress": "قيد التنفيذ",
@@ -1123,7 +1144,7 @@ const translations = {
     // Calendar
     "calendar.title": "التقويم",
     "calendar.month": "شهر",
-    "calendar.week": "أسبوع", 
+    "calendar.week": "أسبوع",
     "calendar.day": "يوم",
     "calendar.today": "اليوم",
     "calendar.addEvent": "إضافة حدث",
@@ -1194,9 +1215,12 @@ const translations = {
     "calendar.validation.titleRequired": "عنوان الحدث مطلوب",
     "calendar.validation.startDateRequired": "تاريخ البداية مطلوب",
     "calendar.validation.startTimeRequired": "وقت البداية مطلوب",
-    "calendar.validation.endDateBeforeStart": "لا يمكن أن يكون تاريخ النهاية قبل تاريخ البداية",
-    "calendar.validation.endTimeBeforeStart": "يجب أن يكون وقت النهاية بعد وقت البداية لأحداث نفس اليوم",
-    "calendar.validation.saveFailed": "فشل في حفظ الحدث. يرجى المحاولة مرة أخرى.",
+    "calendar.validation.endDateBeforeStart":
+      "لا يمكن أن يكون تاريخ النهاية قبل تاريخ البداية",
+    "calendar.validation.endTimeBeforeStart":
+      "يجب أن يكون وقت النهاية بعد وقت البداية لأحداث نفس اليوم",
+    "calendar.validation.saveFailed":
+      "فشل في حفظ الحدث. يرجى المحاولة مرة أخرى.",
 
     // Common Date References
     "common.today": "اليوم",
@@ -1546,18 +1570,18 @@ const translations = {
     "requirements.deleteError": "فشل في حذف المتطلب",
     "requirements.sendError": "فشل في إرسال المتطلب",
     "requirements.loadError": "فشل في تحميل المتطلبات",
-  // Missing keys used by development-requirements page (Arabic)
-  "requirements.description": "الوصف",
-  "requirements.id": "المعرّف",
-  "requirements.created": "تاريخ الإنشاء",
-  "common.viewDetails": "عرض التفاصيل",
-  // Task creation keys (Arabic)
-  "tasks.createTask": "إنشاء مهمة",
-  "tasks.editTask": "تحرير المهمة",
-  "tasks.developer": "المطور",
-  "tasks.qcMember": "مسؤول ضمان الجودة",
-  "tasks.selectDeveloper": "البحث عن مطور...",
-  "tasks.selectQC": "البحث عن مسؤول ضمان الجودة...",
+    // Missing keys used by development-requirements page (Arabic)
+    "requirements.description": "الوصف",
+    "requirements.id": "المعرّف",
+    "requirements.created": "تاريخ الإنشاء",
+    "common.viewDetails": "عرض التفاصيل",
+    // Task creation keys (Arabic)
+    "tasks.createTask": "إنشاء مهمة",
+    "tasks.editTask": "تحرير المهمة",
+    "tasks.developer": "المطور",
+    "tasks.qcMember": "مسؤول ضمان الجودة",
+    "tasks.selectDeveloper": "البحث عن مطور...",
+    "tasks.selectQC": "البحث عن مسؤول ضمان الجودة...",
     "requirements.validation.nameRequired": "اسم المتطلب مطلوب",
     "requirements.validation.descriptionRequired": "الوصف مطلوب",
     "requirements.validation.priorityRequired": "الأولوية مطلوبة",
@@ -1567,7 +1591,7 @@ const translations = {
     "requirements.emptyState.title": "لا توجد متطلبات بعد",
     "requirements.emptyState.description": "ابدأ بإضافة أول متطلب لهذا المشروع",
     "requirements.emptyState.action": "إضافة أول متطلب",
-    
+
     // File Upload Keys (Arabic)
     "requirements.uploadFiles": "انقر لرفع الملفات",
     "requirements.existingAttachments": "المرفقات الموجودة",
@@ -2038,6 +2062,24 @@ const translations = {
     "timeline.selectPredecessors": "اختر المهام السابقة",
     "timeline.selectPredecessorsPlaceholder": "اختر مهمة سابقة...",
     "timeline.searchTask": "البحث عن مهمة",
+    "timeline.taskName": "اسم المهمة",
+    "timeline.startDate": "تاربخ البدء",
+    "timeline.duration": "المدة",
+    "timelane.back": "العودة",
+    "timeline.month": "شهر",
+    "timeline.day": "يوم",
+    "timeline.week": "أسبوع",
+    "timeline.year": "سنة",
+    "timeline.normalSize": "حجم عادي",
+    "timeline.largeSize": "حجم أكبر",
+    "timeline.controlCellHeight": "تحكم بالحجم",
+    "timeline.gantt.description": "الوصف",
+    "timeline.gantt.period": "المدة",
+    "timeline.gantt.save": "حفظ",
+    "timeline.gantt.cancel": "إلغاء",
+    "timeline.gantt.delete": "حذف",
+    "timeline.gantt.progress": "ما تم انجازه",
+    "timeline.gantt.editTask": "تعديل المهمة",
 
     // Members Tasks Dashboard
     membersTasksDashboard: "لوحة مهام الأعضاء",

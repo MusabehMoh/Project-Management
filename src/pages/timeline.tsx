@@ -35,6 +35,7 @@ import TimelineGanttView from "@/components/timeline/TimelineGanttView";
 import TimelineDetailsPanel from "@/components/timeline/TimelineDetailsPanel";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import TimelineFilters from "@/components/timeline/TimelineFilters";
+import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 
 export default function TimelinePage() {
   const { t, language } = useLanguage();
@@ -93,6 +94,8 @@ export default function TimelinePage() {
     moveTaskToSprint,
     updateSubtask,
     setSelectedTimeline,
+    deleteEntity,
+    updateEntity,
     loadTimelines: fetchTimelines,
   } = useTimelines(
     selectedProjectId && !projectsLoading ? selectedProjectId : undefined,
@@ -875,22 +878,29 @@ export default function TimelinePage() {
                 <Card className="h-[600px]">
                   <CardBody className="p-0">
                     {view.type === "gantt" ? (
-                      <TimelineGanttView
-                        departments={departments}
-                        filters={filters}
-                        loading={loading}
-                        selectedItem={view.selectedItem}
+                      // <TimelineGanttView
+                      //   departments={departments}
+                      //   filters={filters}
+                      //   loading={loading}
+                      //   selectedItem={view.selectedItem}
+                      //   timeline={selectedTimeline}
+                      //   onCreateSprint={handleCreateSprint}
+                      //   onCreateSubtask={createSubtask}
+                      //   onCreateTask={createTask}
+                      //   onDeleteSprint={deleteSprint}
+                      //   onDeleteSubtask={deleteSubtask}
+                      //   onDeleteTask={deleteTask}
+                      //   onItemSelect={handleItemSelect}
+                      //   onUpdateSprint={handleUpdateSprint}
+                      //   onUpdateSubtask={updateSubtask}
+                      //   onUpdateTask={handleUpdateTask}
+                      // />
+
+                      <DHTMLXGantt
                         timeline={selectedTimeline}
-                        onCreateSprint={handleCreateSprint}
-                        onCreateSubtask={createSubtask}
-                        onCreateTask={createTask}
-                        onDeleteSprint={deleteSprint}
-                        onDeleteSubtask={deleteSubtask}
-                        onDeleteTask={deleteTask}
-                        onItemSelect={handleItemSelect}
-                        onUpdateSprint={handleUpdateSprint}
-                        onUpdateSubtask={updateSubtask}
-                        onUpdateTask={handleUpdateTask}
+                        onDeleteEntity={deleteEntity}
+                        onUpdateEntity={updateEntity}
+                        projectId={selectedProjectId}
                       />
                     ) : (
                       <TimelineTreeView
