@@ -3,6 +3,8 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from "@heroui/table";
 import { Progress } from "@heroui/progress";
 import { Spinner } from "@heroui/spinner";
+import { Tooltip } from "@heroui/tooltip";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { teamWorkloadService, type TeamMemberMetrics } from "@/services/api/teamWorkloadService";
 
@@ -11,6 +13,22 @@ const getPerformanceColor = (score: number) => {
   if (score >= 80) return "success";
   if (score >= 60) return "warning";
   return "danger";
+};
+
+// Format busy until date for tooltip
+const formatBusyUntil = (busyUntil: string | undefined, t: (key: string) => string) => {
+  if (!busyUntil) return "";
+  
+  const busyDate = new Date(busyUntil);
+  const now = new Date();
+  const diffTime = busyDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return t("team.busyUntilToday");
+  if (diffDays === 1) return t("team.busyUntilTomorrow");
+  if (diffDays <= 7) return t("team.busyUntilDays").replace("{days}", diffDays.toString());
+  
+  return t("team.busyUntilDate").replace("{date}", busyDate.toLocaleDateString());
 };
 
 const TeamWorkloadPerformance: React.FC = () => {
@@ -107,7 +125,9 @@ const TeamWorkloadPerformance: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       {member.busyStatus === "busy" ? (
-                        <span className="text-danger font-semibold">{t("team.busy")}</span>
+                        <Tooltip content={formatBusyUntil(member.busyUntil, t)} showArrow>
+                          <span className="text-danger font-semibold cursor-help">{t("team.busy")}</span>
+                        </Tooltip>
                       ) : (
                         <span className="text-success font-semibold">{t("team.available")}</span>
                       )}

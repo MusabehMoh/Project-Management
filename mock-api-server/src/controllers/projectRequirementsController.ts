@@ -37,12 +37,22 @@ export class ProjectRequirementsController {
           // Overall performance (70% completion rate + 30% timeliness)
           const performanceScore = Math.round((completionRate * 0.7) + (timelinessScore * 0.3));
           
+          // Calculate busy until date (if busy)
+          const isBusy = inProgressRequirements > 2;
+          let busyUntil;
+          if (isBusy) {
+            // Mock: Add 1-7 days from now based on workload
+            const daysToAdd = Math.ceil(inProgressRequirements / 2); // More requirements = longer busy period
+            busyUntil = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+          }
+
           return {
             userId: user.id,
             fullName: user.fullName,
             department: user.department,
             gradeName: user.gradeName,
-            busyStatus: inProgressRequirements > 2 ? "busy" : "available",
+            busyStatus: isBusy ? "busy" : "available",
+            busyUntil: busyUntil,
             metrics: {
               totalRequirements,
               draft: draftRequirements,

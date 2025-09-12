@@ -11,6 +11,7 @@ export interface TeamMemberMetrics {
   department: string;
   gradeName: string;
   busyStatus: "busy" | "available";
+  busyUntil?: string; // ISO date string when user will be available again
   metrics: {
     totalRequirements: number;
     draft: number;

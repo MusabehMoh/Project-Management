@@ -272,6 +272,11 @@ const translations = {
     "team.performance": "Performance",
     "team.busy": "Busy",
     "team.available": "Available",
+    "team.busyUntilToday": "Busy until later today",
+    "team.busyUntilTomorrow": "Busy until tomorrow",
+    "team.busyUntilDays": "Busy for {days} more days",
+    "team.busyUntilDate": "Busy until {date}",
+    "team.busyUntil": "Busy until {date}",
 
     // Project Status
     "status.active": "Active",
@@ -976,8 +981,7 @@ const translations = {
     "timeline.create.timelineName": "Timeline Name",
     "timeline.create.timelineNamePlaceholder": "Enter timeline name",
     "timeline.create.description": "Description",
-    "timeline.create.descriptionPlaceholder":
-      "Describe this timeline (optional)",
+    "timeline.create.descriptionPlaceholder": "Describe this timeline (optional)",
     "timeline.create.startDate": "Start Date",
     "timeline.create.endDate": "End Date",
     "timeline.create.noProjectWarning":
@@ -1338,6 +1342,10 @@ const translations = {
     "team.performance": "الأداء",
     "team.busy": "مشغول",
     "team.available": "متاح",
+    "team.busyUntilToday": "مشغول حتى نهاية اليوم",
+    "team.busyUntilTomorrow": "مشغول حتى الغد",
+    "team.busyUntilDays": "مشغول لـ {days} أيام أخرى",
+    "team.busyUntilDate": "مشغول حتى {date}",
 
     // Project Status
     "status.active": "نشط",
