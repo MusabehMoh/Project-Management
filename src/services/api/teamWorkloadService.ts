@@ -10,6 +10,7 @@ export interface TeamMemberMetrics {
   fullName: string;
   department: string;
   gradeName: string;
+  busyStatus: "busy" | "available";
   metrics: {
     totalRequirements: number;
     draft: number;

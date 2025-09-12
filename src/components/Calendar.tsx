@@ -30,6 +30,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCalendar } from "@/hooks/useCalendar";
 import type { CalendarEvent } from "@/services/api/calendarService";
+import { Accordion, AccordionItem } from "@heroui/react";
 
 interface CalendarComponentProps {
   showSidebar?: boolean;
@@ -40,7 +41,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   showSidebar = true, 
   maxHeight = "600px" 
 }) => {
-  const { t } = useLanguage();
+  const { t, direction } = useLanguage();
   const {
     events,
     stats,
@@ -226,6 +227,51 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       case 'overdue': return 'danger';
       default: return 'default';
     }
+  };
+
+  // Get color for priority level
+  const getPriorityColor = (priority: CalendarEvent['priority']) => {
+    switch (priority) {
+      case 'critical': return 'danger';
+      case 'high': return 'warning';
+      case 'medium': return 'primary';
+      case 'low': return 'success';
+      default: return 'default';
+    }
+  };
+
+  // Get border style for priority (for visual emphasis)
+  const getPriorityBorder = (priority: CalendarEvent['priority']) => {
+    const borderSide = direction === 'rtl' ? 'border-r' : 'border-l';
+    switch (priority) {
+      case 'critical': return `${borderSide}-4 border-danger-500`;
+      case 'high': return `${borderSide}-4 border-warning-500`;
+      case 'medium': return `${borderSide}-2 border-primary-500`;
+      case 'low': return `${borderSide}-2 border-success-500`;
+      default: return '';
+    }
+  };
+
+  // Get comprehensive event styling based on multiple factors
+  const getEventStyling = (event: CalendarEvent) => {
+    const baseClasses = "text-xs p-2 rounded cursor-pointer hover:opacity-80 transition-all duration-200";
+    const typeColor = getEventTypeColor(event.type);
+    const priorityBorder = getPriorityBorder(event.priority);
+    
+    // Combine background color with priority border
+    const backgroundColor = `var(--heroui-colors-${typeColor}-100)`;
+    const borderColor = event.status === 'overdue' ? 'border-danger-300' : `border-${typeColor}-200`;
+    
+    return {
+      className: `${baseClasses} ${priorityBorder} border ${borderColor} ${
+        event.status === 'overdue' ? 'animate-pulse' : ''
+      }`,
+      style: { 
+        backgroundColor,
+        boxShadow: event.priority === 'critical' ? '0 2px 8px rgba(239, 68, 68, 0.3)' : 
+                   event.priority === 'high' ? '0 2px 6px rgba(245, 158, 11, 0.2)' : 'none'
+      }
+    };
   };
 
   // Get priority icon
@@ -636,6 +682,88 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
             </div>
           )}
 
+          {/* Color Legend */}
+          <Accordion isCompact defaultExpandedKeys={["legend"]} className="mb-4">
+            <AccordionItem key="legend" title={t("calendar.colorLegend")}> 
+              <div className="mb-4 p-3 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
+                <h4 className="text-sm font-semibold mb-2 text-foreground-600">{t("calendar.colorLegend")}</h4>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                  {/* Event Types */}
+                  <div>
+                    <p className="font-medium mb-1">{t("calendar.type")}:</p>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-primary-100 border border-primary-200"></div>
+                        <span>{t("calendar.eventTypes.project")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-success-100 border border-success-200"></div>
+                        <span>{t("calendar.eventTypes.meeting")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-danger-100 border border-danger-200"></div>
+                        <span>{t("calendar.eventTypes.deadline")}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Priority Levels */}
+                  <div>
+                    <p className="font-medium mb-1">{t("calendar.priority")}:</p>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-danger-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-danger-500`}></div>
+                        <span>{t("calendar.priorities.urgent")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-warning-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-warning-500`}></div>
+                        <span>{t("calendar.priorities.high")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-primary-100 ${direction === 'rtl' ? 'border-r-2' : 'border-l-2'} border-primary-500`}></div>
+                        <span>{t("calendar.priorities.medium")}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Indicators */}
+                  <div>
+                    <p className="font-medium mb-1">{t("calendar.status")}:</p>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 animate-pulse"></div>
+                        <span>{t("calendar.overdue")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-warning-100 border border-warning-200"></div>
+                        <span>{t("calendar.status.in-progress")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-success-100 border border-success-200"></div>
+                        <span>{t("calendar.status.completed")}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Visual Effects */}
+                  <div>
+                    <p className="font-medium mb-1">{t("calendar.visualEffects")}:</p>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 shadow-md"></div>
+                        <span>{t("calendar.criticalShadow")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-default-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-primary-500`}></div>
+                        <span>{t("calendar.priorityBorder")}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </AccordionItem>
+          </Accordion>
+
           {/* Calendar Grid (Month View) */}
           {viewMode === 'month' && (
             <div className="grid grid-cols-7 gap-1">
@@ -666,18 +794,30 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                     
                     {/* Day Events */}
                     <div className="space-y-1">
-                      {day.events.slice(0, 2).map(event => (
-                        <div
-                          key={event.id}
-                          className="text-xs p-1 rounded cursor-pointer hover:opacity-80"
-                          style={{ backgroundColor: `var(--heroui-colors-${getEventTypeColor(event.type)}-100)` }}
-                          onClick={() => setShowEventDetails(event)}
-                        >
-                          <div className="truncate font-medium">
-                            {event.title}
+                      {day.events.slice(0, 2).map(event => {
+                        const styling = getEventStyling(event);
+                        return (
+                          <div
+                            key={event.id}
+                            className={styling.className}
+                            style={styling.style}
+                            onClick={() => setShowEventDetails(event)}
+                          >
+                            <div className={`flex items-center gap-1 mb-1 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                              <div className="truncate font-medium flex-1">
+                                {event.title}
+                              </div>
+                              {getPriorityIcon(event.priority)}
+                            </div>
+                            <div className={`flex items-center justify-between text-xs opacity-70 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                              <span className="capitalize">{t(`calendar.type.${event.type}`)}</span>
+                              {event.status === 'overdue' && (
+                                <span className="text-danger-600 font-medium">!</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       {day.events.length > 2 && (
                         <div className="text-xs text-default-500 text-center">
                           +{day.events.length - 2} more
@@ -699,49 +839,70 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                     {t("calendar.noEvents")}
                   </div>
                 ) : (
-                  events.map(event => (
-                    <Card
-                      key={event.id}
-                      className="p-3 hover:shadow-md transition-shadow cursor-pointer"
-                      isPressable
-                      onPress={() => setShowEventDetails(event)}
-                    >
-                      <div className="flex justify-between items-start gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            {getPriorityIcon(event.priority)}
-                            <h4 className="font-medium">{event.title}</h4>
+                  events.map(event => {
+                    const styling = getEventStyling(event);
+                    return (
+                      <Card
+                        key={event.id}
+                        className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${styling.className}`}
+                        style={{
+                          ...styling.style,
+                          backgroundColor: `var(--heroui-colors-${getEventTypeColor(event.type)}-50)`
+                        }}
+                        isPressable
+                        onPress={() => setShowEventDetails(event)}
+                      >
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {getPriorityIcon(event.priority)}
+                              <h4 className="font-medium">{event.title}</h4>
+                              <Chip
+                                size="sm"
+                                variant="flat"
+                                color={getEventTypeColor(event.type)}
+                              >
+                                {t(`calendar.type.${event.type}`)}
+                              </Chip>
+                              {event.status === 'overdue' && (
+                                <Chip size="sm" color="danger" variant="flat">
+                                  {t("calendar.overdue")}
+                                </Chip>
+                              )}
+                            </div>
+                            
+                            <div className="text-sm text-default-600 mb-2">
+                              {formatTime(event.startDate)}
+                              {event.endDate && ` - ${formatTime(event.endDate)}`}
+                            </div>
+                            
+                            {event.description && (
+                              <p className="text-sm text-default-500 line-clamp-2">
+                                {event.description}
+                              </p>
+                            )}
+                          </div>
+                          
+                          <div className="flex flex-col gap-1 items-end">
+                            <Chip
+                              size="sm"
+                              variant="dot"
+                              color={getEventStatusColor(event.status)}
+                            >
+                              {t(`calendar.status.${event.status}`)}
+                            </Chip>
                             <Chip
                               size="sm"
                               variant="flat"
-                              color={getEventTypeColor(event.type)}
+                              color={getPriorityColor(event.priority)}
                             >
-                              {t(`calendar.type.${event.type}`)}
+                              {t(`calendar.priority.${event.priority}`)}
                             </Chip>
                           </div>
-                          
-                          <div className="text-sm text-default-600 mb-2">
-                            {formatTime(event.startDate)}
-                            {event.endDate && ` - ${formatTime(event.endDate)}`}
-                          </div>
-                          
-                          {event.description && (
-                            <p className="text-sm text-default-500 line-clamp-2">
-                              {event.description}
-                            </p>
-                          )}
                         </div>
-                        
-                        <Chip
-                          size="sm"
-                          variant="dot"
-                          color={getEventStatusColor(event.status)}
-                        >
-                          {t(`calendar.status.${event.status}`)}
-                        </Chip>
-                      </div>
-                    </Card>
-                  ))
+                      </Card>
+                    );
+                  })
                 )}
               </div>
             </ScrollShadow>
@@ -795,29 +956,47 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                       {t("calendar.noUpcoming")}
                     </div>
                   ) : (
-                    upcomingEvents.map(event => (
-                      <div
-                        key={event.id}
-                        className="p-2 border border-default-200 rounded-lg hover:bg-default-50 cursor-pointer"
-                        onClick={() => setShowEventDetails(event)}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          {getPriorityIcon(event.priority)}
-                          <span className="font-medium text-sm">{event.title}</span>
-                        </div>
-                        <div className="text-xs text-default-600">
-                          {formatTime(event.startDate)}
-                        </div>
-                        <Chip
-                          size="sm"
-                          variant="flat"
-                          color={getEventTypeColor(event.type)}
-                          className="mt-1"
+                    upcomingEvents.map(event => {
+                      const styling = getEventStyling(event);
+                      return (
+                        <div
+                          key={event.id}
+                          className={`p-2 rounded-lg hover:bg-default-50 cursor-pointer ${styling.className}`}
+                          style={{
+                            ...styling.style,
+                            backgroundColor: `var(--heroui-colors-${getEventTypeColor(event.type)}-50)`
+                          }}
+                          onClick={() => setShowEventDetails(event)}
                         >
-                          {t(`calendar.type.${event.type}`)}
-                        </Chip>
-                      </div>
-                    ))
+                          <div className={`flex items-center gap-2 mb-1 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                            {getPriorityIcon(event.priority)}
+                            <span className="font-medium text-sm flex-1">{event.title}</span>
+                            {event.status === 'overdue' && (
+                              <span className="text-danger-600 text-xs font-bold">OVERDUE</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-default-600 mb-1">
+                            {formatTime(event.startDate)}
+                          </div>
+                          <div className={`flex gap-1 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color={getEventTypeColor(event.type)}
+                            >
+                              {t(`calendar.type.${event.type}`)}
+                            </Chip>
+                            <Chip
+                              size="sm"
+                              variant="dot"
+                              color={getPriorityColor(event.priority)}
+                            >
+                              {t(`calendar.priority.${event.priority}`)}
+                            </Chip>
+                          </div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </ScrollShadow>
@@ -833,21 +1012,46 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               <CardBody>
                 <ScrollShadow className="max-h-40" hideScrollBar>
                   <div className="space-y-2">
-                    {overdueEvents.map(event => (
-                      <div
-                        key={event.id}
-                        className="p-2 border border-danger-200 bg-danger-50 rounded-lg hover:bg-danger-100 cursor-pointer"
-                        onClick={() => setShowEventDetails(event)}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <AlertTriangle className="w-3 h-3 text-danger" />
-                          <span className="font-medium text-sm">{event.title}</span>
+                    {overdueEvents.map(event => {
+                      const styling = getEventStyling(event);
+                      return (
+                        <div
+                          key={event.id}
+                          className={`p-2 rounded-lg cursor-pointer animate-pulse ${styling.className}`}
+                          style={{
+                            ...styling.style,
+                            backgroundColor: 'var(--heroui-colors-danger-50)',
+                            borderColor: 'var(--heroui-colors-danger-300)'
+                          }}
+                          onClick={() => setShowEventDetails(event)}
+                        >
+                          <div className={`flex items-center gap-2 mb-1 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                            <AlertTriangle className="w-3 h-3 text-danger animate-bounce" />
+                            <span className="font-medium text-sm flex-1">{event.title}</span>
+                            <span className="text-danger-600 text-xs font-bold">OVERDUE</span>
+                          </div>
+                          <div className="text-xs text-danger-600 mb-1">
+                            {formatTime(event.startDate)}
+                          </div>
+                          <div className={`flex gap-1 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color={getEventTypeColor(event.type)}
+                            >
+                              {t(`calendar.type.${event.type}`)}
+                            </Chip>
+                            <Chip
+                              size="sm"
+                              variant="solid"
+                              color="danger"
+                            >
+                              {t(`calendar.priority.${event.priority}`)}
+                            </Chip>
+                          </div>
                         </div>
-                        <div className="text-xs text-danger-600">
-                          {formatTime(event.startDate)}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </ScrollShadow>
               </CardBody>

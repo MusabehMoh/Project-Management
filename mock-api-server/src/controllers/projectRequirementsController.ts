@@ -42,6 +42,7 @@ export class ProjectRequirementsController {
             fullName: user.fullName,
             department: user.department,
             gradeName: user.gradeName,
+            busyStatus: inProgressRequirements > 2 ? "busy" : "available",
             metrics: {
               totalRequirements,
               draft: draftRequirements,

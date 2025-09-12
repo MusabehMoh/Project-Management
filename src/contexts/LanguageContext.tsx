@@ -142,6 +142,12 @@ const translations = {
     "calendar.priorities.high": "High",
     "calendar.priorities.urgent": "Urgent",
 
+    // Calendar Color Legend
+    "calendar.colorLegend": "Color Legend",
+    "calendar.visualEffects": "Visual Effects",
+    "calendar.criticalShadow": "Critical Priority",
+    "calendar.priorityBorder": "Priority Border",
+
     // Calendar Validation Messages
     "calendar.validation.titleRequired": "Event title is required",
     "calendar.validation.startDateRequired": "Start date is required",
@@ -264,6 +270,8 @@ const translations = {
     "team.inProgress": "In Progress",
     "team.completed": "Completed",
     "team.performance": "Performance",
+    "team.busy": "Busy",
+    "team.available": "Available",
 
     // Project Status
     "status.active": "Active",
@@ -1211,6 +1219,12 @@ const translations = {
     "calendar.priorities.high": "عالي",
     "calendar.priorities.urgent": "عاجل",
 
+    // Calendar Color Legend
+    "calendar.colorLegend": "مفتاح الألوان",
+    "calendar.visualEffects": "التأثيرات البصرية",
+    "calendar.criticalShadow": "أولوية حرجة",
+    "calendar.priorityBorder": "حدود الأولوية",
+
     // Calendar Validation Messages
     "calendar.validation.titleRequired": "عنوان الحدث مطلوب",
     "calendar.validation.startDateRequired": "تاريخ البداية مطلوب",
@@ -1318,10 +1332,12 @@ const translations = {
     // Team Workload
     "team.member": "عضو الفريق",
     "team.department": "القسم",
-    "team.total": "المجموع",
+    "team.total": "الإجمالي",
     "team.inProgress": "قيد التنفيذ",
     "team.completed": "مكتمل",
     "team.performance": "الأداء",
+    "team.busy": "مشغول",
+    "team.available": "متاح",
 
     // Project Status
     "status.active": "نشط",
@@ -2080,7 +2096,6 @@ const translations = {
     "timeline.gantt.delete": "حذف",
     "timeline.gantt.progress": "ما تم انجازه",
     "timeline.gantt.editTask": "تعديل المهمة",
-
     // Members Tasks Dashboard
     membersTasksDashboard: "لوحة مهام الأعضاء",
     tasksOverview: "نظرة عامة على المهام",
