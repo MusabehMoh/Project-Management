@@ -270,6 +270,8 @@ const translations = {
     "team.inProgress": "In Progress",
     "team.completed": "Completed",
     "team.performance": "Performance",
+    "team.busy": "Busy",
+    "team.available": "Available",
 
     // Project Status
     "status.active": "Active",
@@ -1330,10 +1332,12 @@ const translations = {
     // Team Workload
     "team.member": "عضو الفريق",
     "team.department": "القسم",
-    "team.total": "المجموع",
+    "team.total": "الإجمالي",
     "team.inProgress": "قيد التنفيذ",
     "team.completed": "مكتمل",
     "team.performance": "الأداء",
+    "team.busy": "مشغول",
+    "team.available": "متاح",
 
     // Project Status
     "status.active": "نشط",
@@ -2092,7 +2096,6 @@ const translations = {
     "timeline.gantt.delete": "حذف",
     "timeline.gantt.progress": "ما تم انجازه",
     "timeline.gantt.editTask": "تعديل المهمة",
-
     // Members Tasks Dashboard
     membersTasksDashboard: "لوحة مهام الأعضاء",
     tasksOverview: "نظرة عامة على المهام",

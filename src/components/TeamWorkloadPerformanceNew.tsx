@@ -70,6 +70,7 @@ const TeamWorkloadPerformance: React.FC = () => {
                 <TableColumn className="text-center">{t("team.inProgress")}</TableColumn>
                 <TableColumn className="text-center">{t("team.completed")}</TableColumn>
                 <TableColumn>{t("team.performance")}</TableColumn>
+                <TableColumn>{t("team.busy")}</TableColumn>
               </TableHeader>
               <TableBody>
                 {teamData.map((member) => (
@@ -103,6 +104,13 @@ const TeamWorkloadPerformance: React.FC = () => {
                           {member.metrics.performance}%
                         </span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {member.busyStatus === "busy" ? (
+                        <span className="text-danger font-semibold">{t("team.busy")}</span>
+                      ) : (
+                        <span className="text-success font-semibold">{t("team.available")}</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
