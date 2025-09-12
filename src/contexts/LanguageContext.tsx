@@ -126,6 +126,22 @@ const translations = {
     "calendar.locationPlaceholder": "Enter location",
     "calendar.allDay": "All Day",
 
+    // Calendar Filters
+    "calendar.search": "Search",
+    "calendar.searchPlaceholder": "Search events...",
+    "calendar.allTypes": "All Types",
+    "calendar.allPriorities": "All Priorities",
+    "calendar.clearFilters": "Clear Filters",
+    "calendar.eventTypes.meeting": "Meeting",
+    "calendar.eventTypes.task": "Task", 
+    "calendar.eventTypes.deadline": "Deadline",
+    "calendar.eventTypes.project": "Project",
+    "calendar.eventTypes.requirement": "Requirement",
+    "calendar.priorities.low": "Low",
+    "calendar.priorities.medium": "Medium",
+    "calendar.priorities.high": "High",
+    "calendar.priorities.urgent": "Urgent",
+
     // Calendar Validation Messages
     "calendar.validation.titleRequired": "Event title is required",
     "calendar.validation.startDateRequired": "Start date is required",
@@ -1157,6 +1173,22 @@ const translations = {
     "calendar.descriptionPlaceholder": "أدخل وصف الحدث",
     "calendar.locationPlaceholder": "أدخل الموقع",
     "calendar.allDay": "طوال اليوم",
+
+    // Calendar Filters
+    "calendar.search": "البحث",
+    "calendar.searchPlaceholder": "البحث في الأحداث...",
+    "calendar.allTypes": "جميع الأنواع",
+    "calendar.allPriorities": "جميع الأولويات",
+    "calendar.clearFilters": "مسح المرشحات",
+    "calendar.eventTypes.meeting": "اجتماع",
+    "calendar.eventTypes.task": "مهمة",
+    "calendar.eventTypes.deadline": "موعد نهائي",
+    "calendar.eventTypes.project": "مشروع",
+    "calendar.eventTypes.requirement": "متطلب",
+    "calendar.priorities.low": "منخفض",
+    "calendar.priorities.medium": "متوسط",
+    "calendar.priorities.high": "عالي",
+    "calendar.priorities.urgent": "عاجل",
 
     // Calendar Validation Messages
     "calendar.validation.titleRequired": "عنوان الحدث مطلوب",

@@ -69,6 +69,13 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
+  // Local UI filters for client-side filtering
+  const [uiFilters, setUiFilters] = useState({
+    type: "",
+    priority: "",
+    searchTerm: ""
+  });
+
   // Validation functions
   const validateField = (field: string, value: any) => {
     const errors: Record<string, string> = {};
@@ -122,6 +129,68 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   const handleFieldBlur = (field: string) => {
     setTouchedFields(prev => ({ ...prev, [field]: true }));
     validateField(field, eventForm[field as keyof typeof eventForm]);
+  };
+
+  // Filter events based on current filters
+  const filteredEvents = events.filter(event => {
+    // Filter by type
+    if (uiFilters.type && event.type !== uiFilters.type) {
+      return false;
+    }
+
+    // Filter by priority
+    if (uiFilters.priority && event.priority !== uiFilters.priority) {
+      return false;
+    }
+
+    // Filter by search term (title or description)
+    if (uiFilters.searchTerm) {
+      const searchLower = uiFilters.searchTerm.toLowerCase();
+      const titleMatch = event.title.toLowerCase().includes(searchLower);
+      const descMatch = event.description?.toLowerCase().includes(searchLower);
+      if (!titleMatch && !descMatch) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Reset filters
+  const resetFilters = () => {
+    setUiFilters({
+      type: "",
+      priority: "",
+      searchTerm: ""
+    });
+  };
+
+  // Get filtered events for a specific date
+  const getFilteredEventsForDate = (date: Date) => {
+    const dayEvents = getEventsForDate(date);
+    return dayEvents.filter(event => {
+      // Filter by type
+      if (uiFilters.type && event.type !== uiFilters.type) {
+        return false;
+      }
+
+      // Filter by priority
+      if (uiFilters.priority && event.priority !== uiFilters.priority) {
+        return false;
+      }
+
+      // Filter by search term (title or description)
+      if (uiFilters.searchTerm) {
+        const searchLower = uiFilters.searchTerm.toLowerCase();
+        const titleMatch = event.title.toLowerCase().includes(searchLower);
+        const descMatch = event.description?.toLowerCase().includes(searchLower);
+        if (!titleMatch && !descMatch) {
+          return false;
+        }
+      }
+
+      return true;
+    });
   };
   const [eventForm, setEventForm] = useState({
     title: "",
@@ -202,7 +271,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     for (let week = 0; week < 6; week++) {
       const weekDays = [];
       for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-        const dayEvents = getEventsForDate(current);
+        const dayEvents = getFilteredEventsForDate(current);
         const isCurrentMonth = current.getMonth() === month;
         const isToday = current.toDateString() === new Date().toDateString();
         
@@ -492,6 +561,80 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               </Button>
             </div>
           </div>
+
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="mb-6 p-4 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
+              <div className="flex flex-wrap gap-3 items-end">
+                <div className="flex-1 min-w-[200px]">
+                  <Input
+                    size="sm"
+                    label={t("calendar.search")}
+                    placeholder={t("calendar.searchPlaceholder")}
+                    value={uiFilters.searchTerm}
+                    onChange={(e) => setUiFilters({ ...uiFilters, searchTerm: e.target.value })}
+                    classNames={{
+                      label: "text-foreground-600",
+                      input: "text-foreground"
+                    }}
+                  />
+                </div>
+                
+                <div className="min-w-[120px]">
+                  <Select
+                    size="sm"
+                    label={t("calendar.type")}
+                    placeholder={t("calendar.allTypes")}
+                    selectedKeys={uiFilters.type ? [uiFilters.type] : []}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as string || "";
+                      setUiFilters({ ...uiFilters, type: value });
+                    }}
+                    classNames={{
+                      label: "text-foreground-600",
+                      value: "text-foreground"
+                    }}
+                  >
+                    <SelectItem key="meeting">{t("calendar.eventTypes.meeting")}</SelectItem>
+                    <SelectItem key="task">{t("calendar.eventTypes.task")}</SelectItem>
+                    <SelectItem key="deadline">{t("calendar.eventTypes.deadline")}</SelectItem>
+                    <SelectItem key="project">{t("calendar.eventTypes.project")}</SelectItem>
+                    <SelectItem key="requirement">{t("calendar.eventTypes.requirement")}</SelectItem>
+                  </Select>
+                </div>
+
+                <div className="min-w-[120px]">
+                  <Select
+                    size="sm"
+                    label={t("calendar.priority")}
+                    placeholder={t("calendar.allPriorities")}
+                    selectedKeys={uiFilters.priority ? [uiFilters.priority] : []}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as string || "";
+                      setUiFilters({ ...uiFilters, priority: value });
+                    }}
+                    classNames={{
+                      label: "text-foreground-600",
+                      value: "text-foreground"
+                    }}
+                  >
+                    <SelectItem key="low">{t("calendar.priorities.low")}</SelectItem>
+                    <SelectItem key="medium">{t("calendar.priorities.medium")}</SelectItem>
+                    <SelectItem key="high">{t("calendar.priorities.high")}</SelectItem>
+                    <SelectItem key="urgent">{t("calendar.priorities.urgent")}</SelectItem>
+                  </Select>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={resetFilters}
+                >
+                  {t("calendar.clearFilters")}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Calendar Grid (Month View) */}
           {viewMode === 'month' && (
