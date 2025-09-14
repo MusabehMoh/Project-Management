@@ -1,0 +1,206 @@
+using PMA.Core.Entities;
+using PMA.Core.DTOs;
+using TaskEntity = PMA.Core.Entities.Task;
+using System.Threading.Tasks;
+
+namespace PMA.Core.Interfaces;
+
+public interface IProjectService
+{
+        System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null);
+    System.Threading.Tasks.Task<Project?> GetProjectByIdAsync(int id);
+    System.Threading.Tasks.Task<Project> CreateProjectAsync(Project project);
+    System.Threading.Tasks.Task UpdateProjectAsync(Project project);
+    System.Threading.Tasks.Task DeleteProjectAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Project>> SearchProjectsAsync(string query, int? status = null, string? priority = null, int page = 1, int limit = 20);
+    System.Threading.Tasks.Task<object> GetProjectStatsAsync();
+}
+
+public interface IUserService
+{
+    System.Threading.Tasks.Task<(IEnumerable<UserDto> Users, int TotalCount)> GetUsersAsync(int page, int limit, bool? isVisible = null, int? departmentId = null);
+    System.Threading.Tasks.Task<User?> GetUserByIdAsync(int id);
+    System.Threading.Tasks.Task<User?> GetUserByUserNameAsync(string userName);
+    System.Threading.Tasks.Task<User> CreateUserAsync(User user);
+    System.Threading.Tasks.Task<User> UpdateUserAsync(User user);
+    System.Threading.Tasks.Task<bool> DeleteUserAsync(int id);
+    System.Threading.Tasks.Task<User?> GetUserWithRolesAndActionsAsync(int id);
+    System.Threading.Tasks.Task<CurrentUserDto?> GetCurrentUserAsync();
+    System.Threading.Tasks.Task AssignRolesToUserAsync(int userId, List<int> roleIds);
+    System.Threading.Tasks.Task AssignActionsToUserAsync(int userId, List<int> actionIds);
+    System.Threading.Tasks.Task RemoveUserRolesAsync(int userId, List<int> roleIds);
+    System.Threading.Tasks.Task RemoveUserActionsAsync(int userId, List<int> actionIds);
+}
+
+public interface ITaskService
+{
+    System.Threading.Tasks.Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null);
+    System.Threading.Tasks.Task<TaskEntity?> GetTaskByIdAsync(int id);
+    System.Threading.Tasks.Task<TaskEntity> CreateTaskAsync(TaskEntity task);
+    System.Threading.Tasks.Task<TaskEntity> UpdateTaskAsync(TaskEntity task);
+    System.Threading.Tasks.Task<bool> DeleteTaskAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksBySprintAsync(int sprintId);
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByAssigneeAsync(int assigneeId);
+    System.Threading.Tasks.Task<TaskEntity?> GetTaskWithSubTasksAsync(int id);
+}
+
+public interface ISprintService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Sprint> Sprints, int TotalCount)> GetSprintsAsync(int page, int limit, int? projectId = null, int? status = null);
+    System.Threading.Tasks.Task<Sprint?> GetSprintByIdAsync(int id);
+    System.Threading.Tasks.Task<Sprint> CreateSprintAsync(Sprint sprint);
+    System.Threading.Tasks.Task<Sprint> UpdateSprintAsync(Sprint sprint);
+    System.Threading.Tasks.Task<bool> DeleteSprintAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Sprint>> GetSprintsByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<Sprint?> GetActiveSprintByProjectAsync(int projectId);
+}
+
+public interface IRequirementService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Requirement> Requirements, int TotalCount)> GetRequirementsAsync(int page, int limit, int? projectId = null, string? status = null, string? priority = null);
+    System.Threading.Tasks.Task<Requirement?> GetRequirementByIdAsync(int id);
+    System.Threading.Tasks.Task<Requirement> CreateRequirementAsync(Requirement requirement);
+    System.Threading.Tasks.Task<Requirement> UpdateRequirementAsync(Requirement requirement);
+    System.Threading.Tasks.Task<bool> DeleteRequirementAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Requirement>> GetRequirementsByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<Requirement?> GetRequirementWithCommentsAsync(int id);
+}
+
+public interface IDepartmentService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Department> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
+    System.Threading.Tasks.Task<Department?> GetDepartmentByIdAsync(int id);
+    System.Threading.Tasks.Task<Department> CreateDepartmentAsync(Department department);
+    System.Threading.Tasks.Task<Department> UpdateDepartmentAsync(Department department);
+    System.Threading.Tasks.Task<bool> DeleteDepartmentAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Department>> GetActiveDepartmentsAsync();
+}
+
+public interface IUnitService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Unit> Units, int TotalCount)> GetUnitsAsync(int page, int limit, bool? isActive = null);
+    System.Threading.Tasks.Task<Unit?> GetUnitByIdAsync(int id);
+    System.Threading.Tasks.Task<Unit> CreateUnitAsync(Unit unit);
+    System.Threading.Tasks.Task<Unit> UpdateUnitAsync(Unit unit);
+    System.Threading.Tasks.Task<bool> DeleteUnitAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Unit>> GetActiveUnitsAsync();
+}
+
+public interface IRoleService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Role> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null);
+    System.Threading.Tasks.Task<Role?> GetRoleByIdAsync(int id);
+    System.Threading.Tasks.Task<Role> CreateRoleAsync(Role role);
+    System.Threading.Tasks.Task<Role> UpdateRoleAsync(Role role);
+    System.Threading.Tasks.Task<bool> DeleteRoleAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Role>> GetActiveRolesAsync();
+    System.Threading.Tasks.Task<Role?> GetRoleWithActionsAsync(int id);
+}
+
+public interface IActionService
+{
+    System.Threading.Tasks.Task<IEnumerable<Permission>> GetActionsAsync(int page, int limit, string? category = null, bool? isActive = null);
+    System.Threading.Tasks.Task<IEnumerable<Permission>> GetAllActionsAsync();
+    System.Threading.Tasks.Task<Permission?> GetActionByIdAsync(int id);
+    System.Threading.Tasks.Task<Permission> CreateActionAsync(Permission action);
+    System.Threading.Tasks.Task<Permission> UpdateActionAsync(Permission action);
+    System.Threading.Tasks.Task<bool> DeleteActionAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Permission>> GetActiveActionsAsync();
+    System.Threading.Tasks.Task<IEnumerable<Permission>> GetActionsByCategoryAsync(string category);
+}
+
+public interface INotificationService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Notification> Notifications, int TotalCount)> GetNotificationsAsync(int page, int limit, int? userId = null, bool? isRead = null);
+    System.Threading.Tasks.Task<Notification?> GetNotificationByIdAsync(int id);
+    System.Threading.Tasks.Task<Notification> CreateNotificationAsync(Notification notification);
+    System.Threading.Tasks.Task<Notification> UpdateNotificationAsync(Notification notification);
+    System.Threading.Tasks.Task<bool> DeleteNotificationAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Notification>> GetNotificationsByUserAsync(int userId);
+    System.Threading.Tasks.Task<bool> MarkAsReadAsync(int notificationId);
+    System.Threading.Tasks.Task MarkAllAsReadAsync(int userId);
+}
+
+public interface ICalendarEventService
+{
+    System.Threading.Tasks.Task<(IEnumerable<CalendarEvent> CalendarEvents, int TotalCount)> GetCalendarEventsAsync(int page, int limit, int? projectId = null, int? createdBy = null, DateTime? startDate = null, DateTime? endDate = null);
+    System.Threading.Tasks.Task<CalendarEvent?> GetCalendarEventByIdAsync(int id);
+    System.Threading.Tasks.Task<CalendarEvent> CreateCalendarEventAsync(CalendarEvent calendarEvent);
+    System.Threading.Tasks.Task<CalendarEvent> UpdateCalendarEventAsync(CalendarEvent calendarEvent);
+    System.Threading.Tasks.Task<bool> DeleteCalendarEventAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<CalendarEvent>> GetCalendarEventsByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<IEnumerable<CalendarEvent>> GetCalendarEventsByCreatorAsync(int creatorId);
+}
+
+public interface IEmployeeService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> GetEmployeesAsync(int page, int limit, int? statusId = null);
+    System.Threading.Tasks.Task<Employee?> GetEmployeeByIdAsync(int id);
+    System.Threading.Tasks.Task<Employee> CreateEmployeeAsync(Employee employee);
+    System.Threading.Tasks.Task<Employee> UpdateEmployeeAsync(Employee employee);
+    System.Threading.Tasks.Task<bool> DeleteEmployeeAsync(int id);
+}
+
+public interface ILookupService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Lookup> Lookups, int TotalCount)> GetLookupsAsync(int page, int limit, string? category = null, bool? isActive = null);
+    System.Threading.Tasks.Task<Lookup?> GetLookupByIdAsync(int id);
+    System.Threading.Tasks.Task<Lookup> CreateLookupAsync(Lookup lookup);
+    System.Threading.Tasks.Task<Lookup> UpdateLookupAsync(Lookup lookup);
+    System.Threading.Tasks.Task<bool> DeleteLookupAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Lookup>> GetLookupsByCategoryAsync(string category);
+}
+
+public interface IMemberTaskService
+{
+    System.Threading.Tasks.Task<(IEnumerable<MemberTask> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, string? status = null, string? priority = null);
+    System.Threading.Tasks.Task<MemberTask?> GetMemberTaskByIdAsync(int id);
+    System.Threading.Tasks.Task<MemberTask> CreateMemberTaskAsync(MemberTask memberTask);
+    System.Threading.Tasks.Task<MemberTask> UpdateMemberTaskAsync(MemberTask memberTask);
+    System.Threading.Tasks.Task<bool> DeleteMemberTaskAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByAssigneeAsync(int assigneeId);
+}
+
+public interface IProjectRequirementService
+{
+    System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> ProjectRequirements, int TotalCount)> GetProjectRequirementsAsync(int page, int limit, int? projectId = null, string? status = null, string? priority = null);
+    System.Threading.Tasks.Task<ProjectRequirement?> GetProjectRequirementByIdAsync(int id);
+    System.Threading.Tasks.Task<ProjectRequirement> CreateProjectRequirementAsync(ProjectRequirement projectRequirement);
+    System.Threading.Tasks.Task<ProjectRequirement> UpdateProjectRequirementAsync(ProjectRequirement projectRequirement);
+    System.Threading.Tasks.Task<bool> DeleteProjectRequirementAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByProjectAsync(int projectId);
+}
+
+public interface ISubTaskService
+{
+    System.Threading.Tasks.Task<(IEnumerable<SubTask> SubTasks, int TotalCount)> GetSubTasksAsync(int page, int limit, int? taskId = null, int? assigneeId = null, int? statusId = null);
+    System.Threading.Tasks.Task<SubTask?> GetSubTaskByIdAsync(int id);
+    System.Threading.Tasks.Task<SubTask> CreateSubTaskAsync(SubTask subTask);
+    System.Threading.Tasks.Task<SubTask> UpdateSubTaskAsync(SubTask subTask);
+    System.Threading.Tasks.Task<bool> DeleteSubTaskAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<SubTask>> GetSubTasksByTaskAsync(int taskId);
+    System.Threading.Tasks.Task<IEnumerable<SubTask>> GetSubTasksByAssigneeAsync(int assigneeId);
+}
+
+public interface ITimelineService
+{
+    System.Threading.Tasks.Task<(IEnumerable<Timeline> Timelines, int TotalCount)> GetTimelinesAsync(int page, int limit, int? projectId = null);
+    System.Threading.Tasks.Task<Timeline?> GetTimelineByIdAsync(int id);
+    System.Threading.Tasks.Task<Timeline> CreateTimelineAsync(Timeline timeline);
+    System.Threading.Tasks.Task<Timeline> UpdateTimelineAsync(Timeline timeline);
+    System.Threading.Tasks.Task<bool> DeleteTimelineAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Timeline>> GetTimelinesByProjectAsync(int projectId);
+}
+
+public interface ITimelineRequirementService
+{
+    System.Threading.Tasks.Task<(IEnumerable<TimelineRequirement> TimelineRequirements, int TotalCount)> GetTimelineRequirementsAsync(int page, int limit, int? timelineId = null, int? statusId = null);
+    System.Threading.Tasks.Task<TimelineRequirement?> GetTimelineRequirementByIdAsync(int id);
+    System.Threading.Tasks.Task<TimelineRequirement> CreateTimelineRequirementAsync(TimelineRequirement timelineRequirement);
+    System.Threading.Tasks.Task<TimelineRequirement> UpdateTimelineRequirementAsync(TimelineRequirement timelineRequirement);
+    System.Threading.Tasks.Task<bool> DeleteTimelineRequirementAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<TimelineRequirement>> GetTimelineRequirementsByTimelineAsync(int timelineId);
+}
+
+

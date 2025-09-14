@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "XTG0ElP6hVk=",
+  "success": true,
+  "projectFilePath": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Core\\PMA.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\hamdb\\.nuget\\packages\\fluentvalidation\\11.9.0\\fluentvalidation.11.9.0.nupkg.sha512"
+  ],
+  "logs": []
+}

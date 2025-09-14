@@ -1,0 +1,152 @@
+﻿using PMA.Core.Entities;
+using PMA.Core.DTOs;
+using PMA.Core.Interfaces;
+using System.Threading.Tasks;
+
+namespace PMA.Core.Services;
+
+public class UserService : IUserService
+{
+    private readonly IUserRepository _userRepository;
+
+    public UserService(IUserRepository userRepository)
+    {
+        _userRepository = userRepository;
+    }
+
+    public async System.Threading.Tasks.Task<IEnumerable<User>> GetAllUsersAsync()
+    {
+        return await _userRepository.GetAllAsync();
+    }
+
+    public async System.Threading.Tasks.Task<User?> GetUserByIdAsync(int id)
+    {
+        return await _userRepository.GetByIdAsync(id);
+    }
+
+    public async System.Threading.Tasks.Task<User?> GetUserByUserNameAsync(string userName)
+    {
+        return await _userRepository.GetByUserNameAsync(userName);
+    }
+
+    public async System.Threading.Tasks.Task<User> CreateUserAsync(User user)
+    {
+        user.CreatedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTime.UtcNow;
+        return await _userRepository.AddAsync(user);
+    }
+
+    public async Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, bool? isVisible = null, int? departmentId = null)
+    {
+        return await _userRepository.GetUsersAsync(page, limit, isVisible, departmentId);
+    }
+
+    public async Task<User> UpdateUserAsync(User user)
+    {
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user);
+        return user;
+    }
+
+    public async System.Threading.Tasks.Task<bool> DeleteUserAsync(int id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user != null)
+        {
+            await _userRepository.DeleteAsync(user);
+            return true;
+        }
+        return false;
+    }
+
+    public async System.Threading.Tasks.Task<User?> GetUserWithRolesAndActionsAsync(int id)
+    {
+        return await _userRepository.GetUserWithRolesAndActionsAsync(id);
+    }
+
+    public async System.Threading.Tasks.Task<CurrentUserDto?> GetCurrentUserAsync()
+    {
+        // For now, return the first user as current user (placeholder until authentication is implemented)
+        var users = await _userRepository.GetAllAsync();
+        var user = users.FirstOrDefault();
+        
+        if (user == null)
+            return null;
+
+        // Get user with roles and actions
+        var userWithDetails = await _userRepository.GetUserWithRolesAndActionsAsync(user.Id);
+        
+        if (userWithDetails == null)
+            return null;
+
+        // Map to CurrentUserDto
+        return MapToCurrentUserDto(userWithDetails);
+    }
+
+    private CurrentUserDto MapToCurrentUserDto(User user)
+    {
+        var currentUserDto = new CurrentUserDto
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            PrsId = user.PrsId,
+            IsVisible = user.IsVisible,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            Employee = user.Employee != null ? new EmployeeDto
+            {
+                Id = user.Employee.Id,
+                UserName = user.Employee.UserName,
+                MilitaryNumber = user.Employee.MilitaryNumber,
+                GradeName = user.Employee.GradeName,
+                FullName = user.Employee.FullName,
+                StatusId = user.Employee.StatusId
+            } : null,
+            Roles = user.UserRoles?.Select(ur => new RoleDto
+            {
+                Id = ur.Role?.Id ?? 0,
+                Name = ur.Role?.Name ?? string.Empty,
+                Active = ur.Role?.IsActive ?? false,
+                RoleOrder = ur.Role?.RoleOrder ?? 0,
+                Actions = ur.Role?.RoleActions?.Select(ra => new ActionDto
+                {
+                    Id = ra.Permission?.Id ?? 0,
+                    Name = ra.Permission?.Name ?? string.Empty,
+                    Description = ra.Permission?.Description,
+                    Category = ra.Permission?.Category ?? string.Empty,
+                    Resource = ra.Permission?.Resource ?? string.Empty,
+                    Action = ra.Permission?.Action ?? string.Empty,
+                    IsActive = ra.Permission?.IsActive ?? false,
+                    CreatedAt = ra.Permission?.CreatedAt ?? DateTime.UtcNow,
+                    UpdatedAt = ra.Permission?.UpdatedAt ?? DateTime.UtcNow
+                }).ToList()
+            }).ToList(),
+            Actions = user.UserActions?.Select(ua => new ActionDto
+            {
+                Id = ua.Permission?.Id ?? 0,
+                Name = ua.Permission?.Name ?? string.Empty,
+                Description = ua.Permission?.Description,
+                Category = ua.Permission?.Category ?? string.Empty,
+                Resource = ua.Permission?.Resource ?? string.Empty,
+                Action = ua.Permission?.Action ?? string.Empty,
+                IsActive = ua.Permission?.IsActive ?? false,
+                CreatedAt = ua.Permission?.CreatedAt ?? DateTime.UtcNow,
+                UpdatedAt = ua.Permission?.UpdatedAt ?? DateTime.UtcNow
+            }).ToList()
+        };
+
+        // Set flattened employee properties
+        if (user.Employee != null)
+        {
+            currentUserDto.FullName = user.Employee.FullName;
+            currentUserDto.MilitaryNumber = user.Employee.MilitaryNumber;
+            currentUserDto.GradeName = user.Employee.GradeName;
+            // Department, Email, Phone would need to be added to Employee entity if needed
+        }
+
+        return currentUserDto;
+    }
+}
+
+
+
