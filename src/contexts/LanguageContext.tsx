@@ -74,7 +74,9 @@ const translations = {
 
     // Calendar
     "calendar.title": "Calendar",
-    "calendar.month": "Month",
+  "calendar.previousMonth": "Previous month",
+  "calendar.nextMonth": "Next month",
+  "calendar.month": "Month",
     "calendar.week": "Week",
     "calendar.day": "Day",
     "calendar.today": "Today",
@@ -1170,7 +1172,9 @@ const translations = {
 
     // Calendar
     "calendar.title": "التقويم",
-    "calendar.month": "شهر",
+  "calendar.previousMonth": "الشهر السابق",
+  "calendar.nextMonth": "الشهر التالي", 
+  "calendar.month": "شهر",
     "calendar.week": "أسبوع",
     "calendar.day": "يوم",
     "calendar.today": "اليوم",

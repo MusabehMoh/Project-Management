@@ -41,7 +41,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   showSidebar = true, 
   maxHeight = "600px" 
 }) => {
-  const { t, direction } = useLanguage();
+  const { t, direction, language } = useLanguage();
   const {
     events,
     stats,
@@ -574,39 +574,51 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
 
         <CardBody className="p-6">
           <ScrollShadow hideScrollBar>
-            {/* Calendar Header with Navigation */}
+            {/* Calendar Header with Navigation - Fixed for RTL */}
             <div className="flex justify-between items-center mb-6">
-            <Button
-              variant="ghost"
-              isIconOnly
-              onPress={goToPrevious}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            <div className="text-center">
-              <h2 className="text-xl font-semibold">
-                {formatDate(selectedDate)}
-              </h2>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="flat"
-                onPress={goToToday}
-              >
-                {t("calendar.today")}
-              </Button>
+              {/* Previous Button - Shows correct arrow based on language */}
               <Button
                 variant="ghost"
                 isIconOnly
-                onPress={goToNext}
+                onPress={goToPrevious}
+                aria-label={t("calendar.previousMonth")}
               >
-                <ChevronRight className="w-4 h-4" />
+                {language === "ar" ? (
+                  <ChevronRight className="w-4 h-4" />
+                ) : (
+                  <ChevronLeft className="w-4 h-4" />
+                )}
               </Button>
+
+              <div className="text-center">
+                <h2 className="text-xl font-semibold">
+                  {formatDate(selectedDate)}
+                </h2>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={goToToday}
+                >
+                  {t("calendar.today")}
+                </Button>
+                {/* Next Button - Shows correct arrow based on language */}
+                <Button
+                  variant="ghost"
+                  isIconOnly
+                  onPress={goToNext}
+                  aria-label={t("calendar.nextMonth")}
+                >
+                  {language === "ar" ? (
+                    <ChevronLeft className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
 
           {/* Filter Panel */}
           {showFilters && (

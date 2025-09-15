@@ -6,7 +6,7 @@ import UrgentNotifications from "@/components/UrgentNotifications";
 import RequirementOverview from "@/components/RequirementOverview";
 import TeamWorkloadPerformance from "@/components/TeamWorkloadPerformanceNew";
 import ProjectPipeline from "@/components/ProjectPipeline";
-import Calendar from "@/components/Calendar";
+import Calendar from "@/components/calendar";
 import ModernQuickStats from "@/components/ModernQuickStats";
 
 export default function AnalystManagerDashboard() {
