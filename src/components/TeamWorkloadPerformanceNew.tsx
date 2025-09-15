@@ -12,16 +12,21 @@ import { Filter, X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { teamWorkloadService, type TeamMemberMetrics } from "@/services/api/teamWorkloadService";
+import { GlobalPagination } from "@/components/GlobalPagination";
 
 // Get performance color based on score
 const getPerformanceColor = (score: number) => {
   if (score >= 80) return "success";
   if (score >= 60) return "warning";
+
   return "danger";
 };
 
 // Format busy until date for tooltip
-const formatBusyUntil = (busyUntil: string | undefined, t: (key: string) => string) => {
+const formatBusyUntil = (
+  busyUntil: string | undefined,
+  t: (key: string) => string,
+) => {
   if (!busyUntil) return "";
   
   const busyDate = new Date(busyUntil);
@@ -31,9 +36,14 @@ const formatBusyUntil = (busyUntil: string | undefined, t: (key: string) => stri
   
   if (diffDays === 0) return t("team.busyUntilToday");
   if (diffDays === 1) return t("team.busyUntilTomorrow");
-  if (diffDays <= 7) return t("team.busyUntilDays").replace("{days}", diffDays.toString());
+  if (diffDays <= 7) {
+    return t("team.busyUntilDays").replace("{days}", diffDays.toString());
+  }
   
-  return t("team.busyUntilDate").replace("{date}", busyDate.toLocaleDateString());
+  return t("team.busyUntilDate").replace(
+    "{date}",
+    busyDate.toLocaleDateString(),
+  );
 };
 
 const TeamWorkloadPerformance: React.FC = () => {
@@ -43,12 +53,16 @@ const TeamWorkloadPerformance: React.FC = () => {
   const [teamData, setTeamData] = useState<TeamMemberMetrics[]>([]);
   const [showFilters, setShowFilters] = useState<boolean>(false);
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
     department: "",
     busyStatus: "",
-    performanceRange: ""
+    performanceRange: "",
   });
 
   // Get unique departments for filter
@@ -59,11 +73,13 @@ const TeamWorkloadPerformance: React.FC = () => {
 
   // Filter team data based on current filters
   const filteredTeamData = useMemo(() => {
-    return teamData.filter(member => {
+    return teamData.filter((member) => {
       // Search filter (name or department)
-      if (filters.search && 
-          !member.fullName.toLowerCase().includes(filters.search.toLowerCase()) &&
-          !member.department.toLowerCase().includes(filters.search.toLowerCase())) {
+      if (
+        filters.search &&
+        !member.fullName.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !member.department.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
         return false;
       }
 
@@ -80,12 +96,22 @@ const TeamWorkloadPerformance: React.FC = () => {
       // Performance range filter
       if (filters.performanceRange) {
         const performance = member.metrics.performance;
+
         switch (filters.performanceRange) {
-          case "excellent": return performance >= 90;
-          case "good": return performance >= 70 && performance < 90;
-          case "average": return performance >= 50 && performance < 70;
-          case "poor": return performance < 50;
-          default: return true;
+          case "excellent":
+            return performance >= 90;
+
+          case "good":
+            return performance >= 70 && performance < 90;
+
+          case "average":
+            return performance >= 50 && performance < 70;
+
+          case "poor":
+            return performance < 50;
+
+          default:
+            return true;
         }
       }
 
@@ -93,15 +119,44 @@ const TeamWorkloadPerformance: React.FC = () => {
     });
   }, [teamData, filters]);
 
+  // Paginated data
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    return filteredTeamData.slice(startIndex, endIndex);
+  }, [filteredTeamData, currentPage, pageSize]);
+
+  // Calculate pagination info
+  const totalPages = Math.ceil(filteredTeamData.length / pageSize);
+  const totalItems = filteredTeamData.length;
+
   // Reset filters
   const resetFilters = () => {
     setFilters({
       search: "",
       department: "",
       busyStatus: "",
-      performanceRange: ""
+      performanceRange: "",
     });
+    setCurrentPage(1); // Reset to first page when filters change
   };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when page size changes
+  };
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   // Check if any filters are active
   const hasActiveFilters = Object.values(filters).some(value => value !== "");
@@ -253,18 +308,63 @@ const TeamWorkloadPerformance: React.FC = () => {
               {hasActiveFilters ? t("team.noFilterResults") : t("table.noData")}
             </div>
           ) : (
-            <Table aria-label="Team workload and performance table" removeWrapper>
-              <TableHeader>
-                <TableColumn>{t("team.member")}</TableColumn>
-                <TableColumn>{t("team.department")}</TableColumn>
-                <TableColumn className="text-center">{t("team.total")}</TableColumn>
-                <TableColumn className="text-center">{t("team.inProgress")}</TableColumn>
-                <TableColumn className="text-center">{t("team.completed")}</TableColumn>
-                <TableColumn>{t("team.performance")}</TableColumn>
-                <TableColumn>{t("team.busy")}</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {filteredTeamData.map((member) => (
+            <>
+              {/* Results info and page size selector */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                <div className="text-sm text-default-600">
+                  {t("pagination.showing")} {(currentPage - 1) * pageSize + 1}{" "}
+                  {t("pagination.to")}{" "}
+                  {Math.min(currentPage * pageSize, totalItems)}{" "}
+                  {t("pagination.of")} {totalItems} {t("team.members")}
+                </div>
+
+                {/* Page Size Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-default-600">
+                    {t("common.show")}:
+                  </span>
+                  <Select
+                    className="w-20"
+                    selectedKeys={[pageSize.toString()]}
+                    size="sm"
+                    onSelectionChange={(keys) => {
+                      const newSize = parseInt(Array.from(keys)[0] as string);
+
+                      handlePageSizeChange(newSize);
+                    }}
+                  >
+                    <SelectItem key="5">5</SelectItem>
+                    <SelectItem key="10">10</SelectItem>
+                    <SelectItem key="15">15</SelectItem>
+                    <SelectItem key="20">20</SelectItem>
+                  </Select>
+                  <span className="text-sm text-default-600">
+                    {t("pagination.perPage")}
+                  </span>
+                </div>
+              </div>
+
+              <Table
+                removeWrapper
+                aria-label="Team workload and performance table"
+              >
+                <TableHeader>
+                  <TableColumn>{t("team.member")}</TableColumn>
+                  <TableColumn>{t("team.department")}</TableColumn>
+                  <TableColumn className="text-center">
+                    {t("team.total")}
+                  </TableColumn>
+                  <TableColumn className="text-center">
+                    {t("team.inProgress")}
+                  </TableColumn>
+                  <TableColumn className="text-center">
+                    {t("team.completed")}
+                  </TableColumn>
+                  <TableColumn>{t("team.performance")}</TableColumn>
+                  <TableColumn>{t("team.busy")}</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.map((member) => (
                   <TableRow key={member.userId}>
                     <TableCell>
                       <div>
@@ -295,17 +395,40 @@ const TeamWorkloadPerformance: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       {member.busyStatus === "busy" ? (
-                        <Tooltip content={formatBusyUntil(member.busyUntil, t)} showArrow>
-                          <span className="text-danger font-semibold cursor-help">{t("team.busy")}</span>
+                        <Tooltip
+                          showArrow
+                          content={formatBusyUntil(member.busyUntil, t)}
+                        >
+                          <span className="text-danger font-semibold cursor-help">
+                            {t("team.busy")}
+                          </span>
                         </Tooltip>
                       ) : (
-                        <span className="text-success font-semibold">{t("team.available")}</span>
+                        <span className="text-success font-semibold">
+                          {t("team.available")}
+                        </span>
                       )}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center py-4">
+                <GlobalPagination
+                  currentPage={currentPage}
+                  isLoading={loading}
+                  pageSize={pageSize}
+                  showInfo={false}
+                  totalItems={totalItems}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </>
           )}
         </CardBody>
       </Card>

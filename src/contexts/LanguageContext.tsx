@@ -290,6 +290,7 @@ const translations = {
     "team.filtered": "filtered",
     "team.clearFilters": "Clear Filters",
     "team.noFilterResults": "No team members match the current filters",
+    "team.members": "members",
     "team.busyUntil": "Busy until {date}",
 
     // Project Status
@@ -1374,6 +1375,7 @@ const translations = {
     "team.filtered": "مُرشح",
     "team.clearFilters": "مسح المرشحات",
     "team.noFilterResults": "لا يوجد أعضاء فريق تطابق المرشحات الحالية",
+    "team.members": "أعضاء",
 
     // Project Status
     "status.active": "نشط",
