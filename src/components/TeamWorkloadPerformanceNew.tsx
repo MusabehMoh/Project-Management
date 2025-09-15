@@ -110,18 +110,15 @@ const TeamWorkloadPerformance: React.FC = () => {
                       {member.metrics.completed}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <Tooltip content={`${t("team.performance")}: ${member.metrics.performance}%`} showArrow>
                         <Progress
                           size="sm"
                           value={member.metrics.performance}
                           color={getPerformanceColor(member.metrics.performance)}
-                          className="flex-1 max-w-[120px]"
+                          className="w-full cursor-help"
                           showValueLabel={false}
                         />
-                        <span className="text-sm font-medium min-w-[35px]">
-                          {member.metrics.performance}%
-                        </span>
-                      </div>
+                      </Tooltip>
                     </TableCell>
                     <TableCell>
                       {member.busyStatus === "busy" ? (
