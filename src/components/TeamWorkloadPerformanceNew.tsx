@@ -55,7 +55,7 @@ const TeamWorkloadPerformance: React.FC = () => {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize, setPageSize] = useState<number>(5);
   
   // Filter states
   const [filters, setFilters] = useState({
