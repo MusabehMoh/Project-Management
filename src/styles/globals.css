@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@config "../../tailwind.config.js";
+
+/* Arabic Font */
+@font-face {
+  font-family: "Noto Kufi Arabic";
+  src: url("../assets/fonts/noto-kufi-arabic/NotoKufiArabic-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  font-family:
+    "Noto Kufi Arabic",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+}
+
+[dir="ltr"] {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+/* RTL specific adjustments */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .rtl-space-reverse {
+  flex-direction: row-reverse;
+}
+
+/* Hide scrollbars */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Fix TimeInput for Arabic - keep same as English version */
+.time-input-ltr,
+.time-input-ltr *,
+[dir="rtl"] .time-input-ltr,
+[dir="rtl"] .time-input-ltr *,
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"],
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] [data-slot="input"],
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] [data-slot="innerWrapper"],
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] [data-slot="inputWrapper"],
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] [role="group"],
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] [role="spinbutton"] {
+  direction: ltr !important;
+  flex-direction: row !important;
+}
+
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] [data-slot="segment"],
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] input {
+  direction: ltr !important;
+  text-align: center !important;
+  unicode-bidi: embed !important;
+}
+
+/* Force specific order for time segments */
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* Override any RTL flex reversing */
+[dir="rtl"] .time-input-ltr [data-slot="timeInput"] > * {
+  order: unset !important;
+}
+
+/* Additional fallback rules */
+[dir="rtl"] [data-slot="timeInput"],
+[dir="rtl"] [data-slot="timeInput"] [data-slot="input"],
+[dir="rtl"] [data-slot="timeInput"] [data-slot="innerWrapper"],
+[dir="rtl"] [data-slot="timeInput"] [data-slot="inputWrapper"],
+[dir="rtl"] [data-slot="timeInput"] [role="group"],
+[dir="rtl"] [data-slot="timeInput"] [role="spinbutton"] {
+  direction: ltr !important;
+  flex-direction: row !important;
+}
+
+[dir="rtl"] [data-slot="timeInput"] [data-slot="segment"],
+[dir="rtl"] [data-slot="timeInput"] input {
+  direction: ltr !important;
+  text-align: center !important;
+  unicode-bidi: embed !important;
+}
+
+/* Force specific order for time segments */
+[dir="rtl"] [data-slot="timeInput"] {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/* Override any RTL flex reversing */
+[dir="rtl"] [data-slot="timeInput"] > * {
+  order: unset !important;
+}
+
+/* Import custom CSS overrides */
+@import "./custom.css";

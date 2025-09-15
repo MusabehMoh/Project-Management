@@ -1,0 +1,219 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Work\\Project-Management\\pma-api-server\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.api\\controllers\\projectscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|solutionrelative:src\\pma.api\\controllers\\projectscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0D0F0F0-0F0F-6F6F-0F0F-0F0F0F0F0F0F}|src\\PMA.Infrastructure\\PMA.Infrastructure.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.infrastructure\\repositories\\projectrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0D0F0F0-0F0F-6F6F-0F0F-0F0F0F0F0F0F}|src\\PMA.Infrastructure\\PMA.Infrastructure.csproj|solutionrelative:src\\pma.infrastructure\\repositories\\projectrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|solutionrelative:src\\pma.api\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C9E9F9F9-9F9F-5F5F-9F9F-9F9F9F9F9F9F}|src\\PMA.Core\\PMA.Core.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.core\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C9E9F9F9-9F9F-5F5F-9F9F-9F9F9F9F9F9F}|src\\PMA.Core\\PMA.Core.csproj|solutionrelative:src\\pma.core\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C9E9F9F9-9F9F-5F5F-9F9F-9F9F9F9F9F9F}|src\\PMA.Core\\PMA.Core.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.core\\interfaces\\iservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C9E9F9F9-9F9F-5F5F-9F9F-9F9F9F9F9F9F}|src\\PMA.Core\\PMA.Core.csproj|solutionrelative:src\\pma.core\\interfaces\\iservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0D0F0F0-0F0F-6F6F-0F0F-0F0F0F0F0F0F}|src\\PMA.Infrastructure\\PMA.Infrastructure.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.infrastructure\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0D0F0F0-0F0F-6F6F-0F0F-0F0F0F0F0F0F}|src\\PMA.Infrastructure\\PMA.Infrastructure.csproj|solutionrelative:src\\pma.infrastructure\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D0D0F0F0-0F0F-6F6F-0F0F-0F0F0F0F0F0F}|src\\PMA.Infrastructure\\PMA.Infrastructure.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.infrastructure\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D0D0F0F0-0F0F-6F6F-0F0F-0F0F0F0F0F0F}|src\\PMA.Infrastructure\\PMA.Infrastructure.csproj|solutionrelative:src\\pma.infrastructure\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.api\\controllers\\taskscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|solutionrelative:src\\pma.api\\controllers\\taskscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|solutionrelative:src\\pma.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{B8E8F8F8-8F8F-4F4F-8F8F-8F8F8F8F8F8F}|src\\PMA.Api\\PMA.Api.csproj|solutionrelative:src\\pma.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E1E1F1F1-1F1F-7F7F-1F1F-1F1F1F1F1F1F}|tests\\PMA.Tests\\PMA.Tests.csproj|d:\\work\\project-management\\pma-api-server\\tests\\pma.tests\\projectservicetests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E1E1F1F1-1F1F-7F7F-1F1F-1F1F1F1F1F1F}|tests\\PMA.Tests\\PMA.Tests.csproj|solutionrelative:tests\\pma.tests\\projectservicetests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C9E9F9F9-9F9F-5F5F-9F9F-9F9F9F9F9F9F}|src\\PMA.Core\\PMA.Core.csproj|d:\\work\\project-management\\pma-api-server\\src\\pma.core\\services\\actionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C9E9F9F9-9F9F-5F5F-9F9F-9F9F9F9F9F9F}|src\\PMA.Core\\PMA.Core.csproj|solutionrelative:src\\pma.core\\services\\actionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ProjectsController.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\Controllers\\ProjectsController.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Api\\Controllers\\ProjectsController.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\Controllers\\ProjectsController.cs",
+              "RelativeToolTip": "src\\PMA.Api\\Controllers\\ProjectsController.cs",
+              "ViewState": "AgIAAFYAAAAAAAAAAAAawGQAAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-14T15:41:13.523Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ProjectRepository.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Infrastructure\\Repositories\\ProjectRepository.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Infrastructure\\Repositories\\ProjectRepository.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Infrastructure\\Repositories\\ProjectRepository.cs",
+              "RelativeToolTip": "src\\PMA.Infrastructure\\Repositories\\ProjectRepository.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAAABcAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-13T19:45:30.951Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Infrastructure\\Data\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Infrastructure\\Data\\ApplicationDbContext.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Infrastructure\\Data\\ApplicationDbContext.cs",
+              "RelativeToolTip": "src\\PMA.Infrastructure\\Data\\ApplicationDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-13T10:47:31.75Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Api\\Controllers\\UsersController.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "src\\PMA.Api\\Controllers\\UsersController.cs",
+              "ViewState": "AgIAANcAAAAAAAAAAAAgwOsAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-13T05:48:46.531Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "UserService.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Core\\Services\\UserService.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Core\\Services\\UserService.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Core\\Services\\UserService.cs",
+              "RelativeToolTip": "src\\PMA.Core\\Services\\UserService.cs",
+              "ViewState": "AgIAAOAAAAAAAAAAAAAgwO4AAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-13T07:15:38.075Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "IServices.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Core\\Interfaces\\IServices.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Core\\Interfaces\\IServices.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Core\\Interfaces\\IServices.cs",
+              "RelativeToolTip": "src\\PMA.Core\\Interfaces\\IServices.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAA9wBwAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-14T05:35:11.716Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "UserRepository.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Infrastructure\\Repositories\\UserRepository.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Infrastructure\\Repositories\\UserRepository.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Infrastructure\\Repositories\\UserRepository.cs",
+              "RelativeToolTip": "src\\PMA.Infrastructure\\Repositories\\UserRepository.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABQAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-14T05:38:31.582Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "TasksController.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\Controllers\\TasksController.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Api\\Controllers\\TasksController.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\Controllers\\TasksController.cs",
+              "RelativeToolTip": "src\\PMA.Api\\Controllers\\TasksController.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAswAkAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-12T19:07:22.322Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\appsettings.json",
+              "RelativeDocumentMoniker": "src\\PMA.Api\\appsettings.json",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\appsettings.json",
+              "RelativeToolTip": "src\\PMA.Api\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-12T18:24:50.141Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "src\\PMA.Api\\Properties\\launchSettings.json",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Api\\Properties\\launchSettings.json",
+              "RelativeToolTip": "src\\PMA.Api\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-12T15:34:10.003Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "ProjectServiceTests.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\tests\\PMA.Tests\\ProjectServiceTests.cs",
+              "RelativeDocumentMoniker": "tests\\PMA.Tests\\ProjectServiceTests.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\tests\\PMA.Tests\\ProjectServiceTests.cs",
+              "RelativeToolTip": "tests\\PMA.Tests\\ProjectServiceTests.cs",
+              "ViewState": "AgIAADwAAAAAAAAAAAAowE4AAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-12T15:32:06.607Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ActionService.cs",
+              "DocumentMoniker": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Core\\Services\\ActionService.cs",
+              "RelativeDocumentMoniker": "src\\PMA.Core\\Services\\ActionService.cs",
+              "ToolTip": "D:\\Work\\Project-Management\\pma-api-server\\src\\PMA.Core\\Services\\ActionService.cs",
+              "RelativeToolTip": "src\\PMA.Core\\Services\\ActionService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-12T15:26:03.732Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

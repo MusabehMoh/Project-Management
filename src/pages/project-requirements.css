@@ -1,0 +1,19 @@
+.rtl-editor .ql-editor {
+  /* Increase min height for the editor content area */
+  min-height: 120px; /* adjust as needed */
+  height: auto;
+  direction: rtl; /* set right-to-left text direction */
+  text-align: right; /* ensure text aligns to the right */
+}
+
+/* Optional: ensure placeholder text is right-aligned */
+.rtl-editor .ql-editor.ql-blank::before {
+  right: 0.75rem;
+  left: auto;
+  text-align: right;
+}
+
+/* Keep toolbar icons LTR for usability */
+.rtl-editor .ql-toolbar {
+  direction: ltr;
+}
