@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from "@heroui/table";
 import { Progress } from "@heroui/progress";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
+import { Select, SelectItem } from "@heroui/select";
+import { Input } from "@heroui/input";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { Filter, X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { teamWorkloadService, type TeamMemberMetrics } from "@/services/api/teamWorkloadService";
@@ -36,6 +41,70 @@ const TeamWorkloadPerformance: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [teamData, setTeamData] = useState<TeamMemberMetrics[]>([]);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    search: "",
+    department: "",
+    busyStatus: "",
+    performanceRange: ""
+  });
+
+  // Get unique departments for filter
+  const departments = useMemo(() => {
+    const depts = Array.from(new Set(teamData.map(member => member.department)));
+    return depts.sort();
+  }, [teamData]);
+
+  // Filter team data based on current filters
+  const filteredTeamData = useMemo(() => {
+    return teamData.filter(member => {
+      // Search filter (name or department)
+      if (filters.search && 
+          !member.fullName.toLowerCase().includes(filters.search.toLowerCase()) &&
+          !member.department.toLowerCase().includes(filters.search.toLowerCase())) {
+        return false;
+      }
+
+      // Department filter
+      if (filters.department && member.department !== filters.department) {
+        return false;
+      }
+
+      // Busy status filter
+      if (filters.busyStatus && member.busyStatus !== filters.busyStatus) {
+        return false;
+      }
+
+      // Performance range filter
+      if (filters.performanceRange) {
+        const performance = member.metrics.performance;
+        switch (filters.performanceRange) {
+          case "excellent": return performance >= 90;
+          case "good": return performance >= 70 && performance < 90;
+          case "average": return performance >= 50 && performance < 70;
+          case "poor": return performance < 50;
+          default: return true;
+        }
+      }
+
+      return true;
+    });
+  }, [teamData, filters]);
+
+  // Reset filters
+  const resetFilters = () => {
+    setFilters({
+      search: "",
+      department: "",
+      busyStatus: "",
+      performanceRange: ""
+    });
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = Object.values(filters).some(value => value !== "");
   
   useEffect(() => {
     const fetchTeamWorkloadData = async () => {
@@ -66,18 +135,122 @@ const TeamWorkloadPerformance: React.FC = () => {
     <div dir={language === "ar" ? "rtl" : "ltr"}>
       <Card className="w-full shadow-md border border-default-200">
         <CardHeader className="pb-0">
-          <h3 className="text-lg font-medium">{t("dashboard.teamWorkload")}</h3>
+          <div className="flex justify-between items-center w-full">
+            <h3 className="text-lg font-medium">{t("dashboard.teamWorkload")}</h3>
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  color="primary"
+                  onClose={resetFilters}
+                >
+                  {filteredTeamData.length} / {teamData.length} {t("team.filtered")}
+                </Chip>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                isIconOnly
+                onPress={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardBody>
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="mb-4 p-4 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Search Filter */}
+                <Input
+                  size="sm"
+                  label={t("team.search")}
+                  placeholder={t("team.searchPlaceholder")}
+                  value={filters.search}
+                  onChange={(e) => setFilters({...filters, search: e.target.value})}
+                  isClearable
+                  onClear={() => setFilters({...filters, search: ""})}
+                />
+
+                {/* Department Filter */}
+                <Select
+                  size="sm"
+                  label={t("team.department")}
+                  placeholder={t("team.allDepartments")}
+                  selectedKeys={filters.department ? [filters.department] : []}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string || "";
+                    setFilters({...filters, department: value});
+                  }}
+                >
+                  {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
+                  ))}
+                </Select>
+
+                {/* Busy Status Filter */}
+                <Select
+                  size="sm"
+                  label={t("team.busyStatus")}
+                  placeholder={t("team.allStatuses")}
+                  selectedKeys={filters.busyStatus ? [filters.busyStatus] : []}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string || "";
+                    setFilters({...filters, busyStatus: value});
+                  }}
+                >
+                  <SelectItem key="busy">{t("team.busy")}</SelectItem>
+                  <SelectItem key="available">{t("team.available")}</SelectItem>
+                </Select>
+
+                {/* Performance Range Filter */}
+                <Select
+                  size="sm"
+                  label={t("team.performanceRange")}
+                  placeholder={t("team.allPerformance")}
+                  selectedKeys={filters.performanceRange ? [filters.performanceRange] : []}
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string || "";
+                    setFilters({...filters, performanceRange: value});
+                  }}
+                >
+                  <SelectItem key="excellent">{t("team.excellent")} (90%+)</SelectItem>
+                  <SelectItem key="good">{t("team.good")} (70-89%)</SelectItem>
+                  <SelectItem key="average">{t("team.average")} (50-69%)</SelectItem>
+                  <SelectItem key="poor">{t("team.poor")} (&lt;50%)</SelectItem>
+                </Select>
+              </div>
+
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="default"
+                    startContent={<X className="w-4 h-4" />}
+                    onPress={resetFilters}
+                  >
+                    {t("team.clearFilters")}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <Spinner size="lg" color="primary" />
             </div>
           ) : error ? (
             <div className="text-center text-danger py-4">{error}</div>
-          ) : teamData.length === 0 ? (
+          ) : filteredTeamData.length === 0 ? (
             <div className="text-center text-default-500 py-4">
-              {t("table.noData")}
+              {hasActiveFilters ? t("team.noFilterResults") : t("table.noData")}
             </div>
           ) : (
             <Table aria-label="Team workload and performance table" removeWrapper>
@@ -91,7 +264,7 @@ const TeamWorkloadPerformance: React.FC = () => {
                 <TableColumn>{t("team.busy")}</TableColumn>
               </TableHeader>
               <TableBody>
-                {teamData.map((member) => (
+                {filteredTeamData.map((member) => (
                   <TableRow key={member.userId}>
                     <TableCell>
                       <div>
