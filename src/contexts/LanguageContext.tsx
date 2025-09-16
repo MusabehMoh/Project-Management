@@ -74,6 +74,8 @@ const translations = {
 
     // Calendar
     "calendar.title": "Calendar",
+    "calendar.previousMonth": "Previous month",
+    "calendar.nextMonth": "Next month",
     "calendar.month": "Month",
     "calendar.week": "Week",
     "calendar.day": "Day",
@@ -230,6 +232,29 @@ const translations = {
     "dashboard.awaitingDev": "Awaiting Dev",
     "dashboard.teamWorkload": "Team Workload",
     "dashboard.teamWorkloadPerformance": "Team Workload & Performance",
+    "dashboard.quickActions": "Quick Actions",
+    "dashboard.quickActionsSubtitle":
+      "Take action on items that need your attention",
+    "dashboard.myActions": "My Actions",
+    "dashboard.myActionsSubtitle": "Assign projects that need your attention",
+    "quickActions.reviewRequirements": "Review Requirements",
+    "quickActions.reviewRequirementsDesc":
+      "Review pending project requirements",
+    "quickActions.unassignedProjects": "Unassigned Projects",
+    "quickActions.unassignedProjectsDesc": "Projects without analysts assigned",
+    "quickActions.projectsNeedAnalysts": "projects need analysts",
+    "quickActions.actNow": "Act Now",
+    "quickActions.assign": "Assign",
+    "quickActions.overdueItems": "Overdue Items",
+    "quickActions.overdueItemsDesc":
+      "View and manage overdue tasks and projects",
+    "quickActions.assignAnalyst": "Assign Analyst",
+    "quickActions.assignAnalystTo": "Assign analysts to",
+    "quickActions.selectAnalyst": "Select Analysts",
+    "quickActions.chooseAnalyst": "Search and select analysts",
+    "quickActions.selectedAnalysts": "Selected Analysts",
+    "quickActions.assignmentSuccess": "Assignment Successful",
+    "quickActions.assignmentError": "Assignment Failed",
     "dashboard.viewAllProjects": "View All Projects",
     "dashboard.teamName": "Team Name",
     "dashboard.progressMapped": "Progress Mapped",
@@ -276,6 +301,21 @@ const translations = {
     "team.busyUntilTomorrow": "Busy until tomorrow",
     "team.busyUntilDays": "Busy for {days} more days",
     "team.busyUntilDate": "Busy until {date}",
+    "team.search": "Search",
+    "team.searchPlaceholder": "Search team members...",
+    "team.allDepartments": "All Departments",
+    "team.busyStatus": "Status",
+    "team.allStatuses": "All Statuses",
+    "team.performanceRange": "Performance",
+    "team.allPerformance": "All Performance",
+    "team.excellent": "Excellent",
+    "team.good": "Good",
+    "team.average": "Average",
+    "team.poor": "Poor",
+    "team.filtered": "filtered",
+    "team.clearFilters": "Clear Filters",
+    "team.noFilterResults": "No team members match the current filters",
+    "team.members": "members",
     "team.busyUntil": "Busy until {date}",
 
     // Project Status
@@ -434,6 +474,11 @@ const translations = {
     "projects.updateProjectInfo": "Update project information",
     "projects.searchByName": "Search by name, military number, or username",
     "projects.noRemarks": "No remarks",
+
+    // Project Filter Messages
+    "projects.filterActive": "Filter Active",
+    "projects.showingUnassignedProjects": "Showing unassigned projects only",
+    "projects.clearFilter": "Clear Filter",
 
     // Project Validation Messages
     "projects.validation.applicationNameRequired":
@@ -1165,6 +1210,8 @@ const translations = {
 
     // Calendar
     "calendar.title": "التقويم",
+    "calendar.previousMonth": "الشهر السابق",
+    "calendar.nextMonth": "الشهر التالي",
     "calendar.month": "شهر",
     "calendar.week": "أسبوع",
     "calendar.day": "يوم",
@@ -1310,6 +1357,27 @@ const translations = {
     "dashboard.awaitingDev": "في انتظار التطوير",
     "dashboard.teamWorkload": "عبء العمل للفريق",
     "dashboard.teamWorkloadPerformance": "عبء العمل والأداء للفريق",
+    "dashboard.quickActions": "الإجراءات السريعة",
+    "dashboard.quickActionsSubtitle":
+      "اتخذ إجراءً بشأن العناصر التي تحتاج انتباهك",
+    "dashboard.myActions": "إجراءاتي",
+    "dashboard.myActionsSubtitle": "خصص المشاريع التي تحتاج انتباهك",
+    "quickActions.reviewRequirements": "مراجعة المتطلبات",
+    "quickActions.reviewRequirementsDesc": "مراجعة متطلبات المشاريع المعلقة",
+    "quickActions.unassignedProjects": "المشاريع غير المخصصة",
+    "quickActions.unassignedProjectsDesc": "مشاريع بدون محللين مخصصين",
+    "quickActions.projectsNeedAnalysts": "مشاريع تحتاج محللين",
+    "quickActions.actNow": "تصرف الآن",
+    "quickActions.assign": "خصص",
+    "quickActions.overdueItems": "العناصر المتأخرة",
+    "quickActions.overdueItemsDesc": "عرض وإدارة المهام والمشاريع المتأخرة",
+    "quickActions.assignAnalyst": "تعيين محلل",
+    "quickActions.assignAnalystTo": "تعيين محللين لـ",
+    "quickActions.selectAnalyst": "اختيار محللين",
+    "quickActions.chooseAnalyst": "البحث واختيار محللين",
+    "quickActions.selectedAnalysts": "المحللين المختارين",
+    "quickActions.assignmentSuccess": "تم التعيين بنجاح",
+    "quickActions.assignmentError": "فشل في التعيين",
     "dashboard.viewAllProjects": "عرض جميع المشاريع",
     "dashboard.teamName": "اسم الفريق",
     "dashboard.progressMapped": "التقدم المخطط",
@@ -1356,6 +1424,21 @@ const translations = {
     "team.busyUntilTomorrow": "مشغول حتى الغد",
     "team.busyUntilDays": "مشغول لـ {days} أيام أخرى",
     "team.busyUntilDate": "مشغول حتى {date}",
+    "team.search": "البحث",
+    "team.searchPlaceholder": "البحث في أعضاء الفريق...",
+    "team.allDepartments": "جميع الأقسام",
+    "team.busyStatus": "الحالة",
+    "team.allStatuses": "جميع الحالات",
+    "team.performanceRange": "الأداء",
+    "team.allPerformance": "جميع مستويات الأداء",
+    "team.excellent": "ممتاز",
+    "team.good": "جيد",
+    "team.average": "متوسط",
+    "team.poor": "ضعيف",
+    "team.filtered": "مُرشح",
+    "team.clearFilters": "مسح المرشحات",
+    "team.noFilterResults": "لا يوجد أعضاء فريق تطابق المرشحات الحالية",
+    "team.members": "أعضاء",
 
     // Project Status
     "status.active": "نشط",
@@ -1511,6 +1594,11 @@ const translations = {
     "projects.updateProjectInfo": "تحديث معلومات المشروع",
     "projects.searchByName": "البحث بالاسم أو الرقم العسكري أو اسم المستخدم",
     "projects.noRemarks": "لا توجد ملاحظات",
+
+    // Project Filter Messages
+    "projects.filterActive": "الفلتر نشط",
+    "projects.showingUnassignedProjects": "عرض المشاريع غير المخصصة فقط",
+    "projects.clearFilter": "إلغاء الفلتر",
 
     // Project Validation Messages
     "projects.validation.applicationNameRequired": "اسم المشروع مطلوب",
@@ -2149,12 +2237,6 @@ const translations = {
     requestDesign: "طلب تصميم",
     confirm: "تأكيد",
     cancel: "إلغاء",
-
-    // Export
-    exportTasks: "تصدير المهام",
-    exportAsCSV: "تصدير كـ CSV",
-    exportAsPDF: "تصدير كـ PDF",
-    exportAsExcel: "تصدير كـ Excel",
 
     // States
     noTasksFound: "لم يتم العثور على مهام",
