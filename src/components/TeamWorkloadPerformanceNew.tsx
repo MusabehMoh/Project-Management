@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from "@heroui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
 import { Progress } from "@heroui/progress";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
@@ -11,7 +18,10 @@ import { Chip } from "@heroui/chip";
 import { Filter, X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { teamWorkloadService, type TeamMemberMetrics } from "@/services/api/teamWorkloadService";
+import {
+  teamWorkloadService,
+  type TeamMemberMetrics,
+} from "@/services/api/teamWorkloadService";
 import { GlobalPagination } from "@/components/GlobalPagination";
 
 // Get performance color based on score
@@ -25,24 +35,24 @@ const getPerformanceColor = (score: number) => {
 // Format busy until date for tooltip
 const formatBusyUntil = (
   busyUntil: string | undefined,
-  t: (key: string) => string,
+  t: (key: string) => string
 ) => {
   if (!busyUntil) return "";
-  
+
   const busyDate = new Date(busyUntil);
   const now = new Date();
   const diffTime = busyDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) return t("team.busyUntilToday");
   if (diffDays === 1) return t("team.busyUntilTomorrow");
   if (diffDays <= 7) {
     return t("team.busyUntilDays").replace("{days}", diffDays.toString());
   }
-  
+
   return t("team.busyUntilDate").replace(
     "{date}",
-    busyDate.toLocaleDateString(),
+    busyDate.toLocaleDateString()
   );
 };
 
@@ -52,11 +62,11 @@ const TeamWorkloadPerformance: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [teamData, setTeamData] = useState<TeamMemberMetrics[]>([]);
   const [showFilters, setShowFilters] = useState<boolean>(false);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(5);
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     search: "",
@@ -67,7 +77,9 @@ const TeamWorkloadPerformance: React.FC = () => {
 
   // Get unique departments for filter
   const departments = useMemo(() => {
-    const depts = Array.from(new Set(teamData.map(member => member.department)));
+    const depts = Array.from(
+      new Set(teamData.map((member) => member.department))
+    );
     return depts.sort();
   }, [teamData]);
 
@@ -159,39 +171,41 @@ const TeamWorkloadPerformance: React.FC = () => {
   }, [filters]);
 
   // Check if any filters are active
-  const hasActiveFilters = Object.values(filters).some(value => value !== "");
-  
+  const hasActiveFilters = Object.values(filters).some((value) => value !== "");
+
   useEffect(() => {
     const fetchTeamWorkloadData = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const response = await teamWorkloadService.getTeamWorkloadPerformance();
-        
+
         if (response.success) {
           setTeamData(response.data);
         } else {
-          throw new Error('Failed to fetch team workload data');
+          throw new Error("Failed to fetch team workload data");
         }
       } catch (err) {
-        console.error('Error loading team workload data:', err);
-        setError('An error occurred while loading team workload data');
+        console.error("Error loading team workload data:", err);
+        setError("An error occurred while loading team workload data");
         setTeamData([]);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchTeamWorkloadData();
   }, []);
-  
+
   return (
     <div dir={language === "ar" ? "rtl" : "ltr"}>
       <Card className="w-full shadow-md border border-default-200">
         <CardHeader className="pb-0">
           <div className="flex justify-between items-center w-full">
-            <h3 className="text-lg font-medium">{t("dashboard.teamWorkload")}</h3>
+            <h3 className="text-lg font-medium">
+              {t("dashboard.teamWorkload")}
+            </h3>
             <div className="flex items-center gap-2">
               {hasActiveFilters && (
                 <Chip
@@ -200,7 +214,8 @@ const TeamWorkloadPerformance: React.FC = () => {
                   color="primary"
                   onClose={resetFilters}
                 >
-                  {filteredTeamData.length} / {teamData.length} {t("team.filtered")}
+                  {filteredTeamData.length} / {teamData.length}{" "}
+                  {t("team.filtered")}
                 </Chip>
               )}
               <Button
@@ -225,9 +240,11 @@ const TeamWorkloadPerformance: React.FC = () => {
                   label={t("team.search")}
                   placeholder={t("team.searchPlaceholder")}
                   value={filters.search}
-                  onChange={(e) => setFilters({...filters, search: e.target.value})}
+                  onChange={(e) =>
+                    setFilters({ ...filters, search: e.target.value })
+                  }
                   isClearable
-                  onClear={() => setFilters({...filters, search: ""})}
+                  onClear={() => setFilters({ ...filters, search: "" })}
                 />
 
                 {/* Department Filter */}
@@ -237,8 +254,8 @@ const TeamWorkloadPerformance: React.FC = () => {
                   placeholder={t("team.allDepartments")}
                   selectedKeys={filters.department ? [filters.department] : []}
                   onSelectionChange={(keys) => {
-                    const value = Array.from(keys)[0] as string || "";
-                    setFilters({...filters, department: value});
+                    const value = (Array.from(keys)[0] as string) || "";
+                    setFilters({ ...filters, department: value });
                   }}
                 >
                   {departments.map((dept) => (
@@ -255,8 +272,8 @@ const TeamWorkloadPerformance: React.FC = () => {
                   placeholder={t("team.allStatuses")}
                   selectedKeys={filters.busyStatus ? [filters.busyStatus] : []}
                   onSelectionChange={(keys) => {
-                    const value = Array.from(keys)[0] as string || "";
-                    setFilters({...filters, busyStatus: value});
+                    const value = (Array.from(keys)[0] as string) || "";
+                    setFilters({ ...filters, busyStatus: value });
                   }}
                 >
                   <SelectItem key="busy">{t("team.busy")}</SelectItem>
@@ -268,15 +285,21 @@ const TeamWorkloadPerformance: React.FC = () => {
                   size="sm"
                   label={t("team.performanceRange")}
                   placeholder={t("team.allPerformance")}
-                  selectedKeys={filters.performanceRange ? [filters.performanceRange] : []}
+                  selectedKeys={
+                    filters.performanceRange ? [filters.performanceRange] : []
+                  }
                   onSelectionChange={(keys) => {
-                    const value = Array.from(keys)[0] as string || "";
-                    setFilters({...filters, performanceRange: value});
+                    const value = (Array.from(keys)[0] as string) || "";
+                    setFilters({ ...filters, performanceRange: value });
                   }}
                 >
-                  <SelectItem key="excellent">{t("team.excellent")} (90%+)</SelectItem>
+                  <SelectItem key="excellent">
+                    {t("team.excellent")} (90%+)
+                  </SelectItem>
                   <SelectItem key="good">{t("team.good")} (70-89%)</SelectItem>
-                  <SelectItem key="average">{t("team.average")} (50-69%)</SelectItem>
+                  <SelectItem key="average">
+                    {t("team.average")} (50-69%)
+                  </SelectItem>
                   <SelectItem key="poor">{t("team.poor")} (&lt;50%)</SelectItem>
                 </Select>
               </div>
@@ -365,70 +388,79 @@ const TeamWorkloadPerformance: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {paginatedData.map((member) => (
-                  <TableRow key={member.userId}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{member.fullName}</div>
-                        <div className="text-xs text-default-500">{member.gradeName}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{member.department}</TableCell>
-                    <TableCell className="text-center font-medium">
-                      {member.metrics.totalRequirements}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {member.metrics.inProgress}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {member.metrics.completed}
-                    </TableCell>
-                    <TableCell>
-                      <Tooltip content={`${t("team.performance")}: ${member.metrics.performance}%`} showArrow>
-                        <Progress
-                          size="sm"
-                          value={member.metrics.performance}
-                          color={getPerformanceColor(member.metrics.performance)}
-                          className="w-full cursor-help"
-                          showValueLabel={false}
-                        />
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      {member.busyStatus === "busy" ? (
+                    <TableRow key={member.userId}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{member.fullName}</div>
+                          <div className="text-xs text-default-500">
+                            {member.gradeName}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {member.department}
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {member.metrics.totalRequirements}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {member.metrics.inProgress}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {member.metrics.completed}
+                      </TableCell>
+                      <TableCell>
                         <Tooltip
+                          content={`${t("team.performance")}: ${member.metrics.performance}%`}
                           showArrow
-                          content={formatBusyUntil(member.busyUntil, t)}
                         >
-                          <span className="text-danger font-semibold cursor-help">
-                            {t("team.busy")}
-                          </span>
+                          <Progress
+                            size="sm"
+                            value={member.metrics.performance}
+                            color={getPerformanceColor(
+                              member.metrics.performance
+                            )}
+                            className="w-full cursor-help"
+                            showValueLabel={false}
+                          />
                         </Tooltip>
-                      ) : (
-                        <span className="text-success font-semibold">
-                          {t("team.available")}
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </TableCell>
+                      <TableCell>
+                        {member.busyStatus === "busy" ? (
+                          <Tooltip
+                            showArrow
+                            content={formatBusyUntil(member.busyUntil, t)}
+                          >
+                            <span className="text-danger font-semibold cursor-help">
+                              {t("team.busy")}
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-success font-semibold">
+                            {t("team.available")}
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center py-4">
-                <GlobalPagination
-                  currentPage={currentPage}
-                  isLoading={loading}
-                  pageSize={pageSize}
-                  showInfo={false}
-                  totalItems={totalItems}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
-          </>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center py-4">
+                  <GlobalPagination
+                    currentPage={currentPage}
+                    isLoading={loading}
+                    pageSize={pageSize}
+                    showInfo={false}
+                    totalItems={totalItems}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
+            </>
           )}
         </CardBody>
       </Card>

@@ -17,7 +17,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined,
+  undefined
 );
 
 // Translation dictionary
@@ -74,9 +74,9 @@ const translations = {
 
     // Calendar
     "calendar.title": "Calendar",
-  "calendar.previousMonth": "Previous month",
-  "calendar.nextMonth": "Next month",
-  "calendar.month": "Month",
+    "calendar.previousMonth": "Previous month",
+    "calendar.nextMonth": "Next month",
+    "calendar.month": "Month",
     "calendar.week": "Week",
     "calendar.day": "Day",
     "calendar.today": "Today",
@@ -233,18 +233,21 @@ const translations = {
     "dashboard.teamWorkload": "Team Workload",
     "dashboard.teamWorkloadPerformance": "Team Workload & Performance",
     "dashboard.quickActions": "Quick Actions",
-    "dashboard.quickActionsSubtitle": "Take action on items that need your attention",
+    "dashboard.quickActionsSubtitle":
+      "Take action on items that need your attention",
     "dashboard.myActions": "My Actions",
     "dashboard.myActionsSubtitle": "Assign projects that need your attention",
     "quickActions.reviewRequirements": "Review Requirements",
-    "quickActions.reviewRequirementsDesc": "Review pending project requirements",
+    "quickActions.reviewRequirementsDesc":
+      "Review pending project requirements",
     "quickActions.unassignedProjects": "Unassigned Projects",
     "quickActions.unassignedProjectsDesc": "Projects without analysts assigned",
     "quickActions.projectsNeedAnalysts": "projects need analysts",
     "quickActions.actNow": "Act Now",
     "quickActions.assign": "Assign",
     "quickActions.overdueItems": "Overdue Items",
-    "quickActions.overdueItemsDesc": "View and manage overdue tasks and projects",
+    "quickActions.overdueItemsDesc":
+      "View and manage overdue tasks and projects",
     "quickActions.assignAnalyst": "Assign Analyst",
     "quickActions.assignAnalystTo": "Assign analysts to",
     "quickActions.selectAnalyst": "Select Analysts",
@@ -1023,7 +1026,8 @@ const translations = {
     "timeline.create.timelineName": "Timeline Name",
     "timeline.create.timelineNamePlaceholder": "Enter timeline name",
     "timeline.create.description": "Description",
-    "timeline.create.descriptionPlaceholder": "Describe this timeline (optional)",
+    "timeline.create.descriptionPlaceholder":
+      "Describe this timeline (optional)",
     "timeline.create.startDate": "Start Date",
     "timeline.create.endDate": "End Date",
     "timeline.create.noProjectWarning":
@@ -1114,11 +1118,20 @@ const translations = {
     otherAssignees: "Other Assignees",
     moreAssignees: "more assignees",
     taskProgress: "Progress",
-    timeSpent: "Time Spent",
+    startDate: "Start Date",
+    endDate: "End Date",
     estimatedTime: "Estimated Time",
     taskTags: "Tags",
     overdueTask: "Overdue",
     taskDetails: "Task Details",
+    priority: "Priority",
+    status: "Status",
+    project: "Project",
+    requirement: "Requirement",
+    changeStatus: "Change Status",
+    requestDesign: "Request Design",
+    confirm: "Confirm",
+    cancel: "cancel",
 
     // Export
     exportTasks: "Export Tasks",
@@ -1197,9 +1210,9 @@ const translations = {
 
     // Calendar
     "calendar.title": "التقويم",
-  "calendar.previousMonth": "الشهر السابق",
-  "calendar.nextMonth": "الشهر التالي", 
-  "calendar.month": "شهر",
+    "calendar.previousMonth": "الشهر السابق",
+    "calendar.nextMonth": "الشهر التالي",
+    "calendar.month": "شهر",
     "calendar.week": "أسبوع",
     "calendar.day": "يوم",
     "calendar.today": "اليوم",
@@ -1345,7 +1358,8 @@ const translations = {
     "dashboard.teamWorkload": "عبء العمل للفريق",
     "dashboard.teamWorkloadPerformance": "عبء العمل والأداء للفريق",
     "dashboard.quickActions": "الإجراءات السريعة",
-    "dashboard.quickActionsSubtitle": "اتخذ إجراءً بشأن العناصر التي تحتاج انتباهك",
+    "dashboard.quickActionsSubtitle":
+      "اتخذ إجراءً بشأن العناصر التي تحتاج انتباهك",
     "dashboard.myActions": "إجراءاتي",
     "dashboard.myActionsSubtitle": "خصص المشاريع التي تحتاج انتباهك",
     "quickActions.reviewRequirements": "مراجعة المتطلبات",
@@ -2209,17 +2223,20 @@ const translations = {
     otherAssignees: "المعينون الآخرون",
     moreAssignees: "معين إضافي",
     taskProgress: "التقدم",
-    timeSpent: "الوقت المستغرق",
+    startDate: "تاربخ البداية",
+    endDate: "تاريخ النهاية",
     estimatedTime: "الوقت المقدر",
     taskTags: "العلامات",
     overdueTask: "متأخر",
     taskDetails: "تفاصيل المهمة",
-
-    // Export
-    exportTasks: "تصدير المهام",
-    exportAsCSV: "تصدير كـ CSV",
-    exportAsPDF: "تصدير كـ PDF",
-    exportAsExcel: "تصدير كـ Excel",
+    priority: "الأولوية",
+    status: "الحالة",
+    project: "المشروع",
+    requirement: "المتطلب",
+    changeStatus: "تغيير الحالة",
+    requestDesign: "طلب تصميم",
+    confirm: "تأكيد",
+    cancel: "إلغاء",
 
     // States
     noTasksFound: "لم يتم العثور على مهام",
