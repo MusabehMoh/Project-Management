@@ -27,6 +27,43 @@ public class Department
     // Navigation properties
     public ICollection<User>? Users { get; set; }
     public ICollection<Task>? Tasks { get; set; }
+    public ICollection<Team>? Teams { get; set; }
+}
+
+public class Team
+{
+    [Key]
+    public int Id { get; set; }
+
+    [Required]
+    public int PrsId { get; set; } // Employee ID
+
+    [Required]
+    public int DepartmentId { get; set; }
+
+    [Required]
+    public DateTime JoinDate { get; set; }
+
+    [Required]
+    public bool IsActive { get; set; }
+
+    public int? CreatedBy { get; set; }
+
+    [Required]
+    public DateTime CreatedAt { get; set; }
+
+    [Required]
+    public DateTime UpdatedAt { get; set; }
+
+    // Navigation properties
+    [ForeignKey("PrsId")]
+    public Employee? Employee { get; set; }
+
+    [ForeignKey("DepartmentId")]
+    public Department? Department { get; set; }
+
+    [ForeignKey("CreatedBy")]
+    public User? Creator { get; set; }
 }
 
 public class Unit

@@ -12,8 +12,8 @@ using PMA.Infrastructure.Data;
 namespace PMA.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250912183235_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250915164401_InitialBaseline")]
+    partial class InitialBaseline
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -160,7 +160,10 @@ namespace PMA.Api.Migrations
             modelBuilder.Entity("PMA.Core.Entities.Employee", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -169,11 +172,13 @@ namespace PMA.Api.Migrations
 
                     b.Property<string>("GradeName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("MilitaryNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("StatusId")
                         .HasColumnType("int");
@@ -403,9 +408,7 @@ namespace PMA.Api.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -442,6 +445,7 @@ namespace PMA.Api.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AnalystIds")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Analysts")
@@ -1022,6 +1026,46 @@ namespace PMA.Api.Migrations
                     b.ToTable("Tasks");
                 });
 
+            modelBuilder.Entity("PMA.Core.Entities.Team", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoinDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PrsId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("PrsId");
+
+                    b.ToTable("Teams");
+                });
+
             modelBuilder.Entity("PMA.Core.Entities.Timeline", b =>
                 {
                     b.Property<int>("Id")
@@ -1206,7 +1250,8 @@ namespace PMA.Api.Migrations
 
                     b.Property<string>("Department")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
@@ -1223,18 +1268,21 @@ namespace PMA.Api.Migrations
 
                     b.Property<string>("GradeName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
                     b.Property<string>("MilitaryNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("PrsId")
                         .HasColumnType("int");
@@ -1251,7 +1299,7 @@ namespace PMA.Api.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("UserName")
+                    b.HasIndex("PrsId")
                         .IsUnique();
 
                     b.ToTable("Users");
@@ -1361,17 +1409,6 @@ namespace PMA.Api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("PMA.Core.Entities.Employee", b =>
-                {
-                    b.HasOne("PMA.Core.Entities.User", "User")
-                        .WithOne("Employee")
-                        .HasForeignKey("PMA.Core.Entities.Employee", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("PMA.Core.Entities.MemberTask", b =>
                 {
                     b.HasOne("PMA.Core.Entities.Department", "Department")
@@ -1429,8 +1466,8 @@ namespace PMA.Api.Migrations
 
             modelBuilder.Entity("PMA.Core.Entities.Project", b =>
                 {
-                    b.HasOne("PMA.Core.Entities.User", "AlternativeOwnerUser")
-                        .WithMany("AlternativeOwnedProjects")
+                    b.HasOne("PMA.Core.Entities.Employee", "AlternativeOwnerEmployee")
+                        .WithMany()
                         .HasForeignKey("AlternativeOwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1441,17 +1478,17 @@ namespace PMA.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PMA.Core.Entities.User", "ProjectOwnerUser")
-                        .WithMany("OwnedProjects")
+                    b.HasOne("PMA.Core.Entities.Employee", "ProjectOwnerEmployee")
+                        .WithMany()
                         .HasForeignKey("ProjectOwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AlternativeOwnerUser");
+                    b.Navigation("AlternativeOwnerEmployee");
 
                     b.Navigation("OwningUnitEntity");
 
-                    b.Navigation("ProjectOwnerUser");
+                    b.Navigation("ProjectOwnerEmployee");
                 });
 
             modelBuilder.Entity("PMA.Core.Entities.ProjectRequirement", b =>
@@ -1672,6 +1709,31 @@ namespace PMA.Api.Migrations
                     b.Navigation("Sprint");
                 });
 
+            modelBuilder.Entity("PMA.Core.Entities.Team", b =>
+                {
+                    b.HasOne("PMA.Core.Entities.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy");
+
+                    b.HasOne("PMA.Core.Entities.Department", "Department")
+                        .WithMany("Teams")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PMA.Core.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("PrsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("PMA.Core.Entities.Timeline", b =>
                 {
                     b.HasOne("PMA.Core.Entities.Project", "Project")
@@ -1746,6 +1808,14 @@ namespace PMA.Api.Migrations
                     b.HasOne("PMA.Core.Entities.Department", null)
                         .WithMany("Users")
                         .HasForeignKey("DepartmentId");
+
+                    b.HasOne("PMA.Core.Entities.Employee", "Employee")
+                        .WithOne("User")
+                        .HasForeignKey("PMA.Core.Entities.User", "PrsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("PMA.Core.Entities.UserAction", b =>
@@ -1795,7 +1865,14 @@ namespace PMA.Api.Migrations
                 {
                     b.Navigation("Tasks");
 
+                    b.Navigation("Teams");
+
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("PMA.Core.Entities.Employee", b =>
+                {
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PMA.Core.Entities.MemberTask", b =>
@@ -1870,13 +1947,7 @@ namespace PMA.Api.Migrations
 
             modelBuilder.Entity("PMA.Core.Entities.User", b =>
                 {
-                    b.Navigation("AlternativeOwnedProjects");
-
                     b.Navigation("AssignedTasks");
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("OwnedProjects");
 
                     b.Navigation("UserActions");
 

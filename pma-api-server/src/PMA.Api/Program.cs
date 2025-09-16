@@ -114,6 +114,7 @@ builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ISprintRepository, SprintRepository>();
 builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<IUnitRepository, UnitRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IActionRepository, ActionRepository>();

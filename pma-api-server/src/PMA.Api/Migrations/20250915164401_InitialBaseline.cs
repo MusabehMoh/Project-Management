@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace PMA.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialBaseline : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,7 +22,7 @@ namespace PMA.Api.Migrations
                     Category = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Resource = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Action = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -46,6 +46,23 @@ namespace PMA.Api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Departments", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Employees",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    MilitaryNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    GradeName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    StatusId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Employees", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -113,11 +130,11 @@ namespace PMA.Api.Migrations
                     PrsId = table.Column<int>(type: "int", nullable: false),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    MilitaryNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    GradeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Department = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MilitaryNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    GradeName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Department = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DepartmentId = table.Column<int>(type: "int", nullable: true)
@@ -130,6 +147,12 @@ namespace PMA.Api.Migrations
                         column: x => x.DepartmentId,
                         principalTable: "Departments",
                         principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Users_Employees_PrsId",
+                        column: x => x.PrsId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -160,23 +183,50 @@ namespace PMA.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Employees",
+                name: "Projects",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    UserName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    MilitaryNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    GradeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StatusId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApplicationName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ProjectOwner = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    AlternativeOwner = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    OwningUnit = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ProjectOwnerId = table.Column<int>(type: "int", nullable: false),
+                    AlternativeOwnerId = table.Column<int>(type: "int", nullable: false),
+                    OwningUnitId = table.Column<int>(type: "int", nullable: false),
+                    Analysts = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AnalystIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpectedCompletionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Priority = table.Column<int>(type: "int", nullable: false),
+                    Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Progress = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Employees", x => x.Id);
+                    table.PrimaryKey("PK_Projects", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Employees_Users_Id",
-                        column: x => x.Id,
-                        principalTable: "Users",
+                        name: "FK_Projects_Employees_AlternativeOwnerId",
+                        column: x => x.AlternativeOwnerId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Projects_Employees_ProjectOwnerId",
+                        column: x => x.ProjectOwnerId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Projects_Units_OwningUnitId",
+                        column: x => x.OwningUnitId,
+                        principalTable: "Units",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -207,52 +257,39 @@ namespace PMA.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Projects",
+                name: "Teams",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ApplicationName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    ProjectOwner = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    AlternativeOwner = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    OwningUnit = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ProjectOwnerId = table.Column<int>(type: "int", nullable: false),
-                    AlternativeOwnerId = table.Column<int>(type: "int", nullable: false),
-                    OwningUnitId = table.Column<int>(type: "int", nullable: false),
-                    Analysts = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AnalystIds = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ExpectedCompletionDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
+                    PrsId = table.Column<int>(type: "int", nullable: false),
+                    DepartmentId = table.Column<int>(type: "int", nullable: false),
+                    JoinDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Priority = table.Column<int>(type: "int", nullable: false),
-                    Budget = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Progress = table.Column<int>(type: "int", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Projects", x => x.Id);
+                    table.PrimaryKey("PK_Teams", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Projects_Units_OwningUnitId",
-                        column: x => x.OwningUnitId,
-                        principalTable: "Units",
+                        name: "FK_Teams_Departments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Projects_Users_AlternativeOwnerId",
-                        column: x => x.AlternativeOwnerId,
+                        name: "FK_Teams_Employees_PrsId",
+                        column: x => x.PrsId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Teams_Users_CreatedBy",
+                        column: x => x.CreatedBy,
                         principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Projects_Users_ProjectOwnerId",
-                        column: x => x.ProjectOwnerId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1120,6 +1157,21 @@ namespace PMA.Api.Migrations
                 column: "TimelineRequirementId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Teams_CreatedBy",
+                table: "Teams",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_DepartmentId",
+                table: "Teams",
+                column: "DepartmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_PrsId",
+                table: "Teams",
+                column: "PrsId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TimelineRequirementAssignments_TimelineRequirementId",
                 table: "TimelineRequirementAssignments",
                 column: "TimelineRequirementId");
@@ -1185,9 +1237,9 @@ namespace PMA.Api.Migrations
                 column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Users_UserName",
+                name: "IX_Users_PrsId",
                 table: "Users",
-                column: "UserName",
+                column: "PrsId",
                 unique: true);
         }
 
@@ -1196,9 +1248,6 @@ namespace PMA.Api.Migrations
         {
             migrationBuilder.DropTable(
                 name: "CalendarEventAssignments");
-
-            migrationBuilder.DropTable(
-                name: "Employees");
 
             migrationBuilder.DropTable(
                 name: "MemberTaskAssignments");
@@ -1220,6 +1269,9 @@ namespace PMA.Api.Migrations
 
             migrationBuilder.DropTable(
                 name: "SubTaskAssignments");
+
+            migrationBuilder.DropTable(
+                name: "Teams");
 
             migrationBuilder.DropTable(
                 name: "TimelineRequirementAssignments");
@@ -1270,13 +1322,16 @@ namespace PMA.Api.Migrations
                 name: "Projects");
 
             migrationBuilder.DropTable(
-                name: "Units");
-
-            migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
+                name: "Units");
+
+            migrationBuilder.DropTable(
                 name: "Departments");
+
+            migrationBuilder.DropTable(
+                name: "Employees");
         }
     }
 }
