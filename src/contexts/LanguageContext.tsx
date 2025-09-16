@@ -17,7 +17,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined,
+  undefined
 );
 
 // Translation dictionary
@@ -981,7 +981,8 @@ const translations = {
     "timeline.create.timelineName": "Timeline Name",
     "timeline.create.timelineNamePlaceholder": "Enter timeline name",
     "timeline.create.description": "Description",
-    "timeline.create.descriptionPlaceholder": "Describe this timeline (optional)",
+    "timeline.create.descriptionPlaceholder":
+      "Describe this timeline (optional)",
     "timeline.create.startDate": "Start Date",
     "timeline.create.endDate": "End Date",
     "timeline.create.noProjectWarning":
@@ -1072,11 +1073,20 @@ const translations = {
     otherAssignees: "Other Assignees",
     moreAssignees: "more assignees",
     taskProgress: "Progress",
-    timeSpent: "Time Spent",
+    startDate: "Start Date",
+    endDate: "End Date",
     estimatedTime: "Estimated Time",
     taskTags: "Tags",
     overdueTask: "Overdue",
     taskDetails: "Task Details",
+    priority: "Priority",
+    status: "Status",
+    project: "Project",
+    requirement: "Requirement",
+    changeStatus: "Change Status",
+    requestDesign: "Request Design",
+    confirm: "Confirm",
+    cancel: "cancel",
 
     // Export
     exportTasks: "Export Tasks",
@@ -2125,11 +2135,20 @@ const translations = {
     otherAssignees: "المعينون الآخرون",
     moreAssignees: "معين إضافي",
     taskProgress: "التقدم",
-    timeSpent: "الوقت المستغرق",
+    startDate: "تاربخ البداية",
+    endDate: "تاريخ النهاية",
     estimatedTime: "الوقت المقدر",
     taskTags: "العلامات",
     overdueTask: "متأخر",
     taskDetails: "تفاصيل المهمة",
+    priority: "الأولوية",
+    status: "الحالة",
+    project: "المشروع",
+    requirement: "المتطلب",
+    changeStatus: "تغيير الحالة",
+    requestDesign: "طلب تصميم",
+    confirm: "تأكيد",
+    cancel: "إلغاء",
 
     // Export
     exportTasks: "تصدير المهام",
