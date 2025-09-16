@@ -27,16 +27,9 @@ pnpm-lock.yaml
 yarn.lock
 package-lock.json
 bun.lockb
-
-<<<<<<< HEAD
-# Build outputs
+#Build outputs
 **/obj/
 **/bin/
 
 # Visual Studio
 .vs/
-=======
-# .NET build outputs
-bin/
-obj/
->>>>>>> 21f523c5b0de5a983e3cfb026ca9d4c972e3f862
