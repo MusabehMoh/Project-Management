@@ -83,6 +83,8 @@ export default function MembersTasksPage() {
     requestDesign,
   } = useMembersTasks(mockDepartments);
 
+  const { language } = useLanguage();
+
   const [isRequestDesignModalOpend, setIsRequestDesignModalOpend] =
     useState(false);
   const [notes, setNotes] = useState("");
@@ -505,7 +507,7 @@ export default function MembersTasksPage() {
         {/* Requirement Details Drawer */}
         <Drawer
           isOpen={isDrawerOpen}
-          placement="right"
+          placement={language === "en" ? "left" : "right"}
           size="lg"
           onOpenChange={setIsDrawerOpen}
         >
