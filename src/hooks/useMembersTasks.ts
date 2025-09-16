@@ -8,6 +8,7 @@ import {
 import { Department, MemberSearchResult } from "@/types/timeline";
 import { membersTasksService } from "@/services/api/membersTasksService";
 import useTeamSearch from "@/hooks/useTeamSearch";
+import { toast } from "@heroui/theme";
 
 // Mock data generator for fallback
 const generateMockTasks = (): MemberTask[] => {
@@ -172,7 +173,7 @@ const generateMockTasks = (): MemberTask[] => {
       tags: taskTags,
       isOverdue,
       createdAt: new Date(
-        startDate.getTime() - Math.random() * 86400000,
+        startDate.getTime() - Math.random() * 86400000
       ).toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -197,10 +198,12 @@ interface UseMembersTasksResult {
   exportTasks: (format: "csv" | "pdf" | "excel") => Promise<void>;
   searchEmployees: (query: string) => void;
   filtersData: TaskFiltersData;
+  requestDesign: (id: string, notes: string) => Promise<boolean>;
+  changeStatus: (id: string, typeId: string) => Promise<boolean>;
 }
 
 export const useMembersTasks = (
-  initialDepartments: Department[] = [],
+  initialDepartments: Department[] = []
 ): UseMembersTasksResult => {
   const [tasks, setTasks] = useState<MemberTask[]>([]);
   const [loading, setLoading] = useState(false);
@@ -232,6 +235,50 @@ export const useMembersTasks = (
     maxResults: 200,
     loadInitialResults: true,
   });
+
+  ///request design
+  const requestDesign = async (id: string, notes: string): Promise<boolean> => {
+    try {
+      console.log("---->> response is : 111111111111");
+      const response = await membersTasksService.requestDesign(id, notes);
+
+      console.log("---->> response is : 2222222222222");
+      console.log(response);
+      // toast({
+      //   description: response.message,
+      //   variant: "solid",
+      // });
+
+      return response.success;
+    } catch (err) {
+      return false;
+    } finally {
+    }
+  };
+
+  ///change status
+  const changeStatus = async (id: string, typeId: string): Promise<boolean> => {
+    console.log("---->> change statue : 3333333333");
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await membersTasksService.changeStatus(id, typeId);
+
+      console.log("---->> response is :");
+      console.log(response);
+      // toast({
+      //   description: response.message,
+      //   variant: "solid",
+      // });
+
+      return response.success;
+    } catch (err) {
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchTasks = useCallback(
     async (params?: TaskSearchParams) => {
@@ -286,7 +333,7 @@ export const useMembersTasks = (
         setLoading(false);
       }
     },
-    [filters],
+    [filters]
   );
 
   const fetchFiltersData = useCallback(async () => {
@@ -336,7 +383,7 @@ export const useMembersTasks = (
         throw err;
       }
     },
-    [filters],
+    [filters]
   );
 
   // Load initial data
@@ -433,5 +480,7 @@ export const useMembersTasks = (
     exportTasks,
     searchEmployees,
     filtersData,
+    changeStatus,
+    requestDesign,
   };
 };

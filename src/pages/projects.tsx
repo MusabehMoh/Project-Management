@@ -3,6 +3,7 @@ import type { EmployeeSearchResult } from "@/types/user";
 import type { MemberSearchResult } from "@/types/timeline";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -95,6 +96,10 @@ export default function ProjectsPage() {
     handlePageChange,
     handlePageSizeChange,
   } = useProjects();
+
+  // Handle URL parameters for editing specific projects
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editProjectId = searchParams.get("edit");
 
   // Phases hook for dynamic phase management
   const {
@@ -216,7 +221,7 @@ export default function ProjectsPage() {
   const handleAnalystSelect = (analyst: MemberSearchResult) => {
     // Check if analyst is already selected
     const isAlreadySelected = selectedAnalysts.some(
-      (selected) => selected.id === analyst.id,
+      (selected) => selected.id === analyst.id
     );
 
     if (!isAlreadySelected) {
@@ -236,7 +241,7 @@ export default function ProjectsPage() {
   // Handle analyst removal
   const handleAnalystRemove = (analystId: number) => {
     const updatedAnalysts = selectedAnalysts.filter(
-      (analyst) => analyst.id !== analystId,
+      (analyst) => analyst.id !== analystId
     );
 
     setSelectedAnalysts(updatedAnalysts);
@@ -287,7 +292,7 @@ export default function ProjectsPage() {
 
     if (!formData.expectedCompletionDate) {
       errors.expectedCompletionDate = t(
-        "projects.validation.expectedCompletionRequired",
+        "projects.validation.expectedCompletionRequired"
       );
     }
 
@@ -403,7 +408,7 @@ export default function ProjectsPage() {
     // Find the employees by their IDs and set them as selected
     const ownerEmployee = users.find((u) => u.id === project.projectOwnerId);
     const altOwnerEmployee = users.find(
-      (u) => u.id === project.alternativeOwnerId,
+      (u) => u.id === project.alternativeOwnerId
     );
 
     // Convert User objects to EmployeeSearchResult objects
@@ -457,12 +462,12 @@ export default function ProjectsPage() {
 
     // Set input values
     setOwnerInputValue(
-      ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : "",
+      ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : ""
     );
     setAlternativeOwnerInputValue(
       altOwnerResult
         ? `${altOwnerResult.gradeName} ${altOwnerResult.fullName}`
-        : "",
+        : ""
     );
     setAnalystInputValue("");
 
@@ -482,6 +487,42 @@ export default function ProjectsPage() {
     });
     onOpen();
   };
+
+  // Effect to handle auto-editing when edit parameter is present
+  useEffect(() => {
+    if (editProjectId) {
+      const fetchAndEditProject = async () => {
+        try {
+          // Fetch the specific project by ID
+          const response = await projectService.getProjectById(
+            parseInt(editProjectId)
+          );
+
+          if (response.success && response.data) {
+            handleEditProject(response.data);
+          }
+        } catch (error) {
+          // If direct fetch fails, try to find in current loaded projects
+          const projectToEdit = projects.find(
+            (p) => p.id === parseInt(editProjectId)
+          );
+
+          if (projectToEdit) {
+            handleEditProject(projectToEdit);
+          }
+        } finally {
+          // Clear the URL parameter after attempting to open modal
+          setSearchParams((params) => {
+            params.delete("edit");
+
+            return params;
+          });
+        }
+      };
+
+      fetchAndEditProject();
+    }
+  }, [editProjectId, setSearchParams]);
 
   const handleDeleteProject = (project: Project) => {
     setProjectToDelete(project);
@@ -641,7 +682,7 @@ export default function ProjectsPage() {
               // Escape commas and quotes in CSV
               return `"${String(value).replace(/"/g, '""')}"`;
             })
-            .join(","),
+            .join(",")
         ),
       ].join("\n");
 
@@ -657,7 +698,7 @@ export default function ProjectsPage() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `projects_export_${new Date().toISOString().split("T")[0]}.csv`,
+        `projects_export_${new Date().toISOString().split("T")[0]}.csv`
       );
       link.style.visibility = "hidden";
 
@@ -863,7 +904,7 @@ export default function ProjectsPage() {
                         {currentPage > 1
                           ? t("pagination.loadingPage").replace(
                               "{page}",
-                              currentPage.toString(),
+                              currentPage.toString()
                             )
                           : t("common.pleaseWait")}
                       </p>
@@ -1114,7 +1155,7 @@ export default function ProjectsPage() {
                     onSelectionChange={(key) => {
                       if (key) {
                         const selectedEmployee = ownerEmployees.find(
-                          (e) => e.id.toString() === key,
+                          (e) => e.id.toString() === key
                         );
 
                         if (selectedEmployee) {
@@ -1187,7 +1228,7 @@ export default function ProjectsPage() {
                     onSelectionChange={(key) => {
                       if (key) {
                         const selectedEmployee = alternativeOwnerEmployees.find(
-                          (e) => e.id.toString() === key,
+                          (e) => e.id.toString() === key
                         );
 
                         if (selectedEmployee) {
@@ -1248,7 +1289,7 @@ export default function ProjectsPage() {
                       onSelectionChange={(key) => {
                         if (key) {
                           const selectedEmployee = analystEmployees.find(
-                            (e) => e.id.toString() === key,
+                            (e) => e.id.toString() === key
                           );
 
                           if (selectedEmployee) {

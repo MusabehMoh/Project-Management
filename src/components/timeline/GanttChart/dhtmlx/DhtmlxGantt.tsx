@@ -67,7 +67,7 @@ const DHTMLXGantt: FC<{
 
     return Math.max(
       1,
-      Math.ceil(Math.abs(B.getTime() - A.getTime()) / (1000 * 60 * 60 * 24)),
+      Math.ceil(Math.abs(B.getTime() - A.getTime()) / (1000 * 60 * 60 * 24))
     );
   };
 
@@ -115,7 +115,7 @@ const DHTMLXGantt: FC<{
         day_short: ["أحد", "اثن", "ثلث", "أرب", "خمي", "جمع", "سبت"],
       },
     }),
-    [],
+    []
   );
 
   const enLocale = useMemo(
@@ -161,7 +161,7 @@ const DHTMLXGantt: FC<{
         day_short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       },
     }),
-    [],
+    []
   );
 
   // --- layouts ---
@@ -180,7 +180,7 @@ const DHTMLXGantt: FC<{
         { view: "scrollbar", id: "scrollHor", height: 20 },
       ],
     }),
-    [],
+    []
   );
 
   const rtlLayout = useMemo(
@@ -198,7 +198,7 @@ const DHTMLXGantt: FC<{
         { view: "scrollbar", id: "scrollHor", height: 20 },
       ],
     }),
-    [],
+    []
   );
 
   const formatDateForGantt = (date: string | Date) => {
@@ -286,7 +286,6 @@ const DHTMLXGantt: FC<{
       gantt.clearAll();
     };
     // run once
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFullScreen]);
 
   // === ZOOM CONFIG with localized week formatter ===
@@ -315,7 +314,7 @@ const DHTMLXGantt: FC<{
   }, [language]);
 
   const [zoomLevel, setZoomLevel] = useState<"day" | "week" | "month" | "year">(
-    "month",
+    "month"
   );
 
   const applyZoom = (level: "day" | "week" | "month" | "year") => {
@@ -471,7 +470,7 @@ const DHTMLXGantt: FC<{
           ) {
             totalScrollable = Math.max(
               0,
-              newState.width - newState.inner_width,
+              newState.width - newState.inner_width
             );
           } else if (typeof newState.width === "number") {
             totalScrollable = newState.width;
@@ -511,6 +510,18 @@ const DHTMLXGantt: FC<{
     const data = { data: [] as any[], links: [] as any[] };
     const id = (p: string, n: string | number) => `${p}-${n}`;
 
+    data.data.push({
+      id: timeline.id,
+      text: timeline.name,
+      description: timeline.description ?? "",
+      start_date: formatDate(timeline.startDate),
+      duration: daysBetween(timeline.startDate, timeline.endDate),
+      open: true,
+      type: "timeline",
+      color: "#22C55E",
+      border: "#22C55E",
+    });
+
     timeline.sprints.forEach((sprint: Sprint) => {
       const sid = id("S", sprint.id);
 
@@ -522,8 +533,8 @@ const DHTMLXGantt: FC<{
         duration: daysBetween(sprint.startDate, sprint.endDate),
         open: true,
         type: "sprint",
-        color: "#1e3a8a",
-        border: "#1d4ed8",
+        color: "#22C55E",
+        border: "#22C55E",
       });
 
       sprint.tasks.forEach((task: Task) => {
@@ -539,8 +550,8 @@ const DHTMLXGantt: FC<{
           parent: sid,
           open: true,
           type: "task",
-          color: "#5eead4",
-          border: "#60a5fa",
+          color: "#8B5CF6",
+          border: "#8B5CF6",
         });
 
         task.subtasks?.forEach((sub: Subtask) => {
@@ -554,12 +565,12 @@ const DHTMLXGantt: FC<{
             start_date: formatDate(sub.startDate || task.startDate),
             duration: daysBetween(
               sub.startDate || task.startDate,
-              sub.endDate || task.endDate,
+              sub.endDate || task.endDate
             ),
             parent: rid,
             type: "subtask",
-            color: "#a5f3fc",
-            border: "#93c5fd",
+            color: "#EAB308",
+            border: "#EAB308",
           });
         });
       });
@@ -587,7 +598,6 @@ const DHTMLXGantt: FC<{
         {/* Zoom Controls */}
         <div className={`flex gap-2 ${isRTL ? "mr-4" : "ml-4"}`}>
           <button
-            onClick={() => applyZoom("day")}
             className={`px-3 py-1 rounded-md transition-colors ${
               isDarkApp
                 ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
@@ -595,11 +605,11 @@ const DHTMLXGantt: FC<{
                   ? "bg-blue-400 text-white hover:bg-blue-600"
                   : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
+            onClick={() => applyZoom("day")}
           >
             {t("timeline.day")}
           </button>
           <button
-            onClick={() => applyZoom("week")}
             className={`px-3 py-1 rounded-md transition-colors ${
               isDarkApp
                 ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
@@ -607,11 +617,11 @@ const DHTMLXGantt: FC<{
                   ? "bg-blue-400 text-white hover:bg-blue-600"
                   : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
+            onClick={() => applyZoom("week")}
           >
             {t("timeline.week")}
           </button>
           <button
-            onClick={() => applyZoom("month")}
             className={`px-3 py-1 rounded-md transition-colors ${
               isDarkApp
                 ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
@@ -619,11 +629,11 @@ const DHTMLXGantt: FC<{
                   ? "bg-blue-400 text-white hover:bg-blue-600"
                   : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
+            onClick={() => applyZoom("month")}
           >
             {t("timeline.month")}
           </button>
           <button
-            onClick={() => applyZoom("year")}
             className={`px-3 py-1 rounded-md transition-colors ${
               isDarkApp
                 ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
@@ -631,6 +641,7 @@ const DHTMLXGantt: FC<{
                   ? "bg-blue-400 text-white hover:bg-blue-600"
                   : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}
+            onClick={() => applyZoom("year")}
           >
             {t("timeline.year")}
           </button>
@@ -651,16 +662,16 @@ const DHTMLXGantt: FC<{
             {/* HeroUI Slider */}
             <div className="max-w-md" dir="ltr">
               <Slider
+                aria-label="Row height"
+                className="w-48"
+                getValue={(value) => `${value}%`}
+                maxValue={52}
+                minValue={18}
+                showTooltip={true}
                 size="sm"
                 step={1}
-                getValue={(value) => `${value}%`}
-                showTooltip={true}
-                minValue={18}
-                maxValue={52}
                 value={rowHeight}
                 onChange={(val) => setRowHeight(val as number)}
-                className="w-48"
-                aria-label="Row height"
               />
             </div>
 
@@ -675,11 +686,11 @@ const DHTMLXGantt: FC<{
               {t("timeline.ganttView")}
             </h3>
             <button
+              aria-label="Open fullscreen Gantt chart"
+              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
               onClick={() => {
                 navigate("/ganttChart", { state: { projectId, timeline } });
               }}
-              className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
-              aria-label="Open fullscreen Gantt chart"
             >
               <Maximize className="w-5 h-5 text-gray-600 dark:text-gray-200" />
             </button>
@@ -698,7 +709,7 @@ const DHTMLXGantt: FC<{
       />
 
       {/* Modal */}
-      <Modal isOpen={dialogOpen} onOpenChange={setDialogOpen} size="lg">
+      <Modal isOpen={dialogOpen} size="lg" onOpenChange={setDialogOpen}>
         <ModalContent>
           {(onClose) => (
             <>
@@ -727,13 +738,15 @@ const DHTMLXGantt: FC<{
                 />
                 {/* Start Date */}
                 <DatePicker
+                  showMonthAndYearPickers
+                  granularity="day"
                   label={t("timeline.startDate")}
                   value={
                     selectedTask?.start_date
                       ? new CalendarDate(
                           new Date(selectedTask.start_date).getFullYear(),
                           new Date(selectedTask.start_date).getMonth() + 1,
-                          new Date(selectedTask.start_date).getDate(),
+                          new Date(selectedTask.start_date).getDate()
                         )
                       : null
                   }
@@ -743,18 +756,16 @@ const DHTMLXGantt: FC<{
                       start_date: val
                         ? `${val.year}-${String(val.month).padStart(
                             2,
-                            "0",
+                            "0"
                           )}-${String(val.day).padStart(2, "0")}`
                         : "",
                     })
                   }
-                  granularity="day"
-                  showMonthAndYearPickers
                 />
                 {/* Duration */}
                 <Input
-                  type="number"
                   label={t("timeline.duration")}
+                  type="number"
                   value={selectedTask?.duration || ""}
                   onChange={(e) =>
                     setSelectedTask({
@@ -776,9 +787,9 @@ const DHTMLXGantt: FC<{
                     </label>
                     <Slider
                       aria-label="Task progress"
-                      step={1}
                       maxValue={100}
                       minValue={0}
+                      step={1}
                       value={selectedTask?.progress || 0}
                       onChange={(val) =>
                         setSelectedTask({ ...selectedTask, progress: val })
@@ -805,7 +816,7 @@ const DHTMLXGantt: FC<{
                     onPress={async () => {
                       const success = await onDeleteEntity(
                         selectedTask.id,
-                        selectedTask.type,
+                        selectedTask.type
                       );
 
                       if (success) {
@@ -826,11 +837,11 @@ const DHTMLXGantt: FC<{
                           name: selectedTask.text,
                           description: selectedTask.description,
                           startDate: formatDateForGantt(
-                            selectedTask.start_date,
+                            selectedTask.start_date
                           ),
                           duration: selectedTask.duration,
                           progress: selectedTask.progress ?? 0,
-                        },
+                        }
                       );
 
                       if (success) {

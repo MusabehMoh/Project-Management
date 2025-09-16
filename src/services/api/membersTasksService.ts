@@ -19,7 +19,7 @@ export class MembersTasksService {
    * Get all tasks with filtering and pagination
    */
   async getTasks(
-    params?: TaskSearchParams,
+    params?: TaskSearchParams
   ): Promise<ApiResponse<TasksResponse>> {
     const queryParams = new URLSearchParams();
 
@@ -36,7 +36,7 @@ export class MembersTasksService {
     }
 
     return apiClient.get<TasksResponse>(
-      `${this.baseUrl}?${queryParams.toString()}`,
+      `${this.baseUrl}?${queryParams.toString()}`
     );
   }
 
@@ -52,7 +52,7 @@ export class MembersTasksService {
    */
   async exportTasks(
     filters: TaskSearchParams,
-    format: "csv" | "pdf" | "excel",
+    format: "csv" | "pdf" | "excel"
   ): Promise<Blob> {
     const queryParams = new URLSearchParams();
 
@@ -75,7 +75,7 @@ export class MembersTasksService {
         headers: {
           Accept: "application/octet-stream",
         },
-      },
+      }
     );
 
     if (!response.ok) {
@@ -97,7 +97,7 @@ export class MembersTasksService {
    */
   async updateTask(
     id: string,
-    updates: Partial<MemberTask>,
+    updates: Partial<MemberTask>
   ): Promise<ApiResponse<MemberTask>> {
     return apiClient.patch<MemberTask>(`${this.baseUrl}/${id}`, updates);
   }
@@ -107,6 +107,22 @@ export class MembersTasksService {
    */
   async deleteTask(id: string): Promise<ApiResponse<void>> {
     return apiClient.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  /*request design */
+  async requestDesign(id: string, notes: string): Promise<ApiResponse<void>> {
+    return {
+      success: true,
+      data: undefined,
+      message: "Design request submitted successfully",
+      timestamp: "15-08-2025",
+    };
+    // return apiClient.post<void>(`${this.baseUrl}/${id}/request-design`, notes);
+  }
+
+  /*change Status */
+  async changeStatus(id: string, typeId: string): Promise<ApiResponse<void>> {
+    return apiClient.get<void>(`${this.baseUrl}/${id}/change-status/${typeId}`);
   }
 }
 

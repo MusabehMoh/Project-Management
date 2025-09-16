@@ -11,6 +11,7 @@ import { realUnitService } from "./unitService";
 import { ProjectDetailsApiService } from "./projectDetailsService";
 import { lookupService } from "./lookupService";
 import { ProjectStatusService } from "./projectStatusService";
+import { quickActionsService } from "./quickActionsService";
 
 // API Client
 export { apiClient, ApiError, API_CONFIG } from "./client";
@@ -24,6 +25,7 @@ export { lookupService } from "./lookupService";
 export { membersTasksService } from "./membersTasksService";
 export { teamWorkloadService } from "./teamWorkloadService";
 export { pipelineService } from "./pipelineService";
+export { quickActionsService } from "./quickActionsService";
 
 // Export the service instances
 export const projectService = projectsApi;
