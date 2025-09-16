@@ -1,8 +1,0 @@
-﻿public interface IUserRepository : IRepository<User>
-{
-    Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, bool? isVisible = null, int? departmentId = null);
-    Task<User?> GetByUserNameAsync(string userName);
-    Task<User?> GetUserWithRolesAndActionsAsync(int id);
-    Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId);
-    Task<User?> GetFirstUserAsync(); // Added for efficient current user fetch
-}
