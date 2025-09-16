@@ -7,9 +7,11 @@ import { Spinner } from "@heroui/spinner";
 import { Alert } from "@heroui/alert";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import { addToast } from "@heroui/toast";
 import {
   RefreshCw,
   AlertTriangle,
+  X,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -73,7 +75,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   const { t, direction } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [selectedAnalyst, setSelectedAnalyst] = useState<MemberSearchResult | null>(null);
+  const [selectedAnalysts, setSelectedAnalysts] = useState<MemberSearchResult[]>([]);
   const [analystInputValue, setAnalystInputValue] = useState<string>("");
 
   // Use the same team search hook as projects page
@@ -220,21 +222,35 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   }
 
   const handleAssign = async () => {
-    if (selectedProject && selectedAnalyst && onAssignAnalyst) {
+    if (selectedProject && selectedAnalysts.length > 0 && onAssignAnalyst) {
       try {
         console.log("QuickActions: Starting assignment...", {
           projectId: selectedProject.id,
-          analystId: selectedAnalyst.id.toString(),
-          projectName: selectedProject.applicationName
+          analystIds: selectedAnalysts.map(a => a.id.toString()),
+          projectName: selectedProject.applicationName,
         });
         
-        await onAssignAnalyst(selectedProject, selectedAnalyst.id.toString());
+        // Assign each analyst to the project
+        for (const analyst of selectedAnalysts) {
+          await onAssignAnalyst(selectedProject, analyst.id.toString());
+        }
         
         console.log("QuickActions: Assignment completed, refreshing data...");
         
+        // Show success toast
+        addToast({
+          title: t("quickActions.assignmentSuccess") || "Assignment Successful",
+          description: 
+            selectedAnalysts.length === 1 
+              ? `1 analyst assigned to ${selectedProject.applicationName}`
+              : `${selectedAnalysts.length} analysts assigned to ${selectedProject.applicationName}`,
+          color: "success",
+          timeout: 4000,
+        });
+        
         setIsModalOpen(false);
         setSelectedProject(null);
-        setSelectedAnalyst(null);
+        setSelectedAnalysts([]);
         setAnalystInputValue("");
         clearAnalystResults();
         
@@ -244,7 +260,14 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         console.log("QuickActions: Data refreshed successfully");
       } catch (error) {
         console.error("QuickActions: Failed to assign analyst:", error);
-        // You could add a toast notification here for better UX
+        
+        // Show error toast
+        addToast({
+          title: t("quickActions.assignmentError") || "Assignment Failed",
+          description: "Failed to assign analyst(s). Please try again.",
+          color: "danger",
+          timeout: 5000,
+        });
       }
     }
   };
@@ -252,7 +275,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   const handleCancel = () => {
     setIsModalOpen(false);
     setSelectedProject(null);
-    setSelectedAnalyst(null);
+    setSelectedAnalysts([]);
     setAnalystInputValue("");
     clearAnalystResults();
   };
@@ -340,42 +363,55 @@ const QuickActions: React.FC<QuickActionsProps> = ({
           </ModalHeader>
           <ModalBody>
             <p className="text-sm text-default-600 mb-4">
-              {t("quickActions.assignAnalystTo") || "Assign an analyst to"}: {selectedProject?.applicationName}
+              {t("quickActions.assignAnalystTo") || "Assign analysts to"}: {selectedProject?.applicationName}
             </p>
+            
+            {/* Selected Analysts Display */}
+            {selectedAnalysts.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm font-medium text-foreground mb-2">
+                  {t("quickActions.selectedAnalysts") || "Selected Analysts"}:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedAnalysts.map((analyst) => (
+                    <Chip
+                      key={analyst.id}
+                      color="primary"
+                      variant="flat"
+                      onClose={() => {
+                        setSelectedAnalysts(prev => prev.filter(a => a.id !== analyst.id));
+                      }}
+                    >
+                      {analyst.fullName}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <Autocomplete
               isClearable
-              items={analystEmployees}
-              label={t("quickActions.selectAnalyst") || "Select Analyst"}
-              placeholder={t("quickActions.chooseAnalyst") || "Choose an analyst"}
-              selectedKey={selectedAnalyst?.id?.toString() || ""}
+              items={analystEmployees.filter(emp => !selectedAnalysts.some(selected => selected.id === emp.id))}
+              label={t("quickActions.selectAnalyst") || "Select Analysts"}
+              placeholder={t("quickActions.chooseAnalyst") || "Search and select analysts"}
               inputValue={analystInputValue}
               isLoading={analystSearchLoading}
               menuTrigger="input"
               onInputChange={(value) => {
                 setAnalystInputValue(value);
-                // Clear selection if input doesn't match selected analyst
-                if (
-                  selectedAnalyst &&
-                  value !== selectedAnalyst.fullName
-                ) {
-                  setSelectedAnalyst(null);
-                }
                 // Search for analysts
                 searchAnalystEmployees(value);
               }}
               onSelectionChange={(key) => {
                 if (key) {
                   const analyst = analystEmployees.find(
-                    (a) => a.id.toString() === key
+                    (a) => a.id.toString() === key,
                   );
-                  if (analyst) {
-                    setSelectedAnalyst(analyst);
-                    setAnalystInputValue(analyst.fullName);
+
+                  if (analyst && !selectedAnalysts.some(selected => selected.id === analyst.id)) {
+                    setSelectedAnalysts(prev => [...prev, analyst]);
+                    setAnalystInputValue("");
                   }
-                } else {
-                  // Clear selection
-                  setSelectedAnalyst(null);
-                  setAnalystInputValue("");
                 }
               }}
             >
@@ -404,9 +440,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({
             <Button
               color="primary"
               onPress={handleAssign}
-              disabled={!selectedAnalyst}
+              disabled={selectedAnalysts.length === 0}
             >
-              {t("quickActions.assign") || "Assign"}
+              {t("quickActions.assign") || "Assign"} ({selectedAnalysts.length})
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@heroui/button";
 import { useDisclosure } from "@heroui/modal";
 import { useNavigate } from "react-router-dom";
+import { addToast } from "@heroui/toast";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { quickActionsService } from "@/services/api";
