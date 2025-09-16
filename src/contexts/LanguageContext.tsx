@@ -232,6 +232,16 @@ const translations = {
     "dashboard.awaitingDev": "Awaiting Dev",
     "dashboard.teamWorkload": "Team Workload",
     "dashboard.teamWorkloadPerformance": "Team Workload & Performance",
+    "dashboard.quickActions": "Quick Actions",
+    "dashboard.quickActionsSubtitle": "Take action on items that need your attention",
+    "quickActions.reviewRequirements": "Review Requirements",
+    "quickActions.reviewRequirementsDesc": "Review pending project requirements",
+    "quickActions.unassignedProjects": "Unassigned Projects",
+    "quickActions.unassignedProjectsDesc": "Projects without analysts assigned",
+    "quickActions.projectsNeedAnalysts": "projects need analysts",
+    "quickActions.actNow": "Act Now",
+    "quickActions.overdueItems": "Overdue Items",
+    "quickActions.overdueItemsDesc": "View and manage overdue tasks and projects",
     "dashboard.viewAllProjects": "View All Projects",
     "dashboard.teamName": "Team Name",
     "dashboard.progressMapped": "Progress Mapped",
@@ -451,6 +461,11 @@ const translations = {
     "projects.updateProjectInfo": "Update project information",
     "projects.searchByName": "Search by name, military number, or username",
     "projects.noRemarks": "No remarks",
+
+    // Project Filter Messages
+    "projects.filterActive": "Filter Active",
+    "projects.showingUnassignedProjects": "Showing unassigned projects only",
+    "projects.clearFilter": "Clear Filter",
 
     // Project Validation Messages
     "projects.validation.applicationNameRequired":
@@ -1319,6 +1334,16 @@ const translations = {
     "dashboard.awaitingDev": "في انتظار التطوير",
     "dashboard.teamWorkload": "عبء العمل للفريق",
     "dashboard.teamWorkloadPerformance": "عبء العمل والأداء للفريق",
+    "dashboard.quickActions": "الإجراءات السريعة",
+    "dashboard.quickActionsSubtitle": "اتخذ إجراءً بشأن العناصر التي تحتاج انتباهك",
+    "quickActions.reviewRequirements": "مراجعة المتطلبات",
+    "quickActions.reviewRequirementsDesc": "مراجعة متطلبات المشاريع المعلقة",
+    "quickActions.unassignedProjects": "المشاريع غير المخصصة",
+    "quickActions.unassignedProjectsDesc": "مشاريع بدون محللين مخصصين",
+    "quickActions.projectsNeedAnalysts": "مشاريع تحتاج محللين",
+    "quickActions.actNow": "تصرف الآن",
+    "quickActions.overdueItems": "العناصر المتأخرة",
+    "quickActions.overdueItemsDesc": "عرض وإدارة المهام والمشاريع المتأخرة",
     "dashboard.viewAllProjects": "عرض جميع المشاريع",
     "dashboard.teamName": "اسم الفريق",
     "dashboard.progressMapped": "التقدم المخطط",
@@ -1535,6 +1560,11 @@ const translations = {
     "projects.updateProjectInfo": "تحديث معلومات المشروع",
     "projects.searchByName": "البحث بالاسم أو الرقم العسكري أو اسم المستخدم",
     "projects.noRemarks": "لا توجد ملاحظات",
+
+    // Project Filter Messages
+    "projects.filterActive": "الفلتر نشط",
+    "projects.showingUnassignedProjects": "عرض المشاريع غير المخصصة فقط",
+    "projects.clearFilter": "إلغاء الفلتر",
 
     // Project Validation Messages
     "projects.validation.applicationNameRequired": "اسم المشروع مطلوب",

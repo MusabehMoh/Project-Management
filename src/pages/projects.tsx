@@ -3,6 +3,7 @@ import type { EmployeeSearchResult } from "@/types/user";
 import type { MemberSearchResult } from "@/types/timeline";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -95,6 +96,22 @@ export default function ProjectsPage() {
     handlePageChange,
     handlePageSizeChange,
   } = useProjects();
+
+  // Handle URL parameters for auto-editing
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-open edit modal if edit parameter is present
+  useEffect(() => {
+    const editProjectId = searchParams.get("edit");
+    if (editProjectId && projects.length > 0) {
+      const projectToEdit = projects.find(p => p.id === parseInt(editProjectId));
+      if (projectToEdit) {
+        handleEditProject(projectToEdit);
+        // Clear the URL parameter
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, projects, setSearchParams]);
 
   // Phases hook for dynamic phase management
   const {

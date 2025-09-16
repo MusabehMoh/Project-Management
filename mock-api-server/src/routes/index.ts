@@ -19,6 +19,7 @@ import { projectRequirementRoutes } from "./projectRequirements.js";
 import { calendarRoutes } from "./calendar.js";
 import membersTasksRoutes from "./membersTasksRoutes.js";
 import notificationsRoutes from "./notifications.js";
+import quickActionsRoutes from "./quickActions.js";
 export const routes = Router();
 
 // Health check for API
@@ -47,6 +48,7 @@ routes.get("/", (req, res) => {
       calendar: "/calendar",
       "members-tasks": "/members-tasks",
       notifications: "/notifications",
+      "quick-actions": "/quick-actions",
       "task-plan": "/task-plan",
     },
   });
@@ -72,3 +74,4 @@ routes.use("/project-requirements", projectRequirementRoutes);
 routes.use("/calendar", calendarRoutes);
 routes.use("/members-tasks", membersTasksRoutes);
 routes.use("/notifications", notificationsRoutes);
+routes.use("/quick-actions", quickActionsRoutes);

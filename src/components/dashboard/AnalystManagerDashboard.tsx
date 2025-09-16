@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@heroui/button";
+import { useDisclosure } from "@heroui/modal";
+import { useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import UrgentNotifications from "@/components/UrgentNotifications";
@@ -8,9 +10,17 @@ import TeamWorkloadPerformance from "@/components/TeamWorkloadPerformanceNew";
 import ProjectPipeline from "@/components/ProjectPipeline";
 import Calendar from "@/components/calendar";
 import ModernQuickStats from "@/components/ModernQuickStats";
+import QuickActions from "@/components/QuickActions";
 
 export default function AnalystManagerDashboard() {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
+
+  // Handle project editing from Quick Actions
+  const handleEditProject = (project: any) => {
+    // Navigate to projects page and trigger edit modal
+    navigate(`/projects?edit=${project.id}`);
+  };
 
   return (
     <div className={`space-y-8 pb-16 ${language === "ar" ? "rtl" : "ltr"}`}>
@@ -33,6 +43,16 @@ export default function AnalystManagerDashboard() {
 
       {/* Quick Stats */}
       <ModernQuickStats />
+
+      {/* Quick Actions Banner */}
+      <QuickActions
+        autoRefresh={true}
+        className="mb-6"
+        isCompact={false}
+        maxActions={6}
+        showStats={false}
+        onEditProject={handleEditProject}
+      />
 
       {/* Team Workload Performance and Calendar */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

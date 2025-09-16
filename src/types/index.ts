@@ -7,6 +7,7 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 // Re-export types from other modules
 export * from "./user";
 export * from "./timeline";
+export * from "./quickActions";
 
 // Unit types (excluding ApiResponse to avoid conflicts)
 export type {
