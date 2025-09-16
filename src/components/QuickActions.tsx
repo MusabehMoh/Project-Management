@@ -219,13 +219,33 @@ const QuickActions: React.FC<QuickActionsProps> = ({
     );
   }
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (selectedProject && selectedAnalyst && onAssignAnalyst) {
-      onAssignAnalyst(selectedProject, selectedAnalyst.id.toString());
-      setIsModalOpen(false);
-      setSelectedProject(null);
-      setSelectedAnalyst(null);
-      clearAnalystResults();
+      try {
+        console.log("QuickActions: Starting assignment...", {
+          projectId: selectedProject.id,
+          analystId: selectedAnalyst.id.toString(),
+          projectName: selectedProject.applicationName
+        });
+        
+        await onAssignAnalyst(selectedProject, selectedAnalyst.id.toString());
+        
+        console.log("QuickActions: Assignment completed, refreshing data...");
+        
+        setIsModalOpen(false);
+        setSelectedProject(null);
+        setSelectedAnalyst(null);
+        setAnalystInputValue("");
+        clearAnalystResults();
+        
+        // Refresh the unassigned projects list
+        await refresh();
+        
+        console.log("QuickActions: Data refreshed successfully");
+      } catch (error) {
+        console.error("QuickActions: Failed to assign analyst:", error);
+        // You could add a toast notification here for better UX
+      }
     }
   };
 

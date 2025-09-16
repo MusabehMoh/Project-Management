@@ -4,6 +4,7 @@ import { useDisclosure } from "@heroui/modal";
 import { useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { quickActionsService } from "@/services/api";
 import UrgentNotifications from "@/components/UrgentNotifications";
 import RequirementOverview from "@/components/RequirementOverview";
 import TeamWorkloadPerformance from "@/components/TeamWorkloadPerformanceNew";
@@ -15,11 +16,32 @@ import QuickActions from "@/components/QuickActions";
 export default function AnalystManagerDashboard() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Handle project editing from Quick Actions
   const handleEditProject = (project: any) => {
     // Navigate to projects page and trigger edit modal
     navigate(`/projects?edit=${project.id}`);
+  };
+
+  // Handle analyst assignment
+  const handleAssignAnalyst = async (project: any, analystId: string) => {
+    try {
+      console.log("Assigning analyst:", { projectId: project.id, analystId, projectName: project.applicationName });
+      
+      const response = await quickActionsService.assignAnalyst(project.id, analystId);
+      
+      console.log("Assignment response:", response);
+      
+      // Refresh the quick actions to show updated data
+      setRefreshKey((prev) => prev + 1);
+      
+      // You could add a success toast notification here
+      console.log(`Successfully assigned analyst ${analystId} to project ${project.applicationName}`);
+    } catch (error) {
+      console.error("Failed to assign analyst:", error);
+      // You could add an error toast notification here
+    }
   };
 
   return (
@@ -46,12 +68,10 @@ export default function AnalystManagerDashboard() {
 
       {/* Quick Actions Banner */}
       <QuickActions
+        key={refreshKey}
         autoRefresh={true}
         className="mb-6"
-        isCompact={false}
-        maxActions={6}
-        showStats={false}
-        onEditProject={handleEditProject}
+        onAssignAnalyst={handleAssignAnalyst}
       />
 
       {/* Team Workload Performance and Calendar */}

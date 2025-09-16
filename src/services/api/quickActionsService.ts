@@ -112,6 +112,19 @@ export class QuickActionsService {
   async getUnassignedProjects(): Promise<QuickActionApiResponse<any[]>> {
     return apiClient.get<any[]>(`${ENDPOINTS.QUICK_ACTIONS}/unassigned-projects`);
   }
+
+  /**
+   * Assign analyst to project
+   */
+  async assignAnalyst(
+    projectId: number,
+    analystId: string,
+  ): Promise<QuickActionApiResponse<void>> {
+    return apiClient.post<void>(`${ENDPOINTS.QUICK_ACTIONS}/assign-analyst`, {
+      projectId,
+      analystId,
+    });
+  }
 }
 
 // Export singleton instance

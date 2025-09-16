@@ -369,6 +369,92 @@ export class QuickActionsController {
   }
 
   /**
+   * Assign analyst to project
+   */
+  async assignAnalyst(req: Request, res: Response) {
+    await mockDelayHandler();
+
+    try {
+      const { projectId, analystId } = req.body;
+
+      logger.info(`Assigning analyst ${analystId} to project ${projectId}`);
+
+      if (!projectId || !analystId) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: "Project ID and analyst ID are required",
+            code: "MISSING_PARAMS",
+          },
+        });
+      }
+
+      // Find the project
+      const project = mockProjects.find((p) => p.id === projectId);
+      if (!project) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: "Project not found",
+            code: "PROJECT_NOT_FOUND",
+          },
+        });
+      }
+
+      // Update project with assigned analyst
+      if (!project.analystIds) {
+        project.analystIds = [];
+      }
+      
+      // Add analyst to the project if not already assigned
+      const analystIdNum = parseInt(analystId);
+      if (!project.analystIds.includes(analystIdNum)) {
+        project.analystIds.push(analystIdNum);
+      }
+      
+      // Update the display names as well (you might want to fetch actual names)
+      // For now, just add a placeholder
+      if (!project.analysts) {
+        project.analysts = `Analyst ${analystId}`;
+      } else {
+        project.analysts += `, Analyst ${analystId}`;
+      }
+
+      // Send notification
+      await sendNotification({
+        type: "assignment",
+        message: `You have been assigned to project: ${project.applicationName}`,
+        projectId: project.id,
+        targetUserIds: [parseInt(analystId)],
+      });
+
+      logger.info(`Successfully assigned analyst ${analystId} to project ${projectId}`);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          message: "Analyst assigned successfully",
+          project: {
+            id: project.id,
+            applicationName: project.applicationName,
+            analystIds: project.analystIds,
+            analysts: project.analysts,
+          },
+        },
+      });
+    } catch (error) {
+      logger.error("Error assigning analyst:", error);
+      res.status(500).json({
+        success: false,
+        error: {
+          message: "Failed to assign analyst",
+          code: "ASSIGN_ERROR",
+        },
+      });
+    }
+  }
+
+  /**
    * Refresh quick actions data
    */
   async refreshActions(req: Request, res: Response) {
