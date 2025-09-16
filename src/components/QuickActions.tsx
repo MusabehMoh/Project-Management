@@ -50,17 +50,16 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({
     <Button
       className={`${
         isCompact ? "h-12" : "h-16"
-      } justify-start gap-3 p-3 transition-all duration-200 hover:scale-[1.02]`}
-      color={action.variant || "default"}
+      } justify-start gap-3 p-4 bg-default-50 border border-default-200 hover:bg-default-100 transition-colors`}
       disabled={action.isDisabled}
       size={isCompact ? "sm" : "md"}
-      variant="flat"
+      variant="light"
       onPress={onClick}
     >
       <div className="flex items-center gap-3 w-full">
-        <IconComponent className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} flex-shrink-0`} />
+        <IconComponent className={`${isCompact ? "h-4 w-4" : "h-5 w-5"} flex-shrink-0 text-default-600`} />
         <div className="flex-1 text-left">
-          <div className={`font-medium ${isCompact ? "text-sm" : ""}`}>
+          <div className={`font-medium text-foreground ${isCompact ? "text-sm" : ""}`}>
             {t(action.title) || action.title}
           </div>
           {!isCompact && (
@@ -71,10 +70,9 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({
         </div>
         {action.count && action.count > 0 && (
           <Chip
-            className="ml-2"
-            color={action.variant === "danger" ? "danger" : "primary"}
+            className="bg-default-200 text-default-700"
             size="sm"
-            variant="solid"
+            variant="flat"
           >
             {action.count}
           </Chip>
@@ -120,10 +118,10 @@ const QuickActions: React.FC<QuickActionsProps> = ({
 
   if (loading) {
     return (
-      <Card className={`${className}`}>
+      <Card className={`${className} border-default-200`} shadow="sm">
         <CardBody className="flex items-center justify-center py-8">
-          <Spinner size="lg" />
-          <p className="mt-2 text-default-500">Loading quick actions...</p>
+          <Spinner color="default" size="md" />
+          <p className="mt-3 text-default-500">Loading actions...</p>
         </CardBody>
       </Card>
     );
@@ -131,14 +129,12 @@ const QuickActions: React.FC<QuickActionsProps> = ({
 
   if (error) {
     return (
-      <Card className={`border-danger ${className}`}>
+      <Card className={`${className} border-default-200`} shadow="sm">
         <CardBody className="text-center py-6">
-          <AlertTriangle className="h-8 w-8 text-danger mx-auto mb-2" />
-          <p className="text-danger font-medium">Failed to load quick actions</p>
-          <p className="text-sm text-default-500 mt-1">{error}</p>
+          <AlertTriangle className="h-8 w-8 text-default-400 mx-auto mb-3" />
+          <p className="font-medium text-foreground mb-2">Unable to load actions</p>
+          <p className="text-sm text-default-500 mb-4">{error}</p>
           <Button
-            className="mt-3"
-            color="danger"
             size="sm"
             variant="flat"
             onPress={refresh}
@@ -152,11 +148,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({
 
   if (!hasActionsAvailable) {
     return (
-      <Card className={`${className}`}>
+      <Card className={`${className} border-default-200`} shadow="sm">
         <CardBody className="text-center py-6">
-          <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
-          <p className="font-medium text-foreground">All caught up!</p>
-          <p className="text-sm text-default-500 mt-1">
+          <CheckCircle className="h-8 w-8 text-default-400 mx-auto mb-3" />
+          <p className="font-medium text-foreground mb-2">All caught up!</p>
+          <p className="text-sm text-default-500">
             No pending actions require your attention.
           </p>
         </CardBody>
@@ -171,23 +167,23 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   ].slice(0, maxActions);
 
   return (
-    <Card className={`${className}`}>
-      <CardHeader className="flex items-center justify-between pb-3">
+    <Card className={`${className} border-default-200`} shadow="sm">
+      <CardHeader className="flex items-center justify-between pb-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-xl font-semibold text-foreground">
             {t("dashboard.quickActions") || "Quick Actions"}
           </h3>
-          <p className="text-sm text-default-500">
+          <p className="text-sm text-default-500 mt-1">
             {t("dashboard.quickActionsSubtitle") ||
               "Take action on items that need your attention"}
           </p>
         </div>
         <Button
           isIconOnly
-          className="ml-2"
-          disabled={refreshing}
           size="sm"
-          variant="flat"
+          variant="light"
+          className="text-default-400 hover:text-default-600"
+          disabled={refreshing}
           onPress={refresh}
         >
           <RefreshCw
@@ -196,35 +192,35 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         </Button>
       </CardHeader>
 
-      <Divider />
+      <Divider className="bg-default-200" />
 
-      <CardBody className="p-4">
+      <CardBody className="p-6">
         {/* Quick Stats */}
         {showStats && stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <div className="text-center p-3 bg-primary/10 rounded-lg">
-              <div className="text-xl font-bold text-primary">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="text-center p-4 bg-default-50 rounded-lg border border-default-200">
+              <div className="text-xl font-bold text-foreground">
                 {stats.activeProjects}
               </div>
-              <div className="text-xs text-default-600">Active Projects</div>
+              <div className="text-xs text-default-500 mt-1">Active Projects</div>
             </div>
-            <div className="text-center p-3 bg-warning/10 rounded-lg">
-              <div className="text-xl font-bold text-warning">
+            <div className="text-center p-4 bg-default-50 rounded-lg border border-default-200">
+              <div className="text-xl font-bold text-foreground">
                 {stats.pendingRequirements}
               </div>
-              <div className="text-xs text-default-600">Pending Reviews</div>
+              <div className="text-xs text-default-500 mt-1">Pending Reviews</div>
             </div>
-            <div className="text-center p-3 bg-danger/10 rounded-lg">
-              <div className="text-xl font-bold text-danger">
+            <div className="text-center p-4 bg-default-50 rounded-lg border border-default-200">
+              <div className="text-xl font-bold text-foreground">
                 {stats.overdueItems}
               </div>
-              <div className="text-xs text-default-600">Overdue Items</div>
+              <div className="text-xs text-default-500 mt-1">Overdue Items</div>
             </div>
-            <div className="text-center p-3 bg-success/10 rounded-lg">
-              <div className="text-xl font-bold text-success">
+            <div className="text-center p-4 bg-default-50 rounded-lg border border-default-200">
+              <div className="text-xl font-bold text-foreground">
                 {stats.unassignedTasks}
               </div>
-              <div className="text-xs text-default-600">Unassigned Tasks</div>
+              <div className="text-xs text-default-500 mt-1">Unassigned Tasks</div>
             </div>
           </div>
         )}
@@ -249,47 +245,44 @@ const QuickActions: React.FC<QuickActionsProps> = ({
 
           {/* Unassigned Projects Accordion */}
           {unassignedProjects.length > 0 && (
-            <Accordion variant="light" className="px-0">
+            <Accordion variant="bordered" className="w-full">
               <AccordionItem
                 key="unassigned-projects"
                 aria-label={t("quickActions.unassignedProjects") || "Unassigned Projects"}
                 title={
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-warning rounded-full" />
-                      <div>
-                        <p className="font-medium text-foreground text-sm">
-                          {t("quickActions.unassignedProjects") || "Unassigned Projects"}
-                        </p>
+                      <div className="text-lg font-semibold text-foreground">
+                        {t("quickActions.unassignedProjects") || "Unassigned Projects"}
                       </div>
                     </div>
-                    <Chip size="sm" color="warning" variant="flat">
+                    <Chip size="sm" variant="flat" className="bg-default-100 text-default-600">
                       {unassignedProjects.length}
                     </Chip>
                   </div>
                 }
-                className="border border-warning-200 rounded-lg bg-warning-50/30"
+                className="border-default-200"
               >
-                <div className="space-y-2 pb-2">
+                <div className="space-y-3 pt-2">
                   {unassignedProjects.map((project) => (
                     <div
                       key={project.id}
-                      className="flex items-center justify-between p-3 bg-white rounded-md border border-default-200 hover:border-warning-300 transition-colors"
+                      className="flex items-center justify-between p-4 bg-default-50 rounded-lg border border-default-200 hover:bg-default-100 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-foreground truncate">
+                        <h4 className="font-medium text-foreground truncate">
                           {project.applicationName}
                         </h4>
-                        <p className="text-xs text-default-500 truncate">
+                        <p className="text-sm text-default-500 truncate">
                           {project.owningUnit}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 ml-3">
+                      <div className="ml-4">
                         <Button
                           size="sm"
-                          color="warning"
+                          color="danger"
                           variant="flat"
-                          className="min-w-fit px-3"
+                          className="min-w-fit"
                           onPress={() => onEditProject?.(project)}
                         >
                           {t("quickActions.assign") || "Assign"}
