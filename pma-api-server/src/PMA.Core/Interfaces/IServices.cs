@@ -69,16 +69,15 @@ public interface IRequirementService
 
 public interface IDepartmentService
 {
-    System.Threading.Tasks.Task<(IEnumerable<Department> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
+    System.Threading.Tasks.Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
     System.Threading.Tasks.Task<Department?> GetDepartmentByIdAsync(int id);
     System.Threading.Tasks.Task<Department> CreateDepartmentAsync(Department department);
     System.Threading.Tasks.Task<Department> UpdateDepartmentAsync(Department department);
     System.Threading.Tasks.Task<bool> DeleteDepartmentAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<Department>> GetActiveDepartmentsAsync();
     System.Threading.Tasks.Task<(IEnumerable<TeamMemberDto> Members, int TotalCount)> GetDepartmentMembersAsync(int departmentId, int page = 1, int limit = 10);
     System.Threading.Tasks.Task<TeamMemberDto> AddDepartmentMemberAsync(int departmentId, int userId, string role);
     System.Threading.Tasks.Task<TeamMemberDto> UpdateDepartmentMemberAsync(int departmentId, int memberId, string? role, bool? isActive);
-    System.Threading.Tasks.Task<bool> RemoveDepartmentMemberAsync(int departmentId, int memberId);
+    System.Threading.Tasks.Task<bool> RemoveMemberByIdAsync(int memberId);
 }
 
 public interface IUnitService

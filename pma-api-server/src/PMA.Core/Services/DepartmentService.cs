@@ -18,11 +18,6 @@ public class DepartmentService : IDepartmentService
         _employeeService = employeeService;
     }
 
-    public async System.Threading.Tasks.Task<IEnumerable<Department>> GetAllDepartmentsAsync()
-    {
-        return await _departmentRepository.GetAllAsync();
-    }
-
     public async System.Threading.Tasks.Task<Department?> GetDepartmentByIdAsync(int id)
     {
         return await _departmentRepository.GetByIdAsync(id);
@@ -35,7 +30,7 @@ public class DepartmentService : IDepartmentService
         return await _departmentRepository.AddAsync(department);
     }
 
-    public async Task<(IEnumerable<Department> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null)
+    public async Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null)
     {
         return await _departmentRepository.GetDepartmentsAsync(page, limit, isActive);
     }
@@ -56,11 +51,6 @@ public class DepartmentService : IDepartmentService
             return true;
         }
         return false;
-    }
-
-    public async System.Threading.Tasks.Task<IEnumerable<Department>> GetActiveDepartmentsAsync()
-    {
-        return await _departmentRepository.GetActiveDepartmentsAsync();
     }
 
     public async Task<(IEnumerable<TeamMemberDto> Members, int TotalCount)> GetDepartmentMembersAsync(int departmentId, int page = 1, int limit = 10)
@@ -162,14 +152,14 @@ public class DepartmentService : IDepartmentService
         };
     }
 
-    public async Task<bool> RemoveDepartmentMemberAsync(int departmentId, int memberId)
+    public async Task<bool> RemoveMemberByIdAsync(int memberId)
     {
-        var team = await _teamRepository.GetTeamByIdAsync(memberId);
-        if (team == null || team.DepartmentId != departmentId)
-        {
+        // Check if member exists before attempting removal
+        var teamMember = await _teamRepository.GetByIdAsync(memberId);
+        if (teamMember == null)
             return false;
-        }
 
+        // Direct call to repository - no duplicate department validation needed
         return await _teamRepository.RemoveTeamMemberAsync(memberId);
     }
 }

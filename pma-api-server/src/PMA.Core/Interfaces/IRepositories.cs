@@ -56,8 +56,7 @@ public interface IRequirementRepository : IRepository<Requirement>
 
 public interface IDepartmentRepository : IRepository<Department>
 {
-    System.Threading.Tasks.Task<(IEnumerable<Department> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
-    System.Threading.Tasks.Task<IEnumerable<Department>> GetActiveDepartmentsAsync();
+    System.Threading.Tasks.Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
 }
 
 public interface ITeamRepository : IRepository<Team>

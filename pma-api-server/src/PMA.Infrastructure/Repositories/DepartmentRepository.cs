@@ -12,7 +12,7 @@ public class DepartmentRepository : Repository<Department>, IDepartmentRepositor
     {
     }
 
-    public async Task<(IEnumerable<Department> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null)
+    public async Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null)
     {
         var query = _context.Departments.AsQueryable();
 
@@ -22,21 +22,18 @@ public class DepartmentRepository : Repository<Department>, IDepartmentRepositor
         }
 
         var totalCount = await query.CountAsync();
-        var departments = await query
+        var departmentsWithCounts = await query
             .OrderBy(d => d.Name)
             .Skip((page - 1) * limit)
             .Take(limit)
+            .Select(d => new
+            {
+                Department = d,
+                MemberCount = _context.Teams.Count(t => t.DepartmentId == d.Id && t.IsActive)
+            })
             .ToListAsync();
 
-        return (departments, totalCount);
-    }
-
-    public async Task<IEnumerable<Department>> GetActiveDepartmentsAsync()
-    {
-        return await _context.Departments
-            .Where(d => d.IsActive)
-            .OrderBy(d => d.Name)
-            .ToListAsync();
+        return (departmentsWithCounts.Select(x => (x.Department, x.MemberCount)), totalCount);
     }
 }
 

@@ -41,7 +41,7 @@ public class DepartmentsController : ApiBaseController
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
             // Map to DTOs
-            var dtos = departments.Select(d => new DepartmentDto { Id = d.Id, Name = d.Name, IsActive = d.IsActive });
+            var dtos = departments.Select(d => new DepartmentDto { Id = d.Department.Id, Name = d.Department.Name, IsActive = d.Department.IsActive, MemberCount = d.MemberCount });
             return Success(dtos, pagination);
         }
         catch (Exception ex)
@@ -65,7 +65,8 @@ public class DepartmentsController : ApiBaseController
             var department = await _departmentService.GetDepartmentByIdAsync(id);
             if (department == null)
                 return NotFound(Error<DepartmentDto>("Department not found", null, 404));
-            var dto = new DepartmentDto { Id = department.Id, Name = department.Name, IsActive = department.IsActive };
+            var (members, _) = await _departmentService.GetDepartmentMembersAsync(department.Id, 1, int.MaxValue);
+            var dto = new DepartmentDto { Id = department.Id, Name = department.Name, IsActive = department.IsActive, MemberCount = members.Count() };
             return Success(dto);
         }
         catch (Exception ex)
@@ -90,8 +91,8 @@ public class DepartmentsController : ApiBaseController
             // Map DTO to entity
             var department = new Department { Name = dto.Name, IsActive = dto.IsActive };
             var createdDepartment = await _departmentService.CreateDepartmentAsync(department);
-            var resultDto = new DepartmentDto { Id = createdDepartment.Id, Name = createdDepartment.Name, IsActive = createdDepartment.IsActive };
-            return CreatedAtAction(nameof(GetDepartmentById), new { id = resultDto.Id }, resultDto);
+            var resultDto = new DepartmentDto { Id = createdDepartment.Id, Name = createdDepartment.Name, IsActive = createdDepartment.IsActive, MemberCount = 0 };
+            return Created(resultDto, nameof(GetDepartmentById), new { id = resultDto.Id });
         }
         catch (Exception ex)
         {
@@ -121,7 +122,8 @@ public class DepartmentsController : ApiBaseController
             var updatedDepartment = await _departmentService.UpdateDepartmentAsync(department);
             if (updatedDepartment == null)
                 return NotFound(Error<DepartmentDto>("Department not found", null, 404));
-            var resultDto = new DepartmentDto { Id = updatedDepartment.Id, Name = updatedDepartment.Name, IsActive = updatedDepartment.IsActive };
+            var (members, _) = await _departmentService.GetDepartmentMembersAsync(updatedDepartment.Id, 1, int.MaxValue);
+            var resultDto = new DepartmentDto { Id = updatedDepartment.Id, Name = updatedDepartment.Name, IsActive = updatedDepartment.IsActive, MemberCount = members.Count() };
             return Success(resultDto);
         }
         catch (Exception ex)
@@ -136,7 +138,7 @@ public class DepartmentsController : ApiBaseController
     /// Delete a department
     /// </summary>
     [HttpDelete("{id}")]
-    [ProducesResponseType(204)]
+    [ProducesResponseType(200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteDepartment(int id)
     {
@@ -145,7 +147,7 @@ public class DepartmentsController : ApiBaseController
             var result = await _departmentService.DeleteDepartmentAsync(id);
             if (!result)
                 return NotFound(Error<DepartmentDto>("Department not found", null, 404));
-            return NoContent();
+            return Success("Department deleted successfully");
         }
         catch (Exception ex)
         {
@@ -193,7 +195,7 @@ public class DepartmentsController : ApiBaseController
         try
         {
             var member = await _departmentService.AddDepartmentMemberAsync(id, request.UserId, request.Role ?? "Member");
-            return CreatedAtAction(nameof(GetDepartmentMembers), new { id }, member);
+            return Success(member);
         }
         catch (KeyNotFoundException ex)
         {
@@ -240,22 +242,21 @@ public class DepartmentsController : ApiBaseController
     /// <summary>
     /// Remove member from department
     /// </summary>
-    [HttpDelete("{id}/members/{memberId}")]
-    [ProducesResponseType(204)]
+    [HttpDelete("members/{memberId}")]
+    [ProducesResponseType(200)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> RemoveDepartmentMember(int id, int memberId)
+    public async Task<IActionResult> RemoveDepartmentMember(int memberId)
     {
         try
         {
-            var result = await _departmentService.RemoveDepartmentMemberAsync(id, memberId);
+            var result = await _departmentService.RemoveMemberByIdAsync(memberId);
             if (!result)
                 return NotFound(Error<TeamMemberDto>("Member not found", null, 404));
-            return NoContent();
+            return Success("Member removed successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while removing department member. DepartmentId: {DepartmentId}, MemberId: {MemberId}",
-                id, memberId);
+            _logger.LogError(ex, "Error occurred while removing department member. MemberId: {MemberId}", memberId);
             return Error<TeamMemberDto>("An error occurred while removing the department member", ex.Message);
         }
     }
