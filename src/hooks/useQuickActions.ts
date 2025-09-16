@@ -138,60 +138,13 @@ export const useQuickActions = (
 
       if (unassignedResponse.success && unassignedResponse.data) {
         setUnassignedProjects(unassignedResponse.data);
+      } else {
+        setUnassignedProjects([]);
       }
     } catch (err) {
-      // Fallback to mock data if API fails
-      const fallbackStats = {
-        pendingRequirements: 7,
-        unassignedTasks: 12,
-        unassignedProjects: 5,
-        pendingApprovals: 4,
-        overdueItems: 3,
-        newNotifications: 8,
-        activeProjects: 15,
-      };
-
-      const fallbackUnassignedProjects = [
-        {
-          id: 6,
-          applicationName: "Banking Portal Security",
-          projectOwner: "عمر بن أحمد الراشد",
-          owningUnit: "Information Technology Division",
-          priority: "high",
-        },
-        {
-          id: 7,
-          applicationName: "Mobile App Backend API",
-          projectOwner: "ريم محمد السليمان",
-          owningUnit: "Digital Services Division",
-          priority: "high",
-        },
-        {
-          id: 8,
-          applicationName: "Data Migration Tool",
-          projectOwner: "سامي عبدالله الغامدي",
-          owningUnit: "Data & Analytics Division",
-          priority: "medium",
-        },
-        {
-          id: 9,
-          applicationName: "Customer Portal Redesign",
-          projectOwner: "هدى يوسف المنصور",
-          owningUnit: "Digital Services Division",
-          priority: "medium",
-        },
-        {
-          id: 10,
-          applicationName: "Reporting Dashboard Analytics",
-          projectOwner: "فهد محمد الدوسري",
-          owningUnit: "Finance Division",
-          priority: "high",
-        },
-      ];
-
-      setStats(fallbackStats);
-      setUnassignedProjects(fallbackUnassignedProjects);
-      setError(null); // Clear error to show content
+      setError("Failed to load quick actions data");
+      setStats(null);
+      setUnassignedProjects([]);
     }
   }, []);
 

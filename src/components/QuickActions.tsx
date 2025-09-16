@@ -249,57 +249,50 @@ const QuickActions: React.FC<QuickActionsProps> = ({
 
           {/* Unassigned Projects Accordion */}
           {unassignedProjects.length > 0 && (
-            <Accordion variant="splitted">
+            <Accordion variant="light" className="px-0">
               <AccordionItem
                 key="unassigned-projects"
                 aria-label={t("quickActions.unassignedProjects") || "Unassigned Projects"}
                 title={
-                  <div className="flex items-center gap-3">
-                    <div className="text-warning">⚠️</div>
-                    <div>
-                      <p className="font-medium text-warning-800">
-                        {t("quickActions.unassignedProjects") || "Unassigned Projects"}
-                      </p>
-                      <p className="text-sm text-warning-700">
-                        {unassignedProjects.length} {t("quickActions.projectsNeedAnalysts") || "projects need analysts"}
-                      </p>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-warning rounded-full" />
+                      <div>
+                        <p className="font-medium text-foreground text-sm">
+                          {t("quickActions.unassignedProjects") || "Unassigned Projects"}
+                        </p>
+                      </div>
                     </div>
+                    <Chip size="sm" color="warning" variant="flat">
+                      {unassignedProjects.length}
+                    </Chip>
                   </div>
                 }
-                className="bg-warning-50 border-warning-200"
+                className="border border-warning-200 rounded-lg bg-warning-50/30"
               >
-                <div className="space-y-3">
+                <div className="space-y-2 pb-2">
                   {unassignedProjects.map((project) => (
                     <div
                       key={project.id}
-                      className="flex items-center justify-between p-3 bg-white rounded-lg border border-warning-200"
+                      className="flex items-center justify-between p-3 bg-white rounded-md border border-default-200 hover:border-warning-300 transition-colors"
                     >
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm text-foreground">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm text-foreground truncate">
                           {project.applicationName}
                         </h4>
-                        <p className="text-xs text-default-600">
-                          {t("projects.projectOwner")}: {project.projectOwner}
-                        </p>
-                        <p className="text-xs text-default-500">
+                        <p className="text-xs text-default-500 truncate">
                           {project.owningUnit}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Chip
-                          size="sm"
-                          color={project.priority === "high" ? "danger" : "warning"}
-                          variant="flat"
-                        >
-                          {project.priority}
-                        </Chip>
+                      <div className="flex items-center gap-2 ml-3">
                         <Button
                           size="sm"
                           color="warning"
-                          variant="solid"
+                          variant="flat"
+                          className="min-w-fit px-3"
                           onPress={() => onEditProject?.(project)}
                         >
-                          {t("quickActions.actNow") || "Act Now"}
+                          {t("quickActions.assign") || "Assign"}
                         </Button>
                       </div>
                     </div>

@@ -97,21 +97,9 @@ export default function ProjectsPage() {
     handlePageSizeChange,
   } = useProjects();
 
-  // Handle URL parameters for auto-editing
+  // Handle URL parameters for editing specific projects
   const [searchParams, setSearchParams] = useSearchParams();
-
-  // Auto-open edit modal if edit parameter is present
-  useEffect(() => {
-    const editProjectId = searchParams.get("edit");
-    if (editProjectId && projects.length > 0) {
-      const projectToEdit = projects.find(p => p.id === parseInt(editProjectId));
-      if (projectToEdit) {
-        handleEditProject(projectToEdit);
-        // Clear the URL parameter
-        setSearchParams({});
-      }
-    }
-  }, [searchParams, projects, setSearchParams]);
+  const editProjectId = searchParams.get("edit");
 
   // Phases hook for dynamic phase management
   const {
@@ -499,6 +487,40 @@ export default function ProjectsPage() {
     });
     onOpen();
   };
+
+  // Effect to handle auto-editing when edit parameter is present
+  useEffect(() => {
+    if (editProjectId) {
+      const fetchAndEditProject = async () => {
+        try {
+          // Fetch the specific project by ID
+          const response = await projectService.getProjectById(parseInt(editProjectId));
+          
+          if (response.success && response.data) {
+            handleEditProject(response.data);
+          }
+        } catch (error) {
+          // If direct fetch fails, try to find in current loaded projects
+          const projectToEdit = projects.find(
+            (p) => p.id === parseInt(editProjectId),
+          );
+
+          if (projectToEdit) {
+            handleEditProject(projectToEdit);
+          }
+        } finally {
+          // Clear the URL parameter after attempting to open modal
+          setSearchParams((params) => {
+            params.delete("edit");
+
+            return params;
+          });
+        }
+      };
+
+      fetchAndEditProject();
+    }
+  }, [editProjectId, setSearchParams]);
 
   const handleDeleteProject = (project: Project) => {
     setProjectToDelete(project);

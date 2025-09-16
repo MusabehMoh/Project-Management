@@ -8,8 +8,8 @@ import {
   mockOverdueItems,
   mockPendingApprovals,
   mockTeamMembers,
-  mockUnassignedProjects,
 } from "../data/mockQuickActions.js";
+import { mockProjects } from "../data/mockProjects.js";
 import { sendNotification } from "../signalR/notificationHub.js";
 
 export class QuickActionsController {
@@ -152,9 +152,21 @@ export class QuickActionsController {
     try {
       logger.info("Fetching unassigned projects");
 
+      // Filter projects that have no analysts assigned
+      const unassignedProjects = mockProjects
+        .filter(project => !project.analystIds || project.analystIds.length === 0)
+        .map(project => ({
+          id: project.id,
+          applicationName: project.applicationName,
+          projectOwner: project.projectOwner,
+          owningUnit: project.owningUnit,
+          priority: project.priority,
+          status: project.status,
+        }));
+
       res.status(200).json({
         success: true,
-        data: mockUnassignedProjects,
+        data: unassignedProjects,
       });
     } catch (error) {
       logger.error("Error fetching unassigned projects:", error);
