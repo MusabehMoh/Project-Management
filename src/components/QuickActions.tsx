@@ -21,13 +21,26 @@ import { useQuickActions } from "@/hooks/useQuickActions";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
 
-// Custom Alert Component with red styling
+// Custom Alert Component with dynamic color styling
 const CustomAlert = React.forwardRef(
   (
     {title, children, variant = "faded", color = "danger", className, classNames = {}, direction, ...props},
     ref,
   ) => {
     const isRTL = direction === "rtl";
+    
+    // Dynamic border color based on the color prop
+    const getBorderColor = (color: string) => {
+      switch (color) {
+        case "success":
+          return "before:bg-success";
+        case "warning":
+          return "before:bg-warning";
+        case "danger":
+        default:
+          return "before:bg-danger";
+      }
+    };
     
     return (
       <Alert
@@ -40,7 +53,7 @@ const CustomAlert = React.forwardRef(
             "relative before:content-[''] before:absolute before:z-10",
             isRTL ? "before:right-0 before:top-[-1px] before:bottom-[-1px] before:w-1" : "before:left-0 before:top-[-1px] before:bottom-[-1px] before:w-1",
             isRTL ? "rounded-r-none border-r-0" : "rounded-l-none border-l-0",
-            "before:bg-danger",
+            getBorderColor(color),
             classNames.base,
             className,
           ].filter(Boolean).join(" "),
