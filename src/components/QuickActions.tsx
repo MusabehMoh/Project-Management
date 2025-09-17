@@ -475,7 +475,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                             <Divider className="bg-default-200 my-3" />
                             <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
                               <Button
-                                className="bg-success-50 text-success-700 font-medium border-1 border-success-200 shadow-small"
+                                className="bg-background text-default-700 font-medium border-1 shadow-small"
                                 size="sm"
                                 variant="bordered"
                                 onPress={() => {
