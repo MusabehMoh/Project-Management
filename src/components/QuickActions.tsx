@@ -94,6 +94,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   const {
     unassignedProjects,
     projectsWithoutRequirements,
+    availableMembers,
     loading,
     refreshing,
     error,
@@ -414,6 +415,62 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                                 }}
                               >
                                 {t("requirements.addRequirement") || "Add Requirements"}
+                              </Button>
+                            </div>
+                          </CustomAlert>
+                        ))}
+                      </div>
+                    </ScrollShadow>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            )}
+
+            {/* Available Members Accordion */}
+            {availableMembers.length > 0 && (
+              <div className="space-y-4">
+                <Accordion selectionMode="single" variant="splitted">
+                  <AccordionItem
+                    key="available-members"
+                    title={
+                      <div className="flex items-center justify-between w-full">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {t("quickActions.availableMembers") || "Available Team Members"}
+                        </h3>
+                        <Chip size="sm" variant="flat" className="bg-success-50 text-success-600">
+                          {availableMembers.length}
+                        </Chip>
+                      </div>
+                    }
+                    className="border border-default-200 rounded-lg"
+                  >
+                    <ScrollShadow 
+                      className="max-h-64" 
+                      hideScrollBar={false}
+                      size={20}
+                    >
+                      <div className="space-y-3 pr-2">
+                        {availableMembers.map((member) => (
+                          <CustomAlert
+                            key={member.userId}
+                            title={member.fullName}
+                            description={`${member.department} • ${member.gradeName} • ${member.totalRequirements} requirements`}
+                            direction={direction}
+                            variant="faded"
+                            color="success"
+                          >
+                            <Divider className="bg-default-200 my-3" />
+                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                              <Button
+                                className="bg-success-50 text-success-700 font-medium border-1 border-success-200 shadow-small"
+                                size="sm"
+                                variant="bordered"
+                                onPress={() => {
+                                  // Navigate to team workload page or project assignment
+                                  window.location.href = `/team-workload`;
+                                }}
+                              >
+                                {t("common.viewDetails") || "View Details"}
                               </Button>
                             </div>
                           </CustomAlert>

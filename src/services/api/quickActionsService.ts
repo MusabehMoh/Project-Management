@@ -121,6 +121,13 @@ export class QuickActionsService {
   }
 
   /**
+   * Get available team members
+   */
+  async getAvailableMembers(): Promise<QuickActionApiResponse<any[]>> {
+    return apiClient.get<any[]>(`${ENDPOINTS.QUICK_ACTIONS}/available-members`);
+  }
+
+  /**
    * Assign analyst to project
    */
   async assignAnalyst(

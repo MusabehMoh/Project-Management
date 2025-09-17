@@ -23,7 +23,8 @@ export type QuickActionType =
   | "GENERATE_REPORT"
   | "MANAGE_TEAM"
   | "VIEW_ANALYTICS"
-  | "ADD_REQUIREMENTS";
+  | "ADD_REQUIREMENTS"
+  | "ASSIGN_AVAILABLE_MEMBERS";
 
 export interface QuickActionStats {
   pendingRequirements: number;
@@ -34,6 +35,7 @@ export interface QuickActionStats {
   newNotifications: number;
   activeProjects: number;
   projectsWithoutRequirements: number;
+  availableMembers: number;
 }
 
 export interface QuickActionData {
