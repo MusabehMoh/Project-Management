@@ -77,13 +77,20 @@ export default function AnalystManagerDashboard() {
       {/* Quick Stats */}
       <ModernQuickStats />
 
-      {/* Quick Actions Banner */}
-      <QuickActions
-        key={refreshKey}
-        autoRefresh={true}
-        className="mb-6"
-        onAssignAnalyst={handleAssignAnalyst}
-      />
+      {/* Quick Actions and Pending Requirements Section */}
+      <div className="flex flex-col lg:flex-row gap-6 mb-6">
+        <div className="lg:w-[70%] space-y-4">
+          <QuickActions
+            key={refreshKey}
+            autoRefresh={true}
+            onAssignAnalyst={handleAssignAnalyst}
+          />
+        </div>
+        
+        <div className="lg:w-[30%] space-y-4">
+          <PendingRequirements />
+        </div>
+      </div>
 
       {/* Team Workload Performance and Calendar */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -126,11 +133,6 @@ export default function AnalystManagerDashboard() {
             {/* Requirement Overview Section */}
             <div className="space-y-4">
               <RequirementOverview useMockData={true} />
-            </div>
-
-            {/* Pending Requirements Section */}
-            <div className="space-y-4">
-              <PendingRequirements />
             </div>
           </div>
         </div>
