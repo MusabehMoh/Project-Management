@@ -8,6 +8,7 @@ import { Alert } from "@heroui/alert";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Accordion, AccordionItem } from "@heroui/accordion";
+import { ScrollShadow } from "@heroui/scroll-shadow";
 import { addToast } from "@heroui/toast";
 import {
   RefreshCw,
@@ -332,31 +333,37 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                     }
                     className="border border-default-200 rounded-lg"
                   >
-                    <div className="max-h-64 overflow-y-auto scrollbar-hide space-y-3 pr-2">
-                      {unassignedProjects.map((project) => (
-                        <CustomAlert
-                          key={project.id}
-                          title={project.applicationName}
-                          description={project.owningUnit}
-                          direction={direction}
-                        >
-                          <Divider className="bg-default-200 my-3" />
-                          <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
-                            <Button
-                              className="bg-background text-default-700 font-medium border-1 shadow-small"
-                              size="sm"
-                              variant="bordered"
-                              onPress={() => {
-                                setSelectedProject(project);
-                                setIsModalOpen(true);
-                              }}
-                            >
-                              {t("quickActions.assign") || "Assign"}
-                            </Button>
-                          </div>
-                        </CustomAlert>
-                      ))}
-                    </div>
+                    <ScrollShadow 
+                      className="max-h-64" 
+                      hideScrollBar={false}
+                      size={20}
+                    >
+                      <div className="space-y-3 pr-2">
+                        {unassignedProjects.map((project) => (
+                          <CustomAlert
+                            key={project.id}
+                            title={project.applicationName}
+                            description={project.owningUnit}
+                            direction={direction}
+                          >
+                            <Divider className="bg-default-200 my-3" />
+                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                              <Button
+                                className="bg-background text-default-700 font-medium border-1 shadow-small"
+                                size="sm"
+                                variant="bordered"
+                                onPress={() => {
+                                  setSelectedProject(project);
+                                  setIsModalOpen(true);
+                                }}
+                              >
+                                {t("quickActions.assign") || "Assign"}
+                              </Button>
+                            </div>
+                          </CustomAlert>
+                        ))}
+                      </div>
+                    </ScrollShadow>
                   </AccordionItem>
                 </Accordion>
               </div>
@@ -373,40 +380,46 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                         <h3 className="text-lg font-semibold text-foreground">
                           {t("quickActions.projectsWithoutRequirements") || "Projects Without Requirements"}
                         </h3>
-                        <Chip size="sm" variant="flat" className="bg-warning-50 text-warning-600">
+                        <Chip size="sm" variant="flat" className="bg-danger-50 text-danger-600">
                           {projectsWithoutRequirements.length}
                         </Chip>
                       </div>
                     }
                     className="border border-default-200 rounded-lg"
                   >
-                    <div className="max-h-64 overflow-y-auto scrollbar-hide space-y-3 pr-2">
-                      {projectsWithoutRequirements.map((project) => (
-                        <CustomAlert
-                          key={project.id}
-                          title={project.applicationName}
-                          description={`${project.projectOwner} • ${project.owningUnit}`}
-                          direction={direction}
-                          variant="faded"
-                          color="warning"
-                        >
-                          <Divider className="bg-default-200 my-3" />
-                          <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
-                            <Button
-                              className="bg-warning-50 text-warning-700 font-medium border-1 border-warning-200 shadow-small"
-                              size="sm"
-                              variant="bordered"
-                              onPress={() => {
-                                // Navigate to project requirements page to add requirements
-                                window.location.href = `/requirements/${project.id}`;
-                              }}
-                            >
-                              {t("requirements.addRequirement") || "Add Requirements"}
-                            </Button>
-                          </div>
-                        </CustomAlert>
-                      ))}
-                    </div>
+                    <ScrollShadow 
+                      className="max-h-64" 
+                      hideScrollBar={false}
+                      size={20}
+                    >
+                      <div className="space-y-3 pr-2">
+                        {projectsWithoutRequirements.map((project) => (
+                          <CustomAlert
+                            key={project.id}
+                            title={project.applicationName}
+                            description={`${project.projectOwner} • ${project.owningUnit}`}
+                            direction={direction}
+                            variant="faded"
+                            color="danger"
+                          >
+                            <Divider className="bg-default-200 my-3" />
+                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                              <Button
+                                className="bg-background text-default-700 font-medium border-1 shadow-small"
+                                size="sm"
+                                variant="bordered"
+                                onPress={() => {
+                                  // Navigate to project requirements page to add requirements
+                                  window.location.href = `/requirements/${project.id}`;
+                                }}
+                              >
+                                {t("requirements.addRequirement") || "Add Requirements"}
+                              </Button>
+                            </div>
+                          </CustomAlert>
+                        ))}
+                      </div>
+                    </ScrollShadow>
                   </AccordionItem>
                 </Accordion>
               </div>
