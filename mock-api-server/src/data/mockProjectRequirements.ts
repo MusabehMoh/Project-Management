@@ -876,3 +876,75 @@ export const additionalBusyRequirements: ProjectRequirement[] = [
 
 // Combine all requirements
 mockProjectRequirements.push(...additionalBusyRequirements);
+
+// Add additional draft requirements for better testing
+const additionalDraftRequirements = [
+  {
+    id: 100,
+    projectId: 1,
+    name: "Social Media Integration",
+    description: "Integrate social media login and sharing capabilities for enhanced user engagement.",
+    priority: "medium" as const,
+    type: "new" as const,
+    expectedCompletionDate: "2025-06-15",
+    status: "draft" as const,
+    createdAt: "2025-02-01T09:00:00Z",
+    updatedAt: "2025-02-01T09:00:00Z",
+    createdBy: 8, // Sarah Johnson
+    assignedAnalyst: 4,
+    project: {
+      id: 1,
+      applicationName: "Customer Portal System",
+      projectOwner: "أحمد محمد العتيبي",
+      owningUnit: "Information Technology Division",
+      analysts: "خالد الأحمد, منى السالم",
+      analystIds: [4, 5],
+    },
+  },
+  {
+    id: 101,
+    projectId: 2,
+    name: "Fraud Detection System",
+    description: "Implement AI-powered fraud detection and prevention system for banking transactions.",
+    priority: "high" as const,
+    type: "new" as const,
+    expectedCompletionDate: "2025-07-01",
+    status: "draft" as const,
+    createdAt: "2025-02-02T10:30:00Z",
+    updatedAt: "2025-02-02T10:30:00Z",
+    createdBy: 11, // Jennifer Smith
+    assignedAnalyst: 6,
+    project: {
+      id: 2,
+      applicationName: "Mobile Banking App",
+      projectOwner: "محمد أحمد الخالد",
+      owningUnit: "Finance and Budgeting",
+      analysts: "ياسر المحمد, نور الدين",
+      analystIds: [6, 4],
+    },
+  },
+  {
+    id: 102,
+    projectId: 3,
+    name: "Inventory Management Module",
+    description: "Enhanced inventory tracking and management module with real-time updates.",
+    priority: "medium" as const,
+    type: "change request" as const,
+    expectedCompletionDate: "2025-06-30",
+    status: "draft" as const,
+    createdAt: "2025-02-03T14:15:00Z",
+    updatedAt: "2025-02-03T14:15:00Z",
+    createdBy: 5, // منى السالم
+    assignedAnalyst: 5,
+    project: {
+      id: 3,
+      applicationName: "ERP System Upgrade",
+      projectOwner: "خالد سعد المطيري",
+      owningUnit: "Operations and Strategic Planning",
+      analysts: "محمد التميمي, سعاد العتيبي",
+      analystIds: [5, 6],
+    },
+  },
+];
+
+mockProjectRequirements.push(...additionalDraftRequirements);

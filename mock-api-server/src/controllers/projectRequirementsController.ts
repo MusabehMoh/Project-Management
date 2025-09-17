@@ -830,6 +830,87 @@ export class ProjectRequirementsController {
   }
 
   /**
+   * Get all requirements with status "draft"
+   */
+  async getDraftRequirements(req: Request, res: Response) {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        priority,
+        search,
+        projectId: qProjectId,
+      } = req.query;
+
+      // Filter requirements with status "draft"
+      let filteredRequirements = mockProjectRequirements.filter(
+        (req) => req.status === "draft",
+      );
+
+      // Apply additional filters
+      if (qProjectId) {
+        const pid = Number(qProjectId);
+        filteredRequirements = filteredRequirements.filter(
+          (r) =>
+            (r as any).projectId === pid || (r.project && r.project.id === pid),
+        );
+      }
+
+      if (priority) {
+        filteredRequirements = filteredRequirements.filter(
+          (req) => req.priority === priority,
+        );
+      }
+
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        filteredRequirements = filteredRequirements.filter(
+          (req) =>
+            req.name.toLowerCase().includes(searchTerm) ||
+            req.description.toLowerCase().includes(searchTerm),
+        );
+      }
+
+      // Sort requirements by creation date (newest first)
+      filteredRequirements.sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+
+      // Apply pagination
+      const startIndex = ((page as number) - 1) * (limit as number);
+      const endIndex = startIndex + (limit as number);
+      const paginatedRequirements = filteredRequirements.slice(
+        startIndex,
+        endIndex,
+      );
+
+      logger.info(
+        `Retrieved ${paginatedRequirements.length} draft requirements`,
+      );
+
+      res.json({
+        success: true,
+        data: paginatedRequirements,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: filteredRequirements.length,
+          totalPages: Math.ceil(
+            filteredRequirements.length / (limit as number),
+          ),
+        },
+      });
+    } catch (error) {
+      logger.error("Error getting draft requirements:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  /**
    * Upload attachment for a requirement (mock implementation)
    */
   async uploadAttachment(req: Request, res: Response) {

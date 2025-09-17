@@ -13,6 +13,7 @@ import ProjectPipeline from "@/components/ProjectPipeline";
 import Calendar from "@/components/calendar";
 import ModernQuickStats from "@/components/ModernQuickStats";
 import QuickActions from "@/components/QuickActions";
+import PendingRequirements from "@/components/PendingRequirements";
 
 export default function AnalystManagerDashboard() {
   const { t, language } = useLanguage();
@@ -116,6 +117,11 @@ export default function AnalystManagerDashboard() {
             {/* Requirement Overview Section */}
             <div className="space-y-4">
               <RequirementOverview useMockData={true} />
+            </div>
+
+            {/* Pending Requirements Section */}
+            <div className="space-y-4">
+              <PendingRequirements />
             </div>
           </div>
         </div>

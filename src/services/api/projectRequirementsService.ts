@@ -23,6 +23,7 @@ const ENDPOINTS = {
   REQUIREMENT_STATS: (projectId: number) =>
     `/project-requirements/projects/${projectId}/stats`,
   DEVELOPMENT_REQUIREMENTS: "/project-requirements/development-requirements",
+  DRAFT_REQUIREMENTS: "/project-requirements/draft-requirements",
   CREATE_REQUIREMENT_TASK: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/tasks`,
   UPLOAD_ATTACHMENT: (requirementId: number) =>
@@ -244,7 +245,51 @@ class ProjectRequirementsService {
   }
 
   /**
-   * Create a task for a requirement
+   * Get all requirements with status "draft"
+   */
+  async getDraftRequirements(
+    filters?: ProjectRequirementFilters & {
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{
+    data: ProjectRequirement[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, String(value));
+        }
+      });
+    }
+
+    const endpoint = params.toString()
+      ? `${ENDPOINTS.DRAFT_REQUIREMENTS}?${params.toString()}`
+      : ENDPOINTS.DRAFT_REQUIREMENTS;
+
+    const result = await apiClient.get<ProjectRequirement[]>(endpoint);
+
+    return {
+      data: result.data ?? [],
+      pagination: result.pagination ?? {
+        page: (filters as any)?.page ?? 1,
+        limit: (filters as any)?.limit ?? 20,
+        total: (result.data ?? []).length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  /**
+   * Create task for a requirement
    */
   async createRequirementTask(
     requirementId: number,
