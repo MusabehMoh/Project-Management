@@ -114,6 +114,13 @@ export class QuickActionsService {
   }
 
   /**
+   * Get projects without requirements
+   */
+  async getProjectsWithoutRequirements(): Promise<QuickActionApiResponse<any[]>> {
+    return apiClient.get<any[]>(`${ENDPOINTS.QUICK_ACTIONS}/projects-without-requirements`);
+  }
+
+  /**
    * Assign analyst to project
    */
   async assignAnalyst(

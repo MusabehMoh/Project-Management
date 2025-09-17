@@ -52,9 +52,32 @@ export class QuickActionsController {
     try {
       logger.info("Fetching quick action statistics");
 
+      // Import here to avoid circular dependencies
+      const { mockProjectRequirements } = await import("../data/mockProjectRequirements.js");
+
+      // Calculate projects without requirements dynamically
+      const projectsWithRequirementCounts = mockProjects.map(project => {
+        const projectRequirements = mockProjectRequirements.filter(
+          req => req.projectId === project.id
+        );
+        return {
+          projectId: project.id,
+          requirementsCount: projectRequirements.length,
+        };
+      });
+
+      const projectsWithoutRequirements = projectsWithRequirementCounts
+        .filter(project => project.requirementsCount === 0).length;
+
+      // Enhanced stats with dynamic calculation
+      const enhancedStats = {
+        ...mockQuickActionStats,
+        projectsWithoutRequirements,
+      };
+
       res.status(200).json({
         success: true,
-        data: mockQuickActionStats,
+        data: enhancedStats,
       });
     } catch (error) {
       logger.error("Error fetching quick action stats:", error);
@@ -175,6 +198,59 @@ export class QuickActionsController {
         error: {
           message: "Failed to fetch unassigned projects",
           code: "UNASSIGNED_PROJECTS_ERROR",
+        },
+      });
+    }
+  }
+
+  /**
+   * Get projects without requirements (requirement count = 0)
+   */
+  async getProjectsWithoutRequirements(req: Request, res: Response) {
+    await mockDelayHandler();
+
+    try {
+      logger.info("Fetching projects without requirements");
+
+      // Import here to avoid circular dependencies
+      const { mockProjectRequirements } = await import("../data/mockProjectRequirements.js");
+
+      // Get all projects and calculate their requirements count
+      const projectsWithRequirementCounts = mockProjects.map(project => {
+        const projectRequirements = mockProjectRequirements.filter(
+          req => req.projectId === project.id
+        );
+        
+        return {
+          id: project.id,
+          applicationName: project.applicationName,
+          projectOwner: project.projectOwner,
+          owningUnit: project.owningUnit,
+          status: project.status,
+          requirementsCount: projectRequirements.length,
+          completedRequirements: projectRequirements.filter(req => req.status === "completed").length,
+          lastActivity: project.updatedAt || new Date().toISOString(),
+          description: project.description,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+        };
+      });
+
+      // Filter projects that have 0 requirements
+      const projectsWithoutRequirements = projectsWithRequirementCounts
+        .filter(project => project.requirementsCount === 0);
+
+      res.status(200).json({
+        success: true,
+        data: projectsWithoutRequirements,
+      });
+    } catch (error) {
+      logger.error("Error fetching projects without requirements:", error);
+      res.status(500).json({
+        success: false,
+        error: {
+          message: "Failed to fetch projects without requirements",
+          code: "PROJECTS_WITHOUT_REQUIREMENTS_ERROR",
         },
       });
     }

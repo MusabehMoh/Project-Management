@@ -23,6 +23,9 @@ router.get("/team-members", quickActionsController.getTeamMembers.bind(quickActi
 // Get unassigned projects
 router.get("/unassigned-projects", quickActionsController.getUnassignedProjects.bind(quickActionsController));
 
+// Get projects without requirements
+router.get("/projects-without-requirements", quickActionsController.getProjectsWithoutRequirements.bind(quickActionsController));
+
 // Assign analyst to project
 router.post("/assign-analyst", quickActionsController.assignAnalyst.bind(quickActionsController));
 

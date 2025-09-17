@@ -92,6 +92,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   });
   const {
     unassignedProjects,
+    projectsWithoutRequirements,
     loading,
     refreshing,
     error,
@@ -351,6 +352,56 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                               }}
                             >
                               {t("quickActions.assign") || "Assign"}
+                            </Button>
+                          </div>
+                        </CustomAlert>
+                      ))}
+                    </div>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            )}
+
+            {/* Projects Without Requirements Accordion */}
+            {projectsWithoutRequirements.length > 0 && (
+              <div className="space-y-4">
+                <Accordion selectionMode="single" variant="splitted">
+                  <AccordionItem
+                    key="projects-without-requirements"
+                    title={
+                      <div className="flex items-center justify-between w-full">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {t("quickActions.projectsWithoutRequirements") || "Projects Without Requirements"}
+                        </h3>
+                        <Chip size="sm" variant="flat" className="bg-warning-50 text-warning-600">
+                          {projectsWithoutRequirements.length}
+                        </Chip>
+                      </div>
+                    }
+                    className="border border-default-200 rounded-lg"
+                  >
+                    <div className="max-h-64 overflow-y-auto scrollbar-hide space-y-3 pr-2">
+                      {projectsWithoutRequirements.map((project) => (
+                        <CustomAlert
+                          key={project.id}
+                          title={project.applicationName}
+                          description={`${project.projectOwner} • ${project.owningUnit}`}
+                          direction={direction}
+                          variant="faded"
+                          color="warning"
+                        >
+                          <Divider className="bg-default-200 my-3" />
+                          <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                            <Button
+                              className="bg-warning-50 text-warning-700 font-medium border-1 border-warning-200 shadow-small"
+                              size="sm"
+                              variant="bordered"
+                              onPress={() => {
+                                // Navigate to project requirements page to add requirements
+                                window.location.href = `/requirements/${project.id}`;
+                              }}
+                            >
+                              {t("requirements.addRequirement") || "Add Requirements"}
                             </Button>
                           </div>
                         </CustomAlert>
