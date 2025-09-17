@@ -349,7 +349,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                   >
                     <ScrollShadow 
                       className="max-h-64" 
-                      hideScrollBar={false}
+                      hideScrollBar={true}
                       size={20}
                     >
                       <div className="space-y-3 pr-2">
@@ -403,7 +403,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                   >
                     <ScrollShadow 
                       className="max-h-64" 
-                      hideScrollBar={false}
+                      hideScrollBar={true}
                       size={20}
                     >
                       <div className="space-y-3 pr-2">
@@ -459,7 +459,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                   >
                     <ScrollShadow 
                       className="max-h-64" 
-                      hideScrollBar={false}
+                      hideScrollBar={true}
                       size={20}
                     >
                       <div className="space-y-3 pr-2">
