@@ -326,9 +326,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({
 
         <Divider className="bg-default-200" />
 
-        <CardBody className="p-6">
+        <CardBody className="p-6 overflow-hidden">
           {/* Action Buttons and Unassigned Projects */}
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-hidden">
             {/* Unassigned Projects Accordion */}
             {unassignedProjects.length > 0 && (
               <div className="space-y-4">
