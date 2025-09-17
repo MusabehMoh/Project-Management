@@ -69,21 +69,7 @@ public class ApiResponse<T>
     public string? Error { get; set; }
     public PaginationInfo? Pagination { get; set; }
 }
-
-// Action DTOs
-public class ActionDto
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public string Category { get; set; } = string.Empty;
-    public string Resource { get; set; } = string.Empty;
-    public string Action { get; set; } = string.Empty;
-    public bool IsActive { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-}
-
+ 
 public class CreateActionDto
 {
     public string Name { get; set; } = string.Empty;
@@ -114,16 +100,7 @@ public class EmployeeDto
     public string FullName { get; set; } = string.Empty;
     public int StatusId { get; set; }
 }
-
-public class RoleDto
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public bool Active { get; set; }
-    public int RoleOrder { get; set; }
-    public List<ActionDto>? Actions { get; set; }
-}
-
+ 
 public class CurrentUserDto
 {
     public int Id { get; set; }

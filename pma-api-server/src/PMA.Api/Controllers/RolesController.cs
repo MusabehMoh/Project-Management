@@ -20,7 +20,7 @@ public class RolesController : ApiBaseController
     /// Get all roles with pagination and filtering
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(IEnumerable<RoleDto>), 200)]
     public async Task<IActionResult> GetRoles(
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
@@ -35,7 +35,7 @@ public class RolesController : ApiBaseController
         }
         catch (Exception ex)
         {
-            return Error<IEnumerable<Role>>("An error occurred while retrieving roles", ex.Message);
+            return Error<IEnumerable<RoleDto>>("An error occurred while retrieving roles", ex.Message);
         }
     }
 
@@ -43,7 +43,7 @@ public class RolesController : ApiBaseController
     /// Get role by ID
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(RoleDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetRoleById(int id)
     {
@@ -51,12 +51,12 @@ public class RolesController : ApiBaseController
         {
             var role = await _roleService.GetRoleByIdAsync(id);
             if (role == null)
-                return NotFound(Error<Role>("Role not found", null, 404));
+                return NotFound(Error<RoleDto>("Role not found", null, 404));
             return Success(role);
         }
         catch (Exception ex)
         {
-            return Error<Role>("An error occurred while retrieving the role", ex.Message);
+            return Error<RoleDto>("An error occurred while retrieving the role", ex.Message);
         }
     }
 
@@ -64,20 +64,21 @@ public class RolesController : ApiBaseController
     /// Create a new role
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(Role), 201)]
+    [ProducesResponseType(typeof(RoleDto), 201)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> CreateRole([FromBody] Role role)
+    public async Task<IActionResult> CreateRole([FromBody] RoleCreateDto roleDto)
     {
         try
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var createdRole = await _roleService.CreateRoleAsync(role);
+            var createdRole = await _roleService.CreateRoleAsync(roleDto);
+            // Return with the created role and specify the id explicitly
             return CreatedAtAction(nameof(GetRoleById), new { id = createdRole.Id }, createdRole);
         }
         catch (Exception ex)
         {
-            return Error<Role>("An error occurred while creating the role", ex.Message);
+            return Error<RoleDto>("An error occurred while creating the role", ex.Message);
         }
     }
 
@@ -85,25 +86,25 @@ public class RolesController : ApiBaseController
     /// Update an existing role
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(Role), 200)]
+    [ProducesResponseType(typeof(RoleDto), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> UpdateRole(int id, [FromBody] Role role)
+    public async Task<IActionResult> UpdateRole(int id, [FromBody] RoleUpdateDto roleDto)
     {
         try
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            if (id != role.Id)
-                return BadRequest(Error<Role>("ID mismatch", null, 400));
-            var updatedRole = await _roleService.UpdateRoleAsync(role);
+            if (id != roleDto.Id)
+                return BadRequest(Error<RoleDto>("ID mismatch", null, 400));
+            var updatedRole = await _roleService.UpdateRoleAsync(roleDto);
             if (updatedRole == null)
-                return NotFound(Error<Role>("Role not found", null, 404));
+                return NotFound(Error<RoleDto>("Role not found", null, 404));
             return Success(updatedRole);
         }
         catch (Exception ex)
         {
-            return Error<Role>("An error occurred while updating the role", ex.Message);
+            return Error<RoleDto>("An error occurred while updating the role", ex.Message);
         }
     }
 
@@ -119,12 +120,12 @@ public class RolesController : ApiBaseController
         {
             var result = await _roleService.DeleteRoleAsync(id);
             if (!result)
-                return NotFound(Error<Role>("Role not found", null, 404));
+                return NotFound(Error<RoleDto>("Role not found", null, 404));
             return NoContent();
         }
         catch (Exception ex)
         {
-            return Error<Role>("An error occurred while deleting the role", ex.Message);
+            return Error<RoleDto>("An error occurred while deleting the role", ex.Message);
         }
     }
 }

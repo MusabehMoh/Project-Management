@@ -1,5 +1,7 @@
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
+using PMA.Core.DTOs;
+using System.Linq;
 using Task = System.Threading.Tasks.Task;
 
 namespace PMA.Core.Services;
@@ -7,39 +9,54 @@ namespace PMA.Core.Services;
 public class RoleService : IRoleService
 {
     private readonly IRoleRepository _roleRepository;
+    private readonly IMappingService _mappingService;
 
-    public RoleService(IRoleRepository roleRepository)
+    public RoleService(IRoleRepository roleRepository, IMappingService mappingService)
     {
         _roleRepository = roleRepository;
+        _mappingService = mappingService;
     }
 
-    public async System.Threading.Tasks.Task<IEnumerable<Role>> GetAllRolesAsync()
+    public async System.Threading.Tasks.Task<RoleDto?> GetRoleByIdAsync(int id)
     {
-        return await _roleRepository.GetAllAsync();
+        var role = await _roleRepository.GetByIdAsync(id);
+        return role != null ? _mappingService.MapToRoleDto(role) : null;
     }
 
-    public async System.Threading.Tasks.Task<Role?> GetRoleByIdAsync(int id)
+    public async System.Threading.Tasks.Task<RoleDto> CreateRoleAsync(RoleCreateDto roleDto)
     {
-        return await _roleRepository.GetByIdAsync(id);
+        // Map DTO to entity
+        var role = _mappingService.MapToRole(roleDto);
+        
+        // Save to database
+        var createdRole = await _roleRepository.AddAsync(role);
+        
+        // Map back to DTO for response
+        return _mappingService.MapToRoleDto(createdRole);
     }
 
-    public async System.Threading.Tasks.Task<Role> CreateRoleAsync(Role role)
+    public async Task<(IEnumerable<RoleDto> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null)
     {
-        role.CreatedAt = DateTime.UtcNow;
-        role.UpdatedAt = DateTime.UtcNow;
-        return await _roleRepository.AddAsync(role);
+        var (roles, totalCount) = await _roleRepository.GetRolesAsync(page, limit, isActive);
+        var roleDtos = roles.Select(r => _mappingService.MapToRoleDto(r));
+        return (roleDtos, totalCount);
     }
 
-    public async Task<(IEnumerable<Role> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null)
+    public async Task<RoleDto> UpdateRoleAsync(RoleUpdateDto roleDto)
     {
-        return await _roleRepository.GetRolesAsync(page, limit, isActive);
-    }
-
-    public async Task<Role> UpdateRoleAsync(Role role)
-    {
-        role.UpdatedAt = DateTime.UtcNow;
+        // Get existing role
+        var role = await _roleRepository.GetByIdAsync(roleDto.Id);
+        if (role == null)
+            return null!; // Using null-forgiving operator as we're checking for null in the controller
+            
+        // Update the entity with DTO values
+        _mappingService.UpdateRoleFromDto(role, roleDto);
+        
+        // Save changes
         await _roleRepository.UpdateAsync(role);
-        return role;
+        
+        // Return updated DTO
+        return _mappingService.MapToRoleDto(role);
     }
 
     public async Task<bool> DeleteRoleAsync(int id)
@@ -53,14 +70,16 @@ public class RoleService : IRoleService
         return false;
     }
 
-    public async System.Threading.Tasks.Task<IEnumerable<Role>> GetActiveRolesAsync()
+    public async System.Threading.Tasks.Task<IEnumerable<RoleDto>> GetActiveRolesAsync()
     {
-        return await _roleRepository.GetActiveRolesAsync();
+        var roles = await _roleRepository.GetActiveRolesAsync();
+        return roles.Select(r => _mappingService.MapToRoleDto(r));
     }
 
-    public async System.Threading.Tasks.Task<Role?> GetRoleWithActionsAsync(int id)
+    public async System.Threading.Tasks.Task<RoleDto?> GetRoleWithActionsAsync(int id)
     {
-        return await _roleRepository.GetRoleWithActionsAsync(id);
+        var role = await _roleRepository.GetRoleWithActionsAsync(id);
+        return role != null ? _mappingService.MapToRoleDto(role) : null;
     }
 }
 
