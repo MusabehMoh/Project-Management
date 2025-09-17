@@ -186,10 +186,10 @@ export default function ProjectRequirementsPage() {
           // Flash effect
           if (highlightedRequirement === requirementId) {
             element.classList.add('highlight-flash');
+            // Let the CSS animation complete naturally, then clean up
             setTimeout(() => {
-              element.classList.remove('highlight-flash');
               setHighlightedRequirement(null);
-            }, 3000); // Remove highlight after 3 seconds
+            }, 4100); // Slightly after animation completes to ensure clean state
           }
         }
       }, 500);

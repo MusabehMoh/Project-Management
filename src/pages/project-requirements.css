@@ -20,25 +20,31 @@
 
 /* Highlight flash animation for draft requirements */
 .highlight-flash {
-  animation: flashHighlight 3s ease-in-out;
-  background: linear-gradient(90deg, 
-    rgba(255, 165, 0, 0.3) 0%, 
-    rgba(255, 165, 0, 0.1) 50%, 
-    rgba(255, 165, 0, 0.3) 100%);
-  background-size: 200% 100%;
+  animation: calmHighlight 4s ease-in-out forwards;
+  background: rgba(59, 130, 246, 0.15);
+  border-left: 3px solid rgba(59, 130, 246, 0.5);
+  transition: all 0.3s ease;
 }
 
-@keyframes flashHighlight {
+@keyframes calmHighlight {
   0% {
-    background-position: -200% 0;
-    box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
+    background: rgba(59, 130, 246, 0.25);
+    border-left-color: rgba(59, 130, 246, 0.7);
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.3);
   }
-  50% {
-    background-position: 200% 0;
-    box-shadow: 0 0 30px rgba(255, 165, 0, 0.7);
+  20% {
+    background: rgba(59, 130, 246, 0.2);
+    border-left-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+  }
+  80% {
+    background: rgba(59, 130, 246, 0.1);
+    border-left-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 4px rgba(59, 130, 246, 0.1);
   }
   100% {
-    background-position: -200% 0;
-    box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+    background: transparent;
+    border-left-color: transparent;
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
   }
 }
