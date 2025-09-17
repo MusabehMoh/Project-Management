@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -16,10 +18,48 @@ import {
   X,
 } from "lucide-react";
 
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuickActions } from "@/hooks/useQuickActions";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
+
+// Animated Counter Component
+const AnimatedCounter = ({ value, duration = 1000 }: { value: number; duration?: number }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (value === 0) {
+      setDisplayValue(0);
+      return;
+    }
+
+    let startTimestamp: number | null = null;
+    const startValue = displayValue;
+    const endValue = value;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+      const currentValue = Math.floor(startValue + (endValue - startValue) * easeOutCubic);
+      
+      setDisplayValue(currentValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+
+    requestAnimationFrame(step);
+  }, [value, duration, displayValue]);
+
+  return (
+    <span className="tabular-nums">
+      {displayValue}
+    </span>
+  );
+};
 
 // Custom Alert Component with dynamic color styling
 const CustomAlert = React.forwardRef(
@@ -117,6 +157,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({
     autoRefresh: false, // Disable auto-refresh to prevent constant loading
     refreshInterval: 30000,
   });
+
+  // Calculate total count of all actions
+  const totalActionsCount = unassignedProjects.length + projectsWithoutRequirements.length + availableMembers.length;
 
   if (loading) {
     return (
@@ -299,12 +342,34 @@ const QuickActions: React.FC<QuickActionsProps> = ({
 
   return (
     <>
+      <style>
+        {`
+          @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+          }
+        `}
+      </style>
       <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
         <CardHeader className="flex items-center justify-between pb-4">
           <div>
-            <h3 className="text-xl font-semibold text-foreground">
-              {t("dashboard.myActions") || "My Actions"}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-foreground">
+                {t("dashboard.myActions") || "My Actions"}
+              </h3>
+              {totalActionsCount > 0 && (
+                <Chip 
+                  size="sm" 
+                  variant="flat" 
+                  className="bg-danger-50 text-danger-600 border border-danger-200 animate-pulse"
+                  style={{
+                    animation: 'fadeInOut 2s ease-in-out infinite'
+                  }}
+                >
+                  <AnimatedCounter value={totalActionsCount} duration={600} />
+                </Chip>
+              )}
+            </div>
             <p className="text-sm text-default-500 mt-1">
               {t("dashboard.myActionsSubtitle") ||
                 "Assign projects that need your attention"}
