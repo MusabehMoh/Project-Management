@@ -17,3 +17,28 @@
 .rtl-editor .ql-toolbar {
   direction: ltr;
 }
+
+/* Highlight flash animation for draft requirements */
+.highlight-flash {
+  animation: flashHighlight 3s ease-in-out;
+  background: linear-gradient(90deg, 
+    rgba(255, 165, 0, 0.3) 0%, 
+    rgba(255, 165, 0, 0.1) 50%, 
+    rgba(255, 165, 0, 0.3) 100%);
+  background-size: 200% 100%;
+}
+
+@keyframes flashHighlight {
+  0% {
+    background-position: -200% 0;
+    box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
+  }
+  50% {
+    background-position: 200% 0;
+    box-shadow: 0 0 30px rgba(255, 165, 0, 0.7);
+  }
+  100% {
+    background-position: -200% 0;
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+  }
+}

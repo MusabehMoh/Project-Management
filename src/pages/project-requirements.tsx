@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import {
@@ -77,6 +77,14 @@ export default function ProjectRequirementsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
+  
+  // Get highlighting parameters from URL
+  const highlightRequirementId = searchParams.get('highlightRequirement');
+  const scrollToRequirementId = searchParams.get('scrollTo');
+  const [highlightedRequirement, setHighlightedRequirement] = useState<number | null>(
+    highlightRequirementId ? parseInt(highlightRequirementId) : null
+  );
 
   const {
     requirements,
@@ -161,6 +169,32 @@ export default function ProjectRequirementsPage() {
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm, statusFilter, priorityFilter, updateFilters]);
+
+  // Handle highlighting and scrolling for specific requirements
+  useEffect(() => {
+    if (scrollToRequirementId && requirements.length > 0) {
+      const requirementId = parseInt(scrollToRequirementId);
+      // Wait a bit for the table to render
+      setTimeout(() => {
+        const element = document.getElementById(`requirement-${requirementId}`);
+        if (element) {
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+          
+          // Flash effect
+          if (highlightedRequirement === requirementId) {
+            element.classList.add('highlight-flash');
+            setTimeout(() => {
+              element.classList.remove('highlight-flash');
+              setHighlightedRequirement(null);
+            }, 3000); // Remove highlight after 3 seconds
+          }
+        }
+      }, 500);
+    }
+  }, [requirements, scrollToRequirementId, highlightedRequirement, setHighlightedRequirement]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -589,7 +623,11 @@ export default function ProjectRequirementsPage() {
                 </TableHeader>
                 <TableBody>
                   {requirements.map((requirement) => (
-                    <TableRow key={requirement.id}>
+                    <TableRow 
+                      key={requirement.id}
+                      id={`requirement-${requirement.id}`}
+                      className={highlightedRequirement === requirement.id ? 'highlight-flash' : ''}
+                    >
                       <TableCell>
                         <div>
                           <div className="font-medium">{requirement.name}</div>

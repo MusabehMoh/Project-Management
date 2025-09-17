@@ -54,8 +54,8 @@ export default function PendingRequirements({
     });
   };
 
-  const handleViewRequirement = (projectId: number) => {
-    navigate(`/requirements?projectId=${projectId}`);
+  const handleViewRequirement = (projectId: number, requirementId: number) => {
+    navigate(`/requirements/${projectId}?highlightRequirement=${requirementId}&scrollTo=${requirementId}`);
   };
 
   const handleViewAllRequirements = () => {
@@ -139,7 +139,7 @@ export default function PendingRequirements({
               <div
                 key={requirement.id}
                 className="p-4 hover:bg-default-50 transition-colors cursor-pointer"
-                onClick={() => handleViewRequirement(requirement.project.id)}
+                onClick={() => handleViewRequirement(requirement.project.id, requirement.id)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -182,7 +182,7 @@ export default function PendingRequirements({
                       className="min-w-0 px-3"
                       onPress={(e) => {
                         e.stopPropagation();
-                        handleViewRequirement(requirement.project.id);
+                        handleViewRequirement(requirement.project.id, requirement.id);
                       }}
                     >
                       {t("common.view") || "View"}
