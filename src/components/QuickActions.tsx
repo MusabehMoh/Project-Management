@@ -7,6 +7,7 @@ import { Spinner } from "@heroui/spinner";
 import { Alert } from "@heroui/alert";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import { Accordion, AccordionItem } from "@heroui/accordion";
 import { addToast } from "@heroui/toast";
 import {
   RefreshCw,
@@ -312,41 +313,51 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         <CardBody className="p-6">
           {/* Action Buttons and Unassigned Projects */}
           <div className="space-y-4">
-            {/* Unassigned Projects Alerts */}
+            {/* Unassigned Projects Accordion */}
             {unassignedProjects.length > 0 && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {t("quickActions.unassignedProjects") || "Unassigned Projects"}
-                  </h3>
-                  <Chip size="sm" variant="flat" className="bg-default-100 text-default-600">
-                    {unassignedProjects.length}
-                  </Chip>
-                </div>
-                <Divider className="bg-default-200 mb-4" />
-                {unassignedProjects.map((project) => (
-                  <CustomAlert
-                    key={project.id}
-                    title={project.applicationName}
-                    description={project.owningUnit}
-                    direction={direction}
+                <Accordion selectionMode="single" variant="splitted">
+                  <AccordionItem
+                    key="unassigned-projects"
+                    title={
+                      <div className="flex items-center justify-between w-full">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {t("quickActions.unassignedProjects") || "Unassigned Projects"}
+                        </h3>
+                        <Chip size="sm" variant="flat" className="bg-danger-50 text-danger-600">
+                          {unassignedProjects.length}
+                        </Chip>
+                      </div>
+                    }
+                    className="border border-default-200 rounded-lg"
                   >
-                    <Divider className="bg-default-200 my-3" />
-                    <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
-                      <Button
-                        className="bg-background text-default-700 font-medium border-1 shadow-small"
-                        size="sm"
-                        variant="bordered"
-                        onPress={() => {
-                          setSelectedProject(project);
-                          setIsModalOpen(true);
-                        }}
-                      >
-                        {t("quickActions.assign") || "Assign"}
-                      </Button>
+                    <div className="max-h-64 overflow-y-auto scrollbar-hide space-y-3 pr-2">
+                      {unassignedProjects.map((project) => (
+                        <CustomAlert
+                          key={project.id}
+                          title={project.applicationName}
+                          description={project.owningUnit}
+                          direction={direction}
+                        >
+                          <Divider className="bg-default-200 my-3" />
+                          <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                            <Button
+                              className="bg-background text-default-700 font-medium border-1 shadow-small"
+                              size="sm"
+                              variant="bordered"
+                              onPress={() => {
+                                setSelectedProject(project);
+                                setIsModalOpen(true);
+                              }}
+                            >
+                              {t("quickActions.assign") || "Assign"}
+                            </Button>
+                          </div>
+                        </CustomAlert>
+                      ))}
                     </div>
-                  </CustomAlert>
-                ))}
+                  </AccordionItem>
+                </Accordion>
               </div>
             )}
           </div>
