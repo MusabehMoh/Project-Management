@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PMA.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using PMA.Infrastructure.Data;
 namespace PMA.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250915164702_RemoveTeamsTable")]
+    partial class RemoveTeamsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1060,7 +1063,7 @@ namespace PMA.Api.Migrations
 
                     b.HasIndex("PrsId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Team");
                 });
 
             modelBuilder.Entity("PMA.Core.Entities.Timeline", b =>

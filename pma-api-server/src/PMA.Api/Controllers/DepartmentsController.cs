@@ -41,7 +41,7 @@ public class DepartmentsController : ApiBaseController
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
             // Map to DTOs
-            var dtos = departments.Select(d => new DepartmentDto { Id = d.Id, Name = d.Name, IsActive = d.IsActive });
+            var dtos = departments.Select(d => new DepartmentDto { Id = d.Department.Id, Name = d.Department.Name, IsActive = d.Department.IsActive, MemberCount = d.MemberCount });
             return Success(dtos, pagination);
         }
         catch (Exception ex)
@@ -65,7 +65,8 @@ public class DepartmentsController : ApiBaseController
             var department = await _departmentService.GetDepartmentByIdAsync(id);
             if (department == null)
                 return NotFound(Error<DepartmentDto>("Department not found", null, 404));
-            var dto = new DepartmentDto { Id = department.Id, Name = department.Name, IsActive = department.IsActive };
+            var (members, _) = await _departmentService.GetDepartmentMembersAsync(department.Id, 1, int.MaxValue);
+            var dto = new DepartmentDto { Id = department.Id, Name = department.Name, IsActive = department.IsActive, MemberCount = members.Count() };
             return Success(dto);
         }
         catch (Exception ex)
@@ -90,8 +91,8 @@ public class DepartmentsController : ApiBaseController
             // Map DTO to entity
             var department = new Department { Name = dto.Name, IsActive = dto.IsActive };
             var createdDepartment = await _departmentService.CreateDepartmentAsync(department);
-            var resultDto = new DepartmentDto { Id = createdDepartment.Id, Name = createdDepartment.Name, IsActive = createdDepartment.IsActive };
-            return CreatedAtAction(nameof(GetDepartmentById), new { id = resultDto.Id }, resultDto);
+            var resultDto = new DepartmentDto { Id = createdDepartment.Id, Name = createdDepartment.Name, IsActive = createdDepartment.IsActive, MemberCount = 0 };
+            return Created(resultDto, nameof(GetDepartmentById), new { id = resultDto.Id });
         }
         catch (Exception ex)
         {
@@ -121,7 +122,8 @@ public class DepartmentsController : ApiBaseController
             var updatedDepartment = await _departmentService.UpdateDepartmentAsync(department);
             if (updatedDepartment == null)
                 return NotFound(Error<DepartmentDto>("Department not found", null, 404));
-            var resultDto = new DepartmentDto { Id = updatedDepartment.Id, Name = updatedDepartment.Name, IsActive = updatedDepartment.IsActive };
+            var (members, _) = await _departmentService.GetDepartmentMembersAsync(updatedDepartment.Id, 1, int.MaxValue);
+            var resultDto = new DepartmentDto { Id = updatedDepartment.Id, Name = updatedDepartment.Name, IsActive = updatedDepartment.IsActive, MemberCount = members.Count() };
             return Success(resultDto);
         }
         catch (Exception ex)
@@ -136,7 +138,7 @@ public class DepartmentsController : ApiBaseController
     /// Delete a department
     /// </summary>
     [HttpDelete("{id}")]
-    [ProducesResponseType(204)]
+    [ProducesResponseType(200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> DeleteDepartment(int id)
     {
@@ -145,12 +147,117 @@ public class DepartmentsController : ApiBaseController
             var result = await _departmentService.DeleteDepartmentAsync(id);
             if (!result)
                 return NotFound(Error<DepartmentDto>("Department not found", null, 404));
-            return NoContent();
+            return Success("Department deleted successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while deleting department. DepartmentId: {DepartmentId}", id);
             return Error<DepartmentDto>("An error occurred while deleting the department", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get department members
+    /// </summary>
+    [HttpGet("{id}/members")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetDepartmentMembers(int id, [FromQuery] int page = 1, [FromQuery] int limit = 10)
+    {
+        try
+        {
+            // Check if department exists
+            var department = await _departmentService.GetDepartmentByIdAsync(id);
+            if (department == null)
+                return NotFound(Error<TeamMemberDto>("Department not found", null, 404));
+
+            var (members, totalCount) = await _departmentService.GetDepartmentMembersAsync(id, page, limit);
+            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+            return Success(members, pagination);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving department members. DepartmentId: {DepartmentId}", id);
+            return Error<IEnumerable<TeamMemberDto>>("An error occurred while retrieving department members", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Add member to department
+    /// </summary>
+    [HttpPost("{id}/members")]
+    [ProducesResponseType(typeof(TeamMemberDto), 201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> AddDepartmentMember(int id, [FromBody] AddMemberRequest request)
+    {
+        try
+        {
+            var member = await _departmentService.AddDepartmentMemberAsync(id, request.UserId, request.Role ?? "Member");
+            return Success(member);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(Error<TeamMemberDto>(ex.Message, null, 404));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<TeamMemberDto>(ex.Message, null, 400));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while adding department member. DepartmentId: {DepartmentId}, UserId: {UserId}",
+                id, request?.UserId);
+            return Error<TeamMemberDto>("An error occurred while adding the department member", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Update department member
+    /// </summary>
+    [HttpPut("{id}/members/{memberId}")]
+    [ProducesResponseType(typeof(TeamMemberDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateDepartmentMember(int id, int memberId, [FromBody] UpdateMemberRequest request)
+    {
+        try
+        {
+            var member = await _departmentService.UpdateDepartmentMemberAsync(id, memberId, request?.Role, request?.IsActive);
+            return Success(member);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(Error<TeamMemberDto>(ex.Message, null, 404));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating department member. DepartmentId: {DepartmentId}, MemberId: {MemberId}",
+                id, memberId);
+            return Error<TeamMemberDto>("An error occurred while updating the department member", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Remove member from department
+    /// </summary>
+    [HttpDelete("members/{memberId}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> RemoveDepartmentMember(int memberId)
+    {
+        try
+        {
+            var result = await _departmentService.RemoveMemberByIdAsync(memberId);
+            if (!result)
+                return NotFound(Error<TeamMemberDto>("Member not found", null, 404));
+            return Success("Member removed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while removing department member. MemberId: {MemberId}", memberId);
+            return Error<TeamMemberDto>("An error occurred while removing the department member", ex.Message);
         }
     }
 }

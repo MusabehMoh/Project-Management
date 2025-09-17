@@ -14,6 +14,7 @@ public interface IProjectService
     System.Threading.Tasks.Task DeleteProjectAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<Project>> SearchProjectsAsync(string query, int? status = null, string? priority = null, int page = 1, int limit = 20);
     System.Threading.Tasks.Task<object> GetProjectStatsAsync();
+    System.Threading.Tasks.Task<Project> SendProjectAsync(int projectId);
 }
 
 public interface IUserService
@@ -68,12 +69,15 @@ public interface IRequirementService
 
 public interface IDepartmentService
 {
-    System.Threading.Tasks.Task<(IEnumerable<Department> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
+    System.Threading.Tasks.Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
     System.Threading.Tasks.Task<Department?> GetDepartmentByIdAsync(int id);
     System.Threading.Tasks.Task<Department> CreateDepartmentAsync(Department department);
     System.Threading.Tasks.Task<Department> UpdateDepartmentAsync(Department department);
     System.Threading.Tasks.Task<bool> DeleteDepartmentAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<Department>> GetActiveDepartmentsAsync();
+    System.Threading.Tasks.Task<(IEnumerable<TeamMemberDto> Members, int TotalCount)> GetDepartmentMembersAsync(int departmentId, int page = 1, int limit = 10);
+    System.Threading.Tasks.Task<TeamMemberDto> AddDepartmentMemberAsync(int departmentId, int userId, string role);
+    System.Threading.Tasks.Task<TeamMemberDto> UpdateDepartmentMemberAsync(int departmentId, int memberId, string? role, bool? isActive);
+    System.Threading.Tasks.Task<bool> RemoveMemberByIdAsync(int memberId);
 }
 
 public interface IUnitService
@@ -134,11 +138,12 @@ public interface ICalendarEventService
 
 public interface IEmployeeService
 {
-    System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> GetEmployeesAsync(int page, int limit, int? statusId = null);
-    System.Threading.Tasks.Task<Employee?> GetEmployeeByIdAsync(int id);
-    System.Threading.Tasks.Task<Employee> CreateEmployeeAsync(Employee employee);
-    System.Threading.Tasks.Task<Employee> UpdateEmployeeAsync(Employee employee);
+    System.Threading.Tasks.Task<(IEnumerable<EmployeeDto> Employees, int TotalCount)> GetEmployeesAsync(int page, int limit, int? statusId = null);
+    System.Threading.Tasks.Task<EmployeeDto?> GetEmployeeByIdAsync(int id);
+    System.Threading.Tasks.Task<EmployeeDto> CreateEmployeeAsync(Employee employee);
+    System.Threading.Tasks.Task<EmployeeDto> UpdateEmployeeAsync(Employee employee);
     System.Threading.Tasks.Task<bool> DeleteEmployeeAsync(int id);
+    System.Threading.Tasks.Task<(IEnumerable<EmployeeDto> Employees, int TotalCount)> SearchEmployeesAsync(string query, int page = 1, int limit = 20);
 }
 
 public interface ILookupService

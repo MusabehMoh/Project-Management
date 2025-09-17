@@ -1,10 +1,10 @@
-.gantt-dark .gantt_grid, 
+.gantt-dark .gantt_grid,
 .gantt-dark .gantt_task {
   background-color: #1e1e1e;
   color: #eee;
 }
 
-.gantt-light .gantt_grid, 
+.gantt-light .gantt_grid,
 .gantt-light .gantt_task {
   background-color: #fff;
   color: #222;
@@ -77,7 +77,6 @@
   border-color: #374151 !important;
 }
 
-
 /* LTR fallback */
 .task-light .gantt_task_content,
 .task-dark .gantt_task_content {
@@ -90,23 +89,21 @@
   overflow: hidden; /* let dhtmlx manage its own scrollbars */
 }
 
-
 /* Center text inside task bars */
 .gantt_task_content {
   text-align: center !important;
   justify-content: center !important;
   align-items: center !important;
   display: flex !important; /* so we can center vertically + horizontally */
-  padding: 0 !important;   /* remove side padding so it doesn’t shift */
+  padding: 0 !important; /* remove side padding so it doesn’t shift */
 }
-
 
 /* --- Proper RTL tree alignment --- */
 .gantt-rtl .gantt_cell.gantt_cell_tree {
   display: flex !important;
-  flex-direction: row !important;  /* keep normal flow */
+  flex-direction: row !important; /* keep normal flow */
   align-items: center;
-  justify-content: flex-end;       /* pack everything to the right */
+  justify-content: flex-end; /* pack everything to the right */
   gap: 2px;
   text-align: right !important;
   direction: rtl !important;
@@ -143,13 +140,15 @@
   background: inherit; /* keeps theme background */
 }
 
-
-
 /*dialog styles*/
 /* ---------- Light Theme ---------- */
 /* Sprint border: lighter navy so it stands out */
+.gantt_task_line.task-timeline {
+  border: 1px solid #22c55e; /* light blue */
+}
+
 .gantt_task_line.task-sprint {
-  border: 1px solid #3b82f6; /* light blue */
+  border: 1px solid #22c55e; /* light blue */
 }
 
 /* Requirement: royal blue fill, very light sky blue border */
@@ -159,10 +158,10 @@
 
 /* Task border: a bit darker teal to frame the minty fill */
 .gantt_task_line.task-main {
-  border: 1px solid #14b8a6; /* deeper teal */
+  border: 1px solid #8b5cf6; /* deeper teal */
 }
 
 /* Subtask border: mid-blue for contrast on cyan fill */
 .gantt_task_line.task-sub {
-  border: 1px solid #3b82f6; /* medium blue to stand out on light cyan */
+  border: 1px solid #eab308; /* medium blue to stand out on light cyan */
 }

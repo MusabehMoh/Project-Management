@@ -371,7 +371,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 7,
     projectId: 1,
     name: "User Profile Management",
-    description: "Implement comprehensive user profile management with photo upload and preferences.",
+    description:
+      "Implement comprehensive user profile management with photo upload and preferences.",
     priority: "medium",
     type: "new",
     expectedCompletionDate: "2025-04-10",
@@ -393,7 +394,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 8,
     projectId: 2,
     name: "Transaction History Export",
-    description: "Allow users to export transaction history in multiple formats (PDF, Excel, CSV).",
+    description:
+      "Allow users to export transaction history in multiple formats (PDF, Excel, CSV).",
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-03-25",
@@ -415,7 +417,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 9,
     projectId: 3,
     name: "Inventory Management Module",
-    description: "Create comprehensive inventory tracking and management system.",
+    description:
+      "Create comprehensive inventory tracking and management system.",
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-04-15",
@@ -437,7 +440,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 10,
     projectId: 1,
     name: "Security Audit System",
-    description: "Implement comprehensive security audit and monitoring system.",
+    description:
+      "Implement comprehensive security audit and monitoring system.",
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-03-20",
@@ -481,7 +485,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 12,
     projectId: 3,
     name: "Quality Assurance Dashboard",
-    description: "Create QA dashboard for tracking testing progress and metrics.",
+    description:
+      "Create QA dashboard for tracking testing progress and metrics.",
     priority: "medium",
     type: "new",
     expectedCompletionDate: "2025-04-20",
@@ -503,7 +508,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 13,
     projectId: 1,
     name: "Automated Testing Framework",
-    description: "Implement comprehensive automated testing framework for continuous integration.",
+    description:
+      "Implement comprehensive automated testing framework for continuous integration.",
     priority: "medium",
     type: "new",
     expectedCompletionDate: "2025-05-01",
@@ -525,7 +531,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 14,
     projectId: 2,
     name: "HR Integration Module",
-    description: "Integrate HR system with main application for employee data synchronization.",
+    description:
+      "Integrate HR system with main application for employee data synchronization.",
     priority: "low",
     type: "change request",
     expectedCompletionDate: "2025-05-15",
@@ -547,7 +554,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 15,
     projectId: 3,
     name: "Financial Reporting System",
-    description: "Create comprehensive financial reporting and analytics system.",
+    description:
+      "Create comprehensive financial reporting and analytics system.",
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-04-05",
@@ -591,7 +599,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 17,
     projectId: 2,
     name: "Legal Compliance Checker",
-    description: "Implement system to check transactions for legal compliance and regulations.",
+    description:
+      "Implement system to check transactions for legal compliance and regulations.",
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-03-28",
@@ -613,7 +622,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 18,
     projectId: 3,
     name: "Customer Support Portal",
-    description: "Create integrated customer support portal with ticketing system.",
+    description:
+      "Create integrated customer support portal with ticketing system.",
     priority: "medium",
     type: "new",
     expectedCompletionDate: "2025-05-10",
@@ -635,7 +645,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 19,
     projectId: 1,
     name: "Multi-language Support",
-    description: "Add comprehensive multi-language support with RTL layout for Arabic.",
+    description:
+      "Add comprehensive multi-language support with RTL layout for Arabic.",
     priority: "medium",
     type: "change request",
     expectedCompletionDate: "2025-04-30",
@@ -680,7 +691,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 21,
     projectId: 3,
     name: "Performance Monitoring",
-    description: "Implement real-time performance monitoring and alerting system.",
+    description:
+      "Implement real-time performance monitoring and alerting system.",
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-03-18",
@@ -702,7 +714,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 22,
     projectId: 1,
     name: "API Gateway Implementation",
-    description: "Implement centralized API gateway for microservices architecture.",
+    description:
+      "Implement centralized API gateway for microservices architecture.",
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-03-15",
@@ -724,7 +737,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 23,
     projectId: 2,
     name: "Data Backup & Recovery",
-    description: "Implement automated data backup and disaster recovery system.",
+    description:
+      "Implement automated data backup and disaster recovery system.",
     priority: "high",
     type: "new",
     expectedCompletionDate: "2025-03-12",
@@ -746,7 +760,8 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     id: 24,
     projectId: 3,
     name: "Third-party Integrations",
-    description: "Develop framework for third-party service integrations and API management.",
+    description:
+      "Develop framework for third-party service integrations and API management.",
     priority: "medium",
     type: "new",
     expectedCompletionDate: "2025-04-08",
@@ -806,7 +821,8 @@ export const additionalBusyRequirements: ProjectRequirement[] = [
     id: 6,
     projectId: 2,
     name: "Performance Optimization Module",
-    description: "Optimize application performance and implement caching strategies.",
+    description:
+      "Optimize application performance and implement caching strategies.",
     priority: "medium",
     type: "new",
     expectedCompletionDate: "2025-04-01",
@@ -871,7 +887,7 @@ export const additionalBusyRequirements: ProjectRequirement[] = [
     updatedAt: "2025-01-19T12:00:00Z",
     createdBy: 1,
     assignedAnalyst: 5,
-  }
+  },
 ];
 
 // Combine all requirements

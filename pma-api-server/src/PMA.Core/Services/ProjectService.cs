@@ -2,16 +2,22 @@ using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PMA.Core.Services;
 
 public class ProjectService : IProjectService
 {
     private readonly IProjectRepository _projectRepository;
+    private readonly INotificationService _notificationService;
+    private readonly IUserService _userService;
 
-    public ProjectService(IProjectRepository projectRepository)
+    public ProjectService(IProjectRepository projectRepository, INotificationService notificationService, IUserService userService)
     {
         _projectRepository = projectRepository;
+        _notificationService = notificationService;
+        _userService = userService;
     }
 
     public async System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null)
@@ -67,6 +73,72 @@ public class ProjectService : IProjectService
             UnderDevelopment = projects.Count(p => p.Status == ProjectStatus.UnderDevelopment),
             Production = projects.Count(p => p.Status == ProjectStatus.Production)
         };
+    }
+
+    public async System.Threading.Tasks.Task<Project> SendProjectAsync(int projectId)
+    {
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        if (project == null)
+        {
+            throw new KeyNotFoundException("Project not found");
+        }
+
+        // Update project status to Under Review
+        project.Status = ProjectStatus.UnderReview;
+        project.UpdatedAt = DateTime.UtcNow;
+        await _projectRepository.UpdateAsync(project);
+
+        // Parse analyst IDs from the string (assuming comma-separated)
+        var analystIds = new List<int>();
+        if (!string.IsNullOrEmpty(project.AnalystIds))
+        {
+            analystIds = project.AnalystIds.Split(',')
+                .Select(id => int.TryParse(id.Trim(), out var parsedId) ? parsedId : 0)
+                .Where(id => id > 0)
+                .ToList();
+        }
+
+        // Get analyst usernames
+        var analystUsernames = new List<string>();
+        foreach (var analystId in analystIds)
+        {
+            var analyst = await _userService.GetUserByIdAsync(analystId);
+            if (analyst != null)
+            {
+                analystUsernames.Add(analyst.UserName);
+            }
+        }
+
+        // Get project owner username
+        var targetUsernames = new List<string>(analystUsernames);
+        var projectOwner = await _userService.GetUserByIdAsync(project.ProjectOwnerId);
+        if (projectOwner != null)
+        {
+            targetUsernames.Add(projectOwner.UserName);
+        }
+
+        // Create notification for each target user
+        foreach (var username in targetUsernames.Distinct())
+        {
+            var user = await _userService.GetUserByUserNameAsync(username);
+            if (user != null)
+            {
+                var notification = new Notification
+                {
+                    Title = "Project Sent for Review",
+                    Message = $"Project \"{project.ApplicationName}\" has been sent for review",
+                    Type = NotificationType.Info,
+                    Priority = NotificationPriority.Medium,
+                    UserId = user.Id,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _notificationService.CreateNotificationAsync(notification);
+            }
+        }
+
+        return project;
     }
 }
 

@@ -56,8 +56,16 @@ public interface IRequirementRepository : IRepository<Requirement>
 
 public interface IDepartmentRepository : IRepository<Department>
 {
-    System.Threading.Tasks.Task<(IEnumerable<Department> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
-    System.Threading.Tasks.Task<IEnumerable<Department>> GetActiveDepartmentsAsync();
+    System.Threading.Tasks.Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
+}
+
+public interface ITeamRepository : IRepository<Team>
+{
+    System.Threading.Tasks.Task<(IEnumerable<Team> Teams, int TotalCount)> GetTeamsByDepartmentAsync(int departmentId, int page = 1, int limit = 10);
+    System.Threading.Tasks.Task<Team?> GetTeamByIdAsync(int id);
+    System.Threading.Tasks.Task<Team> AddTeamMemberAsync(Team team);
+    System.Threading.Tasks.Task UpdateTeamMemberAsync(Team team);
+    System.Threading.Tasks.Task<bool> RemoveTeamMemberAsync(int id);
 }
 
 public interface IUnitRepository : IRepository<Unit>
@@ -92,6 +100,7 @@ public interface INotificationRepository : IRepository<Notification>
 public interface IEmployeeRepository : IRepository<Employee>
 {
     System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> GetEmployeesAsync(int page, int limit, int? statusId = null);
+    System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> SearchEmployeesAsync(string query, int page = 1, int limit = 20);
 }
 
 

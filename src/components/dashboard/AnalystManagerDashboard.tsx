@@ -29,17 +29,26 @@ export default function AnalystManagerDashboard() {
   // Handle analyst assignment
   const handleAssignAnalyst = async (project: any, analystId: string) => {
     try {
-      console.log("Assigning analyst:", { projectId: project.id, analystId, projectName: project.applicationName });
-      
-      const response = await quickActionsService.assignAnalyst(project.id, analystId);
-      
+      console.log("Assigning analyst:", {
+        projectId: project.id,
+        analystId,
+        projectName: project.applicationName,
+      });
+
+      const response = await quickActionsService.assignAnalyst(
+        project.id,
+        analystId
+      );
+
       console.log("Assignment response:", response);
-      
+
       // Refresh the quick actions to show updated data
       setRefreshKey((prev) => prev + 1);
-      
+
       // You could add a success toast notification here
-      console.log(`Successfully assigned analyst ${analystId} to project ${project.applicationName}`);
+      console.log(
+        `Successfully assigned analyst ${analystId} to project ${project.applicationName}`
+      );
     } catch (error) {
       console.error("Failed to assign analyst:", error);
       // You could add an error toast notification here

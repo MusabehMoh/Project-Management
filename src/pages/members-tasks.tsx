@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
-import { useDisclosure } from "@heroui/modal";
 import { Pagination } from "@heroui/pagination";
 import {
   Dropdown,
@@ -11,6 +10,7 @@ import {
 } from "@heroui/dropdown";
 import { Select, SelectItem } from "@heroui/select";
 import { Badge } from "@heroui/badge";
+
 import {
   FileDown,
   RefreshCw,
@@ -19,13 +19,28 @@ import {
   Grid3X3,
   List,
   BarChart3,
+  Calendar,
+  Clock,
 } from "lucide-react";
+import {
+  Chip,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  Input,
+  Modal,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Textarea,
+} from "@heroui/react";
 
 import { TaskCard } from "@/components/members-tasks/TaskCard";
 import { TaskListView } from "@/components/members-tasks/TaskListView";
 import { TaskGanttView } from "@/components/members-tasks/TaskGanttView";
 import { TaskFilters } from "@/components/members-tasks/TaskFilters";
-import { TaskDetailsModal } from "@/components/members-tasks/TaskDetailsModal";
 import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
 import DefaultLayout from "@/layouts/default";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
@@ -47,11 +62,7 @@ export default function MembersTasksPage() {
   const { t } = useLanguage();
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
   const [viewType, setViewType] = useState<"grid" | "list" | "gantt">("grid");
-  const {
-    isOpen: isDetailsOpen,
-    onOpen: onDetailsOpen,
-    onClose: onDetailsClose,
-  } = useDisclosure();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const {
     tasks,
@@ -68,7 +79,31 @@ export default function MembersTasksPage() {
     searchEmployees,
     filtersData,
     allEmployees,
+    changeStatus,
+    requestDesign,
   } = useMembersTasks(mockDepartments);
+
+  const { language } = useLanguage();
+
+  const [isRequestDesignModalOpend, setIsRequestDesignModalOpend] =
+    useState(false);
+  const [notes, setNotes] = useState("");
+  const [requestDesignError, setRequestDesignError] = useState(false);
+
+  const handleRequestDesignSubmit = async () => {
+    console.log("Request Design for:", selectedTask?.name);
+    console.log("Notes:", notes);
+
+    const success = await requestDesign(selectedTask?.id ?? "0", notes ?? "");
+
+    if (success) {
+      setIsRequestDesignModalOpend(false);
+      setNotes("");
+      console.log("--->>> success is true");
+    } else {
+      setRequestDesignError(true);
+    }
+  };
 
   // Debug logging
   console.log("MembersTasksPage - tasks:", tasks?.length, tasks);
@@ -78,9 +113,18 @@ export default function MembersTasksPage() {
 
   const handleTaskClick = (task: MemberTask) => {
     setSelectedTask(task);
-    onDetailsOpen();
+    setIsDrawerOpen(true);
   };
 
+  const handleRequestDesign = (task: MemberTask) => {
+    if (isDrawerOpen) {
+      setIsDrawerOpen(false);
+    }
+    setSelectedTask(task);
+    setIsRequestDesignModalOpend(true);
+    setRequestDesignError(false);
+    setNotes("");
+  };
   const handlePageChange = (page: number) => {
     setFilters({ ...filters, page });
   };
@@ -122,6 +166,28 @@ export default function MembersTasksPage() {
     if (filters.isOverdue) count++;
 
     return count;
+  };
+
+  // Format date helper
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const mapColor = (color?: string) => {
+    switch (color) {
+      case "success":
+      case "danger":
+      case "primary":
+      case "secondary":
+      case "warning":
+        return color;
+      default:
+        return "default";
+    }
   };
 
   const getSortLabel = () => {
@@ -228,7 +294,7 @@ export default function MembersTasksPage() {
                   <p className="text-xl font-bold text-foreground">
                     {
                       tasks.filter((t) =>
-                        t.status.label.toLowerCase().includes("progress"),
+                        t.status.label.toLowerCase().includes("progress")
                       ).length
                     }
                   </p>
@@ -251,6 +317,8 @@ export default function MembersTasksPage() {
             </Card>
           </div>
         </div>
+
+        {/* Page Size Selector here*/}
 
         {/* Filters */}
         <TaskFilters
@@ -321,6 +389,7 @@ export default function MembersTasksPage() {
           <div className="flex items-center gap-3">
             <span className="text-sm text-foreground-600">Sort by:</span>
             <Select
+              aria-label="Sort tasks"
               className="min-w-[180px]"
               selectedKeys={[`${filters.sortBy}-${filters.sortOrder}`]}
               size="sm"
@@ -399,6 +468,7 @@ export default function MembersTasksPage() {
                     key={task.id}
                     task={task}
                     onClick={handleTaskClick}
+                    onRequestDesign={handleRequestDesign}
                   />
                 ))}
               </div>
@@ -434,11 +504,226 @@ export default function MembersTasksPage() {
         )}
 
         {/* Task Details Modal */}
-        <TaskDetailsModal
+        {/* Requirement Details Drawer */}
+        <Drawer
+          isOpen={isDrawerOpen}
+          placement={language === "en" ? "left" : "right"}
+          size="lg"
+          onOpenChange={setIsDrawerOpen}
+        >
+          <DrawerContent
+          // className={`min-h-[400px] transition-all duration-200 hover:shadow-lg
+          //   ${
+          //     selectedTask?.isOverdue
+          //       ? "border-l-4 border-l-danger-500 bg-white dark:bg-danger-900/20"
+          //       : `border-l-4 border-l-${selectedTask?.status.color as any}-500 bg-white dark:bg-${selectedTask?.status.color as any}-900/20`
+          //   }`}
+          >
+            <DrawerHeader className="flex flex-col gap-1">
+              <h2 className="text-xl font-semibold">{selectedTask?.name}</h2>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: selectedTask?.department?.color }}
+                />
+                <span className="text-sm text-foreground-600">
+                  {selectedTask?.department?.name}
+                </span>
+                {selectedTask?.isOverdue && (
+                  <Badge color="danger" size="sm" variant="flat">
+                    {t("overdueTask")}
+                  </Badge>
+                )}
+              </div>
+            </DrawerHeader>
+            <DrawerBody>
+              {selectedTask && (
+                <div className="space-y-6">
+                  {/* Status and Priority */}
+                  <div className="flex justify-between gap-8">
+                    {/* Column 1: Priority */}
+                    <div className="flex flex-col items-start gap-1">
+                      <h4 className="text-md">{t("priority")}</h4>
+                      <Chip
+                        color={mapColor(selectedTask.priority.color)}
+                        size="sm"
+                        variant="solid"
+                      >
+                        {t(`${selectedTask.priority.label}`)}
+                      </Chip>
+                    </div>
+
+                    {/* Column 2: Status */}
+                    <div className="flex flex-col items-start gap-1">
+                      <h4 className="text-md">{t("status")}</h4>
+                      <Chip
+                        color={mapColor(selectedTask.status.color)}
+                        size="sm"
+                        variant="flat"
+                      >
+                        {`${selectedTask.status.label.replace("-", "")}`}
+                      </Chip>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {t("requirements.description")}
+                    </h3>
+                    <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
+                      <p
+                        dangerouslySetInnerHTML={{
+                          __html: selectedTask.description,
+                        }}
+                        className="text-sm leading-relaxed"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    {/* Start Date */}
+                    <div>
+                      <h3 className="text-md mb-2">{t("startDate")}</h3>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-default-400" />
+                        <span className="text-sm">
+                          {formatDate(selectedTask.startDate)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Expected Completion Date */}
+                    <div>
+                      <h3 className="text-md mb-2">
+                        {t("requirements.expectedCompletion")}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-default-400" />
+                        <span className="text-sm">
+                          {formatDate(selectedTask.endDate)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expected Completion Date */}
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-foreground-500" />
+                    <p className="text-lg ">{t("estimatedTime")}</p>
+                    <p className="text-md font-semibold text-foreground ">
+                      {selectedTask.estimatedTime}h
+                    </p>
+                  </div>
+
+                  {/* project & requirement */}
+                  <div className="mt-3 pt-3 pb-3 border-t border-b border-divider">
+                    <div className="flex flex-col gap-4">
+                      {/* Project */}
+                      <div className="flex flex-col gap-1">
+                        <span className="font-md">{t("project")}</span>
+                        <span className="font-md">
+                          {selectedTask.project.name}
+                        </span>
+                      </div>
+
+                      {/* Requirement */}
+                      <div className="flex flex-col gap-1">
+                        <span className="font-md">{t("requirement")}</span>
+                        <span className="font-md">
+                          {selectedTask.requirement.name}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* buttons */}
+                  <div className="mt-3 pt-3 flex flex-col gap-3">
+                    {/* Row 2 */}
+                    <div className="flex gap-3">
+                      <Button
+                        className="flex-1"
+                        color="primary"
+                        size="sm"
+                        variant="flat"
+                        onPress={() => handleRequestDesign(selectedTask)}
+                      >
+                        {t("requestDesign")}
+                      </Button>
+
+                      <Button
+                        className="flex-1"
+                        color="success"
+                        size="sm"
+                        variant="flat"
+                        onPress={() => {}} ///TODO
+                      >
+                        {t("changeStatus")}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </DrawerBody>
+            <DrawerFooter>
+              <Button
+                color="danger"
+                variant="light"
+                onPress={() => setIsDrawerOpen(false)}
+              >
+                {t("common.close")}
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+
+        {/* Request Design Modal */}
+        <Modal
+          isOpen={isRequestDesignModalOpend}
+          onOpenChange={setIsRequestDesignModalOpend}
+        >
+          <ModalContent className="p-6 rounded-lg max-w-md">
+            <ModalHeader className="flex flex-col items-center">
+              {requestDesignError && (
+                <h4 className="font-medium" style={{ color: "#ef4444" }}>
+                  {t("common.unexpectedError")}
+                </h4>
+              )}
+              <h2 className="text-lg font-semibold">{t("requestDesign")}</h2>
+            </ModalHeader>
+            <div className="space-y-4">
+              <Input value={selectedTask?.name ?? ""} readOnly />
+              <Textarea
+                placeholder={t("timeline.treeView.notes")}
+                value={notes}
+                onChange={(e: any) => setNotes(e.target.value)}
+              />
+            </div>
+            <ModalFooter>
+              <Button
+                color="default"
+                size="md"
+                variant="flat"
+                onPress={() => setIsRequestDesignModalOpend(false)} /// also clear erro here
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                color="primary"
+                size="md"
+                variant="flat"
+                onPress={handleRequestDesignSubmit}
+              >
+                {t("confirm")}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+        {/* <TaskDetailsModal
           isOpen={isDetailsOpen}
           task={selectedTask}
           onClose={onDetailsClose}
-        />
+        /> */}
       </div>
     </DefaultLayout>
   );
