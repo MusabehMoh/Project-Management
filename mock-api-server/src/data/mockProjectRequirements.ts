@@ -741,7 +741,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
       "Implement automated data backup and disaster recovery system.",
     priority: "high",
     type: "new",
-    expectedCompletionDate: "2025-03-12",
+    expectedCompletionDate: "2025-09-19",
     status: "in-development",
     createdAt: "2025-01-31T08:00:00Z",
     updatedAt: "2025-01-31T08:00:00Z",
