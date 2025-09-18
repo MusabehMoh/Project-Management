@@ -64,8 +64,8 @@ public class ProjectsController : ApiBaseController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while retrieving projects. Page: {Page}, Limit: {Limit}, Search: {Search}, Status: {Status}, Priority: {Priority}",
-                page, limit, search, status, priority);
+            _logger.LogError(ex, "Error occurred while retrieving projects. Page: {Page}, Limit: {Limit}, Search: {Search}, Status: {Status}, Priority: {Priority}. StackTrace: {StackTrace}",
+                page, limit, search, status, priority, ex.StackTrace);
             return Error<IEnumerable<ProjectDto>>("Internal server error", ex.Message);
         }
     }

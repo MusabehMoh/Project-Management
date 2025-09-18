@@ -303,10 +303,13 @@ export const useActions = () => {
   const actionsByCategory = useCallback(() => {
     return actions.reduce(
       (acc, action) => {
-        if (!acc[action.categoryName]) {
-          acc[action.categoryName] = [];
+        // Use "Uncategorized" as default if categoryName is missing
+        const category = action.categoryName || "Uncategorized";
+        
+        if (!acc[category]) {
+          acc[category] = [];
         }
-        acc[action.categoryName].push(action);
+        acc[category].push(action);
 
         return acc;
       },

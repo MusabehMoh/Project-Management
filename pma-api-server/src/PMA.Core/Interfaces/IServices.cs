@@ -92,13 +92,13 @@ public interface IUnitService
 
 public interface IRoleService
 {
-    System.Threading.Tasks.Task<(IEnumerable<Role> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null);
-    System.Threading.Tasks.Task<Role?> GetRoleByIdAsync(int id);
-    System.Threading.Tasks.Task<Role> CreateRoleAsync(Role role);
-    System.Threading.Tasks.Task<Role> UpdateRoleAsync(Role role);
+    System.Threading.Tasks.Task<(IEnumerable<RoleDto> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null);
+    System.Threading.Tasks.Task<RoleDto?> GetRoleByIdAsync(int id);
+    System.Threading.Tasks.Task<RoleDto> CreateRoleAsync(RoleCreateDto roleDto);
+    System.Threading.Tasks.Task<RoleDto> UpdateRoleAsync(RoleUpdateDto roleDto);
     System.Threading.Tasks.Task<bool> DeleteRoleAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<Role>> GetActiveRolesAsync();
-    System.Threading.Tasks.Task<Role?> GetRoleWithActionsAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<RoleDto>> GetActiveRolesAsync();
+    System.Threading.Tasks.Task<RoleDto?> GetRoleWithActionsAsync(int id);
 }
 
 public interface IActionService

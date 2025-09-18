@@ -54,6 +54,7 @@ export class QuickActionsController {
 
       // Import here to avoid circular dependencies
       const { mockProjectRequirements } = await import("../data/mockProjectRequirements.js");
+      const { mockUsers } = await import("../data/mockUsers.js");
 
       // Calculate projects without requirements dynamically
       const projectsWithRequirementCounts = mockProjects.map(project => {
@@ -69,10 +70,27 @@ export class QuickActionsController {
       const projectsWithoutRequirements = projectsWithRequirementCounts
         .filter(project => project.requirementsCount === 0).length;
 
+      // Calculate available members dynamically
+      const teamMetrics = mockUsers
+        .filter(user => user.isVisible)
+        .map(user => {
+          const userRequirements = mockProjectRequirements.filter(req => req.createdBy === user.id);
+          const inProgressRequirements = userRequirements.filter(req => req.status === "in-development").length;
+          const isBusy = inProgressRequirements > 2;
+          return {
+            userId: user.id,
+            busyStatus: isBusy ? "busy" : "available",
+          };
+        });
+
+      const availableMembers = teamMetrics
+        .filter(member => member.busyStatus === "available").length;
+
       // Enhanced stats with dynamic calculation
       const enhancedStats = {
         ...mockQuickActionStats,
         projectsWithoutRequirements,
+        availableMembers,
       };
 
       res.status(200).json({
@@ -251,6 +269,71 @@ export class QuickActionsController {
         error: {
           message: "Failed to fetch projects without requirements",
           code: "PROJECTS_WITHOUT_REQUIREMENTS_ERROR",
+        },
+      });
+    }
+  }
+
+  /**
+   * Get available team members (busyStatus = 'available')
+   */
+  async getAvailableMembers(req: Request, res: Response) {
+    await mockDelayHandler();
+
+    try {
+      logger.info("Fetching available team members");
+
+      // Import here to avoid circular dependencies
+      const { mockProjectRequirements } = await import("../data/mockProjectRequirements.js");
+      const { mockUsers } = await import("../data/mockUsers.js");
+
+      // Calculate team metrics similar to getTeamWorkloadPerformance
+      const teamMetrics = mockUsers
+        .filter(user => user.isVisible)
+        .map(user => {
+          // Get requirements created by this user
+          const userRequirements = mockProjectRequirements.filter(req => req.createdBy === user.id);
+          
+          // Calculate metrics
+          const inProgressRequirements = userRequirements.filter(req => req.status === "in-development").length;
+          
+          // Calculate busy status (same logic as team workload)
+          const isBusy = inProgressRequirements > 2;
+          let busyUntil;
+          if (isBusy) {
+            const daysToAdd = Math.ceil(inProgressRequirements / 2);
+            busyUntil = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+          }
+
+          return {
+            userId: user.id,
+            fullName: user.fullName,
+            department: user.department,
+            gradeName: user.gradeName,
+            busyStatus: isBusy ? "busy" : "available",
+            busyUntil: busyUntil,
+            email: user.email,
+            totalRequirements: userRequirements.length,
+            inProgressRequirements,
+          };
+        });
+
+      // Filter for available members only
+      const availableMembers = teamMetrics
+        .filter(member => member.busyStatus === "available")
+        .sort((a, b) => a.fullName.localeCompare(b.fullName)); // Sort alphabetically
+
+      res.status(200).json({
+        success: true,
+        data: availableMembers,
+      });
+    } catch (error) {
+      logger.error("Error fetching available members:", error);
+      res.status(500).json({
+        success: false,
+        error: {
+          message: "Failed to fetch available members",
+          code: "AVAILABLE_MEMBERS_ERROR",
         },
       });
     }

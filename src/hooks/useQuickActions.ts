@@ -22,6 +22,7 @@ export interface UseQuickActionsReturn {
   actions: QuickAction[];
   unassignedProjects: any[]; // Add unassigned projects list
   projectsWithoutRequirements: any[]; // Add projects without requirements list
+  availableMembers: any[]; // Add available members list
 
   // Loading states
   loading: boolean;
@@ -55,6 +56,7 @@ export const useQuickActions = (
   const [stats, setStats] = useState<QuickActionStats | null>(null);
   const [unassignedProjects, setUnassignedProjects] = useState<any[]>([]);
   const [projectsWithoutRequirements, setProjectsWithoutRequirements] = useState<any[]>([]);
+  const [availableMembers, setAvailableMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +113,21 @@ export const useQuickActions = (
         });
       }
 
+      // Available Members
+      if (statsData.availableMembers > 0) {
+        actions.push({
+          id: "available-members",
+          title: "quickActions.availableMembers",
+          description: "quickActions.availableMembersDesc",
+          icon: "users",
+          priority: "medium",
+          count: statsData.availableMembers,
+          action: "ASSIGN_AVAILABLE_MEMBERS",
+          variant: "success",
+          permissions: ["projects.manage"],
+        });
+      }
+
       // View Overdue Items
       if (statsData.overdueItems > 0) {
         actions.push({
@@ -139,11 +156,12 @@ export const useQuickActions = (
     try {
       setError(null);
 
-      const [actionsResponse, statsResponse, unassignedResponse, withoutRequirementsResponse] = await Promise.all([
+      const [actionsResponse, statsResponse, unassignedResponse, withoutRequirementsResponse, availableMembersResponse] = await Promise.all([
         quickActionsService.getQuickActions(),
         quickActionsService.getQuickActionStats(),
         quickActionsService.getUnassignedProjects(),
         quickActionsService.getProjectsWithoutRequirements(),
+        quickActionsService.getAvailableMembers(),
       ]);
 
       if (actionsResponse.success && actionsResponse.data) {
@@ -165,11 +183,18 @@ export const useQuickActions = (
       } else {
         setProjectsWithoutRequirements([]);
       }
+
+      if (availableMembersResponse.success && availableMembersResponse.data) {
+        setAvailableMembers(availableMembersResponse.data);
+      } else {
+        setAvailableMembers([]);
+      }
     } catch (err) {
       setError("Failed to load quick actions data");
       setStats(null);
       setUnassignedProjects([]);
       setProjectsWithoutRequirements([]);
+      setAvailableMembers([]);
     }
   }, []);
 
@@ -261,6 +286,7 @@ export const useQuickActions = (
     actions,
     unassignedProjects,
     projectsWithoutRequirements,
+    availableMembers,
 
     // Loading states
     loading,

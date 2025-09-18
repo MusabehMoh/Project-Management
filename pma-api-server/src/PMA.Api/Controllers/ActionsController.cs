@@ -18,19 +18,32 @@ public class ActionsController : ApiBaseController
     }
 
     /// <summary>
-    /// Get all actions with pagination and filtering
+    /// Get all actions with filtering
     /// </summary>
     [HttpGet]
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetActions(
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 20,
         [FromQuery] string? category = null,
         [FromQuery] bool? isActive = null)
     {
         try
         {
-            var actions = await _actionService.GetActionsAsync(page, limit, category, isActive);
+            var actions = await _actionService.GetAllActionsAsync();
+            
+            // Apply filtering if parameters are provided
+            if (!string.IsNullOrEmpty(category) || isActive.HasValue)
+            {
+                if (!string.IsNullOrEmpty(category))
+                {
+                    actions = actions.Where(a => a.Category == category);
+                }
+                
+                if (isActive.HasValue)
+                {
+                    actions = actions.Where(a => a.IsActive == isActive.Value);
+                }
+            }
+            
             return Success(actions);
         }
         catch (Exception ex)

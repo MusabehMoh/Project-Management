@@ -105,19 +105,15 @@ public class UserService : IUserService
             {
                 Id = ur.Role?.Id ?? 0,
                 Name = ur.Role?.Name ?? string.Empty,
-                Active = ur.Role?.IsActive ?? false,
+                IsActive = ur.Role?.IsActive ?? false,
                 RoleOrder = ur.Role?.RoleOrder ?? 0,
                 Actions = ur.Role?.RoleActions?.Select(ra => new ActionDto
                 {
                     Id = ra.Permission?.Id ?? 0,
                     Name = ra.Permission?.Name ?? string.Empty,
                     Description = ra.Permission?.Description,
-                    Category = ra.Permission?.Category ?? string.Empty,
-                    Resource = ra.Permission?.Resource ?? string.Empty,
-                    Action = ra.Permission?.Action ?? string.Empty,
-                    IsActive = ra.Permission?.IsActive ?? false,
-                    CreatedAt = ra.Permission?.CreatedAt ?? DateTime.UtcNow,
-                    UpdatedAt = ra.Permission?.UpdatedAt ?? DateTime.UtcNow
+                    Category = ra.Permission?.Category ?? string.Empty, 
+                    IsActive = ra.Permission?.IsActive ?? false
                 }).ToList()
             }).ToList(),
             Actions = user.UserActions?.Select(ua => new ActionDto
@@ -125,12 +121,8 @@ public class UserService : IUserService
                 Id = ua.Permission?.Id ?? 0,
                 Name = ua.Permission?.Name ?? string.Empty,
                 Description = ua.Permission?.Description,
-                Category = ua.Permission?.Category ?? string.Empty,
-                Resource = ua.Permission?.Resource ?? string.Empty,
-                Action = ua.Permission?.Action ?? string.Empty,
-                IsActive = ua.Permission?.IsActive ?? false,
-                CreatedAt = ua.Permission?.CreatedAt ?? DateTime.UtcNow,
-                UpdatedAt = ua.Permission?.UpdatedAt ?? DateTime.UtcNow
+                Category = ua.Permission?.Category ?? string.Empty, 
+                IsActive = ua.Permission?.IsActive ?? false, 
             }).ToList()
         };
 
@@ -172,19 +164,15 @@ public class UserService : IUserService
             {
                 Id = ur.Role?.Id ?? 0,
                 Name = ur.Role?.Name ?? string.Empty,
-                Active = ur.Role?.IsActive ?? false,
+                IsActive = ur.Role?.IsActive ?? false,
                 RoleOrder = ur.Role?.RoleOrder ?? 0,
                 Actions = ur.Role?.RoleActions?.Select(ra => new ActionDto
                 {
                     Id = ra.Permission?.Id ?? 0,
                     Name = ra.Permission?.Name ?? string.Empty,
                     Description = ra.Permission?.Description,
-                    Category = ra.Permission?.Category ?? string.Empty,
-                    Resource = ra.Permission?.Resource ?? string.Empty,
-                    Action = ra.Permission?.Action ?? string.Empty,
-                    IsActive = ra.Permission?.IsActive ?? false,
-                    CreatedAt = ra.Permission?.CreatedAt ?? DateTime.UtcNow,
-                    UpdatedAt = ra.Permission?.UpdatedAt ?? DateTime.UtcNow
+                    Category = ra.Permission?.Category ?? string.Empty, 
+                    IsActive = ra.Permission?.IsActive ?? false, 
                 }).ToList()
             }).ToList(),
             Actions = user.UserActions?.Select(ua => new ActionDto
@@ -192,12 +180,8 @@ public class UserService : IUserService
                 Id = ua.Permission?.Id ?? 0,
                 Name = ua.Permission?.Name ?? string.Empty,
                 Description = ua.Permission?.Description,
-                Category = ua.Permission?.Category ?? string.Empty,
-                Resource = ua.Permission?.Resource ?? string.Empty,
-                Action = ua.Permission?.Action ?? string.Empty,
-                IsActive = ua.Permission?.IsActive ?? false,
-                CreatedAt = ua.Permission?.CreatedAt ?? DateTime.UtcNow,
-                UpdatedAt = ua.Permission?.UpdatedAt ?? DateTime.UtcNow
+                Category = ua.Permission?.Category ?? string.Empty, 
+                IsActive = ua.Permission?.IsActive ?? false
             }).ToList()
         };
 
