@@ -13,6 +13,8 @@ import ProjectPipeline from "@/components/ProjectPipeline";
 import Calendar from "@/components/calendar";
 import ModernQuickStats from "@/components/ModernQuickStats";
 import QuickActions from "@/components/QuickActions";
+import PendingRequirements from "@/components/PendingRequirements";
+import RequirementCompletionTracker from "@/components/RequirementCompletionTracker";
 
 export default function AnalystManagerDashboard() {
   const { t, language } = useLanguage();
@@ -76,13 +78,20 @@ export default function AnalystManagerDashboard() {
       {/* Quick Stats */}
       <ModernQuickStats />
 
-      {/* Quick Actions Banner */}
-      <QuickActions
-        key={refreshKey}
-        autoRefresh={true}
-        className="mb-6"
-        onAssignAnalyst={handleAssignAnalyst}
-      />
+      {/* Quick Actions and Pending Requirements Section */}
+      <div className="flex flex-col lg:flex-row gap-6 mb-6">
+        <div className="lg:w-[70%] space-y-4">
+          <QuickActions
+            key={refreshKey}
+            autoRefresh={true}
+            onAssignAnalyst={handleAssignAnalyst}
+          />
+        </div>
+        
+        <div className="lg:w-[30%] space-y-4">
+          <PendingRequirements />
+        </div>
+      </div>
 
       {/* Team Workload Performance and Calendar */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -104,11 +113,18 @@ export default function AnalystManagerDashboard() {
       {/* Project Pipeline Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Column - Project Pipeline */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">
-            {t("dashboard.projectPipeline")}
-          </h2>
-          <ProjectPipeline />
+        <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t("dashboard.projectPipeline")}
+            </h2>
+            <ProjectPipeline />
+          </div>
+          
+          {/* Requirement Completion Tracking */}
+          <div className="space-y-4">
+            <RequirementCompletionTracker useMockData={true} />
+          </div>
         </div>
 
         {/* Side Column - Urgent Notifications and Requirement Overview */}

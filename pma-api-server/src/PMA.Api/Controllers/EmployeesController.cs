@@ -43,7 +43,7 @@ public class EmployeesController : ApiBaseController
     /// Get employee by ID
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(Employee), 200)]
+    [ProducesResponseType(typeof(EmployeeDto), 200)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetEmployeeById(int id)
     {
@@ -66,7 +66,7 @@ public class EmployeesController : ApiBaseController
     /// Create a new employee
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(Employee), 201)]
+    [ProducesResponseType(typeof(EmployeeDto), 201)]
     [ProducesResponseType(400)]
     public async Task<IActionResult> CreateEmployee([FromBody] Employee employee)
     {
@@ -90,7 +90,7 @@ public class EmployeesController : ApiBaseController
     /// Update an existing employee
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(Employee), 200)]
+    [ProducesResponseType(typeof(EmployeeDto), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> UpdateEmployee(int id, [FromBody] Employee employee)
@@ -140,6 +140,32 @@ public class EmployeesController : ApiBaseController
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An error occurred while deleting the employee", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Search employees
+    /// </summary>
+    [HttpGet("search")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> SearchEmployees([FromQuery] string q, [FromQuery] int page = 1, [FromQuery] int limit = 20)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                return BadRequest(new { message = "Search query is required" });
+            }
+
+            var (employees, totalCount) = await _employeeService.SearchEmployeesAsync(q, page, limit);
+            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+            return Success(employees, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<EmployeeDto>>("An error occurred while searching employees", ex.Message);
         }
     }
 }

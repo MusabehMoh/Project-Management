@@ -141,16 +141,16 @@ export default function UsersPage() {
 
       filteredActions = filteredActions.filter(
         (action) =>
-          action.name.toLowerCase().includes(query) ||
-          action.description.toLowerCase().includes(query) ||
-          action.categoryName.toLowerCase().includes(query),
+          action.name?.toLowerCase().includes(query) ||
+          (action.description && action.description.toLowerCase().includes(query)) ||
+          (action.categoryName && action.categoryName.toLowerCase().includes(query)),
       );
     }
 
     // Filter by category
     if (selectedActionCategory !== "all") {
       filteredActions = filteredActions.filter(
-        (action) => action.categoryName === selectedActionCategory,
+        (action) => action.categoryName && action.categoryName === selectedActionCategory,
       );
     }
 
@@ -161,7 +161,9 @@ export default function UsersPage() {
   const getActionCategories = () => {
     const availableActions = getAvailableAdditionalActions();
     const categories = [
-      ...new Set(availableActions.map((action) => action.categoryName)),
+      ...new Set(
+        availableActions.map((action) => action.categoryName || "Uncategorized")
+      ),
     ];
 
     return categories.sort();
@@ -173,7 +175,7 @@ export default function UsersPage() {
     selectAll: boolean,
   ) => {
     const categoryActions = getAvailableAdditionalActions().filter(
-      (action) => action.categoryName === categoryName,
+      (action) => (action.categoryName || "Uncategorized") === categoryName,
     );
     const categoryActionIds = categoryActions.map((action) => action.id);
 
@@ -1078,10 +1080,13 @@ export default function UsersPage() {
                       {Object.entries(
                         getFilteredAdditionalActions().reduce(
                           (acc, action) => {
-                            if (!acc[action.categoryName]) {
-                              acc[action.categoryName] = [];
+                            // Use "Uncategorized" as default if categoryName is missing
+                            const category = action.categoryName || "Uncategorized";
+                            
+                            if (!acc[category]) {
+                              acc[category] = [];
                             }
-                            acc[action.categoryName].push(action);
+                            acc[category].push(action);
 
                             return acc;
                           },

@@ -83,6 +83,14 @@ projectRequirementRoutes.get(
   ),
 );
 
+// GET /api/project-requirements/draft-requirements - Get all requirements with status "draft"
+projectRequirementRoutes.get(
+  "/draft-requirements",
+  projectRequirementsController.getDraftRequirements.bind(
+    projectRequirementsController,
+  ),
+);
+
 // GET /api/project-requirements/team-workload-performance - Get team workload and performance metrics
 projectRequirementRoutes.get(
   "/team-workload-performance",

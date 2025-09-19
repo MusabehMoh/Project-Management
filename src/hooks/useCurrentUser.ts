@@ -38,38 +38,6 @@ export const useCurrentUser = (): UseCurrentUserReturn => {
 
       setError(errorMessage);
       console.error("Error fetching current user:", err);
-
-      // Fallback to mock data in case of error during development
-      if (import.meta.env.MODE === "development") {
-        console.warn(
-          "Using fallback user data due to API error:",
-          errorMessage,
-        );
-        setUser({
-          id: 1,
-          userName: "sarah.johnson",
-          fullName: "Sarah Johnson",
-          militaryNumber: "MIL001234",
-          gradeName: "Captain",
-          department: "IT Department",
-          email: "sarah.johnson@organization.mil",
-          phone: "+1-555-0101",
-          isVisible: true,
-          roles: [
-            {
-              id: 1,
-              name: "Administrator",
-              active: true,
-              roleOrder: 1,
-              actions: [],
-            },
-          ],
-          actions: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-        setError(null); // Clear error since we have fallback data
-      }
     } finally {
       setLoading(false);
     }

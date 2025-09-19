@@ -16,7 +16,7 @@ export interface DepartmentMember {
   departmentId: number;
   userId: number;
   role: "manager" | "supervisor" | "member";
-  joinedAt: string;
+  joinDate: string;
   isActive: boolean;
   // Employee information
   user: {

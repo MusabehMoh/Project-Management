@@ -442,6 +442,7 @@ namespace PMA.Api.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AnalystIds")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Analysts")
@@ -1020,6 +1021,46 @@ namespace PMA.Api.Migrations
                     b.HasIndex("TimelineRequirementId");
 
                     b.ToTable("Tasks");
+                });
+
+            modelBuilder.Entity("PMA.Core.Entities.Team", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoinDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PrsId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("PrsId");
+
+                    b.ToTable("Teams");
                 });
 
             modelBuilder.Entity("PMA.Core.Entities.Timeline", b =>
@@ -1665,6 +1706,31 @@ namespace PMA.Api.Migrations
                     b.Navigation("Sprint");
                 });
 
+            modelBuilder.Entity("PMA.Core.Entities.Team", b =>
+                {
+                    b.HasOne("PMA.Core.Entities.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy");
+
+                    b.HasOne("PMA.Core.Entities.Department", "Department")
+                        .WithMany("Teams")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PMA.Core.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("PrsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("PMA.Core.Entities.Timeline", b =>
                 {
                     b.HasOne("PMA.Core.Entities.Project", "Project")
@@ -1795,6 +1861,8 @@ namespace PMA.Api.Migrations
             modelBuilder.Entity("PMA.Core.Entities.Department", b =>
                 {
                     b.Navigation("Tasks");
+
+                    b.Navigation("Teams");
 
                     b.Navigation("Users");
                 });

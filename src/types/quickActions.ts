@@ -22,7 +22,9 @@ export type QuickActionType =
   | "VIEW_OVERDUE"
   | "GENERATE_REPORT"
   | "MANAGE_TEAM"
-  | "VIEW_ANALYTICS";
+  | "VIEW_ANALYTICS"
+  | "ADD_REQUIREMENTS"
+  | "ASSIGN_AVAILABLE_MEMBERS";
 
 export interface QuickActionStats {
   pendingRequirements: number;
@@ -32,6 +34,8 @@ export interface QuickActionStats {
   overdueItems: number;
   newNotifications: number;
   activeProjects: number;
+  projectsWithoutRequirements: number;
+  availableMembers: number;
 }
 
 export interface QuickActionData {

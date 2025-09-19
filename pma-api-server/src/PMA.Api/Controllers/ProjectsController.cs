@@ -64,8 +64,8 @@ public class ProjectsController : ApiBaseController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while retrieving projects. Page: {Page}, Limit: {Limit}, Search: {Search}, Status: {Status}, Priority: {Priority}",
-                page, limit, search, status, priority);
+            _logger.LogError(ex, "Error occurred while retrieving projects. Page: {Page}, Limit: {Limit}, Search: {Search}, Status: {Status}, Priority: {Priority}. StackTrace: {StackTrace}",
+                page, limit, search, status, priority, ex.StackTrace);
             return Error<IEnumerable<ProjectDto>>("Internal server error", ex.Message);
         }
     }
@@ -342,6 +342,70 @@ public class ProjectsController : ApiBaseController
         }
         catch (Exception ex)
         {
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Internal server error",
+                Error = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Send project for review
+    /// </summary>
+    [HttpPost("{id}/send")]
+    [ProducesResponseType(typeof(ApiResponse<ProjectDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> SendProject(int id)
+    {
+        try
+        {
+            var project = await _projectService.SendProjectAsync(id);
+
+            var projectDto = new ProjectDto
+            {
+                Id = project.Id,
+                ApplicationName = project.ApplicationName,
+                ProjectOwner = project.ProjectOwner,
+                AlternativeOwner = project.AlternativeOwner,
+                OwningUnit = project.OwningUnit,
+                ProjectOwnerId = project.ProjectOwnerId,
+                AlternativeOwnerId = project.AlternativeOwnerId,
+                OwningUnitId = project.OwningUnitId,
+                Analysts = project.Analysts,
+                AnalystIds = project.AnalystIds,
+                StartDate = project.StartDate,
+                ExpectedCompletionDate = project.ExpectedCompletionDate,
+                Description = project.Description,
+                Remarks = project.Remarks,
+                Status = project.Status,
+                CreatedAt = project.CreatedAt,
+                UpdatedAt = project.UpdatedAt,
+                Priority = project.Priority,
+                Budget = project.Budget,
+                Progress = project.Progress
+            };
+
+            return Ok(new ApiResponse<ProjectDto>
+            {
+                Success = true,
+                Data = projectDto,
+                Message = "Project sent for review successfully"
+            });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Project not found"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while sending project for review. ProjectId: {ProjectId}", id);
+
             return StatusCode(500, new ApiResponse<object>
             {
                 Success = false,

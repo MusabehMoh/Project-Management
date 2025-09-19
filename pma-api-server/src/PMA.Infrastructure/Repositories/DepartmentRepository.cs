@@ -12,7 +12,7 @@ public class DepartmentRepository : Repository<Department>, IDepartmentRepositor
     {
     }
 
-    public async Task<(IEnumerable<Department> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null)
+    public async Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null)
     {
         var query = _context.Departments.AsQueryable();
 
@@ -22,21 +22,79 @@ public class DepartmentRepository : Repository<Department>, IDepartmentRepositor
         }
 
         var totalCount = await query.CountAsync();
-        var departments = await query
+        var departmentsWithCounts = await query
             .OrderBy(d => d.Name)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(d => new
+            {
+                Department = d,
+                MemberCount = _context.Teams.Count(t => t.DepartmentId == d.Id && t.IsActive)
+            })
+            .ToListAsync();
+
+        return (departmentsWithCounts.Select(x => (x.Department, x.MemberCount)), totalCount);
+    }
+}
+
+public class TeamRepository : Repository<Team>, ITeamRepository
+{
+    public TeamRepository(ApplicationDbContext context) : base(context)
+    {
+    }
+
+    public async Task<(IEnumerable<Team> Teams, int TotalCount)> GetTeamsByDepartmentAsync(int departmentId, int page = 1, int limit = 10)
+    {
+        var query = _context.Teams
+            .Include(t => t.Employee)
+            .Include(t => t.Department)
+            .Where(t => t.DepartmentId == departmentId && t.IsActive);
+
+        var totalCount = await query.CountAsync();
+        var teams = await query
+            .OrderBy(t => t.JoinDate)
             .Skip((page - 1) * limit)
             .Take(limit)
             .ToListAsync();
 
-        return (departments, totalCount);
+        return (teams, totalCount);
     }
 
-    public async Task<IEnumerable<Department>> GetActiveDepartmentsAsync()
+    public async Task<Team?> GetTeamByIdAsync(int id)
     {
-        return await _context.Departments
-            .Where(d => d.IsActive)
-            .OrderBy(d => d.Name)
-            .ToListAsync();
+        return await _context.Teams
+            .Include(t => t.Employee)
+            .Include(t => t.Department)
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task<Team> AddTeamMemberAsync(Team team)
+    {
+        team.CreatedAt = DateTime.UtcNow;
+        team.UpdatedAt = DateTime.UtcNow;
+        await _context.Teams.AddAsync(team);
+        await _context.SaveChangesAsync();
+        return team;
+    }
+
+    public async Task UpdateTeamMemberAsync(Team team)
+    {
+        team.UpdatedAt = DateTime.UtcNow;
+        _context.Teams.Update(team);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<bool> RemoveTeamMemberAsync(int id)
+    {
+        var team = await _context.Teams.FindAsync(id);
+        if (team != null)
+        {
+            team.IsActive = false;
+            team.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        return false;
     }
 }
 

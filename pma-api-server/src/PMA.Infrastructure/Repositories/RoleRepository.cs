@@ -14,7 +14,7 @@ public class RoleRepository : Repository<Role>, IRoleRepository
 
     public async Task<(IEnumerable<Role> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null)
     {
-        var query = _context.Roles.AsQueryable();
+        var query = _context.Roles.Include(w => w.RoleActions).ThenInclude(x => x.Permission).AsQueryable();
 
         if (isActive.HasValue)
         {

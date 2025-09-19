@@ -1,5 +1,6 @@
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
+using PMA.Core.DTOs;
 using System.Threading.Tasks;
 
 namespace PMA.Core.Services;
@@ -13,25 +14,29 @@ public class EmployeeService : IEmployeeService
         _employeeRepository = employeeRepository;
     }
 
-    public async System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> GetEmployeesAsync(int page, int limit, int? statusId = null)
+    public async System.Threading.Tasks.Task<(IEnumerable<EmployeeDto> Employees, int TotalCount)> GetEmployeesAsync(int page, int limit, int? statusId = null)
     {
-        return await _employeeRepository.GetEmployeesAsync(page, limit, statusId);
+        var (employees, totalCount) = await _employeeRepository.GetEmployeesAsync(page, limit, statusId);
+        var employeeDtos = employees.Select(e => MapToDto(e));
+        return (employeeDtos, totalCount);
     }
 
-    public async System.Threading.Tasks.Task<Employee?> GetEmployeeByIdAsync(int id)
+    public async System.Threading.Tasks.Task<EmployeeDto?> GetEmployeeByIdAsync(int id)
     {
-        return await _employeeRepository.GetByIdAsync(id);
+        var employee = await _employeeRepository.GetByIdAsync(id);
+        return employee != null ? MapToDto(employee) : null;
     }
 
-    public async System.Threading.Tasks.Task<Employee> CreateEmployeeAsync(Employee employee)
+    public async System.Threading.Tasks.Task<EmployeeDto> CreateEmployeeAsync(Employee employee)
     {
-        return await _employeeRepository.AddAsync(employee);
+        var createdEmployee = await _employeeRepository.AddAsync(employee);
+        return MapToDto(createdEmployee);
     }
 
-    public async System.Threading.Tasks.Task<Employee> UpdateEmployeeAsync(Employee employee)
+    public async System.Threading.Tasks.Task<EmployeeDto> UpdateEmployeeAsync(Employee employee)
     {
         await _employeeRepository.UpdateAsync(employee);
-        return employee;
+        return MapToDto(employee);
     }
 
     public async System.Threading.Tasks.Task<bool> DeleteEmployeeAsync(int id)
@@ -43,5 +48,25 @@ public class EmployeeService : IEmployeeService
             return true;
         }
         return false;
+    }
+
+    public async System.Threading.Tasks.Task<(IEnumerable<EmployeeDto> Employees, int TotalCount)> SearchEmployeesAsync(string query, int page = 1, int limit = 20)
+    {
+        var (employees, totalCount) = await _employeeRepository.SearchEmployeesAsync(query, page, limit);
+        var employeeDtos = employees.Select(e => MapToDto(e));
+        return (employeeDtos, totalCount);
+    }
+
+    private EmployeeDto MapToDto(Employee employee)
+    {
+        return new EmployeeDto
+        {
+            Id = employee.Id,
+            UserName = employee.UserName,
+            FullName = employee.FullName,
+            MilitaryNumber = employee.MilitaryNumber,
+            GradeName = employee.GradeName,
+            StatusId = employee.StatusId
+        };
     }
 }

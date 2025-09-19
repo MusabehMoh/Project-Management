@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Requirement> Requirements { get; set; }
     public DbSet<RequirementComment> RequirementComments { get; set; }
     public DbSet<Department> Departments { get; set; }
+    public DbSet<Team> Teams { get; set; }
     public DbSet<Unit> Units { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Permission> Actions { get; set; }

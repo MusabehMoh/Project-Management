@@ -155,7 +155,7 @@ export default function DepartmentsPage() {
     searchEmployees,
     clearResults,
   } = useEmployeeSearch({
-    minLength: 1,
+    minLength: 3,
     maxResults: 20,
     loadInitialResults: false,
   });
@@ -308,7 +308,6 @@ export default function DepartmentsPage() {
                   <TableColumn>{t("departments.name")}</TableColumn>
                   <TableColumn>{t("departments.status")}</TableColumn>
                   <TableColumn>{t("departments.memberCount")}</TableColumn>
-                  <TableColumn>{t("departments.updatedAt")}</TableColumn>
                   <TableColumn>{t("departments.actions")}</TableColumn>
                 </TableHeader>
                 <TableBody>
@@ -332,11 +331,6 @@ export default function DepartmentsPage() {
                           <UsersIcon size={16} />
                           {department.memberCount}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {department.updatedAt
-                          ? new Date(department.updatedAt).toLocaleDateString()
-                          : "-"}
                       </TableCell>
                       <TableCell>
                         <Dropdown>
@@ -477,7 +471,7 @@ export default function DepartmentsPage() {
                           {t("departments.members.gradeName")}
                         </TableColumn>
                         <TableColumn>
-                          {t("departments.members.joinedAt")}
+                          {t("departments.members.joinDate")}
                         </TableColumn>
                         <TableColumn>{t("departments.actions")}</TableColumn>
                       </TableHeader>
@@ -504,8 +498,8 @@ export default function DepartmentsPage() {
                             <TableCell>{member.user.militaryNumber}</TableCell>
                             <TableCell>{member.user.gradeName}</TableCell>
                             <TableCell>
-                              {new Date(member.joinedAt).toLocaleDateString(
-                                language === "ar" ? "ar-SA" : "en-US",
+                              {new Date(member.joinDate).toLocaleDateString(
+                                "en-US",
                               )}
                             </TableCell>
                             <TableCell>

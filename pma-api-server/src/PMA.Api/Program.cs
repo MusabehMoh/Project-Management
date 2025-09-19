@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Options;
+using PMA.Api.Config;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,6 +115,7 @@ builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ISprintRepository, SprintRepository>();
 builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<IUnitRepository, UnitRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IActionRepository, ActionRepository>();
@@ -131,6 +133,9 @@ builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IActionService, ActionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Register mapping services
+builder.Services.AddMappingServices();
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
@@ -184,5 +189,6 @@ app.MapGet("/health", () => new
 });
 
 app.Run();
+
 
 

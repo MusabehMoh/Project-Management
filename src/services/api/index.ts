@@ -12,6 +12,7 @@ import { ProjectDetailsApiService } from "./projectDetailsService";
 import { lookupService } from "./lookupService";
 import { ProjectStatusService } from "./projectStatusService";
 import { quickActionsService } from "./quickActionsService";
+import { projectRequirementsService } from "./projectRequirementsService";
 
 // API Client
 export { apiClient, ApiError, API_CONFIG } from "./client";
@@ -26,6 +27,7 @@ export { membersTasksService } from "./membersTasksService";
 export { teamWorkloadService } from "./teamWorkloadService";
 export { pipelineService } from "./pipelineService";
 export { quickActionsService } from "./quickActionsService";
+export { projectRequirementsService } from "./projectRequirementsService";
 
 // Export the service instances
 export const projectService = projectsApi;

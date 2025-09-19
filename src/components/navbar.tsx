@@ -588,94 +588,20 @@ export const Navbar = () => {
                   {t("user.profile")}
                 </DropdownItem>
                 <DropdownItem
-                  key="settings"
-                  className="transition-all duration-200 hover:bg-primary/10"
-                  description={t("user.settingsDesc")}
+                  key="logout"
+                  className="text-danger transition-all duration-200 hover:bg-danger/10"
+                  color="danger"
+                  description={t("user.logoutDesc")}
                   startContent={
-                    <Settings
+                    <LogOut
                       className="transition-colors duration-200"
                       size={16}
                     />
                   }
                 >
-                  {t("user.settings")}
+                  {t("user.logout")}
                 </DropdownItem>
               </DropdownSection>
-
-              {/* Conditionally render admin section */}
-              {isAdmin() ? (
-                <DropdownSection showDivider title={t("user.administration")}>
-                  <DropdownItem
-                    key="admin-users"
-                    className="transition-all duration-200 hover:bg-primary/10"
-                    description={t("user.userManagementDesc")}
-                    startContent={
-                      <Users
-                        className="transition-colors duration-200"
-                        size={16}
-                      />
-                    }
-                  >
-                    {t("user.userManagement")}
-                  </DropdownItem>
-                  <DropdownItem
-                    key="admin-system"
-                    className="transition-all duration-200 hover:bg-primary/10"
-                    description={t("user.systemSettingsDesc")}
-                    startContent={
-                      <Settings
-                        className="transition-colors duration-200"
-                        size={16}
-                      />
-                    }
-                  >
-                    {t("user.systemSettings")}
-                  </DropdownItem>
-                </DropdownSection>
-              ) : null}
-
-              <DropdownSection title={t("user.workspace")}>
-                <DropdownItem
-                  key="departments"
-                  className="transition-all duration-200 hover:bg-primary/10"
-                  description={t("user.departmentsDesc")}
-                  startContent={
-                    <Users
-                      className="transition-colors duration-200"
-                      size={16}
-                    />
-                  }
-                >
-                  {t("user.departmentManagement")}
-                </DropdownItem>
-                <DropdownItem
-                  key="billing"
-                  className="transition-all duration-200 hover:bg-primary/10"
-                  description={t("user.billingDesc")}
-                  startContent={
-                    <CreditCard
-                      className="transition-colors duration-200"
-                      size={16}
-                    />
-                  }
-                >
-                  {t("user.billing")}
-                </DropdownItem>
-              </DropdownSection>
-              <DropdownItem
-                key="logout"
-                className="text-danger transition-all duration-200 hover:bg-danger/10"
-                color="danger"
-                description={t("user.logoutDesc")}
-                startContent={
-                  <LogOut
-                    className="transition-colors duration-200"
-                    size={16}
-                  />
-                }
-              >
-                {t("user.logout")}
-              </DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </NavbarItem>

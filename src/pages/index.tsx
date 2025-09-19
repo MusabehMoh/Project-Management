@@ -2,6 +2,7 @@ import React from "react";
 
 import DefaultLayout from "@/layouts/default";
 import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
+import DeveloperManagerDashboard from "@/components/dashboard/DeveloperManagerDashboard";
 import { usePermissions } from "@/hooks/usePermissions";
 
 export default function IndexPage() {
@@ -20,10 +21,12 @@ export default function IndexPage() {
 
   // Check if user has Analyst Department Manager role
   const hasAccess = hasAnyRole(["Analyst Department Manager", "Administrator"]);
+  const hasDevManagerRole = hasAnyRole(["Developer Manager", "Administrator"]);
 
   return (
     <DefaultLayout>
       {hasAccess ? <AnalystManagerDashboard /> : <div />}
+      {hasDevManagerRole ? <DeveloperManagerDashboard /> : <div />}
     </DefaultLayout>
   );
 }
