@@ -140,7 +140,15 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
       case "status":
         return (
           <Chip
-            color={getStatusColor(task.status.label)}
+            color={
+              (task.status.color as
+                | "success"
+                | "primary"
+                | "warning"
+                | "danger"
+                | "default"
+                | "secondary") ?? "default"
+            }
             size="sm"
             variant="flat"
           >
@@ -151,7 +159,15 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
       case "priority":
         return (
           <Chip
-            color={getPriorityColor(task.priority.label)}
+            color={
+              (task.priority.color as
+                | "success"
+                | "primary"
+                | "warning"
+                | "danger"
+                | "default"
+                | "secondary") ?? "default"
+            }
             size="sm"
             variant="flat"
           >

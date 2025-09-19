@@ -3,6 +3,7 @@ import type {
   TaskSearchParams,
   TasksResponse,
   TaskFiltersData,
+  TaskConfigData,
 } from "@/types/membersTasks";
 import type { ApiResponse } from "@/types/project";
 
@@ -18,26 +19,45 @@ export class MembersTasksService {
   /**
    * Get all tasks with filtering and pagination
    */
-  async getTasks(
-    params?: TaskSearchParams
-  ): Promise<ApiResponse<TasksResponse>> {
-    const queryParams = new URLSearchParams();
+  // async getTasks() //params?: TaskSearchParams
+  // : Promise<ApiResponse<TasksResponse>> {
+  //   const queryParams = new URLSearchParams();
 
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
-            queryParams.append(key, value.join(","));
-          } else {
-            queryParams.append(key, value.toString());
-          }
-        }
-      });
+  //   return apiClient.get<TasksResponse>(`${this.baseUrl}?`);
+  // }
+
+  /**
+   * Get projects assigned to current analyst
+   */
+  async getTasks(
+    taskRequest?: TaskSearchParams
+  ): Promise<ApiResponse<TasksResponse>> {
+    const params = new URLSearchParams();
+
+    if (taskRequest?.page) {
+      params.append("page", taskRequest?.page.toString());
     }
 
-    return apiClient.get<TasksResponse>(
-      `${this.baseUrl}?${queryParams.toString()}`
-    );
+    if (taskRequest?.limit) {
+      params.append("limit", taskRequest?.limit.toString());
+    }
+    if (taskRequest?.search) {
+      params.append("search", taskRequest?.search);
+    }
+    if (taskRequest?.statusId) {
+      params.append("status", taskRequest?.statusId.toString());
+    }
+    if (taskRequest?.priorityId) {
+      params.append("priority", taskRequest?.priorityId.toString());
+    }
+
+    if (taskRequest?.projectId) {
+      params.append("project", taskRequest?.projectId.toString());
+    }
+
+    const endpoint = `${this.baseUrl}${params.toString() ? "?" + params.toString() : ""}`;
+
+    return await apiClient.get<TasksResponse>(endpoint);
   }
 
   /**
@@ -51,20 +71,20 @@ export class MembersTasksService {
    * Export tasks in specified format
    */
   async exportTasks(
-    filters: TaskSearchParams,
+    //filters: TaskSearchParams,
     format: "csv" | "pdf" | "excel"
   ): Promise<Blob> {
     const queryParams = new URLSearchParams();
 
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (Array.isArray(value)) {
-          queryParams.append(key, value.join(","));
-        } else {
-          queryParams.append(key, value.toString());
-        }
-      }
-    });
+    // Object.entries(filters).forEach(([key, value]) => {
+    //   if (value !== undefined && value !== null) {
+    //     if (Array.isArray(value)) {
+    //       queryParams.append(key, value.join(","));
+    //     } else {
+    //       queryParams.append(key, value.toString());
+    //     }
+    //   }
+    // });
     queryParams.append("format", format);
 
     // Using fetch directly for blob response since apiClient expects JSON
@@ -121,8 +141,72 @@ export class MembersTasksService {
   }
 
   /*change Status */
-  async changeStatus(id: string, typeId: string): Promise<ApiResponse<void>> {
-    return apiClient.get<void>(`${this.baseUrl}/${id}/change-status/${typeId}`);
+  async changeStatus(
+    id: string,
+    typeId: string,
+    notes: string
+  ): Promise<ApiResponse<void>> {
+    return {
+      success: true,
+      data: undefined,
+      message: "Change Status submitted successfully",
+      timestamp: "15-08-2025",
+    };
+    // return apiClient.post<void>(
+    //   `${this.baseUrl}/${id}/change-status/${typeId}`,
+    //   notes,
+    // );
+  }
+
+  /* status drop down values and header data */
+  async getCurrentTasksConfig(): Promise<ApiResponse<TaskConfigData>> {
+    return {
+      success: true,
+      data: {
+        totalTasks: 55,
+        inProgressTasks: 15,
+        overdueTasks: 4,
+        taskStatus: [
+          {
+            id: 1,
+            label: "Not Started",
+          },
+          {
+            id: 2,
+            label: "In Progress",
+          },
+          {
+            id: 3,
+            label: "Review",
+          },
+          {
+            id: 4,
+            label: "Completed",
+          },
+          {
+            id: 5,
+            label: "Blocked",
+          },
+          { id: 6, label: "All" },
+        ],
+        taskPriority: [
+          { id: 1, label: "Low" },
+          { id: 2, label: "Medium" },
+          { id: 3, label: "High" },
+          { id: 4, label: "Critical" },
+          { id: 5, label: "All" },
+        ],
+        projects: [
+          { id: "1", name: "E-Commerce Platform" },
+          { id: "2", name: "Mobile Banking App" },
+          { id: "3", name: "HR Management System" },
+          { id: "4", name: "All" },
+        ],
+      },
+      message: "success",
+      timestamp: "15-08-2025",
+    };
+    //return apiClient.get<TaskConfigData>(`${this.baseUrl}/getTasksConfig`);
   }
 }
 

@@ -4,40 +4,35 @@ import {
   MemberTask,
   TaskSearchParams,
   TaskFiltersData,
+  TaskConfigData,
 } from "@/types/membersTasks";
 import { Department, MemberSearchResult } from "@/types/timeline";
 import { membersTasksService } from "@/services/api/membersTasksService";
 import useTeamSearch from "@/hooks/useTeamSearch";
-import { toast } from "@heroui/theme";
 
-// Mock data generator for fallback
-const generateMockTasks = (): MemberTask[] => {
-  const statuses = [
-    { id: 1, label: "Not Started", color: "default" },
-    { id: 2, label: "In Progress", color: "primary" },
-    { id: 3, label: "Review", color: "warning" },
-    { id: 4, label: "Completed", color: "success" },
-    { id: 5, label: "Blocked", color: "danger" },
-  ];
-
-  const priorities = [
-    { id: 1, label: "Low", color: "default" },
-    { id: 2, label: "Medium", color: "primary" },
-    { id: 3, label: "High", color: "warning" },
-    { id: 4, label: "Critical", color: "danger" },
-  ];
-
-  const departments = [
-    { id: "1", name: "Engineering", color: "#3b82f6" },
-    { id: "2", name: "Design", color: "#8b5cf6" },
-    { id: "3", name: "Marketing", color: "#10b981" },
-    { id: "4", name: "Sales", color: "#f59e0b" },
-    { id: "5", name: "HR", color: "#ef4444" },
-    { id: "6", name: "Operations", color: "#6366f1" },
-  ];
-
-  const employees = [
-    {
+export const mockMemberTasks: MemberTask[] = [
+  {
+    id: "1",
+    name: "Database Schema Design",
+    description: "Design and implement the database schema for the project.",
+    startDate: "2025-08-01",
+    endDate: "2025-08-10",
+    progress: 40,
+    status: { id: 2, label: "In Progress", color: "primary" },
+    priority: { id: 3, label: "High", color: "warning" },
+    department: { id: "1", name: "Engineering", color: "#3b82f6" },
+    assignedMembers: [
+      {
+        id: 1,
+        userName: "ahmed.hassan",
+        militaryNumber: "M001",
+        fullName: "Ahmed Hassan",
+        gradeName: "Captain",
+        statusId: 1,
+        department: "Engineering",
+      },
+    ],
+    primaryAssignee: {
       id: 1,
       userName: "ahmed.hassan",
       militaryNumber: "M001",
@@ -46,16 +41,40 @@ const generateMockTasks = (): MemberTask[] => {
       statusId: 1,
       department: "Engineering",
     },
-    {
-      id: 2,
-      userName: "sara.ahmed",
-      militaryNumber: "M002",
-      fullName: "Sara Ahmed",
-      gradeName: "Lieutenant",
-      statusId: 1,
-      department: "Design",
-    },
-    {
+    memberIds: [1],
+    project: { id: "1", name: "E-Commerce Platform" },
+    requirement: { id: "1", name: "User Authentication" },
+    canRequestDesign: true,
+    timeSpent: 12,
+    estimatedTime: 20,
+    tags: ["Backend", "Database"],
+    isOverdue: false,
+    createdAt: "2025-07-12",
+    updatedAt: "2025-08-02",
+  },
+  {
+    id: "2",
+    name: "API Endpoint Development",
+    description:
+      "Develop REST API endpoints for user management and authentication.",
+    startDate: "2025-08-05",
+    endDate: "2025-08-20",
+    progress: 60,
+    status: { id: 2, label: "In Progress", color: "primary" },
+    priority: { id: 2, label: "Medium", color: "primary" },
+    department: { id: "1", name: "Engineering", color: "#3b82f6" },
+    assignedMembers: [
+      {
+        id: 3,
+        userName: "mohammed.ali",
+        militaryNumber: "M003",
+        fullName: "Mohammed Ali",
+        gradeName: "Major",
+        statusId: 1,
+        department: "Engineering",
+      },
+    ],
+    primaryAssignee: {
       id: 3,
       userName: "mohammed.ali",
       militaryNumber: "M003",
@@ -64,16 +83,172 @@ const generateMockTasks = (): MemberTask[] => {
       statusId: 1,
       department: "Engineering",
     },
-    {
-      id: 4,
-      userName: "fatima.omar",
-      militaryNumber: "M004",
-      fullName: "Fatima Omar",
-      gradeName: "Colonel",
+    memberIds: [3],
+    project: { id: "2", name: "Mobile Banking App" },
+    requirement: { id: "2", name: "Payment Gateway" },
+    canRequestDesign: false,
+    timeSpent: 25,
+    estimatedTime: 40,
+    tags: ["Backend", "Security"],
+    isOverdue: false,
+    createdAt: "2025-07-15",
+    updatedAt: "2025-08-06",
+  },
+  {
+    id: "3",
+    name: "Frontend Component Creation",
+    description: "Implement reusable frontend components with React.",
+    startDate: "2025-08-03",
+    endDate: "2025-08-14",
+    progress: 80,
+    status: { id: 3, label: "Review", color: "warning" },
+    priority: { id: 2, label: "Medium", color: "primary" },
+    department: { id: "2", name: "Design", color: "#8b5cf6" },
+    assignedMembers: [
+      {
+        id: 2,
+        userName: "sara.ahmed",
+        militaryNumber: "M002",
+        fullName: "Sara Ahmed",
+        gradeName: "Lieutenant",
+        statusId: 1,
+        department: "Design",
+      },
+    ],
+    primaryAssignee: {
+      id: 2,
+      userName: "sara.ahmed",
+      militaryNumber: "M002",
+      fullName: "Sara Ahmed",
+      gradeName: "Lieutenant",
       statusId: 1,
-      department: "Marketing",
+      department: "Design",
     },
-    {
+    memberIds: [2],
+    project: { id: "1", name: "E-Commerce Platform" },
+    requirement: { id: "3", name: "Data Analytics" },
+    canRequestDesign: true,
+    timeSpent: 15,
+    estimatedTime: 18,
+    tags: ["Frontend", "UI"],
+    isOverdue: true,
+    createdAt: "2025-07-14",
+    updatedAt: "2025-08-03",
+  },
+  {
+    id: "4",
+    name: "User Interface Design",
+    description: "Design UI mockups for new dashboard module.",
+    startDate: "2025-08-01",
+    endDate: "2025-08-07",
+    progress: 100,
+    status: { id: 4, label: "Completed", color: "success" },
+    priority: { id: 1, label: "Low", color: "default" },
+    department: { id: "2", name: "Design", color: "#8b5cf6" },
+    assignedMembers: [
+      {
+        id: 2,
+        userName: "sara.ahmed",
+        militaryNumber: "M002",
+        fullName: "Sara Ahmed",
+        gradeName: "Lieutenant",
+        statusId: 1,
+        department: "Design",
+      },
+    ],
+    primaryAssignee: {
+      id: 2,
+      userName: "sara.ahmed",
+      militaryNumber: "M002",
+      fullName: "Sara Ahmed",
+      gradeName: "Lieutenant",
+      statusId: 1,
+      department: "Design",
+    },
+    memberIds: [2],
+    project: { id: "3", name: "HR Management System" },
+    requirement: { id: "1", name: "User Authentication" },
+    canRequestDesign: false,
+    timeSpent: 10,
+    estimatedTime: 10,
+    tags: ["Design", "UX"],
+    isOverdue: false,
+    createdAt: "2025-07-11",
+    updatedAt: "2025-08-01",
+  },
+  {
+    id: "5",
+    name: "Payment Integration",
+    description: "Integrate payment gateway into mobile app.",
+    startDate: "2025-08-02",
+    endDate: "2025-08-18",
+    progress: 30,
+    status: { id: 2, label: "In Progress", color: "primary" },
+    priority: { id: 4, label: "Critical", color: "danger" },
+    department: { id: "1", name: "Engineering", color: "#3b82f6" },
+    assignedMembers: [
+      {
+        id: 1,
+        userName: "ahmed.hassan",
+        militaryNumber: "M001",
+        fullName: "Ahmed Hassan",
+        gradeName: "Captain",
+        statusId: 1,
+        department: "Engineering",
+      },
+      {
+        id: 3,
+        userName: "mohammed.ali",
+        militaryNumber: "M003",
+        fullName: "Mohammed Ali",
+        gradeName: "Major",
+        statusId: 1,
+        department: "Engineering",
+      },
+    ],
+    primaryAssignee: {
+      id: 1,
+      userName: "ahmed.hassan",
+      militaryNumber: "M001",
+      fullName: "Ahmed Hassan",
+      gradeName: "Captain",
+      statusId: 1,
+      department: "Engineering",
+    },
+    memberIds: [1, 3],
+    project: { id: "2", name: "Mobile Banking App" },
+    requirement: { id: "2", name: "Payment Gateway" },
+    canRequestDesign: true,
+    timeSpent: 8,
+    estimatedTime: 25,
+    tags: ["Backend", "Security", "Payments"],
+    isOverdue: false,
+    createdAt: "2025-07-20",
+    updatedAt: "2025-08-03",
+  },
+  {
+    id: "6",
+    name: "Security Audit",
+    description:
+      "Conduct a full security audit of the system before deployment.",
+    startDate: "2025-08-06",
+    endDate: "2025-08-15",
+    progress: 20,
+    status: { id: 1, label: "Not Started", color: "default" },
+    priority: { id: 4, label: "Critical", color: "danger" },
+    department: { id: "6", name: "Operations", color: "#6366f1" },
+    assignedMembers: [
+      {
+        id: 5,
+        userName: "khalid.salem",
+        militaryNumber: "M005",
+        fullName: "Khalid Salem",
+        gradeName: "Captain",
+        statusId: 1,
+        department: "Sales",
+      },
+    ],
+    primaryAssignee: {
       id: 5,
       userName: "khalid.salem",
       militaryNumber: "M005",
@@ -82,172 +257,331 @@ const generateMockTasks = (): MemberTask[] => {
       statusId: 1,
       department: "Sales",
     },
-  ];
-
-  const projects = [
-    { id: "1", name: "E-Commerce Platform" },
-    { id: "2", name: "Mobile Banking App" },
-    { id: "3", name: "HR Management System" },
-  ];
-
-  const requirements = [
-    { id: "1", name: "User Authentication" },
-    { id: "2", name: "Payment Gateway" },
-    { id: "3", name: "Data Analytics" },
-  ];
-
-  const taskNames = [
-    "Database Schema Design",
-    "API Endpoint Development",
-    "Frontend Component Creation",
-    "User Interface Design",
-    "Payment Integration",
-    "Security Audit",
-    "Performance Optimization",
-    "Bug Fixes and Testing",
-    "Documentation Writing",
-    "Code Review",
-  ];
-
-  const tags = [
-    "Backend",
-    "Frontend",
-    "Database",
-    "Security",
-    "Testing",
-    "Performance",
-  ];
-
-  const tasks: MemberTask[] = [];
-
-  for (let i = 1; i <= 20; i++) {
-    const startDate = new Date();
-
-    startDate.setDate(startDate.getDate() - Math.floor(Math.random() * 30));
-    const endDate = new Date(startDate);
-
-    endDate.setDate(startDate.getDate() + Math.floor(Math.random() * 14) + 3);
-
-    const isOverdue = Math.random() < 0.2 && endDate < new Date();
-    const progress = Math.floor(Math.random() * 101);
-
-    const department =
-      departments[Math.floor(Math.random() * departments.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const priority = priorities[Math.floor(Math.random() * priorities.length)];
-    const project = projects[Math.floor(Math.random() * projects.length)];
-    const requirement =
-      requirements[Math.floor(Math.random() * requirements.length)];
-
-    // Assign 1-3 members to each task
-    const numAssignees = Math.random() < 0.6 ? 1 : Math.random() < 0.9 ? 2 : 3;
-    const shuffledEmployees = [...employees].sort(() => Math.random() - 0.5);
-    const assignedMembers = shuffledEmployees.slice(0, numAssignees);
-    const primaryAssignee = assignedMembers[0];
-
-    const taskTagCount = Math.floor(Math.random() * 3) + 1;
-    const taskTags = [...tags]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, taskTagCount);
-
-    const timeSpent = Math.floor(Math.random() * 20) + 1;
-    const estimatedTime = timeSpent + Math.floor(Math.random() * 10) + 5;
-
-    tasks.push({
-      id: i.toString(),
-      name: taskNames[Math.floor(Math.random() * taskNames.length)],
-      description: `Detailed description for task ${i}. This task involves implementing specific functionality.`,
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
-      progress,
-      status,
-      priority,
-      department,
-      assignedMembers,
-      primaryAssignee,
-      memberIds: assignedMembers.map((m) => m.id),
-      project,
-      requirement,
-      timeSpent,
-      estimatedTime,
-      tags: taskTags,
-      isOverdue,
-      createdAt: new Date(
-        startDate.getTime() - Math.random() * 86400000
-      ).toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-  }
-
-  return tasks;
-};
+    memberIds: [5],
+    project: { id: "3", name: "HR Management System" },
+    requirement: { id: "3", name: "Data Analytics" },
+    canRequestDesign: false,
+    timeSpent: 5,
+    estimatedTime: 30,
+    tags: ["Security", "Compliance"],
+    isOverdue: false,
+    createdAt: "2025-07-13",
+    updatedAt: "2025-08-06",
+  },
+  {
+    id: "7",
+    name: "Performance Optimization",
+    description: "Improve database queries and API response times.",
+    startDate: "2025-08-04",
+    endDate: "2025-08-22",
+    progress: 50,
+    status: { id: 2, label: "In Progress", color: "primary" },
+    priority: { id: 3, label: "High", color: "warning" },
+    department: { id: "1", name: "Engineering", color: "#3b82f6" },
+    assignedMembers: [
+      {
+        id: 1,
+        userName: "ahmed.hassan",
+        militaryNumber: "M001",
+        fullName: "Ahmed Hassan",
+        gradeName: "Captain",
+        statusId: 1,
+        department: "Engineering",
+      },
+      {
+        id: 3,
+        userName: "mohammed.ali",
+        militaryNumber: "M003",
+        fullName: "Mohammed Ali",
+        gradeName: "Major",
+        statusId: 1,
+        department: "Engineering",
+      },
+    ],
+    primaryAssignee: {
+      id: 3,
+      userName: "mohammed.ali",
+      militaryNumber: "M003",
+      fullName: "Mohammed Ali",
+      gradeName: "Major",
+      statusId: 1,
+      department: "Engineering",
+    },
+    memberIds: [1, 3],
+    project: { id: "1", name: "E-Commerce Platform" },
+    requirement: { id: "1", name: "User Authentication" },
+    canRequestDesign: true,
+    timeSpent: 18,
+    estimatedTime: 35,
+    tags: ["Backend", "Optimization"],
+    isOverdue: false,
+    createdAt: "2025-07-12",
+    updatedAt: "2025-08-07",
+  },
+  {
+    id: "8",
+    name: "Bug Fixes and Testing",
+    description: "Fix reported bugs and perform regression testing.",
+    startDate: "2025-08-09",
+    endDate: "2025-08-19",
+    progress: 70,
+    status: { id: 3, label: "Review", color: "warning" },
+    priority: { id: 2, label: "Medium", color: "primary" },
+    department: { id: "6", name: "Operations", color: "#6366f1" },
+    assignedMembers: [
+      {
+        id: 4,
+        userName: "fatima.omar",
+        militaryNumber: "M004",
+        fullName: "Fatima Omar",
+        gradeName: "Colonel",
+        statusId: 1,
+        department: "Marketing",
+      },
+    ],
+    primaryAssignee: {
+      id: 4,
+      userName: "fatima.omar",
+      militaryNumber: "M004",
+      fullName: "Fatima Omar",
+      gradeName: "Colonel",
+      statusId: 1,
+      department: "Marketing",
+    },
+    memberIds: [4],
+    project: { id: "2", name: "Mobile Banking App" },
+    requirement: { id: "3", name: "Data Analytics" },
+    canRequestDesign: true,
+    timeSpent: 22,
+    estimatedTime: 30,
+    tags: ["Testing", "QA"],
+    isOverdue: false,
+    createdAt: "2025-07-18",
+    updatedAt: "2025-08-09",
+  },
+  {
+    id: "9",
+    name: "Documentation Writing",
+    description: "Prepare technical and user documentation for release.",
+    startDate: "2025-08-01",
+    endDate: "2025-08-12",
+    progress: 90,
+    status: { id: 3, label: "Review", color: "warning" },
+    priority: { id: 1, label: "Low", color: "default" },
+    department: { id: "5", name: "HR", color: "#ef4444" },
+    assignedMembers: [
+      {
+        id: 2,
+        userName: "sara.ahmed",
+        militaryNumber: "M002",
+        fullName: "Sara Ahmed",
+        gradeName: "Lieutenant",
+        statusId: 1,
+        department: "Design",
+      },
+    ],
+    primaryAssignee: {
+      id: 2,
+      userName: "sara.ahmed",
+      militaryNumber: "M002",
+      fullName: "Sara Ahmed",
+      gradeName: "Lieutenant",
+      statusId: 1,
+      department: "Design",
+    },
+    memberIds: [2],
+    project: { id: "3", name: "HR Management System" },
+    requirement: { id: "2", name: "Payment Gateway" },
+    canRequestDesign: false,
+    timeSpent: 12,
+    estimatedTime: 15,
+    tags: ["Documentation", "Knowledge Base"],
+    isOverdue: false,
+    createdAt: "2025-07-10",
+    updatedAt: "2025-08-01",
+  },
+  {
+    id: "10",
+    name: "Code Review",
+    description:
+      "Review submitted code for best practices and coding standards.",
+    startDate: "2025-08-05",
+    endDate: "2025-08-11",
+    progress: 100,
+    status: { id: 4, label: "Completed", color: "success" },
+    priority: { id: 2, label: "Medium", color: "primary" },
+    department: { id: "1", name: "Engineering", color: "#3b82f6" },
+    assignedMembers: [
+      {
+        id: 1,
+        userName: "ahmed.hassan",
+        militaryNumber: "M001",
+        fullName: "Ahmed Hassan",
+        gradeName: "Captain",
+        statusId: 1,
+        department: "Engineering",
+      },
+      {
+        id: 2,
+        userName: "sara.ahmed",
+        militaryNumber: "M002",
+        fullName: "Sara Ahmed",
+        gradeName: "Lieutenant",
+        statusId: 1,
+        department: "Design",
+      },
+    ],
+    primaryAssignee: {
+      id: 1,
+      userName: "ahmed.hassan",
+      militaryNumber: "M001",
+      fullName: "Ahmed Hassan",
+      gradeName: "Captain",
+      statusId: 1,
+      department: "Engineering",
+    },
+    memberIds: [1, 2],
+    project: { id: "1", name: "E-Commerce Platform" },
+    requirement: { id: "1", name: "User Authentication" },
+    canRequestDesign: false,
+    timeSpent: 10,
+    estimatedTime: 10,
+    tags: ["Code Quality", "Review"],
+    isOverdue: false,
+    createdAt: "2025-07-14",
+    updatedAt: "2025-08-05",
+  },
+];
 
 interface UseMembersTasksResult {
   tasks: MemberTask[];
+  tasksConfigData: TaskConfigData;
   loading: boolean;
   error: string | null;
+
   totalPages: number;
-  currentPage: number;
   totalCount: number;
-  departments: Department[];
-  allEmployees: MemberSearchResult[];
-  filters: TaskSearchParams;
-  setFilters: (filters: TaskSearchParams) => void;
   fetchTasks: (params?: TaskSearchParams) => Promise<void>;
   refreshTasks: () => Promise<void>;
   exportTasks: (format: "csv" | "pdf" | "excel") => Promise<void>;
-  searchEmployees: (query: string) => void;
-  filtersData: TaskFiltersData;
   requestDesign: (id: string, notes: string) => Promise<boolean>;
-  changeStatus: (id: string, typeId: string) => Promise<boolean>;
+  changeStatus: (id: string, typeId: string, notes: string) => Promise<boolean>;
+  tasksConfig: () => Promise<void>;
+  handlePageChange: (page: number) => void;
+  handlePageSizeChange: (limit: number) => void;
+  handleProjectChange: (id: number) => void;
+  handleSearchChange: (search: string) => void;
+  handlePriorityChange: (priorityId: number) => void;
+  handleStatusChange: (statusId: number) => void;
+  taskParametersRequest: TaskSearchParams;
 }
 
-export const useMembersTasks = (
-  initialDepartments: Department[] = []
-): UseMembersTasksResult => {
+export const useMembersTasks = (): UseMembersTasksResult => {
   const [tasks, setTasks] = useState<MemberTask[]>([]);
+  const [tasksConfigData, setTasksConfigData] = useState<TaskConfigData>({
+    totalTasks: 0,
+    inProgressTasks: 0,
+    overdueTasks: 0,
+    taskStatus: [],
+    taskPriority: [],
+    projects: [],
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [totalPages, setTotalPages] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState<TaskSearchParams>({
-    page: 1,
-    limit: 20,
-    memberFilterMode: "any",
-    sortBy: "startDate",
-    sortOrder: "asc",
-  });
-  const [filtersData, setFiltersData] = useState<TaskFiltersData>({
-    statuses: [],
-    priorities: [],
-    departments: initialDepartments,
-    members: [],
-  });
 
-  // Use existing employee search for member filtering
-  const {
-    employees: allEmployees,
-    loading: employeeSearchLoading,
-    searchEmployees,
-  } = useTeamSearch({
-    minLength: 0,
-    maxResults: 200,
-    loadInitialResults: true,
-  });
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const [taskParametersRequest, setTaskParametersRequest] =
+    useState<TaskSearchParams>({
+      limit: 20,
+      page: 1,
+    });
+
+  ///TODO ////////////// pls append pagination first
+
+  /**
+   * Handle page change
+   */
+  const handlePageChange = useCallback((page: number) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      page: page,
+    }));
+  }, []);
+
+  /**
+   * Handle page size change
+   */
+  const handlePageSizeChange = useCallback((limit: number) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      page: 1,
+      limit,
+    }));
+    console.log("Page size changed to:", limit);
+  }, []);
+
+  /**
+   * Handle project change
+   */
+  const handleProjectChange = useCallback((id: number) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      projectId: id,
+    }));
+  }, []);
+
+  /**
+   * Handle search change
+   */
+  const handleSearchChange = useCallback((search: string) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      search,
+    }));
+  }, []);
+
+  /**
+   * Handle status change
+   */
+  const handleStatusChange = useCallback((statusId: number) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      statusId: statusId,
+    }));
+  }, []);
+
+  /**
+   * Handle priority change
+   */
+  const handlePriorityChange = useCallback((priorityId: number) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      priorityId: priorityId,
+    }));
+  }, []);
+
+  /// get tasks config
+  const tasksConfig = async (): Promise<void> => {
+    try {
+      const response = await membersTasksService.getCurrentTasksConfig();
+
+      if (response.success) {
+        setTasksConfigData(response.data);
+      }
+      console.log("---->> response is : 2");
+      console.log(response.data);
+    } catch (e) {
+      console.log("---->> catch triggered");
+    } finally {
+    }
+  };
 
   ///request design
   const requestDesign = async (id: string, notes: string): Promise<boolean> => {
     try {
-      console.log("---->> response is : 111111111111");
       const response = await membersTasksService.requestDesign(id, notes);
-
-      console.log("---->> response is : 2222222222222");
-      console.log(response);
-      // toast({
-      //   description: response.message,
-      //   variant: "solid",
-      // });
 
       return response.success;
     } catch (err) {
@@ -257,19 +591,25 @@ export const useMembersTasks = (
   };
 
   ///change status
-  const changeStatus = async (id: string, typeId: string): Promise<boolean> => {
-    console.log("---->> change statue : 3333333333");
+  const changeStatus = async (
+    id: string,
+    typeId: string,
+    notes: string
+  ): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await membersTasksService.changeStatus(id, typeId);
+      const response = await membersTasksService.changeStatus(
+        id,
+        typeId,
+        notes
+      );
 
-      console.log("---->> response is :");
-      console.log(response);
-      // toast({
-      //   description: response.message,
-      //   variant: "solid",
+      //addToast({
+      //   title: "Success",
+      //   description: "Requirement created successfully",
+      //   color: "success",
       // });
 
       return response.success;
@@ -281,110 +621,100 @@ export const useMembersTasks = (
   };
 
   const fetchTasks = useCallback(
-    async (params?: TaskSearchParams) => {
-      console.log("fetchTasks called with:", params);
-      console.log("current filters:", filters);
+    async (request?: TaskSearchParams, reloadConfigApi?: boolean) => {
+      console.log("fetchTasks called with:", request);
       setLoading(true);
       setError(null);
 
-      const searchParams = { ...filters, ...params };
-
-      console.log("searchParams:", searchParams);
-
       try {
-        const response = await membersTasksService.getTasks(searchParams);
+        if (reloadConfigApi) {
+          await tasksConfig();
+        }
+        const response = await membersTasksService.getTasks(request);
 
         if (response.success && response.data) {
           console.log("API response success:", response.data);
           setTasks(response.data.tasks);
           setTotalPages(response.data.totalPages);
-          setCurrentPage(response.data.currentPage);
           setTotalCount(response.data.totalCount);
+          // ✅ only update if it's actually different
+          // if (response.data.currentPage !== taskParametersRequest.page) {
+          //   setTaskParametersRequest((prev) => ({
+          //     ...prev,
+          //     page: response.data.currentPage,
+          //   }));
+          // }
         } else {
           throw new Error(response.message || "Failed to fetch tasks");
         }
-
-        if (params) {
-          setFilters(searchParams);
-        }
       } catch (err) {
         console.warn("API not available, using mock data:", err);
-        // Fallback to mock data when API is not available
-        const mockTasks = generateMockTasks();
 
-        console.log("Generated mock tasks:", mockTasks.length, mockTasks);
-        const limit = searchParams.limit || 20;
-        const page = searchParams.page || 1;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
+        console.log("Setting tasks inside catch:");
 
-        const slicedTasks = mockTasks.slice(startIndex, endIndex);
+        let tasks = mockMemberTasks; // start with all tasks
 
-        console.log("Setting tasks:", slicedTasks.length, slicedTasks);
-        setTasks(slicedTasks);
-        setTotalPages(Math.ceil(mockTasks.length / limit));
-        setCurrentPage(page);
-        setTotalCount(mockTasks.length);
-
-        if (params) {
-          setFilters(searchParams);
+        // Apply filters step by step
+        if (request?.search) {
+          const search = request.search.toLowerCase();
+          tasks = tasks.filter((task) =>
+            task.name.toLowerCase().includes(search)
+          );
         }
+
+        if (request?.statusId) {
+          tasks = tasks.filter((task) => task.status.id === request.statusId);
+        }
+
+        if (request?.projectId) {
+          tasks = tasks.filter(
+            (task) => task.project.id === request.projectId?.toString()
+          );
+        }
+
+        if (request?.priorityId) {
+          tasks = tasks.filter(
+            (task) => task.priority.id === request.priorityId!
+          );
+        }
+
+        // Apply pagination (slice after filtering)
+        const limit = request?.limit ?? 20;
+        tasks = tasks.slice(0, limit);
+
+        setTasks(tasks);
+
+        setTotalPages(Math.ceil(mockMemberTasks.length / request!.limit!));
+        setTotalCount(mockMemberTasks.length);
       } finally {
         setLoading(false);
       }
     },
-    [filters]
+    []
   );
-
-  const fetchFiltersData = useCallback(async () => {
-    try {
-      const response = await membersTasksService.getFiltersData();
-
-      if (response.success && response.data) {
-        setFiltersData((prev) => ({
-          ...response.data,
-          departments:
-            initialDepartments.length > 0
-              ? initialDepartments
-              : response.data.departments,
-        }));
-      }
-    } catch (err) {
-      console.error("Error fetching filter data:", err);
-      // Set fallback filter data
-      setFiltersData((prev) => ({
-        ...prev,
-        departments:
-          initialDepartments.length > 0 ? initialDepartments : prev.departments,
-      }));
-    }
-  }, [initialDepartments]);
 
   const refreshTasks = useCallback(() => {
-    return fetchTasks();
+    return fetchTasks(taskParametersRequest, true);
   }, [fetchTasks]);
 
-  const exportTasks = useCallback(
-    async (format: "csv" | "pdf" | "excel") => {
-      try {
-        const blob = await membersTasksService.exportTasks(filters, format);
+  const exportTasks = useCallback(async (format: "csv" | "pdf" | "excel") => {
+    try {
+      const blob = await membersTasksService.exportTasks(format);
 
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-        link.href = url;
-        link.download = `members-tasks-${new Date().toISOString().split("T")[0]}.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      } catch (err) {
-        console.error("Error exporting tasks:", err);
-        throw err;
-      }
-    },
-    [filters]
-  );
+      link.href = url;
+      link.download = `members-tasks-${new Date().toISOString().split("T")[0]}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error exporting tasks:", err);
+      throw err;
+    }
+  }, []);
 
   // Load initial data
   useEffect(() => {
@@ -394,93 +724,56 @@ export const useMembersTasks = (
       setError(null);
 
       try {
-        const response = await membersTasksService.getTasks({
-          page: 1,
-          limit: 20,
-          memberFilterMode: "any",
-          sortBy: "startDate",
-          sortOrder: "asc",
-        });
+        await tasksConfig();
+        const response = await membersTasksService.getTasks();
 
         if (response.success && response.data) {
           setTasks(response.data.tasks);
           setTotalPages(response.data.totalPages);
-          setCurrentPage(response.data.currentPage);
+          //handlePageChange(response.data.currentPage);
           setTotalCount(response.data.totalCount);
         } else {
           throw new Error(response.message || "Failed to fetch tasks");
         }
       } catch (err) {
         // Fallback to mock data when API is not available
-        const mockTasks = generateMockTasks();
 
-        setTasks(mockTasks.slice(0, 20));
-        setTotalPages(Math.ceil(mockTasks.length / 20));
-        setCurrentPage(1);
-        setTotalCount(mockTasks.length);
+        setTasks(mockMemberTasks);
+        setTotalPages(Math.ceil(mockMemberTasks.length / 20));
+        //handlePageChange(1);
+        setTotalCount(mockMemberTasks.length);
       } finally {
         setLoading(false);
       }
     };
 
-    // Load filters data
-    const loadFiltersData = async () => {
-      try {
-        const response = await membersTasksService.getFiltersData();
-
-        if (response.success && response.data) {
-          setFiltersData((prev) => ({
-            ...response.data,
-            departments:
-              initialDepartments.length > 0
-                ? initialDepartments
-                : response.data.departments,
-          }));
-        }
-      } catch (err) {
-        console.error("Error fetching filter data:", err);
-        // Set fallback filter data
-        setFiltersData((prev) => ({
-          ...prev,
-          departments:
-            initialDepartments.length > 0
-              ? initialDepartments
-              : prev.departments,
-        }));
-      }
-    };
-
     loadInitialData();
-    loadFiltersData();
   }, []);
 
-  // Update filters data when departments change
   useEffect(() => {
-    if (initialDepartments.length > 0) {
-      setFiltersData((prev) => ({
-        ...prev,
-        departments: initialDepartments,
-      }));
-    }
-  }, [initialDepartments]);
+    console.log("taskParametersRequest changed:", taskParametersRequest);
+    fetchTasks(taskParametersRequest, false);
+  }, [taskParametersRequest]);
 
   return {
     tasks,
+    tasksConfigData,
     loading,
     error,
     totalPages,
-    currentPage,
     totalCount,
-    departments: filtersData.departments,
-    allEmployees,
-    filters,
-    setFilters,
     fetchTasks,
+    handlePageChange,
+    handlePageSizeChange,
+    handlePriorityChange,
+    handleSearchChange,
+    handleProjectChange,
+    handleStatusChange,
+    taskParametersRequest,
     refreshTasks,
     exportTasks,
-    searchEmployees,
-    filtersData,
     changeStatus,
     requestDesign,
+    tasksConfig,
   };
 };

@@ -255,15 +255,17 @@ export const TaskCard = ({
         <div className="mt-3 pt-3 border-t border-divider flex flex-col gap-3">
           {/* Row 2 */}
           <div className="flex gap-3">
-            <Button
-              className="flex-1"
-              color="primary"
-              size="sm"
-              variant="flat"
-              onPress={() => handleRequestDesignClick()}
-            >
-              {t("requestDesign")}
-            </Button>
+            {task.canRequestDesign && (
+              <Button
+                className="flex-1"
+                color="primary"
+                size="sm"
+                variant="flat"
+                onPress={() => handleRequestDesignClick()}
+              >
+                {t("requestDesign")}
+              </Button>
+            )}
 
             <Button
               className="flex-1"
