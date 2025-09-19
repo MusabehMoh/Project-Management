@@ -15,6 +15,8 @@ export interface MemberTask {
   memberIds: number[]; // For API filtering
   project: { id: string; name: string };
   requirement: { id: string; name: string };
+  canRequestDesign: boolean;
+  //canChangeStatus: boolean;
   timeSpent: number; // hours
   estimatedTime: number; // hours
   tags: string[];
@@ -27,15 +29,9 @@ export interface TaskSearchParams {
   page?: number;
   limit?: number;
   search?: string; // Task name search
-  memberIds?: number[]; // Multiple assignee filtering
-  memberFilterMode?: "any" | "all"; // AND/OR logic for assignees
-  departmentIds?: string[];
-  statusIds?: number[];
-  priorityIds?: number[];
-  isOverdue?: boolean;
-  dateRange?: { start: string; end: string };
-  sortBy?: "name" | "startDate" | "endDate" | "priority" | "progress";
-  sortOrder?: "asc" | "desc";
+  statusId?: number;
+  priorityId?: number;
+  projectId?: number;
 }
 
 export interface TasksResponse {
@@ -52,4 +48,23 @@ export interface TaskFiltersData {
   priorities: { id: number; label: string; color: string }[];
   departments: Department[];
   members: MemberSearchResult[];
+}
+
+export interface TaskConfigData {
+  totalTasks: number;
+  inProgressTasks: number;
+  overdueTasks: number;
+  taskStatus: TaskStatus[];
+  taskPriority: TaskStatus[];
+  projects: ProjectBasicInfo[];
+}
+
+export interface TaskStatus {
+  id: number;
+  label: string;
+}
+
+export interface ProjectBasicInfo {
+  id: string;
+  name: string;
 }

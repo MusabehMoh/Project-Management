@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@heroui/button";
+import { Search } from "lucide-react";
 import { Card, CardBody } from "@heroui/card";
-import { Pagination } from "@heroui/pagination";
 import {
   Dropdown,
   DropdownTrigger,
@@ -10,7 +10,6 @@ import {
 } from "@heroui/dropdown";
 import { Select, SelectItem } from "@heroui/select";
 import { Badge } from "@heroui/badge";
-
 import {
   FileDown,
   RefreshCw,
@@ -40,23 +39,12 @@ import {
 import { TaskCard } from "@/components/members-tasks/TaskCard";
 import { TaskListView } from "@/components/members-tasks/TaskListView";
 import { TaskGanttView } from "@/components/members-tasks/TaskGanttView";
-import { TaskFilters } from "@/components/members-tasks/TaskFilters";
 import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
 import DefaultLayout from "@/layouts/default";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MemberTask } from "@/types/membersTasks";
-import { Department } from "@/types/timeline";
-
-// Mock departments - in real app, this would come from context or API
-const mockDepartments: Department[] = [
-  { id: "1", name: "Engineering", color: "#3b82f6" },
-  { id: "2", name: "Design", color: "#8b5cf6" },
-  { id: "3", name: "Marketing", color: "#10b981" },
-  { id: "4", name: "Sales", color: "#f59e0b" },
-  { id: "5", name: "HR", color: "#ef4444" },
-  { id: "6", name: "Operations", color: "#6366f1" },
-];
+import { MemberTask, TaskStatus } from "@/types/membersTasks";
+import GlobalPagination from "@/components/GlobalPagination";
 
 export default function MembersTasksPage() {
   const { t } = useLanguage();
@@ -66,50 +54,70 @@ export default function MembersTasksPage() {
 
   const {
     tasks,
+    tasksConfigData,
     loading,
     error,
     totalPages,
-    currentPage,
     totalCount,
-    filters,
-    setFilters,
     fetchTasks,
+    handlePageChange,
+    handlePageSizeChange,
+    handlePriorityChange,
+    handleSearchChange,
+    handleProjectChange,
+    handleStatusChange,
+    taskParametersRequest,
     refreshTasks,
     exportTasks,
-    searchEmployees,
-    filtersData,
-    allEmployees,
     changeStatus,
     requestDesign,
-  } = useMembersTasks(mockDepartments);
+  } = useMembersTasks();
 
   const { language } = useLanguage();
 
   const [isRequestDesignModalOpend, setIsRequestDesignModalOpend] =
     useState(false);
+  const [isChangeStatusModalOpend, setIsChangeStatusModalOpend] =
+    useState(false);
   const [notes, setNotes] = useState("");
-  const [requestDesignError, setRequestDesignError] = useState(false);
+  const [modalError, setModalError] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
+
+  const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
+  const effectivePageSize = PAGE_SIZE_OPTIONS.includes(
+    taskParametersRequest.limit ?? 20
+  )
+    ? taskParametersRequest.limit
+    : 20;
+
+  const [searchValue, setSearchValue] = useState(
+    taskParametersRequest?.search ?? ""
+  );
 
   const handleRequestDesignSubmit = async () => {
-    console.log("Request Design for:", selectedTask?.name);
-    console.log("Notes:", notes);
-
     const success = await requestDesign(selectedTask?.id ?? "0", notes ?? "");
-
     if (success) {
       setIsRequestDesignModalOpend(false);
       setNotes("");
-      console.log("--->>> success is true");
     } else {
-      setRequestDesignError(true);
+      setModalError(true);
     }
   };
 
-  // Debug logging
-  console.log("MembersTasksPage - tasks:", tasks?.length, tasks);
-  console.log("MembersTasksPage - loading:", loading);
-  console.log("MembersTasksPage - error:", error);
-  console.log("MembersTasksPage - filters:", filters);
+  const handleChangeStatusSubmit = async () => {
+    const success = await changeStatus(
+      selectedTask?.id ?? "0",
+      `${selectedStatus?.id ?? 3}`,
+      notes ?? ""
+    );
+    if (success) {
+      setIsChangeStatusModalOpend(false);
+      setNotes("");
+      handleRefresh();
+    } else {
+      setModalError(true);
+    }
+  };
 
   const handleTaskClick = (task: MemberTask) => {
     setSelectedTask(task);
@@ -117,28 +125,23 @@ export default function MembersTasksPage() {
   };
 
   const handleRequestDesign = (task: MemberTask) => {
-    if (isDrawerOpen) {
-      setIsDrawerOpen(false);
-    }
+    if (isDrawerOpen) setIsDrawerOpen(false);
     setSelectedTask(task);
     setIsRequestDesignModalOpend(true);
-    setRequestDesignError(false);
+    setModalError(false);
     setNotes("");
   };
-  const handlePageChange = (page: number) => {
-    setFilters({ ...filters, page });
-  };
 
-  const handleSortChange = (keys: any) => {
-    const sortValue = Array.from(keys)[0] as string;
-    const [sortBy, sortOrder] = sortValue.split("-");
-
-    setFilters({
-      ...filters,
-      sortBy: sortBy as any,
-      sortOrder: sortOrder as "asc" | "desc",
-      page: 1,
+  const handleChangeStatus = (task: MemberTask) => {
+    if (isDrawerOpen) setIsDrawerOpen(false);
+    setSelectedTask(task);
+    setSelectedStatus({
+      id: selectedTask?.status.id ?? 2,
+      label: selectedTask?.status.label ?? "In Progress",
     });
+    setIsChangeStatusModalOpend(true);
+    setModalError(false);
+    setNotes("");
   };
 
   const handleExport = async (format: "csv" | "pdf" | "excel") => {
@@ -146,36 +149,17 @@ export default function MembersTasksPage() {
       await exportTasks(format);
     } catch (error) {
       console.error("Export failed:", error);
-      // In real app, show toast notification
     }
   };
 
-  const handleRefresh = () => {
-    refreshTasks();
-  };
+  const handleRefresh = () => refreshTasks();
 
-  const getActiveFiltersCount = () => {
-    let count = 0;
-
-    if (filters.search) count++;
-    if (filters.memberIds?.length) count++;
-    if (filters.departmentIds?.length) count++;
-    if (filters.statusIds?.length) count++;
-    if (filters.priorityIds?.length) count++;
-    if (filters.dateRange) count++;
-    if (filters.isOverdue) count++;
-
-    return count;
-  };
-
-  // Format date helper
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-  };
 
   const mapColor = (color?: string) => {
     switch (color) {
@@ -190,29 +174,12 @@ export default function MembersTasksPage() {
     }
   };
 
-  const getSortLabel = () => {
-    const sortLabel =
-      filters.sortBy === "name"
-        ? "Name"
-        : filters.sortBy === "startDate"
-          ? "Start Date"
-          : filters.sortBy === "endDate"
-            ? "End Date"
-            : filters.sortBy === "priority"
-              ? "Priority"
-              : filters.sortBy === "progress"
-                ? "Progress"
-                : "Date";
-
-    return `${sortLabel} (${filters.sortOrder === "asc" ? "A-Z" : "Z-A"})`;
-  };
-
   return (
     <DefaultLayout>
-      <div className="w-full max-w-full px-6 py-8">
+      <div className="w-full max-w-full">
         {/* Header */}
-        <div className="flex flex-col gap-4 mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 mb-6 border-b border-divider">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 {t("membersTasksDashboard")}
@@ -263,157 +230,218 @@ export default function MembersTasksPage() {
                 variant="flat"
                 onPress={handleRefresh}
               >
-                Refresh
+                {t("refresh")}
               </Button>
             </div>
           </div>
-
-          {/* Stats */}
-          <div className="flex flex-wrap gap-4">
-            <Card className="flex-1 min-w-[200px]">
-              <CardBody className="flex flex-row items-center gap-3">
-                <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
-                  <Grid3X3 className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-foreground-600">Total Tasks</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {totalCount}
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card className="flex-1 min-w-[200px]">
-              <CardBody className="flex flex-row items-center gap-3">
-                <div className="p-2 bg-warning-100 dark:bg-warning-900/20 rounded-lg">
-                  <RefreshCw className="w-5 h-5 text-warning" />
-                </div>
-                <div>
-                  <p className="text-sm text-foreground-600">In Progress</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {
-                      tasks.filter((t) =>
-                        t.status.label.toLowerCase().includes("progress")
-                      ).length
-                    }
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card className="flex-1 min-w-[200px]">
-              <CardBody className="flex flex-row items-center gap-3">
-                <div className="p-2 bg-danger-100 dark:bg-danger-900/20 rounded-lg">
-                  <FileText className="w-5 h-5 text-danger" />
-                </div>
-                <div>
-                  <p className="text-sm text-foreground-600">Overdue</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {tasks.filter((t) => t.isOverdue).length}
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
         </div>
 
-        {/* Page Size Selector here*/}
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Card className="transition-all hover:shadow-lg">
+            <CardBody className="flex items-center gap-3">
+              <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
+                <Grid3X3 className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground-600">{t("totalTasks")}</p>
+                <p className="text-2xl text-center font-bold">
+                  {tasksConfigData.totalTasks}
+                </p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="transition-all hover:shadow-lg">
+            <CardBody className="flex items-center gap-3">
+              <div className="p-3 bg-warning-100 dark:bg-warning-900/20 rounded-lg">
+                <RefreshCw className="w-6 h-6 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground-600">{t("inProgress")}</p>
+                <p className="text-2xl text-center font-bold">
+                  {tasksConfigData.inProgressTasks}
+                </p>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="transition-all hover:shadow-lg">
+            <CardBody className="flex items-center gap-3">
+              <div className="p-3 bg-danger-100 dark:bg-danger-900/20 rounded-lg">
+                <FileText className="w-6 h-6 text-danger" />
+              </div>
+              <div>
+                <p className="text-sm text-foreground-600">{t("overdue")}</p>
+                <p className="text-2xl text-center font-bold">
+                  {tasksConfigData.overdueTasks}
+                </p>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
 
         {/* Filters */}
-        <TaskFilters
-          allEmployees={allEmployees}
-          filters={filters}
-          filtersData={filtersData}
-          loading={loading}
-          onFiltersChange={setFilters}
-          onSearchEmployees={searchEmployees}
-        />
-
-        {/* Controls Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            {/* View Toggle */}
-            <div className="flex items-center bg-content2 rounded-lg p-1">
+        {!loading && totalCount > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-content1/40 p-3 rounded-xl">
+            <div className="flex items-center gap-2 w-full sm:w-80">
+              <Input
+                aria-label={t("common.search")}
+                className="flex-1"
+                placeholder={t("common.search") + "..."}
+                value={searchValue}
+                onValueChange={setSearchValue}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearchChange(searchValue);
+                  }
+                }}
+              />
               <Button
-                className="min-w-unit-16"
-                color={viewType === "grid" ? "primary" : "default"}
-                size="sm"
-                startContent={<Grid3X3 className="w-4 h-4" />}
-                variant={viewType === "grid" ? "solid" : "light"}
-                onPress={() => setViewType("grid")}
+                isIconOnly
+                color="primary"
+                variant="flat"
+                onPress={() => handleSearchChange(searchValue)}
               >
-                Grid
-              </Button>
-              <Button
-                className="min-w-unit-16"
-                color={viewType === "list" ? "primary" : "default"}
-                size="sm"
-                startContent={<List className="w-4 h-4" />}
-                variant={viewType === "list" ? "solid" : "light"}
-                onPress={() => setViewType("list")}
-              >
-                List
-              </Button>
-              <Button
-                className="min-w-unit-16"
-                color={viewType === "gantt" ? "primary" : "default"}
-                size="sm"
-                startContent={<BarChart3 className="w-4 h-4" />}
-                variant={viewType === "gantt" ? "solid" : "light"}
-                onPress={() => setViewType("gantt")}
-              >
-                Gantt
+                <Search className="w-4 h-4" />
               </Button>
             </div>
 
-            {/* Active Filters Display */}
-            {getActiveFiltersCount() > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-foreground-600">
-                  {t("activeFilters")}:
-                </span>
-                <Badge color="primary" variant="flat">
-                  {getActiveFiltersCount()}
-                </Badge>
-              </div>
-            )}
+            <div className="flex flex-wrap gap-3">
+              {/* Status */}
+              <Select
+                className="w-40"
+                size="sm"
+                selectedKeys={[
+                  taskParametersRequest.statusId
+                    ? `${taskParametersRequest.statusId}`
+                    : "",
+                ]}
+                onSelectionChange={(keys) => {
+                  const selectedStr = String(Array.from(keys)[0] ?? "");
+                  if (selectedStr)
+                    handleStatusChange(parseInt(selectedStr, 10));
+                }}
+              >
+                <SelectItem key="" isDisabled>
+                  {t("status")}
+                </SelectItem>
+                {(tasksConfigData.taskStatus ?? []).map((opt) => (
+                  <SelectItem key={opt.id}>{opt.label}</SelectItem>
+                ))}
+              </Select>
 
-            {/* Results Count */}
-            <div className="text-sm text-foreground-600">
-              Showing {tasks.length} of {totalCount} tasks
+              {/* Priority */}
+              <Select
+                className="w-40"
+                size="sm"
+                selectedKeys={[
+                  taskParametersRequest.priorityId
+                    ? `${taskParametersRequest.priorityId}`
+                    : "",
+                ]}
+                onSelectionChange={(keys) => {
+                  const selectedStr = String(Array.from(keys)[0] ?? "");
+                  if (selectedStr)
+                    handlePriorityChange(parseInt(selectedStr, 10));
+                }}
+              >
+                <SelectItem key="" isDisabled>
+                  {t("priority")}
+                </SelectItem>
+                {(tasksConfigData.taskPriority ?? []).map((opt) => (
+                  <SelectItem key={opt.id}>{opt.label}</SelectItem>
+                ))}
+              </Select>
+
+              {/* Project */}
+              <Select
+                className="w-48"
+                size="sm"
+                selectedKeys={[
+                  taskParametersRequest.projectId
+                    ? `${taskParametersRequest.projectId}`
+                    : "",
+                ]}
+                onSelectionChange={(keys) => {
+                  const selectedStr = String(Array.from(keys)[0] ?? "");
+                  if (selectedStr)
+                    handleProjectChange(parseInt(selectedStr, 10));
+                }}
+              >
+                <SelectItem key="" isDisabled>
+                  {t("project")}
+                </SelectItem>
+                {(tasksConfigData.projects ?? []).map((project) => (
+                  <SelectItem key={Number(project.id)}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </Select>
+
+              {/* Page Size */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-default-600">
+                  {t("common.show")}:
+                </span>
+                <Select
+                  className="w-24"
+                  selectedKeys={[`${effectivePageSize}`]}
+                  size="sm"
+                  onSelectionChange={(keys) => {
+                    const newSize = Number(Array.from(keys)[0]);
+                    if (!isNaN(newSize)) handlePageSizeChange(newSize);
+                  }}
+                >
+                  {PAGE_SIZE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} textValue={`${opt}`}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <span className="text-sm text-default-600">
+                  {t("pagination.perPage")}
+                </span>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Sort Controls */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-foreground-600">Sort by:</span>
-            <Select
-              aria-label="Sort tasks"
-              className="min-w-[180px]"
-              selectedKeys={[`${filters.sortBy}-${filters.sortOrder}`]}
-              size="sm"
-              onSelectionChange={handleSortChange}
-            >
-              <SelectItem key="name-asc">Name (A-Z)</SelectItem>
-              <SelectItem key="name-desc">Name (Z-A)</SelectItem>
-              <SelectItem key="startDate-asc">Start Date (Earliest)</SelectItem>
-              <SelectItem key="startDate-desc">Start Date (Latest)</SelectItem>
-              <SelectItem key="endDate-asc">End Date (Earliest)</SelectItem>
-              <SelectItem key="endDate-desc">End Date (Latest)</SelectItem>
-              <SelectItem key="priority-desc">
-                Priority (High to Low)
-              </SelectItem>
-              <SelectItem key="priority-asc">Priority (Low to High)</SelectItem>
-              <SelectItem key="progress-desc">
-                Progress (High to Low)
-              </SelectItem>
-              <SelectItem key="progress-asc">Progress (Low to High)</SelectItem>
-            </Select>
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            {/* View Toggle */}
+            <div className="flex items-center bg-content2 rounded-full p-1">
+              {(["grid", "list", "gantt"] as const).map((type) => (
+                <Button
+                  key={type}
+                  className="rounded-full px-3"
+                  color={viewType === type ? "primary" : "default"}
+                  size="sm"
+                  startContent={
+                    type === "grid" ? (
+                      <Grid3X3 className="w-4 h-4" />
+                    ) : type === "list" ? (
+                      <List className="w-4 h-4" />
+                    ) : (
+                      <BarChart3 className="w-4 h-4" />
+                    )
+                  }
+                  variant={viewType === type ? "solid" : "light"}
+                  onPress={() => setViewType(type)}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </Button>
+              ))}
+            </div>
+
+            <span className="text-sm text-foreground-600">
+              Showing {tasks.length} of {totalCount} tasks
+            </span>
           </div>
         </div>
 
-        {/* Error State */}
+        {/* Error */}
         {error && (
           <Card className="mb-6">
             <CardBody className="text-center py-8">
@@ -433,7 +461,7 @@ export default function MembersTasksPage() {
           </Card>
         )}
 
-        {/* Tasks Views */}
+        {/* Tasks */}
         {loading ? (
           <TaskGridSkeleton />
         ) : tasks.length === 0 ? (
@@ -446,57 +474,46 @@ export default function MembersTasksPage() {
               <p className="text-foreground-600 mb-6">
                 {t("adjustFiltersMessage")}
               </p>
-              <Button
-                color="primary"
-                variant="flat"
-                onPress={() => setFilters({ page: 1, limit: filters.limit })}
-              >
+              <Button color="primary" variant="flat">
                 Clear Filters
               </Button>
             </CardBody>
           </Card>
         ) : (
           <>
-            {/* Grid View */}
             {viewType === "grid" && (
-              <div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8"
-                style={{ alignItems: "start" }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                 {tasks.map((task) => (
                   <TaskCard
                     key={task.id}
                     task={task}
+                    onChangeStatus={handleChangeStatus}
                     onClick={handleTaskClick}
                     onRequestDesign={handleRequestDesign}
                   />
                 ))}
               </div>
             )}
-
-            {/* List View */}
             {viewType === "list" && (
               <div className="mb-8">
                 <TaskListView tasks={tasks} onTaskClick={handleTaskClick} />
               </div>
             )}
+            {/* {viewType === "gantt" && (
+              <TaskGanttView tasks={tasks} onTaskClick={handleTaskClick} />
+            )} */}
 
-            {/* Gantt View */}
-            {viewType === "gantt" && (
-              <div className="mb-8">
-                <TaskGanttView tasks={tasks} onTaskClick={handleTaskClick} />
-              </div>
-            )}
-
-            {/* Pagination - Only show for grid and list views */}
-            {(viewType === "grid" || viewType === "list") && totalPages > 1 && (
-              <div className="flex justify-center">
-                <Pagination
-                  showControls
-                  showShadow
-                  page={currentPage}
-                  total={totalPages}
-                  onChange={handlePageChange}
+            {!loading && totalCount > taskParametersRequest.limit! && (
+              <div className="flex justify-center py-6">
+                <GlobalPagination
+                  className="w-full max-w-md"
+                  currentPage={taskParametersRequest.page!}
+                  isLoading={loading}
+                  pageSize={taskParametersRequest.limit!}
+                  showInfo={false}
+                  totalItems={totalCount}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
                 />
               </div>
             )}
@@ -656,7 +673,7 @@ export default function MembersTasksPage() {
                         color="success"
                         size="sm"
                         variant="flat"
-                        onPress={() => {}} ///TODO
+                        onPress={() => handleChangeStatus(selectedTask)}
                       >
                         {t("changeStatus")}
                       </Button>
@@ -684,7 +701,7 @@ export default function MembersTasksPage() {
         >
           <ModalContent className="p-6 rounded-lg max-w-md">
             <ModalHeader className="flex flex-col items-center">
-              {requestDesignError && (
+              {modalError && (
                 <h4 className="font-medium" style={{ color: "#ef4444" }}>
                   {t("common.unexpectedError")}
                 </h4>
@@ -692,7 +709,7 @@ export default function MembersTasksPage() {
               <h2 className="text-lg font-semibold">{t("requestDesign")}</h2>
             </ModalHeader>
             <div className="space-y-4">
-              <Input value={selectedTask?.name ?? ""} readOnly />
+              <Input readOnly value={selectedTask?.name ?? ""} />
               <Textarea
                 placeholder={t("timeline.treeView.notes")}
                 value={notes}
@@ -719,6 +736,83 @@ export default function MembersTasksPage() {
             </ModalFooter>
           </ModalContent>
         </Modal>
+
+        {/*change status modal */}
+        <Modal
+          isOpen={isChangeStatusModalOpend}
+          onOpenChange={setIsChangeStatusModalOpend}
+        >
+          <ModalContent className="p-6 rounded-lg max-w-md">
+            <ModalHeader className="flex flex-col items-center">
+              {modalError && (
+                <h4 className="font-medium" style={{ color: "#ef4444" }}>
+                  {t("common.unexpectedError")}
+                </h4>
+              )}
+              <h2 className="text-lg font-semibold">{t("requestDesign")}</h2>
+            </ModalHeader>
+
+            <div className="space-y-4">
+              {/* Task Name */}
+              <Input readOnly value={selectedTask?.name ?? ""} />
+
+              {/* Dropdown with TaskStatus */}
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button className="w-full justify-between" variant="flat">
+                    {selectedStatus ? selectedStatus.label : t("selectStatus")}
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Select task status"
+                  onAction={(key) => {
+                    const status = tasksConfigData.taskStatus?.find(
+                      (s) => s.id.toString() === key
+                    );
+
+                    if (status) setSelectedStatus(status);
+                  }}
+                >
+                  {tasksConfigData.taskStatus?.map((status) => (
+                    <DropdownItem key={status.id.toString()}>
+                      {status.label}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </Dropdown>
+
+              {/* Notes */}
+              <Textarea
+                placeholder={t("timeline.treeView.notes")}
+                value={notes}
+                onChange={(e: any) => setNotes(e.target.value)}
+              />
+            </div>
+
+            <ModalFooter>
+              <Button
+                color="default"
+                size="md"
+                variant="flat"
+                onPress={() => setIsChangeStatusModalOpend(false)} /// also clear erro here
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                color="primary"
+                //isDisabled={!selectedStatus}
+                size="md"
+                variant="flat"
+                onPress={() => {
+                  handleChangeStatusSubmit();
+                }}
+              >
+                {t("confirm")}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
         {/* <TaskDetailsModal
           isOpen={isDetailsOpen}
           task={selectedTask}

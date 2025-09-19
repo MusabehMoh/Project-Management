@@ -1112,6 +1112,9 @@ const translations = {
     allAssigneesMode: "Tasks with ALL selected assignees",
     clearAllFilters: "Clear All Filters",
     activeFilters: "Active Filters",
+    totalTasks: "Total Tasks",
+    inProgress: "In Progress",
+    overdue: "Overdue",
 
     // Task Card
     primaryAssignee: "Primary Assignee",
@@ -2217,6 +2220,9 @@ const translations = {
     allAssigneesMode: "المهام مع جميع المعينين المحددين",
     clearAllFilters: "مسح جميع المرشحات",
     activeFilters: "المرشحات النشطة",
+    totalTasks: "اجمالي المهام",
+    inProgress: "قيد التنفيذ",
+    overdue: "متأخرة",
 
     // Task Card
     primaryAssignee: "المعين الأساسي",
