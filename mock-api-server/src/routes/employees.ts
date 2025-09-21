@@ -7,6 +7,12 @@ export const employeeRoutes = Router();
 const employeesController = new EmployeesController();
 const timelineController = new TimelineController();
 
+// GET /api/employees - Get all employees
+employeeRoutes.get(
+  "/",
+  employeesController.getAllEmployees.bind(employeesController),
+);
+
 // GET /api/employees/search - Search employees
 employeeRoutes.get(
   "/search",

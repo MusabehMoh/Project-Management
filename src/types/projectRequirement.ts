@@ -82,6 +82,7 @@ export interface AssignedProject {
   description?: string;
   createdAt?: string;
   updatedAt?: string;
+  analysts?: string; // Display names for analysts (comma-separated)
 }
 
 export interface CreateProjectRequirementRequest {

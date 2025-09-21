@@ -95,7 +95,7 @@ export function GlobalSearchModal({
   // Save recent searches to localStorage
   const saveRecentSearch = useCallback(
     (query: string) => {
-      if (!query.trim() || query.length < 2) return;
+      if (!query.trim() || query.length < 3) return;
 
       const updated = [
         query,
@@ -117,7 +117,7 @@ export function GlobalSearchModal({
   // Perform search
   const performSearch = useCallback(
     async (query: string) => {
-      if (!query.trim() || query.length < 2) {
+      if (!query.trim() || query.length < 3) {
         clearResults();
 
         return;
@@ -157,7 +157,7 @@ export function GlobalSearchModal({
       performSearch(value);
 
       // Get suggestions for autocomplete
-      if (value.length >= 1) {
+      if (value.length >= 2) {
         getSuggestions(value);
       }
     },

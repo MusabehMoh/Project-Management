@@ -38,7 +38,6 @@ import {
 import { parseDate } from "@internationalized/date";
 import { addToast } from "@heroui/toast";
 
-import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { projectService } from "@/services/api";
@@ -58,10 +57,15 @@ import { useProjectStatus } from "@/hooks/useProjectStatus";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { Project, ProjectFormData } from "@/types/project";
+import { usePageTitle } from "@/hooks";
+import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
   const { hasPermission } = usePermissions();
+
+  // Set page title
+  usePageTitle("projects.title");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
@@ -88,6 +92,7 @@ export default function ProjectsPage() {
     filterUsers,
     refreshData,
     clearError,
+    updateFilters,
     // Pagination
     currentPage,
     totalPages,
@@ -106,6 +111,7 @@ export default function ProjectsPage() {
     phases,
     loading: phasesLoading,
     getProjectStatusName,
+    getProjectStatusColor,
   } = useProjectStatus();
 
   // Employee search hooks for project owner and alternative owner
@@ -160,6 +166,11 @@ export default function ProjectsPage() {
   const [alternativeOwnerInputValue, setAlternativeOwnerInputValue] =
     useState<string>("");
 
+  // State for project name filter
+  const [projectNameFilter, setProjectNameFilter] = useState<string>("");
+  // `searchQuery` is the debounced/applied filter value that triggers API calls
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState<{
     applicationName?: string;
@@ -167,6 +178,7 @@ export default function ProjectsPage() {
     owningUnit?: string;
     startDate?: string;
     expectedCompletionDate?: string;
+    description?: string;
   }>({});
 
   // Keyboard shortcuts for pagination
@@ -203,6 +215,33 @@ export default function ProjectsPage() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [currentPage, totalPages, handlePageChange]);
 
+  // Debounce the input and only apply filter when user typed 3+ characters
+  useEffect(() => {
+    const value = projectNameFilter.trim();
+
+    // If input is empty, clear the search query immediately
+    if (value === "") {
+      setSearchQuery("");
+      return;
+    }
+
+    // Only apply automatic search when user typed 3 or more characters
+    const timeout = setTimeout(() => {
+      if (value.length >= 3) {
+        setSearchQuery(value);
+      }
+    }, 350); // debounce delay
+
+    return () => clearTimeout(timeout);
+  }, [projectNameFilter]);
+
+  // Apply filters when `searchQuery` changes (either via debounce or explicit search)
+  useEffect(() => {
+    updateFilters({
+      search: searchQuery || undefined,
+    });
+  }, [searchQuery, updateFilters]);
+
   // Handle owner selection
   const handleOwnerSelect = (employee: EmployeeSearchResult) => {
     setSelectedOwner(employee);
@@ -221,7 +260,7 @@ export default function ProjectsPage() {
   const handleAnalystSelect = (analyst: MemberSearchResult) => {
     // Check if analyst is already selected
     const isAlreadySelected = selectedAnalysts.some(
-      (selected) => selected.id === analyst.id
+      (selected) => selected.id === analyst.id,
     );
 
     if (!isAlreadySelected) {
@@ -241,7 +280,7 @@ export default function ProjectsPage() {
   // Handle analyst removal
   const handleAnalystRemove = (analystId: number) => {
     const updatedAnalysts = selectedAnalysts.filter(
-      (analyst) => analyst.id !== analystId
+      (analyst) => analyst.id !== analystId,
     );
 
     setSelectedAnalysts(updatedAnalysts);
@@ -292,8 +331,12 @@ export default function ProjectsPage() {
 
     if (!formData.expectedCompletionDate) {
       errors.expectedCompletionDate = t(
-        "projects.validation.expectedCompletionRequired"
+        "projects.validation.expectedCompletionRequired",
       );
+    }
+
+    if (!formData.description.trim()) {
+      errors.description = t("projects.validation.descriptionRequired");
     }
 
     setValidationErrors(errors);
@@ -333,20 +376,7 @@ export default function ProjectsPage() {
   };
 
   const getStatusColor = (status: number) => {
-    switch (status) {
-      case 1: // Under Study
-        return "secondary";
-      case 2: // Under Development
-        return "primary";
-      case 3: // Testing Environment
-        return "warning";
-      case 4: // Operating Environment
-        return "success";
-      case 5: // Production Environment
-        return "success";
-      default:
-        return "default";
-    }
+    return getProjectStatusColor(status);
   };
 
   const getStatusText = (status: number) => {
@@ -408,7 +438,7 @@ export default function ProjectsPage() {
     // Find the employees by their IDs and set them as selected
     const ownerEmployee = users.find((u) => u.id === project.projectOwnerId);
     const altOwnerEmployee = users.find(
-      (u) => u.id === project.alternativeOwnerId
+      (u) => u.id === project.alternativeOwnerId,
     );
 
     // Convert User objects to EmployeeSearchResult objects
@@ -438,36 +468,49 @@ export default function ProjectsPage() {
     setSelectedAlternativeOwner(altOwnerResult);
 
     // Handle analysts if they exist in the project
-    const analystResults: MemberSearchResult[] = [];
+    // Ensure analystIds is an array
+    const analystIdsArray = Array.isArray(project.analystIds)
+      ? project.analystIds
+      : project.analystIds
+        ? [project.analystIds]
+        : [];
 
-    if (project.analystIds && project.analystIds.length > 0) {
-      // Convert analyst IDs to MemberSearchResult objects
-      project.analystIds.forEach((analystId) => {
-        const analystUser = users.find((u) => u.id === analystId);
+    // Since users array now contains department members, we can directly find analysts there
+    if (analystIdsArray.length > 0) {
+      const foundAnalysts: MemberSearchResult[] = [];
 
-        if (analystUser) {
-          analystResults.push({
-            id: analystUser.id,
-            userName: analystUser.userName,
-            fullName: analystUser.fullName,
-            militaryNumber: analystUser.militaryNumber,
-            gradeName: analystUser.gradeName,
-            statusId: analystUser.isVisible ? 1 : 0,
-            department: analystUser.department,
+      analystIdsArray.forEach((analystId) => {
+        const analyst = users.find((u) => String(u.id) === String(analystId));
+
+        if (analyst) {
+          // Convert User to MemberSearchResult
+          foundAnalysts.push({
+            id: analyst.id,
+            userName: analyst.userName,
+            fullName: analyst.fullName,
+            militaryNumber: analyst.militaryNumber,
+            gradeName: analyst.gradeName,
+            statusId: analyst.isVisible ? 1 : 0,
+            department: analyst.department || "",
           });
+          console.log("Found analyst:", foundAnalysts);
         }
       });
+
+      setSelectedAnalysts(foundAnalysts);
+    } else {
+      // No analysts to process
+      setSelectedAnalysts([]);
     }
-    setSelectedAnalysts(analystResults);
 
     // Set input values
     setOwnerInputValue(
-      ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : ""
+      ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : "",
     );
     setAlternativeOwnerInputValue(
       altOwnerResult
         ? `${altOwnerResult.gradeName} ${altOwnerResult.fullName}`
-        : ""
+        : "",
     );
     setAnalystInputValue("");
 
@@ -476,10 +519,16 @@ export default function ProjectsPage() {
       projectOwner: project.projectOwnerId, // Use numeric ID
       alternativeOwner: project.alternativeOwnerId, // Use numeric ID
       owningUnit: project.owningUnitId, // Use numeric ID
-      analysts: project.analystIds || [], // Use analyst IDs or empty array
-      startDate: parseDate(project.startDate),
+      analysts: Array.isArray(project.analystIds)
+        ? project.analystIds
+        : project.analystIds
+          ? [project.analystIds]
+          : [], // Ensure analysts is always an array
+      startDate: project.startDate
+        ? parseDate(project.startDate.split("T")[0])
+        : null,
       expectedCompletionDate: project.expectedCompletionDate
-        ? parseDate(project.expectedCompletionDate)
+        ? parseDate(project.expectedCompletionDate.split("T")[0])
         : null,
       description: project.description,
       remarks: project.remarks,
@@ -495,7 +544,7 @@ export default function ProjectsPage() {
         try {
           // Fetch the specific project by ID
           const response = await projectService.getProjectById(
-            parseInt(editProjectId)
+            parseInt(editProjectId),
           );
 
           if (response.success && response.data) {
@@ -504,7 +553,7 @@ export default function ProjectsPage() {
         } catch (error) {
           // If direct fetch fails, try to find in current loaded projects
           const projectToEdit = projects.find(
-            (p) => p.id === parseInt(editProjectId)
+            (p) => p.id === parseInt(editProjectId),
           );
 
           if (projectToEdit) {
@@ -616,8 +665,23 @@ export default function ProjectsPage() {
 
         if (updatedProject) {
           console.log("Project updated successfully");
+          // Clear any previous errors
+          clearError();
           // Stay on current page after update
           handlePageChange(currentPage);
+          onOpenChange(); // Only close modal on success
+          addToast({
+            title:
+              t("projects.updateSuccess") || "Project updated successfully",
+            color: "success",
+          });
+        } else {
+          // Clear hook's error state since we're showing our own toast
+          clearError();
+          addToast({
+            title: t("projects.updateError") || "Failed to update project",
+            color: "danger",
+          });
         }
       } else {
         // Add new project
@@ -634,13 +698,37 @@ export default function ProjectsPage() {
 
         if (newProject) {
           console.log("Project created successfully");
+          // Clear any previous errors
+          clearError();
           // Go to first page to see the new project (assuming newest first)
           handlePageChange(1);
+          onOpenChange(); // Only close modal on success
+          addToast({
+            title:
+              t("projects.createSuccess") || "Project created successfully",
+            color: "success",
+          });
+        } else {
+          // Clear hook's error state since we're showing our own toast
+          clearError();
+          addToast({
+            title: t("projects.createError") || "Failed to create project",
+            color: "danger",
+          });
         }
       }
-      onOpenChange();
     } catch (err) {
       console.error("Error saving project:", err);
+      // Clear any error from the hook to prevent duplicate error display
+      clearError();
+      // Don't close modal on error - let user fix issues or manually close
+      addToast({
+        title: t("projects.saveError") || "Failed to save project",
+        description:
+          t("projects.saveErrorDescription") ||
+          "Please check your input and try again.",
+        color: "danger",
+      });
     }
   };
 
@@ -682,7 +770,7 @@ export default function ProjectsPage() {
               // Escape commas and quotes in CSV
               return `"${String(value).replace(/"/g, '""')}"`;
             })
-            .join(",")
+            .join(","),
         ),
       ].join("\n");
 
@@ -698,7 +786,7 @@ export default function ProjectsPage() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `projects_export_${new Date().toISOString().split("T")[0]}.csv`
+        `projects_export_${new Date().toISOString().split("T")[0]}.csv`,
       );
       link.style.visibility = "hidden";
 
@@ -720,7 +808,7 @@ export default function ProjectsPage() {
   };
 
   return (
-    <DefaultLayout>
+    <>
       <div className={`space-y-8 ${language === "ar" ? "rtl" : "ltr"}`}>
         {/* Error Display */}
         {error && (
@@ -784,7 +872,7 @@ export default function ProjectsPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
           <Card className="p-4">
             <div className="text-center space-y-2">
               <p className="text-3xl font-bold text-primary">
@@ -807,21 +895,11 @@ export default function ProjectsPage() {
           </Card>
           <Card className="p-4">
             <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-warning">
-                {stats?.delayed || 0}
-              </p>
-              <p className="text-sm text-default-600">
-                {language === "ar" ? "مؤجل" : "Delayed"}
-              </p>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
               <p className="text-3xl font-bold text-secondary">
-                {stats?.underReview || 0}
+                {stats?.underStudy || 0}
               </p>
               <p className="text-sm text-default-600">
-                {language === "ar" ? "قيد الدراسة" : "Under Review"}
+                {language === "ar" ? "قيد الدراسة" : "Under Study"}
               </p>
             </div>
           </Card>
@@ -837,6 +915,16 @@ export default function ProjectsPage() {
           </Card>
           <Card className="p-4">
             <div className="text-center space-y-2">
+              <p className="text-3xl font-bold text-secondary">
+                {stats?.underTesting || 0}
+              </p>
+              <p className="text-sm text-default-600">
+                {language === "ar" ? "قيد الأختبار" : "Under Testing"}
+              </p>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-center space-y-2">
               <p className="text-3xl font-bold text-success">
                 {stats?.production || 0}
               </p>
@@ -845,10 +933,97 @@ export default function ProjectsPage() {
               </p>
             </div>
           </Card>
+          <Card className="p-4">
+            <div className="text-center space-y-2">
+              <p className="text-3xl font-bold text-warning">
+                {stats?.delayed || 0}
+              </p>
+              <p className="text-sm text-default-600">
+                {language === "ar" ? "مؤجل" : "Delayed"}
+              </p>
+            </div>
+          </Card>
         </div>
 
         {/* Projects Table */}
         <div className="space-y-6">
+          {/* Project Name Filter */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <Input
+              className="max-w-xl w-full"
+              endContent={
+                <div className="flex items-center gap-2">
+                  <button
+                    aria-label={t("common.search") || "Search"}
+                    className="text-default-400 hover:text-default-600"
+                    type="button"
+                    onClick={() => setSearchQuery(projectNameFilter.trim())}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+
+                  {projectNameFilter ? (
+                    <button
+                      aria-label={t("common.clear") || "Clear"}
+                      className="text-default-400 hover:text-default-600"
+                      type="button"
+                      onClick={() => {
+                        setProjectNameFilter("");
+                        setSearchQuery("");
+                      }}
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  ) : null}
+                </div>
+              }
+              placeholder={
+                t("projects.searchByName") || "Search by project name"
+              }
+              startContent={
+                <svg
+                  className="w-4 h-4 text-default-400"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              }
+              value={projectNameFilter}
+              onChange={(e) => setProjectNameFilter(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  setSearchQuery(projectNameFilter.trim());
+                }
+              }}
+            />
+          </div>
+
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-2xl font-semibold text-foreground">
               {t("projects.allProjects")}
@@ -861,7 +1036,7 @@ export default function ProjectsPage() {
               </span>
               <Select
                 className="w-20"
-                selectedKeys={[pageSize.toString()]}
+                selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
                 size="sm"
                 onSelectionChange={(keys) => {
                   const newSize = parseInt(Array.from(keys)[0] as string);
@@ -869,28 +1044,17 @@ export default function ProjectsPage() {
                   handlePageSizeChange(newSize);
                 }}
               >
-                <SelectItem key="5">5</SelectItem>
-                <SelectItem key="10">10</SelectItem>
-                <SelectItem key="20">20</SelectItem>
-                <SelectItem key="50">50</SelectItem>
-                <SelectItem key="100">100</SelectItem>
+                {PAGE_SIZE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                    {opt}
+                  </SelectItem>
+                ))}
               </Select>
               <span className="text-sm text-default-600">
                 {t("pagination.perPage")}
               </span>
             </div>
           </div>
-
-          {/* Results info */}
-          {!loading && (
-            <div className="text-sm text-default-600">
-              {t("pagination.showing")} {(currentPage - 1) * pageSize + 1}{" "}
-              {t("pagination.to")}{" "}
-              {Math.min(currentPage * pageSize, totalProjects)}{" "}
-              {t("pagination.of")} {totalProjects}{" "}
-              {t("projects.totalProjects").toLowerCase()}
-            </div>
-          )}
 
           <Card>
             <CardBody className="p-0 overflow-x-auto">
@@ -904,7 +1068,7 @@ export default function ProjectsPage() {
                         {currentPage > 1
                           ? t("pagination.loadingPage").replace(
                               "{page}",
-                              currentPage.toString()
+                              currentPage.toString(),
                             )
                           : t("common.pleaseWait")}
                       </p>
@@ -995,8 +1159,12 @@ export default function ProjectsPage() {
                         <TableCell>
                           {project.owningUnit || "Unknown Unit"}
                         </TableCell>
-                        <TableCell>{project.startDate}</TableCell>
-                        <TableCell>{project.expectedCompletionDate}</TableCell>
+                        <TableCell>
+                          {project.startDate?.split("T")[0] || ""}
+                        </TableCell>
+                        <TableCell>
+                          {project.expectedCompletionDate?.split("T")[0] || ""}
+                        </TableCell>
                         <TableCell>
                           <Chip
                             color={getStatusColor(project.status)}
@@ -1028,7 +1196,7 @@ export default function ProjectsPage() {
 
                               {hasPermission({
                                 actions: ["projects.sendToAnylsis"],
-                              }) ? (
+                              }) && project.status === 1 ? (
                                 <DropdownItem
                                   key="send"
                                   startContent={<SendIcon />}
@@ -1155,7 +1323,7 @@ export default function ProjectsPage() {
                     onSelectionChange={(key) => {
                       if (key) {
                         const selectedEmployee = ownerEmployees.find(
-                          (e) => e.id.toString() === key
+                          (e) => e.id.toString() === key,
                         );
 
                         if (selectedEmployee) {
@@ -1228,7 +1396,7 @@ export default function ProjectsPage() {
                     onSelectionChange={(key) => {
                       if (key) {
                         const selectedEmployee = alternativeOwnerEmployees.find(
-                          (e) => e.id.toString() === key
+                          (e) => e.id.toString() === key,
                         );
 
                         if (selectedEmployee) {
@@ -1289,7 +1457,7 @@ export default function ProjectsPage() {
                       onSelectionChange={(key) => {
                         if (key) {
                           const selectedEmployee = analystEmployees.find(
-                            (e) => e.id.toString() === key
+                            (e) => e.id.toString() === key,
                           );
 
                           if (selectedEmployee) {
@@ -1406,15 +1574,24 @@ export default function ProjectsPage() {
                   />
                   <div className="md:col-span-2">
                     <Input
+                      errorMessage={validationErrors.description}
+                      isInvalid={!!validationErrors.description}
                       label={t("projects.description")}
                       placeholder={t("projects.description")}
                       value={formData.description}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData({
                           ...formData,
                           description: e.target.value,
-                        })
-                      }
+                        });
+                        // Clear validation error when user starts typing
+                        if (validationErrors.description) {
+                          setValidationErrors({
+                            ...validationErrors,
+                            description: undefined,
+                          });
+                        }
+                      }}
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -1514,6 +1691,6 @@ export default function ProjectsPage() {
         project={selectedProjectForDetails}
         onOpenChange={handleDetailsClose}
       />
-    </DefaultLayout>
+    </>
   );
 }

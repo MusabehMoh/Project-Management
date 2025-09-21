@@ -73,9 +73,20 @@ public class Unit
 
     [Required]
     [MaxLength(100)]
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty; 
+
+    [Required]
+    [MaxLength(20)]
+    public string Code { get; set; } = string.Empty;
 
     public string? Description { get; set; }
+
+    public int? ParentId { get; set; }
+
+    public int Level { get; set; } = 0;
+
+    [MaxLength(500)]
+    public string Path { get; set; } = string.Empty;
 
     [Required]
     public bool IsActive { get; set; }
@@ -87,6 +98,12 @@ public class Unit
     public DateTime UpdatedAt { get; set; }
 
     // Navigation properties
+    [JsonIgnore]
+    public Unit? Parent { get; set; }
+
+    [JsonIgnore]
+    public ICollection<Unit>? Children { get; set; }
+
     [JsonIgnore]
     public ICollection<Project>? Projects { get; set; }
 }

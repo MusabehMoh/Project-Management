@@ -1,19 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
+using PMA.Api.Services;
+using PMA.Core.DTOs;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
-using PMA.Core.DTOs;
 
 namespace PMA.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/project-requirements")]
 public class ProjectRequirementsController : ApiBaseController
 {
     private readonly IProjectRequirementService _projectRequirementService;
+    private readonly ICurrentUserService _currentUser;
 
-    public ProjectRequirementsController(IProjectRequirementService projectRequirementService)
+    public ProjectRequirementsController(IProjectRequirementService projectRequirementService, ICurrentUserService currentUser)
     {
         _projectRequirementService = projectRequirementService;
+        _currentUser = currentUser;
     }
 
     /// <summary>
@@ -63,6 +66,32 @@ public class ProjectRequirementsController : ApiBaseController
     }
 
     /// <summary>
+    /// Get projects assigned to current analyst
+    /// </summary>
+    [HttpGet("assigned-projects")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetAssignedProjects(
+        [FromQuery] int? userId = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] int? projectId = null)
+    {
+        try
+        {
+           
+            var (assignedProjects, totalCount) = await _projectRequirementService.GetAssignedProjectsAsync(userId, page, limit, search, projectId);
+            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+            return Success(assignedProjects, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<AssignedProjectDto>>("An error occurred while retrieving assigned projects", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Get project requirements by project
     /// </summary>
     [HttpGet("project/{projectId}")]
@@ -89,6 +118,29 @@ public class ProjectRequirementsController : ApiBaseController
                 Error = ex.Message
             };
             return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Get project requirements by project with pagination
+    /// </summary>
+    [HttpGet("projects/{projectId}/requirements")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetProjectRequirementsByProjectWithPagination(
+        int projectId,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20)
+    {
+        try
+        {
+            var (projectRequirements, totalCount) = await _projectRequirementService.GetProjectRequirementsAsync(page, limit, projectId, null, null);
+            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+            return Success(projectRequirements, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving project requirements", ex.Message);
         }
     }
 

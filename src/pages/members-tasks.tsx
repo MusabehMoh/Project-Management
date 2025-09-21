@@ -40,14 +40,18 @@ import { TaskCard } from "@/components/members-tasks/TaskCard";
 import { TaskListView } from "@/components/members-tasks/TaskListView";
 import { TaskGanttView } from "@/components/members-tasks/TaskGanttView";
 import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
-import DefaultLayout from "@/layouts/default";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MemberTask, TaskStatus } from "@/types/membersTasks";
 import GlobalPagination from "@/components/GlobalPagination";
+import { usePageTitle } from "@/hooks";
+import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 
 export default function MembersTasksPage() {
   const { t } = useLanguage();
+  
+  // Set page title
+  usePageTitle("tasks.title");
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
   const [viewType, setViewType] = useState<"grid" | "list" | "gantt">("grid");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -83,12 +87,10 @@ export default function MembersTasksPage() {
   const [modalError, setModalError] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
-  const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
-  const effectivePageSize = PAGE_SIZE_OPTIONS.includes(
-    taskParametersRequest.limit ?? 20
-  )
-    ? taskParametersRequest.limit
-    : 20;
+  const effectivePageSize = normalizePageSize(
+    taskParametersRequest.limit ?? 10,
+    10,
+  );
 
   const [searchValue, setSearchValue] = useState(
     taskParametersRequest?.search ?? ""
@@ -175,7 +177,7 @@ export default function MembersTasksPage() {
   };
 
   return (
-    <DefaultLayout>
+    <>
       <div className="w-full max-w-full">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 mb-6 border-b border-divider">
@@ -819,6 +821,6 @@ export default function MembersTasksPage() {
           onClose={onDetailsClose}
         /> */}
       </div>
-    </DefaultLayout>
+    </>
   );
 }

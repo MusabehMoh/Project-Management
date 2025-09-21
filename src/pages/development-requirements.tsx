@@ -42,15 +42,18 @@ import {
 } from "lucide-react";
 
 import { RefreshIcon } from "@/components/icons";
-import DefaultLayout from "@/layouts/default";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDevelopmentRequirements } from "@/hooks/useDevelopmentRequirements";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { useTimeline } from "@/hooks/useTimeline";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useRequirementStatus } from "@/hooks/useRequirementStatus";
+import { usePageTitle } from "@/hooks";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import { GlobalPagination } from "@/components/GlobalPagination";
+import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 
 // Utility functions for color mapping
 const getPriorityColor = (priority: string) => {
@@ -60,22 +63,6 @@ const getPriorityColor = (priority: string) => {
     case "medium":
       return "warning";
     case "low":
-      return "success";
-    default:
-      return "default";
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "draft":
-      return "default";
-    case "approved":
-      return "primary";
-    case "in_development":
-    case "in-development":
-      return "secondary";
-    case "completed":
       return "success";
     default:
       return "default";
@@ -97,11 +84,17 @@ const RequirementCard = ({
   onViewDetails,
   onCreateTask,
   onCreateTimeline,
+  getStatusColor,
+  getStatusText,
 }: {
   requirement: ProjectRequirement;
   onViewDetails: (requirement: ProjectRequirement) => void;
   onCreateTask: (requirement: ProjectRequirement) => void;
   onCreateTimeline: (requirement: ProjectRequirement) => void;
+  getStatusColor: (
+    status: string | number,
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getStatusText: (status: string | number) => string;
 }) => {
   const { hasPermission } = usePermissions();
   const { t } = useLanguage();
@@ -133,7 +126,7 @@ const RequirementCard = ({
               size="sm"
               variant="flat"
             >
-              {t(`requirements.${requirement.status.replace("-", "")}`)}
+              {getStatusText(requirement.status)}
             </Chip>
           </div>
         </div>
@@ -242,6 +235,53 @@ export default function DevelopmentRequirementsPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
+
+  // Set page title
+  usePageTitle("requirements.developmentRequirements");
+
+  // Requirement status hook for status management
+  const { getRequirementStatusColor } = useRequirementStatus();
+
+  // Helper function to convert string status to numeric code
+  const convertStatusToCode = (status: string): number => {
+    switch (status.toLowerCase()) {
+      case "draft":
+        return 1; // New
+      case "approved":
+        return 2; // Under Study
+      case "in-development":
+      case "in_development":
+        return 3; // Under Development
+      case "testing":
+        return 4; // Under Testing
+      case "completed":
+        return 5; // Completed
+      default:
+        return 1; // Default to New
+    }
+  };
+
+  // Helper function to get status color (handles both string and numeric)
+  const getStatusColor = (
+    status: string | number,
+  ): "warning" | "danger" | "primary" | "secondary" | "success" | "default" => {
+    if (typeof status === "string") {
+      return getRequirementStatusColor(convertStatusToCode(status));
+    }
+
+    return getRequirementStatusColor(status);
+  };
+
+  // Helper function to get status text (handles both string and numeric)
+  const getStatusText = (status: string | number): string => {
+    if (typeof status === "string") {
+      const statusCode = convertStatusToCode(status);
+
+      return t(`requirementStatus.${statusCode}`);
+    }
+
+    return t(`requirementStatus.${status}`);
+  };
 
   // Grid-only view
 
@@ -462,16 +502,16 @@ export default function DevelopmentRequirementsPage() {
 
   if (loading && requirements.length === 0) {
     return (
-      <DefaultLayout>
+      <>
         <div className="flex justify-center items-center min-h-96">
           <Spinner label={t("common.loading")} size="lg" />
         </div>
-      </DefaultLayout>
+      </>
     );
   }
 
   return (
-    <DefaultLayout>
+    <>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4">
@@ -546,7 +586,7 @@ export default function DevelopmentRequirementsPage() {
                 </span>
                 <Select
                   className="w-20"
-                  selectedKeys={[pageSize.toString()]}
+                  selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
                   size="sm"
                   onSelectionChange={(keys) => {
                     const newSize = parseInt(Array.from(keys)[0] as string);
@@ -554,10 +594,11 @@ export default function DevelopmentRequirementsPage() {
                     handlePageSizeChange(newSize);
                   }}
                 >
-                  <SelectItem key="10">10</SelectItem>
-                  <SelectItem key="20">20</SelectItem>
-                  <SelectItem key="50">50</SelectItem>
-                  <SelectItem key="100">100</SelectItem>
+                  {PAGE_SIZE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                      {opt}
+                    </SelectItem>
+                  ))}
                 </Select>
                 <span className="text-sm text-default-600">
                   {t("pagination.perPage")}
@@ -616,6 +657,8 @@ export default function DevelopmentRequirementsPage() {
               {requirements.map((requirement) => (
                 <RequirementCard
                   key={requirement.id}
+                  getStatusColor={getStatusColor}
+                  getStatusText={getStatusText}
                   requirement={requirement}
                   onCreateTask={openTaskModal}
                   onCreateTimeline={openTimelineModal}
@@ -676,9 +719,7 @@ export default function DevelopmentRequirementsPage() {
                       size="sm"
                       variant="flat"
                     >
-                      {t(
-                        `requirements.${selectedRequirement.status.replace("-", "")}`,
-                      )}
+                      {getStatusText(selectedRequirement.status)}
                     </Chip>
                   </div>
 
@@ -1007,6 +1048,6 @@ export default function DevelopmentRequirementsPage() {
           />
         )}
       </div>
-    </DefaultLayout>
+    </>
   );
 }

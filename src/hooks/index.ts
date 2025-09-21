@@ -6,3 +6,6 @@ export { useCalendar } from "./useCalendar";
 
 // Export quick actions hook
 export { useQuickActions } from "./useQuickActions";
+
+// Export page title hook
+export { usePageTitle } from "./usePageTitle";

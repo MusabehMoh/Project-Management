@@ -12,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Options;
 using PMA.Api.Config;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -107,6 +108,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
         b => b.MigrationsAssembly("PMA.Api")));
 
+// Add Memory Cache
+builder.Services.AddMemoryCache(options =>
+{
+    // Maximum number of entries (approximate, depends on Size property of each entry)
+    options.SizeLimit = 1000; // total "size units" allowed in cache
+
+    // Memory cleanup percentage when the cache reaches the limit
+    options.CompactionPercentage = 0.25; // 25% items removed when trimming
+
+    // How often the cache checks for expired entries
+    options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
+});
+
 // Register repositories
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -114,12 +128,14 @@ builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ISprintRepository, SprintRepository>();
 builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
+builder.Services.AddScoped<IProjectRequirementRepository, ProjectRequirementRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<IUnitRepository, UnitRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IActionRepository, ActionRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<ILookupRepository, LookupRepository>();
 
 // Register services
 builder.Services.AddScoped<IProjectService, ProjectService>();
@@ -128,11 +144,14 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<IRequirementService, RequirementService>();
+builder.Services.AddScoped<IProjectRequirementService, PMA.Core.Services.ProjectRequirementService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IActionService, ActionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ILookupService, LookupService>();
+builder.Services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();
 
 // Register mapping services
 builder.Services.AddMappingServices();
@@ -150,6 +169,27 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowCredentials();
     });
+});
+
+// Add Windows (Negotiate) Authentication
+builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+    .AddNegotiate();
+
+// Register IHttpContextAccessor for accessing HttpContext in services
+builder.Services.AddHttpContextAccessor();
+
+// Register a simple current-user service to expose username and principal
+builder.Services.AddScoped<PMA.Api.Services.ICurrentUserService, PMA.Api.Services.CurrentUserService>();
+// Also register the core abstraction so core services can depend on it
+builder.Services.AddScoped<PMA.Core.Interfaces.ICurrentUserProvider>(sp => sp.GetRequiredService<PMA.Api.Services.ICurrentUserService>());
+
+// Allow anonymous access to Swagger UI in development
+builder.Services.AddAuthorization(options =>
+{
+    // Default policy requires authenticated users
+    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
 });
 
 var app = builder.Build();
@@ -175,6 +215,7 @@ app.UseRequestLogging();
 
 app.UseCors("AllowSpecificOrigin");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

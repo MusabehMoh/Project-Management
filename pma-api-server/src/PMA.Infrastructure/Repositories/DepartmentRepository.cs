@@ -96,6 +96,26 @@ public class TeamRepository : Repository<Team>, ITeamRepository
         }
         return false;
     }
+
+    public async Task<IEnumerable<Employee>> SearchUsersInTeamsAsync(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return Enumerable.Empty<Employee>();
+
+        // Get all employees who are active team members and match the search criteria
+        var employees = await _context.Teams
+            .Include(t => t.Employee)
+            .Where(t => t.IsActive && t.Employee != null &&
+                (t.Employee.UserName.Contains(searchTerm) ||
+                 t.Employee.FullName.Contains(searchTerm) ||
+                 t.Employee.MilitaryNumber.Contains(searchTerm)))
+            .Select(t => t.Employee!)
+            .Distinct()
+            .OrderBy(e => e.FullName)
+            .ToListAsync();
+
+        return employees;
+    }
 }
 
 

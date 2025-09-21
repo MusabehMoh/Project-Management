@@ -39,7 +39,6 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 
-import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
@@ -52,10 +51,15 @@ import {
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { useUsers, useRoles, useActions } from "@/hooks/useUsers";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
+import { usePageTitle } from "@/hooks";
+import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 
 export default function UsersPage() {
   const { t, language } = useLanguage();
   const { hasPermission } = usePermissions();
+  
+  // Set page title
+  usePageTitle("users.title");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
@@ -370,10 +374,7 @@ export default function UsersPage() {
   };
 
   // Pagination page size options
-  const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
-  const effectivePageSize = PAGE_SIZE_OPTIONS.includes(pagination.limit)
-    ? pagination.limit
-    : 20;
+  const effectivePageSize = normalizePageSize(pagination.limit, 10);
 
   // Handler for page size change
   const handlePageSizeChange = (newSize: number) => {
@@ -382,7 +383,7 @@ export default function UsersPage() {
   };
 
   return (
-    <DefaultLayout>
+    <>
       <div className={`space-y-6 ${language === "ar" ? "rtl" : "ltr"}`}>
         {/* Header */}
         <div className="flex flex-col gap-4">
@@ -410,7 +411,7 @@ export default function UsersPage() {
               {/* Role Filter */}
               <Select
                 aria-label={t("users.roles")}
-                className="w-full sm:w-48"
+                className="w-full sm:w-64"
                 placeholder={t("users.roles")}
                 selectedKeys={filters.roleId ? [filters.roleId.toString()] : []}
                 onSelectionChange={(keys) => {
@@ -434,7 +435,7 @@ export default function UsersPage() {
               {/* Status Filter */}
               <Select
                 aria-label={t("users.status")}
-                className="w-full sm:w-32"
+                className="w-full sm:w-52"
                 placeholder={t("users.status")}
                 selectedKeys={
                   filters.isVisible === undefined
@@ -1226,6 +1227,6 @@ export default function UsersPage() {
           </ModalContent>
         </Modal>
       </div>
-    </DefaultLayout>
+    </>
   );
 }

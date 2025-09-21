@@ -158,7 +158,7 @@ const UnitTreeNodeComponent: React.FC<UnitTreeNodeProps> = ({
             <span
               className={`font-medium truncate ${isSelected ? "text-primary-800" : ""}`}
             >
-              {language === "ar" ? node.nameAr : node.name}
+              {language === "ar" ? node.name : node.name}
             </span>
             {!node.isActive && (
               <Chip color="warning" size="sm" variant="flat">
@@ -328,7 +328,7 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
               {path.map((unit, index) => (
                 <div key={unit.id} className="flex items-center gap-1">
                   <span className="text-sm text-primary-800">
-                    {language === "ar" ? unit.nameAr : unit.name}
+                    {language === "ar" ? unit.name : unit.name}
                   </span>
                   {index < path.length - 1 &&
                     (language === "ar" ? (
@@ -393,11 +393,11 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">
-                          {language === "ar" ? unit.nameAr : unit.name}
+                          {language === "ar" ? unit.name : unit.name}
                         </span>
                       </div>
                       <div className="text-sm text-default-500">
-                        {language === "ar" ? unit.name : unit.nameAr}
+                        {language === "ar" ? unit.name : unit.name}
                       </div>
                     </div>
                     <Chip

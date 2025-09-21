@@ -16,9 +16,8 @@ public class Project
     [MaxLength(100)]
     public string ProjectOwner { get; set; } = string.Empty;
 
-    [Required]
     [MaxLength(100)]
-    public string AlternativeOwner { get; set; } = string.Empty;
+    public string? AlternativeOwner { get; set; }
 
     [Required]
     [MaxLength(100)]
@@ -27,14 +26,12 @@ public class Project
     [Required]
     public int ProjectOwnerId { get; set; }
 
-    [Required]
-    public int AlternativeOwnerId { get; set; }
+    public int? AlternativeOwnerId { get; set; }
 
     [Required]
     public int OwningUnitId { get; set; }
 
     public string? Analysts { get; set; }
-    public string AnalystIds { get; set; }
 
     [Required]
     public DateTime StartDate { get; set; }
@@ -77,6 +74,9 @@ public class Project
     [ForeignKey("OwningUnitId")]
     public Unit? OwningUnitEntity { get; set; }
 
+    [ForeignKey("ProjectId")]
+    public ICollection<ProjectAnalyst>? ProjectAnalysts { get; set; }
+
     public ICollection<Task>? Tasks { get; set; }
     public ICollection<Requirement>? Requirements { get; set; }
 }
@@ -84,10 +84,11 @@ public class Project
 public enum ProjectStatus
 {
     New = 1,
-    Delayed = 2,
-    UnderReview = 3,
-    UnderDevelopment = 4,
-    Production = 5
+    UnderStudy = 2,
+    UnderDevelopment = 3,
+    UnderTesting = 4,
+    Production = 5,
+    Delayed = 6
 }
 
 public enum Priority

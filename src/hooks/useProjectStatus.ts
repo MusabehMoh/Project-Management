@@ -1,9 +1,18 @@
-import type { ProjectStatus } from "@/services/api/ProjectStatusService";
-
 import { useState, useEffect } from "react";
 
-import { projectStatusApiService } from "@/services/api";
+import { lookupService } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LookupDto } from "@/types/timeline";
+
+// Map LookupDto to ProjectStatus for backward compatibility
+export interface ProjectStatus {
+  id: number;
+  nameEn: string;
+  nameAr: string;
+  code: number;
+  isActive: boolean;
+  order: number;
+}
 
 export interface UseProjectStatus {
   phases: ProjectStatus[];
@@ -12,6 +21,9 @@ export interface UseProjectStatus {
   refetch: () => Promise<void>;
   getProjectStatusByCode: (code: number) => ProjectStatus | undefined;
   getProjectStatusName: (code: number) => string;
+  getProjectStatusColor: (
+    code: number,
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
 }
 
 export function useProjectStatus(): UseProjectStatus {
@@ -24,10 +36,22 @@ export function useProjectStatus(): UseProjectStatus {
     try {
       setLoading(true);
       setError(null);
-      const response = await projectStatusApiService.getProjectStatus();
+      const response = await lookupService.getByCode("ProjectStatus");
 
       if (response.success) {
-        setPhases(response.data);
+        // Map LookupDto to ProjectStatus for backward compatibility
+        const mappedPhases: ProjectStatus[] = response.data.map(
+          (lookup: LookupDto) => ({
+            id: lookup.id,
+            nameEn: lookup.name,
+            nameAr: lookup.nameAr,
+            code: lookup.value,
+            isActive: lookup.isActive,
+            order: lookup.value, // Use value as order since they're similar
+          }),
+        );
+
+        setPhases(mappedPhases);
       } else {
         throw new Error(response.message || "Failed to fetch phases");
       }
@@ -54,6 +78,25 @@ export function useProjectStatus(): UseProjectStatus {
     return language === "ar" ? phase.nameAr : phase.nameEn;
   };
 
+  const getProjectStatusColor = (
+    code: number,
+  ): "warning" | "danger" | "primary" | "secondary" | "success" | "default" => {
+    switch (code) {
+      case 1: // Under Study
+        return "warning";
+      case 2: // Delayed
+        return "danger";
+      case 3: // Under Review
+        return "primary";
+      case 4: // Under Development
+        return "secondary";
+      case 5: // Production
+        return "success";
+      default:
+        return "default";
+    }
+  };
+
   return {
     phases,
     loading,
@@ -61,5 +104,6 @@ export function useProjectStatus(): UseProjectStatus {
     refetch: fetchPhases,
     getProjectStatusByCode,
     getProjectStatusName,
+    getProjectStatusColor,
   };
 }

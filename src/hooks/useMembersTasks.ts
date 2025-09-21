@@ -738,8 +738,8 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       } catch (err) {
         // Fallback to mock data when API is not available
 
-        setTasks(mockMemberTasks);
-        setTotalPages(Math.ceil(mockMemberTasks.length / 20));
+  setTasks(mockMemberTasks);
+  setTotalPages(Math.ceil(mockMemberTasks.length / 10));
         //handlePageChange(1);
         setTotalCount(mockMemberTasks.length);
       } finally {

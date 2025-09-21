@@ -11,23 +11,17 @@ public class Lookup
 
     [Required]
     [MaxLength(50)]
-    public string Category { get; set; } = string.Empty; // 'projectStatus', 'priority', 'taskStatus', etc.
-
-    [Required]
-    [MaxLength(50)]
-    public string Value { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(100)]
-    public string Label { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
-    [MaxLength(7)]
-    public string? Color { get; set; } // Hex color code
+    [MaxLength(100)]
+    public string? NameAr { get; set; }
 
-    public int Order { get; set; } = 0;
+    [Required]
+    public int Value { get; set; }
 
     public bool IsActive { get; set; } = true;
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

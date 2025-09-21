@@ -17,26 +17,27 @@ public class LookupsController : ApiBaseController
     }
 
     /// <summary>
-    /// Get all lookups with pagination and filtering
+    /// Get all lookups with optional filtering
     /// </summary>
     [HttpGet]
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetLookups(
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 20,
-        [FromQuery] string? category = null,
-        [FromQuery] bool? isActive = null)
+        [FromQuery] string? code = null)
     {
         try
         {
-            var (lookups, totalCount) = await _lookupService.GetLookupsAsync(page, limit, category, isActive);
-            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
-            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
-            return Success(lookups, pagination);
+            var lookups = await _lookupService.GetLookupsAsync(code);
+            var response = new ApiResponse<IEnumerable<LookupDto>>
+            {
+                Success = true,
+                Data = lookups
+            };
+            
+            return Ok(response);
         }
         catch (Exception ex)
         {
-            return Error<IEnumerable<Lookup>>("An error occurred while retrieving lookups", ex.Message);
+            return Error<IEnumerable<LookupDto>>("An error occurred while retrieving lookups", ex.Message);
         }
     }
 
@@ -53,7 +54,7 @@ public class LookupsController : ApiBaseController
             var lookup = await _lookupService.GetLookupByIdAsync(id);
             if (lookup == null)
             {
-                var notFoundResponse = new ApiResponse<Lookup>
+                var notFoundResponse = new ApiResponse<LookupDto>
                 {
                     Success = false,
                     Message = "Lookup not found"
@@ -61,7 +62,7 @@ public class LookupsController : ApiBaseController
                 return NotFound(notFoundResponse);
             }
             
-            var response = new ApiResponse<Lookup>
+            var response = new ApiResponse<LookupDto>
             {
                 Success = true,
                 Data = lookup
@@ -71,7 +72,7 @@ public class LookupsController : ApiBaseController
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<Lookup>
+            var errorResponse = new ApiResponse<LookupDto>
             {
                 Success = false,
                 Message = "An error occurred while retrieving the lookup",
@@ -82,16 +83,16 @@ public class LookupsController : ApiBaseController
     }
 
     /// <summary>
-    /// Get lookups by category
+    /// Get lookups by code
     /// </summary>
-    [HttpGet("category/{category}")]
+    [HttpGet("code/{code}")]
     [ProducesResponseType(200)]
-    public async Task<IActionResult> GetLookupsByCategory(string category)
+    public async Task<IActionResult> GetLookupsByCategory(string code)
     {
         try
         {
-            var lookups = await _lookupService.GetLookupsByCategoryAsync(category);
-            var response = new ApiResponse<IEnumerable<Lookup>>
+            var lookups = await _lookupService.GetLookupsByCategoryAsync(code);
+            var response = new ApiResponse<IEnumerable<LookupDto>>
             {
                 Success = true,
                 Data = lookups
@@ -101,7 +102,7 @@ public class LookupsController : ApiBaseController
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<IEnumerable<Lookup>>
+            var errorResponse = new ApiResponse<IEnumerable<LookupDto>>
             {
                 Success = false,
                 Message = "An error occurred while retrieving lookups by category",
@@ -123,7 +124,7 @@ public class LookupsController : ApiBaseController
         {
             if (!ModelState.IsValid)
             {
-                var validationResponse = new ApiResponse<Lookup>
+                var validationResponse = new ApiResponse<LookupDto>
                 {
                     Success = false,
                     Message = "Validation failed",
@@ -133,7 +134,7 @@ public class LookupsController : ApiBaseController
             }
 
             var createdLookup = await _lookupService.CreateLookupAsync(lookup);
-            var response = new ApiResponse<Lookup>
+            var response = new ApiResponse<LookupDto>
             {
                 Success = true,
                 Data = createdLookup,
@@ -144,7 +145,7 @@ public class LookupsController : ApiBaseController
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<Lookup>
+            var errorResponse = new ApiResponse<LookupDto>
             {
                 Success = false,
                 Message = "An error occurred while creating the lookup",
@@ -167,7 +168,7 @@ public class LookupsController : ApiBaseController
         {
             if (!ModelState.IsValid)
             {
-                var validationResponse = new ApiResponse<Lookup>
+                var validationResponse = new ApiResponse<LookupDto>
                 {
                     Success = false,
                     Message = "Validation failed",
@@ -178,7 +179,7 @@ public class LookupsController : ApiBaseController
 
             if (id != lookup.Id)
             {
-                var mismatchResponse = new ApiResponse<Lookup>
+                var mismatchResponse = new ApiResponse<LookupDto>
                 {
                     Success = false,
                     Message = "ID mismatch"
@@ -189,7 +190,7 @@ public class LookupsController : ApiBaseController
             var updatedLookup = await _lookupService.UpdateLookupAsync(lookup);
             if (updatedLookup == null)
             {
-                var notFoundResponse = new ApiResponse<Lookup>
+                var notFoundResponse = new ApiResponse<LookupDto>
                 {
                     Success = false,
                     Message = "Lookup not found"
@@ -197,7 +198,7 @@ public class LookupsController : ApiBaseController
                 return NotFound(notFoundResponse);
             }
             
-            var response = new ApiResponse<Lookup>
+            var response = new ApiResponse<LookupDto>
             {
                 Success = true,
                 Data = updatedLookup,
@@ -208,7 +209,7 @@ public class LookupsController : ApiBaseController
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<Lookup>
+            var errorResponse = new ApiResponse<LookupDto>
             {
                 Success = false,
                 Message = "An error occurred while updating the lookup",

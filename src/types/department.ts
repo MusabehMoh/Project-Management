@@ -3,7 +3,7 @@ export interface Department {
   id: number;
   name: string;
   nameAr?: string;
-  status: "active" | "inactive";
+  isActive: boolean
   description?: string;
   memberCount: number;
   members?: DepartmentMember[];

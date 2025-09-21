@@ -9,7 +9,8 @@ import {
   UpdateProjectRequest,
   ProjectStats,
 } from "@/types/project";
-import { projectService } from "@/services/api";
+import { projectService, timelineService } from "@/services/api";
+import { MemberSearchResult } from "@/types/timeline";
 import SearchService from "@/services/searchService";
 
 // Custom hook for projects data management
@@ -138,22 +139,42 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
     [filters, pageSize],
   );
 
-  // Load users from API
+  // Load department employees from API instead of general users
   const loadUsers = useCallback(async () => {
     if (inFlightUsersRef.current) return inFlightUsersRef.current;
     const run = (async () => {
       try {
-        const response = await projectService.getProjectUsers();
+        // Use timelineService to fetch all department employees (without search query)
+        const response = await timelineService.getAllDepartmentEmployees();
 
         if (response.success) {
-          setUsers(response.data);
+          // Convert MemberSearchResult to User format for compatibility
+          const departmentEmployees = response.data.map(
+            (employee: MemberSearchResult) => ({
+              id: employee.id,
+              userName: employee.userName,
+              prsId: employee.id, // Using id as prsId for compatibility
+              isVisible: true,
+              fullName: employee.fullName,
+              militaryNumber: employee.militaryNumber,
+              gradeName: employee.gradeName,
+              department: employee.department,
+              // Add any other required fields with defaults
+              createdAt: undefined,
+              updatedAt: undefined,
+            }),
+          );
+          
+          setUsers(departmentEmployees);
         } else {
-          throw new Error(response.message || "Failed to load users");
+          throw new Error(
+            response.message || "Failed to load department employees",
+          );
         }
       } catch (err) {
         if (process.env.NODE_ENV !== "production") {
           // eslint-disable-next-line no-console
-          console.error("Error loading users:", err);
+          console.error("Error loading department employees:", err);
         }
       } finally {
         inFlightUsersRef.current = null;

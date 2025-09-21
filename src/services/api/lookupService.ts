@@ -1,10 +1,19 @@
 import { apiClient } from "./client";
 
-import { TaskStatusLookup, TaskPriorityLookup } from "@/types/timeline";
+import {
+  TaskStatusLookup,
+  TaskPriorityLookup,
+  LookupDto,
+} from "@/types/timeline";
 import { ApiResponse } from "@/types/project";
 
 export class LookupService {
-  private baseUrl = "/api/lookups";
+  private baseUrl = "/lookups";
+
+  // Generic lookup method for new API
+  async getByCode(code: string): Promise<ApiResponse<LookupDto[]>> {
+    return apiClient.get<LookupDto[]>(`${this.baseUrl}/code/${code}`);
+  }
 
   // Task Status Lookups
   async getTaskStatuses(): Promise<ApiResponse<TaskStatusLookup[]>> {

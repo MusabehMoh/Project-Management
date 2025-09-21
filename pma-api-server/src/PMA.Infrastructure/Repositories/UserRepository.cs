@@ -50,7 +50,7 @@ public class UserRepository : Repository<User>, IUserRepository
            .Include("UserRoles.Role")
            .Include("UserActions.Permission")
            .Include(u => u.Employee)
-           .FirstOrDefaultAsync(u => u.UserName == userName);
+           .FirstOrDefaultAsync(u => u.UserName == userName.ToLower());
         }
         catch (Exception)
         {

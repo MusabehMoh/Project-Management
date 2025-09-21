@@ -41,6 +41,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<CalendarEvent> CalendarEvents { get; set; }
     public DbSet<CalendarEventAssignment> CalendarEventAssignments { get; set; }
     public DbSet<SubTaskAssignment> SubTaskAssignments { get; set; }
+    public DbSet<ProjectAnalyst> ProjectAnalysts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

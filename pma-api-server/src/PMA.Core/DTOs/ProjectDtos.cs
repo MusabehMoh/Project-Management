@@ -1,4 +1,5 @@
 using PMA.Core.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace PMA.Core.DTOs;
 
@@ -7,13 +8,13 @@ public class ProjectDto
     public int Id { get; set; }
     public string ApplicationName { get; set; } = string.Empty;
     public string ProjectOwner { get; set; } = string.Empty;
-    public string AlternativeOwner { get; set; } = string.Empty;
+    public string? AlternativeOwner { get; set; }
     public string OwningUnit { get; set; } = string.Empty;
     public int ProjectOwnerId { get; set; }
-    public int AlternativeOwnerId { get; set; }
+    public int? AlternativeOwnerId { get; set; }
     public int OwningUnitId { get; set; }
     public string? Analysts { get; set; }
-    public string AnalystIds { get; set; }
+    public List<int> AnalystIds { get; set; } = new List<int>();
     public DateTime StartDate { get; set; }
     public DateTime ExpectedCompletionDate { get; set; }
     public string Description { get; set; } = string.Empty;
@@ -24,6 +25,74 @@ public class ProjectDto
     public Priority Priority { get; set; }
     public decimal Budget { get; set; }
     public int Progress { get; set; }
+}
+
+public class CreateProjectDto
+{
+    [Required(ErrorMessage = "Application name is required")]
+    [MaxLength(200, ErrorMessage = "Application name cannot exceed 200 characters")]
+    public string ApplicationName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Project owner is required")]
+    public int ProjectOwner { get; set; }
+
+    public int? AlternativeOwner { get; set; }
+
+    [Required(ErrorMessage = "Owning unit is required")]
+    public int OwningUnit { get; set; }
+
+    public int[]? Analysts { get; set; }
+
+    [Required(ErrorMessage = "Start date is required")]
+    public DateTime StartDate { get; set; }
+
+    [Required(ErrorMessage = "Expected completion date is required")]
+    public DateTime ExpectedCompletionDate { get; set; }
+
+    [Required(ErrorMessage = "Description is required")]
+    public string Description { get; set; } = string.Empty;
+
+ 
+    public string Remarks { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Priority is required")]
+    public Priority Priority { get; set; }
+
+    [Range(0, double.MaxValue, ErrorMessage = "Budget must be a positive value")]
+    public decimal Budget { get; set; }
+
+    [Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
+    public int Progress { get; set; } = 0;
+
+    public ProjectStatus Status { get; set; } = ProjectStatus.New;
+}
+
+public class UpdateProjectDto
+{
+    [MaxLength(200, ErrorMessage = "Application name cannot exceed 200 characters")]
+    public string? ApplicationName { get; set; }
+
+    public int? ProjectOwner { get; set; }
+    public int? AlternativeOwner { get; set; }
+    public int? OwningUnit { get; set; }
+
+    public int[]? Analysts { get; set; }
+
+    public DateTime? StartDate { get; set; }
+    public DateTime? ExpectedCompletionDate { get; set; }
+
+    public string? Description { get; set; }
+    public string? Remarks { get; set; }
+    
+    public Priority? Priority { get; set; }
+
+    [Range(0, double.MaxValue, ErrorMessage = "Budget must be a positive value")]
+    public decimal? Budget { get; set; }
+
+    [Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
+    public int? Progress { get; set; }
+
+    public ProjectStatus? Status { get; set; }
 }
 
 public class ProjectStatsDto
@@ -167,4 +236,20 @@ public class UpdateUserRequestDto
     public string? Phone { get; set; } // Optional override
     public List<int> RoleIds { get; set; } = new List<int>();
     public List<int> ActionIds { get; set; } = new List<int>();
+}
+
+public class AssignedProjectDto
+{
+    public int Id { get; set; }
+    public string ApplicationName { get; set; } = string.Empty;
+    public string ProjectOwner { get; set; } = string.Empty;
+    public string OwningUnit { get; set; } = string.Empty;
+    public ProjectStatus Status { get; set; }
+    public int RequirementsCount { get; set; }
+    public int CompletedRequirements { get; set; }
+    public string LastActivity { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public string? Analysts { get; set; } // Display names for analysts (comma-separated)
 }

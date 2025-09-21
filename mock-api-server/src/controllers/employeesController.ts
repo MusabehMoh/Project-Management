@@ -143,4 +143,38 @@ export class EmployeesController {
       });
     }
   }
+
+  /**
+   * Get all employees (for department member listings)
+   */
+  async getAllEmployees(req: Request, res: Response) {
+    try {
+      logger.info("Retrieving all employees");
+
+      // Return all employees in the same format as MemberSearchResult
+      const allEmployees = mockEmployees
+        .filter(emp => emp.isActive) // Only return active employees
+        .map((emp) => ({
+          id: emp.id,
+          userName: emp.username,
+          militaryNumber: emp.militaryNumber,
+          fullName: emp.fullName,
+          gradeName: emp.rank,
+          statusId: emp.isActive ? 1 : 0,
+          department: emp.department,
+        }));
+
+      res.json({
+        success: true,
+        data: allEmployees,
+      });
+    } catch (error) {
+      logger.error("Error getting all employees:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
 }

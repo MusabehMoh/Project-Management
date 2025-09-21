@@ -1,21 +1,22 @@
 import React from "react";
 
-import DefaultLayout from "@/layouts/default";
 import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
 import DeveloperManagerDashboard from "@/components/dashboard/DeveloperManagerDashboard";
 import { usePermissions } from "@/hooks/usePermissions";
+import { usePageTitle } from "@/hooks";
 
 export default function IndexPage() {
   const { hasAnyRole, loading: userLoading } = usePermissions();
+  
+  // Set page title
+  usePageTitle("home.title", { fallback: "Dashboard" });
 
   // Show loading state while user data is being fetched
   if (userLoading) {
     return (
-      <DefaultLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-        </div>
-      </DefaultLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      </div>
     );
   }
 
@@ -24,9 +25,9 @@ export default function IndexPage() {
   const hasDevManagerRole = hasAnyRole(["Developer Manager", "Administrator"]);
 
   return (
-    <DefaultLayout>
+    <>
       {hasAccess ? <AnalystManagerDashboard /> : <div />}
       {hasDevManagerRole ? <DeveloperManagerDashboard /> : <div />}
-    </DefaultLayout>
+    </>
   );
 }

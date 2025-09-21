@@ -85,7 +85,7 @@ export const UnitSelector: React.FC<UnitSelectorProps> = ({
 
   const displayValue = selectedUnit
     ? language === "ar"
-      ? selectedUnit.nameAr
+      ? selectedUnit.name
       : selectedUnit.name
     : "";
 
@@ -148,7 +148,7 @@ export const UnitSelector: React.FC<UnitSelectorProps> = ({
             {path.map((unit, index) => (
               <div key={unit.id} className="flex items-center gap-1">
                 <span className="text-sm text-default-600">
-                  {language === "ar" ? unit.nameAr : unit.name}
+                  {language === "ar" ? unit.name : unit.name}
                 </span>
                 {index < path.length - 1 &&
                   (language === "ar" ? (
@@ -178,7 +178,7 @@ export const UnitSelector: React.FC<UnitSelectorProps> = ({
                   <div className="text-sm font-normal text-default-500">
                     {t("units.selected")}:{" "}
                     {language === "ar"
-                      ? tempSelectedUnit.nameAr
+                      ? tempSelectedUnit.name
                       : tempSelectedUnit.name}
                   </div>
                 )}
