@@ -697,7 +697,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     return fetchTasks(taskParametersRequest, true);
   }, [fetchTasks]);
 
-  const exportTasks = useCallback(async (format: "csv" | "pdf" | "excel") => {
+  const exportTasks = useCallback(async (format: "csv" | "pdf" | "xlsx") => {
     try {
       const blob = await membersTasksService.exportTasks(format);
 

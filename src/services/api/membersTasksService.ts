@@ -72,7 +72,7 @@ export class MembersTasksService {
    */
   async exportTasks(
     //filters: TaskSearchParams,
-    format: "csv" | "pdf" | "excel"
+    format: "csv" | "pdf" | "xlsx"
   ): Promise<Blob> {
     const queryParams = new URLSearchParams();
 
@@ -93,7 +93,12 @@ export class MembersTasksService {
       {
         method: "GET",
         headers: {
-          Accept: "application/octet-stream",
+          Accept:
+            format === "pdf"
+              ? "application/pdf"
+              : format === "csv"
+                ? "text/csv"
+                : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         },
       }
     );
@@ -131,13 +136,13 @@ export class MembersTasksService {
 
   /*request design */
   async requestDesign(id: string, notes: string): Promise<ApiResponse<void>> {
-    return {
-      success: true,
-      data: undefined,
-      message: "Design request submitted successfully",
-      timestamp: "15-08-2025",
-    };
-    // return apiClient.post<void>(`${this.baseUrl}/${id}/request-design`, notes);
+    // return {
+    //   success: true,
+    //   data: undefined,
+    //   message: "Design request submitted successfully",
+    //   timestamp: "15-08-2025",
+    // };
+    return apiClient.post<void>(`${this.baseUrl}/${id}/request-design`, notes);
   }
 
   /*change Status */
@@ -146,16 +151,16 @@ export class MembersTasksService {
     typeId: string,
     notes: string
   ): Promise<ApiResponse<void>> {
-    return {
-      success: true,
-      data: undefined,
-      message: "Change Status submitted successfully",
-      timestamp: "15-08-2025",
-    };
-    // return apiClient.post<void>(
-    //   `${this.baseUrl}/${id}/change-status/${typeId}`,
-    //   notes,
-    // );
+    // return {
+    //   success: true,
+    //   data: undefined,
+    //   message: "Change Status submitted successfully",
+    //   timestamp: "15-08-2025",
+    // };
+    return apiClient.post<void>(
+      `${this.baseUrl}/${id}/change-status/${typeId}`,
+      notes
+    );
   }
 
   /* status drop down values and header data */
@@ -206,6 +211,7 @@ export class MembersTasksService {
       message: "success",
       timestamp: "15-08-2025",
     };
+    ///TODO uncomment this when api available and comment above mock data
     //return apiClient.get<TaskConfigData>(`${this.baseUrl}/getTasksConfig`);
   }
 }

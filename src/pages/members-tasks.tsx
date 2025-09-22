@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@heroui/button";
-import { Search } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import { Card, CardBody } from "@heroui/card";
 import {
   Dropdown,
@@ -101,6 +101,7 @@ export default function MembersTasksPage() {
     if (success) {
       setIsRequestDesignModalOpend(false);
       setNotes("");
+      handleRefresh();
     } else {
       setModalError(true);
     }
@@ -751,7 +752,7 @@ export default function MembersTasksPage() {
                   {t("common.unexpectedError")}
                 </h4>
               )}
-              <h2 className="text-lg font-semibold">{t("requestDesign")}</h2>
+              <h2 className="text-lg font-semibold">{t("changeStatus")}</h2>
             </ModalHeader>
 
             <div className="space-y-4">
@@ -761,7 +762,11 @@ export default function MembersTasksPage() {
               {/* Dropdown with TaskStatus */}
               <Dropdown>
                 <DropdownTrigger>
-                  <Button className="w-full justify-between" variant="flat">
+                  <Button
+                    className="w-full justify-between"
+                    variant="flat"
+                    endContent={<ChevronDown className="w-4 h-4" />}
+                  >
                     {selectedStatus ? selectedStatus.label : t("selectStatus")}
                   </Button>
                 </DropdownTrigger>
@@ -771,7 +776,6 @@ export default function MembersTasksPage() {
                     const status = tasksConfigData.taskStatus?.find(
                       (s) => s.id.toString() === key
                     );
-
                     if (status) setSelectedStatus(status);
                   }}
                 >
