@@ -16,7 +16,7 @@ import {
   useDisclosure,
 } from "@heroui/modal";
 
-import DefaultLayout from "@/layouts/default";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   PlusIcon,
@@ -27,6 +27,7 @@ import {
 } from "@/components/icons";
 import { useTimelines } from "@/hooks/useTimelines";
 import { useTimelineProjects } from "@/hooks/useTimelineProjects";
+import { usePageTitle } from "@/hooks";
 import { timelineService } from "@/services/api";
 import { TimelineView, Timeline } from "@/types/timeline";
 // Import timeline components
@@ -384,13 +385,7 @@ export default function TimelinePage() {
   ]);
 
   // Set page title
-  useEffect(() => {
-    document.title = `${t("timeline.title")} - PMA`;
-
-    return () => {
-      document.title = "PMA";
-    };
-  }, [t]);
+  usePageTitle("timeline.title");
 
   // UI state
   const [view, setView] = useState<TimelineView>({
@@ -590,7 +585,7 @@ export default function TimelinePage() {
 
   if (loading && timelines.length === 0) {
     return (
-      <DefaultLayout>
+      <>
         <div className="flex justify-center items-center min-h-[400px]">
           <div className="text-center space-y-4">
             <Spinner color="primary" size="lg" />
@@ -602,12 +597,12 @@ export default function TimelinePage() {
             </div>
           </div>
         </div>
-      </DefaultLayout>
+      </>
     );
   }
 
   return (
-    <DefaultLayout>
+    <>
       <div className={`space-y-6 ${language === "ar" ? "rtl" : "ltr"}`}>
         {/* Error Display */}
         {error && (
@@ -1010,6 +1005,6 @@ export default function TimelinePage() {
           </ModalContent>
         </Modal>
       </div>
-    </DefaultLayout>
+    </>
   );
 }

@@ -22,9 +22,8 @@ public class ProjectService : IProjectService
 
     public async System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null)
     {
-        var projects = await _projectRepository.GetProjectsWithPaginationAsync(page, limit, search, status, priority);
-        var totalCount = await _projectRepository.GetTotalProjectsCountAsync(search, status, priority);
-        return (projects, totalCount);
+        // Single optimized query that returns both projects and total count
+        return await _projectRepository.GetProjectsWithPaginationAndCountAsync(page, limit, search, status, priority);
     }
 
     public async System.Threading.Tasks.Task<Project?> GetProjectByIdAsync(int id)
@@ -68,8 +67,9 @@ public class ProjectService : IProjectService
         {
             Total = projects.Count,
             New = projects.Count(p => p.Status == ProjectStatus.New),
+            UnderTesting = projects.Count(p => p.Status == ProjectStatus.UnderTesting),
             Delayed = projects.Count(p => p.Status == ProjectStatus.Delayed),
-            UnderReview = projects.Count(p => p.Status == ProjectStatus.UnderReview),
+            UnderStudy = projects.Count(p => p.Status == ProjectStatus.UnderStudy),
             UnderDevelopment = projects.Count(p => p.Status == ProjectStatus.UnderDevelopment),
             Production = projects.Count(p => p.Status == ProjectStatus.Production)
         };
@@ -84,18 +84,15 @@ public class ProjectService : IProjectService
         }
 
         // Update project status to Under Review
-        project.Status = ProjectStatus.UnderReview;
+        project.Status = ProjectStatus.UnderStudy;
         project.UpdatedAt = DateTime.UtcNow;
         await _projectRepository.UpdateAsync(project);
 
-        // Parse analyst IDs from the string (assuming comma-separated)
+        // Parse analyst IDs from ProjectAnalyst entities
         var analystIds = new List<int>();
-        if (!string.IsNullOrEmpty(project.AnalystIds))
+        if (project.ProjectAnalysts != null && project.ProjectAnalysts.Any())
         {
-            analystIds = project.AnalystIds.Split(',')
-                .Select(id => int.TryParse(id.Trim(), out var parsedId) ? parsedId : 0)
-                .Where(id => id > 0)
-                .ToList();
+            analystIds = project.ProjectAnalysts.Select(pa => pa.AnalystId).ToList();
         }
 
         // Get analyst usernames

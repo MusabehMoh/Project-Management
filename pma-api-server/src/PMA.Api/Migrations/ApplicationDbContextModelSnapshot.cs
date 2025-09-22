@@ -198,36 +198,25 @@ namespace PMA.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Category")
+                    b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Color")
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Label")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("Order")
+                    b.Property<string>("NameAr")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Value")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -441,10 +430,6 @@ namespace PMA.Api.Migrations
                     b.Property<int>("AlternativeOwnerId")
                         .HasColumnType("int");
 
-                    b.Property<string>("AnalystIds")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Analysts")
                         .HasColumnType("nvarchar(max)");
 
@@ -510,6 +495,29 @@ namespace PMA.Api.Migrations
                     b.HasIndex("ProjectOwnerId");
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("PMA.Core.Entities.ProjectAnalyst", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AnalystId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnalystId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectAnalysts");
                 });
 
             modelBuilder.Entity("PMA.Core.Entities.ProjectRequirement", b =>
@@ -1212,6 +1220,11 @@ namespace PMA.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -1221,15 +1234,28 @@ namespace PMA.Api.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("Units");
                 });
@@ -1486,6 +1512,25 @@ namespace PMA.Api.Migrations
                     b.Navigation("OwningUnitEntity");
 
                     b.Navigation("ProjectOwnerEmployee");
+                });
+
+            modelBuilder.Entity("PMA.Core.Entities.ProjectAnalyst", b =>
+                {
+                    b.HasOne("PMA.Core.Entities.Employee", "Analyst")
+                        .WithMany()
+                        .HasForeignKey("AnalystId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PMA.Core.Entities.Project", "Project")
+                        .WithMany("ProjectAnalysts")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Analyst");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("PMA.Core.Entities.ProjectRequirement", b =>
@@ -1800,6 +1845,15 @@ namespace PMA.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PMA.Core.Entities.Unit", b =>
+                {
+                    b.HasOne("PMA.Core.Entities.Unit", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId");
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("PMA.Core.Entities.User", b =>
                 {
                     b.HasOne("PMA.Core.Entities.Department", null)
@@ -1886,6 +1940,8 @@ namespace PMA.Api.Migrations
 
             modelBuilder.Entity("PMA.Core.Entities.Project", b =>
                 {
+                    b.Navigation("ProjectAnalysts");
+
                     b.Navigation("Requirements");
 
                     b.Navigation("Tasks");
@@ -1939,6 +1995,8 @@ namespace PMA.Api.Migrations
 
             modelBuilder.Entity("PMA.Core.Entities.Unit", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("Projects");
                 });
 

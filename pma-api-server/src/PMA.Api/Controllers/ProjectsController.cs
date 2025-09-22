@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using PMA.Core.Services;
+using AutoMapper;
 
 namespace PMA.Api.Controllers;
 
@@ -12,11 +14,15 @@ public class ProjectsController : ApiBaseController
 {
     private readonly IProjectService _projectService;
     private readonly ILogger<ProjectsController> _logger;
+    private readonly IMapper _mapper;
+    private readonly IMappingService _mappingService;
 
-    public ProjectsController(IProjectService projectService, ILogger<ProjectsController> logger)
+    public ProjectsController(IProjectService projectService, ILogger<ProjectsController> logger, IMapper mapper, IMappingService mappingService)
     {
         _projectService = projectService;
         _logger = logger;
+        _mapper = mapper;
+        _mappingService = mappingService;
     }
 
     /// <summary>
@@ -35,32 +41,10 @@ public class ProjectsController : ApiBaseController
         {
             var (projects, totalCount) = await _projectService.GetProjectsAsync(page, limit, search, status, priority);
 
-            var projectDtos = projects.Select(p => new ProjectDto
-            {
-                Id = p.Id,
-                ApplicationName = p.ApplicationName,
-                ProjectOwner = p.ProjectOwner,
-                AlternativeOwner = p.AlternativeOwner,
-                OwningUnit = p.OwningUnit,
-                ProjectOwnerId = p.ProjectOwnerId,
-                AlternativeOwnerId = p.AlternativeOwnerId,
-                OwningUnitId = p.OwningUnitId,
-                Analysts = p.Analysts,
-                AnalystIds = p.AnalystIds,
-                StartDate = p.StartDate,
-                ExpectedCompletionDate = p.ExpectedCompletionDate,
-                Description = p.Description,
-                Remarks = p.Remarks,
-                Status = p.Status,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                Priority = p.Priority,
-                Budget = p.Budget,
-                Progress = p.Progress
-            });
+            var projectDtos = projects.Select(p => _mappingService.MapToProjectDto(p));
 
             var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
-            return Success(projectDtos, pagination);
+            return Success(projectDtos, pagination, "Projects retrieved successfully");
         }
         catch (Exception ex)
         {
@@ -84,53 +68,18 @@ public class ProjectsController : ApiBaseController
 
             if (project == null)
             {
-                return NotFound(new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = "Project not found"
-                });
+                return Error<object>("Project not found", status: 404);
             }
 
-            var projectDto = new ProjectDto
-            {
-                Id = project.Id,
-                ApplicationName = project.ApplicationName,
-                ProjectOwner = project.ProjectOwner,
-                AlternativeOwner = project.AlternativeOwner,
-                OwningUnit = project.OwningUnit,
-                ProjectOwnerId = project.ProjectOwnerId,
-                AlternativeOwnerId = project.AlternativeOwnerId,
-                OwningUnitId = project.OwningUnitId,
-                Analysts = project.Analysts,
-                AnalystIds = project.AnalystIds,
-                StartDate = project.StartDate,
-                ExpectedCompletionDate = project.ExpectedCompletionDate,
-                Description = project.Description,
-                Remarks = project.Remarks,
-                Status = project.Status,
-                CreatedAt = project.CreatedAt,
-                UpdatedAt = project.UpdatedAt,
-                Priority = project.Priority,
-                Budget = project.Budget,
-                Progress = project.Progress
-            };
+            var projectDto = _mappingService.MapToProjectDto(project);
 
-            return Ok(new ApiResponse<ProjectDto>
-            {
-                Success = true,
-                Data = projectDto
-            });
+            return Success(projectDto, message: "Project retrieved successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while retrieving project by ID. ProjectId: {ProjectId}", id);
 
-            return StatusCode(500, new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Internal server error",
-                Error = ex.Message
-            });
+            return Error<object>("Internal server error", ex.Message);
         }
     }
 
@@ -145,20 +94,11 @@ public class ProjectsController : ApiBaseController
         {
             var stats = await _projectService.GetProjectStatsAsync();
 
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Data = stats
-            });
+            return Success(stats, message: "Project statistics retrieved successfully");
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Internal server error",
-                Error = ex.Message
-            });
+            return Error<object>("Internal server error", ex.Message);
         }
     }
 
@@ -178,44 +118,14 @@ public class ProjectsController : ApiBaseController
         {
             if (string.IsNullOrEmpty(q))
             {
-                return BadRequest(new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = "Search query is required"
-                });
+                return Error<object>("Search query is required", status: 400);
             }
 
             var projects = await _projectService.SearchProjectsAsync(q, status, priority, page, limit);
 
-            var projectDtos = projects.Select(p => new ProjectDto
-            {
-                Id = p.Id,
-                ApplicationName = p.ApplicationName,
-                ProjectOwner = p.ProjectOwner,
-                AlternativeOwner = p.AlternativeOwner,
-                OwningUnit = p.OwningUnit,
-                ProjectOwnerId = p.ProjectOwnerId,
-                AlternativeOwnerId = p.AlternativeOwnerId,
-                OwningUnitId = p.OwningUnitId,
-                Analysts = p.Analysts,
-                AnalystIds = p.AnalystIds,
-                StartDate = p.StartDate,
-                ExpectedCompletionDate = p.ExpectedCompletionDate,
-                Description = p.Description,
-                Remarks = p.Remarks,
-                Status = p.Status,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                Priority = p.Priority,
-                Budget = p.Budget,
-                Progress = p.Progress
-            });
+            var projectDtos = projects.Select(p => _mappingService.MapToProjectDto(p));
 
-            return Ok(new ApiResponse<IEnumerable<ProjectDto>>
-            {
-                Success = true,
-                Data = projectDtos
-            });
+            return Success(projectDtos, message: "Projects search completed successfully");
         }
         catch (Exception ex)
         {
@@ -233,44 +143,39 @@ public class ProjectsController : ApiBaseController
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<ProjectDto>), 201)]
-    public async Task<IActionResult> CreateProject([FromBody] Project project)
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> CreateProject([FromBody] CreateProjectDto createProjectDto)
     {
         try
         {
+            if (!ModelState.IsValid)
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            // Map DTO to entity using the mapping service
+            var project = _mappingService.MapToProject(createProjectDto);
+            
+            // Create ProjectAnalyst entities if analysts are specified
+            if (createProjectDto.Analysts != null && createProjectDto.Analysts.Length > 0)
+            {
+                _mappingService.CreateProjectAnalysts(project, createProjectDto.Analysts);
+            }
+            
+            // Populate navigation properties (names from IDs)
+            await _mappingService.PopulateProjectNavigationPropertiesAsync(project);
+
+            // Create the project
             var createdProject = await _projectService.CreateProjectAsync(project);
 
-            var projectDto = new ProjectDto
-            {
-                Id = createdProject.Id,
-                ApplicationName = createdProject.ApplicationName,
-                ProjectOwner = createdProject.ProjectOwner,
-                AlternativeOwner = createdProject.AlternativeOwner,
-                OwningUnit = createdProject.OwningUnit,
-                ProjectOwnerId = createdProject.ProjectOwnerId,
-                AlternativeOwnerId = createdProject.AlternativeOwnerId,
-                OwningUnitId = createdProject.OwningUnitId,
-                Analysts = createdProject.Analysts,
-                AnalystIds = createdProject.AnalystIds,
-                StartDate = createdProject.StartDate,
-                ExpectedCompletionDate = createdProject.ExpectedCompletionDate,
-                Description = createdProject.Description,
-                Remarks = createdProject.Remarks,
-                Status = createdProject.Status,
-                CreatedAt = createdProject.CreatedAt,
-                UpdatedAt = createdProject.UpdatedAt,
-                Priority = createdProject.Priority,
-                Budget = createdProject.Budget,
-                Progress = createdProject.Progress
-            };
+            // Map back to DTO for response
+            var projectDto = _mappingService.MapToProjectDto(createdProject);
 
-            return CreatedAtAction(nameof(GetProject), new { id = createdProject.Id }, new ApiResponse<ProjectDto>
-            {
-                Success = true,
-                Data = projectDto
-            });
+            return Created(projectDto, nameof(GetProject), new { id = createdProject.Id }, "Project created successfully");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while creating project. ApplicationName: {ApplicationName}", createProjectDto.ApplicationName);
             return StatusCode(500, new ApiResponse<object>
             {
                 Success = false,
@@ -284,29 +189,43 @@ public class ProjectsController : ApiBaseController
     /// Update an existing project
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 204)]
+    [ProducesResponseType(typeof(ApiResponse<ProjectDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 404)]
-    public async Task<IActionResult> UpdateProject(int id, [FromBody] Project project)
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> UpdateProject(int id, [FromBody] UpdateProjectDto updateProjectDto)
     {
         try
         {
+            if (!ModelState.IsValid)
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
             var existingProject = await _projectService.GetProjectByIdAsync(id);
             if (existingProject == null)
             {
-                return NotFound(new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = "Project not found"
-                });
+                return Error<object>("Project not found", status: 404);
             }
 
-            project.Id = id;
-            await _projectService.UpdateProjectAsync(project);
+            // Update the project using the mapping service
+            await _mappingService.UpdateProjectFromDtoAsync(existingProject, updateProjectDto);
 
-            return NoContent();
+            // Update the project
+            await _projectService.UpdateProjectAsync(existingProject);
+
+            // Get the updated project and map to DTO
+            var updatedProject = await _projectService.GetProjectByIdAsync(id);
+            if (updatedProject == null)
+            {
+                return Error<object>("Project not found after update", status: 404);
+            }
+            var projectDto = _mappingService.MapToProjectDto(updatedProject);
+
+            return Success(projectDto, message: "Project updated successfully");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while updating project. ProjectId: {ProjectId}", id);
             return StatusCode(500, new ApiResponse<object>
             {
                 Success = false,
@@ -329,11 +248,7 @@ public class ProjectsController : ApiBaseController
             var existingProject = await _projectService.GetProjectByIdAsync(id);
             if (existingProject == null)
             {
-                return NotFound(new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = "Project not found"
-                });
+                return Error<object>("Project not found", status: 404);
             }
 
             await _projectService.DeleteProjectAsync(id);
@@ -363,55 +278,19 @@ public class ProjectsController : ApiBaseController
         {
             var project = await _projectService.SendProjectAsync(id);
 
-            var projectDto = new ProjectDto
-            {
-                Id = project.Id,
-                ApplicationName = project.ApplicationName,
-                ProjectOwner = project.ProjectOwner,
-                AlternativeOwner = project.AlternativeOwner,
-                OwningUnit = project.OwningUnit,
-                ProjectOwnerId = project.ProjectOwnerId,
-                AlternativeOwnerId = project.AlternativeOwnerId,
-                OwningUnitId = project.OwningUnitId,
-                Analysts = project.Analysts,
-                AnalystIds = project.AnalystIds,
-                StartDate = project.StartDate,
-                ExpectedCompletionDate = project.ExpectedCompletionDate,
-                Description = project.Description,
-                Remarks = project.Remarks,
-                Status = project.Status,
-                CreatedAt = project.CreatedAt,
-                UpdatedAt = project.UpdatedAt,
-                Priority = project.Priority,
-                Budget = project.Budget,
-                Progress = project.Progress
-            };
+            var projectDto = _mappingService.MapToProjectDto(project);
 
-            return Ok(new ApiResponse<ProjectDto>
-            {
-                Success = true,
-                Data = projectDto,
-                Message = "Project sent for review successfully"
-            });
+            return Success(projectDto, message: "Project sent for review successfully");
         }
         catch (KeyNotFoundException)
         {
-            return NotFound(new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Project not found"
-            });
+            return Error<object>("Project not found", status: 404);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while sending project for review. ProjectId: {ProjectId}", id);
 
-            return StatusCode(500, new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Internal server error",
-                Error = ex.Message
-            });
+            return Error<object>("Internal server error", ex.Message);
         }
     }
 }

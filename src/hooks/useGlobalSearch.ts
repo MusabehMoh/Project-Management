@@ -24,7 +24,7 @@ interface UseGlobalSearchReturn {
 export function useGlobalSearch(
   options: UseGlobalSearchOptions = {},
 ): UseGlobalSearchReturn {
-  const { debounceMs = 300, minLength = 2 } = options;
+  const { debounceMs = 300, minLength = 3 } = options;
 
   const [results, setResults] = useState<GlobalSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,6 +33,7 @@ export function useGlobalSearch(
 
   const debounceTimeoutRef = useRef<NodeJS.Timeout>();
   const abortControllerRef = useRef<AbortController>();
+  const suggestionsTimeoutRef = useRef<NodeJS.Timeout>();
 
   const search = useCallback(
     async (searchOptions: GlobalSearchOptions) => {
@@ -98,9 +99,24 @@ export function useGlobalSearch(
   }, []);
 
   const getSuggestions = useCallback((query: string) => {
-    const searchSuggestions = GlobalSearchService.getSuggestions(query, 10);
+    // Clear previous suggestions timeout
+    if (suggestionsTimeoutRef.current) {
+      clearTimeout(suggestionsTimeoutRef.current);
+    }
 
-    setSuggestions(searchSuggestions);
+    // Don't get suggestions if query is too short
+    if (!query || query.trim().length < 2) {
+      setSuggestions([]);
+
+      return;
+    }
+
+    // Debounce suggestions fetching
+    suggestionsTimeoutRef.current = setTimeout(() => {
+      const searchSuggestions = GlobalSearchService.getSuggestions(query, 10);
+
+      setSuggestions(searchSuggestions);
+    }, 150); // Shorter debounce for suggestions
   }, []);
 
   // Cleanup on unmount
@@ -108,6 +124,9 @@ export function useGlobalSearch(
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
+      }
+      if (suggestionsTimeoutRef.current) {
+        clearTimeout(suggestionsTimeoutRef.current);
       }
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();

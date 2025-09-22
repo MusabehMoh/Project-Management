@@ -78,16 +78,26 @@ public interface IDepartmentService
     System.Threading.Tasks.Task<TeamMemberDto> AddDepartmentMemberAsync(int departmentId, int userId, string role);
     System.Threading.Tasks.Task<TeamMemberDto> UpdateDepartmentMemberAsync(int departmentId, int memberId, string? role, bool? isActive);
     System.Threading.Tasks.Task<bool> RemoveMemberByIdAsync(int memberId);
+    System.Threading.Tasks.Task<IEnumerable<EmployeeDto>> SearchUsersInTeamsAsync(string searchTerm);
 }
 
 public interface IUnitService
 {
     System.Threading.Tasks.Task<(IEnumerable<Unit> Units, int TotalCount)> GetUnitsAsync(int page, int limit, bool? isActive = null);
+    System.Threading.Tasks.Task<(IEnumerable<Unit> Units, int TotalCount)> GetUnitsAsync(int page, int limit, string? search = null, int? parentId = null, bool? isActive = null);
     System.Threading.Tasks.Task<Unit?> GetUnitByIdAsync(int id);
     System.Threading.Tasks.Task<Unit> CreateUnitAsync(Unit unit);
     System.Threading.Tasks.Task<Unit> UpdateUnitAsync(Unit unit);
     System.Threading.Tasks.Task<bool> DeleteUnitAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<Unit>> GetActiveUnitsAsync();
+    System.Threading.Tasks.Task<IEnumerable<UnitTreeDto>> GetUnitsTreeAsync();
+    System.Threading.Tasks.Task<IEnumerable<UnitTreeDto>> GetRootUnitsTreeAsync();
+    System.Threading.Tasks.Task<IEnumerable<Unit>> GetRootUnitsAsync();
+    System.Threading.Tasks.Task<IEnumerable<Unit>> GetUnitChildrenAsync(int parentId);
+    System.Threading.Tasks.Task<IEnumerable<UnitTreeDto>> GetUnitChildrenTreeAsync(int parentId);
+    System.Threading.Tasks.Task<IEnumerable<Unit>> GetUnitPathAsync(int unitId);
+    System.Threading.Tasks.Task<IEnumerable<Unit>> SearchUnitsAsync(string searchTerm);
+    System.Threading.Tasks.Task<UnitStatsDto> GetUnitStatsAsync();
 }
 
 public interface IRoleService
@@ -148,12 +158,12 @@ public interface IEmployeeService
 
 public interface ILookupService
 {
-    System.Threading.Tasks.Task<(IEnumerable<Lookup> Lookups, int TotalCount)> GetLookupsAsync(int page, int limit, string? category = null, bool? isActive = null);
-    System.Threading.Tasks.Task<Lookup?> GetLookupByIdAsync(int id);
-    System.Threading.Tasks.Task<Lookup> CreateLookupAsync(Lookup lookup);
-    System.Threading.Tasks.Task<Lookup> UpdateLookupAsync(Lookup lookup);
+    System.Threading.Tasks.Task<IEnumerable<LookupDto>> GetLookupsAsync(string? code = null);
+    System.Threading.Tasks.Task<LookupDto?> GetLookupByIdAsync(int id);
+    System.Threading.Tasks.Task<LookupDto> CreateLookupAsync(Lookup lookup);
+    System.Threading.Tasks.Task<LookupDto> UpdateLookupAsync(Lookup lookup);
     System.Threading.Tasks.Task<bool> DeleteLookupAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<Lookup>> GetLookupsByCategoryAsync(string category);
+    System.Threading.Tasks.Task<IEnumerable<LookupDto>> GetLookupsByCategoryAsync(string code);
 }
 
 public interface IMemberTaskService
@@ -175,6 +185,7 @@ public interface IProjectRequirementService
     System.Threading.Tasks.Task<ProjectRequirement> UpdateProjectRequirementAsync(ProjectRequirement projectRequirement);
     System.Threading.Tasks.Task<bool> DeleteProjectRequirementAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(int? userId, int page, int limit, string? search = null, int? projectId = null);
 }
 
 public interface ISubTaskService
@@ -208,4 +219,10 @@ public interface ITimelineRequirementService
     System.Threading.Tasks.Task<IEnumerable<TimelineRequirement>> GetTimelineRequirementsByTimelineAsync(int timelineId);
 }
 
+public interface ICacheInvalidationService
+{
+    void InvalidateCurrentUserCache(string username);
+    System.Threading.Tasks.Task InvalidateCurrentUserCacheByIdAsync(int userId, IUserRepository userRepository);
+    void InvalidateAllUserCaches();
+}
 

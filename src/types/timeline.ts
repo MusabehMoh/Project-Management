@@ -105,6 +105,16 @@ export interface TaskPriorityLookup {
   icon?: string;
 }
 
+// Generic Lookup DTO that matches the backend API response
+export interface LookupDto {
+  id: number;
+  code: string;
+  name: string;
+  nameAr: string;
+  value: number;
+  isActive: boolean;
+}
+
 export interface Department {
   id: string | number;
   name: string;

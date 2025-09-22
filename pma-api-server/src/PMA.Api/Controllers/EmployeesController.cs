@@ -10,10 +10,12 @@ namespace PMA.Api.Controllers;
 public class EmployeesController : ApiBaseController
 {
     private readonly IEmployeeService _employeeService;
+    private readonly IDepartmentService _departmentService;
 
-    public EmployeesController(IEmployeeService employeeService)
+    public EmployeesController(IEmployeeService employeeService, IDepartmentService departmentService)
     {
         _employeeService = employeeService;
+        _departmentService = departmentService;
     }
 
     /// <summary>
@@ -166,6 +168,30 @@ public class EmployeesController : ApiBaseController
         catch (Exception ex)
         {
             return Error<IEnumerable<EmployeeDto>>("An error occurred while searching employees", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Search users in teams
+    /// </summary>
+    [HttpGet("searchUsers")]
+    [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), 200)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> SearchUsers([FromQuery] string q)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                return BadRequest(Error<IEnumerable<EmployeeDto>>("Search query is required", null, 400));
+            }
+
+            var employees = await _departmentService.SearchUsersInTeamsAsync(q);
+            return Success(employees);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<EmployeeDto>>("An error occurred while searching users in teams", ex.Message);
         }
     }
 }

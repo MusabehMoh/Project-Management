@@ -81,7 +81,7 @@ class RealUnitService implements UnitService {
   ): Promise<ApiResponse<UnitTreeNode[]>> {
     try {
       const response = await apiClient.get<UnitTreeNode[]>(
-        `/units/${parentId}/children`,
+        `/units/${parentId}/children/tree`,
       );
 
       return {

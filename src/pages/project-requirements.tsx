@@ -49,10 +49,11 @@ import {
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
-import DefaultLayout from "@/layouts/default";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useProjectRequirements } from "@/hooks/useProjectRequirements";
+import { useRequirementStatus } from "@/hooks/useRequirementStatus";
+import { usePageTitle } from "@/hooks";
 import { GlobalPagination } from "@/components/GlobalPagination";
 
 import type {
@@ -77,14 +78,17 @@ export default function ProjectRequirementsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
+
+  // Set page title
+  usePageTitle("requirements.projectRequirements");
   const [searchParams] = useSearchParams();
-  
+
   // Get highlighting parameters from URL
-  const highlightRequirementId = searchParams.get('highlightRequirement');
-  const scrollToRequirementId = searchParams.get('scrollTo');
-  const [highlightedRequirement, setHighlightedRequirement] = useState<number | null>(
-    highlightRequirementId ? parseInt(highlightRequirementId) : null
-  );
+  const highlightRequirementId = searchParams.get("highlightRequirement");
+  const scrollToRequirementId = searchParams.get("scrollTo");
+  const [highlightedRequirement, setHighlightedRequirement] = useState<
+    number | null
+  >(highlightRequirementId ? parseInt(highlightRequirementId) : null);
 
   const {
     requirements,
@@ -113,6 +117,10 @@ export default function ProjectRequirementsPage() {
   });
 
   const { hasPermission } = usePermissions();
+
+  // RequirementStatus hook for dynamic status management
+  const { getRequirementStatusColor, getRequirementStatusName } =
+    useRequirementStatus();
 
   // Modal states
   const {
@@ -178,14 +186,14 @@ export default function ProjectRequirementsPage() {
       setTimeout(() => {
         const element = document.getElementById(`requirement-${requirementId}`);
         if (element) {
-          element.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
           });
-          
+
           // Flash effect
           if (highlightedRequirement === requirementId) {
-            element.classList.add('highlight-flash');
+            element.classList.add("highlight-flash");
             // Let the CSS animation complete naturally, then clean up
             setTimeout(() => {
               setHighlightedRequirement(null);
@@ -194,7 +202,12 @@ export default function ProjectRequirementsPage() {
         }
       }, 500);
     }
-  }, [requirements, scrollToRequirementId, highlightedRequirement, setHighlightedRequirement]);
+  }, [
+    requirements,
+    scrollToRequirementId,
+    highlightedRequirement,
+    setHighlightedRequirement,
+  ]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -382,6 +395,30 @@ export default function ProjectRequirementsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  // Helper function to convert string status to numeric code for RequirementStatus lookup
+  const convertStatusToCode = (status: string): number => {
+    const statusMap: Record<string, number> = {
+      draft: 1, // New
+      approved: 2, // Under Study
+      "in-development": 3, // Under Development
+      "under-testing": 4, // Under Testing
+      completed: 5, // Completed
+    };
+    return statusMap[status] || 1; // Default to 'New' if status not found
+  };
+
+  // Helper function to get status color using RequirementStatus lookup
+  const getStatusColor = (status: string) => {
+    const statusCode = convertStatusToCode(status);
+    return getRequirementStatusColor(statusCode);
+  };
+
+  // Helper function to get status text using RequirementStatus lookup
+  const getStatusText = (status: string) => {
+    const statusCode = convertStatusToCode(status);
+    return getRequirementStatusName(statusCode);
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
@@ -389,21 +426,6 @@ export default function ProjectRequirementsPage() {
       case "medium":
         return "warning";
       case "low":
-        return "success";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "draft":
-        return "default";
-      case "approved":
-        return "primary";
-      case "in-development":
-        return "secondary";
-      case "completed":
         return "success";
       default:
         return "default";
@@ -436,7 +458,7 @@ export default function ProjectRequirementsPage() {
   // }
 
   return (
-    <DefaultLayout>
+    <>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4">
@@ -476,7 +498,7 @@ export default function ProjectRequirementsPage() {
                     {stats.draft}
                   </div>
                   <div className="text-xs text-default-500">
-                    {t("requirements.draft")}
+                    {getStatusText("draft")}
                   </div>
                 </div>
               </Card>
@@ -486,7 +508,7 @@ export default function ProjectRequirementsPage() {
                     {stats.approved}
                   </div>
                   <div className="text-xs text-default-500">
-                    {t("requirements.approved")}
+                    {getStatusText("approved")}
                   </div>
                 </div>
               </Card>
@@ -496,7 +518,7 @@ export default function ProjectRequirementsPage() {
                     {stats.inDevelopment}
                   </div>
                   <div className="text-xs text-default-500">
-                    {t("requirements.inDevelopment")}
+                    {getStatusText("in-development")}
                   </div>
                 </div>
               </Card>
@@ -506,7 +528,7 @@ export default function ProjectRequirementsPage() {
                     {stats.completed}
                   </div>
                   <div className="text-xs text-default-500">
-                    {t("requirements.completed")}
+                    {getStatusText("completed")}
                   </div>
                 </div>
               </Card>
@@ -535,12 +557,18 @@ export default function ProjectRequirementsPage() {
                 }
               >
                 <SelectItem key="">{t("requirements.allStatuses")}</SelectItem>
-                <SelectItem key="draft">{t("requirements.draft")}</SelectItem>
+                <SelectItem key="draft">{getStatusText("draft")}</SelectItem>
+                <SelectItem key="approved">
+                  {getStatusText("approved")}
+                </SelectItem>
                 <SelectItem key="in-development">
-                  {t("requirements.inDevelopment")}
+                  {getStatusText("in-development")}
+                </SelectItem>
+                <SelectItem key="under-testing">
+                  {getStatusText("under-testing")}
                 </SelectItem>
                 <SelectItem key="completed">
-                  {t("requirements.completed")}
+                  {getStatusText("completed")}
                 </SelectItem>
               </Select>
 
@@ -623,10 +651,14 @@ export default function ProjectRequirementsPage() {
                 </TableHeader>
                 <TableBody>
                   {requirements.map((requirement) => (
-                    <TableRow 
+                    <TableRow
                       key={requirement.id}
                       id={`requirement-${requirement.id}`}
-                      className={highlightedRequirement === requirement.id ? 'highlight-flash' : ''}
+                      className={
+                        highlightedRequirement === requirement.id
+                          ? "highlight-flash"
+                          : ""
+                      }
                     >
                       <TableCell>
                         <div>
@@ -669,9 +701,7 @@ export default function ProjectRequirementsPage() {
                           size="sm"
                           variant="flat"
                         >
-                          {t(
-                            `requirements.${requirement.status.replace("-", "")}`,
-                          )}
+                          {getStatusText(requirement.status)}
                         </Chip>
                       </TableCell>
                       <TableCell>
@@ -1087,6 +1117,6 @@ export default function ProjectRequirementsPage() {
           )}
         </ModalContent>
       </Modal>
-    </DefaultLayout>
+    </>
   );
 }

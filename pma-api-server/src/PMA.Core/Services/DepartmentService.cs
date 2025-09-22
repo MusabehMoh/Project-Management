@@ -162,6 +162,26 @@ public class DepartmentService : IDepartmentService
         // Direct call to repository - no duplicate department validation needed
         return await _teamRepository.RemoveTeamMemberAsync(memberId);
     }
+
+    public async Task<IEnumerable<EmployeeDto>> SearchUsersInTeamsAsync(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return Enumerable.Empty<EmployeeDto>();
+        }
+
+        var employees = await _teamRepository.SearchUsersInTeamsAsync(searchTerm);
+
+        return employees.Select(e => new EmployeeDto
+        {
+            Id = e.Id,
+            UserName = e.UserName,
+            FullName = e.FullName,
+            MilitaryNumber = e.MilitaryNumber,
+            GradeName = e.GradeName,
+            StatusId = e.StatusId
+        });
+    }
 }
 
 

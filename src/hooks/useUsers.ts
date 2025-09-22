@@ -27,14 +27,14 @@ export const useUsers = (initialFilters?: UserFilters) => {
   const [filters, setFilters] = useState<UserFilters>(initialFilters || {});
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 20,
+    limit: 10,
     total: 0,
     totalPages: 0,
   });
 
   // Load users from API
   const loadUsers = useCallback(
-    async (page = 1, limit = 20) => {
+  async (page = 1, limit = 10) => {
       try {
         setLoading(true);
         setError(null);

@@ -551,6 +551,12 @@ const translations = {
     "projects.currentTechnologies": "Current Technologies",
     "projects.selectFile": "Select File",
     "projects.uploadFirstFile": "Upload your first file to get started",
+    "projects.createSuccess": "Project created successfully",
+    "projects.updateSuccess": "Project updated successfully",
+    "projects.createError": "Failed to create project",
+    "projects.updateError": "Failed to update project",
+    "projects.saveError": "Error saving project",
+    "projects.saveErrorDescription": "Please check your input and try again",
     "projects.addFirstTeamMember": "Add your first team member",
     "projects.addFirstTechnology": "Add your first technology",
     "projects.downloadFile": "Download File",
@@ -590,6 +596,7 @@ const translations = {
     "projects.validation.startDateRequired": "Start date is required",
     "projects.validation.expectedCompletionRequired":
       "Expected completion date is required",
+    "projects.validation.descriptionRequired": "Description is required",
 
     // Project Export Messages
     "projects.exportSuccess": "Projects exported successfully",
@@ -638,6 +645,18 @@ const translations = {
     "requirements.completedRequirements": "Completed",
     "requirements.lastActivity": "Last Activity",
     "requirements.viewRequirements": "View Requirements",
+    "requirements.viewDetails": "View Details",
+    "requirements.projectDetails": "Project Details",
+    "requirements.projectId": "Project ID",
+    "requirements.projectDescription": "Project Description",
+    "requirements.projectOwner": "Project Owner",
+    "requirements.owningUnit": "Owning Unit",
+    "requirements.projectStatus": "Project Status",
+    "requirements.startDate": "Start Date", 
+    "requirements.progress": "Progress",
+    "requirements.noDescription": "No description available",
+    "requirements.noAnalysts": "No analysts assigned",
+    "requirements.analysts": "Assigned Analysts",
     "requirements.managementForProject": "Requirements Management for",
     "requirements.backToProjects": "Back to Projects",
     "requirements.addRequirement": "Add Requirement",
@@ -665,6 +684,12 @@ const translations = {
     "keyrequirements.indevelopment": "In Development",
     "requirements.project": "Project",
     "requirements.completed": "Completed",
+    // Requirement Status Translations
+    "requirementStatus.1": "New",
+    "requirementStatus.2": "Under Study",
+    "requirementStatus.3": "Under Development",
+    "requirementStatus.4": "Under Testing",
+    "requirementStatus.5": "Completed",
     "requirements.high": "High",
     "requirements.medium": "Medium",
     "requirements.low": "Low",
@@ -1256,6 +1281,14 @@ const translations = {
     selectDepartment: "Select Department",
     selectStatus: "Select Status",
     selectPriority: "Select Priority",
+
+    // Page Titles
+    "home.title": "Dashboard",
+    "about.title": "About",
+    "blog.title": "Blog",
+    "docs.title": "Documentation",
+    "pricing.title": "Pricing",
+    "tasks.title": "Tasks Management",
   },
   ar: {
     // Navbar
@@ -1803,6 +1836,12 @@ const translations = {
     "projects.updateProjectInfo": "تحديث معلومات المشروع",
     "projects.searchByName": "البحث بالاسم أو الرقم العسكري أو اسم المستخدم",
     "projects.noRemarks": "لا توجد ملاحظات",
+    "projects.createSuccess": "تم إنشاء المشروع بنجاح",
+    "projects.updateSuccess": "تم تحديث المشروع بنجاح",
+    "projects.createError": "فشل في إنشاء المشروع",
+    "projects.updateError": "فشل في تحديث المشروع",
+    "projects.saveError": "خطأ في حفظ المشروع",
+    "projects.saveErrorDescription": "يرجى التحقق من إدخالك والمحاولة مرة أخرى",
 
     // Project Filter Messages
     "projects.filterActive": "الفلتر نشط",
@@ -1816,6 +1855,7 @@ const translations = {
     "projects.validation.startDateRequired": "تاريخ البداية مطلوب",
     "projects.validation.expectedCompletionRequired":
       "تاريخ الإنجاز المتوقع مطلوب",
+    "projects.validation.descriptionRequired": "الوصف مطلوب",
 
     // Project Export Messages
     "projects.exportSuccess": "تم تصدير المشاريع بنجاح",
@@ -1862,6 +1902,18 @@ const translations = {
     "requirements.completedRequirements": "المكتملة",
     "requirements.lastActivity": "آخر نشاط",
     "requirements.viewRequirements": "عرض المتطلبات",
+    "requirements.viewDetails": "عرض التفاصيل",
+    "requirements.projectDetails": "تفاصيل المشروع",
+    "requirements.projectId": "رقم المشروع",
+    "requirements.projectDescription": "وصف المشروع",
+    "requirements.projectOwner": "مالك المشروع",
+    "requirements.owningUnit": "الوحدة المالكة",
+    "requirements.projectStatus": "حالة المشروع",
+    "requirements.startDate": "تاريخ البداية",
+    "requirements.progress": "التقدم",
+    "requirements.noDescription": "لا يوجد وصف متاح",
+    "requirements.noAnalysts": "لا يوجد محللين معينين",
+    "requirements.analysts": "المحللين المعينين",
     "requirements.managementForProject": "إدارة المتطلبات لمشروع",
     "requirements.backToProjects": "العودة للمشاريع",
     "requirements.addRequirement": "إضافة متطلب",
@@ -1888,6 +1940,12 @@ const translations = {
     "keyrequirements.indevelopment": "قيد التطوير",
     "requirements.project": "المشروع",
     "requirements.completed": "مكتمل",
+    // Requirement Status Translations - Arabic
+    "requirementStatus.1": "جديد",
+    "requirementStatus.2": "قيد الدراسة",
+    "requirementStatus.3": "قيد التطوير",
+    "requirementStatus.4": "قيد الاختبار",
+    "requirementStatus.5": "مكتمل",
     "requirements.high": "عالية",
     "requirements.medium": "متوسطة",
     "requirements.low": "منخفضة",
@@ -2453,6 +2511,12 @@ const translations = {
     confirm: "تأكيد",
     cancel: "إلغاء",
 
+    // Export
+    exportTasks: "تصدير المهام",
+    exportAsCSV: "تصدير كملف CSV",
+    exportAsPDF: "تصدير كملف PDF",
+    exportAsExcel: "تصدير كملف Excel",
+
     // States
     noTasksFound: "لم يتم العثور على مهام",
     adjustFiltersMessage: "حاول تعديل المرشحات لرؤية المزيد من النتائج",
@@ -2461,6 +2525,14 @@ const translations = {
     selectDepartment: "اختر القسم",
     selectStatus: "اختر الحالة",
     selectPriority: "اختر الأولوية",
+
+    // Page Titles
+    "home.title": "لوحة التحكم",
+    "about.title": "حول",
+    "blog.title": "المدونة",
+    "docs.title": "التوثيق",
+    "pricing.title": "التسعير",
+    "tasks.title": "إدارة المهام",
   },
 };
 

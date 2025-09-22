@@ -136,7 +136,7 @@ export class ProjectsApiService {
    * Get owning units for project assignments
    */
   async getOwningUnits(): Promise<ApiResponse<OwningUnit[]>> {
-    return apiClient.get<OwningUnit[]>("/owning-units");
+    return apiClient.get<OwningUnit[]>("/units");
   }
 }
 

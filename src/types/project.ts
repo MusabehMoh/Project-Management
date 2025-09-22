@@ -70,7 +70,8 @@ export interface ProjectStats {
   total: number;
   new: number; // New (جديد)
   delayed: number; // Delayed (مؤجل)
-  underReview: number; // Under Review (قيد الدراسة)
+  underStudy: number; // Under Review (قيد الدراسة)
+  underTesting: number; // Under Testing (قيد الأختبار)
   underDevelopment: number; // Under Development (قيد التطوير)
   production: number; // Production Environment (بيئة الانتاج)
 }

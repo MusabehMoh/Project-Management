@@ -2,6 +2,7 @@ using PMA.Core.Entities;
 using PMA.Core.DTOs;
 using PMA.Core.Interfaces;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace PMA.Core.Services;
 
@@ -10,12 +11,24 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IActionRepository _actionRepository;
+    private readonly PMA.Core.Interfaces.ICurrentUserProvider _currentUserProvider;
+    private readonly IMemoryCache _cache;
+    private readonly ICacheInvalidationService _cacheInvalidationService;
 
-    public UserService(IUserRepository userRepository, IRoleRepository roleRepository, IActionRepository actionRepository)
+    public UserService(
+        IUserRepository userRepository,
+        IRoleRepository roleRepository,
+        IActionRepository actionRepository,
+        PMA.Core.Interfaces.ICurrentUserProvider currentUserProvider,
+        IMemoryCache cache,
+        ICacheInvalidationService cacheInvalidationService)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _actionRepository = actionRepository;
+        _currentUserProvider = currentUserProvider;
+        _cache = cache;
+        _cacheInvalidationService = cacheInvalidationService;
     }
 
     public async System.Threading.Tasks.Task<IEnumerable<User>> GetAllUsersAsync()
@@ -51,6 +64,10 @@ public class UserService : IUserService
     {
         user.UpdatedAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user);
+
+        // Invalidate cache for this user
+        await _cacheInvalidationService.InvalidateCurrentUserCacheByIdAsync(user.Id, _userRepository);
+
         return user;
     }
 
@@ -72,14 +89,35 @@ public class UserService : IUserService
 
     public async System.Threading.Tasks.Task<CurrentUserDto?> GetCurrentUserAsync()
     {
-        // For now, return the first user as current user (placeholder until authentication is implemented)
-        var user = await _userRepository.GetByUserNameAsync("admin"); 
-        
-        if (user == null)
-            return null; 
+        var username = _currentUserProvider?.UserName;
 
-        // Map to CurrentUserDto
-        return MapToCurrentUserDto(user);
+        if (string.IsNullOrWhiteSpace(username))
+            return null;
+
+        var cacheKey = CacheInvalidationService.GetCurrentUserCacheKey(username);
+
+        // Try to get from cache first
+        if (_cache.TryGetValue(cacheKey, out CurrentUserDto? cachedUser))
+        {
+            return cachedUser;
+        }
+
+        // The username may include domain (DOMAIN\user). Normalize if needed in repository.
+        var user = await _userRepository.GetByUserNameAsync(username);
+
+        if (user == null)
+            return null;
+
+        var currentUserDto = MapToCurrentUserDto(user);
+
+        // Cache the result for 15 minutes
+        var cacheOptions = new MemoryCacheEntryOptions()
+            .SetAbsoluteExpiration(TimeSpan.FromMinutes(15))
+            .SetSize(1); // Set a size value for the cache entry
+
+        _cache.Set(cacheKey, currentUserDto, cacheOptions);
+
+        return currentUserDto;
     }
 
     private CurrentUserDto MapToCurrentUserDto(User user)
@@ -232,6 +270,9 @@ public class UserService : IUserService
         }
 
         await _userRepository.UpdateAsync(user);
+
+        // Invalidate cache for this user
+        await _cacheInvalidationService.InvalidateCurrentUserCacheByIdAsync(userId, _userRepository);
     }
 
     public async System.Threading.Tasks.Task AssignActionsToUserAsync(int userId, List<int> actionIds)
@@ -270,6 +311,9 @@ public class UserService : IUserService
         }
 
         await _userRepository.UpdateAsync(user);
+
+        // Invalidate cache for this user
+        await _cacheInvalidationService.InvalidateCurrentUserCacheByIdAsync(userId, _userRepository);
     }
 
     public async System.Threading.Tasks.Task RemoveUserRolesAsync(int userId, List<int> roleIds)

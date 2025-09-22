@@ -21,7 +21,7 @@ interface UseProjectRequirementsProps {
 export function useProjectRequirements({
   projectId,
   initialFilters = {},
-  pageSize = 20,
+  pageSize = 10,
 }: UseProjectRequirementsProps = {}) {
   const [requirements, setRequirements] = useState<ProjectRequirement[]>([]);
   const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>(
@@ -29,6 +29,8 @@ export function useProjectRequirements({
   );
   const [stats, setStats] = useState<ProjectRequirementStats | null>(null);
   const [loading, setLoading] = useState(false);
+  // Separate loading flag for assigned projects to avoid full-page reloads on search
+  const [assignedProjectsLoading, setAssignedProjectsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Track in-flight request by key to prevent duplicate calls with same params (e.g., StrictMode)
@@ -70,7 +72,7 @@ export function useProjectRequirements({
         return; // prevent duplicate identical request
       }
       assignedInFlightKeyRef.current = key;
-      setLoading(true);
+      setAssignedProjectsLoading(true);
       setError(null);
 
       try {
@@ -100,7 +102,7 @@ export function useProjectRequirements({
           color: "danger",
         });
       } finally {
-        setLoading(false);
+        setAssignedProjectsLoading(false);
         assignedInFlightKeyRef.current = null;
       }
     },
@@ -432,18 +434,26 @@ export function useProjectRequirements({
 
       setLoading(true);
       try {
-        const uploadedAttachments = 
-          await projectRequirementsService.uploadAttachments(requirementId, files);
-        
+        const uploadedAttachments =
+          await projectRequirementsService.uploadAttachments(
+            requirementId,
+            files,
+          );
+
         // Update the requirement in the local state to include new attachments
-        setRequirements(prev => prev.map(req => 
-          req.id === requirementId 
-            ? { 
-                ...req, 
-                attachments: [...(req.attachments || []), ...uploadedAttachments]
-              }
-            : req
-        ));
+        setRequirements((prev) =>
+          prev.map((req) =>
+            req.id === requirementId
+              ? {
+                  ...req,
+                  attachments: [
+                    ...(req.attachments || []),
+                    ...uploadedAttachments,
+                  ],
+                }
+              : req,
+          ),
+        );
 
         addToast({
           title: "Success",
@@ -453,9 +463,9 @@ export function useProjectRequirements({
 
         return uploadedAttachments;
       } catch (err) {
-        const errorMessage = 
+        const errorMessage =
           err instanceof Error ? err.message : "Failed to upload files";
-        
+
         addToast({
           title: "Error",
           description: errorMessage,
@@ -476,17 +486,24 @@ export function useProjectRequirements({
     async (requirementId: number, attachmentId: number) => {
       setLoading(true);
       try {
-        await projectRequirementsService.deleteAttachment(requirementId, attachmentId);
-        
+        await projectRequirementsService.deleteAttachment(
+          requirementId,
+          attachmentId,
+        );
+
         // Update the requirement in the local state to remove the attachment
-        setRequirements(prev => prev.map(req => 
-          req.id === requirementId 
-            ? { 
-                ...req, 
-                attachments: req.attachments?.filter(att => att.id !== attachmentId) || []
-              }
-            : req
-        ));
+        setRequirements((prev) =>
+          prev.map((req) =>
+            req.id === requirementId
+              ? {
+                  ...req,
+                  attachments:
+                    req.attachments?.filter((att) => att.id !== attachmentId) ||
+                    [],
+                }
+              : req,
+          ),
+        );
 
         addToast({
           title: "Success",
@@ -494,9 +511,9 @@ export function useProjectRequirements({
           color: "success",
         });
       } catch (err) {
-        const errorMessage = 
+        const errorMessage =
           err instanceof Error ? err.message : "Failed to delete attachment";
-        
+
         addToast({
           title: "Error",
           description: errorMessage,
@@ -517,13 +534,13 @@ export function useProjectRequirements({
     async (requirementId: number, attachmentId: number, filename: string) => {
       try {
         const blob = await projectRequirementsService.downloadAttachment(
-          requirementId, 
-          attachmentId
+          requirementId,
+          attachmentId,
         );
-        
+
         // Create download link
         const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
         link.download = filename;
         document.body.appendChild(link);
@@ -537,9 +554,9 @@ export function useProjectRequirements({
           color: "success",
         });
       } catch (err) {
-        const errorMessage = 
+        const errorMessage =
           err instanceof Error ? err.message : "Failed to download file";
-        
+
         addToast({
           title: "Error",
           description: errorMessage,
@@ -572,6 +589,9 @@ export function useProjectRequirements({
     assignedProjectsPageSize,
     assignedProjectsSearch,
     assignedProjectsProjectId,
+
+    // Loading state specific to assigned projects
+    assignedProjectsLoading,
 
     // Filters
     filters,
