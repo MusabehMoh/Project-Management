@@ -243,9 +243,11 @@ const translations = {
     "quickActions.unassignedProjects": "Unassigned Projects",
     "quickActions.unassignedProjectsDesc": "Projects without analysts assigned",
     "quickActions.projectsWithoutRequirements": "Projects Without Requirements",
-    "quickActions.projectsWithoutRequirementsDesc": "Projects that need requirements to be added",
+    "quickActions.projectsWithoutRequirementsDesc":
+      "Projects that need requirements to be added",
     "quickActions.availableMembers": "Available Team Members",
-    "quickActions.availableMembersDesc": "Team members available for new assignments",
+    "quickActions.availableMembersDesc":
+      "Team members available for new assignments",
     "quickActions.projectsNeedAnalysts": "projects need analysts",
     "quickActions.actNow": "Act Now",
     "quickActions.assign": "Assign",
@@ -415,7 +417,8 @@ const translations = {
 
     // Developer Dashboard
     "developerDashboard.title": "Developer Management Dashboard",
-    "developerDashboard.subtitle": "Manage development teams, code reviews, and deployments",
+    "developerDashboard.subtitle":
+      "Manage development teams, code reviews, and deployments",
     "developerDashboard.newSprint": "New Sprint",
     "developerDashboard.createRelease": "Create Release",
     "developerDashboard.teamWorkload": "Development Team Workload",
@@ -609,7 +612,8 @@ const translations = {
     "requirements.projectRequirements": "Project Requirements",
     "requirements.pendingRequirements": "Pending Requirements",
     "requirements.noDraftRequirements": "No Draft Requirements",
-    "requirements.noDraftRequirementsDesc": "All requirements have been processed",
+    "requirements.noDraftRequirementsDesc":
+      "All requirements have been processed",
     "requirements.newRequirement": "New Requirement",
     "requirements.editRequirement": "Edit Requirement",
     "requirements.deleteRequirement": "Delete Requirement",
@@ -1505,7 +1509,8 @@ const translations = {
     "quickActions.unassignedProjects": "المشاريع غير المخصصة",
     "quickActions.unassignedProjectsDesc": "مشاريع بدون محللين مخصصين",
     "quickActions.projectsWithoutRequirements": "مشاريع بدون متطلبات",
-    "quickActions.projectsWithoutRequirementsDesc": "مشاريع تحتاج إلى إضافة متطلبات",
+    "quickActions.projectsWithoutRequirementsDesc":
+      "مشاريع تحتاج إلى إضافة متطلبات",
     "quickActions.availableMembers": "أعضاء الفريق المتاحون",
     "quickActions.availableMembersDesc": "أعضاء الفريق المتاحون لمهام جديدة",
     "quickActions.projectsNeedAnalysts": "مشاريع تحتاج محللين",
