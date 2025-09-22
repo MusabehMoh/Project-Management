@@ -662,17 +662,18 @@ export const useMembersTasks = (): UseMembersTasksResult => {
           );
         }
 
-        if (request?.statusId) {
+        ///status 6 means return all
+        if (request?.statusId && request?.statusId !== 6) {
           tasks = tasks.filter((task) => task.status.id === request.statusId);
         }
 
-        if (request?.projectId) {
+        if (request?.projectId && request?.priorityId !== 4) {
           tasks = tasks.filter(
             (task) => task.project.id === request.projectId?.toString()
           );
         }
 
-        if (request?.priorityId) {
+        if (request?.priorityId && request?.priorityId !== 5) {
           tasks = tasks.filter(
             (task) => task.priority.id === request.priorityId!
           );
@@ -738,8 +739,8 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       } catch (err) {
         // Fallback to mock data when API is not available
 
-  setTasks(mockMemberTasks);
-  setTotalPages(Math.ceil(mockMemberTasks.length / 10));
+        setTasks(mockMemberTasks);
+        setTotalPages(Math.ceil(mockMemberTasks.length / 10));
         //handlePageChange(1);
         setTotalCount(mockMemberTasks.length);
       } finally {

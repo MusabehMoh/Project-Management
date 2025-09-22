@@ -4,18 +4,15 @@ import { useTimelines } from "@/hooks/useTimelines";
 import { X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-
 const GanttChartFullScreen = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const {t} = useLanguage();
+  const { t } = useLanguage();
 
-  const projectId = location.state?.projectId;   // ✅ pass projectId when navigating
+  const projectId = location.state?.projectId; // ✅ pass projectId when navigating
   const timeline = location.state?.timeline;
 
-   // ✅ get functions from hook
   const { deleteEntity, updateEntity } = useTimelines(projectId);
-
 
   if (!timeline) {
     return <div>No timeline data provided</div>;
@@ -25,9 +22,9 @@ const GanttChartFullScreen = () => {
     navigate(-1);
   };
 
-  return ( //min-h-screen
-    <div className="h-screen overflow-hidden bg-white dark:bg-gray-900 flex flex-col">
-      {/* Slim Header with Close Button */}
+  return (
+    <div className="h-screen flex flex-col bg-white dark:bg-gray-900">
+      {/* Header */}
       <header className="flex items-center justify-end p-2 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <button
           onClick={handleClose}
@@ -35,7 +32,7 @@ const GanttChartFullScreen = () => {
           aria-label="Close fullscreen Gantt chart"
           title="Close Page"
         >
-            <span className="text-gray-700 dark:text-gray-200 font-medium select-none">
+          <span className="text-gray-700 dark:text-gray-200 font-medium select-none">
             {t("timelane.back")}
           </span>
           <span className="flex items-center justify-center w-7 h-7 bg-gray-300 dark:bg-gray-700 rounded-full">
@@ -44,15 +41,17 @@ const GanttChartFullScreen = () => {
         </button>
       </header>
 
-      {/* Chart */}
-      <main className="flex-grow overflow-auto p-4 min-h-0">
-        <DHTMLXGantt
-          projectId={projectId} 
-          timeline={timeline}
-          isFullScreen={true} 
-          onDeleteEntity={deleteEntity}
-          onUpdateEntity={updateEntity}  
-        />
+      {/* Chart fills the rest */}
+      <main className="flex-grow min-h-0">
+        <div className="w-full h-full">
+          <DHTMLXGantt
+            projectId={projectId}
+            timeline={timeline}
+            isFullScreen={true}
+            onDeleteEntity={deleteEntity}
+            onUpdateEntity={updateEntity}
+          />
+        </div>
       </main>
     </div>
   );
