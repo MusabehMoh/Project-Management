@@ -46,10 +46,11 @@ import { MemberTask, TaskStatus } from "@/types/membersTasks";
 import GlobalPagination from "@/components/GlobalPagination";
 import { usePageTitle } from "@/hooks";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
+import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 
 export default function MembersTasksPage() {
   const { t } = useLanguage();
-  
+
   // Set page title
   usePageTitle("tasks.title");
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
@@ -89,7 +90,7 @@ export default function MembersTasksPage() {
 
   const effectivePageSize = normalizePageSize(
     taskParametersRequest.limit ?? 10,
-    10,
+    10
   );
 
   const [searchValue, setSearchValue] = useState(
@@ -502,9 +503,9 @@ export default function MembersTasksPage() {
                 <TaskListView tasks={tasks} onTaskClick={handleTaskClick} />
               </div>
             )}
-            {/* {viewType === "gantt" && (
-              <TaskGanttView tasks={tasks} onTaskClick={handleTaskClick} />
-            )} */}
+            {viewType === "gantt" && (
+              <DHTMLXGantt tasks={tasks} onTaskClick={handleTaskClick} />
+            )}
 
             {!loading && totalCount > taskParametersRequest.limit! && (
               <div className="flex justify-center py-6">

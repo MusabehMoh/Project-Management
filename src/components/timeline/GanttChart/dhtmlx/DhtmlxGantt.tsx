@@ -23,19 +23,24 @@ import { Maximize } from "lucide-react";
 import { CalendarDate } from "@internationalized/date";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { MemberTask } from "@/types/membersTasks";
 
 const DHTMLXGantt: FC<{
-  projectId: number | undefined;
-  timeline: Timeline;
+  projectId?: number | undefined;
+  timeline?: Timeline;
+  tasks?: MemberTask[];
   loading?: boolean;
   isFullScreen?: boolean;
-  onDeleteEntity: (id: string, type: string) => Promise<boolean>;
-  onUpdateEntity: (id: string, type: string, data: any) => Promise<boolean>;
+  onTaskClick?: (task: MemberTask) => void;
+  onDeleteEntity?: (id: string, type: string) => Promise<boolean>;
+  onUpdateEntity?: (id: string, type: string, data: any) => Promise<boolean>;
 }> = ({
   projectId,
   timeline,
+  tasks,
   loading = false,
   isFullScreen = false,
+  onTaskClick,
   onDeleteEntity,
   onUpdateEntity,
 }) => {
@@ -207,6 +212,12 @@ const DHTMLXGantt: FC<{
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
+  const parseDateFromGantt = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+
+    return new Date(year, month - 1, day);
+  };
+
   // Apply row height dynamically when rowHeight changes
   useEffect(() => {
     if (!inited.current) return;
@@ -269,18 +280,31 @@ const DHTMLXGantt: FC<{
     inited.current = true;
 
     ///dialog
-    gantt.showLightbox = function (id: string) {
-      const task = gantt.getTask(id);
+    if (onTaskClick) {
+      gantt.showLightbox = function (id: string) {
+        // Find the task in your existing list
+        const currentTask = tasks?.find((t) => t.id === id);
 
-      setSelectedTask(task); // Save task into state
-      console.log("selected task is:: ");
-      console.log(task);
-      setDialogOpen(true); // Open React dialog
-    };
+        if (currentTask) {
+          onTaskClick(currentTask);
+        } else {
+          console.warn("Task not found for id:", id);
+        }
+      };
+    } else {
+      gantt.showLightbox = function (id: string) {
+        const task = gantt.getTask(id);
 
-    gantt.hideLightbox = function () {
-      setDialogOpen(false);
-    };
+        setSelectedTask(task); // Save task into state
+        console.log("selected task is:: ");
+        console.log(task);
+        setDialogOpen(true); // Open React dialog
+      };
+
+      gantt.hideLightbox = function () {
+        setDialogOpen(false);
+      };
+    }
 
     return () => {
       gantt.clearAll();
@@ -510,71 +534,91 @@ const DHTMLXGantt: FC<{
     const data = { data: [] as any[], links: [] as any[] };
     const id = (p: string, n: string | number) => `${p}-${n}`;
 
-    data.data.push({
-      id: timeline.id,
-      text: timeline.name,
-      description: timeline.description ?? "",
-      start_date: formatDate(timeline.startDate),
-      duration: daysBetween(timeline.startDate, timeline.endDate),
-      open: true,
-      type: "timeline",
-      color: "#22C55E",
-      border: "#22C55E",
-    });
-
-    timeline.sprints.forEach((sprint: Sprint) => {
-      const sid = id("S", sprint.id);
-
+    if (timeline) {
       data.data.push({
-        id: sid,
-        text: sprint.name,
-        description: sprint.description ?? "",
-        start_date: formatDate(sprint.startDate),
-        duration: daysBetween(sprint.startDate, sprint.endDate),
+        id: timeline.id,
+        text: timeline.name,
+        description: timeline.description ?? "",
+        start_date: formatDate(timeline.startDate),
+        duration: daysBetween(timeline.startDate, timeline.endDate),
         open: true,
-        type: "sprint",
-        color: "#22C55E",
-        border: "#22C55E",
+        type: "timeline",
+        color: "#3B82F6",
+        border: "#3B82F6",
       });
 
-      sprint.tasks.forEach((task: Task) => {
-        const rid = id("T", task.id);
+      timeline.sprints.forEach((sprint: Sprint) => {
+        const sid = id("S", sprint.id);
 
         data.data.push({
-          id: rid,
-          text: task.name,
-          description: task.description ?? "",
-          progress: task.progress,
-          start_date: formatDate(task.startDate),
-          duration: daysBetween(task.startDate, task.endDate),
-          parent: sid,
+          id: sid,
+          text: sprint.name,
+          description: sprint.description ?? "",
+          start_date: formatDate(sprint.startDate),
+          duration: daysBetween(sprint.startDate, sprint.endDate),
           open: true,
-          type: "task",
-          color: "#8B5CF6",
-          border: "#8B5CF6",
+          type: "sprint",
+          color: "#22C55E",
+          border: "#22C55E",
         });
 
-        task.subtasks?.forEach((sub: Subtask) => {
-          const tid = id("U", sub.id);
+        sprint.tasks.forEach((task: Task) => {
+          const rid = id("T", task.id);
 
           data.data.push({
-            id: tid,
-            text: sub.name,
-            description: sub.description ?? "",
-            progress: sub.progress,
-            start_date: formatDate(sub.startDate || task.startDate),
-            duration: daysBetween(
-              sub.startDate || task.startDate,
-              sub.endDate || task.endDate
-            ),
-            parent: rid,
-            type: "subtask",
-            color: "#EAB308",
-            border: "#EAB308",
+            id: rid,
+            text: task.name,
+            description: task.description ?? "",
+            progress: task.progress,
+            start_date: formatDate(task.startDate),
+            duration: daysBetween(task.startDate, task.endDate),
+            parent: sid,
+            open: true,
+            type: "task",
+            color: "#8B5CF6",
+            border: "#8B5CF6",
+          });
+
+          task.subtasks?.forEach((sub: Subtask) => {
+            const tid = id("U", sub.id);
+
+            data.data.push({
+              id: tid,
+              text: sub.name,
+              description: sub.description ?? "",
+              progress: sub.progress,
+              start_date: formatDate(sub.startDate || task.startDate),
+              duration: daysBetween(
+                sub.startDate || task.startDate,
+                sub.endDate || task.endDate
+              ),
+              parent: rid,
+              type: "subtask",
+              color: "#EAB308",
+              border: "#EAB308",
+            });
           });
         });
       });
-    });
+    } else {
+      const colors = ["#3B82F6", "#22C55E", "#8B5CF6", "#EAB308"];
+
+      tasks?.forEach((task: MemberTask, index) => {
+        const color = colors[index % colors.length];
+
+        data.data.push({
+          id: task.id,
+          text: task.name,
+          description: task.description ?? "",
+          start_date: formatDate(task.startDate),
+          duration: daysBetween(task.startDate, task.endDate),
+          open: false,
+          type: "task",
+          color: color,
+          border: color,
+        });
+      });
+    }
 
     gantt.clearAll();
     gantt.parse(data); // ✅ this is the correct place
@@ -680,7 +724,7 @@ const DHTMLXGantt: FC<{
               {52}px
             </span>
           </div>
-        ) : (
+        ) : !tasks ? (
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-gray-800 dark:text-gray-200">
               {t("timeline.ganttView")}
@@ -695,6 +739,8 @@ const DHTMLXGantt: FC<{
               <Maximize className="w-5 h-5 text-gray-600 dark:text-gray-200" />
             </button>
           </div>
+        ) : (
+          <div />
         )}
       </div>
 
