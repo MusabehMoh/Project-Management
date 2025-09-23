@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -26,7 +26,7 @@ import {
   CheckCircle,
   AlertCircle,
   Search,
-  Filter,
+  X,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -87,6 +87,30 @@ export default function DeveloperWorkloadPerformance({
   const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState("efficiency");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Debounced search function
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  };
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
+
+  // Clear search function
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
 
   // Mock data for development
   const mockDevelopers: DeveloperWorkload[] = [
@@ -163,15 +187,81 @@ export default function DeveloperWorkloadPerformance({
 
       if (useMockData) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        setDevelopers(mockDevelopers);
+        
+        // Apply filtering to mock data
+        let filteredDevelopers = [...mockDevelopers];
+        
+        // Apply status filter
+        if (statusFilter) {
+          filteredDevelopers = filteredDevelopers.filter(dev => dev.status === statusFilter);
+        }
+        
+        // Apply search filter
+        if (searchQuery.trim()) {
+          const searchLower = searchQuery.toLowerCase();
+          filteredDevelopers = filteredDevelopers.filter(dev =>
+            dev.developerName.toLowerCase().includes(searchLower) ||
+            dev.skills.some(skill => skill.toLowerCase().includes(searchLower)) ||
+            dev.currentProjects.some(project => project.toLowerCase().includes(searchLower))
+          );
+        }
+        
+        // Apply sorting
+        filteredDevelopers.sort((a, b) => {
+          let aValue: any, bValue: any;
+          
+          switch (sortBy) {
+            case 'efficiency':
+              aValue = a.efficiency;
+              bValue = b.efficiency;
+              break;
+            case 'workload':
+              aValue = a.workloadPercentage;
+              bValue = b.workloadPercentage;
+              break;
+            case 'name':
+              aValue = a.developerName;
+              bValue = b.developerName;
+              break;
+            case 'tasks':
+              aValue = a.currentTasks;
+              bValue = b.currentTasks;
+              break;
+            case 'completed':
+              aValue = a.completedTasks;
+              bValue = b.completedTasks;
+              break;
+            default:
+              aValue = a.efficiency;
+              bValue = b.efficiency;
+          }
+          
+          if (typeof aValue === 'string') {
+            aValue = aValue.toLowerCase();
+            bValue = bValue.toLowerCase();
+          }
+          
+          if (sortOrder === 'asc') {
+            return aValue > bValue ? 1 : -1;
+          } else {
+            return aValue < bValue ? 1 : -1;
+          }
+        });
+        
+        // Apply pagination
+        const startIndex = (page - 1) * pagination.pageSize;
+        const endIndex = startIndex + pagination.pageSize;
+        const paginatedDevelopers = filteredDevelopers.slice(startIndex, endIndex);
+        
+        setDevelopers(paginatedDevelopers);
         setMetrics(mockMetrics);
         setPagination({
-          currentPage: 1,
-          pageSize: 5,
-          totalItems: mockDevelopers.length,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPreviousPage: false,
+          currentPage: page,
+          pageSize: pagination.pageSize,
+          totalItems: filteredDevelopers.length,
+          totalPages: Math.ceil(filteredDevelopers.length / pagination.pageSize),
+          hasNextPage: endIndex < filteredDevelopers.length,
+          hasPreviousPage: page > 1,
         });
       } else {
         const data = await developerWorkloadService.getWorkloadData({
@@ -205,6 +295,20 @@ export default function DeveloperWorkloadPerformance({
   useEffect(() => {
     fetchData();
   }, [useMockData]);
+
+  // Trigger search when debounced search query changes
+  useEffect(() => {
+    if (debouncedSearchQuery !== searchQuery) {
+      // Only trigger if the debounced value is different from current
+      return;
+    }
+    fetchData(1);
+  }, [debouncedSearchQuery]);
+
+  // Trigger data fetch when filters change
+  useEffect(() => {
+    fetchData(1);
+  }, [statusFilter, sortBy, sortOrder]);
 
   if (loading) {
     return (
@@ -260,18 +364,28 @@ export default function DeveloperWorkloadPerformance({
             
             {/* Search and Filter Controls */}
             <div className="flex gap-3 items-center">
-              <Input
-                className="max-w-xs"
-                placeholder={t("developerDashboard.searchDevelopers") || "Search developers..."}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                startContent={<Search className="w-4 h-4 text-default-400" />}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    fetchData(1);
+              <div className="relative">
+                <Input
+                  className="max-w-xs"
+                  placeholder={t("developerDashboard.searchDevelopers") || "Search developers..."}
+                  value={searchQuery}
+                  startContent={<Search className="w-4 h-4 text-default-400" />}
+                  endContent={
+                    searchQuery && (
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={clearSearch}
+                        className="min-w-unit-6 w-6 h-6"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )
                   }
-                }}
-              />
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               
               <Select
                 className="max-w-xs"
@@ -280,7 +394,6 @@ export default function DeveloperWorkloadPerformance({
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
                   setStatusFilter(selected || "");
-                  fetchData(1);
                 }}
               >
                 <SelectItem key="">{t("common.allStatus") || "All Status"}</SelectItem>
@@ -297,7 +410,6 @@ export default function DeveloperWorkloadPerformance({
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
                   setSortBy(selected);
-                  fetchData(1);
                 }}
               >
                 <SelectItem key="efficiency">{t("developerDashboard.efficiency") || "Efficiency"}</SelectItem>
@@ -312,7 +424,6 @@ export default function DeveloperWorkloadPerformance({
                 variant="flat"
                 onPress={() => {
                   setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                  fetchData(1);
                 }}
               >
                 {sortOrder === "asc" ? 
