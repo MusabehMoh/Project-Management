@@ -4,6 +4,7 @@ import type {
   TasksResponse,
   TaskFiltersData,
   TaskConfigData,
+  AdhocTask,
 } from "@/types/membersTasks";
 import type { ApiResponse } from "@/types/project";
 
@@ -213,6 +214,18 @@ export class MembersTasksService {
     };
     ///TODO uncomment this when api available and comment above mock data
     //return apiClient.get<TaskConfigData>(`${this.baseUrl}/getTasksConfig`);
+  }
+
+  /* Add adhoc task */
+  async addAdhocTask(newTask: AdhocTask): Promise<ApiResponse<void>> {
+    return {
+      success: true,
+      data: undefined,
+      message: "Task saved successfully",
+      timestamp: "22-08-2025",
+    };
+    ///TODO uncomment this when api available and comment above mock data
+    // return apiClient.post<void>(`${this.baseUrl}/addAdhocTask`, newTask);
   }
 }
 
