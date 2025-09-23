@@ -153,6 +153,7 @@ const translations = {
     // Calendar Validation Messages
     "calendar.validation.titleRequired": "Event title is required",
     "calendar.validation.startDateRequired": "Start date is required",
+    "calendar.validation.endDateRequired": "End date is required",
     "calendar.validation.startTimeRequired": "Start time is required",
     "calendar.validation.endDateBeforeStart":
       "End date cannot be before start date",
@@ -368,6 +369,7 @@ const translations = {
     "common.pleaseWait": "Please wait...",
     "common.noDataFound": "No data found",
     "common.unexpectedError": "An unexpected error occurred",
+    "common.AddAdhocTask": "Add Adhoc Task",
 
     // Table
     "table.noData": "No data available",
@@ -652,7 +654,7 @@ const translations = {
     "requirements.projectOwner": "Project Owner",
     "requirements.owningUnit": "Owning Unit",
     "requirements.projectStatus": "Project Status",
-    "requirements.startDate": "Start Date", 
+    "requirements.startDate": "Start Date",
     "requirements.progress": "Progress",
     "requirements.noDescription": "No description available",
     "requirements.noAnalysts": "No analysts assigned",
@@ -1282,6 +1284,14 @@ const translations = {
     selectStatus: "Select Status",
     selectPriority: "Select Priority",
 
+    ///adhoc task
+    taskNameRequired: "Task name is required",
+    taskDescriptionRequired: "Task description is required",
+    taskStartDateRequired: "Task start date is required",
+    taskEndDateRequired: "Task end date is required",
+    taskValidEndDate: "Task end date must be after start date",
+    taskAssigneeRequired: "Select one member at least",
+
     // Page Titles
     "home.title": "Dashboard",
     "about.title": "About",
@@ -1431,6 +1441,7 @@ const translations = {
     // Calendar Validation Messages
     "calendar.validation.titleRequired": "عنوان الحدث مطلوب",
     "calendar.validation.startDateRequired": "تاريخ البداية مطلوب",
+    "calendar.validation.endDateRequired": "تاريخ النهاية مطلوب",
     "calendar.validation.startTimeRequired": "وقت البداية مطلوب",
     "calendar.validation.endDateBeforeStart":
       "لا يمكن أن يكون تاريخ النهاية قبل تاريخ البداية",
@@ -1631,6 +1642,7 @@ const translations = {
     "common.pleaseWait": "يرجى الانتظار...",
     "common.noDataFound": "لا توجد بيانات",
     "common.unexpectedError": "حدث خطأ غير متوقع",
+    "common.AddAdhocTask": "إضافة مهمة عاجلة",
 
     // Table
     "table.noData": "لا توجد بيانات متاحة",
@@ -2525,6 +2537,14 @@ const translations = {
     selectDepartment: "اختر القسم",
     selectStatus: "اختر الحالة",
     selectPriority: "اختر الأولوية",
+
+    ///adhoc task
+    taskNameRequired: "اسم المهمة مطلوب",
+    taskDescriptionRequired: "وصف المهمة مطلوب",
+    taskStartDateRequired: "تاريخ بداية المهمة مطلوب",
+    taskEndDateRequired: "تاريخ نهاية المهمة مطلوب",
+    taskValidEndDate: "يجب أن يكون تاريخ نهاية المهمة بعد تاريخ البداية",
+    taskAssigneeRequired: "اختار معين واحد على الأقل مطلوب",
 
     // Page Titles
     "home.title": "لوحة التحكم",

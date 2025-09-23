@@ -68,3 +68,11 @@ export interface ProjectBasicInfo {
   id: string;
   name: string;
 }
+
+export interface AdhocTask {
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  assignedMembers: string[]; ///array of member ids
+}
