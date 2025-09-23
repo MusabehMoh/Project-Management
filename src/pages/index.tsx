@@ -26,7 +26,7 @@ export default function IndexPage() {
 
   return (
     <>
-      {hasAccess ? <AnalystManagerDashboard /> : <div />}
+      {/* {hasAccess ? <AnalystManagerDashboard /> : <div />} */}
       {hasDevManagerRole ? <DeveloperManagerDashboard /> : <div />}
     </>
   );

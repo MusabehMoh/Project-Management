@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Spinner } from "@heroui/spinner";
 import { Progress } from "@heroui/progress";
+import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { Pagination } from "@heroui/pagination";
 import {
   Table,
   TableHeader,
@@ -22,13 +25,18 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Search,
+  X,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { GlobalPagination } from "@/components/GlobalPagination";
 import {
   developerWorkloadService,
   type DeveloperWorkload,
   type TeamPerformanceMetrics,
+  type WorkloadResponse,
+  type PaginationInfo,
 } from "@/services/api/developerWorkloadService";
 
 interface DeveloperWorkloadPerformanceProps {
@@ -64,9 +72,45 @@ export default function DeveloperWorkloadPerformance({
   const { t, language } = useLanguage();
   const [developers, setDevelopers] = useState<DeveloperWorkload[]>([]);
   const [metrics, setMetrics] = useState<TeamPerformanceMetrics | null>(null);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    pageSize: 5,
+    totalItems: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("efficiency");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Debounced search function
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  };
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
+
+  // Clear search function
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
 
   // Mock data for development
   const mockDevelopers: DeveloperWorkload[] = [
@@ -137,21 +181,106 @@ export default function DeveloperWorkloadPerformance({
     featuresDelivered: 18,
   };
 
-  const fetchData = async () => {
+  const fetchData = async (page: number = 1) => {
     try {
       setError(null);
-      
+
       if (useMockData) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setDevelopers(mockDevelopers);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        // Apply filtering to mock data
+        let filteredDevelopers = [...mockDevelopers];
+        
+        // Apply status filter
+        if (statusFilter) {
+          filteredDevelopers = filteredDevelopers.filter(dev => dev.status === statusFilter);
+        }
+        
+        // Apply search filter
+        if (searchQuery.trim()) {
+          const searchLower = searchQuery.toLowerCase();
+          filteredDevelopers = filteredDevelopers.filter(dev =>
+            dev.developerName.toLowerCase().includes(searchLower) ||
+            dev.skills.some(skill => skill.toLowerCase().includes(searchLower)) ||
+            dev.currentProjects.some(project => project.toLowerCase().includes(searchLower))
+          );
+        }
+        
+        // Apply sorting
+        filteredDevelopers.sort((a, b) => {
+          let aValue: any, bValue: any;
+          
+          switch (sortBy) {
+            case 'efficiency':
+              aValue = a.efficiency;
+              bValue = b.efficiency;
+              break;
+            case 'workload':
+              aValue = a.workloadPercentage;
+              bValue = b.workloadPercentage;
+              break;
+            case 'name':
+              aValue = a.developerName;
+              bValue = b.developerName;
+              break;
+            case 'tasks':
+              aValue = a.currentTasks;
+              bValue = b.currentTasks;
+              break;
+            case 'completed':
+              aValue = a.completedTasks;
+              bValue = b.completedTasks;
+              break;
+            default:
+              aValue = a.efficiency;
+              bValue = b.efficiency;
+          }
+          
+          if (typeof aValue === 'string') {
+            aValue = aValue.toLowerCase();
+            bValue = bValue.toLowerCase();
+          }
+          
+          if (sortOrder === 'asc') {
+            return aValue > bValue ? 1 : -1;
+          } else {
+            return aValue < bValue ? 1 : -1;
+          }
+        });
+        
+        // Apply pagination
+        const startIndex = (page - 1) * pagination.pageSize;
+        const endIndex = startIndex + pagination.pageSize;
+        const paginatedDevelopers = filteredDevelopers.slice(startIndex, endIndex);
+        
+        setDevelopers(paginatedDevelopers);
         setMetrics(mockMetrics);
+        setPagination({
+          currentPage: page,
+          pageSize: pagination.pageSize,
+          totalItems: filteredDevelopers.length,
+          totalPages: Math.ceil(filteredDevelopers.length / pagination.pageSize),
+          hasNextPage: endIndex < filteredDevelopers.length,
+          hasPreviousPage: page > 1,
+        });
       } else {
-        const data = await developerWorkloadService.getWorkloadData();
+        const data = await developerWorkloadService.getWorkloadData({
+          page,
+          pageSize: pagination.pageSize,
+          sortBy,
+          sortOrder,
+          status: statusFilter || undefined,
+          search: searchQuery || undefined,
+        });
+
         setDevelopers(data.developers);
         setMetrics(data.metrics);
+        setPagination(data.pagination);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch workload data");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch workload data",
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -166,6 +295,20 @@ export default function DeveloperWorkloadPerformance({
   useEffect(() => {
     fetchData();
   }, [useMockData]);
+
+  // Trigger search when debounced search query changes
+  useEffect(() => {
+    if (debouncedSearchQuery !== searchQuery) {
+      // Only trigger if the debounced value is different from current
+      return;
+    }
+    fetchData(1);
+  }, [debouncedSearchQuery]);
+
+  // Trigger data fetch when filters change
+  useEffect(() => {
+    fetchData(1);
+  }, [statusFilter, sortBy, sortOrder]);
 
   if (loading) {
     return (
@@ -203,19 +346,92 @@ export default function DeveloperWorkloadPerformance({
     <div dir={language === "ar" ? "rtl" : "ltr"}>
       <Card className="w-full shadow-md border border-default-200">
         <CardHeader className="pb-0">
-          <div className="flex justify-between items-center w-full">
-            <h3 className="text-lg font-medium">
-              {t("developerDashboard.teamPerformance") || "Team Performance"}
-            </h3>
-            <Button
-              isIconOnly
-              isLoading={refreshing}
-              size="sm"
-              variant="ghost"
-              onPress={refresh}
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            </Button>
+          <div className="flex flex-col gap-4 w-full">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">
+                {t("developerDashboard.teamPerformance") || "Team Performance"}
+              </h3>
+              <Button
+                isIconOnly
+                isLoading={refreshing}
+                size="sm"
+                variant="ghost"
+                onPress={refresh}
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              </Button>
+            </div>
+            
+            {/* Search and Filter Controls */}
+            <div className="flex gap-3 items-center">
+              <div className="relative">
+                <Input
+                  className="max-w-xs"
+                  placeholder={t("developerDashboard.searchDevelopers") || "Search developers..."}
+                  value={searchQuery}
+                  startContent={<Search className="w-4 h-4 text-default-400" />}
+                  endContent={
+                    searchQuery && (
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={clearSearch}
+                        className="min-w-unit-6 w-6 h-6"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )
+                  }
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <Select
+                className="max-w-xs"
+                placeholder={t("developerDashboard.filterByStatus") || "Filter by status"}
+                selectedKeys={statusFilter ? [statusFilter] : []}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0] as string;
+                  setStatusFilter(selected || "");
+                }}
+              >
+                <SelectItem key="">{t("common.allStatus") || "All Status"}</SelectItem>
+                <SelectItem key="available">{t("developerDashboard.status.available") || "Available"}</SelectItem>
+                <SelectItem key="busy">{t("developerDashboard.status.busy") || "Busy"}</SelectItem>
+                <SelectItem key="blocked">{t("developerDashboard.status.blocked") || "Blocked"}</SelectItem>
+                <SelectItem key="on-leave">{t("developerDashboard.status.on-leave") || "On Leave"}</SelectItem>
+              </Select>
+              
+              <Select
+                className="max-w-xs"
+                placeholder={t("common.sortBy") || "Sort by"}
+                selectedKeys={[sortBy]}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0] as string;
+                  setSortBy(selected);
+                }}
+              >
+                <SelectItem key="efficiency">{t("developerDashboard.efficiency") || "Efficiency"}</SelectItem>
+                <SelectItem key="workload">{t("developerDashboard.workload") || "Workload"}</SelectItem>
+                <SelectItem key="name">{t("common.name") || "Name"}</SelectItem>
+                <SelectItem key="tasks">{t("developerDashboard.currentTasks") || "Current Tasks"}</SelectItem>
+                <SelectItem key="completed">{t("developerDashboard.tasksCompleted") || "Completed Tasks"}</SelectItem>
+              </Select>
+              
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={() => {
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                }}
+              >
+                {sortOrder === "asc" ? 
+                  `↑ ${t("common.ascending") || "Asc"}` : 
+                  `↓ ${t("common.descending") || "Desc"}`
+                }
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardBody>
@@ -370,6 +586,25 @@ export default function DeveloperWorkloadPerformance({
             </TableBody>
           </Table>
         </CardBody>
+        
+        {/* Global Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="flex justify-center p-4 border-t border-default-200">
+            <GlobalPagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              pageSize={pagination.pageSize}
+              totalItems={pagination.totalItems}
+              onPageChange={(page) => fetchData(page)}
+              onPageSizeChange={(pageSize) => {
+                setPagination(prev => ({ ...prev, pageSize }));
+                fetchData(1);
+              }}
+              showSizeChanger={true}
+              showQuickJumper={true}
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

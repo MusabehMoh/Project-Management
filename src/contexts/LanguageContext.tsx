@@ -472,6 +472,22 @@ const translations = {
     "developerDashboard.noOverdueTasks": "No overdue or at-risk tasks",
     "developerDashboard.completedOnTime": "completed on time",
     "developerDashboard.totalCompleted": "total completed",
+    
+    // Developer Workload Performance
+    "developerDashboard.workloadPerformance": "Workload Performance",
+    "developerDashboard.teamOverview": "Team performance and workload overview",
+    "developerDashboard.averageEfficiency": "Average Efficiency",
+    "developerDashboard.tasksInProgress": "Tasks in Progress",
+    "developerDashboard.activeDevelopers": "Active Developers",
+    "developerDashboard.filterByStatus": "Filter by status",
+    "developerDashboard.searchDevelopers": "Search developers...",
+    
+    // Common translations for filters
+    "common.allStatus": "All Status",
+    "common.sortBy": "Sort by",
+    "common.name": "Name",
+    "common.ascending": "Asc",
+    "common.descending": "Desc",
 
     // Deployment Pipeline
     "deployment.status.pending": "Pending",
@@ -1744,6 +1760,22 @@ const translations = {
     "developerDashboard.noOverdueTasks": "لا توجد مهام متأخرة أو معرضة للخطر",
     "developerDashboard.completedOnTime": "مكتمل في الوقت المحدد",
     "developerDashboard.totalCompleted": "إجمالي المكتمل",
+    
+    // Developer Workload Performance
+    "developerDashboard.workloadPerformance": "أداء الأعباء",
+    "developerDashboard.teamOverview": "نظرة عامة على أداء الفريق والأعباء",
+    "developerDashboard.averageEfficiency": "متوسط الكفاءة",
+    "developerDashboard.tasksInProgress": "المهام قيد التنفيذ",
+    "developerDashboard.activeDevelopers": "المطورون النشطون",
+    "developerDashboard.filterByStatus": "تصفية حسب الحالة",
+    "developerDashboard.searchDevelopers": "البحث عن المطورين...",
+    
+    // Common translations for filters
+    "common.allStatus": "جميع الحالات",
+    "common.sortBy": "ترتيب حسب",
+    "common.name": "الاسم",
+    "common.ascending": "تصاعدي",
+    "common.descending": "تنازلي",
 
     // Deployment Pipeline
     "deployment.status.pending": "في الانتظار",
