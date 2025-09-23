@@ -12,6 +12,11 @@ export interface DeveloperWorkload {
   currentProjects: string[];
   availableHours: number;
   status: "available" | "busy" | "blocked" | "on-leave";
+  department?: string;
+  militaryNumber?: string;
+  gradeName?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface TeamPerformanceMetrics {
@@ -25,6 +30,29 @@ export interface TeamPerformanceMetrics {
   averageReviewTime: number;
   bugsFixed: number;
   featuresDelivered: number;
+}
+
+export interface PaginationInfo {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface WorkloadFilters {
+  status?: string;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface WorkloadResponse {
+  developers: DeveloperWorkload[];
+  metrics: TeamPerformanceMetrics;
+  pagination: PaginationInfo;
+  filters: WorkloadFilters;
 }
 
 export interface CodeReviewMetrics {
@@ -194,13 +222,27 @@ export interface CodeReview {
 
 class DeveloperWorkloadService {
   /**
-   * Get developer workload performance data
+   * Get developer workload performance data with pagination and filtering
    */
-  async getWorkloadData(): Promise<{
-    developers: DeveloperWorkload[];
-    metrics: TeamPerformanceMetrics;
-  }> {
-    const response = await apiClient.get("/developer-workload/performance");
+  async getWorkloadData(params?: {
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+    status?: string;
+    search?: string;
+  }): Promise<WorkloadResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.pageSize) queryParams.append("pageSize", params.pageSize.toString());
+    if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
+    if (params?.sortOrder) queryParams.append("sortOrder", params.sortOrder);
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.search) queryParams.append("search", params.search);
+
+    const url = `/developer-workload${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+    const response = await apiClient.get(url);
 
     if (!response.success) {
       throw new Error(
@@ -208,10 +250,7 @@ class DeveloperWorkloadService {
       );
     }
 
-    return response.data as {
-      developers: DeveloperWorkload[];
-      metrics: TeamPerformanceMetrics;
-    };
+    return response.data as WorkloadResponse;
   }
 
   /**

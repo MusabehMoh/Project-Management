@@ -1,90 +1,105 @@
 import { Request, Response } from "express";
+import {
+  allDeveloperWorkloadData,
+  teamPerformanceMetrics,
+  type DeveloperWorkload,
+} from "../data/mockDeveloperWorkload";
 
 export class DeveloperWorkloadController {
   /**
-   * Get workload performance data
+   * Get workload performance data with pagination
    */
   async getWorkloadPerformance(req: Request, res: Response): Promise<void> {
     try {
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = parseInt(req.query.pageSize as string) || 10;
+      const sortBy = (req.query.sortBy as string) || "efficiency";
+      const sortOrder = (req.query.sortOrder as string) || "desc";
+      const statusFilter = req.query.status as string;
+      const searchQuery = req.query.search as string;
+
+      // Filter data based on search and status
+      let filteredDevelopers = [...allDeveloperWorkloadData];
+
+      if (statusFilter) {
+        filteredDevelopers = filteredDevelopers.filter(
+          (dev) => dev.status === statusFilter,
+        );
+      }
+
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        filteredDevelopers = filteredDevelopers.filter(
+          (dev) =>
+            dev.developerName.toLowerCase().includes(query) ||
+            dev.skills.some((skill) => skill.toLowerCase().includes(query)) ||
+            dev.currentProjects.some((project) =>
+              project.toLowerCase().includes(query),
+            ) ||
+            (dev.department && dev.department.toLowerCase().includes(query)),
+        );
+      }
+
+      // Sort data
+      filteredDevelopers.sort((a, b) => {
+        let valueA: any, valueB: any;
+
+        switch (sortBy) {
+          case "name":
+            valueA = a.developerName;
+            valueB = b.developerName;
+            break;
+          case "efficiency":
+            valueA = a.efficiency;
+            valueB = b.efficiency;
+            break;
+          case "workload":
+            valueA = a.workloadPercentage;
+            valueB = b.workloadPercentage;
+            break;
+          case "tasks":
+            valueA = a.currentTasks;
+            valueB = b.currentTasks;
+            break;
+          case "completed":
+            valueA = a.completedTasks;
+            valueB = b.completedTasks;
+            break;
+          default:
+            valueA = a.efficiency;
+            valueB = b.efficiency;
+        }
+
+        if (sortOrder === "asc") {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+
+      // Calculate pagination
+      const totalItems = filteredDevelopers.length;
+      const totalPages = Math.ceil(totalItems / pageSize);
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedDevelopers = filteredDevelopers.slice(startIndex, endIndex);
+
       const workloadData = {
-        developers: [
-          {
-            developerId: "1",
-            developerName: "Ahmed Ali",
-            currentTasks: 5,
-            completedTasks: 28,
-            averageTaskTime: 6.5,
-            efficiency: 92,
-            workloadPercentage: 85,
-            skills: ["React", "Node.js", "TypeScript"],
-            currentProjects: ["E-Commerce", "Admin Panel"],
-            availableHours: 6,
-            status: "available",
-          },
-          {
-            developerId: "2",
-            developerName: "Sara Hassan",
-            currentTasks: 7,
-            completedTasks: 35,
-            averageTaskTime: 5.8,
-            efficiency: 88,
-            workloadPercentage: 95,
-            skills: ["Vue.js", "Python", "PostgreSQL"],
-            currentProjects: ["API Gateway", "Data Analytics"],
-            availableHours: 2,
-            status: "busy",
-          },
-          {
-            developerId: "3",
-            developerName: "Omar Khaled",
-            currentTasks: 3,
-            completedTasks: 22,
-            averageTaskTime: 7.2,
-            efficiency: 85,
-            workloadPercentage: 60,
-            skills: ["Angular", "Java", "MySQL"],
-            currentProjects: ["Mobile App"],
-            availableHours: 8,
-            status: "available",
-          },
-          {
-            developerId: "4",
-            developerName: "Fatima Nour",
-            currentTasks: 0,
-            completedTasks: 15,
-            averageTaskTime: 8.1,
-            efficiency: 78,
-            workloadPercentage: 0,
-            skills: ["React Native", "Swift", "Kotlin"],
-            currentProjects: [],
-            availableHours: 8,
-            status: "on-leave",
-          },
-          {
-            developerId: "5",
-            developerName: "Youssef Ahmed",
-            currentTasks: 4,
-            completedTasks: 31,
-            averageTaskTime: 5.5,
-            efficiency: 94,
-            workloadPercentage: 70,
-            skills: ["DevOps", "Docker", "Kubernetes"],
-            currentProjects: ["Infrastructure", "CI/CD"],
-            availableHours: 5,
-            status: "busy",
-          },
-        ],
-        metrics: {
-          totalDevelopers: 5,
-          activeDevelopers: 4,
-          averageEfficiency: 87.4,
-          totalTasksCompleted: 131,
-          totalTasksInProgress: 19,
-          averageTaskCompletionTime: 6.4,
-          codeReviewsCompleted: 45,
-          averageReviewTime: 2.3,
-          bugsFixed: 23,
-          featuresDelivered: 12,
+        developers: paginatedDevelopers,
+        metrics: teamPerformanceMetrics,
+        pagination: {
+          currentPage: page,
+          pageSize,
+          totalItems,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+        filters: {
+          status: statusFilter,
+          search: searchQuery,
+          sortBy,
+          sortOrder,
         },
       };
 

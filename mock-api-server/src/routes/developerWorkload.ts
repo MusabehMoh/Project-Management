@@ -5,7 +5,23 @@ import { DeveloperWorkloadController } from "../controllers/developerWorkloadCon
 const router = express.Router();
 const developerWorkloadController = new DeveloperWorkloadController();
 
-// GET /api/developer-workload/performance - Get workload performance data
+// GET /api/developer-workload - Get workload performance data with pagination
+router.get(
+  "/",
+  developerWorkloadController.getWorkloadPerformance.bind(
+    developerWorkloadController,
+  ),
+);
+
+// GET /api/developer-workload - Get workload performance data with pagination
+router.get(
+  "/",
+  developerWorkloadController.getWorkloadPerformance.bind(
+    developerWorkloadController,
+  ),
+);
+
+// GET /api/developer-workload/performance - Get workload performance data (alternative route)
 router.get(
   "/performance",
   developerWorkloadController.getWorkloadPerformance.bind(

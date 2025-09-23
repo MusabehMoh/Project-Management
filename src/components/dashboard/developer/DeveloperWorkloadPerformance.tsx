@@ -4,6 +4,9 @@ import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Spinner } from "@heroui/spinner";
 import { Progress } from "@heroui/progress";
+import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { Pagination } from "@heroui/pagination";
 import {
   Table,
   TableHeader,
@@ -22,13 +25,18 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Search,
+  Filter,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { GlobalPagination } from "@/components/GlobalPagination";
 import {
   developerWorkloadService,
   type DeveloperWorkload,
   type TeamPerformanceMetrics,
+  type WorkloadResponse,
+  type PaginationInfo,
 } from "@/services/api/developerWorkloadService";
 
 interface DeveloperWorkloadPerformanceProps {
@@ -64,9 +72,21 @@ export default function DeveloperWorkloadPerformance({
   const { t, language } = useLanguage();
   const [developers, setDevelopers] = useState<DeveloperWorkload[]>([]);
   const [metrics, setMetrics] = useState<TeamPerformanceMetrics | null>(null);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    pageSize: 5,
+    totalItems: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("efficiency");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Mock data for development
   const mockDevelopers: DeveloperWorkload[] = [
@@ -137,21 +157,40 @@ export default function DeveloperWorkloadPerformance({
     featuresDelivered: 18,
   };
 
-  const fetchData = async () => {
+  const fetchData = async (page: number = 1) => {
     try {
       setError(null);
-      
+
       if (useMockData) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         setDevelopers(mockDevelopers);
         setMetrics(mockMetrics);
+        setPagination({
+          currentPage: 1,
+          pageSize: 5,
+          totalItems: mockDevelopers.length,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        });
       } else {
-        const data = await developerWorkloadService.getWorkloadData();
+        const data = await developerWorkloadService.getWorkloadData({
+          page,
+          pageSize: pagination.pageSize,
+          sortBy,
+          sortOrder,
+          status: statusFilter || undefined,
+          search: searchQuery || undefined,
+        });
+
         setDevelopers(data.developers);
         setMetrics(data.metrics);
+        setPagination(data.pagination);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch workload data");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch workload data",
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -203,19 +242,85 @@ export default function DeveloperWorkloadPerformance({
     <div dir={language === "ar" ? "rtl" : "ltr"}>
       <Card className="w-full shadow-md border border-default-200">
         <CardHeader className="pb-0">
-          <div className="flex justify-between items-center w-full">
-            <h3 className="text-lg font-medium">
-              {t("developerDashboard.teamPerformance") || "Team Performance"}
-            </h3>
-            <Button
-              isIconOnly
-              isLoading={refreshing}
-              size="sm"
-              variant="ghost"
-              onPress={refresh}
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            </Button>
+          <div className="flex flex-col gap-4 w-full">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">
+                {t("developerDashboard.teamPerformance") || "Team Performance"}
+              </h3>
+              <Button
+                isIconOnly
+                isLoading={refreshing}
+                size="sm"
+                variant="ghost"
+                onPress={refresh}
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              </Button>
+            </div>
+            
+            {/* Search and Filter Controls */}
+            <div className="flex gap-3 items-center">
+              <Input
+                className="max-w-xs"
+                placeholder={t("developerDashboard.searchDevelopers") || "Search developers..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                startContent={<Search className="w-4 h-4 text-default-400" />}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    fetchData(1);
+                  }
+                }}
+              />
+              
+              <Select
+                className="max-w-xs"
+                placeholder={t("developerDashboard.filterByStatus") || "Filter by status"}
+                selectedKeys={statusFilter ? [statusFilter] : []}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0] as string;
+                  setStatusFilter(selected || "");
+                  fetchData(1);
+                }}
+              >
+                <SelectItem key="">{t("common.allStatus") || "All Status"}</SelectItem>
+                <SelectItem key="available">{t("developerDashboard.status.available") || "Available"}</SelectItem>
+                <SelectItem key="busy">{t("developerDashboard.status.busy") || "Busy"}</SelectItem>
+                <SelectItem key="blocked">{t("developerDashboard.status.blocked") || "Blocked"}</SelectItem>
+                <SelectItem key="on-leave">{t("developerDashboard.status.on-leave") || "On Leave"}</SelectItem>
+              </Select>
+              
+              <Select
+                className="max-w-xs"
+                placeholder={t("common.sortBy") || "Sort by"}
+                selectedKeys={[sortBy]}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0] as string;
+                  setSortBy(selected);
+                  fetchData(1);
+                }}
+              >
+                <SelectItem key="efficiency">{t("developerDashboard.efficiency") || "Efficiency"}</SelectItem>
+                <SelectItem key="workload">{t("developerDashboard.workload") || "Workload"}</SelectItem>
+                <SelectItem key="name">{t("common.name") || "Name"}</SelectItem>
+                <SelectItem key="tasks">{t("developerDashboard.currentTasks") || "Current Tasks"}</SelectItem>
+                <SelectItem key="completed">{t("developerDashboard.tasksCompleted") || "Completed Tasks"}</SelectItem>
+              </Select>
+              
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={() => {
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                  fetchData(1);
+                }}
+              >
+                {sortOrder === "asc" ? 
+                  `↑ ${t("common.ascending") || "Asc"}` : 
+                  `↓ ${t("common.descending") || "Desc"}`
+                }
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardBody>
@@ -370,6 +475,25 @@ export default function DeveloperWorkloadPerformance({
             </TableBody>
           </Table>
         </CardBody>
+        
+        {/* Global Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="flex justify-center p-4 border-t border-default-200">
+            <GlobalPagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              pageSize={pagination.pageSize}
+              totalItems={pagination.totalItems}
+              onPageChange={(page) => fetchData(page)}
+              onPageSizeChange={(pageSize) => {
+                setPagination(prev => ({ ...prev, pageSize }));
+                fetchData(1);
+              }}
+              showSizeChanger={true}
+              showQuickJumper={true}
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -91,6 +91,7 @@ This is a comprehensive Project Management Application (PMA) built with modern w
 - `utils/` - Utility functions
 - `styles/` - Global CSS styles
 - `layouts/` - Page layout components
+- create directories for everything new to keep things organized.
 
 ### Mock API Server (`mock-api-server/`)
 - `src/app.ts` - Main Express server
@@ -225,6 +226,9 @@ This is a comprehensive Project Management Application (PMA) built with modern w
 4. Test in both English and Arabic modes
 5. Verify responsive behavior
 6. Check TypeScript compilation with `tsc`
+7. Never create test scripts 
+8. Dont create documents files or readme files unless told.
+9. dont run npm run dev since its always running by myself.
 
 ## Common Issues & Solutions
 
