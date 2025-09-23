@@ -33,6 +33,7 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Skeleton,
   Textarea,
 } from "@heroui/react";
 
@@ -241,49 +242,76 @@ export default function MembersTasksPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="transition-all hover:shadow-lg">
-            <CardBody className="flex items-center gap-3">
-              <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
-                <Grid3X3 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground-600">{t("totalTasks")}</p>
-                <p className="text-2xl text-center font-bold">
-                  {tasksConfigData.totalTasks}
-                </p>
-              </div>
-            </CardBody>
-          </Card>
+        {loading ? (
+          // Skeleton Loader
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="transition-all">
+                <CardBody className="flex items-center gap-3">
+                  <Skeleton className="h-12 w-12 rounded-lg" />{" "}
+                  {/* icon placeholder */}
+                  <div className="flex flex-col gap-2">
+                    <Skeleton className="h-7 w-24 rounded-md text-center" />{" "}
+                    {/* label */}
+                    <div className="flex justify-center">
+                      <Skeleton className="h-6 w-10 rounded-md" />{" "}
+                      {/* number */}
+                    </div>
+                    {/* number */}
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <Card className="transition-all hover:shadow-lg">
+              <CardBody className="flex items-center gap-3">
+                <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
+                  <Grid3X3 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-foreground-600">
+                    {t("totalTasks")}
+                  </p>
+                  <p className="text-2xl text-center font-bold">
+                    {tasksConfigData.totalTasks}
+                  </p>
+                </div>
+              </CardBody>
+            </Card>
 
-          <Card className="transition-all hover:shadow-lg">
-            <CardBody className="flex items-center gap-3">
-              <div className="p-3 bg-warning-100 dark:bg-warning-900/20 rounded-lg">
-                <RefreshCw className="w-6 h-6 text-warning" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground-600">{t("inProgress")}</p>
-                <p className="text-2xl text-center font-bold">
-                  {tasksConfigData.inProgressTasks}
-                </p>
-              </div>
-            </CardBody>
-          </Card>
+            <Card className="transition-all hover:shadow-lg">
+              <CardBody className="flex items-center gap-3">
+                <div className="p-3 bg-warning-100 dark:bg-warning-900/20 rounded-lg">
+                  <RefreshCw className="w-6 h-6 text-warning" />
+                </div>
+                <div>
+                  <p className="text-sm text-foreground-600">
+                    {t("inProgress")}
+                  </p>
+                  <p className="text-2xl text-center font-bold">
+                    {tasksConfigData.inProgressTasks}
+                  </p>
+                </div>
+              </CardBody>
+            </Card>
 
-          <Card className="transition-all hover:shadow-lg">
-            <CardBody className="flex items-center gap-3">
-              <div className="p-3 bg-danger-100 dark:bg-danger-900/20 rounded-lg">
-                <FileText className="w-6 h-6 text-danger" />
-              </div>
-              <div>
-                <p className="text-sm text-foreground-600">{t("overdue")}</p>
-                <p className="text-2xl text-center font-bold">
-                  {tasksConfigData.overdueTasks}
-                </p>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
+            <Card className="transition-all hover:shadow-lg">
+              <CardBody className="flex items-center gap-3">
+                <div className="p-3 bg-danger-100 dark:bg-danger-900/20 rounded-lg">
+                  <FileText className="w-6 h-6 text-danger" />
+                </div>
+                <div>
+                  <p className="text-sm text-foreground-600">{t("overdue")}</p>
+                  <p className="text-2xl text-center font-bold">
+                    {tasksConfigData.overdueTasks}
+                  </p>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        )}
 
         {/* Filters */}
         {!loading && totalCount > 0 && (
@@ -412,38 +440,57 @@ export default function MembersTasksPage() {
         )}
 
         {/* Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            {/* View Toggle */}
-            <div className="flex items-center bg-content2 rounded-full p-1">
-              {(["grid", "list", "gantt"] as const).map((type) => (
-                <Button
-                  key={type}
-                  className="rounded-full px-3"
-                  color={viewType === type ? "primary" : "default"}
-                  size="sm"
-                  startContent={
-                    type === "grid" ? (
-                      <Grid3X3 className="w-4 h-4" />
-                    ) : type === "list" ? (
-                      <List className="w-4 h-4" />
-                    ) : (
-                      <BarChart3 className="w-4 h-4" />
-                    )
-                  }
-                  variant={viewType === type ? "solid" : "light"}
-                  onPress={() => setViewType(type)}
-                >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </Button>
-              ))}
-            </div>
+        {loading ? (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              {/* Skeleton for View Toggle */}
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-16 rounded-full" />{" "}
+                {/* Grid button */}
+                <Skeleton className="h-8 w-16 rounded-full" />{" "}
+                {/* List button */}
+                <Skeleton className="h-8 w-16 rounded-full" />{" "}
+                {/* Gantt button */}
+              </div>
 
-            <span className="text-sm text-foreground-600">
-              Showing {tasks.length} of {totalCount} tasks
-            </span>
+              {/* Skeleton for "Showing X of Y tasks" */}
+              <Skeleton className="h-4 w-40 rounded-md" />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              {/* View Toggle */}
+              <div className="flex items-center bg-content2 rounded-full p-1">
+                {(["grid", "list", "gantt"] as const).map((type) => (
+                  <Button
+                    key={type}
+                    className="rounded-full px-3"
+                    color={viewType === type ? "primary" : "default"}
+                    size="sm"
+                    startContent={
+                      type === "grid" ? (
+                        <Grid3X3 className="w-4 h-4" />
+                      ) : type === "list" ? (
+                        <List className="w-4 h-4" />
+                      ) : (
+                        <BarChart3 className="w-4 h-4" />
+                      )
+                    }
+                    variant={viewType === type ? "solid" : "light"}
+                    onPress={() => setViewType(type)}
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </Button>
+                ))}
+              </div>
+
+              <span className="text-sm text-foreground-600">
+                Showing {tasks.length} of {totalCount} tasks
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Error */}
         {error && (

@@ -557,6 +557,7 @@ const DHTMLXGantt: FC<{
           start_date: formatDate(sprint.startDate),
           duration: daysBetween(sprint.startDate, sprint.endDate),
           open: true,
+          parent: timeline.id,
           type: "sprint",
           color: "#22C55E",
           border: "#22C55E",
