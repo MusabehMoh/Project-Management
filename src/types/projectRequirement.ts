@@ -5,7 +5,13 @@ export interface ProjectRequirement {
   description: string;
   priority: "low" | "medium" | "high" | "critical";
   type: "new" | "change request";
-  status: "draft" | "approved" | "in-development" | "completed";
+  status:
+    | "new"
+    | "under-study"
+    | "under-development"
+    | "under-testing"
+    | "completed"
+    | "approved";
   createdBy: number;
   assignedTo?: number;
   assignedAnalyst?: number;
@@ -66,7 +72,8 @@ export interface CreateRequirementTaskRequest {
   qcId?: number;
 }
 
-export interface UpdateRequirementTaskRequest extends CreateRequirementTaskRequest {
+export interface UpdateRequirementTaskRequest
+  extends CreateRequirementTaskRequest {
   id: number;
 }
 
@@ -88,8 +95,8 @@ export interface AssignedProject {
 export interface CreateProjectRequirementRequest {
   name: string;
   description: string;
-  priority: "low" | "medium" | "high" | "critical";
-  type: "new" | "change request";
+  priority: number;
+  type: "new" | "change request"; // Keep as string in frontend, convert to int in service
   expectedCompletionDate: any;
   assignedTo?: number;
   projectId: number;
@@ -97,6 +104,7 @@ export interface CreateProjectRequirementRequest {
   estimatedHours?: number;
   tags?: string[];
   attachments?: string[];
+  status?: number; // Add optional status field for integer values
 }
 
 export interface UpdateProjectRequirementRequest {
@@ -104,9 +112,9 @@ export interface UpdateProjectRequirementRequest {
   projectId?: number;
   name?: string;
   description?: string;
-  priority?: "low" | "medium" | "high" | "critical";
-  type?: "new" | "change request";
-  status?: "draft" | "in_development" | "completed";
+  priority?: number;
+  type?: "new" | "change request"; // Keep as string in frontend, convert to int in service
+  status?: number | "draft" | "in_development" | "completed"; // Support both integer and string values
   assignedTo?: number;
   dueDate?: string;
   estimatedHours?: number;

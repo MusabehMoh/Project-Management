@@ -186,6 +186,7 @@ public interface IProjectRequirementService
     System.Threading.Tasks.Task<bool> DeleteProjectRequirementAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByProjectAsync(int projectId);
     System.Threading.Tasks.Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(int? userId, int page, int limit, string? search = null, int? projectId = null);
+    System.Threading.Tasks.Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId);
 }
 
 public interface ISubTaskService

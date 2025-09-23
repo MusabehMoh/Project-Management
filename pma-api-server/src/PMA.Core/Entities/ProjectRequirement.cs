@@ -3,6 +3,30 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PMA.Core.Entities;
 
+public enum RequirementPriority
+{
+    Low = 1,
+    Medium = 2,
+    High = 3,
+    Critical = 4
+}
+
+public enum RequirementType
+{
+    New = 1,
+    ChangeRequest = 2
+}
+
+public enum RequirementStatusEnum
+{
+    New = 1,
+    UnderStudy = 2,
+    UnderDevelopment = 3,
+    UnderTesting = 4,
+    Completed = 5,
+    Approved = 6
+}
+
 [Table("ProjectRequirements")]
 public class ProjectRequirement
 {
@@ -20,18 +44,15 @@ public class ProjectRequirement
     public string? Description { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Priority { get; set; } = string.Empty; // 'high', 'medium', 'low'
+    public RequirementPriority Priority { get; set; } = RequirementPriority.Medium;
 
     [Required]
-    [MaxLength(20)]
-    public string Type { get; set; } = string.Empty; // 'new', 'change request'
+    public RequirementType Type { get; set; } = RequirementType.New;
 
     public DateTime? ExpectedCompletionDate { get; set; }
 
     [Required]
-    [MaxLength(20)]
-    public string Status { get; set; } = string.Empty; // 'draft', 'approved', 'in-development', 'completed'
+    public RequirementStatusEnum Status { get; set; } = RequirementStatusEnum.New;
 
     public int CreatedBy { get; set; }
     public int? AssignedAnalyst { get; set; }

@@ -276,12 +276,21 @@ export default function ProjectRequirementsPage() {
   const handleSaveRequirement = async (saveAsDraft = true) => {
     if (!validateForm() || !projectId) return;
 
+
+    // Map priority string to integer
+    const priorityMap: Record<string, number> = {
+      low: 1,
+      medium: 2,
+      high: 3,
+      critical: 4,
+    };
+
     try {
       const requestData: CreateProjectRequirementRequest = {
         projectId: parseInt(projectId),
         name: formData.name,
         description: formData.description,
-        priority: formData.priority,
+        priority: priorityMap[formData.priority],
         type: formData.type,
         expectedCompletionDate:
           formData.expectedCompletionDate?.toString() || "",
@@ -294,10 +303,13 @@ export default function ProjectRequirementsPage() {
         savedRequirement = await updateRequirement(selectedRequirement.id, {
           ...requestData,
           id: selectedRequirement.id,
-          status: saveAsDraft ? "draft" : "in_development",
+          status: saveAsDraft ? 1 : 6, // 1=New/Draft, 6=Approved (send to development)
         });
       } else {
-        savedRequirement = await createRequirement(requestData);
+        savedRequirement = await createRequirement({
+          ...requestData,
+          status: saveAsDraft ? 1 : 6, // 1=New/Draft, 6=Approved (send to development)
+        });
       }
 
       // Upload new files if any
@@ -353,7 +365,7 @@ export default function ProjectRequirementsPage() {
 
   const handleSendRequirement = async (requirement: ProjectRequirement) => {
     try {
-      await sendRequirement(requirement.id);
+      await sendRequirement(requirement.id, 6); // 6=Approved status when sending to development
     } catch (err) {
       console.error("Error sending requirement:", err);
     }
@@ -398,11 +410,12 @@ export default function ProjectRequirementsPage() {
   // Helper function to convert string status to numeric code for RequirementStatus lookup
   const convertStatusToCode = (status: string): number => {
     const statusMap: Record<string, number> = {
-      draft: 1, // New
-      approved: 2, // Under Study
-      "in-development": 3, // Under Development
+      new: 1, // New (Draft)
+      "under-study": 2, // Under Study
+      "under-development": 3, // Under Development
       "under-testing": 4, // Under Testing
       completed: 5, // Completed
+      approved: 6, // Approved (when sending to development)
     };
     return statusMap[status] || 1; // Default to 'New' if status not found
   };
@@ -481,7 +494,7 @@ export default function ProjectRequirementsPage() {
 
           {/* Stats Cards */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-5">
               <Card className="p-3">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
@@ -498,7 +511,7 @@ export default function ProjectRequirementsPage() {
                     {stats.draft}
                   </div>
                   <div className="text-xs text-default-500">
-                    {getStatusText("draft")}
+                    {getStatusText("new")}
                   </div>
                 </div>
               </Card>
@@ -508,7 +521,7 @@ export default function ProjectRequirementsPage() {
                     {stats.approved}
                   </div>
                   <div className="text-xs text-default-500">
-                    {getStatusText("approved")}
+                    {getStatusText("under-study")}
                   </div>
                 </div>
               </Card>
@@ -518,7 +531,17 @@ export default function ProjectRequirementsPage() {
                     {stats.inDevelopment}
                   </div>
                   <div className="text-xs text-default-500">
-                    {getStatusText("in-development")}
+                    {getStatusText("under-development")}
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-warning">
+                    {stats.underTesting}
+                  </div>
+                  <div className="text-xs text-default-500">
+                    {getStatusText("under-testing")}
                   </div>
                 </div>
               </Card>
@@ -557,12 +580,12 @@ export default function ProjectRequirementsPage() {
                 }
               >
                 <SelectItem key="">{t("requirements.allStatuses")}</SelectItem>
-                <SelectItem key="draft">{getStatusText("draft")}</SelectItem>
-                <SelectItem key="approved">
-                  {getStatusText("approved")}
+                <SelectItem key="new">{getStatusText("new")}</SelectItem>
+                <SelectItem key="under-study">
+                  {getStatusText("under-study")}
                 </SelectItem>
-                <SelectItem key="in-development">
-                  {getStatusText("in-development")}
+                <SelectItem key="under-development">
+                  {getStatusText("under-development")}
                 </SelectItem>
                 <SelectItem key="under-testing">
                   {getStatusText("under-testing")}
@@ -733,7 +756,7 @@ export default function ProjectRequirementsPage() {
                                 {t("common.edit")}
                               </DropdownItem>
                             ) : null}
-                            {requirement.status === "draft" ? (
+                            {requirement.status === "new" ? (
                               hasPermission({
                                 actions: ["requirements.send"],
                               }) ? (
@@ -1050,7 +1073,7 @@ export default function ProjectRequirementsPage() {
                       onPress={async () => {
                         if (
                           selectedRequirement &&
-                          selectedRequirement.status === "draft"
+                          selectedRequirement.status === "new"
                         ) {
                           try {
                             await handleSendRequirement(selectedRequirement);

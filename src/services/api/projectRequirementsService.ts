@@ -142,9 +142,22 @@ class ProjectRequirementsService {
     projectId: number,
     data: CreateProjectRequirementRequest,
   ): Promise<ProjectRequirement> {
+    // Map type string to integer
+    const typeMap: Record<string, number> = {
+      new: 1,
+      "change request": 2,
+    };
+
+    const payload = {
+      createDto: {
+        ...data,
+        type: typeMap[data.type] || 1, // Convert type to integer
+      },
+    };
+
     const result = await apiClient.post<ProjectRequirement>(
       ENDPOINTS.PROJECT_REQUIREMENTS(projectId),
-      data,
+      payload,
     );
 
     return result.data;
@@ -157,9 +170,22 @@ class ProjectRequirementsService {
     requirementId: number,
     data: UpdateProjectRequirementRequest,
   ): Promise<ProjectRequirement> {
+    // Map type string to integer if provided
+    const typeMap: Record<string, number> = {
+      new: 1,
+      "change request": 2,
+    };
+
+    const payload = {
+      updateDto: {
+        ...data,
+        ...(data.type && { type: typeMap[data.type] || 1 }), // Convert type to integer if provided
+      },
+    };
+
     const result = await apiClient.put<ProjectRequirement>(
       ENDPOINTS.REQUIREMENT_BY_ID(requirementId),
-      data,
+      payload,
     );
 
     return result.data;
@@ -179,9 +205,13 @@ class ProjectRequirementsService {
   /**
    * Send requirement to development manager
    */
-  async sendRequirement(requirementId: number): Promise<ProjectRequirement> {
+  async sendRequirement(
+    requirementId: number,
+    status?: number,
+  ): Promise<ProjectRequirement> {
     const result = await apiClient.post<ProjectRequirement>(
       ENDPOINTS.SEND_REQUIREMENT(requirementId),
+      status ? { status } : undefined,
     );
 
     return result.data;
@@ -311,7 +341,7 @@ class ProjectRequirementsService {
     files: File[],
   ): Promise<ProjectRequirementAttachment[]> {
     // For mock API, we'll send file metadata instead of actual files
-    const fileData = files.map(file => ({
+    const fileData = files.map((file) => ({
       name: file.name,
       size: file.size,
       type: file.type,
@@ -347,11 +377,11 @@ class ProjectRequirementsService {
     const response = await fetch(
       `/api${ENDPOINTS.DOWNLOAD_ATTACHMENT(requirementId, attachmentId)}`,
     );
-    
+
     if (!response.ok) {
-      throw new Error('Download failed');
+      throw new Error("Download failed");
     }
-    
+
     return response.blob();
   }
 }
