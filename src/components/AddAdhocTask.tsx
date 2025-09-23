@@ -13,7 +13,7 @@ import {
   Avatar,
 } from "@heroui/react";
 import { useEffect, useState } from "react";
-import { parseDate } from "@internationalized/date";
+import { getLocalTimeZone, parseDate } from "@internationalized/date";
 import { X } from "lucide-react";
 import { today } from "@internationalized/date";
 
@@ -213,7 +213,7 @@ const AddAdhocTask = () => {
                       errorMessage={errors.startDate}
                       isInvalid={!!errors.startDate}
                       label={t("timeline.detailsPanel.startDate")}
-                      minValue={today("UTC")}
+                      minValue={today(getLocalTimeZone())}
                       value={
                         formData.startDate
                           ? parseDate(formData.startDate.substring(0, 10))
