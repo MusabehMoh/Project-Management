@@ -667,7 +667,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
           tasks = tasks.filter((task) => task.status.id === request.statusId);
         }
 
-        if (request?.projectId && request?.priorityId !== 4) {
+        if (request?.projectId && request?.projectId !== 4) {
           tasks = tasks.filter(
             (task) => task.project.id === request.projectId?.toString()
           );
