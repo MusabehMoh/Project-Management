@@ -37,11 +37,11 @@ export default function PendingRequirements({
   const getPriorityText = (priority: string) => {
     switch (priority?.toLowerCase()) {
       case "high":
-        return t("priority.high") || "High";
+        return t("priority.high");
       case "medium":
-        return t("priority.medium") || "Medium";
+        return t("priority.medium");
       case "low":
-        return t("priority.low") || "Low";
+        return t("priority.low");
       default:
         return priority;
     }

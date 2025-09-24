@@ -47,11 +47,11 @@ export default function ApprovedRequirements({
   const getPriorityText = (priority: string) => {
     switch (priority) {
       case "high":
-        return t("common.high");
+        return t("priority.high");
       case "medium":
-        return t("common.medium");
+        return t("priority.medium");
       case "low":
-        return t("common.low");
+        return t("priority.low");
       default:
         return priority;
     }

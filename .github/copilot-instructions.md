@@ -176,12 +176,15 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - Use `dir={language === "ar" ? "rtl" : "ltr"}` on containers
 - **CRITICAL**: Always add translations when creating new components with user-facing text
 - **NO FALLBACK TEXT**: Use proper translation keys, don't rely on fallback English text
+- **CONSISTENCY**: Check existing translation patterns and namespaces before creating new ones
 
 ### Translation Key Patterns
 - Use dot notation: `"dashboard.title"`, `"user.profile.edit"`
 - Group related translations logically (e.g., all `developerDashboard.*` keys together)
 - Always add both English and Arabic translations
 - For new components, add translations immediately after creating the component
+- **CRITICAL**: Use existing translation namespaces when available (e.g., `priority.high`, `calendar.priority.high`)
+- **NEVER use fallback text** like `t("key") || "Fallback"` - always ensure translations exist
 
 ## Component Library (HeroUI)
 

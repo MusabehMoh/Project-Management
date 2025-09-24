@@ -167,6 +167,9 @@ const translations = {
     "common.tryAgainLater": "Please try again later",
     "common.projectManagement": "Project Management",
     "common.unknownProject": "Unknown Project",
+    "common.high": "High",
+    "common.medium": "Medium",
+    "common.low": "Low",
 
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
@@ -1399,6 +1402,9 @@ const translations = {
     "common.tryAgainLater": "يرجى المحاولة مرة أخرى لاحقاً",
     "common.projectManagement": "إدارة المشاريع",
     "common.unknownProject": "مشروع غير معروف",
+    "common.high": "عالي",
+    "common.medium": "متوسط",
+    "common.low": "منخفض",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",
