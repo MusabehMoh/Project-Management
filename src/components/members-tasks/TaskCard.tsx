@@ -258,9 +258,9 @@ export const TaskCard = ({
             {task.canRequestDesign && (
               <Button
                 className="flex-1"
-                color="primary"
+                color="default"
                 size="sm"
-                variant="flat"
+                variant="faded"
                 onPress={() => handleRequestDesignClick()}
               >
                 {t("requestDesign")}
@@ -269,9 +269,9 @@ export const TaskCard = ({
 
             <Button
               className="flex-1"
-              color="success"
+              color="default"
               size="sm"
-              variant="flat"
+              variant="solid"
               onPress={() => handleChangeStatusClick()}
             >
               {t("changeStatus")}
