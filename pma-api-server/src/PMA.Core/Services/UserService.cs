@@ -99,7 +99,10 @@ public class UserService : IUserService
         // Try to get from cache first
         if (_cache.TryGetValue(cacheKey, out CurrentUserDto? cachedUser))
         {
-            return cachedUser;
+            if (cachedUser?.PrsId>0)
+                return cachedUser;
+            else
+                _cache.Remove(cacheKey); // Remove invalid cache entry
         }
 
         // The username may include domain (DOMAIN\user). Normalize if needed in repository.
