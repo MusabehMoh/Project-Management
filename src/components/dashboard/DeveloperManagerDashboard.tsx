@@ -10,7 +10,7 @@ import CodeReviewTracker from "@/components/dashboard/developer/CodeReviewTracke
 import DeploymentPipeline from "@/components/dashboard/developer/DeploymentPipeline";
 import DeveloperCalendar from "@/components/calendar";
 import SprintProgress from "@/components/dashboard/developer/SprintProgress";
-import PendingCodeReviews from "@/components/dashboard/developer/PendingCodeReviews";
+import ApprovedRequirements from "@/components/ApprovedRequirements";
 import TaskCompletionTracker from "@/components/dashboard/developer/TaskCompletionTracker";
 
 export default function DeveloperManagerDashboard() {
@@ -80,7 +80,7 @@ export default function DeveloperManagerDashboard() {
         </div>
 
         <div className="lg:w-[30%] space-y-4">
-          <PendingCodeReviews />
+          <ApprovedRequirements />
         </div>
       </div>
 

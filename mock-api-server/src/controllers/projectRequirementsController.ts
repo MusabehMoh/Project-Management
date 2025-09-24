@@ -1108,4 +1108,38 @@ export class ProjectRequirementsController {
       });
     }
   }
+
+  async getApprovedRequirements(req: Request, res: Response) {
+    try {
+      const { limit = "5" } = req.query;
+      const limitNum = parseInt(limit as string, 10);
+
+      // Get approved requirements
+      const approvedRequirements = mockProjectRequirements
+        .filter((req) => req.status === "approved")
+        .slice(0, limitNum);
+
+      const totalApprovedCount = mockProjectRequirements.filter(
+        (req) => req.status === "approved",
+      ).length;
+
+      return res.json({
+        success: true,
+        data: {
+          requirements: approvedRequirements,
+          totalCount: totalApprovedCount,
+        },
+      });
+    } catch (error) {
+      logger.error("Error fetching approved requirements:", error);
+
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: "Failed to fetch approved requirements",
+          code: "INTERNAL_SERVER_ERROR",
+        },
+      });
+    }
+  }
 }
