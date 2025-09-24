@@ -166,6 +166,8 @@ export class MembersTasksService {
 
   /* status drop down values and header data */
   async getCurrentTasksConfig(): Promise<ApiResponse<TaskConfigData>> {
+    await new Promise((resolve) => setTimeout(resolve, 500)); ///TODO remove this line
+
     return {
       success: true,
       data: {
