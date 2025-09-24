@@ -108,10 +108,10 @@ const RequirementCard = ({
   return (
     <Card 
       ref={cardRef}
-      className={`h-full flex flex-col transition-all duration-300 ${
+      className={`h-full flex flex-col transition-all duration-1000 ease-out ${
         isHighlighted 
-          ? 'ring-2 ring-primary bg-primary-50/50 shadow-lg' 
-          : ''
+          ? "ring-1 ring-primary/60 bg-primary-50/20 shadow-md" 
+          : ""
       }`}
     >
       <CardHeader className="pb-2">
@@ -533,10 +533,10 @@ export default function DevelopmentRequirementsPage() {
             block: 'center' 
           });
           
-          // Remove highlight after 3 seconds
+          // Remove highlight after 5 seconds for a more subtle fade
           setTimeout(() => {
             setHighlightedRequirementId(null);
-          }, 3000);
+          }, 5000);
         }
       }, 500);
     }

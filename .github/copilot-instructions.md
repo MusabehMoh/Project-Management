@@ -174,11 +174,14 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - Add translations to `LanguageContext.tsx` for both English and Arabic
 - Support RTL (right-to-left) layout for Arabic
 - Use `dir={language === "ar" ? "rtl" : "ltr"}` on containers
+- **CRITICAL**: Always add translations when creating new components with user-facing text
+- **NO FALLBACK TEXT**: Use proper translation keys, don't rely on fallback English text
 
 ### Translation Key Patterns
 - Use dot notation: `"dashboard.title"`, `"user.profile.edit"`
-- Provide fallback English text: `{t("key") || "Fallback Text"}`
-- Group related translations logically
+- Group related translations logically (e.g., all `developerDashboard.*` keys together)
+- Always add both English and Arabic translations
+- For new components, add translations immediately after creating the component
 
 ## Component Library (HeroUI)
 
@@ -254,9 +257,17 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 4. Test in both English and Arabic modes
 5. Verify responsive behavior
 6. Check TypeScript compilation with `tsc`
-7. Never create test scripts 
-8. Dont create documents files or readme files unless told.
+7. **DO NOT create test files** unless specifically requested by the user
+8. **DO NOT create documentation files or readme files** unless told
 9. dont run npm run dev since its always running by myself.
+
+## File Creation Guidelines
+
+- **Components**: Always add proper translations immediately
+- **API Services**: Use existing service patterns, never direct fetch calls
+- **Hooks**: Follow existing naming conventions and patterns
+- **Test Files**: DO NOT create test files automatically - only when explicitly requested
+- **Documentation**: DO NOT create documentation files unless specifically asked
 
 ## Common Issues & Solutions
 

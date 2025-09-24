@@ -166,6 +166,7 @@ const translations = {
     "common.lastActivity": "Last Activity",
     "common.tryAgainLater": "Please try again later",
     "common.projectManagement": "Project Management",
+    "common.unknownProject": "Unknown Project",
 
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
@@ -440,6 +441,8 @@ const translations = {
     "developerDashboard.loadingWorkload": "Loading workload data...",
     "developerDashboard.loadingPipeline": "Loading deployment pipeline...",
     "developerDashboard.loadingTasks": "Loading task data...",
+    "developerDashboard.approvedRequirements": "Approved Requirements",
+    "developerDashboard.noApprovedRequirements": "No approved requirements available",
     "developerDashboard.teamPerformance": "Team Performance",
     "developerDashboard.avgEfficiency": "Avg Efficiency",
     "developerDashboard.tasksCompleted": "Tasks Completed",
@@ -474,6 +477,7 @@ const translations = {
     // Task Extension
     "common.extendTask": "Extend Task Deadline",
     "common.newDeadline": "New Deadline",
+    "common.selectNewDate": "Select a new deadline date",
     "common.reason": "Reason for Extension",
     "common.reasonPlaceholder": "Please provide a reason for extending this task...",
     "common.extendDeadline": "Extend Deadline",
@@ -1394,6 +1398,7 @@ const translations = {
     "common.lastActivity": "آخر نشاط",
     "common.tryAgainLater": "يرجى المحاولة مرة أخرى لاحقاً",
     "common.projectManagement": "إدارة المشاريع",
+    "common.unknownProject": "مشروع غير معروف",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",
@@ -1759,6 +1764,8 @@ const translations = {
     "developerDashboard.loadingWorkload": "جاري تحميل بيانات الأعباء...",
     "developerDashboard.loadingPipeline": "جاري تحميل خط أنابيب النشر...",
     "developerDashboard.loadingTasks": "جاري تحميل بيانات المهام...",
+    "developerDashboard.approvedRequirements": "المتطلبات الموافق عليها",
+    "developerDashboard.noApprovedRequirements": "لا توجد متطلبات موافق عليها متاحة",
     "developerDashboard.teamPerformance": "أداء الفريق",
     "developerDashboard.avgEfficiency": "متوسط الكفاءة",
     "developerDashboard.tasksCompleted": "المهام المكتملة",
@@ -1793,6 +1800,7 @@ const translations = {
     // Task Extension  
     "common.extendTask": "تمديد موعد المهمة",
     "common.newDeadline": "الموعد النهائي الجديد",
+    "common.selectNewDate": "اختر تاريخ موعد نهائي جديد",
     "common.reason": "سبب التمديد",
     "common.reasonPlaceholder": "يرجى تقديم سبب لتمديد هذه المهمة...",
     "common.extendDeadline": "تمديد الموعد النهائي",

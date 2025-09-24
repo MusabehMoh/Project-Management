@@ -47,11 +47,11 @@ export default function ApprovedRequirements({
   const getPriorityText = (priority: string) => {
     switch (priority) {
       case "high":
-        return t("common.high") || "High";
+        return t("common.high");
       case "medium":
-        return t("common.medium") || "Medium";
+        return t("common.medium");
       case "low":
-        return t("common.low") || "Low";
+        return t("common.low");
       default:
         return priority;
     }
@@ -78,7 +78,7 @@ export default function ApprovedRequirements({
         <CardBody className="flex items-center justify-center min-h-[200px]">
           <Spinner size="lg" />
           <p className="mt-3 text-default-500">
-            {t("common.loading") || "Loading..."}
+            {t("common.loading")}
           </p>
         </CardBody>
       </Card>
@@ -91,11 +91,11 @@ export default function ApprovedRequirements({
         <CardBody className="flex items-center justify-center min-h-[200px] text-center">
           <AlertCircle className="w-8 h-8 text-danger mb-2" />
           <p className="font-medium text-foreground mb-2">
-            {t("common.error") || "Error"}
+            {t("common.error")}
           </p>
           <p className="text-sm text-default-500 mb-4">{error}</p>
           <Button size="sm" variant="flat" onPress={refresh}>
-            {t("common.refresh") || "Refresh"}
+            {t("common.refresh")}
           </Button>
         </CardBody>
       </Card>
@@ -109,7 +109,7 @@ export default function ApprovedRequirements({
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-success" />
             <h3 className="font-semibold text-foreground">
-              {t("developerDashboard.approvedRequirements") || "Approved Requirements"}
+              {t("developerDashboard.approvedRequirements")}
             </h3>
             <Chip size="sm" color="success" variant="flat">
               {totalCount}
@@ -122,7 +122,7 @@ export default function ApprovedRequirements({
             onPress={handleViewAllRequirements}
             className="text-xs"
           >
-            {t("common.viewAll") || "View All"}
+            {t("common.viewAll")}
           </Button>
         </div>
       </CardHeader>
@@ -132,7 +132,7 @@ export default function ApprovedRequirements({
           <div className="flex flex-col items-center justify-center py-8">
             <CheckCircle className="w-12 h-12 text-default-300 mb-3" />
             <p className="text-default-500 text-center">
-              {t("developerDashboard.noApprovedRequirements") || "No approved requirements available"}
+              {t("developerDashboard.noApprovedRequirements")}
             </p>
           </div>
         ) : (
@@ -165,7 +165,7 @@ export default function ApprovedRequirements({
                       <div className="flex items-center gap-1">
                         <User className="w-3 h-3" />
                         <span className="truncate">
-                          {requirement.project?.applicationName || "Unknown Project"}
+                          {requirement.project?.applicationName || t("common.unknownProject")}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -186,7 +186,7 @@ export default function ApprovedRequirements({
                         handleViewRequirement(requirement.project?.id || 0, requirement.id);
                       }}
                     >
-                      {t("common.view") || "View"}
+                      {t("common.view")}
                     </Button>
                   </div>
                 </div>
