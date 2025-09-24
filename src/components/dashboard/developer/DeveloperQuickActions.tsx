@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { parseDate, today, getLocalTimeZone, CalendarDate } from "@internationalized/date";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardBody, CardHeader } from "@heroui/card";
@@ -9,7 +10,8 @@ import { Spinner } from "@heroui/spinner";
 import { Alert } from "@heroui/alert";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
-import { Input, Textarea } from "@heroui/input";
+import { Textarea } from "@heroui/input";
+import { DatePicker } from "@heroui/date-picker";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { addToast } from "@heroui/toast";
@@ -316,18 +318,24 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   };
 
   const TaskExtensionModal = () => {
-    const [newEndDate, setNewEndDate] = useState("");
+    const [selectedDate, setSelectedDate] = useState<CalendarDate | null>(null);
     const [extensionReason, setExtensionReason] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Get minimum date (today)
+    const minDate = today(getLocalTimeZone());
+
     const handleExtendTask = async () => {
-      if (!selectedTask || !newEndDate || !extensionReason.trim()) {
+      if (!selectedTask || !selectedDate || !extensionReason.trim()) {
         return;
       }
 
+      // Convert CalendarDate to string format
+      const dateString = `${selectedDate.year}-${String(selectedDate.month).padStart(2, '0')}-${String(selectedDate.day).padStart(2, '0')}`;
+
       setIsSubmitting(true);
       try {
-        await extendTask(selectedTask.id, newEndDate, extensionReason);
+        await extendTask(selectedTask.id, dateString, extensionReason);
         addToast({
           title: t("common.success") || "Success",
           description: t("common.taskExtended") || "Task deadline extended successfully",
@@ -336,7 +344,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         });
         
         // Reset form and close modal
-        setNewEndDate("");
+        setSelectedDate(null);
         setExtensionReason("");
         setIsExtendModalOpen(false);
         setSelectedTask(null);
@@ -353,7 +361,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     };
 
     const handleCancel = () => {
-      setNewEndDate("");
+      setSelectedDate(null);
       setExtensionReason("");
       setIsExtendModalOpen(false);
       setSelectedTask(null);
@@ -380,13 +388,14 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
             </p>
             
             <div className="space-y-4">
-              <Input
+              <DatePicker
                 label={t("common.newDeadline") || "New Deadline"}
-                type="date"
-                value={newEndDate}
-                onChange={(e) => setNewEndDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]} // Today's date as minimum
+                value={selectedDate}
+                onChange={setSelectedDate}
+                minValue={minDate}
                 isRequired
+                showMonthAndYearPickers
+                description={t("common.selectNewDate") || "Select a new deadline date"}
               />
               
               <Textarea
@@ -411,7 +420,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
             <Button
               color="primary"
               onPress={handleExtendTask}
-              disabled={!newEndDate || !extensionReason.trim() || isSubmitting}
+              disabled={!selectedDate || !extensionReason.trim() || isSubmitting}
               isLoading={isSubmitting}
             >
               {t("common.extendDeadline") || "Extend Deadline"}
