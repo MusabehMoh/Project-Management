@@ -170,6 +170,7 @@ const translations = {
     "common.high": "High",
     "common.medium": "Medium",
     "common.low": "Low",
+    "common.scrollToTop": "Scroll to top",
 
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
@@ -1405,6 +1406,7 @@ const translations = {
     "common.high": "عالي",
     "common.medium": "متوسط",
     "common.low": "منخفض",
+    "common.scrollToTop": "انتقل إلى الأعلى",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",

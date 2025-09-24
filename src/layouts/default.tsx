@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/navbar";
+import ScrollToTop from "@/components/ScrollToTop";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Outlet } from "react-router-dom";
 
@@ -27,6 +28,7 @@ export default function DefaultLayout({
           </div>
         </div>
       </footer>
+      <ScrollToTop />
     </div>
   );
 }
