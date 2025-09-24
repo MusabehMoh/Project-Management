@@ -265,7 +265,7 @@ export default function RequirementsPage() {
                       {assignedProjectsCurrentPage > 1
                         ? t("pagination.loadingPage").replace(
                             "{page}",
-                            assignedProjectsCurrentPage.toString(),
+                            assignedProjectsCurrentPage.toString()
                           )
                         : t("common.pleaseWait")}
                     </p>
@@ -366,7 +366,7 @@ export default function RequirementsPage() {
                               ? Math.round(
                                   (project.completedRequirements /
                                     project.requirementsCount) *
-                                    100,
+                                    100
                                 )
                               : 0}
                             %
@@ -392,18 +392,18 @@ export default function RequirementsPage() {
                       <div className="flex gap-2">
                         <Button
                           className="flex-1"
-                          color="primary"
+                          color="default"
                           size="sm"
-                          variant="flat"
+                          variant="faded"
                           onPress={() => handleViewRequirements(project)}
                         >
                           {t("requirements.viewRequirements")}
                         </Button>
                         <Button
                           className="flex-1"
-                          color="secondary"
+                          color="default"
                           size="sm"
-                          variant="flat"
+                          variant="solid"
                           startContent={<Info className="w-4 h-4" />}
                           onPress={() => handleViewDetails(project)}
                         >
@@ -545,7 +545,7 @@ export default function RequirementsPage() {
                             ? Math.round(
                                 (selectedProject.completedRequirements /
                                   selectedProject.requirementsCount) *
-                                  100,
+                                  100
                               )
                             : 0}
                           %

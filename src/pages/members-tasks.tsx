@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@heroui/button";
 import { Search, ChevronDown } from "lucide-react";
 import { Card, CardBody } from "@heroui/card";
@@ -39,7 +39,6 @@ import {
 
 import { TaskCard } from "@/components/members-tasks/TaskCard";
 import { TaskListView } from "@/components/members-tasks/TaskListView";
-import { TaskGanttView } from "@/components/members-tasks/TaskGanttView";
 import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -62,6 +61,8 @@ export default function MembersTasksPage() {
     tasks,
     tasksConfigData,
     loading,
+    headerLoading,
+    initialLoading,
     error,
     totalPages,
     totalCount,
@@ -100,6 +101,7 @@ export default function MembersTasksPage() {
 
   const handleRequestDesignSubmit = async () => {
     const success = await requestDesign(selectedTask?.id ?? "0", notes ?? "");
+
     if (success) {
       setIsRequestDesignModalOpend(false);
       setNotes("");
@@ -115,6 +117,7 @@ export default function MembersTasksPage() {
       `${selectedStatus?.id ?? 3}`,
       notes ?? ""
     );
+
     if (success) {
       setIsChangeStatusModalOpend(false);
       setNotes("");
@@ -156,6 +159,15 @@ export default function MembersTasksPage() {
       console.error("Export failed:", error);
     }
   };
+
+  // Auto search effect
+  useEffect(() => {
+    if (searchValue.length >= 3) {
+      handleSearchChange(searchValue);
+    } else if (searchValue.length === 0) {
+      handleSearchChange(""); // reset if cleared
+    }
+  }, [searchValue]);
 
   const handleRefresh = () => refreshTasks();
 
@@ -242,7 +254,7 @@ export default function MembersTasksPage() {
         </div>
 
         {/* Stats */}
-        {loading ? (
+        {headerLoading ? (
           // Skeleton Loader
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {[1, 2, 3].map((i) => (
@@ -314,43 +326,32 @@ export default function MembersTasksPage() {
         )}
 
         {/* Filters */}
-        {!loading && totalCount > 0 && (
+        {!initialLoading && (
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-content1/40 p-3 rounded-xl">
             <div className="flex items-center gap-2 w-full sm:w-80">
               <Input
                 aria-label={t("common.search")}
                 className="flex-1"
                 placeholder={t("common.search") + "..."}
+                startContent={<Search className="w-4 h-4 text-default-400" />}
                 value={searchValue}
                 onValueChange={setSearchValue}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSearchChange(searchValue);
-                  }
-                }}
               />
-              <Button
-                isIconOnly
-                color="primary"
-                variant="flat"
-                onPress={() => handleSearchChange(searchValue)}
-              >
-                <Search className="w-4 h-4" />
-              </Button>
             </div>
 
             <div className="flex flex-wrap gap-3">
               {/* Status */}
               <Select
                 className="w-40"
-                size="sm"
                 selectedKeys={[
                   taskParametersRequest.statusId
                     ? `${taskParametersRequest.statusId}`
                     : "",
                 ]}
+                size="sm"
                 onSelectionChange={(keys) => {
                   const selectedStr = String(Array.from(keys)[0] ?? "");
+
                   if (selectedStr)
                     handleStatusChange(parseInt(selectedStr, 10));
                 }}
@@ -366,14 +367,15 @@ export default function MembersTasksPage() {
               {/* Priority */}
               <Select
                 className="w-40"
-                size="sm"
                 selectedKeys={[
                   taskParametersRequest.priorityId
                     ? `${taskParametersRequest.priorityId}`
                     : "",
                 ]}
+                size="sm"
                 onSelectionChange={(keys) => {
                   const selectedStr = String(Array.from(keys)[0] ?? "");
+
                   if (selectedStr)
                     handlePriorityChange(parseInt(selectedStr, 10));
                 }}
@@ -389,14 +391,15 @@ export default function MembersTasksPage() {
               {/* Project */}
               <Select
                 className="w-48"
-                size="sm"
                 selectedKeys={[
                   taskParametersRequest.projectId
                     ? `${taskParametersRequest.projectId}`
                     : "",
                 ]}
+                size="sm"
                 onSelectionChange={(keys) => {
                   const selectedStr = String(Array.from(keys)[0] ?? "");
+
                   if (selectedStr)
                     handleProjectChange(parseInt(selectedStr, 10));
                 }}
@@ -422,6 +425,7 @@ export default function MembersTasksPage() {
                   size="sm"
                   onSelectionChange={(keys) => {
                     const newSize = Number(Array.from(keys)[0]);
+
                     if (!isNaN(newSize)) handlePageSizeChange(newSize);
                   }}
                 >
@@ -812,8 +816,8 @@ export default function MembersTasksPage() {
                 <DropdownTrigger>
                   <Button
                     className="w-full justify-between"
-                    variant="flat"
                     endContent={<ChevronDown className="w-4 h-4" />}
+                    variant="flat"
                   >
                     {selectedStatus ? selectedStatus.label : t("selectStatus")}
                   </Button>
@@ -824,6 +828,7 @@ export default function MembersTasksPage() {
                     const status = tasksConfigData.taskStatus?.find(
                       (s) => s.id.toString() === key
                     );
+
                     if (status) setSelectedStatus(status);
                   }}
                 >
