@@ -3,12 +3,10 @@ import { useState, useEffect, useCallback } from "react";
 import {
   MemberTask,
   TaskSearchParams,
-  TaskFiltersData,
   TaskConfigData,
 } from "@/types/membersTasks";
-import { Department, MemberSearchResult } from "@/types/timeline";
 import { membersTasksService } from "@/services/api/membersTasksService";
-import useTeamSearch from "@/hooks/useTeamSearch";
+import { addToast } from "@heroui/toast";
 
 export const mockMemberTasks: MemberTask[] = [
   {
@@ -457,13 +455,15 @@ interface UseMembersTasksResult {
   tasks: MemberTask[];
   tasksConfigData: TaskConfigData;
   loading: boolean;
+  headerLoading: boolean;
+  initialLoading: boolean;
   error: string | null;
 
   totalPages: number;
   totalCount: number;
   fetchTasks: (params?: TaskSearchParams) => Promise<void>;
   refreshTasks: () => Promise<void>;
-  exportTasks: (format: "csv" | "pdf" | "excel") => Promise<void>;
+  exportTasks: (format: "csv" | "pdf" | "xlsx") => Promise<void>;
   requestDesign: (id: string, notes: string) => Promise<boolean>;
   changeStatus: (id: string, typeId: string, notes: string) => Promise<boolean>;
   tasksConfig: () => Promise<void>;
@@ -487,6 +487,8 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     projects: [],
   });
   const [loading, setLoading] = useState(false);
+  const [headerLoading, setHeaderLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [totalPages, setTotalPages] = useState(0);
@@ -564,6 +566,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
 
   /// get tasks config
   const tasksConfig = async (): Promise<void> => {
+    setHeaderLoading(true);
     try {
       const response = await membersTasksService.getCurrentTasksConfig();
 
@@ -575,6 +578,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     } catch (e) {
       console.log("---->> catch triggered");
     } finally {
+      setHeaderLoading(false);
     }
   };
 
@@ -582,6 +586,13 @@ export const useMembersTasks = (): UseMembersTasksResult => {
   const requestDesign = async (id: string, notes: string): Promise<boolean> => {
     try {
       const response = await membersTasksService.requestDesign(id, notes);
+
+      if (response.success) {
+        addToast({
+          description: response.message ?? "Design requested successfully",
+          color: "success",
+        });
+      }
 
       return response.success;
     } catch (err) {
@@ -606,11 +617,12 @@ export const useMembersTasks = (): UseMembersTasksResult => {
         notes
       );
 
-      //addToast({
-      //   title: "Success",
-      //   description: "Requirement created successfully",
-      //   color: "success",
-      // });
+      if (response.success) {
+        addToast({
+          description: response.message ?? "Status changed successfully",
+          color: "success",
+        });
+      }
 
       return response.success;
     } catch (err) {
@@ -620,83 +632,82 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     }
   };
 
-  const fetchTasks = useCallback(
-    async (request?: TaskSearchParams, reloadConfigApi?: boolean) => {
-      console.log("fetchTasks called with:", request);
-      setLoading(true);
-      setError(null);
+  const fetchTasks = useCallback(async (request?: TaskSearchParams) => {
+    console.log("fetchTasks called with:", request);
+    setLoading(true);
+    setError(null);
 
-      try {
-        if (reloadConfigApi) {
-          await tasksConfig();
-        }
-        const response = await membersTasksService.getTasks(request);
+    try {
+      const response = await membersTasksService.getTasks(request);
 
-        if (response.success && response.data) {
-          console.log("API response success:", response.data);
-          setTasks(response.data.tasks);
-          setTotalPages(response.data.totalPages);
-          setTotalCount(response.data.totalCount);
-          // ✅ only update if it's actually different
-          // if (response.data.currentPage !== taskParametersRequest.page) {
-          //   setTaskParametersRequest((prev) => ({
-          //     ...prev,
-          //     page: response.data.currentPage,
-          //   }));
-          // }
-        } else {
-          throw new Error(response.message || "Failed to fetch tasks");
-        }
-      } catch (err) {
-        console.warn("API not available, using mock data:", err);
-
-        console.log("Setting tasks inside catch:");
-
-        let tasks = mockMemberTasks; // start with all tasks
-
-        // Apply filters step by step
-        if (request?.search) {
-          const search = request.search.toLowerCase();
-          tasks = tasks.filter((task) =>
-            task.name.toLowerCase().includes(search)
-          );
-        }
-
-        ///status 6 means return all
-        if (request?.statusId && request?.statusId !== 6) {
-          tasks = tasks.filter((task) => task.status.id === request.statusId);
-        }
-
-        if (request?.projectId && request?.projectId !== 4) {
-          tasks = tasks.filter(
-            (task) => task.project.id === request.projectId?.toString()
-          );
-        }
-
-        if (request?.priorityId && request?.priorityId !== 5) {
-          tasks = tasks.filter(
-            (task) => task.priority.id === request.priorityId!
-          );
-        }
-
-        // Apply pagination (slice after filtering)
-        const limit = request?.limit ?? 20;
-        tasks = tasks.slice(0, limit);
-
-        setTasks(tasks);
-
-        setTotalPages(Math.ceil(mockMemberTasks.length / request!.limit!));
-        setTotalCount(mockMemberTasks.length);
-      } finally {
-        setLoading(false);
+      if (response.success && response.data) {
+        console.log("API response success:", response.data);
+        setTasks(response.data.tasks);
+        setTotalPages(response.data.totalPages);
+        setTotalCount(response.data.totalCount);
+        // ✅ only update if it's actually different
+        // if (response.data.currentPage !== taskParametersRequest.page) {
+        //   setTaskParametersRequest((prev) => ({
+        //     ...prev,
+        //     page: response.data.currentPage,
+        //   }));
+        // }
+      } else {
+        throw new Error(response.message || "Failed to fetch tasks");
       }
-    },
-    []
-  );
+    } catch (err) {
+      console.warn("API not available, using mock data:", err);
 
-  const refreshTasks = useCallback(() => {
-    return fetchTasks(taskParametersRequest, true);
-  }, [fetchTasks]);
+      console.log("Setting tasks inside catch:");
+
+      let tasks = mockMemberTasks; // start with all tasks
+
+      // Apply filters step by step
+      if (request?.search) {
+        const search = request.search.toLowerCase();
+
+        tasks = tasks.filter((task) =>
+          task.name.toLowerCase().includes(search)
+        );
+      }
+
+      ///status 6 means return all
+      if (request?.statusId && request?.statusId !== 6) {
+        tasks = tasks.filter((task) => task.status.id === request.statusId);
+      }
+
+      if (request?.projectId && request?.projectId !== 4) {
+        tasks = tasks.filter(
+          (task) => task.project.id === request.projectId?.toString()
+        );
+      }
+
+      if (request?.priorityId && request?.priorityId !== 5) {
+        tasks = tasks.filter(
+          (task) => task.priority.id === request.priorityId!
+        );
+      }
+
+      // Apply pagination (slice after filtering)
+      const limit = request?.limit ?? 20;
+
+      tasks = tasks.slice(0, limit);
+
+      setTasks(tasks);
+
+      setTotalPages(Math.ceil(mockMemberTasks.length / request!.limit!));
+      setTotalCount(mockMemberTasks.length);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const refreshTasks = useCallback(async () => {
+    setHeaderLoading(true);
+    await tasksConfig();
+
+    return fetchTasks(taskParametersRequest);
+  }, []);
 
   const exportTasks = useCallback(async (format: "csv" | "pdf" | "xlsx") => {
     try {
@@ -721,7 +732,9 @@ export const useMembersTasks = (): UseMembersTasksResult => {
   useEffect(() => {
     // Initial load without dependencies to avoid loops
     const loadInitialData = async () => {
+      console.log("Loading initial data...");
       setLoading(true);
+      setInitialLoading(true);
       setError(null);
 
       try {
@@ -733,6 +746,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
           setTotalPages(response.data.totalPages);
           //handlePageChange(response.data.currentPage);
           setTotalCount(response.data.totalCount);
+          await new Promise((resolve) => setTimeout(resolve, 200));
         } else {
           throw new Error(response.message || "Failed to fetch tasks");
         }
@@ -745,6 +759,8 @@ export const useMembersTasks = (): UseMembersTasksResult => {
         setTotalCount(mockMemberTasks.length);
       } finally {
         setLoading(false);
+        setHeaderLoading(false);
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     };
 
@@ -752,14 +768,24 @@ export const useMembersTasks = (): UseMembersTasksResult => {
   }, []);
 
   useEffect(() => {
-    console.log("taskParametersRequest changed:", taskParametersRequest);
-    fetchTasks(taskParametersRequest, false);
+    if (taskParametersRequest) {
+      fetchTasks(taskParametersRequest);
+    }
   }, [taskParametersRequest]);
+
+  useEffect(() => {
+    if (totalCount > 0) {
+      console.log("Total count updated, setting initialLoading to false");
+      setInitialLoading(false);
+    }
+  }, [headerLoading]);
 
   return {
     tasks,
     tasksConfigData,
     loading,
+    headerLoading,
+    initialLoading,
     error,
     totalPages,
     totalCount,

@@ -22,6 +22,8 @@ import notificationsRoutes from "./notifications.js";
 import quickActionsRoutes from "./quickActions.js";
 import requirementCompletionRoutes from "./requirementCompletion.js";
 import developerWorkloadRoutes from "./developerWorkload.js";
+import developerQuickActionsRoutesV2 from "./developerQuickActionsRoutesV2.js";
+
 export const routes = Router();
 
 // Health check for API
@@ -53,6 +55,7 @@ routes.get("/", (req, res) => {
       "quick-actions": "/quick-actions",
       "requirement-completion": "/requirement-completion",
       "developer-workload": "/developer-workload",
+      "developer-quick-actions": "/developer-quick-actions",
       "task-plan": "/task-plan",
     },
   });
@@ -81,3 +84,4 @@ routes.use("/notifications", notificationsRoutes);
 routes.use("/quick-actions", quickActionsRoutes);
 routes.use("/requirement-completion", requirementCompletionRoutes);
 routes.use("/developer-workload", developerWorkloadRoutes);
+routes.use("/developer-quick-actions", developerQuickActionsRoutesV2);
