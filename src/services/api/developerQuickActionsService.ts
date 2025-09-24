@@ -60,11 +60,38 @@ export interface DeveloperQuickAction {
   };
 }
 
+export interface AlmostCompletedTask {
+  id: number;
+  treeId: string;
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  duration: number;
+  projectName: string;
+  sprintName: string;
+  assigneeName?: string;
+  statusId: number;
+  priorityId: number;
+  progress?: number;
+  daysUntilDeadline: number;
+  isOverdue: boolean;
+  estimatedHours?: number;
+  actualHours?: number;
+  departmentName?: string;
+}
+
 class DeveloperQuickActionsService {
-  async getQuickActions(): Promise<DeveloperQuickAction[]> {
-    const response = await apiClient.get<DeveloperQuickAction[]>(
-      "/developer-quick-actions",
-    );
+  async getQuickActions(): Promise<{
+    unassignedTasks: any[];
+    almostCompletedTasks: AlmostCompletedTask[];
+    availableDevelopers: any[];
+  }> {
+    const response = await apiClient.get<{
+      unassignedTasks: any[];
+      almostCompletedTasks: AlmostCompletedTask[];
+      availableDevelopers: any[];
+    }>("/developer-quick-actions");
 
     if (!response.success) {
       throw new Error(
@@ -73,6 +100,38 @@ class DeveloperQuickActionsService {
     }
 
     return response.data;
+  }
+
+  async getAlmostCompletedTasks(): Promise<AlmostCompletedTask[]> {
+    const response = await apiClient.get<AlmostCompletedTask[]>(
+      "/developer-quick-actions/almost-completed-tasks",
+    );
+
+    if (!response.success) {
+      throw new Error(
+        response.message || "Failed to fetch almost completed tasks",
+      );
+    }
+
+    return response.data;
+  }
+
+  async extendTask(
+    taskId: number,
+    newEndDate: string,
+    extensionReason: string,
+    additionalHours?: number,
+  ): Promise<void> {
+    const response = await apiClient.post("/developer-quick-actions/extend-task", {
+      taskId,
+      newEndDate,
+      extensionReason,
+      additionalHours,
+    });
+
+    if (!response.success) {
+      throw new Error(response.message || "Failed to extend task deadline");
+    }
   }
 
   async assignDeveloper(taskId: string, developerId: string): Promise<void> {

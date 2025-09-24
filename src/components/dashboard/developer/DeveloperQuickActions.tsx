@@ -9,6 +9,7 @@ import { Spinner } from "@heroui/spinner";
 import { Alert } from "@heroui/alert";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import { Input, Textarea } from "@heroui/input";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { addToast } from "@heroui/toast";
@@ -16,11 +17,11 @@ import {
   RefreshCw,
   AlertTriangle,
   Code,
-  GitPullRequest,
   User,
+  Clock,
 } from "lucide-react";
 
-import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActions";
+import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActionsV2";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
 
@@ -134,6 +135,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   const { t, direction } = useLanguage();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isPRModalOpen, setIsPRModalOpen] = useState(false);
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [selectedPR, setSelectedPR] = useState<any>(null);
   const [selectedDevelopers, setSelectedDevelopers] = useState<MemberSearchResult[]>([]);
@@ -153,20 +155,25 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
 
   const {
     unassignedTasks,
-    pendingCodeReviews,
+    almostCompletedTasks,
     availableDevelopers,
     loading,
     refreshing,
     error,
     hasActionsAvailable,
     refresh,
+    extendTask,
+    assignDeveloper,
   } = useDeveloperQuickActions({
     autoRefresh: false, // Disable auto-refresh to prevent constant loading
     refreshInterval: 30000,
   });
 
   // Calculate total count of all actions
-  const totalActionsCount = unassignedTasks.length + pendingCodeReviews.length + availableDevelopers.length;
+  const totalActionsCount =
+    unassignedTasks.length +
+    almostCompletedTasks.length +
+    availableDevelopers.length;
 
   if (loading) {
     return (
@@ -209,20 +216,12 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   }
 
   const handleTaskAssign = async () => {
-    if (selectedTask && selectedDevelopers.length > 0 && onAssignDeveloper) {
+    if (selectedTask && selectedDevelopers.length > 0) {
       try {
-        console.log("DeveloperQuickActions: Starting task assignment...", {
-          taskId: selectedTask.id,
-          developerIds: selectedDevelopers.map(d => d.id.toString()),
-          taskTitle: selectedTask.title,
-        });
-        
-        // Assign each developer to the task
+        // Assign each developer to the task using the hook function
         for (const developer of selectedDevelopers) {
-          await onAssignDeveloper(selectedTask, developer.id.toString());
+          await assignDeveloper(selectedTask.id, developer.id.toString());
         }
-        
-        console.log("DeveloperQuickActions: Task assignment completed, refreshing data...");
         
         // Show success toast
         addToast({
@@ -241,13 +240,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         setDeveloperInputValue("");
         clearDeveloperResults();
         
-        // Refresh the unassigned tasks list
-        await refresh();
-        
-        console.log("DeveloperQuickActions: Data refreshed successfully");
       } catch (error) {
-        console.error("DeveloperQuickActions: Failed to assign developer:", error);
-        
         // Show error toast
         addToast({
           title: t("developerQuickActions.assignmentError") || "Assignment Failed",
@@ -320,6 +313,113 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     setSelectedDevelopers([]);
     setDeveloperInputValue("");
     clearDeveloperResults();
+  };
+
+  const TaskExtensionModal = () => {
+    const [newEndDate, setNewEndDate] = useState("");
+    const [extensionReason, setExtensionReason] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleExtendTask = async () => {
+      if (!selectedTask || !newEndDate || !extensionReason.trim()) {
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        await extendTask(selectedTask.id, newEndDate, extensionReason);
+        addToast({
+          title: t("common.success") || "Success",
+          description: t("common.taskExtended") || "Task deadline extended successfully",
+          color: "success",
+          timeout: 3000,
+        });
+        
+        // Reset form and close modal
+        setNewEndDate("");
+        setExtensionReason("");
+        setIsExtendModalOpen(false);
+        setSelectedTask(null);
+      } catch (error) {
+        addToast({
+          title: t("common.error") || "Error", 
+          description: error instanceof Error ? error.message : "Failed to extend task",
+          color: "danger",
+          timeout: 5000,
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const handleCancel = () => {
+      setNewEndDate("");
+      setExtensionReason("");
+      setIsExtendModalOpen(false);
+      setSelectedTask(null);
+    };
+
+    return (
+      <Modal
+        isOpen={isExtendModalOpen}
+        onOpenChange={setIsExtendModalOpen}
+        dir={direction}
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h3 className="text-lg font-semibold">
+              {t("common.extendTask") || "Extend Task Deadline"}
+            </h3>
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-default-600 mb-4">
+              Task: <strong>{selectedTask?.name}</strong>
+            </p>
+            <p className="text-sm text-default-600 mb-4">
+              Current Deadline: <strong>{selectedTask?.endDate ? new Date(selectedTask.endDate).toLocaleDateString() : 'N/A'}</strong>
+            </p>
+            
+            <div className="space-y-4">
+              <Input
+                label={t("common.newDeadline") || "New Deadline"}
+                type="date"
+                value={newEndDate}
+                onChange={(e) => setNewEndDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]} // Today's date as minimum
+                isRequired
+              />
+              
+              <Textarea
+                label={t("common.reason") || "Reason for Extension"}
+                placeholder={t("common.reasonPlaceholder") || "Please provide a reason for extending this task..."}
+                value={extensionReason}
+                onChange={(e) => setExtensionReason(e.target.value)}
+                minRows={3}
+                maxRows={6}
+                isRequired
+              />
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="flat"
+              onPress={handleCancel}
+              disabled={isSubmitting}
+            >
+              {t("common.cancel") || "Cancel"}
+            </Button>
+            <Button
+              color="primary"
+              onPress={handleExtendTask}
+              disabled={!newEndDate || !extensionReason.trim() || isSubmitting}
+              isLoading={isSubmitting}
+            >
+              {t("common.extendDeadline") || "Extend Deadline"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
   };
 
   const TaskAssignmentModal = () => (
@@ -533,7 +633,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-xl font-semibold text-foreground">
-                {t("developerDashboard.quickActions") || "Developer Actions"}
+                {t("dashboard.myActions") || "My Actions"}
               </h3>
               {totalActionsCount > 0 && (
                 <Chip 
@@ -627,19 +727,19 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               </div>
             )}
 
-            {/* Pending Code Reviews Accordion */}
-            {pendingCodeReviews.length > 0 && (
+            {/* Almost Completed Tasks Accordion */}
+            {almostCompletedTasks.length > 0 && (
               <div className="space-y-4">
                 <Accordion selectionMode="single" variant="splitted">
                   <AccordionItem
-                    key="pending-code-reviews"
+                    key="almost-completed-tasks"
                     title={
                       <div className="flex items-center justify-between w-full">
                         <h3 className="text-lg font-semibold text-foreground">
-                          {t("developerQuickActions.pendingCodeReviews") || "Pending Code Reviews"}
+                          {t("developerQuickActions.almostCompletedTasks") || "Almost Completed Tasks"}
                         </h3>
                         <Chip size="sm" variant="flat" className="bg-warning-50 text-warning-600">
-                          {pendingCodeReviews.length}
+                          {almostCompletedTasks.length}
                         </Chip>
                       </div>
                     }
@@ -651,14 +751,14 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                       size={20}
                     >
                       <div className="space-y-3 pr-2">
-                        {pendingCodeReviews.map((pr) => (
+                        {almostCompletedTasks.map((task) => (
                           <CustomAlert
-                            key={pr.id}
-                            title={pr.title}
-                            description={`${pr.author} • ${pr.repository} • +${pr.linesAdded}/-${pr.linesDeleted} • ${pr.filesChanged} files`}
+                            key={task.id}
+                            title={task.name}
+                            description={`${task.projectName} • ${task.sprintName} • ${task.assigneeName || "Unassigned"} • Progress: ${task.progress || 0}% • ${task.isOverdue ? "Overdue" : `Due in ${task.daysUntilDeadline} days`}`}
                             direction={direction}
                             variant="faded"
-                            color="warning"
+                            color={task.isOverdue ? "danger" : "warning"}
                           >
                             <Divider className="bg-default-200 my-3" />
                             <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
@@ -666,13 +766,13 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                                 className="bg-background text-default-700 font-medium border-1 shadow-small"
                                 size="sm"
                                 variant="bordered"
-                                startContent={<GitPullRequest className="w-4 h-4" />}
+                                startContent={<Clock className="w-4 h-4" />}
                                 onPress={() => {
-                                  setSelectedPR(pr);
-                                  setIsPRModalOpen(true);
+                                  setSelectedTask(task);
+                                  setIsExtendModalOpen(true);
                                 }}
                               >
-                                {t("developerQuickActions.assignReviewer") || "Assign Reviewer"}
+                                {t("common.extend") || "Extend Deadline"}
                               </Button>
                             </div>
                           </CustomAlert>
@@ -743,6 +843,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
           </div>
         </CardBody>
       </Card>
+      <TaskExtensionModal />
       <TaskAssignmentModal />
       <CodeReviewAssignmentModal />
     </>

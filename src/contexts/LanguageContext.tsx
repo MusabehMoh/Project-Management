@@ -452,7 +452,7 @@ const translations = {
 
     // Developer Quick Actions
     "developerQuickActions.unassignedTasks": "Unassigned Tasks",
-    "developerQuickActions.pendingCodeReviews": "Pending Code Reviews",
+    "developerQuickActions.almostCompletedTasks": "Almost Completed Tasks",
     "developerQuickActions.availableDevelopers": "Available Team Developers",
     "developerQuickActions.assignTask": "Assign Task",
     "developerQuickActions.assignReviewer": "Assign Reviewer",
@@ -470,6 +470,15 @@ const translations = {
     "developerQuickActions.assignmentError": "Assignment Failed",
     "developerQuickActions.reviewAssignmentSuccess": "Review Assignment Successful",
     "developerQuickActions.reviewAssignmentError": "Review Assignment Failed",
+
+    // Task Extension
+    "common.extendTask": "Extend Task Deadline",
+    "common.newDeadline": "New Deadline",
+    "common.reason": "Reason for Extension",
+    "common.reasonPlaceholder": "Please provide a reason for extending this task...",
+    "common.extendDeadline": "Extend Deadline",
+    "common.taskExtended": "Task deadline extended successfully",
+    "common.extend": "Extend Deadline",
     "developerDashboard.currentTasks": "Tasks",
     "developerDashboard.status": "Status",
     "developerDashboard.status.available": "Available",
@@ -1762,7 +1771,7 @@ const translations = {
 
     // Developer Quick Actions
     "developerQuickActions.unassignedTasks": "المهام غير المعينة",
-    "developerQuickActions.pendingCodeReviews": "مراجعات الكود المعلقة",
+    "developerQuickActions.almostCompletedTasks": "المهام شبه المكتملة", 
     "developerQuickActions.availableDevelopers": "المطورون المتاحون في الفريق",
     "developerQuickActions.assignTask": "تعيين مهمة",
     "developerQuickActions.assignReviewer": "تعيين مراجع",
@@ -1780,6 +1789,15 @@ const translations = {
     "developerQuickActions.assignmentError": "فشل في التعيين",
     "developerQuickActions.reviewAssignmentSuccess": "تم تعيين المراجعة بنجاح",
     "developerQuickActions.reviewAssignmentError": "فشل في تعيين المراجعة",
+
+    // Task Extension  
+    "common.extendTask": "تمديد موعد المهمة",
+    "common.newDeadline": "الموعد النهائي الجديد",
+    "common.reason": "سبب التمديد",
+    "common.reasonPlaceholder": "يرجى تقديم سبب لتمديد هذه المهمة...",
+    "common.extendDeadline": "تمديد الموعد النهائي",
+    "common.taskExtended": "تم تمديد موعد المهمة بنجاح",
+    "common.extend": "تمديد الموعد النهائي",
     "developerDashboard.currentTasks": "المهام",
     "developerDashboard.status": "الحالة",
     "developerDashboard.status.available": "متاح",

@@ -1,25 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 
 import {
-  developerQuickActionsService,
-  type DeveloperQuickAction,
-} from "@/services/api/developerQuickActionsService";
-
-interface UnassignedTask {
-  id: string;
-  title: string;
-  description: string;
-  priority: "low" | "medium" | "high" | "critical";
-  status: "todo" | "in-progress" | "review" | "testing" | "done";
-  projectId: string;
-  projectName: string;
-  estimatedHours: number;
-  dueDate: string;
-  type: "feature" | "bug" | "improvement" | "refactor";
-  complexity: "simple" | "medium" | "complex";
-  tags: string[];
-  owningUnit?: string;
-}
+  developerQuickActionsServiceV2 as developerQuickActionsService,
+  type UnassignedTask,
+  type AlmostCompletedTask, 
+  type AvailableDeveloper,
+} from "@/services/api/developerQuickActionsServiceV2";
 
 interface PendingCodeReview {
   id: string;
@@ -37,6 +23,27 @@ interface PendingCodeReview {
   dueDate?: string;
 }
 
+interface AlmostCompletedTask {
+  id: number;
+  treeId: string;
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  duration: number;
+  projectName: string;
+  sprintName: string;
+  assigneeName?: string;
+  statusId: number;
+  priorityId: number;
+  progress?: number;
+  daysUntilDeadline: number;
+  isOverdue: boolean;
+  estimatedHours?: number;
+  actualHours?: number;
+  departmentName?: string;
+}
+
 interface AvailableDeveloper {
   userId: string;
   fullName: string;
@@ -50,13 +57,14 @@ interface AvailableDeveloper {
 
 interface UseDeveloperQuickActionsResult {
   unassignedTasks: UnassignedTask[];
-  pendingCodeReviews: PendingCodeReview[];
+  almostCompletedTasks: AlmostCompletedTask[];
   availableDevelopers: AvailableDeveloper[];
   loading: boolean;
   refreshing: boolean;
   error: string | null;
   hasActionsAvailable: boolean;
   refresh: () => Promise<void>;
+  extendTask: (taskId: number, newEndDate: string, reason: string) => Promise<void>;
 }
 
 interface UseDeveloperQuickActionsOptions {
@@ -71,6 +79,7 @@ export function useDeveloperQuickActions(
   
   const [unassignedTasks, setUnassignedTasks] = useState<UnassignedTask[]>([]);
   const [pendingCodeReviews, setPendingCodeReviews] = useState<PendingCodeReview[]>([]);
+  const [almostCompletedTasks, setAlmostCompletedTasks] = useState<AlmostCompletedTask[]>([]);
   const [availableDevelopers, setAvailableDevelopers] = useState<AvailableDeveloper[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -146,7 +155,7 @@ export function useDeveloperQuickActions(
       title: "Refactor user authentication middleware",
       description: "Improve code structure and add better error handling",
       author: "Sara Hassan",
-      authorId: "dev-2", 
+      authorId: "dev-2",
       repository: "ecommerce-api",
       branch: "refactor/auth-middleware",
       priority: "medium",
@@ -158,7 +167,68 @@ export function useDeveloperQuickActions(
     },
   ];
 
-  const mockAvailableDevelopers: AvailableDeveloper[] = [
+  const mockAlmostCompletedTasks: AlmostCompletedTask[] = [
+    {
+      id: 101,
+      treeId: "task-101",
+      name: "Complete user dashboard implementation",
+      description: "Finalize the user dashboard with all required components",
+      startDate: "2025-09-20",
+      endDate: "2025-09-25",
+      duration: 5,
+      projectName: "E-Commerce Platform",
+      sprintName: "Sprint 3",
+      assigneeName: "Ahmed Ali",
+      statusId: 2, // in-progress
+      priorityId: 2, // high
+      progress: 85,
+      daysUntilDeadline: 1,
+      isOverdue: false,
+      estimatedHours: 40,
+      actualHours: 34,
+      departmentName: "Frontend Team",
+    },
+    {
+      id: 102,
+      treeId: "task-102",
+      name: "API integration testing",
+      description: "Complete integration testing for payment API endpoints",
+      startDate: "2025-09-18",
+      endDate: "2025-09-24",
+      duration: 6,
+      projectName: "Payment Gateway",
+      sprintName: "Sprint 2",
+      assigneeName: "Sara Hassan",
+      statusId: 3, // review
+      priorityId: 3, // critical
+      progress: 90,
+      daysUntilDeadline: 0,
+      isOverdue: true,
+      estimatedHours: 24,
+      actualHours: 26,
+      departmentName: "Backend Team",
+    },
+    {
+      id: 103,
+      treeId: "task-103",
+      name: "Database migration scripts",
+      description: "Prepare and test database migration scripts for production",
+      startDate: "2025-09-21",
+      endDate: "2025-09-26",
+      duration: 5,
+      projectName: "System Upgrade",
+      sprintName: "Sprint 1",
+      assigneeName: "Omar Khalil",
+      statusId: 2, // in-progress
+      priorityId: 2, // high
+      progress: 75,
+      daysUntilDeadline: 2,
+      isOverdue: false,
+      estimatedHours: 32,
+      actualHours: 28,
+      departmentName: "DevOps Team",
+    },
+  ];  const mockAvailableDevelopers: AvailableDeveloper[] = [
     {
       userId: "dev-3",
       fullName: "Omar Khalil",
@@ -195,17 +265,12 @@ export function useDeveloperQuickActions(
     try {
       setError(null);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Make actual API call to get all developer quick actions
+      const response = await developerQuickActionsService.getQuickActions();
       
-      // Use mock data for now
-      setUnassignedTasks(mockUnassignedTasks);
-      setPendingCodeReviews(mockPendingCodeReviews);
-      setAvailableDevelopers(mockAvailableDevelopers);
-      
-      // In real implementation, would call:
-      // const actions = await developerQuickActionsService.getQuickActions();
-      // const teamAvailability = await developerQuickActionsService.getTeamAvailability();
+      setUnassignedTasks(response.unassignedTasks);
+      setAlmostCompletedTasks(response.almostCompletedTasks);
+      setAvailableDevelopers(response.availableDevelopers);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch developer quick actions");
@@ -219,6 +284,40 @@ export function useDeveloperQuickActions(
     setRefreshing(true);
     await fetchData();
   }, [fetchData]);
+
+  const extendTask = useCallback(async (
+    taskId: number,
+    newEndDate: string,
+    reason: string,
+  ) => {
+    try {
+      // In real implementation, would call:
+      // await developerQuickActionsService.extendTask(taskId, newEndDate, reason);
+      
+      console.log(`Extending task ${taskId} to ${newEndDate}. Reason: ${reason}`);
+      
+      // Update the local state to reflect the change
+      setAlmostCompletedTasks(prev => 
+        prev.map(task => 
+          task.id === taskId 
+            ? { 
+                ...task, 
+                endDate: newEndDate,
+                daysUntilDeadline: Math.ceil(
+                  (new Date(newEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                ),
+                isOverdue: false
+              }
+            : task
+        )
+      );
+      
+      // Refresh data to get updated information
+      await refresh();
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : "Failed to extend task");
+    }
+  }, [refresh]);
 
   useEffect(() => {
     fetchData();
@@ -236,17 +335,18 @@ export function useDeveloperQuickActions(
 
   const hasActionsAvailable = 
     unassignedTasks.length > 0 || 
-    pendingCodeReviews.length > 0 || 
+    almostCompletedTasks.length > 0 || 
     availableDevelopers.length > 0;
 
   return {
     unassignedTasks,
-    pendingCodeReviews,
+    almostCompletedTasks,
     availableDevelopers,
     loading,
     refreshing,
     error,
     hasActionsAvailable,
     refresh,
+    extendTask,
   };
 }
