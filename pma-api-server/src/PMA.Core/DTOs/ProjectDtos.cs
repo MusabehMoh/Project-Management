@@ -253,3 +253,76 @@ public class AssignedProjectDto
     public DateTime? UpdatedAt { get; set; }
     public string? Analysts { get; set; } // Display names for analysts (comma-separated)
 }
+
+public class ProjectRequirementStatsDto
+{
+    public int Total { get; set; }
+    public int Draft { get; set; }
+    public int Approved { get; set; }
+    public int InDevelopment { get; set; }
+    public int UnderTesting { get; set; }
+    public int Completed { get; set; }
+    public ByStatusDto ByStatus { get; set; } = new();
+    public ByPriorityDto ByPriority { get; set; } = new();
+}
+
+public class ByStatusDto
+{
+    public int Draft { get; set; }
+    public int Approved { get; set; }
+    public int Rejected { get; set; }
+    public int InDevelopment { get; set; }
+    public int UnderTesting { get; set; }
+    public int Completed { get; set; }
+}
+
+public class ByPriorityDto
+{
+    public int Low { get; set; }
+    public int Medium { get; set; }
+    public int High { get; set; }
+    public int Critical { get; set; }
+}
+
+ 
+public class CreateProjectRequirementDto
+{
+    public int ProjectId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public RequirementPriority Priority { get; set; } = RequirementPriority.Medium;
+    public RequirementType Type { get; set; } = RequirementType.New;
+    public DateTime? ExpectedCompletionDate { get; set; }
+    public RequirementStatusEnum Status { get; set; } = RequirementStatusEnum.New;
+    public List<string> Attachments { get; set; } = new();
+}
+
+public class UpdateProjectRequirementDto
+{
+    public int Id { get; set; }
+    public int ProjectId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public RequirementPriority Priority { get; set; }
+    public RequirementType Type { get; set; }
+    public DateTime? ExpectedCompletionDate { get; set; }
+    public RequirementStatusEnum Status { get; set; }
+    public List<string> Attachments { get; set; } = new();
+}
+
+public class ProjectRequirementDto
+{
+    public int Id { get; set; }
+    public int ProjectId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public RequirementPriority Priority { get; set; }
+    public RequirementType Type { get; set; }
+    public DateTime? ExpectedCompletionDate { get; set; }
+    public RequirementStatusEnum Status { get; set; }
+    public int CreatedBy { get; set; }
+    public int? AssignedAnalyst { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+ 

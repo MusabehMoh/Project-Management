@@ -45,13 +45,7 @@ public class Requirement
     public ICollection<RequirementComment>? Comments { get; set; }
 }
 
-public enum RequirementType
-{
-    Functional = 1,
-    NonFunctional = 2,
-    Business = 3,
-    Technical = 4
-}
+ 
 
 public enum RequirementStatus
 {

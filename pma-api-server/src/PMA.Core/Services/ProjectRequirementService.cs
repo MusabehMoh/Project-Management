@@ -76,4 +76,9 @@ public class ProjectRequirementService : IProjectRequirementService
         // Delegate to repository for complex query logic
         return await _projectRepository.GetAssignedProjectsAsync(currentUserPrsId, page, limit, search, projectId);
     }
+
+    public async Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId)
+    {
+        return await _projectRequirementRepository.GetProjectRequirementStatsAsync(projectId);
+    }
 }

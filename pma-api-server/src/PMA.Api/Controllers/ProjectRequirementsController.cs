@@ -150,12 +150,66 @@ public class ProjectRequirementsController : ApiBaseController
     [HttpPost]
     [ProducesResponseType(201)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> CreateProjectRequirement([FromBody] ProjectRequirement projectRequirement)
+    public async Task<IActionResult> CreateProjectRequirement([FromBody] CreateProjectRequirementDto createDto)
     {
         try
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+                
+            // Map DTO to Entity
+            var projectRequirement = new ProjectRequirement
+            {
+                ProjectId = createDto.ProjectId,
+                Name = createDto.Name,
+                Description = createDto.Description,
+                Priority = createDto.Priority,
+                Type = createDto.Type,
+                ExpectedCompletionDate = createDto.ExpectedCompletionDate,
+                Status = createDto.Status,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+                
+            var createdProjectRequirement = await _projectRequirementService.CreateProjectRequirementAsync(projectRequirement);
+            return CreatedAtAction(nameof(GetProjectRequirementById), new { id = createdProjectRequirement.Id }, createdProjectRequirement);
+        }
+        catch (Exception ex)
+        {
+            return Error<ProjectRequirement>("An error occurred while creating the project requirement", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Create a new project requirement for a specific project
+    /// </summary>
+    [HttpPost("projects/{projectId}/requirements")]
+    [ProducesResponseType(201)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> CreateProjectRequirementForProject(int projectId, [FromBody] CreateProjectRequirementDto createDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            
+            // Ensure the projectId from route matches the one in the request body
+            createDto.ProjectId = projectId;
+            
+            // Map DTO to Entity
+            var projectRequirement = new ProjectRequirement
+            {
+                ProjectId = createDto.ProjectId,
+                Name = createDto.Name,
+                Description = createDto.Description,
+                Priority = createDto.Priority,
+                Type = createDto.Type,
+                ExpectedCompletionDate = createDto.ExpectedCompletionDate,
+                Status = createDto.Status,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
             var createdProjectRequirement = await _projectRequirementService.CreateProjectRequirementAsync(projectRequirement);
             return CreatedAtAction(nameof(GetProjectRequirementById), new { id = createdProjectRequirement.Id }, createdProjectRequirement);
         }
@@ -209,6 +263,25 @@ public class ProjectRequirementsController : ApiBaseController
         catch (Exception ex)
         {
             return Error<ProjectRequirement>("An error occurred while deleting the project requirement", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get project requirement statistics for a specific project
+    /// </summary>
+    [HttpGet("projects/{projectId}/stats")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetProjectRequirementStats(int projectId)
+    {
+        try
+        {
+            var stats = await _projectRequirementService.GetProjectRequirementStatsAsync(projectId);
+            return Success(stats);
+        }
+        catch (Exception ex)
+        {
+            return Error<ProjectRequirementStatsDto>("An error occurred while retrieving project requirement statistics", ex.Message);
         }
     }
 }

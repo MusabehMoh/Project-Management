@@ -294,11 +294,11 @@ export function useProjectRequirements({
    * Send requirement to development manager
    */
   const sendRequirement = useCallback(
-    async (requirementId: number) => {
+    async (requirementId: number, status?: number) => {
       setLoading(true);
       try {
         const updatedRequirement =
-          await projectRequirementsService.sendRequirement(requirementId);
+          await projectRequirementsService.sendRequirement(requirementId, status);
 
         setRequirements((prev) =>
           prev.map((req) =>

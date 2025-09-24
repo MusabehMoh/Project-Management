@@ -1,236 +1,188 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { parseDate, today, getLocalTimeZone, CalendarDate } from "@internationalized/date";
+
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
+import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
+import { Alert } from "@heroui/alert";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
+import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import { Textarea } from "@heroui/input";
+import { DatePicker } from "@heroui/date-picker";
+import { Accordion, AccordionItem } from "@heroui/accordion";
+import { ScrollShadow } from "@heroui/scroll-shadow";
+import { addToast } from "@heroui/toast";
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableColumn,
-  TableRow,
-  TableCell,
-} from "@heroui/table";
-import { Avatar } from "@heroui/avatar";
-import { Select, SelectItem } from "@heroui/select";
-import { Badge } from "@heroui/badge";
-import {
-  Code,
-  GitPullRequest,
-  Bug,
-  Settings,
-  Clock,
-  User,
+  RefreshCw,
   AlertTriangle,
+  Code,
+  User,
+  Clock,
 } from "lucide-react";
 
-import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  developerQuickActionsService,
-  type DeveloperQuickAction,
-} from "@/services/api/developerQuickActionsService";
+import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActionsV2";
+import { useTeamSearch } from "@/hooks/useTeamSearch";
+import { MemberSearchResult } from "@/types/timeline";
+
+// Animated Counter Component
+const AnimatedCounter = ({ value, duration = 1000 }: { value: number; duration?: number }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (value === 0) {
+      setDisplayValue(0);
+      return;
+    }
+
+    let startTimestamp: number | null = null;
+    const startValue = displayValue;
+    const endValue = value;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+      const currentValue = Math.floor(startValue + (endValue - startValue) * easeOutCubic);
+      
+      setDisplayValue(currentValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+
+    requestAnimationFrame(step);
+  }, [value, duration, displayValue]);
+
+  return (
+    <span className="tabular-nums">
+      {displayValue}
+    </span>
+  );
+};
+
+// Custom Alert Component with dynamic color styling
+const CustomAlert = React.forwardRef(
+  (
+    {title, children, variant = "faded", color = "danger", className, classNames = {}, direction, ...props},
+    ref,
+  ) => {
+    const isRTL = direction === "rtl";
+    
+    // Dynamic border color based on the color prop
+    const getBorderColor = (color: string) => {
+      switch (color) {
+        case "success":
+          return "before:bg-success";
+        case "warning":
+          return "before:bg-warning";
+        case "danger":
+        default:
+          return "before:bg-danger";
+      }
+    };
+    
+    return (
+      <Alert
+        ref={ref}
+        classNames={{
+          ...classNames,
+          base: [
+            "bg-default-50 dark:bg-background shadow-sm",
+            "border-1 border-default-200 dark:border-default-100",
+            "relative before:content-[''] before:absolute before:z-10",
+            isRTL ? "before:right-0 before:top-[-1px] before:bottom-[-1px] before:w-1" : "before:left-0 before:top-[-1px] before:bottom-[-1px] before:w-1",
+            isRTL ? "rounded-r-none border-r-0" : "rounded-l-none border-l-0",
+            getBorderColor(color),
+            classNames.base,
+            className,
+          ].filter(Boolean).join(" "),
+          mainWrapper: ["pt-1 flex items-start justify-between", classNames.mainWrapper].filter(Boolean).join(" "),
+          iconWrapper: ["dark:bg-transparent", classNames.iconWrapper].filter(Boolean).join(" "),
+          title: [isRTL ? "text-right" : "text-left", "text-sm font-medium", classNames.title].filter(Boolean).join(" "),
+          description: [isRTL ? "text-right" : "text-left", "text-xs text-default-500 mt-1", classNames.description].filter(Boolean).join(" "),
+        }}
+        color={color}
+        title={title}
+        variant={variant}
+        dir={direction}
+        {...props}
+      >
+        {children}
+      </Alert>
+    );
+  },
+);
+
+CustomAlert.displayName = "CustomAlert";
 
 interface DeveloperQuickActionsProps {
   autoRefresh?: boolean;
+  className?: string;
   onAssignDeveloper?: (task: any, developerId: string) => void;
   onAssignReviewer?: (pullRequest: any, reviewerId: string) => void;
-  className?: string;
 }
 
-// Mock developers data (in real app, this would come from API)
-const mockDevelopers = [
-  { id: "1", name: "Ahmed Ali", skills: ["React", "Node.js"], status: "available" },
-  { id: "2", name: "Sara Hassan", skills: ["Vue", "Python"], status: "busy" },
-  { id: "3", name: "Omar Khalil", skills: ["Angular", "Java"], status: "available" },
-  { id: "4", name: "Fatima Nasser", skills: ["React", "C#"], status: "available" },
-];
-
-const getActionIcon = (type: string) => {
-  switch (type) {
-    case "task_assignment":
-      return <Code className="w-4 h-4" />;
-    case "code_review":
-      return <GitPullRequest className="w-4 h-4" />;
-    case "bug_fix":
-      return <Bug className="w-4 h-4" />;
-    case "deployment":
-      return <Settings className="w-4 h-4" />;
-    default:
-      return <Code className="w-4 h-4" />;
-  }
-};
-
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case "critical":
-      return "danger";
-    case "high":
-      return "warning";
-    case "medium":
-      return "primary";
-    case "low":
-      return "success";
-    default:
-      return "default";
-  }
-};
-
-export default function DeveloperQuickActions({
-  autoRefresh = false,
+const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
+  autoRefresh = true,
+  className = "",
   onAssignDeveloper,
   onAssignReviewer,
-  className = "",
-}: DeveloperQuickActionsProps) {
-  const { t, language } = useLanguage();
-  const [actions, setActions] = useState<DeveloperQuickAction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+}) => {
+  const { t, direction } = useLanguage();
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isPRModalOpen, setIsPRModalOpen] = useState(false);
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedPR, setSelectedPR] = useState<any>(null);
+  const [selectedDevelopers, setSelectedDevelopers] = useState<MemberSearchResult[]>([]);
+  const [developerInputValue, setDeveloperInputValue] = useState<string>("");
 
-  // Mock data for development
-  const mockActions: DeveloperQuickAction[] = [
-    {
-      id: "1",
-      type: "task_assignment",
-      title: "Implement user authentication",
-      description: "Create login/logout functionality with JWT",
-      priority: "high",
-      status: "pending",
-      dueDate: "2025-09-25",
-      project: "E-Commerce Platform",
-      estimatedTime: "8 hours",
-      createdAt: "2025-09-18T09:00:00Z",
-      data: {
-        task: {
-          id: "t1",
-          title: "Implement user authentication",
-          description: "Create login/logout functionality with JWT",
-          priority: "high",
-          status: "todo",
-          assigneeId: "",
-          assigneeName: "",
-          projectId: "p1",
-          projectName: "E-Commerce Platform",
-          estimatedHours: 8,
-          actualHours: 0,
-          dueDate: "2025-09-25",
-          createdAt: "2025-09-18T09:00:00Z",
-          updatedAt: "2025-09-18T09:00:00Z",
-          type: "feature",
-          complexity: "medium",
-          tags: ["authentication", "security"],
-        },
-      },
-    },
-    {
-      id: "2",
-      type: "code_review",
-      title: "Review payment gateway integration",
-      description: "Code review for Stripe payment integration PR",
-      priority: "critical",
-      status: "pending",
-      dueDate: "2025-09-20",
-      project: "E-Commerce Platform",
-      estimatedTime: "2 hours",
-      createdAt: "2025-09-18T10:00:00Z",
-      data: {
-        pullRequest: {
-          id: "pr1",
-          title: "Add Stripe payment integration",
-          description: "Integrate Stripe for payment processing",
-          author: "Ahmed Ali",
-          authorId: "1",
-          reviewers: [],
-          status: "open",
-          createdAt: "2025-09-18T10:00:00Z",
-          updatedAt: "2025-09-18T10:00:00Z",
-          repository: "ecommerce-backend",
-          branch: "feature/stripe-integration",
-          targetBranch: "main",
-          linesAdded: 150,
-          linesDeleted: 20,
-          filesChanged: 8,
-          comments: 3,
-          priority: "critical",
-        },
-      },
-    },
-    {
-      id: "3",
-      type: "bug_fix",
-      title: "Fix checkout cart calculation bug",
-      description: "Cart total calculation is incorrect for discounts",
-      priority: "high",
-      status: "pending",
-      dueDate: "2025-09-22",
-      project: "E-Commerce Platform",
-      estimatedTime: "4 hours",
-      createdAt: "2025-09-18T11:00:00Z",
-      data: {
-        task: {
-          id: "t2",
-          title: "Fix checkout cart calculation bug",
-          description: "Cart total calculation is incorrect for discounts",
-          priority: "high",
-          status: "todo",
-          assigneeId: "",
-          assigneeName: "",
-          projectId: "p1",
-          projectName: "E-Commerce Platform",
-          estimatedHours: 4,
-          actualHours: 0,
-          dueDate: "2025-09-22",
-          createdAt: "2025-09-18T11:00:00Z",
-          updatedAt: "2025-09-18T11:00:00Z",
-          type: "bug",
-          complexity: "simple",
-          tags: ["checkout", "calculation"],
-        },
-      },
-    },
-  ];
+  // Use the same team search hook as projects page
+  const {
+    employees: developerEmployees,
+    loading: developerSearchLoading,
+    searchEmployees: searchDeveloperEmployees,
+    clearResults: clearDeveloperResults,
+  } = useTeamSearch({
+    minLength: 1,
+    maxResults: 20,
+    loadInitialResults: false,
+  });
 
-  const fetchActions = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Use mock data for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setActions(mockActions);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch actions");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    unassignedTasks,
+    almostCompletedTasks,
+    availableDevelopers,
+    loading,
+    refreshing,
+    error,
+    hasActionsAvailable,
+    refresh,
+    extendTask,
+    assignDeveloper,
+  } = useDeveloperQuickActions({
+    autoRefresh: false, // Disable auto-refresh to prevent constant loading
+    refreshInterval: 30000,
+  });
 
-  useEffect(() => {
-    fetchActions();
-  }, []);
-
-  useEffect(() => {
-    if (autoRefresh) {
-      const interval = setInterval(fetchActions, 30000); // Refresh every 30 seconds
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh]);
-
-  const handleAssignment = (action: DeveloperQuickAction, assigneeId: string) => {
-    if (action.type === "task_assignment" || action.type === "bug_fix") {
-      onAssignDeveloper?.(action.data.task, assigneeId);
-    } else if (action.type === "code_review") {
-      onAssignReviewer?.(action.data.pullRequest, assigneeId);
-    }
-  };
+  // Calculate total count of all actions
+  const totalActionsCount =
+    unassignedTasks.length +
+    almostCompletedTasks.length +
+    availableDevelopers.length;
 
   if (loading) {
     return (
-      <Card className={`${className} w-full`}>
+      <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
         <CardBody className="flex items-center justify-center py-8">
-          <Spinner size="lg" />
-          <p className="mt-4 text-default-500">
-            {t("developerDashboard.loadingActions") || "Loading developer actions..."}
-          </p>
+          <Spinner color="default" size="md" />
+          <p className="mt-3 text-default-500">{t("common.loading") || "Loading..."}</p>
         </CardBody>
       </Card>
     );
@@ -238,145 +190,673 @@ export default function DeveloperQuickActions({
 
   if (error) {
     return (
-      <Card className={`${className} w-full`}>
-        <CardBody className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <AlertTriangle className="h-12 w-12 text-danger mx-auto mb-4" />
-            <p className="font-medium text-foreground mb-2">
-              {t("common.error") || "Error"}
-            </p>
-            <p className="text-sm text-default-500 mb-4">{error}</p>
-            <Button size="sm" variant="flat" onPress={fetchActions}>
-              {t("common.retry") || "Retry"}
-            </Button>
-          </div>
+      <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
+        <CardBody className="text-center py-6">
+          <AlertTriangle className="h-8 w-8 text-default-400 mx-auto mb-3" />
+          <p className="font-medium text-foreground mb-2">{t("common.error") || "Error"}</p>
+          <p className="text-sm text-default-500 mb-4">{error}</p>
+          <Button
+            size="sm"
+            variant="flat"
+            onPress={refresh}
+          >
+            {t("common.retry") || "Retry"}
+          </Button>
         </CardBody>
       </Card>
     );
   }
 
-  return (
-    <div dir={language === "ar" ? "rtl" : "ltr"}>
-      <Card className="w-full shadow-md border border-default-200">
-        <CardHeader className="pb-0">
-          <div className="flex justify-between items-center w-full">
-            <h3 className="text-lg font-medium">
-              {t("developerDashboard.quickActions") || "Developer Quick Actions"}
+  if (!hasActionsAvailable) {
+    return (
+      <>
+        {null}
+        <TaskAssignmentModal />
+        <CodeReviewAssignmentModal />
+      </>
+    );
+  }
+
+  const handleTaskAssign = async () => {
+    if (selectedTask && selectedDevelopers.length > 0) {
+      try {
+        // Assign each developer to the task using the hook function
+        for (const developer of selectedDevelopers) {
+          await assignDeveloper(selectedTask.id, developer.id.toString());
+        }
+        
+        // Show success toast
+        addToast({
+          title: t("developerQuickActions.assignmentSuccess") || "Assignment Successful",
+          description: 
+            selectedDevelopers.length === 1 
+              ? `1 developer assigned to ${selectedTask.title}`
+              : `${selectedDevelopers.length} developers assigned to ${selectedTask.title}`,
+          color: "success",
+          timeout: 4000,
+        });
+        
+        setIsTaskModalOpen(false);
+        setSelectedTask(null);
+        setSelectedDevelopers([]);
+        setDeveloperInputValue("");
+        clearDeveloperResults();
+        
+      } catch (error) {
+        // Show error toast
+        addToast({
+          title: t("developerQuickActions.assignmentError") || "Assignment Failed",
+          description: "Failed to assign developer(s). Please try again.",
+          color: "danger",
+          timeout: 5000,
+        });
+      }
+    }
+  };
+
+  const handlePRAssign = async () => {
+    if (selectedPR && selectedDevelopers.length > 0 && onAssignReviewer) {
+      try {
+        console.log("DeveloperQuickActions: Starting code review assignment...", {
+          prId: selectedPR.id,
+          reviewerIds: selectedDevelopers.map(d => d.id.toString()),
+          prTitle: selectedPR.title,
+        });
+        
+        // Assign each reviewer to the PR
+        for (const reviewer of selectedDevelopers) {
+          await onAssignReviewer(selectedPR, reviewer.id.toString());
+        }
+        
+        // Show success toast
+        addToast({
+          title: t("developerQuickActions.reviewAssignmentSuccess") || "Review Assignment Successful",
+          description: 
+            selectedDevelopers.length === 1 
+              ? `1 reviewer assigned to ${selectedPR.title}`
+              : `${selectedDevelopers.length} reviewers assigned to ${selectedPR.title}`,
+          color: "success",
+          timeout: 4000,
+        });
+        
+        setIsPRModalOpen(false);
+        setSelectedPR(null);
+        setSelectedDevelopers([]);
+        setDeveloperInputValue("");
+        clearDeveloperResults();
+        
+        // Refresh the pending code reviews list
+        await refresh();
+      } catch (error) {
+        console.error("DeveloperQuickActions: Failed to assign reviewer:", error);
+        
+        // Show error toast
+        addToast({
+          title: t("developerQuickActions.reviewAssignmentError") || "Review Assignment Failed",
+          description: "Failed to assign reviewer(s). Please try again.",
+          color: "danger",
+          timeout: 5000,
+        });
+      }
+    }
+  };
+
+  const handleTaskCancel = () => {
+    setIsTaskModalOpen(false);
+    setSelectedTask(null);
+    setSelectedDevelopers([]);
+    setDeveloperInputValue("");
+    clearDeveloperResults();
+  };
+
+  const handlePRCancel = () => {
+    setIsPRModalOpen(false);
+    setSelectedPR(null);
+    setSelectedDevelopers([]);
+    setDeveloperInputValue("");
+    clearDeveloperResults();
+  };
+
+  const TaskExtensionModal = () => {
+    const [selectedDate, setSelectedDate] = useState<CalendarDate | null>(null);
+    const [extensionReason, setExtensionReason] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Get minimum date (today)
+    const minDate = today(getLocalTimeZone());
+
+    const handleExtendTask = async () => {
+      if (!selectedTask || !selectedDate || !extensionReason.trim()) {
+        return;
+      }
+
+      // Convert CalendarDate to string format
+      const dateString = `${selectedDate.year}-${String(selectedDate.month).padStart(2, '0')}-${String(selectedDate.day).padStart(2, '0')}`;
+
+      setIsSubmitting(true);
+      try {
+        await extendTask(selectedTask.id, dateString, extensionReason);
+        addToast({
+          title: t("common.success") || "Success",
+          description: t("common.taskExtended") || "Task deadline extended successfully",
+          color: "success",
+          timeout: 3000,
+        });
+        
+        // Reset form and close modal
+        setSelectedDate(null);
+        setExtensionReason("");
+        setIsExtendModalOpen(false);
+        setSelectedTask(null);
+      } catch (error) {
+        addToast({
+          title: t("common.error") || "Error", 
+          description: error instanceof Error ? error.message : "Failed to extend task",
+          color: "danger",
+          timeout: 5000,
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const handleCancel = () => {
+      setSelectedDate(null);
+      setExtensionReason("");
+      setIsExtendModalOpen(false);
+      setSelectedTask(null);
+    };
+
+    return (
+      <Modal
+        isOpen={isExtendModalOpen}
+        onOpenChange={setIsExtendModalOpen}
+        dir={direction}
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h3 className="text-lg font-semibold">
+              {t("common.extendTask") || "Extend Task Deadline"}
             </h3>
-            <Badge
-              color="primary"
-              content={actions.filter(a => a.status === "pending").length}
-              isInvisible={actions.filter(a => a.status === "pending").length === 0}
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-default-600 mb-4">
+              Task: <strong>{selectedTask?.name}</strong>
+            </p>
+            <p className="text-sm text-default-600 mb-4">
+              Current Deadline: <strong>{selectedTask?.endDate ? new Date(selectedTask.endDate).toLocaleDateString() : 'N/A'}</strong>
+            </p>
+            
+            <div className="space-y-4">
+              <DatePicker
+                label={t("common.newDeadline") || "New Deadline"}
+                value={selectedDate}
+                onChange={setSelectedDate}
+                minValue={minDate}
+                isRequired
+                showMonthAndYearPickers
+                description={t("common.selectNewDate") || "Select a new deadline date"}
+              />
+              
+              <Textarea
+                label={t("common.reason") || "Reason for Extension"}
+                placeholder={t("common.reasonPlaceholder") || "Please provide a reason for extending this task..."}
+                value={extensionReason}
+                onChange={(e) => setExtensionReason(e.target.value)}
+                minRows={3}
+                maxRows={6}
+                isRequired
+              />
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="flat"
+              onPress={handleCancel}
+              disabled={isSubmitting}
             >
-              <Chip size="sm" variant="flat">
-                {actions.length} {t("developerDashboard.totalActions") || "Total Actions"}
-              </Chip>
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardBody>
-          {actions.length > 0 ? (
-            <Table removeWrapper aria-label="Developer quick actions table">
-              <TableHeader>
-                <TableColumn>{t("developerDashboard.action") || "Action"}</TableColumn>
-                <TableColumn>{t("developerDashboard.priority") || "Priority"}</TableColumn>
-                <TableColumn>{t("developerDashboard.project") || "Project"}</TableColumn>
-                <TableColumn>{t("developerDashboard.dueDate") || "Due Date"}</TableColumn>
-                <TableColumn>{t("developerDashboard.assign") || "Assign"}</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {actions.map((action) => (
-                  <TableRow key={action.id}>
-                    <TableCell>
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 mt-1">
-                          {getActionIcon(action.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-foreground truncate">
-                            {action.title}
-                          </p>
-                          <p className="text-xs text-default-500 mt-1 line-clamp-2">
-                            {action.description}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Clock className="w-3 h-3 text-default-400" />
-                            <span className="text-xs text-default-500">
-                              {action.estimatedTime}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        color={getPriorityColor(action.priority)}
-                        size="sm"
-                        variant="flat"
-                      >
-                        {t(`priority.${action.priority}`) || action.priority}
-                      </Chip>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-default-600">
-                        {action.project}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-default-600">
-                        {new Date(action.dueDate).toLocaleDateString()}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        placeholder={t("developerDashboard.selectDeveloper") || "Select Developer"}
-                        size="sm"
-                        className="w-40"
-                        onSelectionChange={(key) => {
-                          if (key) {
-                            handleAssignment(action, String(key));
-                          }
-                        }}
-                      >
-                        {mockDevelopers
-                          .filter(dev => dev.status === "available")
-                          .map((developer) => (
-                            <SelectItem
-                              key={developer.id}
-                              textValue={developer.name}
-                              startContent={
-                                <Avatar
-                                  size="sm"
-                                  name={developer.name}
-                                  className="w-5 h-5"
-                                />
-                              }
-                            >
-                              <div className="flex items-center gap-2">
-                                <User className="w-4 h-4" />
-                                <span>{developer.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                      </Select>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8">
-              <Code className="h-12 w-12 text-success-600 mx-auto mb-4" />
-              <h4 className="text-lg font-semibold text-foreground mb-2">
-                {t("developerDashboard.noActions") || "No Pending Actions"}
-              </h4>
-              <p className="text-sm text-default-500">
-                {t("developerDashboard.allCaughtUp") || "All development tasks are up to date"}
+              {t("common.cancel") || "Cancel"}
+            </Button>
+            <Button
+              color="primary"
+              onPress={handleExtendTask}
+              disabled={!selectedDate || !extensionReason.trim() || isSubmitting}
+              isLoading={isSubmitting}
+            >
+              {t("common.extendDeadline") || "Extend Deadline"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  };
+
+  const TaskAssignmentModal = () => (
+    <Modal
+      isOpen={isTaskModalOpen}
+      onOpenChange={setIsTaskModalOpen}
+      dir={direction}
+    >
+      <ModalContent>
+        <ModalHeader>
+          {t("developerQuickActions.assignDeveloper") || "Assign Developer"}
+        </ModalHeader>
+        <ModalBody>
+          <p className="text-sm text-default-600 mb-4">
+            {t("developerQuickActions.assignDeveloperTo") || "Assign developers to"}: {selectedTask?.title}
+          </p>
+          
+          {/* Selected Developers Display */}
+          {selectedDevelopers.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-foreground mb-2">
+                {t("developerQuickActions.selectedDevelopers") || "Selected Developers"}:
               </p>
+              <div className="flex flex-wrap gap-2">
+                {selectedDevelopers.map((developer) => (
+                  <Chip
+                    key={developer.id}
+                    color="primary"
+                    variant="flat"
+                    onClose={() => {
+                      setSelectedDevelopers(prev => prev.filter(d => d.id !== developer.id));
+                    }}
+                  >
+                    {developer.fullName}
+                  </Chip>
+                ))}
+              </div>
             </div>
           )}
+          
+          <Autocomplete
+            isClearable
+            items={developerEmployees.filter(emp => !selectedDevelopers.some(selected => selected.id === emp.id))}
+            label={t("developerQuickActions.selectDeveloper") || "Select Developers"}
+            placeholder={t("developerQuickActions.chooseDeveloper") || "Search and select developers"}
+            inputValue={developerInputValue}
+            isLoading={developerSearchLoading}
+            menuTrigger="input"
+            onInputChange={(value) => {
+              setDeveloperInputValue(value);
+              // Search for developers
+              searchDeveloperEmployees(value);
+            }}
+            onSelectionChange={(key) => {
+              if (key) {
+                const developer = developerEmployees.find(
+                  (d) => d.id.toString() === key,
+                );
+
+                if (developer && !selectedDevelopers.some(selected => selected.id === developer.id)) {
+                  setSelectedDevelopers(prev => [...prev, developer]);
+                  setDeveloperInputValue("");
+                }
+              }
+            }}
+          >
+            {(developer) => (
+              <AutocompleteItem
+                key={developer.id}
+                textValue={`${developer.fullName} - ${developer.militaryNumber}`}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">{developer.fullName}</span>
+                  <span className="text-sm text-default-500">
+                    {developer.militaryNumber} - {developer.gradeName}
+                  </span>
+                </div>
+              </AutocompleteItem>
+            )}
+          </Autocomplete>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="flat"
+            onPress={handleTaskCancel}
+          >
+            {t("common.cancel") || "Cancel"}
+          </Button>
+          <Button
+            color="primary"
+            onPress={handleTaskAssign}
+            disabled={selectedDevelopers.length === 0}
+          >
+            {t("developerQuickActions.assign") || "Assign"} ({selectedDevelopers.length})
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+
+  const CodeReviewAssignmentModal = () => (
+    <Modal
+      isOpen={isPRModalOpen}
+      onOpenChange={setIsPRModalOpen}
+      dir={direction}
+    >
+      <ModalContent>
+        <ModalHeader>
+          {t("developerQuickActions.assignReviewer") || "Assign Reviewer"}
+        </ModalHeader>
+        <ModalBody>
+          <p className="text-sm text-default-600 mb-4">
+            {t("developerQuickActions.assignReviewerTo") || "Assign reviewers to"}: {selectedPR?.title}
+          </p>
+          
+          {/* Selected Developers Display */}
+          {selectedDevelopers.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-foreground mb-2">
+                {t("developerQuickActions.selectedReviewers") || "Selected Reviewers"}:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {selectedDevelopers.map((developer) => (
+                  <Chip
+                    key={developer.id}
+                    color="primary"
+                    variant="flat"
+                    onClose={() => {
+                      setSelectedDevelopers(prev => prev.filter(d => d.id !== developer.id));
+                    }}
+                  >
+                    {developer.fullName}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <Autocomplete
+            isClearable
+            items={developerEmployees.filter(emp => !selectedDevelopers.some(selected => selected.id === emp.id))}
+            label={t("developerQuickActions.selectReviewer") || "Select Reviewers"}
+            placeholder={t("developerQuickActions.chooseReviewer") || "Search and select reviewers"}
+            inputValue={developerInputValue}
+            isLoading={developerSearchLoading}
+            menuTrigger="input"
+            onInputChange={(value) => {
+              setDeveloperInputValue(value);
+              // Search for developers
+              searchDeveloperEmployees(value);
+            }}
+            onSelectionChange={(key) => {
+              if (key) {
+                const developer = developerEmployees.find(
+                  (d) => d.id.toString() === key,
+                );
+
+                if (developer && !selectedDevelopers.some(selected => selected.id === developer.id)) {
+                  setSelectedDevelopers(prev => [...prev, developer]);
+                  setDeveloperInputValue("");
+                }
+              }
+            }}
+          >
+            {(developer) => (
+              <AutocompleteItem
+                key={developer.id}
+                textValue={`${developer.fullName} - ${developer.militaryNumber}`}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">{developer.fullName}</span>
+                  <span className="text-sm text-default-500">
+                    {developer.militaryNumber} - {developer.gradeName}
+                  </span>
+                </div>
+              </AutocompleteItem>
+            )}
+          </Autocomplete>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="flat"
+            onPress={handlePRCancel}
+          >
+            {t("common.cancel") || "Cancel"}
+          </Button>
+          <Button
+            color="primary"
+            onPress={handlePRAssign}
+            disabled={selectedDevelopers.length === 0}
+          >
+            {t("developerQuickActions.assign") || "Assign"} ({selectedDevelopers.length})
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+
+  return (
+    <>
+      <style>
+        {`
+          @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+          }
+        `}
+      </style>
+      <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
+        <CardHeader className="flex items-center justify-between pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-foreground">
+                {t("dashboard.myActions") || "My Actions"}
+              </h3>
+              {totalActionsCount > 0 && (
+                <Chip 
+                  size="sm" 
+                  variant="flat" 
+                  className="bg-danger-50 text-danger-600 border border-danger-200 animate-pulse"
+                  style={{
+                    animation: 'fadeInOut 2s ease-in-out infinite'
+                  }}
+                >
+                  <AnimatedCounter value={totalActionsCount} duration={600} />
+                </Chip>
+              )}
+            </div>
+            <p className="text-sm text-default-500 mt-1">
+              {t("developerDashboard.quickActionsSubtitle") ||
+                "Assign tasks and code reviews that need your attention"}
+            </p>
+          </div>
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            className="text-default-400 hover:text-default-600"
+            disabled={refreshing}
+            onPress={refresh}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </CardHeader>
+
+        <Divider className="bg-default-200" />
+
+        <CardBody className="p-6 overflow-hidden">
+          {/* Action Buttons and Content */}
+          <div className="space-y-4 overflow-hidden">
+            {/* Unassigned Tasks Accordion */}
+            {unassignedTasks.length > 0 && (
+              <div className="space-y-4">
+                <Accordion selectionMode="single" variant="splitted">
+                  <AccordionItem
+                    key="unassigned-tasks"
+                    title={
+                      <div className="flex items-center justify-between w-full">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {t("developerQuickActions.unassignedTasks") || "Unassigned Tasks"}
+                        </h3>
+                        <Chip size="sm" variant="flat" className="bg-danger-50 text-danger-600">
+                          {unassignedTasks.length}
+                        </Chip>
+                      </div>
+                    }
+                    className="border border-default-200 rounded-lg"
+                  >
+                    <ScrollShadow 
+                      className="max-h-64" 
+                      hideScrollBar={true}
+                      size={20}
+                    >
+                      <div className="space-y-3 pr-2">
+                        {unassignedTasks.map((task) => (
+                          <CustomAlert
+                            key={task.id}
+                            title={task.title}
+                            description={`${task.projectName} • ${task.owningUnit} • ${task.estimatedHours}h • Due: ${new Date(task.dueDate).toLocaleDateString()}`}
+                            direction={direction}
+                          >
+                            <Divider className="bg-default-200 my-3" />
+                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                              <Button
+                                className="bg-background text-default-700 font-medium border-1 shadow-small"
+                                size="sm"
+                                variant="bordered"
+                                startContent={<Code className="w-4 h-4" />}
+                                onPress={() => {
+                                  setSelectedTask(task);
+                                  setIsTaskModalOpen(true);
+                                }}
+                              >
+                                {t("developerQuickActions.assignTask") || "Assign Task"}
+                              </Button>
+                            </div>
+                          </CustomAlert>
+                        ))}
+                      </div>
+                    </ScrollShadow>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            )}
+
+            {/* Almost Completed Tasks Accordion */}
+            {almostCompletedTasks.length > 0 && (
+              <div className="space-y-4">
+                <Accordion selectionMode="single" variant="splitted">
+                  <AccordionItem
+                    key="almost-completed-tasks"
+                    title={
+                      <div className="flex items-center justify-between w-full">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {t("developerQuickActions.almostCompletedTasks") || "Almost Completed Tasks"}
+                        </h3>
+                        <Chip size="sm" variant="flat" className="bg-warning-50 text-warning-600">
+                          {almostCompletedTasks.length}
+                        </Chip>
+                      </div>
+                    }
+                    className="border border-default-200 rounded-lg"
+                  >
+                    <ScrollShadow 
+                      className="max-h-64" 
+                      hideScrollBar={true}
+                      size={20}
+                    >
+                      <div className="space-y-3 pr-2">
+                        {almostCompletedTasks.map((task) => (
+                          <CustomAlert
+                            key={task.id}
+                            title={task.name}
+                            description={`${task.projectName} • ${task.sprintName} • ${task.assigneeName || "Unassigned"} • Progress: ${task.progress || 0}% • ${task.isOverdue ? "Overdue" : `Due in ${task.daysUntilDeadline} days`}`}
+                            direction={direction}
+                            variant="faded"
+                            color={task.isOverdue ? "danger" : "warning"}
+                          >
+                            <Divider className="bg-default-200 my-3" />
+                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                              <Button
+                                className="bg-background text-default-700 font-medium border-1 shadow-small"
+                                size="sm"
+                                variant="bordered"
+                                startContent={<Clock className="w-4 h-4" />}
+                                onPress={() => {
+                                  setSelectedTask(task);
+                                  setIsExtendModalOpen(true);
+                                }}
+                              >
+                                {t("common.extend") || "Extend Deadline"}
+                              </Button>
+                            </div>
+                          </CustomAlert>
+                        ))}
+                      </div>
+                    </ScrollShadow>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            )}
+
+            {/* Available Developers Accordion */}
+            {availableDevelopers.length > 0 && (
+              <div className="space-y-4">
+                <Accordion selectionMode="single" variant="splitted">
+                  <AccordionItem
+                    key="available-developers"
+                    title={
+                      <div className="flex items-center justify-between w-full">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {t("developerQuickActions.availableDevelopers") || "Available Team Developers"}
+                        </h3>
+                        <Chip size="sm" variant="flat" className="bg-success-50 text-success-600">
+                          {availableDevelopers.length}
+                        </Chip>
+                      </div>
+                    }
+                    className="border border-default-200 rounded-lg"
+                  >
+                    <ScrollShadow 
+                      className="max-h-64" 
+                      hideScrollBar={true}
+                      size={20}
+                    >
+                      <div className="space-y-3 pr-2">
+                        {availableDevelopers.map((developer) => (
+                          <CustomAlert
+                            key={developer.userId}
+                            title={developer.fullName}
+                            description={`${developer.department} • ${developer.gradeName} • ${developer.totalTasks} tasks • ${developer.skills.join(", ")}`}
+                            direction={direction}
+                            variant="faded"
+                            color="success"
+                          >
+                            <Divider className="bg-default-200 my-3" />
+                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                              <Button
+                                className="bg-background text-default-700 font-medium border-1 shadow-small"
+                                size="sm"
+                                variant="bordered"
+                                startContent={<User className="w-4 h-4" />}
+                                onPress={() => {
+                                  // Navigate to team workload page or developer details
+                                  window.location.href = `/team-workload`;
+                                }}
+                              >
+                                {t("common.viewDetails") || "View Details"}
+                              </Button>
+                            </div>
+                          </CustomAlert>
+                        ))}
+                      </div>
+                    </ScrollShadow>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            )}
+          </div>
         </CardBody>
       </Card>
-    </div>
+      <TaskExtensionModal />
+      <TaskAssignmentModal />
+      <CodeReviewAssignmentModal />
+    </>
   );
-}
+};
+
+export default DeveloperQuickActions;
