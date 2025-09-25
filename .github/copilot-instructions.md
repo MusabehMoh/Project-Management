@@ -94,12 +94,34 @@ This is a comprehensive Project Management Application (PMA) built with modern w
 - create directories for everything new to keep things organized.
 
 ### Mock API Server (`mock-api-server/`)
-- `src/app.ts` - Main Express server
-- `src/routes/` - API route definitions
+- `src/app.ts` - Main Express server (runs on port 3002)
+- `src/routes/` - API route definitions  
 - `src/controllers/` - Request handlers
 - `src/services/` - Business logic
 - `src/data/` - Mock data sources
 - `src/signalR/` - Real-time hubs
+
+### API Configuration
+- **Mock API Server Port**: 3002 (default)
+- **Frontend Dev Server Port**: 5173 (Vite)
+- **API Base URL**: `http://localhost:3002/api` (configured in `src/services/api/client.ts`)
+- **WebSocket URL**: `ws://localhost:3002` (for SignalR)
+
+### Using API Services
+- **Always use service classes** from `src/services/api/` instead of direct fetch calls
+- **Use apiClient** for consistent error handling and configuration
+- **Follow existing patterns** from services like `projectRequirementsService`, `developerQuickActionsService`
+- **Port Configuration**: API calls automatically use port 3002 via `API_CONFIG.BASE_URL`
+
+### Example API Usage
+```typescript
+// ✅ Correct - Use service classes
+import { projectRequirementsService } from "@/services/api";
+const result = await projectRequirementsService.getApprovedRequirements({ limit: 5 });
+
+// ❌ Wrong - Direct fetch calls
+const response = await fetch('/api/project-requirements/approved-requirements');
+```
 
 ### Configuration Files
 - `vite.config.ts` - Includes proxy configuration for API calls
@@ -152,11 +174,17 @@ This is a comprehensive Project Management Application (PMA) built with modern w
 - Add translations to `LanguageContext.tsx` for both English and Arabic
 - Support RTL (right-to-left) layout for Arabic
 - Use `dir={language === "ar" ? "rtl" : "ltr"}` on containers
+- **CRITICAL**: Always add translations when creating new components with user-facing text
+- **NO FALLBACK TEXT**: Use proper translation keys, don't rely on fallback English text
+- **CONSISTENCY**: Check existing translation patterns and namespaces before creating new ones
 
 ### Translation Key Patterns
 - Use dot notation: `"dashboard.title"`, `"user.profile.edit"`
-- Provide fallback English text: `{t("key") || "Fallback Text"}`
-- Group related translations logically
+- Group related translations logically (e.g., all `developerDashboard.*` keys together)
+- Always add both English and Arabic translations
+- For new components, add translations immediately after creating the component
+- **CRITICAL**: Use existing translation namespaces when available (e.g., `priority.high`, `calendar.priority.high`)
+- **NEVER use fallback text** like `t("key") || "Fallback"` - always ensure translations exist
 
 ## Component Library (HeroUI)
 
@@ -194,8 +222,14 @@ This is a comprehensive Project Management Application (PMA) built with modern w
 
 ### Dashboard Types
 - **AnalystManagerDashboard**: Requirements management, team performance
-- **DeveloperManagerDashboard**: Development team management, code reviews, deployments
+- **DeveloperManagerDashboard**: Development team management, approved requirements, deployments
 - Each dashboard has specialized components in respective subdirectories
+
+### Dashboard Components
+- **ApprovedRequirements**: Shows approved requirements ready for development (Developer Manager)
+- **PendingRequirements**: Shows draft requirements awaiting approval (Analyst Manager)
+- **DeveloperQuickActions**: Task assignment and management tools
+- Each component uses proper API services and follows consistent design patterns
 
 ### Role-Based Access
 - Use `usePermissions()` hook for role checking
@@ -226,16 +260,24 @@ This is a comprehensive Project Management Application (PMA) built with modern w
 4. Test in both English and Arabic modes
 5. Verify responsive behavior
 6. Check TypeScript compilation with `tsc`
-7. Never create test scripts 
-8. Dont create documents files or readme files unless told.
+7. **DO NOT create test files** unless specifically requested by the user
+8. **DO NOT create documentation files or readme files** unless told
 9. dont run npm run dev since its always running by myself.
+
+## File Creation Guidelines
+
+- **Components**: Always add proper translations immediately
+- **API Services**: Use existing service patterns, never direct fetch calls
+- **Hooks**: Follow existing naming conventions and patterns
+- **Test Files**: DO NOT create test files automatically - only when explicitly requested
+- **Documentation**: DO NOT create documentation files unless specifically asked
 
 ## Common Issues & Solutions
 
 ### Build Issues
 - **TypeScript errors**: Fix all type issues before building
 - **Missing dependencies**: Run `npm install` in both root and `mock-api-server/`
-- **Port conflicts**: Default ports are 5173 (frontend) and 3001 (API)
+- **Port conflicts**: Default ports are 5173 (frontend) and 3002 (API)
 
 ### Development Issues
 - **API calls failing**: Ensure mock API server is running

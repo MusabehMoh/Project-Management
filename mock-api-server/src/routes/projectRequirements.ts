@@ -91,6 +91,14 @@ projectRequirementRoutes.get(
   ),
 );
 
+// GET /api/project-requirements/approved-requirements - Get all requirements with status "approved"
+projectRequirementRoutes.get(
+  "/approved-requirements",
+  projectRequirementsController.getApprovedRequirements.bind(
+    projectRequirementsController,
+  ),
+);
+
 // GET /api/project-requirements/team-workload-performance - Get team workload and performance metrics
 projectRequirementRoutes.get(
   "/team-workload-performance",

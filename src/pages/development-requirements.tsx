@@ -6,8 +6,8 @@ import type {
 import type { MemberSearchResult } from "@/types/timeline";
 import type { CreateTimelineRequest } from "@/types/timeline";
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -86,6 +86,8 @@ const RequirementCard = ({
   onCreateTimeline,
   getStatusColor,
   getStatusText,
+  isHighlighted = false,
+  cardRef,
 }: {
   requirement: ProjectRequirement;
   onViewDetails: (requirement: ProjectRequirement) => void;
@@ -95,6 +97,8 @@ const RequirementCard = ({
     status: string | number,
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
   getStatusText: (status: string | number) => string;
+  isHighlighted?: boolean;
+  cardRef?: (element: HTMLDivElement | null) => void;
 }) => {
   const { hasPermission } = usePermissions();
   const { t } = useLanguage();
@@ -102,7 +106,14 @@ const RequirementCard = ({
   // Using the formatDate function defined above
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card 
+      ref={cardRef}
+      className={`h-full flex flex-col transition-all duration-1000 ease-out ${
+        isHighlighted 
+          ? "ring-1 ring-primary/60 bg-primary-50/20 shadow-md" 
+          : ""
+      }`}
+    >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full gap-3">
           <div className="flex-1 min-w-0">
@@ -235,6 +246,11 @@ export default function DevelopmentRequirementsPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
+  const [searchParams] = useSearchParams();
+  
+  // Refs for scrolling and highlighting
+  const requirementRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const [highlightedRequirementId, setHighlightedRequirementId] = useState<number | null>(null);
 
   // Set page title
   usePageTitle("requirements.developmentRequirements");
@@ -496,6 +512,36 @@ export default function DevelopmentRequirementsPage() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm, priorityFilter, updateFilters]);
 
+  // Auto-scroll and highlight functionality
+  useEffect(() => {
+    const highlightRequirement = searchParams.get('highlightRequirement');
+    const scrollTo = searchParams.get('scrollTo');
+    
+    if (highlightRequirement && scrollTo && requirements.length > 0) {
+      const requirementId = parseInt(highlightRequirement, 10);
+      const scrollToId = parseInt(scrollTo, 10);
+      
+      // Set highlighted requirement
+      setHighlightedRequirementId(requirementId);
+      
+      // Scroll to the requirement after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        const element = requirementRefs.current[scrollToId];
+        if (element) {
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+          
+          // Remove highlight after 5 seconds for a more subtle fade
+          setTimeout(() => {
+            setHighlightedRequirementId(null);
+          }, 5000);
+        }
+      }, 500);
+    }
+  }, [searchParams, requirements, setHighlightedRequirementId]);
+
   // edit/delete handlers removed - grid is read-only
 
   // (Helpers are defined within RequirementCard where needed)
@@ -663,6 +709,12 @@ export default function DevelopmentRequirementsPage() {
                   onCreateTask={openTaskModal}
                   onCreateTimeline={openTimelineModal}
                   onViewDetails={openRequirementDetails}
+                  isHighlighted={highlightedRequirementId === requirement.id}
+                  cardRef={(element) => {
+                    if (element) {
+                      requirementRefs.current[requirement.id] = element;
+                    }
+                  }}
                 />
               ))}
             </div>

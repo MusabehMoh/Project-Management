@@ -24,6 +24,7 @@ const ENDPOINTS = {
     `/project-requirements/projects/${projectId}/stats`,
   DEVELOPMENT_REQUIREMENTS: "/project-requirements/development-requirements",
   DRAFT_REQUIREMENTS: "/project-requirements/draft-requirements",
+  APPROVED_REQUIREMENTS: "/project-requirements/approved-requirements",
   CREATE_REQUIREMENT_TASK: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/tasks`,
   UPLOAD_ATTACHMENT: (requirementId: number) =>
@@ -315,6 +316,38 @@ class ProjectRequirementsService {
         total: (result.data ?? []).length,
         totalPages: 1,
       },
+    };
+  }
+
+  /**
+   * Get approved requirements (ready for development)
+   */
+  async getApprovedRequirements(
+    filters?: {
+      limit?: number;
+    },
+  ): Promise<{
+    data: ProjectRequirement[];
+    totalCount: number;
+  }> {
+    const params = new URLSearchParams();
+
+    if (filters?.limit) {
+      params.append("limit", String(filters.limit));
+    }
+
+    const endpoint = params.toString()
+      ? `${ENDPOINTS.APPROVED_REQUIREMENTS}?${params.toString()}`
+      : ENDPOINTS.APPROVED_REQUIREMENTS;
+
+    const result = await apiClient.get<{
+      requirements: ProjectRequirement[];
+      totalCount: number;
+    }>(endpoint);
+
+    return {
+      data: result.data?.requirements ?? [],
+      totalCount: result.data?.totalCount ?? 0,
     };
   }
 

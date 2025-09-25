@@ -5,37 +5,47 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
 import { useNavigate } from "react-router-dom";
-import { PenTool, Clock, User, AlertCircle } from "lucide-react";
+import { CheckCircle, Clock, User, AlertCircle } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useDraftRequirements } from "@/hooks/useDraftRequirements";
+import { useApprovedRequirements } from "@/hooks/useApprovedRequirements";
 
-interface PendingRequirementsProps {
+interface ApprovedRequirementsProps {
   className?: string;
 }
 
-export default function PendingRequirements({ 
+export default function ApprovedRequirements({ 
   className = "" 
-}: PendingRequirementsProps) {
+}: ApprovedRequirementsProps) {
   const { t, direction } = useLanguage();
   const navigate = useNavigate();
-  const { draftRequirements, loading, error, refresh, total } = useDraftRequirements();
+  
+  const { 
+    requirements, 
+    loading, 
+    error, 
+    refresh,
+    totalCount 
+  } = useApprovedRequirements({
+    limit: 5,
+    autoRefresh: true
+  });
 
   const getPriorityColor = (priority: string) => {
-    switch (priority?.toLowerCase()) {
+    switch (priority) {
       case "high":
         return "danger";
       case "medium":
         return "warning";
       case "low":
-        return "default";
+        return "success";
       default:
         return "default";
     }
   };
 
   const getPriorityText = (priority: string) => {
-    switch (priority?.toLowerCase()) {
+    switch (priority) {
       case "high":
         return t("priority.high");
       case "medium":
@@ -55,11 +65,11 @@ export default function PendingRequirements({
   };
 
   const handleViewRequirement = (projectId: number, requirementId: number) => {
-    navigate(`/requirements/${projectId}?highlightRequirement=${requirementId}&scrollTo=${requirementId}`);
+    navigate(`/development-requirements?highlightRequirement=${requirementId}&scrollTo=${requirementId}`);
   };
 
   const handleViewAllRequirements = () => {
-    navigate("/requirements");
+    navigate("/development-requirements");
   };
 
   if (loading) {
@@ -68,7 +78,7 @@ export default function PendingRequirements({
         <CardBody className="flex items-center justify-center min-h-[200px]">
           <Spinner size="lg" />
           <p className="mt-3 text-default-500">
-            {t("common.loading") || "Loading..."}
+            {t("common.loading")}
           </p>
         </CardBody>
       </Card>
@@ -81,11 +91,11 @@ export default function PendingRequirements({
         <CardBody className="flex items-center justify-center min-h-[200px] text-center">
           <AlertCircle className="w-8 h-8 text-danger mb-2" />
           <p className="font-medium text-foreground mb-2">
-            {t("common.error") || "Error"}
+            {t("common.error")}
           </p>
           <p className="text-sm text-default-500 mb-4">{error}</p>
           <Button size="sm" variant="flat" onPress={refresh}>
-            {t("common.refresh") || "Refresh"}
+            {t("common.refresh")}
           </Button>
         </CardBody>
       </Card>
@@ -97,56 +107,47 @@ export default function PendingRequirements({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
-            <PenTool className="w-5 h-5 text-default-600" />
-            <h3 className="text-lg font-semibold text-foreground">
-              {t("requirements.pendingRequirements") || "Pending Requirements"}
+            <CheckCircle className="w-5 h-5 text-success" />
+            <h3 className="font-semibold text-foreground">
+              {t("developerDashboard.approvedRequirements")}
             </h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <Chip size="sm" variant="flat" className="bg-warning-50 text-warning-600">
-              {total}
+            <Chip size="sm" color="success" variant="flat">
+              {totalCount}
             </Chip>
-            {total > 0 && (
-              <Button
-                size="sm"
-                variant="light"
-                onPress={handleViewAllRequirements}
-              >
-                {t("common.viewAll") || "View All"}
-              </Button>
-            )}
           </div>
+          <Button
+            size="sm"
+            variant="light"
+            color="primary"
+            onPress={handleViewAllRequirements}
+            className="text-xs"
+          >
+            {t("common.viewAll")}
+          </Button>
         </div>
       </CardHeader>
-
-      <Divider className="bg-default-200" />
-
-      <CardBody className="p-0">
-        {draftRequirements.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <PenTool className="w-12 h-12 text-default-300 mb-3" />
-            <h4 className="font-medium text-foreground mb-1">
-              {t("requirements.noDraftRequirements") || "No Draft Requirements"}
-            </h4>
-            <p className="text-sm text-default-500">
-              {t("requirements.noDraftRequirementsDesc") || 
-               "All requirements have been processed"}
+      
+      <CardBody className="pt-0">
+        {requirements.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <CheckCircle className="w-12 h-12 text-default-300 mb-3" />
+            <p className="text-default-500 text-center">
+              {t("developerDashboard.noApprovedRequirements")}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-default-200">
-            {draftRequirements.map((requirement) => (
-              <div
-                key={requirement.id}
-                className="p-4 hover:bg-default-50 transition-colors cursor-pointer"
-                onClick={() => handleViewRequirement(requirement.project.id, requirement.id)}
-              >
-                <div className="flex items-start justify-between gap-3">
+          <div className="space-y-3">
+            {requirements.map((requirement, index) => (
+              <div key={requirement.id}>
+                <div 
+                  className="flex items-start justify-between p-3 rounded-lg bg-default-50 hover:bg-default-100 transition-colors cursor-pointer"
+                  onClick={() => handleViewRequirement(requirement.project?.id || 0, requirement.id)}
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h5 className="font-medium text-sm text-foreground truncate">
+                      <p className="font-medium text-sm text-foreground truncate">
                         {requirement.name}
-                      </h5>
+                      </p>
                       <Chip
                         size="sm"
                         color={getPriorityColor(requirement.priority)}
@@ -164,12 +165,12 @@ export default function PendingRequirements({
                       <div className="flex items-center gap-1">
                         <User className="w-3 h-3" />
                         <span className="truncate">
-                          {requirement.project.applicationName}
+                          {requirement.project?.applicationName || t("common.unknownProject")}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        <span>{formatDate(requirement.createdAt)}</span>
+                        <span>{formatDate(requirement.expectedCompletionDate)}</span>
                       </div>
                     </div>
                   </div>
@@ -182,13 +183,15 @@ export default function PendingRequirements({
                       className="min-w-0 px-3"
                       onPress={(e) => {
                         e.stopPropagation();
-                        handleViewRequirement(requirement.project.id, requirement.id);
+                        handleViewRequirement(requirement.project?.id || 0, requirement.id);
                       }}
                     >
-                      {t("common.view") || "View"}
+                      {t("common.view")}
                     </Button>
                   </div>
                 </div>
+                
+                {index < requirements.length - 1 && <Divider className="my-2" />}
               </div>
             ))}
           </div>
