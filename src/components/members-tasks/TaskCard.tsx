@@ -13,6 +13,8 @@ interface TaskCardProps {
   onClick?: (task: MemberTask) => void;
   onRequestDesign?: (task: MemberTask) => void;
   onChangeStatus?: (task: MemberTask) => void;
+  onChangeAssignees?: (task: MemberTask) => void;
+  isTeamManager: boolean;
 }
 
 export const TaskCard = ({
@@ -20,6 +22,8 @@ export const TaskCard = ({
   onClick,
   onRequestDesign,
   onChangeStatus,
+  onChangeAssignees,
+  isTeamManager,
 }: TaskCardProps) => {
   const { t } = useLanguage();
 
@@ -50,6 +54,12 @@ export const TaskCard = ({
   const handleChangeStatusClick = () => {
     if (onChangeStatus) {
       onChangeStatus(task);
+    }
+  };
+
+  const handleChangeAssigneesClick = () => {
+    if (onChangeAssignees) {
+      onChangeAssignees(task);
     }
   };
 
@@ -253,30 +263,45 @@ export const TaskCard = ({
 
         {/* buttons */}
         <div className="mt-3 pt-3 border-t border-divider flex flex-col gap-3">
-          {/* Row 2 */}
-          <div className="flex gap-3">
-            {task.canRequestDesign && (
+          {isTeamManager ? (
+            /* actions for team managers */
+            <div className="flex gap-3">
               <Button
                 className="flex-1"
                 color="default"
                 size="sm"
-                variant="faded"
-                onPress={() => handleRequestDesignClick()}
+                variant="solid"
+                onPress={() => handleChangeAssigneesClick()}
               >
-                {t("requestDesign")}
+                {t("changeAssignees")}
               </Button>
-            )}
+            </div>
+          ) : (
+            /* actions for members */
+            <div className="flex gap-3">
+              {task.canRequestDesign && (
+                <Button
+                  className="flex-1"
+                  color="default"
+                  size="sm"
+                  variant="faded"
+                  onPress={() => handleRequestDesignClick()}
+                >
+                  {t("changeAssignees")}
+                </Button>
+              )}
 
-            <Button
-              className="flex-1"
-              color="default"
-              size="sm"
-              variant="solid"
-              onPress={() => handleChangeStatusClick()}
-            >
-              {t("changeStatus")}
-            </Button>
-          </div>
+              <Button
+                className="flex-1"
+                color="default"
+                size="sm"
+                variant="solid"
+                onPress={() => handleChangeStatusClick()}
+              >
+                {t("changeStatus")}
+              </Button>
+            </div>
+          )}
         </div>
       </CardBody>
     </Card>

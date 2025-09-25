@@ -32,6 +32,7 @@ const translations = {
     "nav.users": "Users",
     "nav.timeline": "Timeline",
     "nav.tasks": "Tasks",
+    "nav.teamTasks": "Team Tasks",
     "nav.departments": "Departments",
     "nav.reports": "Reports",
     "nav.newProject": "New Project",
@@ -448,7 +449,8 @@ const translations = {
     "developerDashboard.developer": "Developer",
     "developerDashboard.workload": "Workload",
     "developerDashboard.efficiency": "Efficiency",
-    "developerDashboard.quickActionsSubtitle": "Assign tasks and code reviews that need your attention",
+    "developerDashboard.quickActionsSubtitle":
+      "Assign tasks and code reviews that need your attention",
 
     // Developer Quick Actions
     "developerQuickActions.unassignedTasks": "Unassigned Tasks",
@@ -468,14 +470,16 @@ const translations = {
     "developerQuickActions.assign": "Assign",
     "developerQuickActions.assignmentSuccess": "Assignment Successful",
     "developerQuickActions.assignmentError": "Assignment Failed",
-    "developerQuickActions.reviewAssignmentSuccess": "Review Assignment Successful",
+    "developerQuickActions.reviewAssignmentSuccess":
+      "Review Assignment Successful",
     "developerQuickActions.reviewAssignmentError": "Review Assignment Failed",
 
     // Task Extension
     "common.extendTask": "Extend Task Deadline",
     "common.newDeadline": "New Deadline",
     "common.reason": "Reason for Extension",
-    "common.reasonPlaceholder": "Please provide a reason for extending this task...",
+    "common.reasonPlaceholder":
+      "Please provide a reason for extending this task...",
     "common.extendDeadline": "Extend Deadline",
     "common.taskExtended": "Task deadline extended successfully",
     "common.extend": "Extend Deadline",
@@ -503,7 +507,7 @@ const translations = {
     "developerDashboard.noOverdueTasks": "No overdue or at-risk tasks",
     "developerDashboard.completedOnTime": "completed on time",
     "developerDashboard.totalCompleted": "total completed",
-    
+
     // Developer Workload Performance
     "developerDashboard.workloadPerformance": "Workload Performance",
     "developerDashboard.teamOverview": "Team performance and workload overview",
@@ -512,7 +516,7 @@ const translations = {
     "developerDashboard.activeDevelopers": "Active Developers",
     "developerDashboard.filterByStatus": "Filter by status",
     "developerDashboard.searchDevelopers": "Search developers...",
-    
+
     // Common translations for filters
     "common.allStatus": "All Status",
     "common.sortBy": "Sort by",
@@ -1279,6 +1283,7 @@ const translations = {
     "timeline.gantt.editTask": "Update Task",
     // Members Tasks Dashboard
     membersTasksDashboard: "Members Tasks Dashboard",
+    teamMembersTasksDashboard: "Team Members Tasks Dashboard",
     tasksOverview: "Tasks Overview",
 
     // Filters
@@ -1315,6 +1320,7 @@ const translations = {
     requestDesign: "Request Design",
     confirm: "Confirm",
     cancel: "cancel",
+    changeAssignees: "Change Assignees",
 
     // Export
     exportTasks: "Export Tasks",
@@ -1357,6 +1363,7 @@ const translations = {
     "nav.users": "المستخدمين",
     "nav.timeline": "المخطط الزمني",
     "nav.tasks": "المهام",
+    "nav.teamTasks": "مهام الفريق",
     "nav.departments": "الأقسام",
     "nav.reports": "التقارير",
     "nav.newProject": "مشروع جديد",
@@ -1767,11 +1774,12 @@ const translations = {
     "developerDashboard.developer": "المطور",
     "developerDashboard.workload": "الأعباء",
     "developerDashboard.efficiency": "الكفاءة",
-    "developerDashboard.quickActionsSubtitle": "تعيين المهام ومراجعات الكود التي تحتاج انتباهك",
+    "developerDashboard.quickActionsSubtitle":
+      "تعيين المهام ومراجعات الكود التي تحتاج انتباهك",
 
     // Developer Quick Actions
     "developerQuickActions.unassignedTasks": "المهام غير المعينة",
-    "developerQuickActions.almostCompletedTasks": "المهام شبه المكتملة", 
+    "developerQuickActions.almostCompletedTasks": "المهام شبه المكتملة",
     "developerQuickActions.availableDevelopers": "المطورون المتاحون في الفريق",
     "developerQuickActions.assignTask": "تعيين مهمة",
     "developerQuickActions.assignReviewer": "تعيين مراجع",
@@ -1790,7 +1798,7 @@ const translations = {
     "developerQuickActions.reviewAssignmentSuccess": "تم تعيين المراجعة بنجاح",
     "developerQuickActions.reviewAssignmentError": "فشل في تعيين المراجعة",
 
-    // Task Extension  
+    // Task Extension
     "common.extendTask": "تمديد موعد المهمة",
     "common.newDeadline": "الموعد النهائي الجديد",
     "common.reason": "سبب التمديد",
@@ -1822,7 +1830,7 @@ const translations = {
     "developerDashboard.noOverdueTasks": "لا توجد مهام متأخرة أو معرضة للخطر",
     "developerDashboard.completedOnTime": "مكتمل في الوقت المحدد",
     "developerDashboard.totalCompleted": "إجمالي المكتمل",
-    
+
     // Developer Workload Performance
     "developerDashboard.workloadPerformance": "أداء الأعباء",
     "developerDashboard.teamOverview": "نظرة عامة على أداء الفريق والأعباء",
@@ -1831,7 +1839,7 @@ const translations = {
     "developerDashboard.activeDevelopers": "المطورون النشطون",
     "developerDashboard.filterByStatus": "تصفية حسب الحالة",
     "developerDashboard.searchDevelopers": "البحث عن المطورين...",
-    
+
     // Common translations for filters
     "common.allStatus": "جميع الحالات",
     "common.sortBy": "ترتيب حسب",
@@ -2580,6 +2588,7 @@ const translations = {
     "timeline.gantt.editTask": "تعديل المهمة",
     // Members Tasks Dashboard
     membersTasksDashboard: "لوحة مهام الأعضاء",
+    teamMembersTasksDashboard: "لوحة مهام أعضاء الفريق",
     tasksOverview: "نظرة عامة على المهام",
 
     // Filters
@@ -2616,6 +2625,7 @@ const translations = {
     requestDesign: "طلب تصميم",
     confirm: "تأكيد",
     cancel: "إلغاء",
+    changeAssignees: "تغيير المعينين",
 
     // Export
     exportTasks: "تصدير المهام",

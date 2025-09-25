@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@heroui/button";
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronDown, X } from "lucide-react";
 import { Card, CardBody } from "@heroui/card";
 import {
   Dropdown,
@@ -22,6 +22,9 @@ import {
   Clock,
 } from "lucide-react";
 import {
+  Autocomplete,
+  AutocompleteItem,
+  Avatar,
   Chip,
   Drawer,
   DrawerBody,
@@ -44,18 +47,19 @@ import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MemberTask, TaskStatus } from "@/types/membersTasks";
 import GlobalPagination from "@/components/GlobalPagination";
-import { usePageTitle } from "@/hooks";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
+import { usePermissions } from "@/hooks/usePermissions";
+import useTeamSearch from "@/hooks/useTeamSearch";
+import { MemberSearchResult } from "@/types/timeline";
 
 export default function MembersTasksPage() {
   const { t } = useLanguage();
 
-  // Set page title
-  usePageTitle("tasks.title");
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
   const [viewType, setViewType] = useState<"grid" | "list" | "gantt">("grid");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { hasAnyRole, loading: userLoading } = usePermissions();
 
   const {
     tasks,
@@ -78,17 +82,38 @@ export default function MembersTasksPage() {
     exportTasks,
     changeStatus,
     requestDesign,
+    changeAssignees,
   } = useMembersTasks();
 
   const { language } = useLanguage();
 
   const [isRequestDesignModalOpend, setIsRequestDesignModalOpend] =
     useState(false);
+  const [isChangeAssigneesModalOpened, setIsChangeAssigneesModalOpened] =
+    useState(false);
   const [isChangeStatusModalOpend, setIsChangeStatusModalOpend] =
     useState(false);
   const [notes, setNotes] = useState("");
   const [modalError, setModalError] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
+
+  const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
+    []
+  );
+  const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
+  // State for selected members
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<MemberSearchResult | null>(null);
+  // Employee search hooks for employees
+  const {
+    employees: employees,
+    loading: employeeSearchLoading,
+    searchEmployees: searchEmployees,
+  } = useTeamSearch({
+    minLength: 1,
+    maxResults: 20,
+    loadInitialResults: false,
+  });
 
   const effectivePageSize = normalizePageSize(
     taskParametersRequest.limit ?? 10,
@@ -98,6 +123,34 @@ export default function MembersTasksPage() {
   const [searchValue, setSearchValue] = useState(
     taskParametersRequest?.search ?? ""
   );
+
+  const isTeamManager = hasAnyRole([
+    "Analyst Department Manager",
+    "Administrator",
+  ]);
+
+  console.log("isTeamManager", isTeamManager);
+
+  const handleChangeAssigneesSubmit = async () => {
+    if (typeof changeAssignees === "function") {
+      const success = await changeAssignees(
+        selectedTask?.id ?? "0",
+        selectedMembers.map((member) => member.id.toString()),
+        notes ?? ""
+      );
+
+      if (success) {
+        setIsChangeAssigneesModalOpened(false);
+        setNotes("");
+        handleRefresh();
+      } else {
+        setModalError(true);
+      }
+    } else {
+      setModalError(true);
+      // Optionally, log or show a message that changeAssignees is not available
+    }
+  };
 
   const handleRequestDesignSubmit = async () => {
     const success = await requestDesign(selectedTask?.id ?? "0", notes ?? "");
@@ -132,6 +185,16 @@ export default function MembersTasksPage() {
     setIsDrawerOpen(true);
   };
 
+  const handleChangeAssignees = (task: MemberTask) => {
+    // Implement the logic to change assignees here
+    if (isDrawerOpen) setIsDrawerOpen(false);
+    setSelectedTask(task);
+    setIsChangeAssigneesModalOpened(true);
+    resetUserDropDown();
+    setModalError(false);
+    setNotes("");
+  };
+
   const handleRequestDesign = (task: MemberTask) => {
     if (isDrawerOpen) setIsDrawerOpen(false);
     setSelectedTask(task);
@@ -152,12 +215,30 @@ export default function MembersTasksPage() {
     setNotes("");
   };
 
-  const handleExport = async (format: "csv" | "pdf" | "excel") => {
+  const handleExport = async (format: "csv" | "pdf" | "xlsx") => {
     try {
       await exportTasks(format);
     } catch (error) {
       console.error("Export failed:", error);
     }
+  };
+
+  // Handle employee selection
+  const handleEmployeeSelect = (employee: MemberSearchResult) => {
+    setSelectedEmployee(employee);
+    setEmployeeInputValue("");
+    if (!selectedMembers.some((user) => user.id === employee.id)) {
+      setSelectedMembers([...selectedMembers, employee]);
+    }
+    setSelectedEmployee(null);
+  };
+
+  const resetUserDropDown = () => {
+    // Only reset the dropdown input and current selection, keep selected chips
+    setEmployeeInputValue("");
+    setSelectedEmployee(null);
+    setSelectedMembers([]);
+    setSelectedEmployee(null);
   };
 
   // Auto search effect
@@ -199,7 +280,9 @@ export default function MembersTasksPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
-                {t("membersTasksDashboard")}
+                {isTeamManager
+                  ? t("teamMembersTasksDashboard")
+                  : t("membersTasksDashboard")}
               </h1>
               <p className="text-foreground-600 mt-1">{t("tasksOverview")}</p>
             </div>
@@ -226,7 +309,7 @@ export default function MembersTasksPage() {
                   <DropdownItem
                     key="excel"
                     startContent={<FileSpreadsheet className="w-4 h-4" />}
-                    onPress={() => handleExport("excel")}
+                    onPress={() => handleExport("xlsx")}
                   >
                     {t("exportAsExcel")}
                   </DropdownItem>
@@ -541,7 +624,9 @@ export default function MembersTasksPage() {
                 {tasks.map((task) => (
                   <TaskCard
                     key={task.id}
+                    isTeamManager={isTeamManager}
                     task={task}
+                    onChangeAssignees={handleChangeAssignees}
                     onChangeStatus={handleChangeStatus}
                     onClick={handleTaskClick}
                     onRequestDesign={handleRequestDesign}
@@ -711,28 +796,42 @@ export default function MembersTasksPage() {
 
                   {/* buttons */}
                   <div className="mt-3 pt-3 flex flex-col gap-3">
-                    {/* Row 2 */}
-                    <div className="flex gap-3">
-                      <Button
-                        className="flex-1"
-                        color="primary"
-                        size="sm"
-                        variant="flat"
-                        onPress={() => handleRequestDesign(selectedTask)}
-                      >
-                        {t("requestDesign")}
-                      </Button>
+                    {isTeamManager ? (
+                      <div className="flex gap-3">
+                        <Button
+                          className="flex-1"
+                          color="default"
+                          size="sm"
+                          variant="solid"
+                          onPress={() => handleChangeAssignees(selectedTask!)}
+                        >
+                          {t("changeAssignees")}
+                        </Button>
+                      </div>
+                    ) : (
+                      /* Member */
+                      <div className="flex gap-3">
+                        <Button
+                          className="flex-1"
+                          color="primary"
+                          size="sm"
+                          variant="flat"
+                          onPress={() => handleRequestDesign(selectedTask)}
+                        >
+                          {t("requestDesign")}
+                        </Button>
 
-                      <Button
-                        className="flex-1"
-                        color="success"
-                        size="sm"
-                        variant="flat"
-                        onPress={() => handleChangeStatus(selectedTask)}
-                      >
-                        {t("changeStatus")}
-                      </Button>
-                    </div>
+                        <Button
+                          className="flex-1"
+                          color="success"
+                          size="sm"
+                          variant="flat"
+                          onPress={() => handleChangeStatus(selectedTask)}
+                        >
+                          {t("changeStatus")}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -748,6 +847,167 @@ export default function MembersTasksPage() {
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
+
+        {/* Change Assignees Modal */}
+        <Modal
+          isOpen={isChangeAssigneesModalOpened}
+          size="2xl"
+          onOpenChange={setIsChangeAssigneesModalOpened}
+        >
+          <ModalContent className="p-6 rounded-lg max-w-3xl h-[420px]">
+            <ModalHeader className="flex flex-col items-center">
+              {modalError && (
+                <h4 className="font-medium" style={{ color: "#ef4444" }}>
+                  {t("common.unexpectedError")}
+                </h4>
+              )}
+              <h2 className="text-lg font-semibold">{t("changeAssignees")}</h2>
+            </ModalHeader>
+
+            {/* Body */}
+            <div className="space-y-4">
+              <Input readOnly value={selectedTask?.name ?? ""} />
+
+              {/* Tags Display */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                {selectedMembers.map((employee, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      background: "#e0e0e0",
+                      padding: "5px 10px",
+                      borderRadius: "20px",
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <X
+                        color="red"
+                        size={24}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          setSelectedMembers(
+                            selectedMembers.filter(
+                              (user) => user.id !== employee.id
+                            )
+                          );
+                        }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs">
+                          {employee.gradeName}{" "}
+                          {employee.fullName || "Unknown User"}
+                        </span>
+                        <span className="text-xs text-default-400">
+                          @{employee.department || "unknown"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <label>{t("users.selectEmployee")}</label>
+              <Autocomplete
+                isClearable
+                defaultFilter={(textValue, input) => true}
+                errorMessage="You must choose one"
+                inputValue={employeeInputValue}
+                isInvalid={modalError}
+                isLoading={employeeSearchLoading}
+                label={t("users.selectEmployee")}
+                menuTrigger="input"
+                placeholder={t("users.searchEmployees")}
+                selectedKey={selectedEmployee?.id.toString()}
+                onInputChange={(value) => {
+                  setEmployeeInputValue(value);
+                  if (
+                    selectedEmployee &&
+                    value !==
+                      `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
+                  ) {
+                    setSelectedEmployee(null);
+                  }
+                  searchEmployees(value);
+                  if (modalError) {
+                    setModalError(false); // clear error on typing
+                  }
+                }}
+                onSelectionChange={(key) => {
+                  if (key) {
+                    const selectedEmployee = employees.find(
+                      (e) => e.id.toString() === key
+                    );
+
+                    if (selectedEmployee) {
+                      handleEmployeeSelect(selectedEmployee);
+                      setModalError(false); // clear error on selection
+                    }
+                  } else {
+                    setSelectedEmployee(null);
+                    setEmployeeInputValue("");
+                  }
+                }}
+              >
+                {employees.map((employee) => (
+                  <AutocompleteItem
+                    key={employee.id.toString()}
+                    textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar name={employee.fullName || "Unknown"} size="sm" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {employee.gradeName}{" "}
+                          {employee.fullName || "Unknown User"}
+                        </span>
+                        <span className="text-sm text-default-500">
+                          {employee.militaryNumber || "N/A"}
+                        </span>
+                        <span className="text-xs text-default-400">
+                          @{employee.userName || "unknown"}
+                        </span>
+                        <span className="text-xs text-default-400">
+                          @{employee.department || "unknown"}
+                        </span>
+                      </div>
+                    </div>
+                  </AutocompleteItem>
+                ))}
+              </Autocomplete>
+
+              <Textarea
+                placeholder={t("timeline.treeView.notes")}
+                value={notes}
+                onChange={(e: any) => setNotes(e.target.value)}
+              />
+            </div>
+            {/* end Body */}
+
+            <ModalFooter>
+              <Button
+                color="default"
+                size="md"
+                variant="flat"
+                onPress={() => {
+                  setIsChangeAssigneesModalOpened(false);
+                  setModalError(false); // clear error here too
+                }}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                color="primary"
+                size="md"
+                variant="flat"
+                onPress={handleChangeAssigneesSubmit}
+              >
+                {t("confirm")}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
         {/* Request Design Modal */}
         <Modal
