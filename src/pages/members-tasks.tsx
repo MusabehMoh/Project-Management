@@ -95,6 +95,8 @@ export default function MembersTasksPage() {
     useState(false);
   const [notes, setNotes] = useState("");
   const [modalError, setModalError] = useState(false);
+  const [assigneeModalError, setAssigneeModalError] = useState(false);
+
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
@@ -133,22 +135,26 @@ export default function MembersTasksPage() {
 
   const handleChangeAssigneesSubmit = async () => {
     if (typeof changeAssignees === "function") {
-      const success = await changeAssignees(
-        selectedTask?.id ?? "0",
-        selectedMembers.map((member) => member.id.toString()),
-        notes ?? ""
-      );
-
-      if (success) {
-        setIsChangeAssigneesModalOpened(false);
-        setNotes("");
-        handleRefresh();
+      if (selectedMembers.length === 0) {
+        setAssigneeModalError(true);
+        return;
       } else {
-        setModalError(true);
+        const success = await changeAssignees(
+          selectedTask?.id ?? "0",
+          selectedMembers.map((member) => member.id.toString()),
+          notes ?? ""
+        );
+
+        if (success) {
+          setIsChangeAssigneesModalOpened(false);
+          setNotes("");
+          handleRefresh();
+        } else {
+          setModalError(true);
+        }
       }
     } else {
       setModalError(true);
-      // Optionally, log or show a message that changeAssignees is not available
     }
   };
 
@@ -192,6 +198,7 @@ export default function MembersTasksPage() {
     setIsChangeAssigneesModalOpened(true);
     resetUserDropDown();
     setModalError(false);
+    setAssigneeModalError(false);
     setNotes("");
   };
 
@@ -912,9 +919,9 @@ export default function MembersTasksPage() {
               <Autocomplete
                 isClearable
                 defaultFilter={(textValue, input) => true}
-                errorMessage="You must choose one"
+                errorMessage="You must choose one at least"
                 inputValue={employeeInputValue}
-                isInvalid={modalError}
+                isInvalid={assigneeModalError}
                 isLoading={employeeSearchLoading}
                 label={t("users.selectEmployee")}
                 menuTrigger="input"
