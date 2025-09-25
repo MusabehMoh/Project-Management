@@ -466,6 +466,11 @@ interface UseMembersTasksResult {
   exportTasks: (format: "csv" | "pdf" | "xlsx") => Promise<void>;
   requestDesign: (id: string, notes: string) => Promise<boolean>;
   changeStatus: (id: string, typeId: string, notes: string) => Promise<boolean>;
+  changeAssignees?: (
+    taskId: string,
+    memberIds: string[],
+    notes: string
+  ) => Promise<boolean>;
   tasksConfig: () => Promise<void>;
   handlePageChange: (page: number) => void;
   handlePageSizeChange: (limit: number) => void;
@@ -579,6 +584,39 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       console.log("---->> catch triggered");
     } finally {
       setHeaderLoading(false);
+    }
+  };
+
+  ///change assignees
+  const changeAssignees = async (
+    taskId: string,
+    memberIds: string[],
+    notes: string
+  ): Promise<boolean> => {
+    console.log("changeAssignees called with:", { taskId, memberIds, notes });
+    try {
+      const response = await membersTasksService.changeAssignees(
+        taskId,
+        memberIds,
+        notes
+      );
+
+      if (response.success) {
+        addToast({
+          description: response.message ?? "Assignees changed successfully",
+          color: "success",
+        });
+      } else {
+        addToast({
+          description: response.message ?? "Assignees couldn't be changed",
+          color: "warning",
+        });
+      }
+
+      return response.success;
+    } catch (err) {
+      return false;
+    } finally {
     }
   };
 
@@ -800,6 +838,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     refreshTasks,
     exportTasks,
     changeStatus,
+    changeAssignees,
     requestDesign,
     tasksConfig,
   };

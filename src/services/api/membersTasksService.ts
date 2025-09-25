@@ -146,6 +146,24 @@ export class MembersTasksService {
     return apiClient.post<void>(`${this.baseUrl}/${id}/request-design`, notes);
   }
 
+  ///change assignees
+  async changeAssignees(
+    taskId: string,
+    memberIds: string[],
+    notes: string
+  ): Promise<ApiResponse<void>> {
+    return {
+      success: true,
+      data: undefined,
+      message: "Change Status submitted successfully",
+      timestamp: "15-08-2025",
+    };
+    // return apiClient.post<void>(`${this.baseUrl}/${taskId}/change-assignees`, {
+    //   memberIds,
+    //   notes,
+    // });
+  }
+
   /*change Status */
   async changeStatus(
     id: string,
