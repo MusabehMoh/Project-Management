@@ -207,12 +207,7 @@ const getProjectNavItems = (
     });
   }
   /// member tasks or Team Tasks for manager
-  if (
-    isAdmin() ||
-    hasPermission({
-      actions: ["Department Management", "Manage Departments"],
-    })
-  ) {
+  if (hasAnyRole(["Analyst Department Manager", "Administrator"])) {
     developmentItems.push({ label: t("nav.teamTasks"), href: "/tasks" });
   } else {
     developmentItems.push({ label: t("nav.tasks"), href: "/tasks" });
