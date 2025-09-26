@@ -12,6 +12,7 @@ import DeveloperCalendar from "@/components/calendar";
 import SprintProgress from "@/components/dashboard/developer/SprintProgress";
 import ApprovedRequirements from "@/components/ApprovedRequirements";
 import TaskCompletionTracker from "@/components/dashboard/developer/TaskCompletionTracker";
+import DHtmlGanttChart from "@/components/dashboard/developer/DHtmlGanttChart";
 
 export default function DeveloperManagerDashboard() {
   const { t, language } = useLanguage();
@@ -102,9 +103,9 @@ export default function DeveloperManagerDashboard() {
         </div>
       </div>
 
-      {/* Deployment Pipeline Layout */}
+      {/* Deployment Pipeline and Gantt Chart Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Column - Deployment Pipeline */}
+        {/* Main Column - Deployment Pipeline and Gantt Chart */}
         <div className="lg:col-span-2 space-y-6">
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">
@@ -112,6 +113,11 @@ export default function DeveloperManagerDashboard() {
                 "Deployment Pipeline"}
             </h2>
             <DeploymentPipeline />
+          </div>
+
+          {/* DHTMLX Gantt Chart Section */}
+          <div className="space-y-4">
+            <DHtmlGanttChart height="400px" useMockData={true} />
           </div>
 
           {/* Task Completion Tracking */}

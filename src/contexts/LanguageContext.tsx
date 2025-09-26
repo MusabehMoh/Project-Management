@@ -1289,6 +1289,20 @@ const translations = {
     "timeline.gantt.delete": "Delete",
     "timeline.gantt.progress": "Progess",
     "timeline.gantt.editTask": "Update Task",
+
+    // Gantt Chart
+    "gantt.title": "Project Timeline",
+    "gantt.subtitle": "Track project progress and dependencies",
+    "gantt.task": "Task",
+    "gantt.assignee": "Assignee",
+    "gantt.priority": "Priority",
+    "gantt.startDate": "Start",
+    "gantt.duration": "Duration",
+    "gantt.progress": "Progress",
+    "gantt.days": "days",
+    "gantt.zoomIn": "Day View",
+    "gantt.zoomOut": "Month View",
+    "gantt.fullscreen": "Expand",
     // Members Tasks Dashboard
     membersTasksDashboard: "Members Tasks Dashboard",
     teamMembersTasksDashboard: "Team Members Tasks Dashboard",
@@ -2602,6 +2616,20 @@ const translations = {
     "timeline.gantt.delete": "حذف",
     "timeline.gantt.progress": "ما تم انجازه",
     "timeline.gantt.editTask": "تعديل المهمة",
+
+    // Gantt Chart
+    "gantt.title": "الجدول الزمني للمشروع",
+    "gantt.subtitle": "تتبع تقدم المشروع والتبعيات",
+    "gantt.task": "المهمة",
+    "gantt.assignee": "المسؤول",
+    "gantt.priority": "الأولوية",
+    "gantt.startDate": "البداية",
+    "gantt.duration": "المدة",
+    "gantt.progress": "التقدم",
+    "gantt.days": "أيام",
+    "gantt.zoomIn": "عرض يومي",
+    "gantt.zoomOut": "عرض شهري",
+    "gantt.fullscreen": "توسيع",
     // Members Tasks Dashboard
     membersTasksDashboard: "لوحة مهام الأعضاء",
     teamMembersTasksDashboard: "لوحة مهام أعضاء الفريق",
