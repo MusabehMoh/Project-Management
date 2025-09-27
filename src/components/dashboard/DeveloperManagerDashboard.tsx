@@ -103,9 +103,17 @@ export default function DeveloperManagerDashboard() {
         </div>
       </div>
 
-      {/* Deployment Pipeline and Gantt Chart Layout */}
+      {/* Full Width Project Timeline Section */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold text-foreground">
+          {t("developerDashboard.projectTimeline") || "Project Timeline"}
+        </h2>
+        <DHtmlGanttChart height="400px" useMockData={true} />
+      </div>
+
+      {/* Deployment Pipeline and Other Components Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Column - Deployment Pipeline and Gantt Chart */}
+        {/* Main Column - Deployment Pipeline and Task Completion */}
         <div className="lg:col-span-2 space-y-6">
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">
@@ -113,11 +121,6 @@ export default function DeveloperManagerDashboard() {
                 "Deployment Pipeline"}
             </h2>
             <DeploymentPipeline />
-          </div>
-
-          {/* DHTMLX Gantt Chart Section */}
-          <div className="space-y-4">
-            <DHtmlGanttChart height="400px" useMockData={true} />
           </div>
 
           {/* Task Completion Tracking */}

@@ -388,6 +388,7 @@ export default function DeveloperWorkloadPerformance({
               </div>
               
               <Select
+                aria-label={t("developerDashboard.filterByStatus") || "Filter by status"}
                 className="max-w-xs"
                 placeholder={t("developerDashboard.filterByStatus") || "Filter by status"}
                 selectedKeys={statusFilter ? [statusFilter] : []}
@@ -404,6 +405,7 @@ export default function DeveloperWorkloadPerformance({
               </Select>
               
               <Select
+                aria-label={t("common.sortBy") || "Sort by"}
                 className="max-w-xs"
                 placeholder={t("common.sortBy") || "Sort by"}
                 selectedKeys={[sortBy]}
@@ -525,6 +527,7 @@ export default function DeveloperWorkloadPerformance({
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <Progress
+                        aria-label={`${developer.developerName} workload: ${developer.workloadPercentage}%`}
                         color={developer.workloadPercentage > 90 ? "danger" : 
                                developer.workloadPercentage > 75 ? "warning" : "success"}
                         size="sm"

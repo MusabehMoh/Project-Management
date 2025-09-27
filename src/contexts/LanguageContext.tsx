@@ -430,6 +430,7 @@ const translations = {
     "developerDashboard.newSprint": "New Sprint",
     "developerDashboard.createRelease": "Create Release",
     "developerDashboard.teamWorkload": "Development Team Workload",
+    "developerDashboard.projectTimeline": "Project Timeline",
     "developerDashboard.deploymentPipeline": "Deployment Pipeline",
     "developerDashboard.sprintProgress": "Sprint Progress",
     "developerDashboard.quickActions": "Developer Quick Actions",
@@ -1303,6 +1304,7 @@ const translations = {
     "gantt.zoomIn": "Day View",
     "gantt.zoomOut": "Month View",
     "gantt.fullscreen": "Expand",
+    "gantt.loading": "Loading timeline...",
     // Members Tasks Dashboard
     membersTasksDashboard: "Members Tasks Dashboard",
     teamMembersTasksDashboard: "Team Members Tasks Dashboard",
@@ -1777,6 +1779,7 @@ const translations = {
     "developerDashboard.newSprint": "سبرنت جديد",
     "developerDashboard.createRelease": "إنشاء إصدار",
     "developerDashboard.teamWorkload": "أعباء فريق التطوير",
+    "developerDashboard.projectTimeline": "الجدول الزمني للمشروع",
     "developerDashboard.deploymentPipeline": "خط أنابيب النشر",
     "developerDashboard.sprintProgress": "تقدم السبرنت",
     "developerDashboard.quickActions": "إجراءات المطورين السريعة",
@@ -2630,6 +2633,7 @@ const translations = {
     "gantt.zoomIn": "عرض يومي",
     "gantt.zoomOut": "عرض شهري",
     "gantt.fullscreen": "توسيع",
+    "gantt.loading": "جاري تحميل الجدول الزمني...",
     // Members Tasks Dashboard
     membersTasksDashboard: "لوحة مهام الأعضاء",
     teamMembersTasksDashboard: "لوحة مهام أعضاء الفريق",

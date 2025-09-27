@@ -29,9 +29,21 @@ export interface TaskSearchParams {
   page?: number;
   limit?: number;
   search?: string; // Task name search
-  statusId?: number;
-  priorityId?: number;
+  memberIds?: number[]; // Filter by member IDs
+  memberFilterMode?: "any" | "all"; // How to apply member filter
+  departmentIds?: string[]; // Filter by department IDs
+  statusIds?: number[]; // Filter by status IDs  
+  priorityIds?: number[]; // Filter by priority IDs
+  statusId?: number; // Legacy single status filter
+  priorityId?: number; // Legacy single priority filter
   projectId?: number;
+  isOverdue?: boolean; // Show only overdue tasks
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  sortBy?: "startDate" | "endDate" | "priority" | "status" | "name";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface TasksResponse {

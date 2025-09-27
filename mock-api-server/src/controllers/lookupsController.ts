@@ -172,6 +172,57 @@ export class LookupsController {
       });
     }
   }
+
+  /**
+   * Get lookup by code
+   */
+  async getLookupByCode(req: Request, res: Response) {
+    try {
+      const { code } = req.params;
+
+      logger.info(`Getting lookup by code: ${code}`);
+
+      // Handle ProjectStatus specially
+      if (code === "ProjectStatus") {
+        // Return the project statuses in the expected LookupDto format
+        const projectStatusLookups = mockProjectStatuses.map((status) => ({
+          id: status.id,
+          name: status.nameEn,
+          nameAr: status.nameAr,
+          value: status.code,
+          isActive: status.isActive,
+          order: status.order,
+        }));
+
+        return res.json({
+          success: true,
+          data: projectStatusLookups,
+        });
+      }
+
+      // For other lookup codes, try to find in mockLookups
+      const lookup = mockLookups[code.toLowerCase() as keyof typeof mockLookups];
+
+      if (!lookup) {
+        return res.status(404).json({
+          success: false,
+          message: `Lookup code '${code}' not found`,
+        });
+      }
+
+      res.json({
+        success: true,
+        data: lookup,
+      });
+    } catch (error) {
+      logger.error("Error getting lookup by code:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
   /**
    * Get all project statuses
    */
