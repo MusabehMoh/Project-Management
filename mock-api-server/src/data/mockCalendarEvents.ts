@@ -25,7 +25,151 @@ export interface CalendarEvent {
 
 // Mock calendar events data
 export const mockCalendarEvents: CalendarEvent[] = [
-  // Project milestones and deadlines
+  // Meeting with LOW priority and UPCOMING status
+  {
+    id: 101,
+    title: "Coffee Chat with Team",
+    description: "Informal team building coffee session",
+    startDate: "2025-09-28T10:00:00Z",
+    endDate: "2025-09-28T10:30:00Z",
+    type: "meeting",
+    status: "upcoming",
+    priority: "low",
+    assignedTo: [4, 5, 6],
+    location: "Cafeteria",
+    isAllDay: false,
+    createdBy: 4,
+    createdAt: "2025-09-25T08:00:00Z",
+    updatedAt: "2025-09-25T08:00:00Z"
+  },
+  
+  // Meeting with MEDIUM priority and IN-PROGRESS status
+  {
+    id: 102,
+    title: "Sprint Planning Session",
+    description: "Planning meeting for the next development sprint",
+    startDate: "2025-09-27T14:00:00Z",
+    endDate: "2025-09-27T16:00:00Z",
+    type: "meeting",
+    status: "in-progress",
+    priority: "medium",
+    assignedTo: [4, 5, 6, 7],
+    location: "Meeting Room B",
+    isAllDay: false,
+    createdBy: 5,
+    createdAt: "2025-09-20T08:00:00Z",
+    updatedAt: "2025-09-27T14:00:00Z"
+  },
+
+  // Meeting with HIGH priority and COMPLETED status
+  {
+    id: 103,
+    title: "Client Presentation Review",
+    description: "Final review of presentation materials before client meeting",
+    startDate: "2025-09-25T09:00:00Z",
+    endDate: "2025-09-25T11:00:00Z",
+    type: "meeting",
+    status: "completed",
+    priority: "high",
+    assignedTo: [4, 5, 6, 8],
+    location: "Executive Conference Room",
+    isAllDay: false,
+    createdBy: 6,
+    createdAt: "2025-09-20T10:00:00Z",
+    updatedAt: "2025-09-25T11:00:00Z"
+  },
+
+  // Meeting with CRITICAL priority and OVERDUE status
+  {
+    id: 104,
+    title: "Emergency Security Briefing",
+    description: "Urgent security incident response meeting",
+    startDate: "2025-09-26T08:00:00Z",
+    endDate: "2025-09-26T09:00:00Z",
+    type: "meeting",
+    status: "overdue",
+    priority: "critical",
+    assignedTo: [4, 5, 6, 7, 8, 9],
+    location: "Secure Conference Room",
+    isAllDay: false,
+    createdBy: 7,
+    createdAt: "2025-09-26T07:30:00Z",
+    updatedAt: "2025-09-26T09:30:00Z"
+  },
+
+  // Additional meeting with LOW priority and COMPLETED status
+  {
+    id: 105,
+    title: "Monthly Newsletter Review",
+    description: "Review content for the monthly company newsletter",
+    startDate: "2025-09-24T15:00:00Z",
+    endDate: "2025-09-24T15:30:00Z",
+    type: "meeting",
+    status: "completed",
+    priority: "low",
+    assignedTo: [5, 9],
+    location: "Marketing Office",
+    isAllDay: false,
+    createdBy: 9,
+    createdAt: "2025-09-20T12:00:00Z",
+    updatedAt: "2025-09-24T15:30:00Z"
+  },
+
+  // Meeting with MEDIUM priority and OVERDUE status
+  {
+    id: 106,
+    title: "Budget Review Meeting",
+    description: "Quarterly budget review and planning session",
+    startDate: "2025-09-25T13:00:00Z",
+    endDate: "2025-09-25T14:30:00Z",
+    type: "meeting",
+    status: "overdue",
+    priority: "medium",
+    assignedTo: [4, 6, 8],
+    location: "Finance Conference Room",
+    isAllDay: false,
+    createdBy: 8,
+    createdAt: "2025-09-18T10:00:00Z",
+    updatedAt: "2025-09-25T15:00:00Z"
+  },
+
+  // Meeting with HIGH priority and UPCOMING status
+  {
+    id: 107,
+    title: "Product Launch Strategy",
+    description: "Strategic planning for upcoming product launch",
+    startDate: "2025-09-30T10:00:00Z",
+    endDate: "2025-09-30T12:00:00Z",
+    type: "meeting",
+    status: "upcoming",
+    priority: "high",
+    assignedTo: [4, 5, 6, 7, 8],
+    location: "Executive Boardroom",
+    isAllDay: false,
+    createdBy: 4,
+    createdAt: "2025-09-22T09:00:00Z",
+    updatedAt: "2025-09-22T09:00:00Z"
+  },
+
+  // Meeting with CRITICAL priority and IN-PROGRESS status
+  {
+    id: 108,
+    title: "System Outage Response",
+    description: "Critical incident response for system outage",
+    startDate: "2025-09-27T16:00:00Z",
+    endDate: "2025-09-27T18:00:00Z",
+    type: "meeting",
+    status: "in-progress",
+    priority: "critical",
+    assignedTo: [4, 5, 7, 8],
+    location: "IT Operations Center",
+    isAllDay: false,
+    createdBy: 7,
+    createdAt: "2025-09-27T15:45:00Z",
+    updatedAt: "2025-09-27T16:00:00Z"
+  },
+
+  // Project milestones and deadlines (original data)
   {
     id: 1,
     title: "Project Alpha Requirements Review",

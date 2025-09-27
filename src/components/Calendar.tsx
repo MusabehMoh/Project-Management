@@ -201,6 +201,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     endTime: null as Time | null,
     type: "meeting" as CalendarEvent['type'],
     priority: "medium" as CalendarEvent['priority'],
+    status: "upcoming" as CalendarEvent['status'],
     location: "",
     isAllDay: false,
   });
@@ -251,15 +252,15 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     }
   };
 
-  // Get comprehensive event styling based on multiple factors
+  // Get comprehensive event styling based on status and priority (for meetings-only calendar)
   const getEventStyling = (event: CalendarEvent) => {
     const baseClasses = "text-xs p-2 rounded cursor-pointer hover:opacity-80 transition-all duration-200";
-    const typeColor = getEventTypeColor(event.type);
+    const statusColor = getEventStatusColor(event.status); // Use status color instead of type color
     const priorityBorder = getPriorityBorder(event.priority);
     
-    // Combine background color with priority border
-    const backgroundColor = `var(--heroui-colors-${typeColor}-100)`;
-    const borderColor = event.status === 'overdue' ? 'border-danger-300' : `border-${typeColor}-200`;
+    // Use status color for background to differentiate meeting states
+    const backgroundColor = `var(--heroui-colors-${statusColor}-100)`;
+    const borderColor = event.status === 'overdue' ? 'border-danger-300' : `border-${statusColor}-200`;
     
     return {
       className: `${baseClasses} ${priorityBorder} border ${borderColor} ${
@@ -273,15 +274,9 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     };
   };
 
-  // Get priority icon
+  // Get priority icon - REMOVED per user request (no extra icons)
   const getPriorityIcon = (priority: CalendarEvent['priority']) => {
-    switch (priority) {
-      case 'critical': return <AlertTriangle className="w-3 h-3 text-danger" />;
-      case 'high': return <AlertTriangle className="w-3 h-3 text-warning" />;
-      case 'medium': return <Clock className="w-3 h-3 text-primary" />;
-      case 'low': return <CheckCircle className="w-3 h-3 text-success" />;
-      default: return null;
-    }
+    return null; // No icons to keep interface clean
   };
 
   // Format date for display
@@ -349,6 +344,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       endTime: null,
       type: "meeting",
       priority: "medium",
+      status: "upcoming",
       location: "",
       isAllDay: false,
     });
@@ -386,6 +382,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       endTime: endTime,
       type: event.type,
       priority: event.priority,
+      status: event.status,
       location: event.location || "",
       isAllDay: event.isAllDay || false,
     });
@@ -452,7 +449,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       startDate: startDateTime,
       endDate: endDateTime,
       type: eventForm.type,
-      status: "upcoming" as CalendarEvent['status'],
+      status: eventForm.status,
       priority: eventForm.priority,
       location: eventForm.location.trim() || undefined,
       isAllDay: eventForm.isAllDay,
@@ -814,7 +811,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                         className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${styling.className}`}
                         style={{
                           ...styling.style,
-                          backgroundColor: `var(--heroui-colors-${getEventTypeColor(event.type)}-50)`
+                          backgroundColor: `var(--heroui-colors-${getEventStatusColor(event.status)}-50)`
                         }}
                         isPressable
                         onPress={() => setShowEventDetails(event)}
@@ -931,7 +928,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                           className={`p-2 rounded-lg hover:bg-default-50 cursor-pointer ${styling.className}`}
                           style={{
                             ...styling.style,
-                            backgroundColor: `var(--heroui-colors-${getEventTypeColor(event.type)}-50)`
+                            backgroundColor: `var(--heroui-colors-${getEventStatusColor(event.status)}-50)`
                           }}
                           onClick={() => setShowEventDetails(event)}
                         >
@@ -1181,8 +1178,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 />
               </div>
 
-              {/* Priority Selection */}
-              <div className="grid grid-cols-1 gap-4">
+              {/* Priority and Status Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
                   label={t("calendar.priority")}
                   selectedKeys={[eventForm.priority]}
@@ -1205,6 +1202,31 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   </SelectItem>
                   <SelectItem key="critical">
                     {t("calendar.priorities.critical")}
+                  </SelectItem>
+                </Select>
+
+                <Select
+                  label={t("calendar.status")}
+                  selectedKeys={[eventForm.status]}
+                  onSelectionChange={(keys) => {
+                    const key = Array.from(keys)[0] as CalendarEvent['status'];
+                    setEventForm({...eventForm, status: key});
+                  }}
+                  classNames={{
+                    label: "text-foreground-600"
+                  }}
+                >
+                  <SelectItem key="upcoming">
+                    {t("calendar.status.upcoming")}
+                  </SelectItem>
+                  <SelectItem key="in-progress">
+                    {t("calendar.status.in-progress")}
+                  </SelectItem>
+                  <SelectItem key="completed">
+                    {t("calendar.status.completed")}
+                  </SelectItem>
+                  <SelectItem key="overdue">
+                    {t("calendar.status.overdue")}
                   </SelectItem>
                 </Select>
               </div>
