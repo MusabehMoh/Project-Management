@@ -6,9 +6,7 @@ import { developerQuickActionsService } from "@/services/api/developerQuickActio
 import ModernQuickStats from "@/components/ModernQuickStats";
 import DeveloperQuickActions from "@/components/dashboard/developer/DeveloperQuickActions";
 import DeveloperWorkloadPerformance from "@/components/dashboard/developer/DeveloperWorkloadPerformance";
-import CodeReviewTracker from "@/components/dashboard/developer/CodeReviewTracker";
 import DeveloperCalendar from "@/components/calendar";
-import SprintProgress from "@/components/dashboard/developer/SprintProgress";
 import ApprovedRequirements from "@/components/ApprovedRequirements";
 import TaskCompletionTracker from "@/components/dashboard/developer/TaskCompletionTracker";
 import DHtmlGanttChart from "@/components/dashboard/developer/DHtmlGanttChart";
@@ -110,32 +108,10 @@ export default function DeveloperManagerDashboard() {
         <DHtmlGanttChart height="400px" />
       </div>
 
-      {/* Task Completion and Sprint Progress Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Column - Task Completion */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Task Completion Tracking */}
-          <div className="space-y-4">
-            <TaskCompletionTracker useMockData={true} />
-          </div>
-        </div>
-
-        {/* Side Column - Sprint Progress and Code Reviews */}
-        <div className="lg:col-span-1">
-          <div className="space-y-6">
-            {/* Sprint Progress Section */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {t("developerDashboard.sprintProgress") || "Sprint Progress"}
-              </h2>
-              <SprintProgress useMockData={true} />
-            </div>
-
-            {/* Code Review Tracker Section */}
-            <div className="space-y-4">
-              <CodeReviewTracker useMockData={true} />
-            </div>
-          </div>
+      {/* Task Completion Only */}
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <TaskCompletionTracker useMockData={true} />
         </div>
       </div>
     </div>
