@@ -132,7 +132,7 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
         )}
       </CardHeader>
       
-      <CardBody className='p-0' style={{ height }}>
+  <CardBody className='p-0'>
         {error ? (
           <div className='flex items-center justify-center h-full'>
             <div className='text-center'>
@@ -148,6 +148,7 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
             tasks={tasks}
             loading={loading}
             isFullScreen={false}
+            height={height}
             onTaskClick={(task) => {
               console.log('Task clicked:', task);
             }}

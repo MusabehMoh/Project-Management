@@ -31,6 +31,7 @@ const DHTMLXGantt: FC<{
   tasks?: MemberTask[];
   loading?: boolean;
   isFullScreen?: boolean;
+  height?: string; // explicit height when not fullscreen
   onTaskClick?: (task: MemberTask) => void;
   onDeleteEntity?: (id: string, type: string) => Promise<boolean>;
   onUpdateEntity?: (id: string, type: string, data: any) => Promise<boolean>;
@@ -40,6 +41,7 @@ const DHTMLXGantt: FC<{
   tasks,
   loading = false,
   isFullScreen = false,
+  height,
   onTaskClick,
   onDeleteEntity,
   onUpdateEntity,
@@ -261,7 +263,8 @@ const DHTMLXGantt: FC<{
     gantt.config.rtl = isRTL;
     gantt.skin = "material";
 
-    gantt.config.autosize = isFullScreen ? false : "y";
+  // Disable vertical autosize so the component does not push scrollbar below the viewport
+  gantt.config.autosize = false;
     gantt.config.fix_grid_header = true;
     gantt.config.scrollable = true;
 
@@ -756,7 +759,7 @@ const DHTMLXGantt: FC<{
       </div>
 
       {/* Chart */}
-      <div className="relative w-full">
+  <div className="relative w-full" style={{height: isFullScreen ? 'calc(90vh - 140px)' : (height || '360px')}}>
         {noData && (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
             {t('timeline.gantt.noTasks') || 'No tasks to display'}
@@ -766,7 +769,7 @@ const DHTMLXGantt: FC<{
           ref={el}
           style={{
             width: '100%',
-            height: isFullScreen ? 'calc(90vh - 140px)' : '360px',
+            height: '100%',
             direction: 'ltr'
           }}
         />
