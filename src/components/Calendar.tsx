@@ -131,10 +131,10 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     validateField(field, eventForm[field as keyof typeof eventForm]);
   };
 
-  // Filter events based on current filters
+  // Filter events to show only meetings
   const filteredEvents = events.filter(event => {
-    // Filter by type
-    if (uiFilters.type && event.type !== uiFilters.type) {
+    // Only show meetings
+    if (event.type !== 'meeting') {
       return false;
     }
 
@@ -165,12 +165,12 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     });
   };
 
-  // Get filtered events for a specific date
+  // Get filtered meetings for a specific date
   const getFilteredEventsForDate = (date: Date) => {
     const dayEvents = getEventsForDate(date);
     return dayEvents.filter(event => {
-      // Filter by type
-      if (uiFilters.type && event.type !== uiFilters.type) {
+      // Only show meetings
+      if (event.type !== 'meeting') {
         return false;
       }
 
@@ -517,7 +517,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" />
-              <h3 className="text-lg font-semibold">{t("calendar.title")}</h3>
+              <h3 className="text-lg font-semibold">{t("calendar.title")} - {t("calendar.eventTypes.meeting")}</h3>
             </div>
             
             {/* View Mode Selector */}
@@ -557,14 +557,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               <Filter className="w-4 h-4" />
             </Button>
 
-            {/* Add Event Button */}
+            {/* Add Meeting Button */}
             <Button
               size="sm"
               color="primary"
               startContent={<Plus className="w-4 h-4" />}
               onPress={openCreateModal}
             >
-              {t("calendar.addEvent")}
+              {t("calendar.addMeeting")}
             </Button>
           </div>
         </CardHeader>
@@ -615,7 +615,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   <Input
                     size="sm"
                     label={t("calendar.search")}
-                    placeholder={t("calendar.searchPlaceholder")}
+                    placeholder={t("calendar.searchMeetings")}
                     value={uiFilters.searchTerm}
                     onChange={(e) => setUiFilters({ ...uiFilters, searchTerm: e.target.value })}
                     classNames={{
@@ -623,29 +623,6 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                       input: "text-foreground"
                     }}
                   />
-                </div>
-                
-                <div className="min-w-[120px]">
-                  <Select
-                    size="sm"
-                    label={t("calendar.type")}
-                    placeholder={t("calendar.allTypes")}
-                    selectedKeys={uiFilters.type ? [uiFilters.type] : []}
-                    onSelectionChange={(keys) => {
-                      const value = Array.from(keys)[0] as string || "";
-                      setUiFilters({ ...uiFilters, type: value });
-                    }}
-                    classNames={{
-                      label: "text-foreground-600",
-                      value: "text-foreground"
-                    }}
-                  >
-                    <SelectItem key="meeting">{t("calendar.eventTypes.meeting")}</SelectItem>
-                    <SelectItem key="task">{t("calendar.eventTypes.task")}</SelectItem>
-                    <SelectItem key="deadline">{t("calendar.eventTypes.deadline")}</SelectItem>
-                    <SelectItem key="project">{t("calendar.eventTypes.project")}</SelectItem>
-                    <SelectItem key="requirement">{t("calendar.eventTypes.requirement")}</SelectItem>
-                  </Select>
                 </div>
 
                 <div className="min-w-[120px]">
@@ -666,7 +643,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                     <SelectItem key="low">{t("calendar.priorities.low")}</SelectItem>
                     <SelectItem key="medium">{t("calendar.priorities.medium")}</SelectItem>
                     <SelectItem key="high">{t("calendar.priorities.high")}</SelectItem>
-                    <SelectItem key="urgent">{t("calendar.priorities.urgent")}</SelectItem>
+                    <SelectItem key="critical">{t("calendar.priorities.critical")}</SelectItem>
                   </Select>
                 </div>
 
@@ -685,23 +662,15 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           <Accordion isCompact defaultExpandedKeys={["legend"]} className="mb-4">
             <AccordionItem key="legend" title={t("calendar.colorLegend")}> 
               <div className="mb-4 p-3 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
-                <h4 className="text-sm font-semibold mb-2 text-foreground-600">{t("calendar.colorLegend")}</h4>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                  {/* Event Types */}
+                <h4 className="text-sm font-semibold mb-2 text-foreground-600">{t("calendar.colorLegend")} - {t("calendar.eventTypes.meeting")}</h4>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                  {/* Meeting Type Indicator */}
                   <div>
                     <p className="font-medium mb-1">{t("calendar.type")}:</p>
                     <div className="space-y-1">
                       <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                        <div className="w-3 h-3 rounded bg-primary-100 border border-primary-200"></div>
-                        <span>{t("calendar.eventTypes.project")}</span>
-                      </div>
-                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div className="w-3 h-3 rounded bg-success-100 border border-success-200"></div>
                         <span>{t("calendar.eventTypes.meeting")}</span>
-                      </div>
-                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                        <div className="w-3 h-3 rounded bg-danger-100 border border-danger-200"></div>
-                        <span>{t("calendar.eventTypes.deadline")}</span>
                       </div>
                     </div>
                   </div>
@@ -712,7 +681,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                     <div className="space-y-1">
                       <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div className={`w-3 h-3 rounded bg-danger-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-danger-500`}></div>
-                        <span>{t("calendar.priorities.urgent")}</span>
+                        <span>{t("calendar.priorities.critical")}</span>
                       </div>
                       <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div className={`w-3 h-3 rounded bg-warning-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-warning-500`}></div>
@@ -721,6 +690,10 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                       <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div className={`w-3 h-3 rounded bg-primary-100 ${direction === 'rtl' ? 'border-r-2' : 'border-l-2'} border-primary-500`}></div>
                         <span>{t("calendar.priorities.medium")}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-3 h-3 rounded bg-success-100 ${direction === 'rtl' ? 'border-r-2' : 'border-l-2'} border-success-500`}></div>
+                        <span>{t("calendar.priorities.low")}</span>
                       </div>
                     </div>
                   </div>
@@ -741,20 +714,9 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                         <div className="w-3 h-3 rounded bg-success-100 border border-success-200"></div>
                         <span>{t("calendar.status.completed")}</span>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Visual Effects */}
-                  <div>
-                    <p className="font-medium mb-1">{t("calendar.visualEffects")}:</p>
-                    <div className="space-y-1">
                       <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                        <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 shadow-md"></div>
-                        <span>{t("calendar.criticalShadow")}</span>
-                      </div>
-                      <div className={`flex items-center gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                        <div className={`w-3 h-3 rounded bg-default-100 ${direction === 'rtl' ? 'border-r-4' : 'border-l-4'} border-primary-500`}></div>
-                        <span>{t("calendar.priorityBorder")}</span>
+                        <div className="w-3 h-3 rounded bg-primary-100 border border-primary-200"></div>
+                        <span>{t("calendar.status.upcoming")}</span>
                       </div>
                     </div>
                   </div>
@@ -809,7 +771,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                               {getPriorityIcon(event.priority)}
                             </div>
                             <div className={`flex items-center justify-between text-xs opacity-70 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                              <span className="capitalize">{t(`calendar.type.${event.type}`)}</span>
+                              <span className="capitalize">{t(`calendar.eventTypes.meeting`)}</span>
                               {event.status === 'overdue' && (
                                 <span className="text-danger-600 font-medium">!</span>
                               )}
@@ -835,7 +797,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               <div className="space-y-2">
                 {events.length === 0 ? (
                   <div className="text-center py-8 text-default-500">
-                    {t("calendar.noEvents")}
+                    {t("calendar.noMeetings")}
                   </div>
                 ) : (
                   events.map(event => {
@@ -861,7 +823,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                                 variant="flat"
                                 color={getEventTypeColor(event.type)}
                               >
-                                {t(`calendar.type.${event.type}`)}
+                                {t(`calendar.eventTypes.${event.type}`)}
                               </Chip>
                               {event.status === 'overdue' && (
                                 <Chip size="sm" color="danger" variant="flat">
@@ -895,7 +857,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                               variant="flat"
                               color={getPriorityColor(event.priority)}
                             >
-                              {t(`calendar.priority.${event.priority}`)}
+                              {t(`calendar.priorities.${event.priority}`)}
                             </Chip>
                           </div>
                         </div>
@@ -945,14 +907,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           {/* Upcoming Events */}
           <Card>
             <CardHeader>
-              <h3 className="text-lg font-semibold">{t("calendar.upcomingEvents")}</h3>
+              <h3 className="text-lg font-semibold">{t("calendar.upcomingMeetings")}</h3>
             </CardHeader>
             <CardBody>
               <ScrollShadow className="max-h-60" hideScrollBar>
                 <div className="space-y-2">
                   {upcomingEvents.length === 0 ? (
                     <div className="text-center py-4 text-default-500">
-                      {t("calendar.noUpcoming")}
+                      {t("calendar.noUpcomingMeetings")}
                     </div>
                   ) : (
                     upcomingEvents.map(event => {
@@ -983,14 +945,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                               variant="flat"
                               color={getEventTypeColor(event.type)}
                             >
-                              {t(`calendar.type.${event.type}`)}
+                              {t(`calendar.eventTypes.${event.type}`)}
                             </Chip>
                             <Chip
                               size="sm"
                               variant="dot"
                               color={getPriorityColor(event.priority)}
                             >
-                              {t(`calendar.priority.${event.priority}`)}
+                              {t(`calendar.priorities.${event.priority}`)}
                             </Chip>
                           </div>
                         </div>
@@ -1006,7 +968,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           {overdueEvents.length > 0 && (
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold text-danger">{t("calendar.overdueEvents")}</h3>
+                <h3 className="text-lg font-semibold text-danger">{t("calendar.overdueMeetings")}</h3>
               </CardHeader>
               <CardBody>
                 <ScrollShadow className="max-h-40" hideScrollBar>
@@ -1038,14 +1000,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                               variant="flat"
                               color={getEventTypeColor(event.type)}
                             >
-                              {t(`calendar.type.${event.type}`)}
+                              {t(`calendar.eventTypes.${event.type}`)}
                             </Chip>
                             <Chip
                               size="sm"
                               variant="solid"
                               color="danger"
                             >
-                              {t(`calendar.priority.${event.priority}`)}
+                              {t(`calendar.priorities.${event.priority}`)}
                             </Chip>
                           </div>
                         </div>
@@ -1078,7 +1040,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   variant="flat"
                   color={getEventTypeColor(showEventDetails.type)}
                 >
-                  {t(`calendar.type.${showEventDetails.type}`)}
+                  {t(`calendar.eventTypes.${showEventDetails.type}`)}
                 </Chip>
               </div>
             </ModalHeader>
@@ -1125,7 +1087,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                       showEventDetails.priority === 'high' ? 'warning' :
                       showEventDetails.priority === 'medium' ? 'primary' : 'success'
                     }>
-                      {t(`calendar.priority.${showEventDetails.priority}`)}
+                      {t(`calendar.priorities.${showEventDetails.priority}`)}
                     </Chip>
                   </div>
                 </div>
@@ -1180,7 +1142,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         <ModalContent>
           <ModalHeader>
             <h3 className="text-lg font-semibold">
-              {editingEvent ? t("calendar.editEvent") : t("calendar.addEvent")}
+              {editingEvent ? t("calendar.editMeeting") : t("calendar.addMeeting")}
             </h3>
           </ModalHeader>
           <ModalBody className="px-6 py-6">
@@ -1188,8 +1150,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               {/* Title and Description Row */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Input
-                  label={t("calendar.eventTitle")}
-                  placeholder={t("calendar.titlePlaceholder")}
+                  label={t("calendar.meetingTitle")}
+                  placeholder={t("calendar.meetingTitlePlaceholder")}
                   value={eventForm.title}
                   onChange={(e) => handleFieldChange('title', e.target.value)}
                   onBlur={() => handleFieldBlur('title')}
@@ -1213,36 +1175,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 />
               </div>
 
-              {/* Type and Priority */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select
-                  label={t("calendar.type")}
-                  selectedKeys={[eventForm.type]}
-                  onSelectionChange={(keys) => {
-                    const key = Array.from(keys)[0] as CalendarEvent['type'];
-                    setEventForm({...eventForm, type: key});
-                  }}
-                  classNames={{
-                    label: "text-foreground-600"
-                  }}
-                >
-                  <SelectItem key="project">
-                    {t("calendar.type.project")}
-                  </SelectItem>
-                  <SelectItem key="requirement">
-                    {t("calendar.type.requirement")}
-                  </SelectItem>
-                  <SelectItem key="meeting">
-                    {t("calendar.type.meeting")}
-                  </SelectItem>
-                  <SelectItem key="deadline">
-                    {t("calendar.type.deadline")}
-                  </SelectItem>
-                  <SelectItem key="milestone">
-                    {t("calendar.type.milestone")}
-                  </SelectItem>
-                </Select>
-
+              {/* Priority Selection */}
+              <div className="grid grid-cols-1 gap-4">
                 <Select
                   label={t("calendar.priority")}
                   selectedKeys={[eventForm.priority]}
@@ -1255,16 +1189,16 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   }}
                 >
                   <SelectItem key="low">
-                    {t("calendar.priority.low")}
+                    {t("calendar.priorities.low")}
                   </SelectItem>
                   <SelectItem key="medium">
-                    {t("calendar.priority.medium")}
+                    {t("calendar.priorities.medium")}
                   </SelectItem>
                   <SelectItem key="high">
-                    {t("calendar.priority.high")}
+                    {t("calendar.priorities.high")}
                   </SelectItem>
                   <SelectItem key="critical">
-                    {t("calendar.priority.critical")}
+                    {t("calendar.priorities.critical")}
                   </SelectItem>
                 </Select>
               </div>
