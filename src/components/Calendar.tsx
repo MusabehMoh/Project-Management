@@ -580,7 +580,10 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               isIconOnly
               onPress={goToPrevious}
             >
-              <ChevronLeft className="w-4 h-4" />
+              {direction === 'rtl' ? 
+                <ChevronRight className="w-4 h-4" /> : 
+                <ChevronLeft className="w-4 h-4" />
+              }
             </Button>
 
             <div className="text-center">
@@ -602,7 +605,10 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 isIconOnly
                 onPress={goToNext}
               >
-                <ChevronRight className="w-4 h-4" />
+                {direction === 'rtl' ? 
+                  <ChevronLeft className="w-4 h-4" /> : 
+                  <ChevronRight className="w-4 h-4" />
+                }
               </Button>
             </div>
           </div>
