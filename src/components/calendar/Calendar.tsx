@@ -39,7 +39,7 @@ interface CalendarComponentProps {
 
 const CalendarComponent: React.FC<CalendarComponentProps> = ({ 
   showSidebar = true, 
-  maxHeight = "600px" 
+  maxHeight 
 }) => {
   const { t, direction, language } = useLanguage();
   const {
@@ -511,7 +511,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   }
 
   return (
-    <div className="flex gap-4" style={{ maxHeight }}>
+    <div className="flex gap-4">
       {/* Main Calendar */}
       <Card className={`${showSidebar ? 'flex-1' : 'w-full'}`}>
         <CardHeader className="flex justify-between items-center px-6 py-4">

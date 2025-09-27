@@ -98,7 +98,7 @@ export default function DeveloperManagerDashboard() {
           <h2 className="text-2xl font-semibold text-foreground">
             {t("calendar.title") || "Calendar"}
           </h2>
-          <DeveloperCalendar maxHeight="500px" showSidebar={false} />
+          <DeveloperCalendar showSidebar={false} />
         </div>
       </div>
 
