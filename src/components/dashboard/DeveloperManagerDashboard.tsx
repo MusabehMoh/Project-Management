@@ -7,7 +7,6 @@ import ModernQuickStats from "@/components/ModernQuickStats";
 import DeveloperQuickActions from "@/components/dashboard/developer/DeveloperQuickActions";
 import DeveloperWorkloadPerformance from "@/components/dashboard/developer/DeveloperWorkloadPerformance";
 import CodeReviewTracker from "@/components/dashboard/developer/CodeReviewTracker";
-import DeploymentPipeline from "@/components/dashboard/developer/DeploymentPipeline";
 import DeveloperCalendar from "@/components/calendar";
 import SprintProgress from "@/components/dashboard/developer/SprintProgress";
 import ApprovedRequirements from "@/components/ApprovedRequirements";
@@ -108,21 +107,13 @@ export default function DeveloperManagerDashboard() {
         <h2 className="text-2xl font-semibold text-foreground">
           {t("developerDashboard.projectTimeline") || "Project Timeline"}
         </h2>
-        <DHtmlGanttChart height="400px" useMockData={true} />
+        <DHtmlGanttChart height="400px" />
       </div>
 
-      {/* Deployment Pipeline and Other Components Layout */}
+      {/* Task Completion and Sprint Progress Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Column - Deployment Pipeline and Task Completion */}
+        {/* Main Column - Task Completion */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-foreground">
-              {t("developerDashboard.deploymentPipeline") ||
-                "Deployment Pipeline"}
-            </h2>
-            <DeploymentPipeline />
-          </div>
-
           {/* Task Completion Tracking */}
           <div className="space-y-4">
             <TaskCompletionTracker useMockData={true} />
