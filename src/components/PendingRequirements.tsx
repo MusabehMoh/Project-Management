@@ -14,12 +14,13 @@ interface PendingRequirementsProps {
   className?: string;
 }
 
-export default function PendingRequirements({ 
-  className = "" 
+export default function PendingRequirements({
+  className = "",
 }: PendingRequirementsProps) {
   const { t, direction } = useLanguage();
   const navigate = useNavigate();
-  const { draftRequirements, loading, error, refresh, total } = useDraftRequirements();
+  const { draftRequirements, loading, error, refresh, total } =
+    useDraftRequirements();
 
   const getPriorityColor = (priority: string) => {
     switch (priority?.toLowerCase()) {
@@ -55,7 +56,9 @@ export default function PendingRequirements({
   };
 
   const handleViewRequirement = (projectId: number, requirementId: number) => {
-    navigate(`/requirements/${projectId}?highlightRequirement=${requirementId}&scrollTo=${requirementId}`);
+    navigate(
+      `/requirements/${projectId}?highlightRequirement=${requirementId}&scrollTo=${requirementId}`,
+    );
   };
 
   const handleViewAllRequirements = () => {
@@ -64,7 +67,11 @@ export default function PendingRequirements({
 
   if (loading) {
     return (
-      <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
+      <Card
+        className={`${className} border-default-200`}
+        dir={direction}
+        shadow="sm"
+      >
         <CardBody className="flex items-center justify-center min-h-[200px]">
           <Spinner size="lg" />
           <p className="mt-3 text-default-500">
@@ -77,7 +84,11 @@ export default function PendingRequirements({
 
   if (error) {
     return (
-      <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
+      <Card
+        className={`${className} border-default-200`}
+        dir={direction}
+        shadow="sm"
+      >
         <CardBody className="flex items-center justify-center min-h-[200px] text-center">
           <AlertCircle className="w-8 h-8 text-danger mb-2" />
           <p className="font-medium text-foreground mb-2">
@@ -93,7 +104,11 @@ export default function PendingRequirements({
   }
 
   return (
-    <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
+    <Card
+      className={`${className} border-default-200`}
+      dir={direction}
+      shadow="sm"
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
@@ -103,7 +118,11 @@ export default function PendingRequirements({
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <Chip size="sm" variant="flat" className="bg-warning-50 text-warning-600">
+            <Chip
+              className="bg-warning-50 text-warning-600"
+              size="sm"
+              variant="flat"
+            >
               {total}
             </Chip>
             {total > 0 && (
@@ -129,8 +148,8 @@ export default function PendingRequirements({
               {t("requirements.noDraftRequirements") || "No Draft Requirements"}
             </h4>
             <p className="text-sm text-default-500">
-              {t("requirements.noDraftRequirementsDesc") || 
-               "All requirements have been processed"}
+              {t("requirements.noDraftRequirementsDesc") ||
+                "All requirements have been processed"}
             </p>
           </div>
         ) : (
@@ -139,7 +158,9 @@ export default function PendingRequirements({
               <div
                 key={requirement.id}
                 className="p-4 hover:bg-default-50 transition-colors cursor-pointer"
-                onClick={() => handleViewRequirement(requirement.project.id, requirement.id)}
+                onClick={() =>
+                  handleViewRequirement(requirement.project.id, requirement.id)
+                }
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -148,18 +169,18 @@ export default function PendingRequirements({
                         {requirement.name}
                       </h5>
                       <Chip
-                        size="sm"
                         color={getPriorityColor(requirement.priority)}
+                        size="sm"
                         variant="flat"
                       >
                         {getPriorityText(requirement.priority)}
                       </Chip>
                     </div>
-                    
+
                     <p className="text-xs text-default-500 mb-2 line-clamp-2">
                       {requirement.description}
                     </p>
-                    
+
                     <div className="flex items-center gap-4 text-xs text-default-400">
                       <div className="flex items-center gap-1">
                         <User className="w-3 h-3" />
@@ -173,16 +194,19 @@ export default function PendingRequirements({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex-shrink-0">
                     <Button
-                      size="sm"
-                      color="primary"
-                      variant="flat"
                       className="min-w-0 px-3"
+                      color="primary"
+                      size="sm"
+                      variant="flat"
                       onPress={(e) => {
                         e.stopPropagation();
-                        handleViewRequirement(requirement.project.id, requirement.id);
+                        handleViewRequirement(
+                          requirement.project.id,
+                          requirement.id,
+                        );
                       }}
                     >
                       {t("common.view") || "View"}

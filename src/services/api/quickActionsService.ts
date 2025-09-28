@@ -110,14 +110,20 @@ export class QuickActionsService {
    * Get unassigned projects
    */
   async getUnassignedProjects(): Promise<QuickActionApiResponse<any[]>> {
-    return apiClient.get<any[]>(`${ENDPOINTS.QUICK_ACTIONS}/unassigned-projects`);
+    return apiClient.get<any[]>(
+      `${ENDPOINTS.QUICK_ACTIONS}/unassigned-projects`,
+    );
   }
 
   /**
    * Get projects without requirements
    */
-  async getProjectsWithoutRequirements(): Promise<QuickActionApiResponse<any[]>> {
-    return apiClient.get<any[]>(`${ENDPOINTS.QUICK_ACTIONS}/projects-without-requirements`);
+  async getProjectsWithoutRequirements(): Promise<
+    QuickActionApiResponse<any[]>
+  > {
+    return apiClient.get<any[]>(
+      `${ENDPOINTS.QUICK_ACTIONS}/projects-without-requirements`,
+    );
   }
 
   /**

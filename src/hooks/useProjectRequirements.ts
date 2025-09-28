@@ -11,18 +11,22 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { addToast } from "@heroui/toast";
 
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UseProjectRequirementsProps {
   projectId?: number;
   initialFilters?: ProjectRequirementFilters;
   pageSize?: number;
+  onSearchNoResults?: () => void;
 }
 
 export function useProjectRequirements({
   projectId,
   initialFilters = {},
   pageSize = 10,
+  onSearchNoResults,
 }: UseProjectRequirementsProps = {}) {
+  const { t } = useLanguage();
   const [requirements, setRequirements] = useState<ProjectRequirement[]>([]);
   const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>(
     [],
@@ -143,6 +147,15 @@ export function useProjectRequirements({
       setRequirements(result.data);
       setTotalPages(result.pagination.totalPages);
       setTotalRequirements(result.pagination.total);
+
+      // If search was performed but no results found, call the callback
+      if (
+        filters.search &&
+        result.data.length === 0 &&
+        result.pagination.total === 0
+      ) {
+        onSearchNoResults?.();
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load requirements";
@@ -170,8 +183,8 @@ export function useProjectRequirements({
         await projectRequirementsService.getRequirementStats(projectId);
 
       setStats(projectStats);
-    } catch (err) {
-      console.error("Failed to load requirement stats:", err);
+    } catch {
+      // Silently ignore stats loading errors
     }
   }, [projectId]);
 
@@ -187,11 +200,11 @@ export function useProjectRequirements({
         const newRequirement =
           await projectRequirementsService.createRequirement(projectId, data);
 
-        setRequirements((prev) => [newRequirement, ...prev]);
-        await loadStats(); // Refresh stats
+        // Reload the requirements list to get fresh data with proper pagination
+        await Promise.all([loadRequirements(), loadStats()]);
         addToast({
           title: "Success",
-          description: "Requirement created successfully",
+          description: t("requirements.createSuccess"),
           color: "success",
         });
 
@@ -210,7 +223,7 @@ export function useProjectRequirements({
         setLoading(false);
       }
     },
-    [projectId, loadStats],
+    [projectId, loadRequirements, loadStats],
   );
 
   /**
@@ -226,15 +239,11 @@ export function useProjectRequirements({
             data,
           );
 
-        setRequirements((prev) =>
-          prev.map((req) =>
-            req.id === requirementId ? updatedRequirement : req,
-          ),
-        );
-        await loadStats(); // Refresh stats
+        // Reload the requirements list to get fresh data with proper pagination
+        await Promise.all([loadRequirements(), loadStats()]);
         addToast({
           title: "Success",
-          description: "Requirement updated successfully",
+          description: t("requirements.updateSuccess"),
           color: "success",
         });
 
@@ -253,7 +262,7 @@ export function useProjectRequirements({
         setLoading(false);
       }
     },
-    [loadStats],
+    [loadRequirements, loadStats],
   );
 
   /**
@@ -270,7 +279,7 @@ export function useProjectRequirements({
         await loadStats(); // Refresh stats
         addToast({
           title: "Success",
-          description: "Requirement deleted successfully",
+          description: t("requirements.deleteSuccess"),
           color: "success",
         });
       } catch (err) {
@@ -298,7 +307,10 @@ export function useProjectRequirements({
       setLoading(true);
       try {
         const updatedRequirement =
-          await projectRequirementsService.sendRequirement(requirementId, status);
+          await projectRequirementsService.sendRequirement(
+            requirementId,
+            status,
+          );
 
         setRequirements((prev) =>
           prev.map((req) =>
@@ -308,7 +320,7 @@ export function useProjectRequirements({
         await loadStats(); // Refresh stats
         addToast({
           title: "Success",
-          description: "Requirement sent to development successfully",
+          description: t("requirements.sendSuccess"),
           color: "success",
         });
 
@@ -457,7 +469,7 @@ export function useProjectRequirements({
 
         addToast({
           title: "Success",
-          description: `${uploadedAttachments.length} file(s) uploaded successfully`,
+          description: `${uploadedAttachments.length} file(s) ${t("requirements.uploadSuccess")}`,
           color: "success",
         });
 
@@ -507,7 +519,7 @@ export function useProjectRequirements({
 
         addToast({
           title: "Success",
-          description: "Attachment deleted successfully",
+          description: t("requirements.attachmentDeleteSuccess"),
           color: "success",
         });
       } catch (err) {
@@ -541,6 +553,7 @@ export function useProjectRequirements({
         // Create download link
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
+
         link.href = url;
         link.download = filename;
         document.body.appendChild(link);
@@ -550,7 +563,7 @@ export function useProjectRequirements({
 
         addToast({
           title: "Success",
-          description: "File downloaded successfully",
+          description: t("requirements.downloadSuccess"),
           color: "success",
         });
       } catch (err) {

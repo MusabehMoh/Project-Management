@@ -57,7 +57,7 @@ import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 export default function UsersPage() {
   const { t, language } = useLanguage();
   const { hasPermission } = usePermissions();
-  
+
   // Set page title
   usePageTitle("users.title");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -146,15 +146,18 @@ export default function UsersPage() {
       filteredActions = filteredActions.filter(
         (action) =>
           action.name?.toLowerCase().includes(query) ||
-          (action.description && action.description.toLowerCase().includes(query)) ||
-          (action.categoryName && action.categoryName.toLowerCase().includes(query)),
+          (action.description &&
+            action.description.toLowerCase().includes(query)) ||
+          (action.categoryName &&
+            action.categoryName.toLowerCase().includes(query)),
       );
     }
 
     // Filter by category
     if (selectedActionCategory !== "all") {
       filteredActions = filteredActions.filter(
-        (action) => action.categoryName && action.categoryName === selectedActionCategory,
+        (action) =>
+          action.categoryName && action.categoryName === selectedActionCategory,
       );
     }
 
@@ -166,7 +169,9 @@ export default function UsersPage() {
     const availableActions = getAvailableAdditionalActions();
     const categories = [
       ...new Set(
-        availableActions.map((action) => action.categoryName || "Uncategorized")
+        availableActions.map(
+          (action) => action.categoryName || "Uncategorized",
+        ),
       ),
     ];
 
@@ -1082,8 +1087,9 @@ export default function UsersPage() {
                         getFilteredAdditionalActions().reduce(
                           (acc, action) => {
                             // Use "Uncategorized" as default if categoryName is missing
-                            const category = action.categoryName || "Uncategorized";
-                            
+                            const category =
+                              action.categoryName || "Uncategorized";
+
                             if (!acc[category]) {
                               acc[category] = [];
                             }

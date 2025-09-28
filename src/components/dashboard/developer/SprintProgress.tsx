@@ -56,9 +56,9 @@ export default function SprintProgress({
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       if (useMockData) {
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         setCurrentSprint(mockSprint);
       }
     } catch (error) {
@@ -121,7 +121,9 @@ export default function SprintProgress({
               variant="ghost"
               onPress={refresh}
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </CardHeader>
@@ -154,17 +156,24 @@ export default function SprintProgress({
                 <span>{currentSprint.progress}%</span>
               </div>
               <Progress
-                color={currentSprint.progress >= 80 ? "success" : 
-                       currentSprint.progress >= 60 ? "primary" : "warning"}
+                color={
+                  currentSprint.progress >= 80
+                    ? "success"
+                    : currentSprint.progress >= 60
+                      ? "primary"
+                      : "warning"
+                }
                 size="sm"
                 value={currentSprint.progress}
               />
               <div className="flex justify-between text-xs text-default-500 mt-1">
                 <span>
-                  {currentSprint.completedTasks} / {currentSprint.totalTasks} tasks
+                  {currentSprint.completedTasks} / {currentSprint.totalTasks}{" "}
+                  tasks
                 </span>
                 <span>
-                  {currentSprint.totalTasks - currentSprint.completedTasks} remaining
+                  {currentSprint.totalTasks - currentSprint.completedTasks}{" "}
+                  remaining
                 </span>
               </div>
             </div>
@@ -175,7 +184,7 @@ export default function SprintProgress({
               <div className="flex flex-wrap gap-2">
                 {currentSprint.teamMembers.map((member, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <Avatar name={member} size="sm" className="w-6 h-6" />
+                    <Avatar className="w-6 h-6" name={member} size="sm" />
                     <span className="text-xs">{member}</span>
                   </div>
                 ))}
@@ -202,13 +211,14 @@ export default function SprintProgress({
                   currentSprint.status === "active"
                     ? "primary"
                     : currentSprint.status === "completed"
-                    ? "success"
-                    : "warning"
+                      ? "success"
+                      : "warning"
                 }
                 size="sm"
                 variant="flat"
               >
-                {t(`sprint.status.${currentSprint.status}`) || currentSprint.status}
+                {t(`sprint.status.${currentSprint.status}`) ||
+                  currentSprint.status}
               </Chip>
             </div>
           </div>

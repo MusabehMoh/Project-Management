@@ -1,38 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
-import { calendarService, type CalendarEvent, type CalendarFilters, type CalendarStatsResponse } from "@/services/api/calendarService";
+
+import {
+  calendarService,
+  type CalendarEvent,
+  type CalendarFilters,
+  type CalendarStatsResponse,
+} from "@/services/api/calendarService";
 
 export interface UseCalendarReturn {
   // Data
   events: CalendarEvent[];
-  stats: CalendarStatsResponse['data'] | null;
+  stats: CalendarStatsResponse["data"] | null;
   upcomingEvents: CalendarEvent[];
   overdueEvents: CalendarEvent[];
-  
+
   // State
   loading: boolean;
   error: string | null;
   selectedDate: Date;
-  viewMode: 'month' | 'week' | 'day';
+  viewMode: "month" | "week" | "day";
   filters: CalendarFilters;
-  
+
   // Actions
   loadEvents: (filters?: CalendarFilters) => Promise<void>;
   loadStats: () => Promise<void>;
   loadUpcomingEvents: (limit?: number) => Promise<void>;
   loadOverdueEvents: () => Promise<void>;
-  createEvent: (event: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>) => Promise<boolean>;
+  createEvent: (
+    event: Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<boolean>;
   updateEvent: (id: number, event: Partial<CalendarEvent>) => Promise<boolean>;
   deleteEvent: (id: number) => Promise<boolean>;
-  
+
   // Filters and Navigation
   setFilters: (filters: CalendarFilters) => void;
   setSelectedDate: (date: Date) => void;
-  setViewMode: (mode: 'month' | 'week' | 'day') => void;
+  setViewMode: (mode: "month" | "week" | "day") => void;
   navigateToDate: (date: Date) => void;
   goToToday: () => void;
   goToPrevious: () => void;
   goToNext: () => void;
-  
+
   // Utilities
   getEventsForDate: (date: Date) => CalendarEvent[];
   getEventsForDateRange: (startDate: Date, endDate: Date) => CalendarEvent[];
@@ -43,41 +51,48 @@ export interface UseCalendarReturn {
 export const useCalendar = (): UseCalendarReturn => {
   // State
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [stats, setStats] = useState<CalendarStatsResponse['data'] | null>(null);
+  const [stats, setStats] = useState<CalendarStatsResponse["data"] | null>(
+    null,
+  );
   const [upcomingEvents, setUpcomingEvents] = useState<CalendarEvent[]>([]);
   const [overdueEvents, setOverdueEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [viewMode, setViewMode] = useState<"month" | "week" | "day">("month");
   const [filters, setFilters] = useState<CalendarFilters>({});
 
   // Load events
-  const loadEvents = useCallback(async (customFilters?: CalendarFilters) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const filtersToUse = customFilters || filters;
-      const response = await calendarService.getCalendarEvents(filtersToUse);
-      
-      if (response.success) {
-        setEvents(response.data);
-      } else {
-        setError(response.message);
+  const loadEvents = useCallback(
+    async (customFilters?: CalendarFilters) => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const filtersToUse = customFilters || filters;
+        const response = await calendarService.getCalendarEvents(filtersToUse);
+
+        if (response.success) {
+          setEvents(response.data);
+        } else {
+          setError(response.message);
+        }
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Failed to load events",
+        );
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to load events");
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+    },
+    [filters],
+  );
 
   // Load stats
   const loadStats = useCallback(async () => {
     try {
       const response = await calendarService.getCalendarStats();
-      
+
       if (response.success) {
         setStats(response.data);
       } else {
@@ -92,14 +107,18 @@ export const useCalendar = (): UseCalendarReturn => {
   const loadUpcomingEvents = useCallback(async (limit: number = 10) => {
     try {
       const response = await calendarService.getUpcomingEvents(limit);
-      
+
       if (response.success) {
         setUpcomingEvents(response.data);
       } else {
         setError(response.message);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to load upcoming events");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load upcoming events",
+      );
     }
   }, []);
 
@@ -107,88 +126,118 @@ export const useCalendar = (): UseCalendarReturn => {
   const loadOverdueEvents = useCallback(async () => {
     try {
       const response = await calendarService.getOverdueEvents();
-      
+
       if (response.success) {
         setOverdueEvents(response.data);
       } else {
         setError(response.message);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to load overdue events");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load overdue events",
+      );
     }
   }, []);
 
   // Create event
-  const createEvent = useCallback(async (event: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await calendarService.createEvent(event);
-      
-      if (response.success) {
-        await loadEvents(); // Refresh events list
-        await loadStats(); // Refresh stats
-        return true;
-      } else {
-        setError(response.message);
+  const createEvent = useCallback(
+    async (
+      event: Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">,
+    ): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await calendarService.createEvent(event);
+
+        if (response.success) {
+          await loadEvents(); // Refresh events list
+          await loadStats(); // Refresh stats
+
+          return true;
+        } else {
+          setError(response.message);
+
+          return false;
+        }
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Failed to create event",
+        );
+
         return false;
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to create event");
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadEvents, loadStats]);
+    },
+    [loadEvents, loadStats],
+  );
 
   // Update event
-  const updateEvent = useCallback(async (id: number, event: Partial<CalendarEvent>): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await calendarService.updateEvent(id, event);
-      
-      if (response.success) {
-        await loadEvents(); // Refresh events list
-        await loadStats(); // Refresh stats
-        return true;
-      } else {
-        setError(response.message);
+  const updateEvent = useCallback(
+    async (id: number, event: Partial<CalendarEvent>): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await calendarService.updateEvent(id, event);
+
+        if (response.success) {
+          await loadEvents(); // Refresh events list
+          await loadStats(); // Refresh stats
+
+          return true;
+        } else {
+          setError(response.message);
+
+          return false;
+        }
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Failed to update event",
+        );
+
         return false;
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to update event");
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadEvents, loadStats]);
+    },
+    [loadEvents, loadStats],
+  );
 
   // Delete event
-  const deleteEvent = useCallback(async (id: number): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await calendarService.deleteEvent(id);
-      
-      if (response.success) {
-        await loadEvents(); // Refresh events list
-        await loadStats(); // Refresh stats
-        return true;
-      } else {
-        setError(response.message);
+  const deleteEvent = useCallback(
+    async (id: number): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await calendarService.deleteEvent(id);
+
+        if (response.success) {
+          await loadEvents(); // Refresh events list
+          await loadStats(); // Refresh stats
+
+          return true;
+        } else {
+          setError(response.message);
+
+          return false;
+        }
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Failed to delete event",
+        );
+
         return false;
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to delete event");
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadEvents, loadStats]);
+    },
+    [loadEvents, loadStats],
+  );
 
   // Navigation helpers
   const navigateToDate = useCallback((date: Date) => {
@@ -201,62 +250,78 @@ export const useCalendar = (): UseCalendarReturn => {
 
   const goToPrevious = useCallback(() => {
     const newDate = new Date(selectedDate);
-    
+
     switch (viewMode) {
-      case 'day':
+      case "day":
         newDate.setDate(newDate.getDate() - 1);
         break;
-      case 'week':
+      case "week":
         newDate.setDate(newDate.getDate() - 7);
         break;
-      case 'month':
+      case "month":
         newDate.setMonth(newDate.getMonth() - 1);
         break;
     }
-    
+
     setSelectedDate(newDate);
   }, [selectedDate, viewMode]);
 
   const goToNext = useCallback(() => {
     const newDate = new Date(selectedDate);
-    
+
     switch (viewMode) {
-      case 'day':
+      case "day":
         newDate.setDate(newDate.getDate() + 1);
         break;
-      case 'week':
+      case "week":
         newDate.setDate(newDate.getDate() + 7);
         break;
-      case 'month':
+      case "month":
         newDate.setMonth(newDate.getMonth() + 1);
         break;
     }
-    
+
     setSelectedDate(newDate);
   }, [selectedDate, viewMode]);
 
   // Utility functions
-  const getEventsForDate = useCallback((date: Date): CalendarEvent[] => {
-    const dateStr = date.toISOString().split('T')[0];
-    return events.filter(event => {
-      const eventStart = new Date(event.startDate).toISOString().split('T')[0];
-      const eventEnd = event.endDate ? new Date(event.endDate).toISOString().split('T')[0] : eventStart;
-      return dateStr >= eventStart && dateStr <= eventEnd;
-    });
-  }, [events]);
+  const getEventsForDate = useCallback(
+    (date: Date): CalendarEvent[] => {
+      const dateStr = date.toISOString().split("T")[0];
 
-  const getEventsForDateRange = useCallback((startDate: Date, endDate: Date): CalendarEvent[] => {
-    const startStr = startDate.toISOString().split('T')[0];
-    const endStr = endDate.toISOString().split('T')[0];
-    
-    return events.filter(event => {
-      const eventStart = new Date(event.startDate).toISOString().split('T')[0];
-      const eventEnd = event.endDate ? new Date(event.endDate).toISOString().split('T')[0] : eventStart;
-      
-      // Check if event overlaps with the date range
-      return eventStart <= endStr && eventEnd >= startStr;
-    });
-  }, [events]);
+      return events.filter((event) => {
+        const eventStart = new Date(event.startDate)
+          .toISOString()
+          .split("T")[0];
+        const eventEnd = event.endDate
+          ? new Date(event.endDate).toISOString().split("T")[0]
+          : eventStart;
+
+        return dateStr >= eventStart && dateStr <= eventEnd;
+      });
+    },
+    [events],
+  );
+
+  const getEventsForDateRange = useCallback(
+    (startDate: Date, endDate: Date): CalendarEvent[] => {
+      const startStr = startDate.toISOString().split("T")[0];
+      const endStr = endDate.toISOString().split("T")[0];
+
+      return events.filter((event) => {
+        const eventStart = new Date(event.startDate)
+          .toISOString()
+          .split("T")[0];
+        const eventEnd = event.endDate
+          ? new Date(event.endDate).toISOString().split("T")[0]
+          : eventStart;
+
+        // Check if event overlaps with the date range
+        return eventStart <= endStr && eventEnd >= startStr;
+      });
+    },
+    [events],
+  );
 
   const refreshCalendar = useCallback(async () => {
     await Promise.all([
@@ -278,16 +343,17 @@ export const useCalendar = (): UseCalendarReturn => {
     const endDate = new Date(selectedDate);
 
     switch (viewMode) {
-      case 'day':
+      case "day":
         // Same day
         break;
-      case 'week':
+      case "week":
         // Start of week to end of week
         const dayOfWeek = startDate.getDay();
+
         startDate.setDate(startDate.getDate() - dayOfWeek);
         endDate.setDate(startDate.getDate() + 6);
         break;
-      case 'month':
+      case "month":
         // Start of month to end of month
         startDate.setDate(1);
         endDate.setMonth(endDate.getMonth() + 1);
@@ -297,8 +363,8 @@ export const useCalendar = (): UseCalendarReturn => {
 
     const dateFilters: CalendarFilters = {
       ...filters,
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
     };
 
     loadEvents(dateFilters);
@@ -317,14 +383,14 @@ export const useCalendar = (): UseCalendarReturn => {
     stats,
     upcomingEvents,
     overdueEvents,
-    
+
     // State
     loading,
     error,
     selectedDate,
     viewMode,
     filters,
-    
+
     // Actions
     loadEvents,
     loadStats,
@@ -333,7 +399,7 @@ export const useCalendar = (): UseCalendarReturn => {
     createEvent,
     updateEvent,
     deleteEvent,
-    
+
     // Filters and Navigation
     setFilters,
     setSelectedDate,
@@ -342,7 +408,7 @@ export const useCalendar = (): UseCalendarReturn => {
     goToToday,
     goToPrevious,
     goToNext,
-    
+
     // Utilities
     getEventsForDate,
     getEventsForDateRange,

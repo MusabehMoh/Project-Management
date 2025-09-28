@@ -164,7 +164,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
               updatedAt: undefined,
             }),
           );
-          
+
           setUsers(departmentEmployees);
         } else {
           throw new Error(

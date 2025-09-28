@@ -33,10 +33,14 @@ export function useDeveloperQuickActions(
   options: UseDeveloperQuickActionsOptions = {},
 ): UseDeveloperQuickActionsResult {
   const { autoRefresh = false, refreshInterval = 30000 } = options;
-  
+
   const [unassignedTasks, setUnassignedTasks] = useState<UnassignedTask[]>([]);
-  const [almostCompletedTasks, setAlmostCompletedTasks] = useState<AlmostCompletedTask[]>([]);
-  const [availableDevelopers, setAvailableDevelopers] = useState<AvailableDeveloper[]>([]);
+  const [almostCompletedTasks, setAlmostCompletedTasks] = useState<
+    AlmostCompletedTask[]
+  >([]);
+  const [availableDevelopers, setAvailableDevelopers] = useState<
+    AvailableDeveloper[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,14 +48,13 @@ export function useDeveloperQuickActions(
   const fetchData = useCallback(async () => {
     try {
       setError(null);
-      
+
       // Make actual API call to get all developer quick actions
       const response = await developerQuickActionsService.getQuickActions();
-      
+
       setUnassignedTasks(response.unassignedTasks);
       setAlmostCompletedTasks(response.almostCompletedTasks);
       setAvailableDevelopers(response.availableDevelopers);
-      
     } catch (err) {
       setError(
         err instanceof Error
@@ -73,8 +76,12 @@ export function useDeveloperQuickActions(
     async (taskId: number, newEndDate: string, reason: string) => {
       try {
         // Make actual API call to extend task
-        await developerQuickActionsService.extendTask(taskId, newEndDate, reason);
-        
+        await developerQuickActionsService.extendTask(
+          taskId,
+          newEndDate,
+          reason,
+        );
+
         // Refresh data after successful extension
         await refresh();
       } catch (error) {
@@ -90,7 +97,7 @@ export function useDeveloperQuickActions(
       try {
         // Make actual API call to assign developer
         await developerQuickActionsService.assignDeveloper(taskId, developerId);
-        
+
         // Refresh data after successful assignment
         await refresh();
       } catch (error) {
@@ -119,9 +126,9 @@ export function useDeveloperQuickActions(
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, loading, refresh]);
 
-  const hasActionsAvailable = 
-    unassignedTasks.length > 0 || 
-    almostCompletedTasks.length > 0 || 
+  const hasActionsAvailable =
+    unassignedTasks.length > 0 ||
+    almostCompletedTasks.length > 0 ||
     availableDevelopers.length > 0;
 
   return {

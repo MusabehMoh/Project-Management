@@ -1,3 +1,5 @@
+import type { PipelineProject } from "@/services/api/pipelineService";
+
 import React from "react";
 import { Card, CardHeader, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
@@ -5,19 +7,19 @@ import { Divider } from "@heroui/divider";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Spinner } from "@heroui/spinner";
 import { Progress } from "@heroui/progress";
-import { Button } from "@heroui/button";
 import { useNavigate } from "react-router-dom";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePipeline } from "@/hooks/usePipeline";
-import type { PipelineProject } from "@/services/api/pipelineService";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-GB', { 
-    day: '2-digit', 
-    month: 'short',
-    year: 'numeric'
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 };
 
@@ -31,14 +33,17 @@ const ProjectCard: React.FC<{ project: PipelineProject }> = ({ project }) => {
   };
 
   // Calculate completion percentage
-  const completionPercentage = project.requirementsCount > 0 
-    ? Math.round((project.completedRequirements / project.requirementsCount) * 100) 
-    : 0;
+  const completionPercentage =
+    project.requirementsCount > 0
+      ? Math.round(
+          (project.completedRequirements / project.requirementsCount) * 100,
+        )
+      : 0;
 
   return (
-    <Card 
-      className="mb-3 shadow-sm hover:shadow-md transition-shadow duration-200 border border-default-200 cursor-pointer" 
+    <Card
       isPressable
+      className="mb-3 shadow-sm hover:shadow-md transition-shadow duration-200 border border-default-200 cursor-pointer"
       onPress={handleViewRequirements}
     >
       <CardBody className="p-4">
@@ -53,7 +58,8 @@ const ProjectCard: React.FC<{ project: PipelineProject }> = ({ project }) => {
           {/* Project owner and unit */}
           <div className="space-y-1">
             <p className="text-xs text-default-600 truncate">
-              <span className="font-medium">{t("common.owner")}:</span> {project.projectOwner}
+              <span className="font-medium">{t("common.owner")}:</span>{" "}
+              {project.projectOwner}
             </p>
             <p className="text-xs text-default-500 truncate">
               {project.owningUnit}
@@ -84,14 +90,22 @@ const ProjectCard: React.FC<{ project: PipelineProject }> = ({ project }) => {
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-default-600">{t("common.progress")}</span>
-              <span className="font-medium text-foreground">{completionPercentage}%</span>
+              <span className="font-medium text-foreground">
+                {completionPercentage}%
+              </span>
             </div>
             <Progress
+              aria-label={`Requirements completion: ${completionPercentage}%`}
+              className="w-full"
+              color={
+                completionPercentage >= 80
+                  ? "success"
+                  : completionPercentage >= 50
+                    ? "primary"
+                    : "warning"
+              }
               size="sm"
               value={completionPercentage}
-              color={completionPercentage >= 80 ? "success" : completionPercentage >= 50 ? "primary" : "warning"}
-              className="w-full"
-              aria-label={`Requirements completion: ${completionPercentage}%`}
             />
           </div>
 
@@ -124,11 +138,11 @@ const PipelineStage: React.FC<{
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between w-full">
           <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-          <Chip 
-            size="sm" 
-            color={color} 
-            variant="flat" 
+          <Chip
             className={language === "ar" ? "mr-2" : "ml-2"}
+            color={color}
+            size="sm"
+            variant="flat"
           >
             {projects.length}
           </Chip>
@@ -145,7 +159,9 @@ const PipelineStage: React.FC<{
             </div>
           ) : (
             <div className="flex items-center justify-center h-full">
-              <p className="text-sm text-default-400">{t("pipeline.noProjects")}</p>
+              <p className="text-sm text-default-400">
+                {t("pipeline.noProjects")}
+              </p>
             </div>
           )}
         </ScrollShadow>
@@ -162,7 +178,7 @@ const ProjectPipeline: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <Spinner size="lg" color="primary" />
+        <Spinner color="primary" size="lg" />
       </div>
     );
   }
@@ -181,22 +197,22 @@ const ProjectPipeline: React.FC = () => {
       {/* Pipeline stages */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <PipelineStage
-          title={t("pipeline.planning")}
-          projects={planning}
-          color="primary"
           borderColor="border-t-primary"
+          color="primary"
+          projects={planning}
+          title={t("pipeline.planning")}
         />
         <PipelineStage
-          title={t("pipeline.inProgress")}
-          projects={inProgress}
-          color="warning"
           borderColor="border-t-warning"
+          color="warning"
+          projects={inProgress}
+          title={t("pipeline.inProgress")}
         />
         <PipelineStage
-          title={t("pipeline.completed")}
-          projects={completed}
-          color="success"
           borderColor="border-t-success"
+          color="success"
+          projects={completed}
+          title={t("pipeline.completed")}
         />
       </div>
     </div>

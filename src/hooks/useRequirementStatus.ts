@@ -9,7 +9,8 @@ export interface RequirementStatus {
   id: number;
   nameEn: string;
   nameAr: string;
-  code: number;
+  value: number;
+  code: string;
   isActive: boolean;
   order: number;
 }
@@ -45,7 +46,8 @@ export function useRequirementStatus(): UseRequirementStatus {
             id: lookup.id,
             nameEn: lookup.name,
             nameAr: lookup.nameAr,
-            code: lookup.value,
+            code: lookup.code,
+            value: lookup.value,
             isActive: lookup.isActive,
             order: lookup.value, // Use value as order since they're similar
           }),
@@ -69,15 +71,15 @@ export function useRequirementStatus(): UseRequirementStatus {
   }, []);
 
   const getRequirementStatusByCode = (
-    code: number,
+    value: number,
   ): RequirementStatus | undefined => {
-    return statuses.find((status) => status.code === code);
+    return statuses.find((status) => status.value === value);
   };
 
-  const getRequirementStatusName = (code: number): string => {
-    const status = getRequirementStatusByCode(code);
+  const getRequirementStatusName = (value: number): string => {
+    const status = getRequirementStatusByCode(value);
 
-    if (!status) return `Status ${code}`;
+    if (!status) return `Status ${value}`;
 
     // Use translation key format for dynamic translation
     return language === "ar" ? status.nameAr : status.nameEn;

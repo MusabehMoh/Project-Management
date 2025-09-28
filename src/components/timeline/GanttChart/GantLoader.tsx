@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 
-
-
 const GoogleChartLoader = ({ children }: { children: any }) => {
   const [googleReady, setGoogleReady] = useState(false);
 
@@ -11,6 +9,7 @@ const GoogleChartLoader = ({ children }: { children: any }) => {
       window.google.charts.setOnLoadCallback(() => setGoogleReady(true));
     } else {
       const script = document.createElement("script");
+
       script.src = "https://www.gstatic.com/charts/loader.js";
       script.id = "googleChartsScript";
       script.onload = () => {
@@ -19,8 +18,10 @@ const GoogleChartLoader = ({ children }: { children: any }) => {
       };
       document.head.appendChild(script);
     }
+
     return () => {
       const script = document.getElementById("googleChartsScript");
+
       if (script) document.head.removeChild(script);
     };
   }, []);

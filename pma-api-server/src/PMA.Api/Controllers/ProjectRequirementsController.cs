@@ -373,6 +373,48 @@ public class ProjectRequirementsController : ApiBaseController
     }
 
     /// <summary>
+    /// Get pending approval requirements (requirements waiting for approval)
+    /// </summary>
+    [HttpGet("pending-approval-requirements")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetPendingApprovalRequirements(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20)
+    {
+        try
+        {
+            var (requirements, totalCount) = await _projectRequirementService.GetPendingApprovalRequirementsAsync(page, limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
+            return Success(requirements, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving pending approval requirements", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Approve a requirement and change its status to approved
+    /// </summary>
+    [HttpPost("requirements/{id}/approve")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ApproveRequirement(int id)
+    {
+        try
+        {
+            var result = await _projectRequirementService.ApproveRequirementAsync(id);
+            if (!result)
+                return Error<ProjectRequirement>("Project requirement not found", null, 404);
+            return Success("Requirement approved successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<string>("An error occurred while approving the requirement", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Send requirement for approval or processing
     /// </summary>
     [HttpPost("requirements/{id}/send")]

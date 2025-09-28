@@ -33,7 +33,9 @@ export class TeamWorkloadService {
    * Get team workload and performance metrics
    */
   async getTeamWorkloadPerformance(): Promise<TeamWorkloadResponse> {
-    return apiClient.get<TeamMemberMetrics[]>(ENDPOINTS.TEAM_WORKLOAD_PERFORMANCE);
+    return apiClient.get<TeamMemberMetrics[]>(
+      ENDPOINTS.TEAM_WORKLOAD_PERFORMANCE,
+    );
   }
 }
 

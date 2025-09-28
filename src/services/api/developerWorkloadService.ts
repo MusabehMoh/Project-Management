@@ -233,9 +233,10 @@ class DeveloperWorkloadService {
     search?: string;
   }): Promise<WorkloadResponse> {
     const queryParams = new URLSearchParams();
-    
+
     if (params?.page) queryParams.append("page", params.page.toString());
-    if (params?.pageSize) queryParams.append("pageSize", params.pageSize.toString());
+    if (params?.pageSize)
+      queryParams.append("pageSize", params.pageSize.toString());
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params?.sortOrder) queryParams.append("sortOrder", params.sortOrder);
     if (params?.status) queryParams.append("status", params.status);
@@ -257,7 +258,9 @@ class DeveloperWorkloadService {
    * Get code review metrics
    */
   async getCodeReviewMetrics(): Promise<CodeReviewMetrics> {
-    const response = await apiClient.get("/developer-workload/code-reviews/metrics");
+    const response = await apiClient.get(
+      "/developer-workload/code-reviews/metrics",
+    );
 
     if (!response.success) {
       throw new Error(
@@ -339,10 +342,14 @@ class DeveloperWorkloadService {
    * Get capacity planning data
    */
   async getCapacityPlanning(): Promise<CapacityPlanning> {
-    const response = await apiClient.get("/developer-workload/capacity-planning");
+    const response = await apiClient.get(
+      "/developer-workload/capacity-planning",
+    );
 
     if (!response.success) {
-      throw new Error(response.message || "Failed to fetch capacity planning data");
+      throw new Error(
+        response.message || "Failed to fetch capacity planning data",
+      );
     }
 
     return response.data as CapacityPlanning;
@@ -352,10 +359,14 @@ class DeveloperWorkloadService {
    * Get burnout analysis
    */
   async getBurnoutAnalysis(): Promise<BurnoutAnalysis> {
-    const response = await apiClient.get("/developer-workload/burnout-analysis");
+    const response = await apiClient.get(
+      "/developer-workload/burnout-analysis",
+    );
 
     if (!response.success) {
-      throw new Error(response.message || "Failed to fetch burnout analysis data");
+      throw new Error(
+        response.message || "Failed to fetch burnout analysis data",
+      );
     }
 
     return response.data as BurnoutAnalysis;
@@ -370,7 +381,10 @@ class DeveloperWorkloadService {
     priority: string;
     estimatedHours: number;
   }): Promise<any> {
-    const response = await apiClient.post("/developer-workload/assign-task", taskData);
+    const response = await apiClient.post(
+      "/developer-workload/assign-task",
+      taskData,
+    );
 
     if (!response.success) {
       throw new Error(response.message || "Failed to assign task");
@@ -396,10 +410,14 @@ class DeveloperWorkloadService {
    * Get productivity trends
    */
   async getProductivityTrends(): Promise<ProductivityTrends> {
-    const response = await apiClient.get("/developer-workload/productivity-trends");
+    const response = await apiClient.get(
+      "/developer-workload/productivity-trends",
+    );
 
     if (!response.success) {
-      throw new Error(response.message || "Failed to fetch productivity trends");
+      throw new Error(
+        response.message || "Failed to fetch productivity trends",
+      );
     }
 
     return response.data as ProductivityTrends;
@@ -417,10 +435,14 @@ class DeveloperWorkloadService {
       overdueReviews: number;
     };
   }> {
-    const response = await apiClient.get("/developer-workload/code-reviews/pending");
+    const response = await apiClient.get(
+      "/developer-workload/code-reviews/pending",
+    );
 
     if (!response.success) {
-      throw new Error(response.message || "Failed to fetch pending code reviews");
+      throw new Error(
+        response.message || "Failed to fetch pending code reviews",
+      );
     }
 
     return response.data as {

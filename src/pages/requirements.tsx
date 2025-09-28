@@ -8,7 +8,7 @@ import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
 import { Select, SelectItem } from "@heroui/select";
 import { useNavigate } from "react-router-dom";
-import { FolderOpen, Clock, Users, Info, Calendar } from "lucide-react";
+import { FolderOpen, Clock, Users, Info } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -265,7 +265,7 @@ export default function RequirementsPage() {
                       {assignedProjectsCurrentPage > 1
                         ? t("pagination.loadingPage").replace(
                             "{page}",
-                            assignedProjectsCurrentPage.toString()
+                            assignedProjectsCurrentPage.toString(),
                           )
                         : t("common.pleaseWait")}
                     </p>
@@ -366,7 +366,7 @@ export default function RequirementsPage() {
                               ? Math.round(
                                   (project.completedRequirements /
                                     project.requirementsCount) *
-                                    100
+                                    100,
                                 )
                               : 0}
                             %
@@ -403,8 +403,8 @@ export default function RequirementsPage() {
                           className="flex-1"
                           color="default"
                           size="sm"
-                          variant="solid"
                           startContent={<Info className="w-4 h-4" />}
+                          variant="solid"
                           onPress={() => handleViewDetails(project)}
                         >
                           {t("requirements.viewDetails")}
@@ -545,7 +545,7 @@ export default function RequirementsPage() {
                             ? Math.round(
                                 (selectedProject.completedRequirements /
                                   selectedProject.requirementsCount) *
-                                  100
+                                  100,
                               )
                             : 0}
                           %

@@ -120,6 +120,25 @@ public class ProjectRequirementService : IProjectRequirementService
         return true;
     }
 
+    public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetPendingApprovalRequirementsAsync(int page, int limit)
+    {
+        // Get requirements with status "ManagerReview" (2) - waiting for manager approval
+        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, null, (int)RequirementStatusEnum.ManagerReview, null);
+    }
+
+    public async Task<bool> ApproveRequirementAsync(int id)
+    {
+        var requirement = await _projectRequirementRepository.GetByIdAsync(id);
+        if (requirement == null)
+            return false;
+
+        // Update status to "Approved" (assuming status 3)
+        requirement.Status = RequirementStatusEnum.Approved;
+        requirement.UpdatedAt = DateTime.UtcNow;
+        await _projectRequirementRepository.UpdateAsync(requirement);
+        return true;
+    }
+
     public async Task<RequirementTask?> CreateRequirementTaskAsync(int requirementId, CreateRequirementTaskDto taskDto)
     {
         var requirement = await _projectRequirementRepository.GetByIdAsync(requirementId);

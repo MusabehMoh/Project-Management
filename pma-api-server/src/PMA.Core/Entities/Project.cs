@@ -78,7 +78,7 @@ public class Project
     public ICollection<ProjectAnalyst>? ProjectAnalysts { get; set; }
 
     public ICollection<Task>? Tasks { get; set; }
-    public ICollection<Requirement>? Requirements { get; set; }
+    public ICollection<ProjectRequirement>? ProjectRequirements { get; set; }
 }
 
 public enum ProjectStatus

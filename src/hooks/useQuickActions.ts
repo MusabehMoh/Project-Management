@@ -55,7 +55,8 @@ export const useQuickActions = (
     useState<QuickActionData | null>(null);
   const [stats, setStats] = useState<QuickActionStats | null>(null);
   const [unassignedProjects, setUnassignedProjects] = useState<any[]>([]);
-  const [projectsWithoutRequirements, setProjectsWithoutRequirements] = useState<any[]>([]);
+  const [projectsWithoutRequirements, setProjectsWithoutRequirements] =
+    useState<any[]>([]);
   const [availableMembers, setAvailableMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -156,7 +157,13 @@ export const useQuickActions = (
     try {
       setError(null);
 
-      const [actionsResponse, statsResponse, unassignedResponse, withoutRequirementsResponse, availableMembersResponse] = await Promise.all([
+      const [
+        actionsResponse,
+        statsResponse,
+        unassignedResponse,
+        withoutRequirementsResponse,
+        availableMembersResponse,
+      ] = await Promise.all([
         quickActionsService.getQuickActions(),
         quickActionsService.getQuickActionStats(),
         quickActionsService.getUnassignedProjects(),
@@ -178,7 +185,10 @@ export const useQuickActions = (
         setUnassignedProjects([]);
       }
 
-      if (withoutRequirementsResponse.success && withoutRequirementsResponse.data) {
+      if (
+        withoutRequirementsResponse.success &&
+        withoutRequirementsResponse.data
+      ) {
         setProjectsWithoutRequirements(withoutRequirementsResponse.data);
       } else {
         setProjectsWithoutRequirements([]);
@@ -252,7 +262,9 @@ export const useQuickActions = (
   );
 
   const hasActionsAvailable = actions.length > 0;
-  const priorityActions = actions.filter((action) => action.priority === "high");
+  const priorityActions = actions.filter(
+    (action) => action.priority === "high",
+  );
 
   // Initial load
   useEffect(() => {

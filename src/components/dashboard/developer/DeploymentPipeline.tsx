@@ -182,9 +182,9 @@ export default function DeploymentPipeline({
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       if (useMockData) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         setStages(mockStages);
       }
     } catch (error) {
@@ -210,7 +210,8 @@ export default function DeploymentPipeline({
         <CardBody className="flex items-center justify-center py-8">
           <Spinner size="lg" />
           <p className="mt-4 text-default-500">
-            {t("developerDashboard.loadingPipeline") || "Loading deployment pipeline..."}
+            {t("developerDashboard.loadingPipeline") ||
+              "Loading deployment pipeline..."}
           </p>
         </CardBody>
       </Card>
@@ -223,7 +224,8 @@ export default function DeploymentPipeline({
         <CardHeader className="pb-0">
           <div className="flex justify-between items-center w-full">
             <h3 className="text-lg font-medium">
-              {t("developerDashboard.deploymentPipeline") || "Deployment Pipeline"}
+              {t("developerDashboard.deploymentPipeline") ||
+                "Deployment Pipeline"}
             </h3>
             <Button
               isIconOnly
@@ -232,7 +234,9 @@ export default function DeploymentPipeline({
               variant="ghost"
               onPress={refresh}
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </CardHeader>
@@ -247,10 +251,10 @@ export default function DeploymentPipeline({
                       stage.status === "completed"
                         ? "bg-success text-success-foreground"
                         : stage.status === "in-progress"
-                        ? "bg-primary text-primary-foreground"
-                        : stage.status === "failed"
-                        ? "bg-danger text-danger-foreground"
-                        : "bg-default-200 text-default-500"
+                          ? "bg-primary text-primary-foreground"
+                          : stage.status === "failed"
+                            ? "bg-danger text-danger-foreground"
+                            : "bg-default-200 text-default-500"
                     }`}
                   >
                     {stage.status === "completed" ? (
@@ -294,10 +298,11 @@ export default function DeploymentPipeline({
                               size="sm"
                               variant="flat"
                             >
-                              {t(`deployment.status.${item.status}`) || item.status}
+                              {t(`deployment.status.${item.status}`) ||
+                                item.status}
                             </Chip>
                           </div>
-                          
+
                           <div className="flex items-center gap-4 text-sm text-default-500 mb-3">
                             <div className="flex items-center gap-1">
                               <GitBranch className="w-3 h-3" />
@@ -328,13 +333,13 @@ export default function DeploymentPipeline({
                               <span className="text-xs text-default-500">
                                 Assigned to:
                               </span>
-                              <AvatarGroup size="sm" max={3}>
+                              <AvatarGroup max={3} size="sm">
                                 {item.assignedTo.map((assignee, idx) => (
                                   <Tooltip key={idx} content={assignee}>
                                     <Avatar
+                                      className="w-6 h-6"
                                       name={assignee}
                                       size="sm"
-                                      className="w-6 h-6"
                                     />
                                   </Tooltip>
                                 ))}

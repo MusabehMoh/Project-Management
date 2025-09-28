@@ -43,7 +43,7 @@ export default function CodeReviewTracker({
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       if (useMockData) {
         await new Promise((resolve) => setTimeout(resolve, 800));
         setMetrics(mockMetrics);
@@ -92,7 +92,9 @@ export default function CodeReviewTracker({
               variant="ghost"
               onPress={refresh}
             >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </CardHeader>
@@ -102,7 +104,9 @@ export default function CodeReviewTracker({
             <div className="p-4 bg-default-50 dark:bg-default-100/50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Approval Rate</span>
-                <span className="text-sm text-default-500">{metrics.approvalRate}%</span>
+                <span className="text-sm text-default-500">
+                  {metrics.approvalRate}%
+                </span>
               </div>
               <Progress
                 color={metrics.approvalRate >= 80 ? "success" : "warning"}
@@ -122,7 +126,7 @@ export default function CodeReviewTracker({
                   {metrics.averageReviewTime}h
                 </div>
               </div>
-              
+
               <div className="text-center p-3 bg-default-50 dark:bg-default-100/50 rounded-lg">
                 <div className="flex items-center justify-center gap-1 mb-1">
                   <CheckCircle className="w-4 h-4 text-success" />
@@ -145,7 +149,7 @@ export default function CodeReviewTracker({
                   {metrics.totalReviews}
                 </Chip>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-warning" />

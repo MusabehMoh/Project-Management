@@ -291,25 +291,25 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
         {showToolbar && (
           <div className="flex gap-2">
             <Button
+              className="min-w-0"
               size="sm"
               variant="flat"
-              className="min-w-0"
               onPress={handleZoomIn}
             >
               {t("gantt.zoomIn") || "Day View"}
             </Button>
             <Button
+              className="min-w-0"
               size="sm"
               variant="flat"
-              className="min-w-0"
               onPress={handleZoomOut}
             >
               {t("gantt.zoomOut") || "Month View"}
             </Button>
             <Button
+              className="min-w-0"
               size="sm"
               variant="flat"
-              className="min-w-0"
               onPress={handleFullscreen}
             >
               {t("gantt.fullscreen") || "Expand"}

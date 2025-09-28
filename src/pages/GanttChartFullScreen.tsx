@@ -1,8 +1,9 @@
+import { X } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimelines } from "@/hooks/useTimelines";
-import { X } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
 
 const GanttChartFullScreen = () => {
   const location = useLocation();
@@ -27,10 +28,10 @@ const GanttChartFullScreen = () => {
       {/* Header */}
       <header className="flex items-center justify-end p-2 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <button
-          onClick={handleClose}
-          className="flex items-center gap-2 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label="Close fullscreen Gantt chart"
+          className="flex items-center gap-2 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           title="Close Page"
+          onClick={handleClose}
         >
           <span className="text-gray-700 dark:text-gray-200 font-medium select-none">
             {t("timelane.back")}
@@ -45,9 +46,9 @@ const GanttChartFullScreen = () => {
       <main className="flex-grow min-h-0">
         <div className="w-full h-full">
           <DHTMLXGantt
+            isFullScreen={true}
             projectId={projectId}
             timeline={timeline}
-            isFullScreen={true}
             onDeleteEntity={deleteEntity}
             onUpdateEntity={updateEntity}
           />

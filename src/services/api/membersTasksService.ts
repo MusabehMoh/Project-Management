@@ -31,7 +31,7 @@ export class MembersTasksService {
    * Get projects assigned to current analyst
    */
   async getTasks(
-    taskRequest?: TaskSearchParams
+    taskRequest?: TaskSearchParams,
   ): Promise<ApiResponse<TasksResponse>> {
     const params = new URLSearchParams();
 
@@ -73,7 +73,7 @@ export class MembersTasksService {
    */
   async exportTasks(
     //filters: TaskSearchParams,
-    format: "csv" | "pdf" | "xlsx"
+    format: "csv" | "pdf" | "xlsx",
   ): Promise<Blob> {
     const queryParams = new URLSearchParams();
 
@@ -101,7 +101,7 @@ export class MembersTasksService {
                 ? "text/csv"
                 : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         },
-      }
+      },
     );
 
     if (!response.ok) {
@@ -123,7 +123,7 @@ export class MembersTasksService {
    */
   async updateTask(
     id: string,
-    updates: Partial<MemberTask>
+    updates: Partial<MemberTask>,
   ): Promise<ApiResponse<MemberTask>> {
     return apiClient.patch<MemberTask>(`${this.baseUrl}/${id}`, updates);
   }
@@ -150,7 +150,7 @@ export class MembersTasksService {
   async changeAssignees(
     taskId: string,
     memberIds: string[],
-    notes: string
+    notes: string,
   ): Promise<ApiResponse<void>> {
     return {
       success: true,
@@ -168,7 +168,7 @@ export class MembersTasksService {
   async changeStatus(
     id: string,
     typeId: string,
-    notes: string
+    notes: string,
   ): Promise<ApiResponse<void>> {
     // return {
     //   success: true,
@@ -178,7 +178,7 @@ export class MembersTasksService {
     // };
     return apiClient.post<void>(
       `${this.baseUrl}/${id}/change-status/${typeId}`,
-      notes
+      notes,
     );
   }
 

@@ -29,16 +29,18 @@ export class PipelineService {
   async getPipelineProjects(): Promise<PipelineResponse> {
     try {
       // Get assigned projects which already includes requirements count
-      const assignedProjectsResponse = await apiClient.get<PipelineProject[]>("/project-requirements/assigned-projects?limit=200");
+      const assignedProjectsResponse = await apiClient.get<PipelineProject[]>(
+        "/project-requirements/assigned-projects?limit=200",
+      );
 
       if (assignedProjectsResponse.success) {
         const projects = assignedProjectsResponse.data;
-        
+
         // Categorize projects by status
         // Status mapping: 1=New(Planning), 2=Delayed(Planning), 3=Under Review(Planning), 4=Under Development(InProgress), 5=Production(Completed)
-        const planning = projects.filter(p => [1, 2, 3].includes(p.status));
-        const inProgress = projects.filter(p => p.status === 4);
-        const completed = projects.filter(p => p.status === 5);
+        const planning = projects.filter((p) => [1, 2, 3].includes(p.status));
+        const inProgress = projects.filter((p) => p.status === 4);
+        const completed = projects.filter((p) => p.status === 5);
 
         return {
           success: true,
@@ -54,6 +56,7 @@ export class PipelineService {
       throw new Error("Failed to fetch pipeline data");
     } catch (error) {
       console.error("Pipeline service error:", error);
+
       return {
         success: false,
         data: {

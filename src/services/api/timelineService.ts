@@ -86,9 +86,11 @@ export class TimelineApiService {
   /**
    * Get all department employees (without requiring search query)
    */
-  async getAllDepartmentEmployees(): Promise<ApiResponse<MemberSearchResult[]>> {
+  async getAllDepartmentEmployees(): Promise<
+    ApiResponse<MemberSearchResult[]>
+  > {
     console.log("----> Getting all department employees");
-    
+
     return apiClient.get<MemberSearchResult[]>("/employees");
   }
 

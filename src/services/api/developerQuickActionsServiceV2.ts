@@ -57,12 +57,12 @@ export interface DeveloperQuickActionsResponse {
 class DeveloperQuickActionsServiceV2 {
   async getQuickActions(): Promise<DeveloperQuickActionsResponse> {
     const response = await apiClient.get<DeveloperQuickActionsResponse>(
-      "/developer-quick-actions"
+      "/developer-quick-actions",
     );
 
     if (!response.success) {
       throw new Error(
-        response.message || "Failed to fetch developer quick actions"
+        response.message || "Failed to fetch developer quick actions",
       );
     }
 
@@ -71,13 +71,11 @@ class DeveloperQuickActionsServiceV2 {
 
   async getUnassignedTasks(): Promise<UnassignedTask[]> {
     const response = await apiClient.get<UnassignedTask[]>(
-      "/developer-quick-actions/unassigned-tasks"
+      "/developer-quick-actions/unassigned-tasks",
     );
 
     if (!response.success) {
-      throw new Error(
-        response.message || "Failed to fetch unassigned tasks"
-      );
+      throw new Error(response.message || "Failed to fetch unassigned tasks");
     }
 
     return response.data;
@@ -85,12 +83,12 @@ class DeveloperQuickActionsServiceV2 {
 
   async getAlmostCompletedTasks(): Promise<AlmostCompletedTask[]> {
     const response = await apiClient.get<AlmostCompletedTask[]>(
-      "/developer-quick-actions/almost-completed-tasks"
+      "/developer-quick-actions/almost-completed-tasks",
     );
 
     if (!response.success) {
       throw new Error(
-        response.message || "Failed to fetch almost completed tasks"
+        response.message || "Failed to fetch almost completed tasks",
       );
     }
 
@@ -99,12 +97,12 @@ class DeveloperQuickActionsServiceV2 {
 
   async getAvailableDevelopers(): Promise<AvailableDeveloper[]> {
     const response = await apiClient.get<AvailableDeveloper[]>(
-      "/developer-quick-actions/available-developers"
+      "/developer-quick-actions/available-developers",
     );
 
     if (!response.success) {
       throw new Error(
-        response.message || "Failed to fetch available developers"
+        response.message || "Failed to fetch available developers",
       );
     }
 
@@ -115,14 +113,17 @@ class DeveloperQuickActionsServiceV2 {
     taskId: number,
     newEndDate: string,
     extensionReason: string,
-    additionalHours?: number
+    additionalHours?: number,
   ): Promise<void> {
-    const response = await apiClient.post("/developer-quick-actions/extend-task", {
-      taskId,
-      newEndDate,
-      extensionReason,
-      additionalHours,
-    });
+    const response = await apiClient.post(
+      "/developer-quick-actions/extend-task",
+      {
+        taskId,
+        newEndDate,
+        extensionReason,
+        additionalHours,
+      },
+    );
 
     if (!response.success) {
       throw new Error(response.message || "Failed to extend task deadline");
@@ -130,10 +131,13 @@ class DeveloperQuickActionsServiceV2 {
   }
 
   async assignDeveloper(taskId: string, developerId: string): Promise<void> {
-    const response = await apiClient.post("/developer-quick-actions/assign-developer", {
-      taskId,
-      developerId,
-    });
+    const response = await apiClient.post(
+      "/developer-quick-actions/assign-developer",
+      {
+        taskId,
+        developerId,
+      },
+    );
 
     if (!response.success) {
       throw new Error(response.message || "Failed to assign developer");
@@ -141,4 +145,5 @@ class DeveloperQuickActionsServiceV2 {
   }
 }
 
-export const developerQuickActionsServiceV2 = new DeveloperQuickActionsServiceV2();
+export const developerQuickActionsServiceV2 =
+  new DeveloperQuickActionsServiceV2();

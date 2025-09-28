@@ -17,7 +17,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined
+  undefined,
 );
 
 // Translation dictionary
@@ -26,8 +26,8 @@ const translations = {
     // Navbar
     "nav.dashboard": "Dashboard",
     "nav.projects": "Projects",
-    "nav.requirements": "Analysis Requirements",
-    "nav.developmentRequirements": "Development Requirements",
+    "nav.requirements": "Under Analysis",
+    "nav.developmentRequirements": "Under Development",
     "nav.taskPlan": "Task Plan",
     "nav.users": "Users",
     "nav.timeline": "Timeline",
@@ -360,6 +360,7 @@ const translations = {
     "common.cancel": "Cancel",
     "common.select": "Select",
     "common.clear": "Clear",
+    "common.reset": "Reset",
     "common.search": "Search",
     "common.delete": "Delete",
     "common.remove": "Remove",
@@ -447,7 +448,8 @@ const translations = {
     "developerDashboard.loadingPipeline": "Loading deployment pipeline...",
     "developerDashboard.loadingTasks": "Loading task data...",
     "developerDashboard.approvedRequirements": "Approved Requirements",
-    "developerDashboard.noApprovedRequirements": "No approved requirements available",
+    "developerDashboard.noApprovedRequirements":
+      "No approved requirements available",
     "developerDashboard.teamPerformance": "Team Performance",
     "developerDashboard.avgEfficiency": "Avg Efficiency",
     "developerDashboard.tasksCompleted": "Tasks Completed",
@@ -686,7 +688,7 @@ const translations = {
     "requirements.attachments": "Attachments",
     "requirements.status": "Status",
     "requirements.saveAsDraft": "Save as Draft",
-    "requirements.sendToDevelopment": "Send to Development",
+    "requirements.requestApproval": "Request Approval",
     "requirements.startDevelopment": "Start Development",
     "requirements.cancel": "Cancel",
     "requirements.requirementNamePlaceholder": "e.g. PDF Invoice Generation",
@@ -738,6 +740,22 @@ const translations = {
     "requirements.developmentRequirements": "Development Requirements",
     "requirements.developmentRequirementsSubtitle":
       "View all requirements currently in development across projects",
+    "requirements.approvedRequirements": "Approved Requirements",
+    "requirements.approvedRequirementsSubtitle":
+      "View all approved requirements ready for development",
+    "requirements.noApprovedRequirements": "No approved requirements",
+    "requirements.noApprovedRequirementsDesc":
+      "There are currently no approved requirements available.",
+    "requirements.approvalRequests": "Approval Requests",
+    "requirements.approvalRequestsSubtitle":
+      "View all requirements pending approval",
+    "requirements.noApprovalRequests": "No requirements pending approval",
+    "requirements.noApprovalRequestsDesc":
+      "There are currently no requirements waiting for approval.",
+    "requirements.approve": "Approve",
+    "requirements.approveRequirement": "Approve Requirement",
+    "requirements.approveSuccess": "Requirement approved successfully",
+    "requirements.approveError": "Failed to approve requirement",
     "requirements.noDevelopmentRequirements": "No requirements in development",
     "requirements.noDevelopmentRequirementsDesc":
       "There are currently no requirements marked as in development.",
@@ -761,7 +779,10 @@ const translations = {
     "requirements.createSuccess": "Requirement created successfully",
     "requirements.updateSuccess": "Requirement updated successfully",
     "requirements.deleteSuccess": "Requirement deleted successfully",
-    "requirements.sendSuccess": "Requirement sent to development successfully",
+    "requirements.sendSuccess": "Requirement submitted for approval successfully",
+    "requirements.uploadSuccess": "uploaded successfully",
+    "requirements.attachmentDeleteSuccess": "Attachment deleted successfully",
+    "requirements.downloadSuccess": "File downloaded successfully",
     "requirements.createError": "Failed to create requirement",
     "requirements.updateError": "Failed to update requirement",
     "requirements.deleteError": "Failed to delete requirement",
@@ -779,6 +800,19 @@ const translations = {
     "tasks.qcMember": "QC Member",
     "tasks.selectDeveloper": "Search for developer...",
     "tasks.selectQC": "Search for QC member...",
+    "tasks.assignedOn": "Assigned On",
+    
+    // Additional requirements keys
+    "requirements.updated": "Updated",
+    "requirements.uploadedOn": "Uploaded on",
+    "requirements.taskInfo": "Task Information",
+    "requirements.timelineInfo": "Timeline Information",
+    "timeline.name": "Timeline Name",
+    "timeline.id": "Timeline ID",
+    
+    // Common keys
+    "common.preview": "Preview",
+    "common.download": "Download",
     "requirements.validation.nameRequired": "Requirement name is required",
     "requirements.validation.descriptionRequired": "Description is required",
     "requirements.validation.priorityRequired": "Priority is required",
@@ -1708,6 +1742,7 @@ const translations = {
     "common.cancel": "إلغاء",
     "common.select": "اختيار",
     "common.clear": "مسح",
+    "common.reset": "إعادة تعيين",
     "common.search": "بحث",
     "common.delete": "حذف",
     "common.remove": "إزالة",
@@ -1794,7 +1829,8 @@ const translations = {
     "developerDashboard.loadingPipeline": "جاري تحميل خط أنابيب النشر...",
     "developerDashboard.loadingTasks": "جاري تحميل بيانات المهام...",
     "developerDashboard.approvedRequirements": "المتطلبات الموافق عليها",
-    "developerDashboard.noApprovedRequirements": "لا توجد متطلبات موافق عليها متاحة",
+    "developerDashboard.noApprovedRequirements":
+      "لا توجد متطلبات موافق عليها متاحة",
     "developerDashboard.teamPerformance": "أداء الفريق",
     "developerDashboard.avgEfficiency": "متوسط الكفاءة",
     "developerDashboard.tasksCompleted": "المهام المكتملة",
@@ -2027,7 +2063,7 @@ const translations = {
     "requirements.attachments": "المرفقات",
     "requirements.status": "الحالة",
     "requirements.saveAsDraft": "حفظ كمسودة",
-    "requirements.sendToDevelopment": "إرسال لمدير التطوير",
+    "requirements.requestApproval": "طلب الموافقة",
     "requirements.startDevelopment": "بدء التطوير",
     "requirements.cancel": "إلغاء",
     "requirements.requirementNamePlaceholder": "مثال: إصدار فاتورة PDF",
@@ -2077,6 +2113,22 @@ const translations = {
     "requirements.developmentRequirements": "متطلبات التطوير",
     "requirements.developmentRequirementsSubtitle":
       "عرض جميع المتطلبات التي هي قيد التطوير عبر المشاريع",
+    "requirements.approvedRequirements": "المتطلبات المعتمدة",
+    "requirements.approvedRequirementsSubtitle":
+      "عرض جميع المتطلبات المعتمدة جاهزة للتطوير",
+    "requirements.noApprovedRequirements": "لا توجد متطلبات معتمدة",
+    "requirements.noApprovedRequirementsDesc":
+      "لا توجد حالياً متطلبات معتمدة متاحة.",
+    "requirements.approvalRequests": "طلبات الموافقة",
+    "requirements.approvalRequestsSubtitle":
+      "عرض جميع المتطلبات المعلقة للموافقة",
+    "requirements.noApprovalRequests": "لا توجد متطلبات معلقة للموافقة",
+    "requirements.noApprovalRequestsDesc":
+      "لا توجد حالياً متطلبات في انتظار الموافقة.",
+    "requirements.approve": "موافقة",
+    "requirements.approveRequirement": "الموافقة على المتطلب",
+    "requirements.approveSuccess": "تمت الموافقة على المتطلب بنجاح",
+    "requirements.approveError": "فشل في الموافقة على المتطلب",
     "requirements.noDevelopmentRequirements": "لا توجد متطلبات قيد التطوير",
     "requirements.noDevelopmentRequirementsDesc":
       "لا توجد حالياً متطلبات موسومة بأنها قيد التطوير.",
@@ -2100,7 +2152,10 @@ const translations = {
     "requirements.createSuccess": "تم إنشاء المتطلب بنجاح",
     "requirements.updateSuccess": "تم تحديث المتطلب بنجاح",
     "requirements.deleteSuccess": "تم حذف المتطلب بنجاح",
-    "requirements.sendSuccess": "تم إرسال المتطلب للتطوير بنجاح",
+    "requirements.sendSuccess": "تم تقديم المتطلب للموافقة بنجاح",
+    "requirements.uploadSuccess": "تم الرفع بنجاح",
+    "requirements.attachmentDeleteSuccess": "تم حذف المرفق بنجاح",
+    "requirements.downloadSuccess": "تم تحميل الملف بنجاح",
     "requirements.createError": "فشل في إنشاء المتطلب",
     "requirements.updateError": "فشل في تحديث المتطلب",
     "requirements.deleteError": "فشل في حذف المتطلب",
@@ -2118,6 +2173,19 @@ const translations = {
     "tasks.qcMember": "مسؤول ضمان الجودة",
     "tasks.selectDeveloper": "البحث عن مطور...",
     "tasks.selectQC": "البحث عن مسؤول ضمان الجودة...",
+    "tasks.assignedOn": "تم التعيين في",
+    
+    // Additional requirements keys (Arabic)
+    "requirements.updated": "تاريخ التحديث",
+    "requirements.uploadedOn": "تم الرفع في",
+    "requirements.taskInfo": "معلومات المهمة",
+    "requirements.timelineInfo": "معلومات الجدول الزمني",
+    "timeline.name": "اسم الجدول الزمني",
+    "timeline.id": "معرّف الجدول الزمني",
+    
+    // Common keys (Arabic)
+    "common.preview": "معاينة",
+    "common.download": "تحميل",
     "requirements.validation.nameRequired": "اسم المتطلب مطلوب",
     "requirements.validation.descriptionRequired": "الوصف مطلوب",
     "requirements.validation.priorityRequired": "الأولوية مطلوبة",

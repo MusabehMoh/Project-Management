@@ -1,3 +1,9 @@
+import type {
+  ProjectRequirement,
+  CreateProjectRequirementRequest,
+  ProjectRequirementAttachment,
+} from "@/types/projectRequirement";
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardBody } from "@heroui/card";
@@ -30,8 +36,8 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/modal";
+import { Skeleton } from "@heroui/skeleton";
 import { DatePicker } from "@heroui/date-picker";
-import { Divider } from "@heroui/divider";
 import {
   Plus,
   Search,
@@ -46,28 +52,36 @@ import {
   Upload,
   X,
   Download,
+  Eye,
+  RotateCcw,
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
+import { FilePreview } from "@/components/FilePreview";
+import { GlobalPagination } from "@/components/GlobalPagination";
+import {
+  convertTypeToString,
+  REQUIREMENT_STATUS,
+  REQUIREMENT_PRIORITY,
+  REQUIREMENT_TYPE,
+} from "@/constants/projectRequirements";
+import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useFilePreview } from "@/hooks/useFilePreview";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { useRequirementStatus } from "@/hooks/useRequirementStatus";
+import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
-import { GlobalPagination } from "@/components/GlobalPagination";
-
-import type {
-  ProjectRequirement,
-  CreateProjectRequirementRequest,
-  ProjectRequirementAttachment,
-} from "@/types/projectRequirement";
+import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 
 // Form data type for creating/editing requirements
+// Uses string values for UI components - will be converted to integers before API calls
 interface RequirementFormData {
   name: string;
   description: string;
-  priority: "low" | "medium" | "high" | "critical";
-  type: "new" | "change request";
+  priority: number; // Integer value matching backend enum
+  type: number; // Integer value matching backend enum
   expectedCompletionDate: any;
   attachments: string[];
   uploadedFiles: File[];
@@ -77,7 +91,7 @@ interface RequirementFormData {
 export default function ProjectRequirementsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Set page title
   usePageTitle("requirements.projectRequirements");
@@ -90,17 +104,16 @@ export default function ProjectRequirementsPage() {
     number | null
   >(highlightRequirementId ? parseInt(highlightRequirementId) : null);
 
+  // Page size state for dynamic pagination
+  const [currentPageSize, setCurrentPageSize] = useState(20);
+
   const {
     requirements,
     stats,
     loading,
-    error,
     currentPage,
     totalPages,
     totalRequirements,
-    pageSize,
-    filters,
-    loadRequirements,
     createRequirement,
     updateRequirement,
     deleteRequirement,
@@ -113,14 +126,62 @@ export default function ProjectRequirementsPage() {
     downloadAttachment,
   } = useProjectRequirements({
     projectId: projectId ? parseInt(projectId) : undefined,
-    pageSize: 20,
+    pageSize: currentPageSize,
+    // Preserve user input; we'll show a 'no results' state instead of clearing.
+    // onSearchNoResults intentionally left unused to avoid unexpected clearing UX.
+    // onSearchNoResults: () => {},
   });
+
+  // Pagination page size options
+  const effectivePageSize = normalizePageSize(currentPageSize, 20);
+
+  // Handler for page size change
+  const handlePageSizeChange = (newSize: number) => {
+    setCurrentPageSize(newSize);
+    // Reset to first page when page size changes
+    handlePageChange(1);
+  };
 
   const { hasPermission } = usePermissions();
 
+  // Global priority lookups
+  const { getPriorityColor, getPriorityLabel, priorityOptions } =
+    usePriorityLookups();
+
   // RequirementStatus hook for dynamic status management
-  const { getRequirementStatusColor, getRequirementStatusName } =
+  const { statuses, getRequirementStatusColor, getRequirementStatusName } =
     useRequirementStatus();
+
+  // File preview hook
+  const { previewState, previewFile, closePreview, downloadCurrentFile } =
+    useFilePreview({
+      downloadFunction: downloadAttachment,
+    });
+
+  // Handle file preview with attachment data
+  const handleFilePreview = async (
+    attachment: ProjectRequirementAttachment,
+  ) => {
+    try {
+      // For previewable files, get the blob URL
+      const blob = await projectRequirementsService.downloadAttachment(
+        selectedRequirement?.id || 0,
+        attachment.id,
+      );
+
+      // Create URL for preview
+      const url = window.URL.createObjectURL(blob);
+
+      await previewFile(attachment.originalName, url, attachment.fileSize);
+    } catch {
+      // If preview fails, just download the file
+      await downloadAttachment(
+        selectedRequirement?.id || 0,
+        attachment.id,
+        attachment.originalName,
+      );
+    }
+  };
 
   // Modal states
   const {
@@ -147,8 +208,8 @@ export default function ProjectRequirementsPage() {
   const [formData, setFormData] = useState<RequirementFormData>({
     name: "",
     description: "",
-    priority: "medium",
-    type: "new",
+    priority: REQUIREMENT_PRIORITY.MEDIUM,
+    type: REQUIREMENT_TYPE.NEW,
     expectedCompletionDate: null,
     attachments: [],
     uploadedFiles: [],
@@ -160,31 +221,52 @@ export default function ProjectRequirementsPage() {
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string>("");
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Update filters when search/filter states change (with debouncing)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       const newFilters = {
         ...(searchTerm && { search: searchTerm }),
-        ...(statusFilter && { status: statusFilter }),
+        ...(statusFilter !== null && {
+          status: statusFilter.toString(),
+        }),
         ...(priorityFilter && { priority: priorityFilter }),
       };
 
       updateFilters(newFilters);
+
+      // Mark as not initial load after first filter update
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm, statusFilter, priorityFilter, updateFilters]);
 
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter(null);
+    setPriorityFilter("");
+    updateFilters({});
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchTerm || statusFilter !== null || priorityFilter;
+
   // Handle highlighting and scrolling for specific requirements
   useEffect(() => {
     if (scrollToRequirementId && requirements.length > 0) {
       const requirementId = parseInt(scrollToRequirementId);
+
       // Wait a bit for the table to render
       setTimeout(() => {
         const element = document.getElementById(`requirement-${requirementId}`);
+
         if (element) {
           element.scrollIntoView({
             behavior: "smooth",
@@ -236,8 +318,8 @@ export default function ProjectRequirementsPage() {
     setFormData({
       name: "",
       description: "",
-      priority: "medium",
-      type: "new",
+      priority: REQUIREMENT_PRIORITY.MEDIUM,
+      type: REQUIREMENT_TYPE.NEW,
       expectedCompletionDate: null,
       attachments: [],
       uploadedFiles: [],
@@ -254,12 +336,37 @@ export default function ProjectRequirementsPage() {
 
   const handleEditRequirement = (requirement: ProjectRequirement) => {
     setSelectedRequirement(requirement);
+
+    // Safely parse the expected completion date
+    let parsedDate = null;
+
+    if (requirement.expectedCompletionDate) {
+      try {
+        // Handle different date formats that might come from the backend
+        const dateStr = requirement.expectedCompletionDate;
+
+        if (typeof dateStr === "string") {
+          // Try to create a Date object first to validate
+          const date = new Date(dateStr);
+
+          if (!isNaN(date.getTime())) {
+            // Convert to YYYY-MM-DD format for parseDate
+            const isoString = date.toISOString().split("T")[0];
+
+            parsedDate = parseDate(isoString);
+          }
+        }
+      } catch {
+        // Silently ignore date parsing errors
+      }
+    }
+
     setFormData({
       name: requirement.name,
       description: requirement.description,
       priority: requirement.priority,
       type: requirement.type,
-      expectedCompletionDate: parseDate(requirement.expectedCompletionDate),
+      expectedCompletionDate: parsedDate,
       attachments: [],
       uploadedFiles: [],
       existingAttachments: requirement.attachments || [],
@@ -276,21 +383,12 @@ export default function ProjectRequirementsPage() {
   const handleSaveRequirement = async (saveAsDraft = true) => {
     if (!validateForm() || !projectId) return;
 
-
-    // Map priority string to integer
-    const priorityMap: Record<string, number> = {
-      low: 1,
-      medium: 2,
-      high: 3,
-      critical: 4,
-    };
-
     try {
       const requestData: CreateProjectRequirementRequest = {
         projectId: parseInt(projectId),
         name: formData.name,
         description: formData.description,
-        priority: priorityMap[formData.priority],
+        priority: formData.priority,
         type: formData.type,
         expectedCompletionDate:
           formData.expectedCompletionDate?.toString() || "",
@@ -300,34 +398,48 @@ export default function ProjectRequirementsPage() {
       let savedRequirement: ProjectRequirement;
 
       if (selectedRequirement) {
+        // When editing, only send status if sending to development
+        const updateData = saveAsDraft
+          ? requestData
+          : { ...requestData, status: 2 };
+
         savedRequirement = await updateRequirement(selectedRequirement.id, {
-          ...requestData,
+          ...updateData,
           id: selectedRequirement.id,
-          status: saveAsDraft ? 1 : 6, // 1=New/Draft, 6=Approved (send to development)
         });
       } else {
         savedRequirement = await createRequirement({
           ...requestData,
-          status: saveAsDraft ? 1 : 6, // 1=New/Draft, 6=Approved (send to development)
+          status: saveAsDraft ? 1 : 2, // 1=New/Draft, 2=Approved (send to development)
         });
       }
 
-      // Upload new files if any
-      if (formData.uploadedFiles.length > 0) {
-        await uploadAttachments(savedRequirement.id, formData.uploadedFiles);
-      }
+      // Determine removed attachment IDs (existing on requirement but not in kept list)
+      const removedAttachments: number[] =
+        selectedRequirement?.attachments
+          ?.filter(
+            (existing) =>
+              !formData.existingAttachments.find(
+                (kept) => kept.id === existing.id,
+              ),
+          )
+          .map((a) => a.id) || [];
 
-      // Handle removed existing attachments
-      const removedAttachments =
-        selectedRequirement?.attachments?.filter(
-          (existing) =>
-            !formData.existingAttachments.find(
-              (kept) => kept.id === existing.id,
-            ),
-        ) || [];
+      // Try bulk sync (uploads + deletes). Falls back if endpoint unsupported.
+      const syncResult = await projectRequirementsService.syncAttachments(
+        savedRequirement.id,
+        formData.uploadedFiles,
+        removedAttachments,
+      );
 
-      for (const removed of removedAttachments) {
-        await deleteAttachment(savedRequirement.id, removed.id);
+      if (syncResult === null) {
+        // Fallback path: legacy separate calls
+        if (formData.uploadedFiles.length > 0) {
+          await uploadAttachments(savedRequirement.id, formData.uploadedFiles);
+        }
+        for (const removedId of removedAttachments) {
+          await deleteAttachment(savedRequirement.id, removedId);
+        }
       }
 
       resetForm();
@@ -336,38 +448,30 @@ export default function ProjectRequirementsPage() {
       } else {
         onCreateOpenChange();
       }
-    } catch (err) {
-      console.error("Error saving requirement:", err);
+    } catch {
+      // Error saving requirement
     }
   };
-
-  const handleSendToDevelopment = async () => {
-    await handleSaveRequirement(false);
-    // Ensure stats and list refresh after sending to development
-    try {
-      await refreshData();
-    } catch (e) {
-      // ignore
-    }
-  };
-
+ 
   const confirmDelete = async () => {
     if (requirementToDelete) {
       try {
         await deleteRequirement(requirementToDelete.id);
         setRequirementToDelete(null);
         onDeleteOpenChange();
-      } catch (err) {
-        console.error("Error deleting requirement:", err);
+      } catch {
+        // Error deleting requirement
       }
     }
   };
 
-  const handleSendRequirement = async (requirement: ProjectRequirement) => {
+  const handleRequestApproval = async (requirement: ProjectRequirement) => {
     try {
-      await sendRequirement(requirement.id, 6); // 6=Approved status when sending to development
-    } catch (err) {
-      console.error("Error sending requirement:", err);
+      await sendRequirement(requirement.id, 2); // 2=Approved status when requesting approval
+      await refreshData(); // Refresh the grid to show updated requirement status
+      await resetFilters();
+    } catch {
+      // Error requesting approval
     }
   };
 
@@ -377,6 +481,7 @@ export default function ProjectRequirementsPage() {
     if (!files) return;
 
     const newFiles = Array.from(files);
+
     setFormData((prev) => ({
       ...prev,
       uploadedFiles: [...prev.uploadedFiles, ...newFiles],
@@ -404,53 +509,36 @@ export default function ProjectRequirementsPage() {
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // Helper function to convert string status to numeric code for RequirementStatus lookup
-  const convertStatusToCode = (status: string): number => {
-    const statusMap: Record<string, number> = {
-      new: 1, // New (Draft)
-      "under-study": 2, // Under Study
-      "under-development": 3, // Under Development
-      "under-testing": 4, // Under Testing
-      completed: 5, // Completed
-      approved: 6, // Approved (when sending to development)
-    };
-    return statusMap[status] || 1; // Default to 'New' if status not found
-  };
-
   // Helper function to get status color using RequirementStatus lookup
-  const getStatusColor = (status: string) => {
-    const statusCode = convertStatusToCode(status);
-    return getRequirementStatusColor(statusCode);
+  const getStatusColor = (status: number) => {
+    return getRequirementStatusColor(status);
   };
 
   // Helper function to get status text using RequirementStatus lookup
-  const getStatusText = (status: string) => {
-    const statusCode = convertStatusToCode(status);
-    return getRequirementStatusName(statusCode);
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "danger";
-      case "medium":
-        return "warning";
-      case "low":
-        return "success";
-      default:
-        return "default";
-    }
+  const getStatusText = (status: number) => {
+    return getRequirementStatusName(status);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    if (!dateString) return "-";
+
+    try {
+      const date = new Date(dateString);
+
+      if (isNaN(date.getTime())) return "-";
+
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return "-";
+    }
   };
 
   if (!projectId) {
@@ -493,8 +581,20 @@ export default function ProjectRequirementsPage() {
           </div>
 
           {/* Stats Cards */}
-          {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-5">
+          {loading && (isInitialLoad || !stats) ? (
+            // Skeleton Loader for Stats - show on initial load or when no stats data
+            <div className="grid grid-cols-2 md:grid-cols-7 gap-5">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i} className="p-3">
+                  <div className="text-center">
+                    <Skeleton className="h-8 w-12 rounded-md mx-auto mb-2" />
+                    <Skeleton className="h-3 w-16 rounded-md mx-auto" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : stats ? (
+            <div className="grid grid-cols-2 md:grid-cols-7 gap-5">
               <Card className="p-3">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
@@ -511,7 +611,17 @@ export default function ProjectRequirementsPage() {
                     {stats.draft}
                   </div>
                   <div className="text-xs text-default-500">
-                    {getStatusText("new")}
+                    {getStatusText(REQUIREMENT_STATUS.NEW)}
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-500">
+                    {stats.managerReview || 0}
+                  </div>
+                  <div className="text-xs text-default-500">
+                    {getStatusText(REQUIREMENT_STATUS.MANAGER_REVIEW)}
                   </div>
                 </div>
               </Card>
@@ -521,7 +631,7 @@ export default function ProjectRequirementsPage() {
                     {stats.approved}
                   </div>
                   <div className="text-xs text-default-500">
-                    {getStatusText("under-study")}
+                    {getStatusText(REQUIREMENT_STATUS.APPROVED)}
                   </div>
                 </div>
               </Card>
@@ -531,7 +641,7 @@ export default function ProjectRequirementsPage() {
                     {stats.inDevelopment}
                   </div>
                   <div className="text-xs text-default-500">
-                    {getStatusText("under-development")}
+                    {getStatusText(REQUIREMENT_STATUS.UNDER_DEVELOPMENT)}
                   </div>
                 </div>
               </Card>
@@ -541,7 +651,7 @@ export default function ProjectRequirementsPage() {
                     {stats.underTesting}
                   </div>
                   <div className="text-xs text-default-500">
-                    {getStatusText("under-testing")}
+                    {getStatusText(REQUIREMENT_STATUS.UNDER_TESTING)}
                   </div>
                 </div>
               </Card>
@@ -551,103 +661,235 @@ export default function ProjectRequirementsPage() {
                     {stats.completed}
                   </div>
                   <div className="text-xs text-default-500">
-                    {getStatusText("completed")}
+                    {getStatusText(REQUIREMENT_STATUS.COMPLETED)}
                   </div>
                 </div>
               </Card>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Filters and Search */}
-        <Card>
-          <CardBody>
-            <div className="flex flex-col md:flex-row gap-4 items-end">
-              <Input
-                className="md:max-w-xs"
-                placeholder={t("requirements.searchRequirements")}
-                startContent={<Search className="w-4 h-4" />}
-                value={searchTerm}
-                onValueChange={setSearchTerm}
-              />
+        {loading && (isInitialLoad || requirements.length === 0) ? (
+          // Skeleton Loader for Filters - show on initial load or when no data
+          <Card>
+            <CardBody>
+              <div className="flex flex-col md:flex-row gap-4 items-end">
+                <Skeleton className="h-10 w-full md:max-w-xs rounded-lg" />
+                <Skeleton className="h-10 w-full md:max-w-xs rounded-lg" />
+                <Skeleton className="h-10 w-full md:max-w-xs rounded-lg" />
+                <Skeleton className="h-10 w-32 rounded-lg" />
+              </div>
+            </CardBody>
+          </Card>
+        ) : (
+          <Card>
+            <CardBody>
+              <div className="flex flex-col md:flex-row gap-4 items-end">
+                <Input
+                  className="md:max-w-xs"
+                  placeholder={t("requirements.searchRequirements")}
+                  startContent={
+                    <Search
+                      className={`w-4 h-4 ${
+                        loading && !isInitialLoad
+                          ? "animate-pulse text-primary"
+                          : ""
+                      }`}
+                    />
+                  }
+                  value={searchTerm}
+                  onValueChange={setSearchTerm}
+                />
 
-              <Select
-                className="md:max-w-xs"
-                placeholder={t("requirements.filterByStatus")}
-                selectedKeys={statusFilter ? [statusFilter] : []}
-                onSelectionChange={(keys) =>
-                  setStatusFilter((Array.from(keys)[0] as string) || "")
-                }
-              >
-                <SelectItem key="">{t("requirements.allStatuses")}</SelectItem>
-                <SelectItem key="new">{getStatusText("new")}</SelectItem>
-                <SelectItem key="under-study">
-                  {getStatusText("under-study")}
-                </SelectItem>
-                <SelectItem key="under-development">
-                  {getStatusText("under-development")}
-                </SelectItem>
-                <SelectItem key="under-testing">
-                  {getStatusText("under-testing")}
-                </SelectItem>
-                <SelectItem key="completed">
-                  {getStatusText("completed")}
-                </SelectItem>
-              </Select>
+                <Select
+                  className="md:max-w-xs"
+                  items={[
+                    { value: "", label: t("requirements.allStatuses") },
+                    ...(statuses || []).map((status) => ({
+                      value: status.value.toString(),
+                      label: language === "ar" ? status.nameAr : status.nameEn,
+                    })),
+                  ]}
+                  placeholder={t("requirements.filterByStatus")}
+                  selectedKeys={
+                    statusFilter !== null ? [statusFilter.toString()] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0] as string;
 
-              <Select
-                className="md:max-w-xs"
-                placeholder={t("requirements.filterByPriority")}
-                selectedKeys={priorityFilter ? [priorityFilter] : []}
-                onSelectionChange={(keys) =>
-                  setPriorityFilter((Array.from(keys)[0] as string) || "")
-                }
-              >
-                <SelectItem key="">
-                  {t("requirements.allPriorities")}
-                </SelectItem>
-                <SelectItem key="high">{t("requirements.high")}</SelectItem>
-                <SelectItem key="medium">{t("requirements.medium")}</SelectItem>
-                <SelectItem key="low">{t("requirements.low")}</SelectItem>
-              </Select>
-
-              {hasPermission({
-                actions: ["requirements.create"],
-              }) ? (
-                <Button
-                  className="min-w-fit"
-                  color="primary"
-                  size="lg"
-                  startContent={<Plus className="w-4 h-4" />}
-                  onPress={handleCreateRequirement}
+                    setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
+                  }}
                 >
-                  {t("requirements.addRequirement")}
-                </Button>
-              ) : null}
-            </div>
-          </CardBody>
-        </Card>
+                  {(item) => (
+                    <SelectItem key={item.value}>{item.label}</SelectItem>
+                  )}
+                </Select>
+
+                <Select
+                  className="md:max-w-xs"
+                  items={[
+                    { value: "", label: t("requirements.allPriorities") },
+                    ...priorityOptions.map((p) => ({
+                      value: p.value.toString(),
+                      label: language === "ar" ? p.labelAr : p.label,
+                    })),
+                  ]}
+                  placeholder={t("requirements.filterByPriority")}
+                  selectedKeys={
+                    priorityFilter ? [priorityFilter.toString()] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0] as string;
+
+                    setPriorityFilter(selectedKey || "");
+                  }}
+                >
+                  {(item) => (
+                    <SelectItem key={item.value}>{item.label}</SelectItem>
+                  )}
+                </Select>
+
+                {hasActiveFilters && (
+                  <Button
+                    className="min-w-fit"
+                    size="lg"
+                    startContent={<RotateCcw className="w-4 h-4" />}
+                    variant="flat"
+                    onPress={resetFilters}
+                  >
+                    {t("common.reset")}
+                  </Button>
+                )}
+
+                {/* Page Size Selector */}
+                {!loading && totalRequirements > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-default-600">
+                      {t("common.show")}:
+                    </span>
+                    <Select
+                      className="w-24"
+                      selectedKeys={[effectivePageSize.toString()]}
+                      size="sm"
+                      onSelectionChange={(keys) => {
+                        const newSizeStr = Array.from(keys)[0] as string;
+
+                        if (!newSizeStr) return;
+                        const newSize = parseInt(newSizeStr, 10);
+
+                        if (!Number.isNaN(newSize)) {
+                          handlePageSizeChange(newSize);
+                        }
+                      }}
+                    >
+                      {PAGE_SIZE_OPTIONS.map((opt) => {
+                        const val = opt.toString();
+
+                        return (
+                          <SelectItem key={val} textValue={val}>
+                            {val}
+                          </SelectItem>
+                        );
+                      })}
+                    </Select>
+                    <span className="text-sm text-default-600">
+                      {t("pagination.perPage")}
+                    </span>
+                  </div>
+                )}
+
+                {hasPermission({
+                  actions: ["requirements.create"],
+                }) ? (
+                  <Button
+                    className="min-w-fit"
+                    color="primary"
+                    size="lg"
+                    startContent={<Plus className="w-4 h-4" />}
+                    onPress={handleCreateRequirement}
+                  >
+                    {t("requirements.addRequirement")}
+                  </Button>
+                ) : null}
+              </div>
+            </CardBody>
+          </Card>
+        )}
 
         {/* Requirements Table */}
         <Card>
           <CardBody className="p-0">
-            {requirements.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="w-24 h-24 bg-default-100 rounded-full flex items-center justify-center">
+            {loading && (isInitialLoad || requirements.length === 0) ? (
+              // Skeleton Loader for Table - show on initial load or when no data
+              <div className="p-6">
+                <div className="space-y-4">
+                  {/* Table Header Skeleton */}
+                  <div className="grid grid-cols-6 gap-4 pb-4 border-b border-divider">
+                    <Skeleton className="h-4 w-32 rounded-md" />
+                    <Skeleton className="h-4 w-16 rounded-md" />
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                    <Skeleton className="h-4 w-16 rounded-md" />
+                    <Skeleton className="h-4 w-32 rounded-md" />
+                    <Skeleton className="h-4 w-20 rounded-md mx-auto" />
+                  </div>
+                  {/* Table Rows Skeleton */}
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="grid grid-cols-6 gap-4 py-4 border-b border-divider last:border-b-0"
+                    >
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-48 rounded-md" />
+                        <Skeleton className="h-3 w-64 rounded-md" />
+                      </div>
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-4 rounded-sm" />
+                        <Skeleton className="h-4 w-24 rounded-md" />
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded-md mx-auto" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : requirements.length === 0 ? (
+              <div className="text-center py-16 px-4">
+                <div className="flex flex-col items-center space-y-5 max-w-lg mx-auto">
+                  <div className="w-24 h-24 bg-default-100 dark:bg-default-50 rounded-full flex items-center justify-center">
                     <FileText className="w-12 h-12 text-default-400" />
                   </div>
-                  <div>
+                  <div className="space-y-2">
                     <h3 className="text-lg font-semibold text-default-700">
-                      {t("requirements.emptyState.title")}
+                      {searchTerm
+                        ? t("requirements.noResultsTitle")
+                        : t("requirements.emptyState.title")}
                     </h3>
-                    <p className="text-default-500">
-                      {t("requirements.emptyState.description")}
+                    <p className="text-default-500 text-sm">
+                      {searchTerm
+                        ? `${t("requirements.noResultsDescription")}: "${searchTerm}"`
+                        : t("requirements.emptyState.description")}
                     </p>
+                    {searchTerm && (
+                      <div className="flex flex-wrap gap-3 justify-center pt-2">
+                        <Button
+                          size="sm"
+                          startContent={<RotateCcw className="w-4 h-4" />}
+                          variant="flat"
+                          onPress={() => {
+                            setSearchTerm("");
+                            updateFilters({});
+                          }}
+                        >
+                          {t("common.reset")}
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  {hasPermission({
-                    actions: ["requirements.create"],
-                  }) ? (
+                  {!searchTerm &&
+                  hasPermission({ actions: ["requirements.create"] }) ? (
                     <Button
                       color="primary"
                       startContent={<Plus className="w-4 h-4" />}
@@ -659,154 +901,180 @@ export default function ProjectRequirementsPage() {
                 </div>
               </div>
             ) : (
-              <Table aria-label="Requirements table">
-                <TableHeader>
-                  <TableColumn>{t("requirements.requirementName")}</TableColumn>
-                  <TableColumn>{t("requirements.type")}</TableColumn>
-                  <TableColumn>{t("requirements.priority")}</TableColumn>
-                  <TableColumn>{t("requirements.status")}</TableColumn>
-                  <TableColumn>
-                    {t("requirements.expectedCompletion")}
-                  </TableColumn>
-                  <TableColumn align="center">
-                    {t("common.actions")}
-                  </TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {requirements.map((requirement) => (
-                    <TableRow
-                      key={requirement.id}
-                      id={`requirement-${requirement.id}`}
-                      className={
-                        highlightedRequirement === requirement.id
-                          ? "highlight-flash"
-                          : ""
-                      }
-                    >
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{requirement.name}</div>
-                          <div className="text-sm text-default-500 line-clamp-2">
-                            <p
-                              dangerouslySetInnerHTML={{
-                                __html: requirement.description,
-                              }}
-                              className="text-sm leading-relaxed"
-                            />
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          color={
-                            requirement.type === "new" ? "success" : "warning"
+              <div className="relative">
+                {loading && !isInitialLoad && (
+                  <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                    <div className="text-sm text-default-500">
+                      {t("common.loading")}...
+                    </div>
+                  </div>
+                )}
+                <Table aria-label="Requirements table">
+                  <TableHeader>
+                    <TableColumn className="w-[40%] max-w-[400px]">
+                      {t("requirements.requirementName")}
+                    </TableColumn>
+                    <TableColumn>{t("requirements.type")}</TableColumn>
+                    <TableColumn>{t("requirements.priority")}</TableColumn>
+                    <TableColumn>{t("requirements.status")}</TableColumn>
+                    <TableColumn>
+                      {t("requirements.expectedCompletion")}
+                    </TableColumn>
+                    <TableColumn align="center">
+                      {t("common.actions")}
+                    </TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {requirements
+                      .filter((req) => req && req.id)
+                      .map((requirement) => (
+                        <TableRow
+                          key={requirement.id}
+                          className={
+                            highlightedRequirement === requirement.id
+                              ? "highlight-flash"
+                              : ""
                           }
-                          size="sm"
-                          variant="flat"
+                          id={`requirement-${requirement.id}`}
                         >
-                          {requirement.type === "new"
-                            ? t("requirements.new")
-                            : t("requirements.changeRequest")}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          color={getPriorityColor(requirement.priority)}
-                          size="sm"
-                          variant="flat"
-                        >
-                          {t(`requirements.${requirement.priority}`)}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          color={getStatusColor(requirement.status)}
-                          size="sm"
-                          variant="flat"
-                        >
-                          {getStatusText(requirement.status)}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-default-400" />
-                          <span>
-                            {formatDate(requirement.expectedCompletionDate)}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Dropdown>
-                          <DropdownTrigger>
-                            <Button isIconOnly size="sm" variant="light">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownTrigger>
-                          <DropdownMenu>
-                            {hasPermission({
-                              actions: ["requirements.update"],
-                            }) ? (
-                              <DropdownItem
-                                key="edit"
-                                startContent={<Edit className="w-4 h-4" />}
-                                onPress={() =>
-                                  handleEditRequirement(requirement)
-                                }
-                              >
-                                {t("common.edit")}
-                              </DropdownItem>
-                            ) : null}
-                            {requirement.status === "new" ? (
-                              hasPermission({
-                                actions: ["requirements.send"],
-                              }) ? (
-                                <DropdownItem
-                                  key="send"
-                                  startContent={<Send className="w-4 h-4" />}
-                                  onPress={() =>
-                                    handleSendRequirement(requirement)
-                                  }
-                                >
-                                  {t("requirements.sendToDevelopment")}
-                                </DropdownItem>
-                              ) : null
-                            ) : null}
-                            {/* start development action removed */}
-                            {hasPermission({
-                              actions: ["requirements.delete"],
-                            }) ? (
-                              <DropdownItem
-                                key="delete"
-                                className="text-danger"
-                                color="danger"
-                                startContent={<Trash2 className="w-4 h-4" />}
-                                onPress={() =>
-                                  handleDeleteRequirement(requirement)
-                                }
-                              >
-                                {t("common.delete")}
-                              </DropdownItem>
-                            ) : null}
-                          </DropdownMenu>
-                        </Dropdown>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">
+                                {requirement.name}
+                              </div>
+                              <div className="text-sm text-default-500 line-clamp-2">
+                                <p
+                                  dangerouslySetInnerHTML={{
+                                    __html: requirement.description,
+                                  }}
+                                  className="text-sm leading-relaxed"
+                                />
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              color={
+                                convertTypeToString(requirement.type) === "new"
+                                  ? "success"
+                                  : "warning"
+                              }
+                              size="sm"
+                              variant="flat"
+                            >
+                              {convertTypeToString(requirement.type) === "new"
+                                ? t("requirements.new")
+                                : t("requirements.changeRequest")}
+                            </Chip>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              color={getPriorityColor(requirement.priority)}
+                              size="sm"
+                              variant="flat"
+                            >
+                              {getPriorityLabel(requirement.priority)}
+                            </Chip>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              color={getStatusColor(requirement.status)}
+                              size="sm"
+                              variant="flat"
+                            >
+                              {getStatusText(requirement.status)}
+                            </Chip>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-default-400" />
+                              <span>
+                                {formatDate(requirement.expectedCompletionDate)}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Dropdown>
+                              <DropdownTrigger>
+                                <Button isIconOnly size="sm" variant="light">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownTrigger>
+                              <DropdownMenu>
+                                {hasPermission({
+                                  actions: ["requirements.update"],
+                                }) ? (
+                                  <DropdownItem
+                                    key="edit"
+                                    startContent={<Edit className="w-4 h-4" />}
+                                    onPress={() =>
+                                      handleEditRequirement(requirement)
+                                    }
+                                  >
+                                    {t("common.edit")}
+                                  </DropdownItem>
+                                ) : null}
+                                {requirement.status ===
+                                REQUIREMENT_STATUS.NEW ? (
+                                  hasPermission({
+                                    actions: ["requirements.send"],
+                                  }) ? (
+                                    <DropdownItem
+                                      key="send"
+                                      startContent={
+                                        <Send className="w-4 h-4" />
+                                      }
+                                      onPress={() =>
+                                        handleRequestApproval(requirement)
+                                      }
+                                    >
+                                      {t("requirements.requestApproval")}
+                                    </DropdownItem>
+                                  ) : null
+                                ) : null}
+                                {hasPermission({
+                                  actions: ["requirements.delete"],
+                                }) ? (
+                                  <DropdownItem
+                                    key="delete"
+                                    className="text-danger"
+                                    color="danger"
+                                    startContent={
+                                      <Trash2 className="w-4 h-4" />
+                                    }
+                                    onPress={() =>
+                                      handleDeleteRequirement(requirement)
+                                    }
+                                  >
+                                    {t("common.delete")}
+                                  </DropdownItem>
+                                ) : null}
+                              </DropdownMenu>
+                            </Dropdown>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardBody>
         </Card>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <GlobalPagination
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalItems={totalRequirements}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+        {totalRequirements > effectivePageSize && (
+          <div className="flex justify-center py-6">
+            <GlobalPagination
+              className="w-full max-w-md"
+              currentPage={currentPage}
+              isLoading={loading}
+              pageSize={effectivePageSize}
+              showInfo={true}
+              totalItems={totalRequirements}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
         )}
       </div>
 
@@ -879,35 +1147,39 @@ export default function ProjectRequirementsPage() {
                     isRequired
                     label={t("requirements.priority")}
                     placeholder={t("requirements.selectPriority")}
-                    selectedKeys={[formData.priority]}
+                    selectedKeys={[formData.priority.toString()]}
                     onSelectionChange={(keys) =>
                       setFormData({
                         ...formData,
-                        priority: Array.from(keys)[0] as any,
+                        priority: parseInt(Array.from(keys)[0] as string),
                       })
                     }
                   >
-                    <SelectItem key="high">{t("requirements.high")}</SelectItem>
-                    <SelectItem key="medium">
-                      {t("requirements.medium")}
-                    </SelectItem>
-                    <SelectItem key="low">{t("requirements.low")}</SelectItem>
+                    {priorityOptions.map((priority) => (
+                      <SelectItem key={priority.value.toString()}>
+                        {language === "ar" ? priority.labelAr : priority.label}
+                      </SelectItem>
+                    ))}
                   </Select>
 
                   <Select
                     isRequired
                     label={t("requirements.type")}
                     placeholder={t("requirements.selectType")}
-                    selectedKeys={[formData.type]}
+                    selectedKeys={[formData.type.toString()]}
                     onSelectionChange={(keys) =>
                       setFormData({
                         ...formData,
-                        type: Array.from(keys)[0] as any,
+                        type: parseInt(Array.from(keys)[0] as string),
                       })
                     }
                   >
-                    <SelectItem key="new">{t("requirements.new")}</SelectItem>
-                    <SelectItem key="change request">
+                    <SelectItem key={REQUIREMENT_TYPE.NEW.toString()}>
+                      {t("requirements.new")}
+                    </SelectItem>
+                    <SelectItem
+                      key={REQUIREMENT_TYPE.CHANGE_REQUEST.toString()}
+                    >
                       {t("requirements.changeRequest")}
                     </SelectItem>
                   </Select>
@@ -932,16 +1204,16 @@ export default function ProjectRequirementsPage() {
                     {/* File Upload Input */}
                     <div className="border-2 border-dashed border-default-300 rounded-lg p-4 hover:border-default-400 transition-colors">
                       <input
-                        type="file"
                         multiple
                         accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.rar"
-                        onChange={(e) => handleFileSelect(e.target.files)}
                         className="hidden"
                         id="file-upload"
+                        type="file"
+                        onChange={(e) => handleFileSelect(e.target.files)}
                       />
                       <label
-                        htmlFor="file-upload"
                         className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                        htmlFor="file-upload"
                       >
                         <Upload className="w-8 h-8 text-default-400" />
                         <div className="text-center">
@@ -985,6 +1257,14 @@ export default function ProjectRequirementsPage() {
                                 isIconOnly
                                 size="sm"
                                 variant="light"
+                                onPress={() => handleFilePreview(attachment)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="light"
                                 onPress={() => {
                                   downloadAttachment(
                                     selectedRequirement?.id || 0,
@@ -997,9 +1277,9 @@ export default function ProjectRequirementsPage() {
                               </Button>
                               <Button
                                 isIconOnly
+                                color="danger"
                                 size="sm"
                                 variant="light"
-                                color="danger"
                                 onPress={() =>
                                   handleRemoveExistingAttachment(attachment.id)
                                 }
@@ -1036,9 +1316,9 @@ export default function ProjectRequirementsPage() {
                             </div>
                             <Button
                               isIconOnly
+                              color="danger"
                               size="sm"
                               variant="light"
-                              color="danger"
                               onPress={() => handleRemoveFile(index)}
                             >
                               <X className="w-4 h-4" />
@@ -1057,7 +1337,7 @@ export default function ProjectRequirementsPage() {
                 {/* When editing an approved requirement, hide draft/send actions */}
                 {!(
                   selectedRequirement &&
-                  selectedRequirement.status === "approved"
+                  selectedRequirement.status === REQUIREMENT_STATUS.APPROVED
                 ) && (
                   <>
                     <Button
@@ -1070,24 +1350,9 @@ export default function ProjectRequirementsPage() {
                     <Button
                       color="primary"
                       isLoading={loading}
-                      onPress={async () => {
-                        if (
-                          selectedRequirement &&
-                          selectedRequirement.status === "new"
-                        ) {
-                          try {
-                            await handleSendRequirement(selectedRequirement);
-                            // Close edit modal when send succeeds
-                            onEditOpenChange();
-                          } catch (err) {
-                            // error already logged in handler
-                          }
-                        } else {
-                          await handleSendToDevelopment();
-                        }
-                      }}
+                       onPress={() => handleSaveRequirement(false)}
                     >
-                      {t("requirements.sendToDevelopment")}
+                      {t("requirements.requestApproval")}
                     </Button>
                   </>
                 )}
@@ -1140,6 +1405,13 @@ export default function ProjectRequirementsPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* File Preview Modal */}
+      <FilePreview
+        previewState={previewState}
+        onClose={closePreview}
+        onDownload={downloadCurrentFile}
+      />
     </>
   );
 }

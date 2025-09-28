@@ -34,7 +34,7 @@ export const useUsers = (initialFilters?: UserFilters) => {
 
   // Load users from API
   const loadUsers = useCallback(
-  async (page = 1, limit = 10) => {
+    async (page = 1, limit = 10) => {
       try {
         setLoading(true);
         setError(null);
@@ -305,7 +305,7 @@ export const useActions = () => {
       (acc, action) => {
         // Use "Uncategorized" as default if categoryName is missing
         const category = action.categoryName || "Uncategorized";
-        
+
         if (!acc[category]) {
           acc[category] = [];
         }

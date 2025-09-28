@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@heroui/button";
-import { useDisclosure } from "@heroui/modal";
 import { useNavigate } from "react-router-dom";
-import { addToast } from "@heroui/toast";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { quickActionsService } from "@/services/api";
@@ -38,7 +36,7 @@ export default function AnalystManagerDashboard() {
 
       const response = await quickActionsService.assignAnalyst(
         project.id,
-        analystId
+        analystId,
       );
 
       console.log("Assignment response:", response);
@@ -48,7 +46,7 @@ export default function AnalystManagerDashboard() {
 
       // You could add a success toast notification here
       console.log(
-        `Successfully assigned analyst ${analystId} to project ${project.applicationName}`
+        `Successfully assigned analyst ${analystId} to project ${project.applicationName}`,
       );
     } catch (error) {
       console.error("Failed to assign analyst:", error);
@@ -87,7 +85,7 @@ export default function AnalystManagerDashboard() {
             onAssignAnalyst={handleAssignAnalyst}
           />
         </div>
-        
+
         <div className="lg:w-[30%] space-y-4">
           <PendingRequirements />
         </div>
@@ -120,7 +118,7 @@ export default function AnalystManagerDashboard() {
             </h2>
             <ProjectPipeline />
           </div>
-          
+
           {/* Requirement Completion Tracking */}
           <div className="space-y-4">
             <RequirementCompletionTracker useMockData={true} />
