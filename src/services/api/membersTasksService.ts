@@ -28,7 +28,7 @@ export class MembersTasksService {
   // }
 
   /**
-   * Get projects assigned to current analyst
+   * Get all tasks with filtering and pagination
    */
   async getTasks(
     taskRequest?: TaskSearchParams,
@@ -36,36 +36,118 @@ export class MembersTasksService {
     const params = new URLSearchParams();
 
     if (taskRequest?.page) {
-      params.append("page", taskRequest?.page.toString());
+      params.append("page", taskRequest.page.toString());
     }
 
     if (taskRequest?.limit) {
-      params.append("limit", taskRequest?.limit.toString());
+      params.append("limit", taskRequest.limit.toString());
     }
+    
     if (taskRequest?.search) {
-      params.append("search", taskRequest?.search);
+      params.append("search", taskRequest.search);
     }
-    if (taskRequest?.statusId) {
-      params.append("status", taskRequest?.statusId.toString());
+
+    // Member filtering
+    if (taskRequest?.memberIds && taskRequest.memberIds.length > 0) {
+      params.append("memberIds", taskRequest.memberIds.join(","));
     }
-    if (taskRequest?.priorityId) {
-      params.append("priority", taskRequest?.priorityId.toString());
+    
+    if (taskRequest?.memberFilterMode) {
+      params.append("memberFilterMode", taskRequest.memberFilterMode);
+    }
+
+    // Department filtering
+    if (taskRequest?.departmentIds && taskRequest.departmentIds.length > 0) {
+      params.append("departmentIds", taskRequest.departmentIds.join(","));
+    }
+
+    // Status filtering (support both new array format and legacy single format)
+    if (taskRequest?.statusIds && taskRequest.statusIds.length > 0) {
+      params.append("statusIds", taskRequest.statusIds.join(","));
+    } else if (taskRequest?.statusId) {
+      params.append("statusIds", taskRequest.statusId.toString());
+    }
+
+    // Priority filtering (support both new array format and legacy single format)
+    if (taskRequest?.priorityIds && taskRequest.priorityIds.length > 0) {
+      params.append("priorityIds", taskRequest.priorityIds.join(","));
+    } else if (taskRequest?.priorityId) {
+      params.append("priorityIds", taskRequest.priorityId.toString());
     }
 
     if (taskRequest?.projectId) {
-      params.append("project", taskRequest?.projectId.toString());
+      params.append("project", taskRequest.projectId.toString());
+    }
+
+    // Overdue filter
+    if (taskRequest?.isOverdue) {
+      params.append("isOverdue", "true");
+    }
+
+    // Date range filtering
+    if (taskRequest?.dateRange) {
+      params.append("dateRangeStart", taskRequest.dateRange.start);
+      params.append("dateRangeEnd", taskRequest.dateRange.end);
+    }
+
+    // Sorting
+    if (taskRequest?.sortBy) {
+      params.append("sortBy", taskRequest.sortBy);
+    }
+    
+    if (taskRequest?.sortOrder) {
+      params.append("sortOrder", taskRequest.sortOrder);
     }
 
     const endpoint = `${this.baseUrl}${params.toString() ? "?" + params.toString() : ""}`;
 
-    return await apiClient.get<TasksResponse>(endpoint);
+    const res = await apiClient.get<TasksResponse | ApiResponse<TasksResponse>>(endpoint);
+
+    // If backend already returns ApiResponse shape
+    if (res && typeof (res as any).success === 'boolean') {
+      return res as ApiResponse<TasksResponse>;
+    }
+
+    // Otherwise it's a raw TasksResponse (mock server current behavior)
+    const raw = res as unknown as TasksResponse;
+    if (raw && Array.isArray(raw.tasks)) {
+      return {
+        success: true,
+        data: raw,
+        message: 'ok',
+        timestamp: new Date().toISOString(),
+        pagination: {
+          page: raw.currentPage,
+            limit: taskRequest?.limit || raw.tasks.length,
+            total: raw.totalCount,
+            totalPages: raw.totalPages
+        }
+      };
+    }
+
+    throw new Error('Unexpected tasks response shape');
   }
 
   /**
    * Get filter data for tasks
    */
   async getFiltersData(): Promise<ApiResponse<TaskFiltersData>> {
-    return apiClient.get<TaskFiltersData>(`${this.baseUrl}/filters`);
+    const res = await apiClient.get<TaskFiltersData | any>(`${this.baseUrl}/filters`);
+    // Some mock/legacy endpoints might return the raw object instead of ApiResponse shape
+    if (res && typeof res.success === 'boolean') {
+      return res as ApiResponse<TaskFiltersData>;
+    }
+    // If the response is the raw filters object
+    const maybeRaw = res as unknown as TaskFiltersData;
+    if (maybeRaw && Array.isArray(maybeRaw.statuses) && Array.isArray(maybeRaw.priorities)) {
+      return {
+        success: true,
+        data: maybeRaw,
+        message: 'ok',
+        timestamp: new Date().toISOString()
+      };
+    }
+    throw new Error('Unexpected filters response shape');
   }
 
   /**

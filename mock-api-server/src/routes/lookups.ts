@@ -14,6 +14,12 @@ lookupRoutes.get(
   lookupsController.getStatuses.bind(lookupsController),
 );
 
+// GET /api/lookups/code/:code - Get lookup by code
+lookupRoutes.get(
+  "/code/:code",
+  lookupsController.getLookupByCode.bind(lookupsController),
+);
+
 // GET /api/lookups/:type - Get lookup by type
 lookupRoutes.get(
   "/:type",

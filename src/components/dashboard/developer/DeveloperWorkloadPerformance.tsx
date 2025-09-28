@@ -405,6 +405,7 @@ export default function DeveloperWorkloadPerformance({
               </div>
 
               <Select
+                aria-label={t("developerDashboard.filterByStatus") || "Filter by status"}
                 className="max-w-xs"
                 placeholder={
                   t("developerDashboard.filterByStatus") || "Filter by status"
@@ -434,6 +435,7 @@ export default function DeveloperWorkloadPerformance({
               </Select>
 
               <Select
+                aria-label={t("common.sortBy") || "Sort by"}
                 className="max-w-xs"
                 placeholder={t("common.sortBy") || "Sort by"}
                 selectedKeys={[sortBy]}

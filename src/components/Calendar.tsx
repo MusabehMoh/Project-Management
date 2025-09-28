@@ -37,7 +37,7 @@ import { useCalendar } from "@/hooks/useCalendar";
 
 interface CalendarComponentProps {
   showSidebar?: boolean;
-  maxHeight?: string;
+  // removed maxHeight to allow natural growth
 }
 
 const CalendarComponent: React.FC<CalendarComponentProps> = ({
@@ -183,7 +183,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     });
   };
 
-  // Get filtered events for a specific date
+  // Get filtered meetings for a specific date
   const getFilteredEventsForDate = (date: Date) => {
     const dayEvents = getEventsForDate(date);
 
@@ -295,7 +295,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     }
   };
 
-  // Get comprehensive event styling based on multiple factors
+  // Get comprehensive event styling based on status and priority (for meetings-only calendar)
   const getEventStyling = (event: CalendarEvent) => {
     const baseClasses =
       "text-xs p-2 rounded cursor-pointer hover:opacity-80 transition-all duration-200";
@@ -408,6 +408,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       endTime: null,
       type: "meeting",
       priority: "medium",
+      status: "upcoming",
       location: "",
       isAllDay: false,
     });
@@ -445,6 +446,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       endTime: endTime,
       type: event.type,
       priority: event.priority,
+      status: event.status,
       location: event.location || "",
       isAllDay: event.isAllDay || false,
     });
@@ -585,14 +587,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   }
 
   return (
-    <div className="flex gap-4" style={{ maxHeight }}>
+    <div className="flex gap-4">
       {/* Main Calendar */}
       <Card className={`${showSidebar ? "flex-1" : "w-full"}`}>
         <CardHeader className="flex justify-between items-center px-6 py-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" />
-              <h3 className="text-lg font-semibold">{t("calendar.title")}</h3>
+              <h3 className="text-lg font-semibold">{t("calendar.title")} - {t("calendar.eventTypes.meeting")}</h3>
             </div>
 
             {/* View Mode Selector */}
@@ -632,14 +634,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               <Filter className="w-4 h-4" />
             </Button>
 
-            {/* Add Event Button */}
+            {/* Add Meeting Button */}
             <Button
               color="primary"
               size="sm"
               startContent={<Plus className="w-4 h-4" />}
               onPress={openCreateModal}
             >
-              {t("calendar.addEvent")}
+              {t("calendar.addMeeting")}
             </Button>
           </div>
         </CardHeader>
@@ -1120,7 +1122,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 <div className="space-y-2">
                   {upcomingEvents.length === 0 ? (
                     <div className="text-center py-4 text-default-500">
-                      {t("calendar.noUpcoming")}
+                      {t("calendar.noUpcomingMeetings")}
                     </div>
                   ) : (
                     upcomingEvents.map((event) => {
@@ -1160,14 +1162,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                               size="sm"
                               variant="flat"
                             >
-                              {t(`calendar.type.${event.type}`)}
+                              {t(`calendar.eventTypes.${event.type}`)}
                             </Chip>
                             <Chip
                               color={getPriorityColor(event.priority)}
                               size="sm"
                               variant="dot"
                             >
-                              {t(`calendar.priority.${event.priority}`)}
+                              {t(`calendar.priorities.${event.priority}`)}
                             </Chip>
                           </div>
                         </div>
@@ -1226,7 +1228,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                               size="sm"
                               variant="flat"
                             >
-                              {t(`calendar.type.${event.type}`)}
+                              {t(`calendar.eventTypes.${event.type}`)}
                             </Chip>
                             <Chip color="danger" size="sm" variant="solid">
                               {t(`calendar.priority.${event.priority}`)}
@@ -1262,7 +1264,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   size="sm"
                   variant="flat"
                 >
-                  {t(`calendar.type.${showEventDetails.type}`)}
+                  {t(`calendar.eventTypes.${showEventDetails.type}`)}
                 </Chip>
               </div>
             </ModalHeader>
@@ -1393,7 +1395,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         <ModalContent>
           <ModalHeader>
             <h3 className="text-lg font-semibold">
-              {editingEvent ? t("calendar.editEvent") : t("calendar.addEvent")}
+              {editingEvent ? t("calendar.editMeeting") : t("calendar.addMeeting")}
             </h3>
           </ModalHeader>
           <ModalBody className="px-6 py-6">
@@ -1428,7 +1430,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 />
               </div>
 
-              {/* Type and Priority */}
+              {/* Priority and Status Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
                   classNames={{
@@ -1474,16 +1476,41 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                   }}
                 >
                   <SelectItem key="low">
-                    {t("calendar.priority.low")}
+                    {t("calendar.priorities.low")}
                   </SelectItem>
                   <SelectItem key="medium">
-                    {t("calendar.priority.medium")}
+                    {t("calendar.priorities.medium")}
                   </SelectItem>
                   <SelectItem key="high">
-                    {t("calendar.priority.high")}
+                    {t("calendar.priorities.high")}
                   </SelectItem>
                   <SelectItem key="critical">
-                    {t("calendar.priority.critical")}
+                    {t("calendar.priorities.critical")}
+                  </SelectItem>
+                </Select>
+
+                <Select
+                  label={t("calendar.status")}
+                  selectedKeys={[eventForm.status]}
+                  onSelectionChange={(keys) => {
+                    const key = Array.from(keys)[0] as CalendarEvent['status'];
+                    setEventForm({...eventForm, status: key});
+                  }}
+                  classNames={{
+                    label: "text-foreground-600"
+                  }}
+                >
+                  <SelectItem key="upcoming">
+                    {t("calendar.status.upcoming")}
+                  </SelectItem>
+                  <SelectItem key="in-progress">
+                    {t("calendar.status.in-progress")}
+                  </SelectItem>
+                  <SelectItem key="completed">
+                    {t("calendar.status.completed")}
+                  </SelectItem>
+                  <SelectItem key="overdue">
+                    {t("calendar.status.overdue")}
                   </SelectItem>
                 </Select>
               </div>

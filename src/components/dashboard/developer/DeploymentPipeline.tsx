@@ -321,6 +321,7 @@ export default function DeploymentPipeline({
                                 <span>{item.progress}%</span>
                               </div>
                               <Progress
+                                aria-label={`${item.name} progress: ${item.progress}%`}
                                 color="primary"
                                 size="sm"
                                 value={item.progress}
