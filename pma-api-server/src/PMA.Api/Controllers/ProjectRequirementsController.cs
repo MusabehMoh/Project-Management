@@ -3,7 +3,9 @@ using PMA.Api.Services;
 using PMA.Core.DTOs;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
-
+using Microsoft.Extensions.Options;
+using PMA.Api.Config;
+using PMA.Core.Services;
 namespace PMA.Api.Controllers;
 
 [ApiController]
@@ -12,35 +14,78 @@ public class ProjectRequirementsController : ApiBaseController
 {
     private readonly IProjectRequirementService _projectRequirementService;
     private readonly ICurrentUserService _currentUser;
+    private readonly ILogger<ProjectRequirementsController> _logger;
+    private readonly AttachmentSettings _attachmentSettings;
+    private readonly IMappingService _mappingService; 
 
-    public ProjectRequirementsController(IProjectRequirementService projectRequirementService, ICurrentUserService currentUser)
+    public ProjectRequirementsController(
+        IProjectRequirementService projectRequirementService, 
+        ICurrentUserService currentUser,
+        ILogger<ProjectRequirementsController> logger,
+        IOptions<AttachmentSettings> attachmentSettings,
+        IMappingService mappingService)
     {
         _projectRequirementService = projectRequirementService;
         _currentUser = currentUser;
+        _logger = logger;
+        _attachmentSettings = attachmentSettings.Value;
+        _mappingService = mappingService;
     }
+
+    #region Private Helpers
+
+    /// <summary>
+    /// Validates an uploaded attachment file for size and extension constraints.
+    /// </summary>
+    private (bool IsValid, string? Error) ValidateAttachment(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return (false, "No file uploaded");
+        if (file.Length > _attachmentSettings.MaxFileSize)
+            return (false, $"File size exceeds {_attachmentSettings.MaxFileSize / (1024 * 1024)}MB limit");
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!_attachmentSettings.AllowedExtensions.Contains(ext))
+            return (false, "File type not allowed");
+        return (true, null);
+    }
+
+    /// <summary>
+    /// Consolidated model state validation returning a formatted error list.
+    /// </summary>
+    private IActionResult? ValidateModelState()
+    {
+        if (ModelState.IsValid) return null;
+        var errors = string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+        return Error<object>("Validation failed", errors, 400);
+    }
+
+    #endregion
 
     /// <summary>
     /// Get all project requirements with pagination and filtering
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(PaginatedResponse<ProjectRequirement>), 200)]
     public async Task<IActionResult> GetProjectRequirements(
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
         [FromQuery] int? projectId = null,
-        [FromQuery] string? status = null,
-        [FromQuery] string? priority = null)
+        [FromQuery] int? status = null,
+        [FromQuery] string? priority = null,
+        [FromQuery] string? search = null)
     {
         try
         {
-            var (projectRequirements, totalCount) = await _projectRequirementService.GetProjectRequirementsAsync(page, limit, projectId, status, priority);
-            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
-            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
-            return Success(projectRequirements, pagination);
+            var (projectRequirements, totalCount) = await _projectRequirementService
+                .GetProjectRequirementsAsync(page, limit, projectId, status, priority, search);
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
+            return Success(projectRequirements, pagination, "Project requirements retrieved successfully");
         }
         catch (Exception ex)
         {
-            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving project requirements", ex.Message);
+            _logger.LogError(ex, "Error occurred while retrieving project requirements. Page: {Page}, Limit: {Limit}, ProjectId: {ProjectId}, Status: {Status}, Priority: {Priority}, Search: {Search}", 
+                page, limit, projectId, status, priority, search);
+            return Error<IEnumerable<ProjectRequirement>>("Internal server error", ex.Message);
         }
     }
 
@@ -48,20 +93,24 @@ public class ProjectRequirementsController : ApiBaseController
     /// Get project requirement by ID
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
+    [ProducesResponseType(typeof(ApiResponse<ProjectRequirement>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> GetProjectRequirementById(int id)
     {
         try
         {
             var projectRequirement = await _projectRequirementService.GetProjectRequirementByIdAsync(id);
             if (projectRequirement == null)
-                return NotFound(Error<ProjectRequirement>("Project requirement not found", null, 404));
-            return Success(projectRequirement);
+            {
+                _logger.LogWarning("Project requirement with ID {RequirementId} not found", id);
+                return Error<object>("Project requirement not found", status: 404);
+            }
+            return Success(projectRequirement, message: "Project requirement retrieved successfully");
         }
         catch (Exception ex)
         {
-            return Error<ProjectRequirement>("An error occurred while retrieving the project requirement", ex.Message);
+            _logger.LogError(ex, "Error occurred while retrieving project requirement. RequirementId: {RequirementId}", id);
+            return Error<object>("Internal server error", ex.Message, 500);
         }
     }
 
@@ -79,10 +128,9 @@ public class ProjectRequirementsController : ApiBaseController
     {
         try
         {
-           
-            var (assignedProjects, totalCount) = await _projectRequirementService.GetAssignedProjectsAsync(userId, page, limit, search, projectId);
-            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
-            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+            var (assignedProjects, totalCount) = await _projectRequirementService
+                .GetAssignedProjectsAsync(userId, page, limit, search, projectId);
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
             return Success(assignedProjects, pagination);
         }
         catch (Exception ex)
@@ -101,23 +149,12 @@ public class ProjectRequirementsController : ApiBaseController
         try
         {
             var projectRequirements = await _projectRequirementService.GetProjectRequirementsByProjectAsync(projectId);
-            var response = new ApiResponse<IEnumerable<ProjectRequirement>>
-            {
-                Success = true,
-                Data = projectRequirements
-            };
-            
-            return Ok(response);
+            return Success(projectRequirements, message: "Project requirements retrieved successfully");
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<IEnumerable<ProjectRequirement>>
-            {
-                Success = false,
-                Message = "An error occurred while retrieving project requirements by project",
-                Error = ex.Message
-            };
-            return StatusCode(500, errorResponse);
+            _logger.LogError(ex, "Error occurred while retrieving project requirements by project. ProjectId: {ProjectId}", projectId);
+            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving project requirements by project", ex.Message, 500);
         }
     }
 
@@ -133,9 +170,9 @@ public class ProjectRequirementsController : ApiBaseController
     {
         try
         {
-            var (projectRequirements, totalCount) = await _projectRequirementService.GetProjectRequirementsAsync(page, limit, projectId, null, null);
-            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
-            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+            var (projectRequirements, totalCount) = await _projectRequirementService
+                .GetProjectRequirementsAsync(page, limit, projectId, null, null);
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
             return Success(projectRequirements, pagination);
         }
         catch (Exception ex)
@@ -149,30 +186,18 @@ public class ProjectRequirementsController : ApiBaseController
     /// </summary>
     [HttpPost]
     [ProducesResponseType(201)]
-    [ProducesResponseType(400)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     public async Task<IActionResult> CreateProjectRequirement([FromBody] CreateProjectRequirementDto createDto)
     {
         try
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-                
-            // Map DTO to Entity
-            var projectRequirement = new ProjectRequirement
-            {
-                ProjectId = createDto.ProjectId,
-                Name = createDto.Name,
-                Description = createDto.Description,
-                Priority = createDto.Priority,
-                Type = createDto.Type,
-                ExpectedCompletionDate = createDto.ExpectedCompletionDate,
-                Status = createDto.Status,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-                
-            var createdProjectRequirement = await _projectRequirementService.CreateProjectRequirementAsync(projectRequirement);
-            return CreatedAtAction(nameof(GetProjectRequirementById), new { id = createdProjectRequirement.Id }, createdProjectRequirement);
+            var invalid = ValidateModelState();
+            if (invalid != null) return invalid;
+
+            var projectRequirement = _mappingService.MapToProjectRequirement(createDto);
+            var createdProjectRequirement = await _projectRequirementService
+                .CreateProjectRequirementAsync(projectRequirement);
+            return Success(createdProjectRequirement, message: "Project requirement created successfully");
         }
         catch (Exception ex)
         {
@@ -190,28 +215,15 @@ public class ProjectRequirementsController : ApiBaseController
     {
         try
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            
-            // Ensure the projectId from route matches the one in the request body
+            var invalid = ValidateModelState();
+            if (invalid != null) return invalid;
+
+            // Ensure the projectId from route overrides body
             createDto.ProjectId = projectId;
-            
-            // Map DTO to Entity
-            var projectRequirement = new ProjectRequirement
-            {
-                ProjectId = createDto.ProjectId,
-                Name = createDto.Name,
-                Description = createDto.Description,
-                Priority = createDto.Priority,
-                Type = createDto.Type,
-                ExpectedCompletionDate = createDto.ExpectedCompletionDate,
-                Status = createDto.Status,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-            
-            var createdProjectRequirement = await _projectRequirementService.CreateProjectRequirementAsync(projectRequirement);
-            return CreatedAtAction(nameof(GetProjectRequirementById), new { id = createdProjectRequirement.Id }, createdProjectRequirement);
+            var projectRequirement = _mappingService.MapToProjectRequirement(createDto);
+            var createdProjectRequirement = await _projectRequirementService
+                .CreateProjectRequirementAsync(projectRequirement);
+            return Success(createdProjectRequirement, message: "Project requirement created successfully");
         }
         catch (Exception ex)
         {
@@ -226,17 +238,21 @@ public class ProjectRequirementsController : ApiBaseController
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> UpdateProjectRequirement(int id, [FromBody] ProjectRequirement projectRequirement)
+    public async Task<IActionResult> UpdateProjectRequirement(int id, [FromBody] CreateProjectRequirementDto updateDto)
     {
         try
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            if (id != projectRequirement.Id)
-                return BadRequest(Error<ProjectRequirement>("ID mismatch", null, 400));
-            var updatedProjectRequirement = await _projectRequirementService.UpdateProjectRequirementAsync(projectRequirement);
-            if (updatedProjectRequirement == null)
-                return NotFound(Error<ProjectRequirement>("Project requirement not found", null, 404));
+            var invalid = ValidateModelState();
+            if (invalid != null) return invalid;
+
+            var existingRequirement = await _projectRequirementService
+                .GetProjectRequirementByIdAsync(id);
+            if (existingRequirement == null)
+                return Error<ProjectRequirement>("Project requirement not found", null, 404);
+
+            existingRequirement = _mappingService.MapToProjectRequirement(updateDto, existingRequirement);
+            var updatedProjectRequirement = await _projectRequirementService
+                .UpdateProjectRequirementAsync(existingRequirement);
             return Success(updatedProjectRequirement);
         }
         catch (Exception ex)
@@ -249,20 +265,26 @@ public class ProjectRequirementsController : ApiBaseController
     /// Delete a project requirement
     /// </summary>
     [HttpDelete("{id}")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(404)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 204)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> DeleteProjectRequirement(int id)
     {
         try
         {
+            _logger.LogInformation("DELETE request received for project requirement with ID: {RequirementId}", id);
             var result = await _projectRequirementService.DeleteProjectRequirementAsync(id);
             if (!result)
-                return NotFound(Error<ProjectRequirement>("Project requirement not found", null, 404));
-            return NoContent();
+            {
+                _logger.LogWarning("Project requirement with ID {RequirementId} not found", id);
+                return Error<object>("Project requirement not found", status: 404);
+            }
+            _logger.LogInformation("Project requirement with ID {RequirementId} deleted successfully", id);
+          return NoContent();  
         }
         catch (Exception ex)
         {
-            return Error<ProjectRequirement>("An error occurred while deleting the project requirement", ex.Message);
+            _logger.LogError(ex, "Error occurred while deleting project requirement. RequirementId: {RequirementId}", id);
+            return Error<object>("Internal server error", ex.Message, 500);
         }
     }
 
@@ -282,6 +304,253 @@ public class ProjectRequirementsController : ApiBaseController
         catch (Exception ex)
         {
             return Error<ProjectRequirementStatsDto>("An error occurred while retrieving project requirement statistics", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get development requirements (requirements ready for development)
+    /// </summary>
+    [HttpGet("development-requirements")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetDevelopmentRequirements(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20)
+    {
+        try
+        {
+            var (requirements, totalCount) = await _projectRequirementService
+                .GetDevelopmentRequirementsAsync(page, limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
+            return Success(requirements, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving development requirements", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get draft requirements (requirements in draft status)
+    /// </summary>
+    [HttpGet("draft-requirements")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetDraftRequirements(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20)
+    {
+        try
+        {
+            var (requirements, totalCount) = await _projectRequirementService
+                .GetDraftRequirementsAsync(page, limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
+            return Success(requirements, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving draft requirements", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get approved requirements (requirements that have been approved)
+    /// </summary>
+    [HttpGet("approved-requirements")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetApprovedRequirements(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20)
+    {
+        try
+        {
+            var (requirements, totalCount) = await _projectRequirementService.GetApprovedRequirementsAsync(page, limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
+            return Success(requirements, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving approved requirements", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Send requirement for approval or processing
+    /// </summary>
+    [HttpPost("requirements/{id}/send")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> SendRequirement(int id)
+    {
+        try
+        {
+            var result = await _projectRequirementService.SendRequirementAsync(id);
+            if (!result)
+                return Error<ProjectRequirement>("Project requirement not found", null, 404);
+            return Success("Requirement sent successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<string>("An error occurred while sending the requirement", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Create a task for a specific requirement
+    /// </summary>
+    [HttpPost("requirements/{id}/tasks")]
+    [ProducesResponseType(201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> CreateRequirementTask(int id, [FromBody] CreateRequirementTaskDto taskDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return Error<object>("Validation failed", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), 400);
+
+            var task = await _projectRequirementService.CreateRequirementTaskAsync(id, taskDto);
+            if (task == null)
+                return Error<RequirementTask>("Project requirement not found", null, 404);
+            
+            return CreatedAtAction(nameof(GetProjectRequirementById), new { id = id }, Success(task));
+        }
+        catch (Exception ex)
+        {
+            return Error<RequirementTask>("An error occurred while creating the requirement task", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Upload one or multiple attachments for a specific requirement (multipart/form-data).
+    /// Accepts either a single field named 'file' or multiple using 'files'.
+    /// </summary>
+    [HttpPost("requirements/{id}/attachments")]
+    [ProducesResponseType(201)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UploadAttachments(int id, [FromForm] List<IFormFile>? files, [FromForm] IFormFile? file)
+    {
+        try
+        {
+            // Normalize to a list: support legacy single file param name
+            var incoming = new List<IFormFile>();
+            if (files != null && files.Count > 0) incoming.AddRange(files);
+            if (file != null) incoming.Add(file);
+            if (incoming.Count == 0)
+                return Error<object>("No files uploaded", status: 400);
+
+            // Validate each file; collect first error only for simplicity
+            foreach (var f in incoming)
+            {
+                var (isValid, error) = ValidateAttachment(f);
+                if (!isValid)
+                    return Error<object>(error!, null, 400);
+            }
+
+            // Use bulk service method (falls back to single additions internally)
+            var result = await _projectRequirementService.UploadAttachmentsAsync(id, incoming);
+            if (result == null || result.Count == 0)
+                return Error<object>("Project requirement not found or no files processed", null, 404);
+
+            return Success(result, message: "Attachment(s) uploaded successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while uploading the attachment(s)", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Delete attachment from a specific requirement
+    /// </summary>
+    [HttpDelete("requirements/{id}/attachments/{attachmentId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeleteAttachment(int id, int attachmentId)
+    {
+        try
+        {
+            var result = await _projectRequirementService.DeleteAttachmentAsync(id, attachmentId);
+            if (!result)
+                return Error<ProjectRequirementAttachment>("Attachment not found", null, 404);
+            
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return Error<ProjectRequirementAttachment>("An error occurred while deleting the attachment", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Download attachment from a specific requirement
+    /// </summary>
+    [HttpGet("requirements/{id}/attachments/{attachmentId}/download")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DownloadAttachment(int id, int attachmentId)
+    {
+        try
+        {
+            var fileResult = await _projectRequirementService.DownloadAttachmentAsync(id, attachmentId);
+            if (fileResult == null)
+                return Error<byte[]>("Attachment not found", null, 404);
+            // Prefer PhysicalFile if we have a concrete path (range support & automatic headers)
+            if (!string.IsNullOrWhiteSpace(fileResult.FilePath) && System.IO.File.Exists(fileResult.FilePath))
+            {
+                return PhysicalFile(fileResult.FilePath, fileResult.ContentType, fileResult.FileName, enableRangeProcessing: true);
+            }
+            // Reset stream position defensively
+            if (fileResult.FileStream.CanSeek)
+                fileResult.FileStream.Position = 0;
+            Response.ContentLength = fileResult.FileSize;
+            return File(fileResult.FileStream, fileResult.ContentType, fileResult.FileName, enableRangeProcessing: true);
+        }
+        catch (Exception ex)
+        {
+            return Error<byte[]>("An error occurred while downloading the attachment", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Bulk synchronize attachments for a requirement (add new files, remove specified attachment IDs) in a single request.
+    /// Multipart/form-data: files[] for new files, removeIds (comma separated) or JSON body part named 'removeIds'.
+    /// </summary>
+    [HttpPost("requirements/{id}/attachments/sync")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> SyncAttachments(int id, [FromForm] List<IFormFile>? files, [FromForm] string? removeIds)
+    {
+        try
+        {
+            var newFiles = files ?? new List<IFormFile>();
+            // Parse removeIds (comma separated integers)
+            var removeList = new List<int>();
+            if (!string.IsNullOrWhiteSpace(removeIds))
+            {
+                foreach (var part in removeIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    if (int.TryParse(part, out var rid)) removeList.Add(rid);
+                }
+            }
+
+            // Validate each new file
+            foreach (var f in newFiles)
+            {
+                var (isValid, error) = ValidateAttachment(f);
+                if (!isValid)
+                    return Error<object>(error!, null, 400);
+            }
+
+            var updated = await _projectRequirementService.SyncAttachmentsAsync(id, newFiles, removeList);
+            if (updated == null)
+                return Error<object>("Project requirement not found", null, 404);
+
+            return Success(updated, message: "Attachments synchronized successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while synchronizing attachments", ex.Message);
         }
     }
 }

@@ -311,4 +311,32 @@ public class MappingService : IMappingService
             });
         }
     }
+
+    /// <summary>
+    /// Maps a create/update DTO to an existing or new ProjectRequirement entity.
+    /// </summary>
+    public ProjectRequirement MapToProjectRequirement(CreateProjectRequirementDto dto, ProjectRequirement? existing = null)
+    {
+        var entity = existing ?? new ProjectRequirement
+        {
+            CreatedAt = DateTime.UtcNow
+        };
+
+        entity.ProjectId = dto.ProjectId;
+        entity.Name = dto.Name;
+        entity.Description = dto.Description ?? string.Empty;
+        entity.Priority = (RequirementPriority)dto.Priority;
+        entity.Type = (RequirementType)dto.Type;
+        entity.ExpectedCompletionDate = dto.ExpectedCompletionDate;
+        if (dto.Status.HasValue)
+        {
+            entity.Status = (RequirementStatusEnum)dto.Status.Value;
+        }
+        else if (existing == null)
+        {
+            entity.Status = RequirementStatusEnum.New;
+        }
+        entity.UpdatedAt = DateTime.UtcNow;
+        return entity;
+    }
 }

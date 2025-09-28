@@ -19,4 +19,7 @@ public interface IMappingService
     System.Threading.Tasks.Task UpdateProjectFromDtoAsync(Project project, UpdateProjectDto updateDto);
     System.Threading.Tasks.Task PopulateProjectNavigationPropertiesAsync(Project project);
     void CreateProjectAnalysts(Project project, int[]? analystIds);
+    
+    // Project Requirement mapping methods
+    ProjectRequirement MapToProjectRequirement(CreateProjectRequirementDto dto, ProjectRequirement? existing = null);
 }

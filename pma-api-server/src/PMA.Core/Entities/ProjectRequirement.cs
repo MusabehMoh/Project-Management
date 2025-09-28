@@ -20,11 +20,12 @@ public enum RequirementType
 public enum RequirementStatusEnum
 {
     New = 1,
-    UnderStudy = 2,
-    UnderDevelopment = 3,
-    UnderTesting = 4,
-    Completed = 5,
-    Approved = 6
+    ManagerReview = 2,
+    Approved = 3, 
+    UnderDevelopment = 4,
+    UnderTesting = 5,
+    Completed = 6,
+
 }
 
 [Table("ProjectRequirements")]
@@ -44,14 +45,17 @@ public class ProjectRequirement
     public string? Description { get; set; }
 
     [Required]
+    [Column(TypeName = "int")]
     public RequirementPriority Priority { get; set; } = RequirementPriority.Medium;
 
     [Required]
+    [Column(TypeName = "int")]
     public RequirementType Type { get; set; } = RequirementType.New;
 
     public DateTime? ExpectedCompletionDate { get; set; }
 
     [Required]
+    [Column(TypeName = "int")]
     public RequirementStatusEnum Status { get; set; } = RequirementStatusEnum.New;
 
     public int CreatedBy { get; set; }
@@ -66,37 +70,6 @@ public class ProjectRequirement
     public virtual User? Analyst { get; set; }
     public virtual ICollection<ProjectRequirementAttachment> Attachments { get; set; } = new List<ProjectRequirementAttachment>();
     public virtual ICollection<RequirementTask> Tasks { get; set; } = new List<RequirementTask>();
-}
-
-[Table("ProjectRequirementAttachments")]
-public class ProjectRequirementAttachment
-{
-    [Key]
-    public int Id { get; set; }
-
-    [Required]
-    public int ProjectRequirementId { get; set; }
-
-    [Required]
-    [MaxLength(255)]
-    public string FileName { get; set; } = string.Empty;
-
-    [Required]
-    [MaxLength(255)]
-    public string OriginalName { get; set; } = string.Empty;
-
-    [MaxLength(500)]
-    public string? FilePath { get; set; }
-
-    public long FileSize { get; set; }
-
-    [MaxLength(100)]
-    public string? ContentType { get; set; }
-
-    public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
-
-    // Navigation property
-    public virtual ProjectRequirement? ProjectRequirement { get; set; }
 }
 
 [Table("RequirementTasks")]
