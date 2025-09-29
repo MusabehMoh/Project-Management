@@ -53,38 +53,48 @@ export class QuickActionsController {
       logger.info("Fetching quick action statistics");
 
       // Import here to avoid circular dependencies
-      const { mockProjectRequirements } = await import("../data/mockProjectRequirements.js");
+      const { mockProjectRequirements } = await import(
+        "../data/mockProjectRequirements.js"
+      );
       const { mockUsers } = await import("../data/mockUsers.js");
 
       // Calculate projects without requirements dynamically
-      const projectsWithRequirementCounts = mockProjects.map(project => {
+      const projectsWithRequirementCounts = mockProjects.map((project) => {
         const projectRequirements = mockProjectRequirements.filter(
-          req => req.projectId === project.id
+          (req) => req.projectId === project.id,
         );
+
         return {
           projectId: project.id,
           requirementsCount: projectRequirements.length,
         };
       });
 
-      const projectsWithoutRequirements = projectsWithRequirementCounts
-        .filter(project => project.requirementsCount === 0).length;
+      const projectsWithoutRequirements = projectsWithRequirementCounts.filter(
+        (project) => project.requirementsCount === 0,
+      ).length;
 
       // Calculate available members dynamically
       const teamMetrics = mockUsers
-        .filter(user => user.isVisible)
-        .map(user => {
-          const userRequirements = mockProjectRequirements.filter(req => req.createdBy === user.id);
-          const inProgressRequirements = userRequirements.filter(req => req.status === "in-development").length;
+        .filter((user) => user.isVisible)
+        .map((user) => {
+          const userRequirements = mockProjectRequirements.filter(
+            (req) => req.createdBy === user.id,
+          );
+          const inProgressRequirements = userRequirements.filter(
+            (req) => req.status === "in-development",
+          ).length;
           const isBusy = inProgressRequirements > 2;
+
           return {
             userId: user.id,
             busyStatus: isBusy ? "busy" : "available",
           };
         });
 
-      const availableMembers = teamMetrics
-        .filter(member => member.busyStatus === "available").length;
+      const availableMembers = teamMetrics.filter(
+        (member) => member.busyStatus === "available",
+      ).length;
 
       // Enhanced stats with dynamic calculation
       const enhancedStats = {
@@ -195,8 +205,10 @@ export class QuickActionsController {
 
       // Filter projects that have no analysts assigned
       const unassignedProjects = mockProjects
-        .filter(project => !project.analystIds || project.analystIds.length === 0)
-        .map(project => ({
+        .filter(
+          (project) => !project.analystIds || project.analystIds.length === 0,
+        )
+        .map((project) => ({
           id: project.id,
           applicationName: project.applicationName,
           projectOwner: project.projectOwner,
@@ -231,14 +243,16 @@ export class QuickActionsController {
       logger.info("Fetching projects without requirements");
 
       // Import here to avoid circular dependencies
-      const { mockProjectRequirements } = await import("../data/mockProjectRequirements.js");
+      const { mockProjectRequirements } = await import(
+        "../data/mockProjectRequirements.js"
+      );
 
       // Get all projects and calculate their requirements count
-      const projectsWithRequirementCounts = mockProjects.map(project => {
+      const projectsWithRequirementCounts = mockProjects.map((project) => {
         const projectRequirements = mockProjectRequirements.filter(
-          req => req.projectId === project.id
+          (req) => req.projectId === project.id,
         );
-        
+
         return {
           id: project.id,
           applicationName: project.applicationName,
@@ -246,7 +260,9 @@ export class QuickActionsController {
           owningUnit: project.owningUnit,
           status: project.status,
           requirementsCount: projectRequirements.length,
-          completedRequirements: projectRequirements.filter(req => req.status === "completed").length,
+          completedRequirements: projectRequirements.filter(
+            (req) => req.status === "completed",
+          ).length,
           lastActivity: project.updatedAt || new Date().toISOString(),
           description: project.description,
           createdAt: project.createdAt,
@@ -255,8 +271,9 @@ export class QuickActionsController {
       });
 
       // Filter projects that have 0 requirements
-      const projectsWithoutRequirements = projectsWithRequirementCounts
-        .filter(project => project.requirementsCount === 0);
+      const projectsWithoutRequirements = projectsWithRequirementCounts.filter(
+        (project) => project.requirementsCount === 0,
+      );
 
       res.status(200).json({
         success: true,
@@ -284,25 +301,35 @@ export class QuickActionsController {
       logger.info("Fetching available team members");
 
       // Import here to avoid circular dependencies
-      const { mockProjectRequirements } = await import("../data/mockProjectRequirements.js");
+      const { mockProjectRequirements } = await import(
+        "../data/mockProjectRequirements.js"
+      );
       const { mockUsers } = await import("../data/mockUsers.js");
 
       // Calculate team metrics similar to getTeamWorkloadPerformance
       const teamMetrics = mockUsers
-        .filter(user => user.isVisible)
-        .map(user => {
+        .filter((user) => user.isVisible)
+        .map((user) => {
           // Get requirements created by this user
-          const userRequirements = mockProjectRequirements.filter(req => req.createdBy === user.id);
-          
+          const userRequirements = mockProjectRequirements.filter(
+            (req) => req.createdBy === user.id,
+          );
+
           // Calculate metrics
-          const inProgressRequirements = userRequirements.filter(req => req.status === "in-development").length;
-          
+          const inProgressRequirements = userRequirements.filter(
+            (req) => req.status === "in-development",
+          ).length;
+
           // Calculate busy status (same logic as team workload)
           const isBusy = inProgressRequirements > 2;
           let busyUntil;
+
           if (isBusy) {
             const daysToAdd = Math.ceil(inProgressRequirements / 2);
-            busyUntil = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+
+            busyUntil = new Date(
+              Date.now() + daysToAdd * 24 * 60 * 60 * 1000,
+            ).toISOString();
           }
 
           return {
@@ -320,7 +347,7 @@ export class QuickActionsController {
 
       // Filter for available members only
       const availableMembers = teamMetrics
-        .filter(member => member.busyStatus === "available")
+        .filter((member) => member.busyStatus === "available")
         .sort((a, b) => a.fullName.localeCompare(b.fullName)); // Sort alphabetically
 
       res.status(200).json({
@@ -376,8 +403,10 @@ export class QuickActionsController {
         mockPendingApprovals.splice(approvalIndex, 1);
 
         // Update stats
-        mockQuickActionStats.pendingApprovals =
-          Math.max(0, mockQuickActionStats.pendingApprovals - 1);
+        mockQuickActionStats.pendingApprovals = Math.max(
+          0,
+          mockQuickActionStats.pendingApprovals - 1,
+        );
 
         // Send notification
         await sendNotification("approval_processed", {
@@ -461,8 +490,10 @@ export class QuickActionsController {
       }
 
       // Update stats
-      mockQuickActionStats.unassignedTasks =
-        Math.max(0, mockQuickActionStats.unassignedTasks - 1);
+      mockQuickActionStats.unassignedTasks = Math.max(
+        0,
+        mockQuickActionStats.unassignedTasks - 1,
+      );
 
       // Send notification
       await sendNotification("task_assigned", {
@@ -550,6 +581,7 @@ export class QuickActionsController {
 
       // Find the project
       const project = mockProjects.find((p) => p.id === projectId);
+
       if (!project) {
         return res.status(404).json({
           success: false,
@@ -564,13 +596,14 @@ export class QuickActionsController {
       if (!project.analystIds) {
         project.analystIds = [];
       }
-      
+
       // Add analyst to the project if not already assigned
       const analystIdNum = parseInt(analystId);
+
       if (!project.analystIds.includes(analystIdNum)) {
         project.analystIds.push(analystIdNum);
       }
-      
+
       // Update the display names as well (you might want to fetch actual names)
       // For now, just add a placeholder
       if (!project.analysts) {
@@ -587,7 +620,9 @@ export class QuickActionsController {
         targetUserIds: [parseInt(analystId)],
       });
 
-      logger.info(`Successfully assigned analyst ${analystId} to project ${projectId}`);
+      logger.info(
+        `Successfully assigned analyst ${analystId} to project ${projectId}`,
+      );
 
       res.status(200).json({
         success: true,

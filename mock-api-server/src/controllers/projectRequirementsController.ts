@@ -16,34 +16,53 @@ export class ProjectRequirementsController {
     try {
       // Calculate workload and performance for each user who has created requirements
       const teamMetrics = mockUsers
-        .filter(user => user.isVisible)
-        .map(user => {
+        .filter((user) => user.isVisible)
+        .map((user) => {
           // Get requirements created by this user
-          const userRequirements = mockProjectRequirements.filter(req => req.createdBy === user.id);
-          
+          const userRequirements = mockProjectRequirements.filter(
+            (req) => req.createdBy === user.id,
+          );
+
           // Calculate metrics
           const totalRequirements = userRequirements.length;
-          const draftRequirements = userRequirements.filter(req => req.status === "draft").length;
-          const approvedRequirements = userRequirements.filter(req => req.status === "approved").length;
-          const inProgressRequirements = userRequirements.filter(req => req.status === "in-development").length;
-          const completedRequirements = userRequirements.filter(req => req.status === "completed").length;
-          
+          const draftRequirements = userRequirements.filter(
+            (req) => req.status === "draft",
+          ).length;
+          const approvedRequirements = userRequirements.filter(
+            (req) => req.status === "approved",
+          ).length;
+          const inProgressRequirements = userRequirements.filter(
+            (req) => req.status === "in-development",
+          ).length;
+          const completedRequirements = userRequirements.filter(
+            (req) => req.status === "completed",
+          ).length;
+
           // Calculate performance score (completion rate + timeliness factor)
-          const completionRate = totalRequirements > 0 ? (completedRequirements / totalRequirements) * 100 : 0;
-          
+          const completionRate =
+            totalRequirements > 0
+              ? (completedRequirements / totalRequirements) * 100
+              : 0;
+
           // Mock timeliness factor (in real app, this would be based on expected vs actual completion dates)
           const timelinessScore = Math.random() * 20 + 80; // Random score between 80-100
-          
+
           // Overall performance (70% completion rate + 30% timeliness)
-          const performanceScore = Math.round((completionRate * 0.7) + (timelinessScore * 0.3));
-          
+          const performanceScore = Math.round(
+            completionRate * 0.7 + timelinessScore * 0.3,
+          );
+
           // Calculate busy until date (if busy)
           const isBusy = inProgressRequirements > 2;
           let busyUntil;
+
           if (isBusy) {
             // Mock: Add 1-7 days from now based on workload
             const daysToAdd = Math.ceil(inProgressRequirements / 2); // More requirements = longer busy period
-            busyUntil = new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+
+            busyUntil = new Date(
+              Date.now() + daysToAdd * 24 * 60 * 60 * 1000,
+            ).toISOString();
           }
 
           return {
@@ -59,19 +78,21 @@ export class ProjectRequirementsController {
               approved: approvedRequirements,
               inProgress: inProgressRequirements,
               completed: completedRequirements,
-              performance: Math.min(performanceScore, 100) // Cap at 100%
-            }
+              performance: Math.min(performanceScore, 100), // Cap at 100%
+            },
           };
         })
-        .filter(user => user.metrics.totalRequirements > 0) // Only include users with requirements
+        .filter((user) => user.metrics.totalRequirements > 0) // Only include users with requirements
         .sort((a, b) => b.metrics.performance - a.metrics.performance); // Sort by performance desc
 
-      logger.info(`Retrieved team workload performance for ${teamMetrics.length} team members`);
+      logger.info(
+        `Retrieved team workload performance for ${teamMetrics.length} team members`,
+      );
 
       res.json({
         success: true,
         data: teamMetrics,
-        message: "Team workload performance retrieved successfully"
+        message: "Team workload performance retrieved successfully",
       });
     } catch (error) {
       logger.error("Error getting team workload performance:", error);
@@ -375,7 +396,13 @@ export class ProjectRequirementsController {
       }
 
       // Create a simple RequirementTask object and attach to requirement
-      const newTaskId = Math.max(0, ...mockProjectRequirements.flatMap(r => r.task ? [r.task.id] : [])) + 1;
+      const newTaskId =
+        Math.max(
+          0,
+          ...mockProjectRequirements.flatMap((r) =>
+            r.task ? [r.task.id] : [],
+          ),
+        ) + 1;
 
       const now = new Date().toISOString();
 
@@ -384,7 +411,9 @@ export class ProjectRequirementsController {
         requirementId: requirement.id,
         developerId: developerId || undefined,
         developerName: developerId
-          ? (requirement.project?.analysts ? undefined : undefined)
+          ? requirement.project?.analysts
+            ? undefined
+            : undefined
           : undefined,
         qcId: qcId || undefined,
         qcName: qcId ? undefined : undefined,
@@ -405,15 +434,22 @@ export class ProjectRequirementsController {
           projectId: requirement.projectId,
         });
       } catch (notifyErr) {
-        logger.warn("Failed to send notification for requirement task creation", notifyErr);
+        logger.warn(
+          "Failed to send notification for requirement task creation",
+          notifyErr,
+        );
       }
 
       logger.info(`Created task ${task.id} for requirement ${requirement.id}`);
 
-      res.status(201).json({ success: true, data: task, message: "Task created" });
+      res
+        .status(201)
+        .json({ success: true, data: task, message: "Task created" });
     } catch (error) {
       logger.error("Error creating requirement task:", error);
-      res.status(500).json({ success: false, message: "Internal server error" });
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -615,6 +651,7 @@ export class ProjectRequirementsController {
           success: false,
           message: "Requirement not found",
         });
+
         return;
       }
 
@@ -624,6 +661,7 @@ export class ProjectRequirementsController {
           success: false,
           message: "Only approved requirements can be started for development",
         });
+
         return;
       }
 
@@ -737,7 +775,8 @@ export class ProjectRequirementsController {
       const stats = {
         total: projectRequirements.length,
         draft: projectRequirements.filter((r) => r.status === "draft").length,
-        approved: projectRequirements.filter((r) => r.status === "approved").length,
+        approved: projectRequirements.filter((r) => r.status === "approved")
+          .length,
         inDevelopment: projectRequirements.filter(
           (r) => r.status === "in-development",
         ).length,
@@ -811,8 +850,11 @@ export class ProjectRequirementsController {
       filteredRequirements.sort((a, b) => {
         if (a.status === "approved" && b.status !== "approved") return -1;
         if (a.status !== "approved" && b.status === "approved") return 1;
+
         // If both have same status priority, sort by creation date (newest first)
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       });
 
       // Apply pagination
@@ -893,6 +935,7 @@ export class ProjectRequirementsController {
       // Apply additional filters
       if (qProjectId) {
         const pid = Number(qProjectId);
+
         filteredRequirements = filteredRequirements.filter(
           (r) =>
             (r as any).projectId === pid || (r.project && r.project.id === pid),
@@ -907,6 +950,7 @@ export class ProjectRequirementsController {
 
       if (search) {
         const searchTerm = (search as string).toLowerCase();
+
         filteredRequirements = filteredRequirements.filter(
           (req) =>
             req.name.toLowerCase().includes(searchTerm) ||
@@ -916,7 +960,9 @@ export class ProjectRequirementsController {
 
       // Sort requirements by creation date (newest first)
       filteredRequirements.sort((a, b) => {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       });
 
       // Apply pagination
@@ -978,7 +1024,9 @@ export class ProjectRequirementsController {
 
       // Mock file processing - in real implementation, would handle multipart/form-data
       // For now, we'll simulate with dummy data based on body
-      const { files } = req.body as { files: Array<{ name: string; size: number; type: string }> };
+      const { files } = req.body as {
+        files: Array<{ name: string; size: number; type: string }>;
+      };
 
       if (!files || !Array.isArray(files) || files.length === 0) {
         return res.status(400).json({
@@ -991,10 +1039,15 @@ export class ProjectRequirementsController {
       }
 
       const uploadedAttachments = files.map((file, index) => {
-        const newAttachmentId = Math.max(
-          ...mockProjectRequirements.flatMap(r => r.attachments?.map(a => a.id) || []),
-          0
-        ) + index + 1;
+        const newAttachmentId =
+          Math.max(
+            ...mockProjectRequirements.flatMap(
+              (r) => r.attachments?.map((a) => a.id) || [],
+            ),
+            0,
+          ) +
+          index +
+          1;
 
         return {
           id: newAttachmentId,
@@ -1014,7 +1067,9 @@ export class ProjectRequirementsController {
       }
       requirement.attachments.push(...uploadedAttachments);
 
-      logger.info(`Uploaded ${uploadedAttachments.length} attachments for requirement ${requirementId}`);
+      logger.info(
+        `Uploaded ${uploadedAttachments.length} attachments for requirement ${requirementId}`,
+      );
 
       res.status(201).json({
         success: true,
@@ -1078,9 +1133,14 @@ export class ProjectRequirementsController {
       }
 
       // Remove attachment
-      const deletedAttachment = requirement.attachments.splice(attachmentIndex, 1)[0];
+      const deletedAttachment = requirement.attachments.splice(
+        attachmentIndex,
+        1,
+      )[0];
 
-      logger.info(`Deleted attachment ${attachmentId} from requirement ${requirementId}`);
+      logger.info(
+        `Deleted attachment ${attachmentId} from requirement ${requirementId}`,
+      );
 
       res.json({
         success: true,
@@ -1134,14 +1194,19 @@ export class ProjectRequirementsController {
       }
 
       // Mock download - in real implementation, would stream file
-      res.setHeader('Content-Disposition', `attachment; filename="${attachment.originalName}"`);
-      res.setHeader('Content-Type', attachment.mimeType);
-      res.setHeader('Content-Length', attachment.fileSize.toString());
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${attachment.originalName}"`,
+      );
+      res.setHeader("Content-Type", attachment.mimeType);
+      res.setHeader("Content-Length", attachment.fileSize.toString());
 
       // Send mock file content
       res.send(`Mock file content for ${attachment.originalName}`);
 
-      logger.info(`Downloaded attachment ${attachmentId} from requirement ${requirementId}`);
+      logger.info(
+        `Downloaded attachment ${attachmentId} from requirement ${requirementId}`,
+      );
     } catch (error) {
       logger.error("Error downloading attachment:", error);
       res.status(500).json({
@@ -1154,23 +1219,33 @@ export class ProjectRequirementsController {
 
   async getApprovedRequirements(req: Request, res: Response) {
     try {
-      const { limit = "5" } = req.query;
+      const { page = "1", limit = "5" } = req.query;
+      const pageNum = parseInt(page as string, 10);
       const limitNum = parseInt(limit as string, 10);
 
-      // Get approved requirements
-      const approvedRequirements = mockProjectRequirements
-        .filter((req) => req.status === "approved")
-        .slice(0, limitNum);
-
-      const totalApprovedCount = mockProjectRequirements.filter(
+      // Get all approved requirements first
+      const allApprovedRequirements = mockProjectRequirements.filter(
         (req) => req.status === "approved",
-      ).length;
+      );
+
+      // Apply pagination
+      const startIndex = (pageNum - 1) * limitNum;
+      const paginatedRequirements = allApprovedRequirements.slice(
+        startIndex,
+        startIndex + limitNum,
+      );
+
+      const totalCount = allApprovedRequirements.length;
+      const totalPages = Math.ceil(totalCount / limitNum);
 
       return res.json({
         success: true,
-        data: {
-          requirements: approvedRequirements,
-          totalCount: totalApprovedCount,
+        data: paginatedRequirements, // Return requirements directly in data
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          totalPages: totalPages,
         },
       });
     } catch (error) {

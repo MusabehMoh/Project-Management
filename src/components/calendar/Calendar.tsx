@@ -150,7 +150,12 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
 
   // Filter events based on current filters
   const filteredEvents = events.filter((event) => {
-    // Filter by type
+    // Only show meeting events to match the legend
+    if (event.type !== "meeting") {
+      return false;
+    }
+
+    // Filter by type (for future use if needed)
     if (uiFilters.type && event.type !== uiFilters.type) {
       return false;
     }
@@ -174,6 +179,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     return true;
   });
 
+  // Filter upcoming and overdue events to only show meetings
+  const filteredUpcomingEvents = upcomingEvents.filter(
+    (event) => event.type === "meeting",
+  );
+  const filteredOverdueEvents = overdueEvents.filter(
+    (event) => event.type === "meeting",
+  );
+
   // Reset filters
   const resetFilters = () => {
     setUiFilters({
@@ -188,7 +201,12 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     const dayEvents = getEventsForDate(date);
 
     return dayEvents.filter((event) => {
-      // Filter by type
+      // Only show meeting events
+      if (event.type !== "meeting") {
+        return false;
+      }
+
+      // Filter by type (for future use if needed)
       if (uiFilters.type && event.type !== uiFilters.type) {
         return false;
       }
@@ -299,15 +317,17 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   const getEventStyling = (event: CalendarEvent) => {
     const baseClasses =
       "text-xs p-2 rounded cursor-pointer hover:opacity-80 transition-all duration-200";
-    const typeColor = getEventTypeColor(event.type);
+
+    // Priority determines background color (matching legend)
+    const priorityColor = getPriorityColor(event.priority);
     const priorityBorder = getPriorityBorder(event.priority);
 
-    // Combine background color with priority border
-    const backgroundColor = `var(--heroui-colors-${typeColor}-100)`;
-    const borderColor =
-      event.status === "overdue"
-        ? "border-danger-300"
-        : `border-${typeColor}-200`;
+    // Status determines border color and effects
+    const statusColor = getEventStatusColor(event.status);
+    const borderColor = `border-${statusColor}-${event.status === "overdue" ? "300" : "200"}`;
+
+    // Use priority color for background, status color for border
+    const backgroundColor = `var(--heroui-colors-${priorityColor}-100)`;
 
     return {
       className: `${baseClasses} ${priorityBorder} border ${borderColor} ${
@@ -1140,12 +1160,12 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
             <CardBody>
               <ScrollShadow hideScrollBar className="max-h-60">
                 <div className="space-y-2">
-                  {upcomingEvents.length === 0 ? (
+                  {filteredUpcomingEvents.length === 0 ? (
                     <div className="text-center py-4 text-default-500">
                       {t("calendar.noUpcoming")}
                     </div>
                   ) : (
-                    upcomingEvents.map((event) => {
+                    filteredUpcomingEvents.map((event) => {
                       const styling = getEventStyling(event);
 
                       return (
@@ -1202,7 +1222,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           </Card>
 
           {/* Overdue Events */}
-          {overdueEvents.length > 0 && (
+          {filteredOverdueEvents.length > 0 && (
             <Card>
               <CardHeader>
                 <h3 className="text-lg font-semibold text-danger">
@@ -1212,7 +1232,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               <CardBody>
                 <ScrollShadow hideScrollBar className="max-h-40">
                   <div className="space-y-2">
-                    {overdueEvents.map((event) => {
+                    {filteredOverdueEvents.map((event) => {
                       const styling = getEventStyling(event);
 
                       return (

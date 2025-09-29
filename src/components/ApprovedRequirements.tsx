@@ -29,28 +29,42 @@ export default function ApprovedRequirements({
   const refresh = refreshData;
 
   const getPriorityColor = (priority: string | number | undefined) => {
-    const value = typeof priority === "number" ? String(priority) : priority;
+    const value = typeof priority === "string" ? priority : String(priority);
+
     switch (value) {
+      case "3":
       case "high":
         return "danger";
+      case "2":
       case "medium":
         return "warning";
+      case "1":
       case "low":
         return "success";
+      case "4":
+      case "critical":
+        return "danger";
       default:
         return "default";
     }
   };
 
   const getPriorityText = (priority: string | number | undefined) => {
-    const value = typeof priority === "number" ? String(priority) : priority;
+    const value = typeof priority === "string" ? priority : String(priority);
+
     switch (value) {
+      case "3":
       case "high":
         return t("priority.high");
+      case "2":
       case "medium":
         return t("priority.medium");
+      case "1":
       case "low":
         return t("priority.low");
+      case "4":
+      case "critical":
+        return t("priority.critical");
       default:
         return value ?? "";
     }
@@ -81,7 +95,7 @@ export default function ApprovedRequirements({
         shadow="sm"
       >
         <CardBody className="flex items-center justify-center min-h-[200px]">
-          <Spinner size="lg" aria-label={t("common.loading")} />
+          <Spinner aria-label={t("common.loading")} size="lg" />
           <p className="mt-3 text-default-500">{t("common.loading")}</p>
         </CardBody>
       </Card>
@@ -112,7 +126,11 @@ export default function ApprovedRequirements({
   const listEmpty = !Array.isArray(requirements) || requirements.length === 0;
 
   return (
-    <Card className={`${className} border-default-200`} dir={direction} shadow="sm">
+    <Card
+      className={`${className} border-default-200`}
+      dir={direction}
+      shadow="sm"
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
@@ -146,67 +164,88 @@ export default function ApprovedRequirements({
           </div>
         ) : (
           <div className="space-y-3">
-            {requirements.map((requirement: ProjectRequirement, index: number) => (
-              <div key={requirement.id}>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  className="flex items-start justify-between p-3 rounded-lg bg-default-50 hover:bg-default-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
-                  onClick={() => handleViewRequirement(requirement.project?.id || 0, requirement.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleViewRequirement(requirement.project?.id || 0, requirement.id);
+            {requirements.map(
+              (requirement: ProjectRequirement, index: number) => (
+                <div key={requirement.id}>
+                  <div
+                    className="flex items-start justify-between p-3 rounded-lg bg-default-50 hover:bg-default-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      handleViewRequirement(
+                        requirement.project?.id || 0,
+                        requirement.id,
+                      )
                     }
-                  }}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm text-foreground truncate">
-                        {requirement.name}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleViewRequirement(
+                          requirement.project?.id || 0,
+                          requirement.id,
+                        );
+                      }
+                    }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium text-sm text-foreground truncate">
+                          {requirement.name}
+                        </p>
+                        <Chip
+                          color={getPriorityColor(requirement.priority)}
+                          size="sm"
+                          variant="flat"
+                        >
+                          {getPriorityText(requirement.priority)}
+                        </Chip>
+                      </div>
+
+                      <p className="text-xs text-default-500 mb-2 line-clamp-2">
+                        {requirement.description}
                       </p>
-                      <Chip
-                        color={getPriorityColor(requirement.priority)}
+
+                      <div className="flex items-center gap-4 text-xs text-default-400">
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          <span className="truncate">
+                            {requirement.project?.applicationName ||
+                              t("common.unknownProject")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>
+                            {formatDate(requirement.expectedCompletionDate)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex-shrink-0">
+                      <Button
+                        className="min-w-0 px-3"
+                        color="primary"
                         size="sm"
                         variant="flat"
+                        onPress={() =>
+                          handleViewRequirement(
+                            requirement.project?.id || 0,
+                            requirement.id,
+                          )
+                        }
                       >
-                        {getPriorityText(requirement.priority)}
-                      </Chip>
-                    </div>
-
-                    <p className="text-xs text-default-500 mb-2 line-clamp-2">
-                      {requirement.description}
-                    </p>
-
-                    <div className="flex items-center gap-4 text-xs text-default-400">
-                      <div className="flex items-center gap-1">
-                        <User className="w-3 h-3" />
-                        <span className="truncate">
-                          {requirement.project?.applicationName ||
-                            t("common.unknownProject")}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>
-                          {formatDate(requirement.expectedCompletionDate)}
-                        </span>
-                      </div>
+                        {t("common.view")}
+                      </Button>
                     </div>
                   </div>
 
-                  <div className="flex-shrink-0">
-                    <Button className="min-w-0 px-3" color="primary" size="sm" variant="flat" onPress={() => handleViewRequirement(requirement.project?.id || 0, requirement.id)}>
-                      {t("common.view")}
-                    </Button>
-                  </div>
+                  {index < requirements.length - 1 && (
+                    <Divider className="my-2" />
+                  )}
                 </div>
-
-                {index < requirements.length - 1 && (
-                  <Divider className="my-2" />
-                )}
-              </div>
-            ))}
+              ),
+            )}
           </div>
         )}
       </CardBody>

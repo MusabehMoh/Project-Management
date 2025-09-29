@@ -263,8 +263,8 @@ const DHTMLXGantt: FC<{
     gantt.config.rtl = isRTL;
     gantt.skin = "material";
 
-  // Disable vertical autosize so the component does not push scrollbar below the viewport
-  gantt.config.autosize = false;
+    // Disable vertical autosize so the component does not push scrollbar below the viewport
+    gantt.config.autosize = false;
     gantt.config.fix_grid_header = true;
     gantt.config.scrollable = true;
 
@@ -276,8 +276,8 @@ const DHTMLXGantt: FC<{
 
     // Ensure the container has a minimum height so the grid + timeline render
     if (!isFullScreen) {
-      el.current.style.minHeight = '360px';
-      el.current.style.height = '360px';
+      el.current.style.minHeight = "360px";
+      el.current.style.height = "360px";
     }
 
     gantt.init(el.current);
@@ -290,21 +290,22 @@ const DHTMLXGantt: FC<{
 
     // Perform an initial parse if tasks already passed in (tasks-only mode)
     if (!timeline && tasks && tasks.length > 0) {
-      const colors = ['#3B82F6','#22C55E','#8B5CF6','#EAB308'];
+      const colors = ["#3B82F6", "#22C55E", "#8B5CF6", "#EAB308"];
       const data = {
         data: tasks.map((task, index) => ({
           id: task.id,
           text: task.name,
-          description: task.description ?? '',
-            start_date: formatDate(task.startDate),
-            duration: daysBetween(task.startDate, task.endDate),
-            open: false,
-            type: 'task',
-            color: colors[index % colors.length],
-            border: colors[index % colors.length]
+          description: task.description ?? "",
+          start_date: formatDate(task.startDate),
+          duration: daysBetween(task.startDate, task.endDate),
+          open: false,
+          type: "task",
+          color: colors[index % colors.length],
+          border: colors[index % colors.length],
         })),
-        links: [] as any[]
+        links: [] as any[],
       };
+
       gantt.silent(() => {
         gantt.clearAll();
         gantt.parse(data);
@@ -559,12 +560,20 @@ const DHTMLXGantt: FC<{
 
   // --- write data ---
   const lastDataSig = useRef<string>("");
+
   useEffect(() => {
     if (!inited.current) return; // not ready yet
     const sig = JSON.stringify({
       timelineId: timeline?.id ?? null,
-      tasks: tasks?.map(t => ({ id: t.id, s: t.startDate, e: t.endDate, n: t.name })) ?? []
+      tasks:
+        tasks?.map((t) => ({
+          id: t.id,
+          s: t.startDate,
+          e: t.endDate,
+          n: t.name,
+        })) ?? [],
     });
+
     if (sig === lastDataSig.current) return; // nothing changed
     lastDataSig.current = sig;
     // console.debug("[Gantt] Writing data", { timeline: !!timeline, taskCount: tasks?.length });
@@ -724,7 +733,9 @@ const DHTMLXGantt: FC<{
           </button>
         </div>
         {isFullScreen ? (
-          <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
+          <div
+            className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+          >
             <span className="text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
               {t("timeline.controlCellHeight")}
             </span>
@@ -742,15 +753,21 @@ const DHTMLXGantt: FC<{
                 onChange={(val) => setRowHeight(val as number)}
               />
             </div>
-            <span className="text-xs text-gray-500 dark:text-gray-400">{52}px</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {52}px
+            </span>
           </div>
         ) : !tasks ? (
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-800 dark:text-gray-200">{t("timeline.ganttView")}</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">
+              {t("timeline.ganttView")}
+            </h3>
             <button
               aria-label="Open fullscreen Gantt chart"
               className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
-              onClick={() => navigate("/ganttChart", { state: { projectId, timeline } })}
+              onClick={() =>
+                navigate("/ganttChart", { state: { projectId, timeline } })
+              }
             >
               <Maximize className="w-5 h-5 text-gray-600 dark:text-gray-200" />
             </button>
@@ -759,18 +776,23 @@ const DHTMLXGantt: FC<{
       </div>
 
       {/* Chart */}
-  <div className="relative w-full" style={{height: isFullScreen ? 'calc(90vh - 140px)' : (height || '360px')}}>
+      <div
+        className="relative w-full"
+        style={{
+          height: isFullScreen ? "calc(90vh - 140px)" : height || "360px",
+        }}
+      >
         {noData && (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
-            {t('timeline.gantt.noTasks') || 'No tasks to display'}
+            {t("timeline.gantt.noTasks") || "No tasks to display"}
           </div>
         )}
         <div
           ref={el}
           style={{
-            width: '100%',
-            height: '100%',
-            direction: 'ltr'
+            width: "100%",
+            height: "100%",
+            direction: "ltr",
           }}
         />
       </div>
@@ -886,6 +908,7 @@ const DHTMLXGantt: FC<{
                         selectedTask.id,
                         selectedTask.type,
                       );
+
                       if (success) {
                         gantt.deleteTask(selectedTask.id);
                         onClose();
@@ -911,6 +934,7 @@ const DHTMLXGantt: FC<{
                           progress: selectedTask.progress ?? 0,
                         },
                       );
+
                       if (success) {
                         gantt.updateTask(selectedTask.id, selectedTask);
                         onClose();

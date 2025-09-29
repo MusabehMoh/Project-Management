@@ -119,7 +119,14 @@ export class TimelineController {
     await mockDelayHandler();
 
     try {
-      const { projectId, projectRequirementId, name, description, startDate, endDate } = req.body;
+      const {
+        projectId,
+        projectRequirementId,
+        name,
+        description,
+        startDate,
+        endDate,
+      } = req.body;
 
       if (!projectId || !name || !startDate || !endDate) {
         return res.status(400).json({

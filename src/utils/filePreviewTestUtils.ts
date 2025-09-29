@@ -30,18 +30,21 @@ export const mockAttachments = [
  * Test hook usage for file preview
  */
 export function TestFilePreviewComponent() {
-  const { previewState, previewFile, closePreview, getFileType } = useFilePreview();
+  const { previewState, previewFile, closePreview, getFileType } =
+    useFilePreview();
 
   const testPreview = (filename: string) => {
     const type = getFileType(filename);
+
     console.log(`File type for ${filename}: ${type}`);
-    
+
     if (type === "download") {
       console.log(`${filename} will trigger direct download`);
     } else {
       console.log(`${filename} will open in preview modal`);
       // For testing, create a mock URL
       const mockUrl = `data:text/plain;base64,${btoa(`Mock content for ${filename}`)}`;
+
       previewFile(filename, mockUrl, 1024);
     }
   };
@@ -61,17 +64,18 @@ export function testFileTypes() {
   const testFiles = [
     "document.pdf",
     "image.jpg",
-    "photo.png", 
+    "photo.png",
     "spreadsheet.xlsx",
     "presentation.pptx",
     "archive.zip",
-    "text.txt"
+    "text.txt",
   ];
 
   console.log("File type detection tests:");
-  testFiles.forEach(file => {
+  testFiles.forEach((file) => {
     const { getFileType } = useFilePreview();
     const type = getFileType(file);
+
     console.log(`${file} -> ${type}`);
   });
 }

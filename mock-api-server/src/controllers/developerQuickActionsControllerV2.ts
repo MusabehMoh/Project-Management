@@ -52,7 +52,7 @@ export class DeveloperQuickActionsControllerV2 {
       });
     } catch (error) {
       logger.error("Error fetching developer quick actions:", error);
-      
+
       return res.status(500).json({
         success: false,
         error: {
@@ -82,7 +82,7 @@ export class DeveloperQuickActionsControllerV2 {
       });
     } catch (error) {
       logger.error("Error fetching unassigned tasks:", error);
-      
+
       return res.status(500).json({
         success: false,
         error: {
@@ -101,11 +101,15 @@ export class DeveloperQuickActionsControllerV2 {
 
     try {
       const almostCompletedTasks = getAlmostCompletedTasks();
-      
-      logger.info(`Fetching ${almostCompletedTasks.length} almost completed tasks`, {
-        overdue: almostCompletedTasks.filter(task => task.isOverdue).length,
-        dueSoon: almostCompletedTasks.filter(task => !task.isOverdue).length,
-      });
+
+      logger.info(
+        `Fetching ${almostCompletedTasks.length} almost completed tasks`,
+        {
+          overdue: almostCompletedTasks.filter((task) => task.isOverdue).length,
+          dueSoon: almostCompletedTasks.filter((task) => !task.isOverdue)
+            .length,
+        },
+      );
 
       return res.status(200).json({
         success: true,
@@ -113,13 +117,14 @@ export class DeveloperQuickActionsControllerV2 {
         message: "Almost completed tasks fetched successfully",
         meta: {
           total: almostCompletedTasks.length,
-          overdue: almostCompletedTasks.filter(task => task.isOverdue).length,
-          dueSoon: almostCompletedTasks.filter(task => !task.isOverdue).length,
+          overdue: almostCompletedTasks.filter((task) => task.isOverdue).length,
+          dueSoon: almostCompletedTasks.filter((task) => !task.isOverdue)
+            .length,
         },
       });
     } catch (error) {
       logger.error("Error fetching almost completed tasks:", error);
-      
+
       return res.status(500).json({
         success: false,
         error: {
@@ -137,7 +142,9 @@ export class DeveloperQuickActionsControllerV2 {
     await mockDelayHandler();
 
     try {
-      logger.info(`Fetching ${mockAvailableDevelopers.length} available developers`);
+      logger.info(
+        `Fetching ${mockAvailableDevelopers.length} available developers`,
+      );
 
       return res.status(200).json({
         success: true,
@@ -145,14 +152,20 @@ export class DeveloperQuickActionsControllerV2 {
         message: "Available developers fetched successfully",
         meta: {
           total: mockAvailableDevelopers.length,
-          available: mockAvailableDevelopers.filter(dev => dev.availability === 'available').length,
-          busy: mockAvailableDevelopers.filter(dev => dev.availability === 'busy').length,
-          away: mockAvailableDevelopers.filter(dev => dev.availability === 'away').length,
+          available: mockAvailableDevelopers.filter(
+            (dev) => dev.availability === "available",
+          ).length,
+          busy: mockAvailableDevelopers.filter(
+            (dev) => dev.availability === "busy",
+          ).length,
+          away: mockAvailableDevelopers.filter(
+            (dev) => dev.availability === "away",
+          ).length,
         },
       });
     } catch (error) {
       logger.error("Error fetching available developers:", error);
-      
+
       return res.status(500).json({
         success: false,
         error: {
@@ -191,7 +204,7 @@ export class DeveloperQuickActionsControllerV2 {
 
       // Validate date format
       const newDate = new Date(newEndDate);
-      
+
       if (isNaN(newDate.getTime())) {
         return res.status(400).json({
           success: false,
@@ -204,8 +217,9 @@ export class DeveloperQuickActionsControllerV2 {
 
       // Validate new date is in the future
       const today = new Date();
+
       today.setHours(0, 0, 0, 0);
-      
+
       if (newDate < today) {
         return res.status(400).json({
           success: false,
@@ -220,7 +234,7 @@ export class DeveloperQuickActionsControllerV2 {
       const taskIndex = mockAlmostCompletedTasks.findIndex(
         (task) => task.id === taskId,
       );
-      
+
       if (taskIndex === -1) {
         return res.status(404).json({
           success: false,
@@ -232,7 +246,7 @@ export class DeveloperQuickActionsControllerV2 {
       }
 
       const originalTask = { ...mockAlmostCompletedTasks[taskIndex] };
-      
+
       // Update the task with new deadline
       const updatedTask = {
         ...originalTask,
@@ -244,7 +258,8 @@ export class DeveloperQuickActionsControllerV2 {
       };
 
       if (additionalHours) {
-        updatedTask.estimatedHours = (updatedTask.estimatedHours || 0) + additionalHours;
+        updatedTask.estimatedHours =
+          (updatedTask.estimatedHours || 0) + additionalHours;
       }
 
       // Update the task in the mock data
@@ -274,7 +289,7 @@ export class DeveloperQuickActionsControllerV2 {
       });
     } catch (error) {
       logger.error("Error extending task deadline:", error);
-      
+
       return res.status(500).json({
         success: false,
         error: {
@@ -308,7 +323,7 @@ export class DeveloperQuickActionsControllerV2 {
       const taskIndex = mockUnassignedTasks.findIndex(
         (task) => task.id === taskId,
       );
-      
+
       if (taskIndex === -1) {
         return res.status(404).json({
           success: false,
@@ -323,7 +338,7 @@ export class DeveloperQuickActionsControllerV2 {
       const developer = mockAvailableDevelopers.find(
         (dev) => dev.userId === developerId,
       );
-      
+
       if (!developer) {
         return res.status(404).json({
           success: false,
@@ -361,7 +376,7 @@ export class DeveloperQuickActionsControllerV2 {
       });
     } catch (error) {
       logger.error("Error assigning developer:", error);
-      
+
       return res.status(500).json({
         success: false,
         error: {
@@ -373,4 +388,5 @@ export class DeveloperQuickActionsControllerV2 {
   }
 }
 
-export const developerQuickActionsControllerV2 = new DeveloperQuickActionsControllerV2();
+export const developerQuickActionsControllerV2 =
+  new DeveloperQuickActionsControllerV2();

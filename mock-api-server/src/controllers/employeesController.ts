@@ -153,7 +153,7 @@ export class EmployeesController {
 
       // Return all employees in the same format as MemberSearchResult
       const allEmployees = mockEmployees
-        .filter(emp => emp.isActive) // Only return active employees
+        .filter((emp) => emp.isActive) // Only return active employees
         .map((emp) => ({
           id: emp.id,
           userName: emp.username,

@@ -201,7 +201,8 @@ export class LookupsController {
       }
 
       // For other lookup codes, try to find in mockLookups
-      const lookup = mockLookups[code.toLowerCase() as keyof typeof mockLookups];
+      const lookup =
+        mockLookups[code.toLowerCase() as keyof typeof mockLookups];
 
       if (!lookup) {
         return res.status(404).json({

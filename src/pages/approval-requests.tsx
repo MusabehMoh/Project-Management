@@ -264,6 +264,7 @@ export default function ApprovalRequestsPage() {
           .then((blob) => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
+
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
@@ -283,6 +284,7 @@ export default function ApprovalRequestsPage() {
         attachment.id,
       );
       const url = window.URL.createObjectURL(blob);
+
       await previewFile(attachment.originalName, url, attachment.fileSize);
     } catch {
       // If preview fails, just download the file
@@ -291,6 +293,7 @@ export default function ApprovalRequestsPage() {
         .then((blob) => {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
+
           a.href = url;
           a.download = attachment.originalName;
           document.body.appendChild(a);
@@ -393,6 +396,7 @@ export default function ApprovalRequestsPage() {
         }),
         ...(priorityFilter && { priority: priorityFilter }),
       };
+
       updateFilters(newFilters);
     }, 300); // 300ms debounce
 
@@ -423,6 +427,7 @@ export default function ApprovalRequestsPage() {
 
       setTimeout(() => {
         const element = requirementRefs.current[scrollToId];
+
         if (element) {
           element.scrollIntoView({
             behavior: "smooth",

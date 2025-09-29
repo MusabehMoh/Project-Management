@@ -1,30 +1,35 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import DHTMLXGantt from '@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { MemberTask, TaskFiltersData, TaskSearchParams } from '@/types/membersTasks';
-import { membersTasksService } from '@/services/api/membersTasksService';
-import { API_CONFIG } from '@/services/api/client';
+import React, { useEffect, useRef, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
 
-interface DHtmlGanttChartProps { 
-  height?: string; 
+import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  MemberTask,
+  TaskFiltersData,
+  TaskSearchParams,
+} from "@/types/membersTasks";
+import { membersTasksService } from "@/services/api/membersTasksService";
+import { API_CONFIG } from "@/services/api/client";
+
+interface DHtmlGanttChartProps {
+  height?: string;
   showToolbar?: boolean;
   initialMemberFilter?: number[]; // Allow initial member filtering
 }
 
 const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
-  height = '600px',
+  height = "600px",
   showToolbar = true,
-  initialMemberFilter = []
+  initialMemberFilter = [],
 }) => {
   const { language, t } = useLanguage();
-  
+
   // State for tasks and filters
   const [tasks, setTasks] = useState<MemberTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Filter state
   const [filtersData, setFiltersData] = useState<TaskFiltersData | null>(null);
 
@@ -37,51 +42,64 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
     const fetchFilters = async () => {
       try {
         const response = await membersTasksService.getFiltersData();
+
         if (!cancelled) {
           if (response.success && response.data) {
             setFiltersData(response.data);
           } else {
-            if (API_CONFIG.ENABLE_LOGS) console.warn('Filters fetch returned unexpected shape:', response);
+            if (API_CONFIG.ENABLE_LOGS)
+              console.warn(
+                "Filters fetch returned unexpected shape:",
+                response,
+              );
           }
         }
       } catch (err) {
         if (!cancelled) {
-          if (API_CONFIG.ENABLE_LOGS) console.warn('Filters fetch failed (non-blocking):', err);
+          if (API_CONFIG.ENABLE_LOGS)
+            console.warn("Filters fetch failed (non-blocking):", err);
         }
       }
     };
+
     fetchFilters();
-    return () => { cancelled = true; };
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Fetch tasks based on current filters
   const fetchTasks = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      if (API_CONFIG.ENABLE_LOGS) console.log('Fetching tasks...');
+      if (API_CONFIG.ENABLE_LOGS) console.log("Fetching tasks...");
       const searchParams: TaskSearchParams = {
         page: 1,
         limit: 100, // Get all tasks for Gantt view
-        memberIds: initialMemberFilter.length > 0 ? initialMemberFilter : undefined,
-        sortBy: 'startDate',
-        sortOrder: 'asc'
+        memberIds:
+          initialMemberFilter.length > 0 ? initialMemberFilter : undefined,
+        sortBy: "startDate",
+        sortOrder: "asc",
       };
-      
-      if (API_CONFIG.ENABLE_LOGS) console.log('Search params:', searchParams);
+
+      if (API_CONFIG.ENABLE_LOGS) console.log("Search params:", searchParams);
       const response = await membersTasksService.getTasks(searchParams);
-      if (API_CONFIG.ENABLE_LOGS) console.log('Tasks response:', response);
-      
+
+      if (API_CONFIG.ENABLE_LOGS) console.log("Tasks response:", response);
+
       if (response.success) {
         setTasks(response.data.tasks);
-        if (API_CONFIG.ENABLE_LOGS) console.log('Tasks loaded:', response.data.tasks.length);
+        if (API_CONFIG.ENABLE_LOGS)
+          console.log("Tasks loaded:", response.data.tasks.length);
       } else {
-        setError(response.message || 'Failed to fetch tasks');
+        setError(response.message || "Failed to fetch tasks");
       }
     } catch (error) {
-      if (API_CONFIG.ENABLE_LOGS) console.error('Error fetching tasks:', error);
-      setError('Unable to load tasks');
+      if (API_CONFIG.ENABLE_LOGS) console.error("Error fetching tasks:", error);
+      setError("Unable to load tasks");
     } finally {
       setLoading(false);
     }
@@ -90,11 +108,11 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
   // Fetch tasks when component mounts OR when the serialized filter actually changes
   useEffect(() => {
     const serialized = JSON.stringify(initialMemberFilter);
+
     if (serialized !== initialFilterRef.current) {
       initialFilterRef.current = serialized;
     }
     fetchTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFilterRef.current]);
 
   // Retry function
@@ -123,7 +141,9 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
             {language === "ar" ? "الجدول الزمني للمشروع" : "Project Timeline"}
           </h3>
           <p className="text-sm text-default-600">
-            {language === "ar" ? "تتبع تقدم المشروع والتبعيات" : "Track project progress and dependencies"}
+            {language === "ar"
+              ? "تتبع تقدم المشروع والتبعيات"
+              : "Track project progress and dependencies"}
           </p>
         </div>
         {showToolbar && (

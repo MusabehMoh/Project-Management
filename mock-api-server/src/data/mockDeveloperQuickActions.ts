@@ -96,7 +96,8 @@ export const mockUnassignedTasks: UnassignedTask[] = [
   {
     id: "task-4",
     title: "Create responsive mobile layout",
-    description: "Design and implement mobile-first responsive layout for the dashboard",
+    description:
+      "Design and implement mobile-first responsive layout for the dashboard",
     priority: "high",
     status: "todo",
     projectId: "proj-1",
@@ -111,7 +112,8 @@ export const mockUnassignedTasks: UnassignedTask[] = [
   {
     id: "task-5",
     title: "Setup automated testing pipeline",
-    description: "Configure CI/CD pipeline with automated unit and integration tests",
+    description:
+      "Configure CI/CD pipeline with automated unit and integration tests",
     priority: "medium",
     status: "todo",
     projectId: "proj-3",
@@ -190,7 +192,8 @@ export const mockAlmostCompletedTasks: AlmostCompletedTask[] = [
     id: 104,
     treeId: "task-104",
     name: "Security vulnerability assessment",
-    description: "Conduct comprehensive security audit and fix identified vulnerabilities",
+    description:
+      "Conduct comprehensive security audit and fix identified vulnerabilities",
     startDate: "2025-09-19",
     endDate: "2025-09-25",
     duration: 6,
@@ -295,9 +298,11 @@ export const mockAvailableDevelopers: AvailableDeveloper[] = [
 export const calculateTaskUrgency = (endDate: string) => {
   const now = new Date();
   const taskEndDate = new Date(endDate);
-  const daysUntilDeadline = Math.ceil((taskEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const daysUntilDeadline = Math.ceil(
+    (taskEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+  );
   const isOverdue = daysUntilDeadline < 0;
-  
+
   return {
     daysUntilDeadline: Math.abs(daysUntilDeadline),
     isOverdue,
@@ -308,24 +313,33 @@ export const calculateTaskUrgency = (endDate: string) => {
 export const getAlmostCompletedTasks = (): AlmostCompletedTask[] => {
   const DAYS_THRESHOLD = 3;
   const now = new Date();
-  
+
   return mockAlmostCompletedTasks
-    .map(task => {
+    .map((task) => {
       const urgency = calculateTaskUrgency(task.endDate);
+
       return {
         ...task,
         daysUntilDeadline: urgency.daysUntilDeadline,
         isOverdue: urgency.isOverdue,
       };
     })
-    .filter(task => {
-      const daysUntilDeadline = Math.ceil((new Date(task.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return (daysUntilDeadline <= DAYS_THRESHOLD || task.isOverdue) && task.statusId !== 4; // Not completed
+    .filter((task) => {
+      const daysUntilDeadline = Math.ceil(
+        (new Date(task.endDate).getTime() - now.getTime()) /
+          (1000 * 60 * 60 * 24),
+      );
+
+      return (
+        (daysUntilDeadline <= DAYS_THRESHOLD || task.isOverdue) &&
+        task.statusId !== 4
+      ); // Not completed
     })
     .sort((a, b) => {
       // Sort by urgency - overdue first, then by days until deadline
       if (a.isOverdue && !b.isOverdue) return -1;
       if (!a.isOverdue && b.isOverdue) return 1;
+
       return a.daysUntilDeadline - b.daysUntilDeadline;
     });
 };

@@ -222,7 +222,24 @@ export default function TaskCompletionTracker({
 
   const refresh = async () => {
     setRefreshing(true);
-    // Re-fetch data logic here
+    setError(null);
+
+    try {
+      if (useMockData) {
+        // Simulate API call delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setAnalytics(mockAnalytics);
+      }
+      // Add real API call logic here when needed
+      // const data = await fetchTaskCompletionData(developerId);
+      // setAnalytics(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to refresh task data",
+      );
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   if (loading) {

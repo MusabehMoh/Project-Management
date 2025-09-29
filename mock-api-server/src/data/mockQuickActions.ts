@@ -161,7 +161,7 @@ export const mockUnassignedProjects = [
     id: 2,
     name: "Mobile App Backend",
     description: "API development for mobile application",
-    status: "Under Review", 
+    status: "Under Review",
     createdAt: "2025-09-12T00:00:00Z",
     priority: "medium",
     analyst: null, // No analyst assigned
@@ -171,7 +171,7 @@ export const mockUnassignedProjects = [
     name: "Data Migration Tool",
     description: "Tool for migrating legacy database",
     status: "Under Review",
-    createdAt: "2025-09-08T00:00:00Z", 
+    createdAt: "2025-09-08T00:00:00Z",
     priority: "high",
     analyst: null, // No analyst assigned
   },
@@ -190,7 +190,7 @@ export const mockUnassignedProjects = [
     description: "Analytics and reporting dashboard development",
     status: "Under Review",
     createdAt: "2025-09-11T00:00:00Z",
-    priority: "medium", 
+    priority: "medium",
     analyst: null, // No analyst assigned
   },
 ];

@@ -34,6 +34,9 @@ const translations = {
     "nav.tasks": "Tasks",
     "nav.teamTasks": "Team Tasks",
     "nav.departments": "Departments",
+    "nav.management": "Management",
+    "nav.userManagement": "User Management",
+    "nav.departmentManagement": "Department Management",
     "nav.reports": "Reports",
     "nav.newProject": "New Project",
     "nav.notifications": "Notifications",
@@ -234,6 +237,17 @@ const translations = {
     "user.systemSettingsDesc": "Configure system settings",
     "user.loading": "Loading user data...",
     "user.loadingProfile": "Loading user profile...",
+    "user.fullName": "Full Name",
+    "user.militaryNumber": "Military Number", 
+    "user.grade": "Grade",
+    "user.department": "Department",
+    "user.email": "Email",
+    "user.phone": "Phone",
+    "user.roles": "Roles",
+    "profile.subtitle": "Manage your personal information and settings",
+    "profile.personalInfo": "Personal Information",
+    "profile.contactInfo": "Contact Information", 
+    "profile.joinedDate": "Joined Date",
 
     // Dashboard
     "dashboard.title": "Project Management Dashboard",
@@ -352,6 +366,7 @@ const translations = {
     "priority.high": "High",
     "priority.medium": "Medium",
     "priority.low": "Low",
+    "priority.critical": "Critical",
 
     // Common
     "common.total": "Total",
@@ -795,7 +810,8 @@ const translations = {
     "requirements.createSuccess": "Requirement created successfully",
     "requirements.updateSuccess": "Requirement updated successfully",
     "requirements.deleteSuccess": "Requirement deleted successfully",
-    "requirements.sendSuccess": "Requirement submitted for approval successfully",
+    "requirements.sendSuccess":
+      "Requirement submitted for approval successfully",
     "requirements.uploadSuccess": "uploaded successfully",
     "requirements.attachmentDeleteSuccess": "Attachment deleted successfully",
     "requirements.downloadSuccess": "File downloaded successfully",
@@ -817,7 +833,7 @@ const translations = {
     "tasks.selectDeveloper": "Search for developer...",
     "tasks.selectQC": "Search for QC member...",
     "tasks.assignedOn": "Assigned On",
-    
+
     // Additional requirements keys
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
@@ -825,7 +841,7 @@ const translations = {
     "requirements.timelineInfo": "Timeline Information",
     "timeline.name": "Timeline Name",
     "timeline.id": "Timeline ID",
-    
+
     // Common keys
     "common.preview": "Preview",
     "common.download": "Download",
@@ -1441,6 +1457,9 @@ const translations = {
     "nav.tasks": "المهام",
     "nav.teamTasks": "مهام الفريق",
     "nav.departments": "الأقسام",
+    "nav.management": "الإدارة",
+    "nav.userManagement": "إدارة المستخدمين",
+    "nav.departmentManagement": "إدارة الأقسام",
     "nav.reports": "التقارير",
     "nav.newProject": "مشروع جديد",
     "nav.notifications": "الإشعارات",
@@ -1640,6 +1659,18 @@ const translations = {
     "user.systemSettings": "إعدادات النظام",
     "user.systemSettingsDesc": "تكوين إعدادات النظام",
     "user.loading": "جاري تحميل بيانات المستخدم...",
+    "user.loadingProfile": "جاري تحميل الملف الشخصي...",
+    "user.fullName": "الاسم الكامل",
+    "user.militaryNumber": "الرقم العسكري",
+    "user.grade": "الرتبة", 
+    "user.department": "القسم",
+    "user.email": "البريد الإلكتروني",
+    "user.phone": "رقم الهاتف",
+    "user.roles": "الأدوار",
+    "profile.subtitle": "إدارة معلوماتك الشخصية والإعدادات",
+    "profile.personalInfo": "المعلومات الشخصية",
+    "profile.contactInfo": "معلومات الاتصال",
+    "profile.joinedDate": "تاريخ الانضمام",
 
     // Dashboard
     "dashboard.title": "لوحة تحكم إدارة المشاريع",
@@ -1754,6 +1785,7 @@ const translations = {
     "priority.high": "عالية",
     "priority.medium": "متوسطة",
     "priority.low": "منخفضة",
+    "priority.critical": "حرجة",
 
     // Common
     "common.total": "المجموع",
@@ -2210,7 +2242,7 @@ const translations = {
     "tasks.selectDeveloper": "البحث عن مطور...",
     "tasks.selectQC": "البحث عن مسؤول ضمان الجودة...",
     "tasks.assignedOn": "تم التعيين في",
-    
+
     // Additional requirements keys (Arabic)
     "requirements.updated": "تاريخ التحديث",
     "requirements.uploadedOn": "تم الرفع في",
@@ -2218,7 +2250,7 @@ const translations = {
     "requirements.timelineInfo": "معلومات الجدول الزمني",
     "timeline.name": "اسم الجدول الزمني",
     "timeline.id": "معرّف الجدول الزمني",
-    
+
     // Common keys (Arabic)
     "common.preview": "معاينة",
     "common.download": "تحميل",

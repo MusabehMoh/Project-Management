@@ -37,7 +37,7 @@ const mockUsers = [
         roleOrder: 1,
       },
     ],
-  actions: [
+    actions: [
       {
         id: 1,
         name: "users.create",

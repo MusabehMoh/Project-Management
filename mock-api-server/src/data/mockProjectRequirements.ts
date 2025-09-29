@@ -16,7 +16,7 @@ export interface ProjectRequirement {
   projectId: number;
   name: string;
   description: string;
-  priority: "high" | "medium" | "low";
+  priority: number; // 1=Low, 2=Medium, 3=High, 4=Critical
   type: "new" | "change request";
   expectedCompletionDate: string;
   attachments?: ProjectRequirementAttachment[];
@@ -61,7 +61,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "User Authentication System",
     description:
       "Implement secure user login and registration functionality with multi-factor authentication support. The system should support OAuth integration with Google and Microsoft accounts.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-15",
     status: "completed",
@@ -112,7 +112,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "PDF Invoice Generation",
     description:
       "Create a module to generate PDF invoices with company branding, including QR codes for verification and support for multiple languages (Arabic/English).",
-    priority: "medium",
+    priority: 2,
     type: "change request",
     expectedCompletionDate: "2025-04-01",
     status: "approved",
@@ -171,7 +171,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Mobile App Push Notifications",
     description:
       "Implement push notification system for the mobile banking application to notify users of transactions, account updates, and security alerts.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-30",
     status: "approved",
@@ -221,7 +221,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Biometric Authentication",
     description:
       "Integrate fingerprint and face recognition authentication for enhanced security in the mobile banking application.",
-    priority: "high",
+    priority: 3,
     type: "change request",
     expectedCompletionDate: "2025-05-15",
     status: "in-development",
@@ -280,7 +280,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Advanced Reporting Dashboard",
     description:
       "Create comprehensive reporting dashboard with charts, graphs, and data export capabilities for the ERP system upgrade.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-06-01",
     status: "approved",
@@ -326,7 +326,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Biometric Authentication",
     description:
       "Integrate fingerprint and face recognition authentication for enhanced security in the mobile banking application.",
-    priority: "high",
+    priority: 3,
     type: "change request",
     expectedCompletionDate: "2025-05-15",
     status: "approved",
@@ -373,7 +373,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "User Profile Management",
     description:
       "Implement comprehensive user profile management with photo upload and preferences.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-04-10",
     status: "in-development",
@@ -396,7 +396,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Transaction History Export",
     description:
       "Allow users to export transaction history in multiple formats (PDF, Excel, CSV).",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-25",
     status: "in-development",
@@ -419,7 +419,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Inventory Management Module",
     description:
       "Create comprehensive inventory tracking and management system.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-04-15",
     status: "in-development",
@@ -442,7 +442,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Security Audit System",
     description:
       "Implement comprehensive security audit and monitoring system.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-20",
     status: "in-development",
@@ -464,7 +464,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     projectId: 2,
     name: "Fraud Detection System",
     description: "Develop AI-powered fraud detection and prevention system.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-30",
     status: "in-development",
@@ -487,7 +487,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Quality Assurance Dashboard",
     description:
       "Create QA dashboard for tracking testing progress and metrics.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-04-20",
     status: "approved",
@@ -510,7 +510,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Automated Testing Framework",
     description:
       "Implement comprehensive automated testing framework for continuous integration.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-05-01",
     status: "in-development",
@@ -533,7 +533,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "HR Integration Module",
     description:
       "Integrate HR system with main application for employee data synchronization.",
-    priority: "low",
+    priority: 1,
     type: "change request",
     expectedCompletionDate: "2025-05-15",
     status: "draft",
@@ -556,7 +556,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Financial Reporting System",
     description:
       "Create comprehensive financial reporting and analytics system.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-04-05",
     status: "in-development",
@@ -578,7 +578,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     projectId: 1,
     name: "Budget Management Tools",
     description: "Develop tools for budget planning, tracking, and analysis.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-04-25",
     status: "approved",
@@ -601,7 +601,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Legal Compliance Checker",
     description:
       "Implement system to check transactions for legal compliance and regulations.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-28",
     status: "in-development",
@@ -624,7 +624,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Customer Support Portal",
     description:
       "Create integrated customer support portal with ticketing system.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-05-10",
     status: "draft",
@@ -647,7 +647,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Multi-language Support",
     description:
       "Add comprehensive multi-language support with RTL layout for Arabic.",
-    priority: "medium",
+    priority: 2,
     type: "change request",
     expectedCompletionDate: "2025-04-30",
     status: "in-development",
@@ -670,7 +670,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     projectId: 2,
     name: "Advanced Analytics Engine",
     description: "Develop advanced analytics engine for business intelligence.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-22",
     status: "in-development",
@@ -693,7 +693,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Performance Monitoring",
     description:
       "Implement real-time performance monitoring and alerting system.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-18",
     status: "in-development",
@@ -716,7 +716,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "API Gateway Implementation",
     description:
       "Implement centralized API gateway for microservices architecture.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-15",
     status: "in-development",
@@ -739,7 +739,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Data Backup & Recovery",
     description:
       "Implement automated data backup and disaster recovery system.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-09-19",
     status: "in-development",
@@ -762,7 +762,7 @@ export const mockProjectRequirements: ProjectRequirement[] = [
     name: "Third-party Integrations",
     description:
       "Develop framework for third-party service integrations and API management.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-04-08",
     status: "in-development",
@@ -823,7 +823,7 @@ export const additionalBusyRequirements: ProjectRequirement[] = [
     name: "Performance Optimization Module",
     description:
       "Optimize application performance and implement caching strategies.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-04-01",
     status: "in-development",
@@ -837,7 +837,7 @@ export const additionalBusyRequirements: ProjectRequirement[] = [
     projectId: 2,
     name: "API Rate Limiting",
     description: "Implement rate limiting for API endpoints to prevent abuse.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-25",
     status: "in-development",
@@ -851,7 +851,7 @@ export const additionalBusyRequirements: ProjectRequirement[] = [
     projectId: 1,
     name: "Mobile App Integration",
     description: "Create mobile app integration for the customer portal.",
-    priority: "medium",
+    priority: 2,
     type: "new",
     expectedCompletionDate: "2025-04-15",
     status: "in-development",
@@ -865,7 +865,7 @@ export const additionalBusyRequirements: ProjectRequirement[] = [
     projectId: 1,
     name: "Advanced Search Feature",
     description: "Implement advanced search with filters and sorting.",
-    priority: "low",
+    priority: 1,
     type: "new",
     expectedCompletionDate: "2025-05-01",
     status: "in-development",
@@ -879,7 +879,7 @@ export const additionalBusyRequirements: ProjectRequirement[] = [
     projectId: 3,
     name: "Data Analytics Dashboard",
     description: "Create comprehensive analytics dashboard for administrators.",
-    priority: "high",
+    priority: 3,
     type: "new",
     expectedCompletionDate: "2025-03-30",
     status: "in-development",
@@ -899,8 +899,9 @@ const additionalDraftRequirements = [
     id: 100,
     projectId: 1,
     name: "Social Media Integration",
-    description: "Integrate social media login and sharing capabilities for enhanced user engagement.",
-    priority: "medium" as const,
+    description:
+      "Integrate social media login and sharing capabilities for enhanced user engagement.",
+    priority: 2 as const,
     type: "new" as const,
     expectedCompletionDate: "2025-06-15",
     status: "draft" as const,
@@ -921,8 +922,9 @@ const additionalDraftRequirements = [
     id: 101,
     projectId: 2,
     name: "Fraud Detection System",
-    description: "Implement AI-powered fraud detection and prevention system for banking transactions.",
-    priority: "high" as const,
+    description:
+      "Implement AI-powered fraud detection and prevention system for banking transactions.",
+    priority: 3 as const,
     type: "new" as const,
     expectedCompletionDate: "2025-07-01",
     status: "draft" as const,
@@ -943,8 +945,9 @@ const additionalDraftRequirements = [
     id: 102,
     projectId: 3,
     name: "Inventory Management Module",
-    description: "Enhanced inventory tracking and management module with real-time updates.",
-    priority: "medium" as const,
+    description:
+      "Enhanced inventory tracking and management module with real-time updates.",
+    priority: 2 as const,
     type: "change request" as const,
     expectedCompletionDate: "2025-06-30",
     status: "draft" as const,
@@ -962,5 +965,126 @@ const additionalDraftRequirements = [
     },
   },
 ];
+
+// Additional approved requirements for testing
+const additionalApprovedRequirements = [
+  {
+    id: 201,
+    projectId: 1,
+    name: "Advanced Search & Filtering",
+    description:
+      "Implement advanced search and filtering capabilities for the customer portal, including full-text search, date range filters, and category-based filtering.",
+    priority: 2, // medium
+    type: "new" as const,
+    expectedCompletionDate: "2025-12-15",
+    status: "approved" as const,
+    createdAt: "2025-09-20T10:30:00Z",
+    updatedAt: "2025-09-25T14:20:00Z",
+    createdBy: 2,
+    assignedAnalyst: 2,
+    project: {
+      id: 1,
+      applicationName: "Customer Portal System",
+      projectOwner: "أحمد محمد العتيبي",
+      owningUnit: "Information Technology Division",
+      analysts: "سارة الأحمد, محمد التميمي",
+      analystIds: [2, 5],
+    },
+  },
+  {
+    id: 202,
+    projectId: 2,
+    name: "Transaction Analytics Dashboard",
+    description:
+      "Create a comprehensive analytics dashboard for viewing transaction patterns, spending habits, and account activity with interactive charts and reports.",
+    priority: 3, // high
+    type: "new" as const,
+    expectedCompletionDate: "2025-11-30",
+    status: "approved" as const,
+    createdAt: "2025-09-22T09:15:00Z",
+    updatedAt: "2025-09-28T16:45:00Z",
+    createdBy: 3,
+    assignedAnalyst: 6,
+    project: {
+      id: 2,
+      applicationName: "Mobile Banking App",
+      projectOwner: "محمد أحمد الخالد",
+      owningUnit: "Finance and Budgeting",
+      analysts: "ياسر المحمد, نور الدين",
+      analystIds: [6, 4],
+    },
+  },
+  {
+    id: 203,
+    projectId: 3,
+    name: "Automated Inventory Management",
+    description:
+      "Implement automated inventory tracking and low-stock alerts with integration to supplier systems for automatic reordering.",
+    priority: 3, // high
+    type: "change request" as const,
+    expectedCompletionDate: "2025-12-20",
+    status: "approved" as const,
+    createdAt: "2025-09-25T11:00:00Z",
+    updatedAt: "2025-09-28T13:30:00Z",
+    createdBy: 5,
+    assignedAnalyst: 5,
+    project: {
+      id: 3,
+      applicationName: "ERP System Upgrade",
+      projectOwner: "خالد سعد المطيري",
+      owningUnit: "Operations and Strategic Planning",
+      analysts: "محمد التميمي, سعاد العتيبي",
+      analystIds: [5, 6],
+    },
+  },
+  {
+    id: 204,
+    projectId: 1,
+    name: "Multi-language Support Enhancement",
+    description:
+      "Enhance the existing multi-language support with additional languages and improved RTL layout support for better user experience.",
+    priority: 2, // medium
+    type: "change request" as const,
+    expectedCompletionDate: "2025-11-15",
+    status: "approved" as const,
+    createdAt: "2025-09-26T14:45:00Z",
+    updatedAt: "2025-09-28T10:15:00Z",
+    createdBy: 2,
+    assignedAnalyst: 2,
+    project: {
+      id: 1,
+      applicationName: "Customer Portal System",
+      projectOwner: "أحمد محمد العتيبي",
+      owningUnit: "Information Technology Division",
+      analysts: "سارة الأحمد, محمد التميمي",
+      analystIds: [2, 5],
+    },
+  },
+  {
+    id: 205,
+    projectId: 2,
+    name: "Enhanced Security Protocols",
+    description:
+      "Implement advanced security measures including two-factor authentication, encrypted communications, and fraud detection algorithms.",
+    priority: 4, // critical
+    type: "new" as const,
+    expectedCompletionDate: "2025-10-31",
+    status: "approved" as const,
+    createdAt: "2025-09-27T08:30:00Z",
+    updatedAt: "2025-09-28T15:00:00Z",
+    createdBy: 3,
+    assignedAnalyst: 6,
+    project: {
+      id: 2,
+      applicationName: "Mobile Banking App",
+      projectOwner: "محمد أحمد الخالد",
+      owningUnit: "Finance and Budgeting",
+      analysts: "ياسر المحمد, نور الدين",
+      analystIds: [6, 4],
+    },
+  },
+];
+
+mockProjectRequirements.push(...additionalApprovedRequirements);
 
 mockProjectRequirements.push(...additionalDraftRequirements);

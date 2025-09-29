@@ -7,6 +7,30 @@ import {
   type CalendarStatsResponse,
 } from "@/services/api/calendarService";
 
+// Utility function to sanitize calendar event dates
+const sanitizeEventDates = (event: CalendarEvent): CalendarEvent => {
+  const sanitizedEvent = { ...event };
+
+  // Fix malformed date strings like "2025-09-30T09:00:00:00.000Z"
+  if (event.startDate?.includes("T") && event.startDate.split(":").length > 3) {
+    // Remove the extra ":00" from malformed timestamps
+    sanitizedEvent.startDate = event.startDate.replace(
+      /T(\d{2}:\d{2}:\d{2}):\d{2}(\.000Z)$/,
+      "T$1$2",
+    );
+  }
+
+  if (event.endDate?.includes("T") && event.endDate.split(":").length > 3) {
+    // Remove the extra ":00" from malformed timestamps
+    sanitizedEvent.endDate = event.endDate.replace(
+      /T(\d{2}:\d{2}:\d{2}):\d{2}(\.000Z)$/,
+      "T$1$2",
+    );
+  }
+
+  return sanitizedEvent;
+};
+
 export interface UseCalendarReturn {
   // Data
   events: CalendarEvent[];
@@ -73,7 +97,10 @@ export const useCalendar = (): UseCalendarReturn => {
         const response = await calendarService.getCalendarEvents(filtersToUse);
 
         if (response.success) {
-          setEvents(response.data);
+          // Sanitize event dates to fix any malformed date strings
+          const sanitizedEvents = response.data.map(sanitizeEventDates);
+
+          setEvents(sanitizedEvents);
         } else {
           setError(response.message);
         }
@@ -109,7 +136,9 @@ export const useCalendar = (): UseCalendarReturn => {
       const response = await calendarService.getUpcomingEvents(limit);
 
       if (response.success) {
-        setUpcomingEvents(response.data);
+        const sanitizedEvents = response.data.map(sanitizeEventDates);
+
+        setUpcomingEvents(sanitizedEvents);
       } else {
         setError(response.message);
       }
@@ -128,7 +157,9 @@ export const useCalendar = (): UseCalendarReturn => {
       const response = await calendarService.getOverdueEvents();
 
       if (response.success) {
-        setOverdueEvents(response.data);
+        const sanitizedEvents = response.data.map(sanitizeEventDates);
+
+        setOverdueEvents(sanitizedEvents);
       } else {
         setError(response.message);
       }
@@ -287,17 +318,56 @@ export const useCalendar = (): UseCalendarReturn => {
   // Utility functions
   const getEventsForDate = useCallback(
     (date: Date): CalendarEvent[] => {
+      // Check if the date is valid
+      if (!date || isNaN(date.getTime())) {
+        // eslint-disable-next-line no-console
+        console.warn("Invalid date passed to getEventsForDate:", date);
+
+        return [];
+      }
+
       const dateStr = date.toISOString().split("T")[0];
 
       return events.filter((event) => {
-        const eventStart = new Date(event.startDate)
-          .toISOString()
-          .split("T")[0];
-        const eventEnd = event.endDate
-          ? new Date(event.endDate).toISOString().split("T")[0]
-          : eventStart;
+        try {
+          const eventStartDate = new Date(event.startDate);
 
-        return dateStr >= eventStart && dateStr <= eventEnd;
+          // Check if the start date is valid
+          if (isNaN(eventStartDate.getTime())) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              "Invalid start date in event:",
+              event.startDate,
+              event,
+            );
+
+            return false;
+          }
+
+          const eventStart = eventStartDate.toISOString().split("T")[0];
+          let eventEnd = eventStart;
+
+          if (event.endDate) {
+            const eventEndDate = new Date(event.endDate);
+
+            // Check if the end date is valid
+            if (isNaN(eventEndDate.getTime())) {
+              // eslint-disable-next-line no-console
+              console.warn("Invalid end date in event:", event.endDate, event);
+
+              return false;
+            }
+
+            eventEnd = eventEndDate.toISOString().split("T")[0];
+          }
+
+          return dateStr >= eventStart && dateStr <= eventEnd;
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn("Invalid date in event:", event, error);
+
+          return false;
+        }
       });
     },
     [events],
@@ -305,19 +375,71 @@ export const useCalendar = (): UseCalendarReturn => {
 
   const getEventsForDateRange = useCallback(
     (startDate: Date, endDate: Date): CalendarEvent[] => {
+      // Check if the dates are valid
+      if (
+        !startDate ||
+        !endDate ||
+        isNaN(startDate.getTime()) ||
+        isNaN(endDate.getTime())
+      ) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "Invalid dates passed to getEventsForDateRange:",
+          startDate,
+          endDate,
+        );
+
+        return [];
+      }
+
       const startStr = startDate.toISOString().split("T")[0];
       const endStr = endDate.toISOString().split("T")[0];
 
       return events.filter((event) => {
-        const eventStart = new Date(event.startDate)
-          .toISOString()
-          .split("T")[0];
-        const eventEnd = event.endDate
-          ? new Date(event.endDate).toISOString().split("T")[0]
-          : eventStart;
+        try {
+          const eventStartDate = new Date(event.startDate);
 
-        // Check if event overlaps with the date range
-        return eventStart <= endStr && eventEnd >= startStr;
+          // Check if the start date is valid
+          if (isNaN(eventStartDate.getTime())) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              "Invalid start date in event for date range:",
+              event.startDate,
+              event,
+            );
+
+            return false;
+          }
+
+          const eventStart = eventStartDate.toISOString().split("T")[0];
+          let eventEnd = eventStart;
+
+          if (event.endDate) {
+            const eventEndDate = new Date(event.endDate);
+
+            // Check if the end date is valid
+            if (isNaN(eventEndDate.getTime())) {
+              // eslint-disable-next-line no-console
+              console.warn(
+                "Invalid end date in event for date range:",
+                event.endDate,
+                event,
+              );
+
+              return false;
+            }
+
+            eventEnd = eventEndDate.toISOString().split("T")[0];
+          }
+
+          // Check if event overlaps with the date range
+          return eventStart <= endStr && eventEnd >= startStr;
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn("Invalid date in event for date range:", event, error);
+
+          return false;
+        }
       });
     },
     [events],

@@ -2,15 +2,7 @@ import { Request, Response } from "express";
 
 import { mockDelayHandler } from "../utils/mockDelay.js";
 import { logger } from "../utils/logger.js";
-import {
-  mockUnassignedTasks,
-  mockAlmostCompletedTasks,
-  mockAvailableDevelopers,
-  getAlmostCompletedTasks,
-  type UnassignedTask,
-  type AlmostCompletedTask,
-  type AvailableDeveloper,
-} from "../data/mockDeveloperQuickActions.js";
+import { type AlmostCompletedTask } from "../data/mockDeveloperQuickActions.js";
 
 export interface AlmostCompletedTask {
   id: number;
@@ -66,6 +58,7 @@ export class DeveloperQuickActionsController {
       });
     } catch (error) {
       logger.error("Error fetching developer quick actions:", error);
+
       return res.status(500).json({
         success: false,
         error: {
@@ -88,6 +81,7 @@ export class DeveloperQuickActionsController {
       });
     } catch (error) {
       logger.error("Error fetching almost completed tasks:", error);
+
       return res.status(500).json({
         success: false,
         error: {
@@ -102,13 +96,19 @@ export class DeveloperQuickActionsController {
     await mockDelayHandler();
 
     try {
-      const { taskId, newEndDate, extensionReason, additionalHours }: TaskExtensionRequest = req.body;
+      const {
+        taskId,
+        newEndDate,
+        extensionReason,
+        additionalHours,
+      }: TaskExtensionRequest = req.body;
 
       if (!taskId || !newEndDate || !extensionReason) {
         return res.status(400).json({
           success: false,
           error: {
-            message: "Missing required fields: taskId, newEndDate, extensionReason",
+            message:
+              "Missing required fields: taskId, newEndDate, extensionReason",
             code: "VALIDATION_ERROR",
           },
         });
@@ -116,6 +116,7 @@ export class DeveloperQuickActionsController {
 
       // Validate date format
       const newDate = new Date(newEndDate);
+
       if (isNaN(newDate.getTime())) {
         return res.status(400).json({
           success: false,
@@ -133,7 +134,9 @@ export class DeveloperQuickActionsController {
       });
 
       // Log the extension for audit purposes
-      logger.info(`Task ${taskId} extended to ${newEndDate}. Reason: ${extensionReason}`);
+      logger.info(
+        `Task ${taskId} extended to ${newEndDate}. Reason: ${extensionReason}`,
+      );
 
       return res.status(200).json({
         success: true,
@@ -144,6 +147,7 @@ export class DeveloperQuickActionsController {
       });
     } catch (error) {
       logger.error("Error extending task:", error);
+
       return res.status(500).json({
         success: false,
         error: {
@@ -181,6 +185,7 @@ export class DeveloperQuickActionsController {
       });
     } catch (error) {
       logger.error("Error assigning developer:", error);
+
       return res.status(500).json({
         success: false,
         error: {
@@ -218,6 +223,7 @@ export class DeveloperQuickActionsController {
       });
     } catch (error) {
       logger.error("Error assigning reviewer:", error);
+
       return res.status(500).json({
         success: false,
         error: {
@@ -240,14 +246,19 @@ export class DeveloperQuickActionsController {
       for (const sprint of timeline.sprints) {
         for (const task of sprint.tasks) {
           const taskEndDate = new Date(task.endDate);
-          const daysUntilDeadline = Math.ceil((taskEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          const daysUntilDeadline = Math.ceil(
+            (taskEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+          );
           const isOverdue = daysUntilDeadline < 0;
-          
+
           // Include tasks that are:
           // 1. Due within DAYS_THRESHOLD days
           // 2. Already overdue
           // 3. Not already completed (statusId !== 4, assuming 4 = completed)
-          if ((daysUntilDeadline <= DAYS_THRESHOLD || isOverdue) && task.statusId !== 4) {
+          if (
+            (daysUntilDeadline <= DAYS_THRESHOLD || isOverdue) &&
+            task.statusId !== 4
+          ) {
             almostCompletedTasks.push({
               id: task.id,
               treeId: task.treeId,
@@ -277,6 +288,7 @@ export class DeveloperQuickActionsController {
     almostCompletedTasks.sort((a, b) => {
       if (a.isOverdue && !b.isOverdue) return -1;
       if (!a.isOverdue && b.isOverdue) return 1;
+
       return a.daysUntilDeadline - b.daysUntilDeadline;
     });
 

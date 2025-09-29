@@ -405,7 +405,9 @@ export default function DeveloperWorkloadPerformance({
               </div>
 
               <Select
-                aria-label={t("developerDashboard.filterByStatus") || "Filter by status"}
+                aria-label={
+                  t("developerDashboard.filterByStatus") || "Filter by status"
+                }
                 className="max-w-xs"
                 placeholder={
                   t("developerDashboard.filterByStatus") || "Filter by status"
