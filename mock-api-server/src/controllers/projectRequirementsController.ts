@@ -1111,23 +1111,33 @@ export class ProjectRequirementsController {
 
   async getApprovedRequirements(req: Request, res: Response) {
     try {
-      const { limit = "5" } = req.query;
+      const { page = "1", limit = "5" } = req.query;
+      const pageNum = parseInt(page as string, 10);
       const limitNum = parseInt(limit as string, 10);
 
-      // Get approved requirements
-      const approvedRequirements = mockProjectRequirements
-        .filter((req) => req.status === "approved")
-        .slice(0, limitNum);
-
-      const totalApprovedCount = mockProjectRequirements.filter(
+      // Get all approved requirements first
+      const allApprovedRequirements = mockProjectRequirements.filter(
         (req) => req.status === "approved",
-      ).length;
+      );
+
+      // Apply pagination
+      const startIndex = (pageNum - 1) * limitNum;
+      const paginatedRequirements = allApprovedRequirements.slice(
+        startIndex,
+        startIndex + limitNum,
+      );
+
+      const totalCount = allApprovedRequirements.length;
+      const totalPages = Math.ceil(totalCount / limitNum);
 
       return res.json({
         success: true,
-        data: {
-          requirements: approvedRequirements,
-          totalCount: totalApprovedCount,
+        data: paginatedRequirements, // Return requirements directly in data
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          totalPages: totalPages,
         },
       });
     } catch (error) {

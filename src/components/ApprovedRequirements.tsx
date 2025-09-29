@@ -29,28 +29,40 @@ export default function ApprovedRequirements({
   const refresh = refreshData;
 
   const getPriorityColor = (priority: string | number | undefined) => {
-    const value = typeof priority === "number" ? String(priority) : priority;
+    const value = typeof priority === "string" ? priority : String(priority);
     switch (value) {
+      case "3":
       case "high":
         return "danger";
+      case "2":
       case "medium":
         return "warning";
+      case "1":
       case "low":
         return "success";
+      case "4":
+      case "critical":
+        return "danger";
       default:
         return "default";
     }
   };
 
   const getPriorityText = (priority: string | number | undefined) => {
-    const value = typeof priority === "number" ? String(priority) : priority;
+    const value = typeof priority === "string" ? priority : String(priority);
     switch (value) {
+      case "3":
       case "high":
         return t("priority.high");
+      case "2":
       case "medium":
         return t("priority.medium");
+      case "1":
       case "low":
         return t("priority.low");
+      case "4":
+      case "critical":
+        return t("priority.critical");
       default:
         return value ?? "";
     }
