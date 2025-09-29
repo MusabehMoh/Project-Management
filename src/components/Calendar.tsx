@@ -788,20 +788,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                         <div
                           className={`flex items-center gap-2 ${direction === "rtl" ? "flex-row-reverse" : ""}`}
                         >
-                          <div className="w-3 h-3 rounded bg-primary-100 border border-primary-200" />
-                          <span>{t("calendar.eventTypes.project")}</span>
-                        </div>
-                        <div
-                          className={`flex items-center gap-2 ${direction === "rtl" ? "flex-row-reverse" : ""}`}
-                        >
                           <div className="w-3 h-3 rounded bg-success-100 border border-success-200" />
                           <span>{t("calendar.eventTypes.meeting")}</span>
-                        </div>
-                        <div
-                          className={`flex items-center gap-2 ${direction === "rtl" ? "flex-row-reverse" : ""}`}
-                        >
-                          <div className="w-3 h-3 rounded bg-danger-100 border border-danger-200" />
-                          <span>{t("calendar.eventTypes.deadline")}</span>
                         </div>
                       </div>
                     </div>
@@ -818,7 +806,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                           <div
                             className={`w-3 h-3 rounded bg-danger-100 ${direction === "rtl" ? "border-r-4" : "border-l-4"} border-danger-500`}
                           />
-                          <span>{t("calendar.priorities.urgent")}</span>
+                          <span>{t("calendar.priorities.critical")}</span>
                         </div>
                         <div
                           className={`flex items-center gap-2 ${direction === "rtl" ? "flex-row-reverse" : ""}`}
@@ -836,6 +824,14 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                           />
                           <span>{t("calendar.priorities.medium")}</span>
                         </div>
+                        <div
+                          className={`flex items-center gap-2 ${direction === "rtl" ? "flex-row-reverse" : ""}`}
+                        >
+                          <div
+                            className={`w-3 h-3 rounded bg-success-100 ${direction === "rtl" ? "border-r-2" : "border-l-2"} border-success-500`}
+                          />
+                          <span>{t("calendar.priorities.low")}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -848,8 +844,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                         <div
                           className={`flex items-center gap-2 ${direction === "rtl" ? "flex-row-reverse" : ""}`}
                         >
-                          <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 animate-pulse" />
-                          <span>{t("calendar.overdue")}</span>
+                          <div className="w-3 h-3 rounded bg-primary-100 border border-primary-200" />
+                          <span>{t("calendar.status.upcoming")}</span>
                         </div>
                         <div
                           className={`flex items-center gap-2 ${direction === "rtl" ? "flex-row-reverse" : ""}`}
@@ -862,6 +858,12 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                         >
                           <div className="w-3 h-3 rounded bg-success-100 border border-success-200" />
                           <span>{t("calendar.status.completed")}</span>
+                        </div>
+                        <div
+                          className={`flex items-center gap-2 ${direction === "rtl" ? "flex-row-reverse" : ""}`}
+                        >
+                          <div className="w-3 h-3 rounded bg-danger-100 border border-danger-300 animate-pulse" />
+                          <span>{t("calendar.status.overdue")}</span>
                         </div>
                       </div>
                     </div>
