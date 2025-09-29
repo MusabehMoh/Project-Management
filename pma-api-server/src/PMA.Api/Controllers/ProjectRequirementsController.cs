@@ -262,6 +262,38 @@ public class ProjectRequirementsController : ApiBaseController
     }
 
     /// <summary>
+    /// Update project requirement status
+    /// </summary>
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateProjectRequirementStatus(int id, [FromBody] UpdateRequirementStatusDto statusDto)
+    {
+        try
+        {
+            var invalid = ValidateModelState();
+            if (invalid != null) return invalid;
+
+            var existingRequirement = await _projectRequirementService
+                .GetProjectRequirementByIdAsync(id);
+            if (existingRequirement == null)
+                return Error<ProjectRequirement>("Project requirement not found", null, 404);
+
+            existingRequirement.Status = statusDto.Status;
+            existingRequirement.UpdatedAt = DateTime.UtcNow;
+
+            var updatedProjectRequirement = await _projectRequirementService
+                .UpdateProjectRequirementAsync(existingRequirement);
+            return Success(updatedProjectRequirement);
+        }
+        catch (Exception ex)
+        {
+            return Error<ProjectRequirement>("An error occurred while updating the project requirement status", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Delete a project requirement
     /// </summary>
     [HttpDelete("{id}")]

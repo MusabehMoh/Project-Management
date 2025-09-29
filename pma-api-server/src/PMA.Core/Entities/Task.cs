@@ -43,6 +43,8 @@ public class Task
     public decimal? ActualHours { get; set; }
 
     public string? Dependencies { get; set; }
+     
+    public int? ProjectRequirementId { get; set; }
 
     [Required]
     [Range(0, 100)]

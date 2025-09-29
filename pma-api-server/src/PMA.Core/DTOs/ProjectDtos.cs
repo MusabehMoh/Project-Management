@@ -315,4 +315,10 @@ public class ProjectRequirementDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+public class UpdateRequirementStatusDto
+{
+    [Required]
+    public RequirementStatusEnum Status { get; set; }
+}
  

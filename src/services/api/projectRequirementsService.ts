@@ -19,6 +19,8 @@ const ENDPOINTS = {
     `/project-requirements/projects/${projectId}/requirements`,
   REQUIREMENT_BY_ID: (requirementId: number) =>
     `/project-requirements/${requirementId}`,
+  UPDATE_REQUIREMENT_STATUS: (requirementId: number) =>
+    `/project-requirements/${requirementId}/status`,
   SEND_REQUIREMENT: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/send`,
   REQUIREMENT_STATS: (projectId: number) =>
@@ -166,6 +168,21 @@ class ProjectRequirementsService {
     const result = await apiClient.put<ProjectRequirement>(
       ENDPOINTS.REQUIREMENT_BY_ID(requirementId),
       data,
+    );
+
+    return result.data;
+  }
+
+  /**
+   * Update requirement status only
+   */
+  async updateRequirementStatus(
+    requirementId: number,
+    status: number,
+  ): Promise<ProjectRequirement> {
+    const result = await apiClient.patch<ProjectRequirement>(
+      ENDPOINTS.UPDATE_REQUIREMENT_STATUS(requirementId),
+      { status },
     );
 
     return result.data;

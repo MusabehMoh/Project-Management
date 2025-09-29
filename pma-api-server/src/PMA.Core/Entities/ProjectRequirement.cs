@@ -70,6 +70,7 @@ public class ProjectRequirement
     public virtual User? Analyst { get; set; }
     public virtual ICollection<ProjectRequirementAttachment> Attachments { get; set; } = new List<ProjectRequirementAttachment>();
     public virtual ICollection<RequirementTask> Tasks { get; set; } = new List<RequirementTask>();
+    public virtual Timeline? Timeline { get; set; }
 }
 
 [Table("RequirementTasks")]

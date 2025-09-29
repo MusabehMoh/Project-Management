@@ -19,6 +19,8 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
             .Include(pr => pr.Attachments) // Include attachments
+            .Include(pr => pr.Tasks)
+            .Include(pr => pr.Timeline)
             .AsQueryable();
 
         if (projectId.HasValue)
@@ -74,6 +76,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Analyst)
             .Include(pr => pr.Attachments)
             .Include(pr => pr.Tasks)
+            .Include(pr => pr.Timeline)
             .Where(pr => pr.ProjectId == projectId)
             .OrderBy(pr => pr.Priority)
             .ThenBy(pr => pr.CreatedAt)
@@ -109,6 +112,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
                 .ThenInclude(t => t.Developer)
             .Include(pr => pr.Tasks)
                 .ThenInclude(t => t.Qc)
+            .Include(pr => pr.Timeline)
             .FirstOrDefaultAsync(pr => pr.Id == id);
     }
 

@@ -13,8 +13,8 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
-import { Spinner } from "@heroui/spinner";
 import { Chip } from "@heroui/chip";
+import { Skeleton } from "@heroui/skeleton";
 import {
   Modal,
   ModalContent,
@@ -430,12 +430,9 @@ export default function DevelopmentRequirementsPage() {
       if (result) {
         // Update requirement status to in_development after timeline creation
         if (timelineRequirement?.status === REQUIREMENT_STATUS.APPROVED) {
-          await projectRequirementsService.updateRequirement(
+          await projectRequirementsService.updateRequirementStatus(
             timelineRequirement.id,
-            {
-              id: timelineRequirement.id,
-              status: REQUIREMENT_STATUS.UNDER_DEVELOPMENT,
-            },
+            REQUIREMENT_STATUS.UNDER_DEVELOPMENT,
           );
         }
 
@@ -471,12 +468,9 @@ export default function DevelopmentRequirementsPage() {
 
       // Update requirement status to in_development after task creation
       if (selectedRequirement.status === REQUIREMENT_STATUS.APPROVED) {
-        await projectRequirementsService.updateRequirement(
+        await projectRequirementsService.updateRequirementStatus(
           selectedRequirement.id,
-          {
-            id: selectedRequirement.id,
-            status: REQUIREMENT_STATUS.UNDER_DEVELOPMENT,
-          },
+          REQUIREMENT_STATUS.UNDER_DEVELOPMENT,
         );
       }
 
@@ -576,16 +570,6 @@ export default function DevelopmentRequirementsPage() {
   // edit/delete handlers removed - grid is read-only
 
   // (Helpers are defined within RequirementCard where needed)
-
-  if (loading && requirements.length === 0) {
-    return (
-      <>
-        <div className="flex justify-center items-center min-h-96">
-          <Spinner label={t("common.loading")} size="lg" />
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
@@ -752,7 +736,47 @@ export default function DevelopmentRequirementsPage() {
         )}
 
         {/* Requirements Content */}
-        {requirements.length === 0 ? (
+        {loading && requirements.length === 0 ? (
+          /* Skeleton Loader for Requirements Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="h-full flex flex-col">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start w-full gap-3">
+                    <div className="flex-1 min-w-0">
+                      <Skeleton className="h-6 w-3/4 rounded-md mb-1" />
+                      <Skeleton className="h-4 w-1/2 rounded-md" />
+                    </div>
+                    <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardBody className="pt-0 flex-1 flex flex-col">
+                  <div className="space-y-4 flex-1">
+                    <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
+                      <Skeleton className="h-4 w-full rounded-md mb-2" />
+                      <Skeleton className="h-4 w-4/5 rounded-md mb-2" />
+                      <Skeleton className="h-4 w-3/5 rounded-md" />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-4 rounded-sm" />
+                      <Skeleton className="h-4 w-24 rounded-md" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center pt-2 gap-2 mt-auto">
+                    <Skeleton className="h-8 flex-1 rounded-md" />
+                    <Skeleton className="h-8 flex-1 rounded-md" />
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        ) : requirements.length === 0 ? (
           <Card>
             <CardBody>
               <div className="text-center py-12">

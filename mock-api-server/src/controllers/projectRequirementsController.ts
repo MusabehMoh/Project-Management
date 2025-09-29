@@ -491,6 +491,49 @@ export class ProjectRequirementsController {
   }
 
   /**
+   * Update requirement status only
+   */
+  async updateRequirementStatus(req: Request, res: Response) {
+    try {
+      const { requirementId } = req.params;
+      const { status } = req.body;
+
+      const requirementIndex = mockProjectRequirements.findIndex(
+        (r) => r.id === parseInt(requirementId),
+      );
+
+      if (requirementIndex === -1) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: "Requirement not found",
+            code: "NOT_FOUND",
+          },
+        });
+      }
+
+      // Update only the status
+      mockProjectRequirements[requirementIndex].status = status;
+      mockProjectRequirements[requirementIndex].updatedAt = new Date().toISOString();
+
+      const requirement = mockProjectRequirements[requirementIndex];
+
+      res.status(200).json({
+        success: true,
+        data: requirement,
+        message: "Requirement status updated successfully",
+      });
+    } catch (error) {
+      logger.error("Error updating requirement status:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  /**
    * Send requirement to development manager
    */
   async sendRequirement(req: Request, res: Response) {

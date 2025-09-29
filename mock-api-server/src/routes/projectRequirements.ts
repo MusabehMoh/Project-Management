@@ -37,6 +37,14 @@ projectRequirementRoutes.put(
   ),
 );
 
+// PATCH /api/project-requirements/requirements/:requirementId/status - Update requirement status
+projectRequirementRoutes.patch(
+  "/requirements/:requirementId/status",
+  projectRequirementsController.updateRequirementStatus.bind(
+    projectRequirementsController,
+  ),
+);
+
 // POST /api/project-requirements/requirements/:requirementId/send - Send requirement to development
 projectRequirementRoutes.post(
   "/requirements/:requirementId/send",
