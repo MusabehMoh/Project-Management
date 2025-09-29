@@ -23,7 +23,7 @@ import {
   NavbarMenuItem,
 } from "@heroui/navbar";
 import clsx from "clsx";
-import { Bell, LogOut, User } from "lucide-react";
+import { Bell, LogOut, User, ChevronDown, Users, Building2 } from "lucide-react";
 import { useTheme } from "@heroui/use-theme";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -143,6 +143,115 @@ const AnimatedNavItem = ({
   );
 };
 
+// Management Dropdown Component
+const ManagementDropdown = ({
+  t,
+  isAdmin,
+  hasPermission,
+  navigate,
+  currentPath,
+}: {
+  t: (key: string) => string;
+  isAdmin: () => boolean;
+  hasPermission: (permissions: any) => boolean;
+  navigate: (path: string) => void;
+  currentPath: string;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Check if user has access to either users or departments
+  const hasUsersAccess = isAdmin() || hasPermission({ actions: ["users.read"] });
+  const hasDepartmentsAccess = isAdmin() || hasPermission({ 
+    actions: ["Department Management", "Manage Departments"] 
+  });
+
+  // Don't render if user has no access to either
+  if (!hasUsersAccess && !hasDepartmentsAccess) {
+    return null;
+  }
+
+  const isActive = currentPath === "/users" || currentPath === "/departments";
+
+  return (
+    <Dropdown 
+      isOpen={isOpen}
+      onOpenChange={setIsOpen}
+      placement="bottom-start"
+      className="min-w-[200px]"
+    >
+      <DropdownTrigger>
+        <Button
+          className={clsx(
+            "relative group transition-all duration-300 ease-in-out transform",
+            "hover:scale-105 hover:-translate-y-0.5",
+            "text-foreground font-medium bg-transparent p-0 h-auto min-w-0",
+            isActive ? "text-primary" : "hover:text-primary",
+          )}
+          variant="light"
+          endContent={
+            <ChevronDown
+              className={clsx(
+                "transition-transform duration-200 ml-1",
+                isOpen ? "rotate-180" : "rotate-0"
+              )}
+              size={14}
+            />
+          }
+        >
+          <span className="relative z-10 flex items-center gap-2">
+            <Users size={16} />
+            {t("nav.management")}
+          </span>
+          {/* Hover background glow */}
+          <span
+            className={clsx(
+              "absolute inset-0 -z-10 rounded-lg",
+              "bg-primary/10",
+              "transition-all duration-300 ease-out",
+              "transform -inset-2",
+              isOpen ? "opacity-100 scale-110" : "opacity-0 scale-95",
+            )}
+          />
+        </Button>
+      </DropdownTrigger>
+      <DropdownMenu
+        aria-label="Management options"
+        className="min-w-[200px]"
+        variant="flat"
+      >
+        {hasUsersAccess && (
+          <DropdownItem
+            key="users"
+            className={clsx(
+              "transition-all duration-200",
+              currentPath === "/users" && "bg-primary/10 text-primary",
+            )}
+            startContent={<Users size={16} />}
+            textValue="User Management"
+            onPress={() => navigate("/users")}
+          >
+            {t("nav.userManagement")}
+          </DropdownItem>
+        )}
+        {hasDepartmentsAccess && (
+          <DropdownItem
+            key="departments"
+            className={clsx(
+              "transition-all duration-200",
+              currentPath === "/departments" && "bg-primary/10 text-primary",
+            )}
+            startContent={<Building2 size={16} />}
+            textValue="Department Management"
+            onPress={() => navigate("/departments")}
+          >
+            {t("nav.departmentManagement")}
+          </DropdownItem>
+        )}
+      </DropdownMenu>
+    </Dropdown>
+  );
+};
+
 // Project management specific nav items
 const getProjectNavItems = (
   t: (key: string) => string,
@@ -166,26 +275,6 @@ const getProjectNavItems = (
 
   const adminItems = [];
 
-  // Add users link if user has admin role or user read permission
-  if (
-    isAdmin() ||
-    hasPermission({
-      actions: ["users.read"],
-    })
-  ) {
-    adminItems.push({ label: t("nav.users"), href: "/users" });
-  }
-
-  // Add departments link if user has admin role or department management permission
-  if (
-    isAdmin() ||
-    hasPermission({
-      actions: ["Department Management", "Manage Departments"],
-    })
-  ) {
-    adminItems.push({ label: t("nav.departments"), href: "/departments" });
-  }
-
   // Development Manager specific items
   const developmentItems = [];
 
@@ -194,6 +283,7 @@ const getProjectNavItems = (
       label: t("nav.developmentRequirements"),
       href: "/development-requirements",
     });
+    // Add timeline for Development Managers
     developmentItems.push({ label: t("nav.timeline"), href: "/timeline" });
   }
 
@@ -214,7 +304,8 @@ const getProjectNavItems = (
       href: "/approval-requests",
     });
   }
-  /// member tasks or Team Tasks for manager
+
+  // Member tasks or Team Tasks for manager
   if (hasAnyRole(["Analyst Department Manager", "Administrator"])) {
     developmentItems.push({ label: t("nav.teamTasks"), href: "/tasks" });
   } else {
@@ -412,6 +503,18 @@ export const Navbar = () => {
               />
             </div>
           ))}
+          <div
+            className="animate-in slide-in-from-left duration-500"
+            style={{ animationDelay: `${projectNavItems.length * 100}ms` }}
+          >
+            <ManagementDropdown
+              currentPath={currentPath}
+              hasPermission={hasPermission}
+              isAdmin={isAdmin}
+              navigate={navigate}
+              t={t}
+            />
+          </div>
         </div>
       </NavbarContent>
 
@@ -684,10 +787,60 @@ export const Navbar = () => {
               </Link>
             </NavbarMenuItem>
           ))}
+          
+          {/* Add Management Items for Mobile */}
+          {(isAdmin() || hasPermission({ actions: ["users.read"] })) && (
+            <NavbarMenuItem
+              className="animate-in slide-in-from-left duration-500"
+              style={{ animationDelay: `${(projectNavItems.length + 1) * 100}ms` }}
+            >
+              <Link
+                className={clsx(
+                  "transition-all duration-300 hover:scale-105 active:scale-95",
+                  "hover:text-primary font-medium",
+                  currentPath === "/users" && "border-l-2 border-primary pl-2",
+                )}
+                color={currentPath === "/users" ? "primary" : "foreground"}
+                href="/users"
+                size="lg"
+                onClick={(e) => handleNav(e, "/users")}
+              >
+                <div className="flex items-center gap-2">
+                  <Users size={16} />
+                  {t("nav.userManagement")}
+                </div>
+              </Link>
+            </NavbarMenuItem>
+          )}
+          
+          {(isAdmin() || hasPermission({ actions: ["Department Management", "Manage Departments"] })) && (
+            <NavbarMenuItem
+              className="animate-in slide-in-from-left duration-500"
+              style={{ animationDelay: `${(projectNavItems.length + 2) * 100}ms` }}
+            >
+              <Link
+                className={clsx(
+                  "transition-all duration-300 hover:scale-105 active:scale-95",
+                  "hover:text-primary font-medium",
+                  currentPath === "/departments" && "border-l-2 border-primary pl-2",
+                )}
+                color={currentPath === "/departments" ? "primary" : "foreground"}
+                href="/departments"
+                size="lg"
+                onClick={(e) => handleNav(e, "/departments")}
+              >
+                <div className="flex items-center gap-2">
+                  <Building2 size={16} />
+                  {t("nav.departmentManagement")}
+                </div>
+              </Link>
+            </NavbarMenuItem>
+          )}
+          
           <NavbarMenuItem
             className="flex flex-row gap-2 items-center animate-in slide-in-from-left duration-500"
             style={{
-              animationDelay: `${(projectNavItems.length + 1) * 100}ms`,
+              animationDelay: `${(projectNavItems.length + 3) * 100}ms`,
             }}
           >
             <div className="transition-all duration-300 hover:scale-110 active:scale-95">
