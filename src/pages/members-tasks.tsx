@@ -77,6 +77,7 @@ export default function MembersTasksPage() {
     handleSearchChange,
     handleProjectChange,
     handleStatusChange,
+    handleResetFilters,
     taskParametersRequest,
     refreshTasks,
     exportTasks,
@@ -620,8 +621,14 @@ export default function MembersTasksPage() {
               <p className="text-foreground-600 mb-6">
                 {t("adjustFiltersMessage")}
               </p>
-              <Button color="primary" variant="flat">
-                Clear Filters
+              <Button
+                color="primary"
+                variant="flat"
+                onPress={() => {
+                  handleResetFilters();
+                }}
+              >
+                {t("calendar.clearFilters")}
               </Button>
             </CardBody>
           </Card>

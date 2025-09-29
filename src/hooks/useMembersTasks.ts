@@ -478,6 +478,7 @@ interface UseMembersTasksResult {
   handleSearchChange: (search: string) => void;
   handlePriorityChange: (priorityId: number) => void;
   handleStatusChange: (statusId: number) => void;
+  handleResetFilters: () => void;
   taskParametersRequest: TaskSearchParams;
 }
 
@@ -493,6 +494,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
   });
   const [loading, setLoading] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
+  const [initialCount, setInitialCount] = useState(0);
   const [initialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -505,7 +507,13 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       page: 1,
     });
 
-  ///TODO ////////////// pls append pagination first
+  /// reset filters
+  const handleResetFilters = useCallback(() => {
+    setTaskParametersRequest({
+      limit: 20,
+      page: 1,
+    });
+  }, []);
 
   /**
    * Handle page change
@@ -784,6 +792,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
           setTotalPages(response.data.totalPages);
           //handlePageChange(response.data.currentPage);
           setTotalCount(response.data.totalCount);
+          setInitialCount(response.data.totalCount);
           await new Promise((resolve) => setTimeout(resolve, 200));
         } else {
           throw new Error(response.message || "Failed to fetch tasks");
@@ -795,6 +804,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
         setTotalPages(Math.ceil(mockMemberTasks.length / 10));
         //handlePageChange(1);
         setTotalCount(mockMemberTasks.length);
+        setInitialCount(mockMemberTasks.length);
       } finally {
         setLoading(false);
         setHeaderLoading(false);
@@ -812,11 +822,12 @@ export const useMembersTasks = (): UseMembersTasksResult => {
   }, [taskParametersRequest]);
 
   useEffect(() => {
-    if (totalCount > 0) {
+    console.log("use effect for initial loading triggered", initialCount);
+    if (initialCount > 0) {
       console.log("Total count updated, setting initialLoading to false");
       setInitialLoading(false);
     }
-  }, [headerLoading]);
+  }, [initialLoading, initialCount]);
 
   return {
     tasks,
@@ -834,6 +845,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     handleSearchChange,
     handleProjectChange,
     handleStatusChange,
+    handleResetFilters,
     taskParametersRequest,
     refreshTasks,
     exportTasks,
