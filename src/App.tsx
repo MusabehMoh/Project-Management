@@ -20,6 +20,7 @@ import DevelopmentRequirementsPage from "@/pages/development-requirements";
 import ApprovalRequestsPage from "@/pages/approval-requests";
 import TimelinePage from "@/pages/timeline";
 import MembersTasksPage from "@/pages/members-tasks";
+import ProfilePage from "@/pages/profile";
 import DefaultLayout from "@/layouts/default";
 function App() {
   const { user, loading } = useCurrentUser();
@@ -54,6 +55,7 @@ function App() {
         <Route element={<ApprovalRequestsPage />} path="approval-requests" />
         <Route element={<UsersPage />} path="users" />
         <Route element={<DepartmentsPage />} path="departments" />
+        <Route element={<ProfilePage />} path="profile" />
         <Route element={<TimelinePage />} path="timeline" />
         <Route element={<TasksTest />} path="test-tasks" />
         <Route element={<MembersTasksPage />} path="tasks" />

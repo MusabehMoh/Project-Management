@@ -32,6 +32,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { SearchIcon } from "@/components/icons";
 import { GlobalSearchModal } from "@/components/GlobalSearchModal";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useUserContext } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useNotifications } from "@/hooks/useNotifications";
 // Import both logo versions
@@ -330,6 +331,7 @@ export const Navbar = () => {
     isAdmin,
     hasAnyRole,
   } = usePermissions();
+  const { setUser } = useUserContext();
   const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } =
     useNotifications();
   const projectNavItems = getProjectNavItems(
@@ -700,6 +702,7 @@ export const Navbar = () => {
                     />
                   }
                   textValue="Profile"
+                  onPress={() => navigate("/profile")}
                 >
                   {t("user.profile")}
                 </DropdownItem>
@@ -714,6 +717,27 @@ export const Navbar = () => {
                       size={16}
                     />
                   }
+                  onPress={async () => {
+                    try {
+                      // Clear local storage
+                      localStorage.removeItem("authToken");
+                      localStorage.removeItem("currentUser");
+                      sessionStorage.removeItem("authToken");
+                      
+                      // Clear user context
+                      setUser(null);
+                      
+                      // Navigate to login or home page
+                      navigate("/");
+                      
+                      // Optional: Call logout API endpoint
+                      // await authService.logout();
+                    } catch (error) {
+                      console.error("Logout error:", error);
+                      // Still navigate even if logout call fails
+                      navigate("/");
+                    }
+                  }}
                 >
                   {t("user.logout")}
                 </DropdownItem>
