@@ -18,7 +18,7 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
   showToolbar = true,
   initialMemberFilter = []
 }) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   
   // State for tasks and filters
   const [tasks, setTasks] = useState<MemberTask[]>([]);
@@ -102,15 +102,28 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
     fetchTasks();
   };
 
+  // Gantt chart control functions
+  const handleZoomIn = () => {
+    // This would be implemented with the actual Gantt chart API
+  };
+
+  const handleZoomOut = () => {
+    // This would be implemented with the actual Gantt chart API
+  };
+
+  const handleFullscreen = () => {
+    // This would be implemented with the actual Gantt chart API
+  };
+
   return (
-    <Card className='w-full'>
-      <CardHeader className='flex justify-between items-center'>
+    <Card className="w-full">
+      <CardHeader className="flex justify-between items-center">
         <div>
-          <h3 className='text-lg font-semibold'>
-            {language === 'ar' ? 'الجدول الزمني للمشروع' : 'Project Timeline'}
+          <h3 className="text-lg font-semibold">
+            {language === "ar" ? "الجدول الزمني للمشروع" : "Project Timeline"}
           </h3>
-          <p className='text-sm text-default-600'>
-            {language === 'ar' ? 'تتبع تقدم المشروع والتبعيات' : 'Track project progress and dependencies'}
+          <p className="text-sm text-default-600">
+            {language === "ar" ? "تتبع تقدم المشروع والتبعيات" : "Track project progress and dependencies"}
           </p>
         </div>
         {showToolbar && (
@@ -142,26 +155,26 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
           </div>
         )}
       </CardHeader>
-      
-  <CardBody className='p-0'>
+
+      <CardBody className="p-0">
         {error ? (
-          <div className='flex items-center justify-center h-full'>
-            <div className='text-center'>
-              <div className='text-red-500 text-2xl mb-2'>⚠️</div>
-              <p className='text-sm text-red-600 mb-4'>{error}</p>
-              <Button size='sm' color='primary' onPress={handleRetry}>
-                {language === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="text-red-500 text-2xl mb-2">⚠️</div>
+              <p className="text-sm text-red-600 mb-4">{error}</p>
+              <Button color="primary" size="sm" onPress={handleRetry}>
+                {language === "ar" ? "إعادة المحاولة" : "Retry"}
               </Button>
             </div>
           </div>
         ) : (
           <DHTMLXGantt
-            tasks={tasks}
-            loading={loading}
-            isFullScreen={false}
             height={height}
-            onTaskClick={(task) => {
-              console.log('Task clicked:', task);
+            isFullScreen={false}
+            loading={loading}
+            tasks={tasks}
+            onTaskClick={(_task) => {
+              // Handle task click
             }}
           />
         )}

@@ -1,3 +1,5 @@
+import type { ProjectRequirement } from "@/types/projectRequirement";
+
 import React from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -20,14 +22,15 @@ export default function ApprovedRequirements({
   const { t, direction } = useLanguage();
   const navigate = useNavigate();
 
-  const { requirements, loading, error, refresh, totalCount } =
-    useApprovedRequirements({
-      limit: 5,
-      autoRefresh: true,
-    });
+  // Current hook usage
+  const { requirements, loading, error, refreshData, totalRequirements } =
+    useApprovedRequirements({ pageSize: 5 });
+  const totalCount = totalRequirements;
+  const refresh = refreshData;
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
+  const getPriorityColor = (priority: string | number | undefined) => {
+    const value = typeof priority === "number" ? String(priority) : priority;
+    switch (value) {
       case "high":
         return "danger";
       case "medium":
@@ -39,8 +42,9 @@ export default function ApprovedRequirements({
     }
   };
 
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
+  const getPriorityText = (priority: string | number | undefined) => {
+    const value = typeof priority === "number" ? String(priority) : priority;
+    switch (value) {
       case "high":
         return t("priority.high");
       case "medium":
@@ -48,7 +52,7 @@ export default function ApprovedRequirements({
       case "low":
         return t("priority.low");
       default:
-        return priority;
+        return value ?? "";
     }
   };
 
@@ -77,7 +81,7 @@ export default function ApprovedRequirements({
         shadow="sm"
       >
         <CardBody className="flex items-center justify-center min-h-[200px]">
-          <Spinner size="lg" />
+          <Spinner size="lg" aria-label={t("common.loading")} />
           <p className="mt-3 text-default-500">{t("common.loading")}</p>
         </CardBody>
       </Card>
@@ -105,12 +109,10 @@ export default function ApprovedRequirements({
     );
   }
 
+  const listEmpty = !Array.isArray(requirements) || requirements.length === 0;
+
   return (
-    <Card
-      className={`${className} border-default-200`}
-      dir={direction}
-      shadow="sm"
-    >
+    <Card className={`${className} border-default-200`} dir={direction} shadow="sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
@@ -135,7 +137,7 @@ export default function ApprovedRequirements({
       </CardHeader>
 
       <CardBody className="pt-0">
-        {requirements.length === 0 ? (
+        {listEmpty ? (
           <div className="flex flex-col items-center justify-center py-8">
             <CheckCircle className="w-12 h-12 text-default-300 mb-3" />
             <p className="text-default-500 text-center">
@@ -144,16 +146,19 @@ export default function ApprovedRequirements({
           </div>
         ) : (
           <div className="space-y-3">
-            {requirements.map((requirement, index) => (
+            {requirements.map((requirement: ProjectRequirement, index: number) => (
               <div key={requirement.id}>
                 <div
-                  className="flex items-start justify-between p-3 rounded-lg bg-default-50 hover:bg-default-100 transition-colors cursor-pointer"
-                  onClick={() =>
-                    handleViewRequirement(
-                      requirement.project?.id || 0,
-                      requirement.id,
-                    )
-                  }
+                  role="button"
+                  tabIndex={0}
+                  className="flex items-start justify-between p-3 rounded-lg bg-default-50 hover:bg-default-100 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                  onClick={() => handleViewRequirement(requirement.project?.id || 0, requirement.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleViewRequirement(requirement.project?.id || 0, requirement.id);
+                    }
+                  }}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -191,19 +196,7 @@ export default function ApprovedRequirements({
                   </div>
 
                   <div className="flex-shrink-0">
-                    <Button
-                      className="min-w-0 px-3"
-                      color="primary"
-                      size="sm"
-                      variant="flat"
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        handleViewRequirement(
-                          requirement.project?.id || 0,
-                          requirement.id,
-                        );
-                      }}
-                    >
+                    <Button className="min-w-0 px-3" color="primary" size="sm" variant="flat" onPress={() => handleViewRequirement(requirement.project?.id || 0, requirement.id)}>
                       {t("common.view")}
                     </Button>
                   </div>
