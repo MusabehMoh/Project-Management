@@ -1,26 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using PMA.Core.Services;
+using AutoMapper;
 
 namespace PMA.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TimelineController : ApiBaseController
+public class TimelinesController : ApiBaseController
 {
     private readonly ITimelineService _timelineService;
+    private readonly ILogger<TimelinesController> _logger;
+    private readonly IMapper _mapper;
+    private readonly IMappingService _mappingService;
 
-    public TimelineController(ITimelineService timelineService)
+    public TimelinesController(ITimelineService timelineService, ILogger<TimelinesController> logger, IMapper mapper, IMappingService mappingService)
     {
         _timelineService = timelineService;
+        _logger = logger;
+        _mapper = mapper;
+        _mappingService = mappingService;
     }
 
     /// <summary>
     /// Get all timelines with pagination and filtering
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(PaginatedResponse<TimelineDto>), 200)]
     public async Task<IActionResult> GetTimelines(
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
@@ -29,13 +38,17 @@ public class TimelineController : ApiBaseController
         try
         {
             var (timelines, totalCount) = await _timelineService.GetTimelinesAsync(page, limit, projectId);
-            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
-            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
-            return Success(timelines, pagination);
+
+            var timelineDtos = timelines.Select(t => _mappingService.MapToTimelineDto(t));
+
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
+            return Success(timelineDtos, pagination, "Timelines retrieved successfully");
         }
         catch (Exception ex)
         {
-            return Error<IEnumerable<Timeline>>("An error occurred while retrieving timelines", ex.Message);
+            _logger.LogError(ex, "Error occurred while retrieving timelines. Page: {Page}, Limit: {Limit}, ProjectId: {ProjectId}. StackTrace: {StackTrace}",
+                page, limit, projectId, ex.StackTrace);
+            return Error<IEnumerable<TimelineDto>>("Internal server error", ex.Message);
         }
     }
 
@@ -43,20 +56,28 @@ public class TimelineController : ApiBaseController
     /// Get timeline by ID
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(404)]
+    [ProducesResponseType(typeof(ApiResponse<TimelineDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> GetTimelineById(int id)
     {
         try
         {
             var timeline = await _timelineService.GetTimelineByIdAsync(id);
+
             if (timeline == null)
-                return NotFound(Error<Timeline>("Timeline not found", null, 404));
-            return Success(timeline);
+            {
+                return Error<object>("Timeline not found", status: 404);
+            }
+
+            var timelineDto = _mappingService.MapToTimelineDto(timeline);
+
+            return Success(timelineDto, message: "Timeline retrieved successfully");
         }
         catch (Exception ex)
         {
-            return Error<Timeline>("An error occurred while retrieving the timeline", ex.Message);
+            _logger.LogError(ex, "Error occurred while retrieving timeline by ID. TimelineId: {TimelineId}", id);
+
+            return Error<object>("Internal server error", ex.Message);
         }
     }
 
@@ -64,17 +85,22 @@ public class TimelineController : ApiBaseController
     /// Get timelines by project
     /// </summary>
     [HttpGet("project/{projectId}")]
-    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<TimelineDto>>), 200)]
     public async Task<IActionResult> GetTimelinesByProject(int projectId)
     {
         try
         {
             var timelines = await _timelineService.GetTimelinesByProjectAsync(projectId);
-            return Success(timelines);
+
+            var timelineDtos = timelines.Select(t => _mappingService.MapToTimelineDto(t));
+
+            return Success(timelineDtos, message: "Project timelines retrieved successfully");
         }
         catch (Exception ex)
         {
-            return Error<IEnumerable<Timeline>>("An error occurred while retrieving project timelines", ex.Message);
+            _logger.LogError(ex, "Error occurred while retrieving timelines by project. ProjectId: {ProjectId}", projectId);
+
+            return Error<IEnumerable<TimelineDto>>("Internal server error", ex.Message);
         }
     }
 
@@ -82,20 +108,37 @@ public class TimelineController : ApiBaseController
     /// Create a new timeline
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(201)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> CreateTimeline([FromBody] Timeline timeline)
+    [ProducesResponseType(typeof(ApiResponse<TimelineDto>), 201)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> CreateTimeline([FromBody] CreateTimelineDto createTimelineDto)
     {
         try
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            // Map DTO to entity
+            var timeline = _mappingService.MapToTimeline(createTimelineDto);
+
+            // Create the timeline
             var createdTimeline = await _timelineService.CreateTimelineAsync(timeline);
-            return CreatedAtAction(nameof(GetTimelineById), new { id = createdTimeline.Id }, createdTimeline);
+
+            // Map back to DTO for response
+            var timelineDto = _mappingService.MapToTimelineDto(createdTimeline);
+
+            return Created(timelineDto, nameof(GetTimelineById), new { id = createdTimeline.Id }, "Timeline created successfully");
         }
         catch (Exception ex)
         {
-            return Error<Timeline>("An error occurred while creating the timeline", ex.Message);
+            _logger.LogError(ex, "Error occurred while creating timeline. Name: {Name}", createTimelineDto.Name);
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Internal server error",
+                Error = ex.Message
+            });
         }
     }
 
@@ -103,25 +146,49 @@ public class TimelineController : ApiBaseController
     /// Update an existing timeline
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> UpdateTimeline(int id, [FromBody] Timeline timeline)
+    [ProducesResponseType(typeof(ApiResponse<TimelineDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> UpdateTimeline(int id, [FromBody] UpdateTimelineDto updateTimelineDto)
     {
         try
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            if (id != timeline.Id)
-                return BadRequest(Error<Timeline>("ID mismatch", null, 400));
-            var updatedTimeline = await _timelineService.UpdateTimelineAsync(timeline);
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            var existingTimeline = await _timelineService.GetTimelineByIdAsync(id);
+            if (existingTimeline == null)
+            {
+                return Error<object>("Timeline not found", status: 404);
+            }
+
+            // Update the timeline using the mapping service
+            _mappingService.UpdateTimelineFromDto(existingTimeline, updateTimelineDto);
+
+            // Update the timeline
+            await _timelineService.UpdateTimelineAsync(existingTimeline);
+
+            // Get the updated timeline and map to DTO
+            var updatedTimeline = await _timelineService.GetTimelineByIdAsync(id);
             if (updatedTimeline == null)
-                return NotFound(Error<Timeline>("Timeline not found", null, 404));
-            return Success(updatedTimeline);
+            {
+                return Error<object>("Timeline not found after update", status: 404);
+            }
+            var timelineDto = _mappingService.MapToTimelineDto(updatedTimeline);
+
+            return Success(timelineDto, message: "Timeline updated successfully");
         }
         catch (Exception ex)
         {
-            return Error<Timeline>("An error occurred while updating the timeline", ex.Message);
+            _logger.LogError(ex, "Error occurred while updating timeline. TimelineId: {TimelineId}", id);
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Internal server error",
+                Error = ex.Message
+            });
         }
     }
 
@@ -129,20 +196,31 @@ public class TimelineController : ApiBaseController
     /// Delete a timeline
     /// </summary>
     [HttpDelete("{id}")]
-    [ProducesResponseType(204)]
-    [ProducesResponseType(404)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 204)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
     public async Task<IActionResult> DeleteTimeline(int id)
     {
         try
         {
-            var result = await _timelineService.DeleteTimelineAsync(id);
-            if (!result)
-                return NotFound(Error<Timeline>("Timeline not found", null, 404));
+            var existingTimeline = await _timelineService.GetTimelineByIdAsync(id);
+            if (existingTimeline == null)
+            {
+                return Error<object>("Timeline not found", status: 404);
+            }
+
+            await _timelineService.DeleteTimelineAsync(id);
+
             return NoContent();
         }
         catch (Exception ex)
         {
-            return Error<Timeline>("An error occurred while deleting the timeline", ex.Message);
+            _logger.LogError(ex, "Error occurred while deleting timeline. TimelineId: {TimelineId}", id);
+            return StatusCode(500, new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Internal server error",
+                Error = ex.Message
+            });
         }
     }
 }

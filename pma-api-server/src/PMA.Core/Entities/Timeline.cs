@@ -10,10 +10,6 @@ public class Timeline
     public int Id { get; set; }
 
     [Required]
-    [MaxLength(50)]
-    public string TreeId { get; set; } = string.Empty;
-
-    [Required]
     public int ProjectId { get; set; }
 
     public int? ProjectRequirementId { get; set; }

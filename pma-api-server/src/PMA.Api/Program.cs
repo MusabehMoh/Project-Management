@@ -140,6 +140,7 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IActionRepository, ActionRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ILookupRepository, LookupRepository>();
+builder.Services.AddScoped<ITimelineRepository, TimelineRepository>();
 
 // Register services
 builder.Services.AddScoped<IProjectService, ProjectService>();
@@ -149,6 +150,7 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<IRequirementService, RequirementService>();
 builder.Services.AddScoped<IProjectRequirementService, PMA.Core.Services.ProjectRequirementService>();
+builder.Services.AddScoped<ITimelineService, TimelineService>();
 builder.Services.AddScoped<IFileStorageService, PMA.Infrastructure.Services.FileStorageService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IUnitService, UnitService>();

@@ -8,7 +8,7 @@ import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
 import { Select, SelectItem } from "@heroui/select";
 import { useNavigate } from "react-router-dom";
-import { FolderOpen, Clock, Users, Info } from "lucide-react";
+import { FolderOpen, Clock, Users, Info, X } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -77,6 +77,15 @@ export default function RequirementsPage() {
 
   // Ensure current page size is part of the allowed options list
   const effectivePageSize = normalizePageSize(assignedProjectsPageSize, 10);
+
+  // Clear filters function
+  const resetFilters = () => {
+    setLocalSearch("");
+    handleAssignedProjectsSearchChange("");
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = localSearch.trim() !== "";
 
   useEffect(() => {
     loadAssignedProjects();
@@ -254,6 +263,27 @@ export default function RequirementsPage() {
                 </div>
               )}
             </div>
+
+            {/* Clear Filters */}
+            {hasActiveFilters && (
+              <div className="flex items-center gap-2 -mt-2">
+                <Button
+                  color="secondary"
+                  size="sm"
+                  startContent={<X size={16} />}
+                  variant="flat"
+                  onPress={resetFilters}
+                >
+                  {t("requirements.clearFilters")}
+                </Button>
+                <span className="text-sm text-default-500">
+                  {t("projects.projectsFound").replace(
+                    "{count}",
+                    totalAssignedProjects.toString(),
+                  )}
+                </span>
+              </div>
+            )}
 
             {assignedProjectsLoading ? (
               <div className="flex justify-center items-center py-12">

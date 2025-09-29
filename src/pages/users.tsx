@@ -39,6 +39,8 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 
+import { X } from "lucide-react";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
@@ -378,6 +380,23 @@ export default function UsersPage() {
     });
   };
 
+  // Reset all filters
+  const resetFilters = () => {
+    updateFilters({
+      search: undefined,
+      fullName: undefined,
+      militaryNumber: undefined,
+      userName: undefined,
+      roleId: undefined,
+      isVisible: undefined,
+      statusId: undefined,
+    });
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    filters.search || filters.roleId || filters.isVisible !== undefined;
+
   // Pagination page size options
   const effectivePageSize = normalizePageSize(pagination.limit, 10);
 
@@ -515,6 +534,27 @@ export default function UsersPage() {
               </Button>
             )}
           </div>
+
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2 -mt-2">
+              <Button
+                color="secondary"
+                size="sm"
+                startContent={<X size={16} />}
+                variant="flat"
+                onPress={resetFilters}
+              >
+                {t("requirements.clearFilters")}
+              </Button>
+              <span className="text-sm text-default-500">
+                {t("users.usersFound").replace(
+                  "{count}",
+                  pagination.total.toString(),
+                )}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Users Table */}

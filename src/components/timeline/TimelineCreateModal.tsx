@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { DatePicker } from "@heroui/date-picker";
-import { Textarea } from "@heroui/input";
 import {
   Modal,
   ModalContent,
@@ -153,7 +152,7 @@ export default function TimelineCreateModal({
     <Modal
       isOpen={isOpen}
       scrollBehavior="inside"
-      size="2xl"
+      size="4xl"
       onClose={handleClose}
       onOpenChange={onOpenChange}
     >
@@ -184,16 +183,6 @@ export default function TimelineCreateModal({
                   onChange={(e) => handleInputChange("name", e.target.value)}
                 />
 
-                <Textarea
-                  label={t("timeline.create.description")}
-                  minRows={3}
-                  placeholder={t("timeline.create.descriptionPlaceholder")}
-                  value={formData.description || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                />
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <DatePicker
                     isRequired
@@ -211,6 +200,25 @@ export default function TimelineCreateModal({
                     label={t("timeline.create.endDate")}
                     value={formData.endDate}
                     onChange={(date) => handleInputChange("endDate", date)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    {t("timeline.create.description")}
+                  </label>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: formData.description || "",
+                    }}
+                    contentEditable
+                    className="w-full min-h-[80px] p-3 border border-default-200 rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+                    onInput={(e) =>
+                      setFormData({
+                        ...formData,
+                        description: e.currentTarget.innerHTML,
+                      })
+                    }
                   />
                 </div>
 

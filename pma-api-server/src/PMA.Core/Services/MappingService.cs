@@ -339,4 +339,65 @@ public class MappingService : IMappingService
         entity.UpdatedAt = DateTime.UtcNow;
         return entity;
     }
+
+    /// <summary>
+    /// Maps a Timeline entity to a TimelineDto
+    /// </summary>
+    public TimelineDto MapToTimelineDto(Timeline timeline)
+    {
+        if (timeline == null)
+            return null!;
+
+        return new TimelineDto
+        {
+            Id = timeline.Id,
+            ProjectId = timeline.ProjectId,
+            ProjectRequirementId = timeline.ProjectRequirementId,
+            Name = timeline.Name,
+            Description = timeline.Description,
+            StartDate = timeline.StartDate,
+            EndDate = timeline.EndDate,
+            CreatedAt = timeline.CreatedAt,
+            UpdatedAt = timeline.UpdatedAt
+        };
+    }
+
+    /// <summary>
+    /// Maps a CreateTimelineDto to a Timeline entity
+    /// </summary>
+    public Timeline MapToTimeline(CreateTimelineDto createDto)
+    {
+        return new Timeline
+        {
+
+            ProjectId = createDto.ProjectId,
+            ProjectRequirementId = createDto.ProjectRequirementId,
+            Name = createDto.Name,
+            Description = createDto.Description,
+            StartDate = createDto.StartDate,
+            EndDate = createDto.EndDate,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    /// <summary>
+    /// Updates a Timeline entity from an UpdateTimelineDto
+    /// </summary>
+    public void UpdateTimelineFromDto(Timeline timeline, UpdateTimelineDto updateDto)
+    {
+        if (updateDto.ProjectId.HasValue)
+            timeline.ProjectId = updateDto.ProjectId.Value;
+        if (updateDto.ProjectRequirementId.HasValue)
+            timeline.ProjectRequirementId = updateDto.ProjectRequirementId;
+        if (updateDto.Name != null)
+            timeline.Name = updateDto.Name;
+        if (updateDto.Description != null)
+            timeline.Description = updateDto.Description;
+        if (updateDto.StartDate.HasValue)
+            timeline.StartDate = updateDto.StartDate.Value;
+        if (updateDto.EndDate.HasValue)
+            timeline.EndDate = updateDto.EndDate.Value;
+        timeline.UpdatedAt = DateTime.UtcNow;
+    }
 }

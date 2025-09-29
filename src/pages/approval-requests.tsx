@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -16,13 +16,8 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  DrawerFooter,
 } from "@heroui/react";
-import { Search, Filter, X, Download, Eye, Check } from "lucide-react";
+import { Search, Filter, X, Eye, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -31,10 +26,11 @@ import { useRequirementStatus } from "@/hooks/useRequirementStatus";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { FilePreview } from "@/components/FilePreview";
+import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
-import type { 
-  ProjectRequirement, 
-  ProjectRequirementAttachment
+import type {
+  ProjectRequirement,
+  ProjectRequirementAttachment,
 } from "@/types/projectRequirement";
 import { projectRequirementsService } from "@/services/api";
 
@@ -64,13 +60,14 @@ const usePendingApprovalRequirements = ({
   const fetchRequirements = async () => {
     try {
       setLoading(true);
-      
+
       // Use the dedicated getPendingApprovalRequirements method
-      const result = await projectRequirementsService.getPendingApprovalRequirements({
-        page: currentPage,
-        limit: pageSize,
-        ...filters,
-      });
+      const result =
+        await projectRequirementsService.getPendingApprovalRequirements({
+          page: currentPage,
+          limit: pageSize,
+          ...filters,
+        });
 
       if (result?.data) {
         setRequirements(result.data);
@@ -85,10 +82,10 @@ const usePendingApprovalRequirements = ({
     }
   };
 
-  const updateFilters = (newFilters: Record<string, string>) => {
+  const updateFilters = useCallback((newFilters: Record<string, string>) => {
     setFilters(newFilters);
     setCurrentPage(1);
-  };
+  }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -149,7 +146,7 @@ const RequirementCard = ({
   cardRef?: (element: HTMLDivElement | null) => void;
 }) => {
   const { hasPermission } = usePermissions();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <Card
@@ -165,10 +162,18 @@ const RequirementCard = ({
               {requirement.name}
             </h3>
             <p className="text-sm text-default-500 line-clamp-1">
-              {requirement.project?.applicationName || t("common.unknownProject")}
+              {requirement.project?.applicationName ||
+                t("common.unknownProject")}
             </p>
           </div>
           <div className="flex flex-col gap-2 items-end flex-shrink-0">
+            <Chip
+              color={getPriorityColor(requirement.priority)}
+              size="sm"
+              variant="flat"
+            >
+              {getPriorityLabel(requirement.priority)}
+            </Chip>
             <Chip
               color={getStatusColor(requirement.status)}
               size="sm"
@@ -176,30 +181,29 @@ const RequirementCard = ({
             >
               {getStatusText(requirement.status)}
             </Chip>
-            <Chip
-              color={getPriorityColor(requirement.priority)}
-              size="sm"
-              variant="dot"
-            >
-              {getPriorityLabel(requirement.priority)}
-            </Chip>
           </div>
         </div>
       </CardHeader>
 
       <CardBody className="pt-0 flex-1 flex flex-col">
         <div className="space-y-4 flex-1">
-          <p className="text-sm text-default-600 line-clamp-3">
-            {requirement.description || t("requirements.noDescription")}
-          </p>
+          <p
+            dangerouslySetInnerHTML={{
+              __html:
+                requirement.description || t("requirements.noDescription"),
+            }}
+            className="text-sm text-default-600 line-clamp-3"
+          />
 
           <div className="flex items-center gap-2 text-xs text-default-500">
-            <span>{t("requirements.created")}: {formatDate(requirement.createdAt)}</span>
+            <span>
+              {t("requirements.created")}: {formatDate(requirement.createdAt)}
+            </span>
           </div>
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center pt-2 gap-2 mt-auto">
+        <div className="flex items-center justify-between pt-2 gap-2 mt-auto">
           <Button
             color="primary"
             size="sm"
@@ -211,19 +215,17 @@ const RequirementCard = ({
           </Button>
 
           {/* Approve button - only for users with permission */}
-          {hasPermission({
-            actions: ["requirements.approve"],
-          }) && (
+          {
             <Button
               color="success"
               size="sm"
-              variant="solid"
+              variant="flat"
               onPress={() => onApprove(requirement)}
             >
               <Check size={16} />
               {t("requirements.approve")}
             </Button>
-          )}
+          }
         </div>
       </CardBody>
     </Card>
@@ -231,7 +233,7 @@ const RequirementCard = ({
 };
 
 export default function ApprovalRequestsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
   const [searchParams] = useSearchParams();
@@ -332,8 +334,13 @@ export default function ApprovalRequestsPage() {
     useState<ProjectRequirement | null>(null);
 
   // Approval modal state
-  const { isOpen: isApprovalModalOpen, onOpen: onApprovalModalOpen, onOpenChange: onApprovalModalOpenChange } = useDisclosure();
-  const [requirementToApprove, setRequirementToApprove] = useState<ProjectRequirement | null>(null);
+  const {
+    isOpen: isApprovalModalOpen,
+    onOpen: onApprovalModalOpen,
+    onOpenChange: onApprovalModalOpenChange,
+  } = useDisclosure();
+  const [requirementToApprove, setRequirementToApprove] =
+    useState<ProjectRequirement | null>(null);
   const [isApproving, setIsApproving] = useState(false);
 
   // Function to open drawer with requirement details
@@ -355,11 +362,13 @@ export default function ApprovalRequestsPage() {
     setIsApproving(true);
     try {
       // Use the new approve API method
-      await projectRequirementsService.approveRequirement(requirementToApprove.id);
+      await projectRequirementsService.approveRequirement(
+        requirementToApprove.id,
+      );
 
       onApprovalModalOpenChange();
       setRequirementToApprove(null);
-      
+
       // Refresh requirements data
       refreshData();
     } catch {
@@ -371,6 +380,7 @@ export default function ApprovalRequestsPage() {
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string>("");
 
   // Update filters when search/filter states change (with debouncing)
@@ -378,23 +388,27 @@ export default function ApprovalRequestsPage() {
     const timeoutId = setTimeout(() => {
       const newFilters = {
         ...(searchTerm && { search: searchTerm }),
+        ...(statusFilter !== null && {
+          status: statusFilter.toString(),
+        }),
         ...(priorityFilter && { priority: priorityFilter }),
       };
       updateFilters(newFilters);
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, priorityFilter, updateFilters]);
+  }, [searchTerm, statusFilter, priorityFilter, updateFilters]);
 
   // Reset all filters
   const resetFilters = () => {
     setSearchTerm("");
+    setStatusFilter(null);
     setPriorityFilter("");
     updateFilters({});
   };
 
   // Check if any filters are active
-  const hasActiveFilters = searchTerm || priorityFilter;
+  const hasActiveFilters = searchTerm || statusFilter !== null || priorityFilter;
 
   // Auto-scroll and highlight functionality
   useEffect(() => {
@@ -445,46 +459,79 @@ export default function ApprovalRequestsPage() {
         {/* Filters and Search */}
         <Card>
           <CardBody className="p-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Input
-                  className="flex-1"
-                  placeholder={t("requirements.searchRequirements")}
-                  startContent={<Search className="text-default-400" size={20} />}
-                  value={searchTerm}
-                  onValueChange={setSearchTerm}
-                />
-                
-                <Select
-                  className="sm:w-48"
-                  placeholder={t("requirements.filterByPriority")}
-                  selectedKeys={priorityFilter ? [priorityFilter] : []}
-                  onSelectionChange={(keys) => {
-                    const selected = Array.from(keys)[0] as string;
-                    setPriorityFilter(selected || "");
-                  }}
-                >
-                  {priorityOptions.map((option) => (
-                    <SelectItem key={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </Select>
+            <div className="flex flex-col gap-4 filters-section">
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  <Input
+                    className="flex-1"
+                    placeholder={t("requirements.searchRequirements")}
+                    startContent={
+                      <Search className="text-default-400" size={20} />
+                    }
+                    value={searchTerm}
+                    onValueChange={setSearchTerm}
+                  />
+
+                  <Select
+                    className="sm:w-48"
+                    placeholder={t("requirements.filterByPriority")}
+                    selectedKeys={priorityFilter ? [priorityFilter] : []}
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0] as string;
+                      setPriorityFilter(selected || "");
+                    }}
+                  >
+                    {priorityOptions.map((option) => (
+                      <SelectItem key={option.value}>{language === "ar" ? option.labelAr : option.label}</SelectItem>
+                    ))}
+                  </Select>
+                </div>
+
+                {/* Page Size Selector */}
+                {!loading && totalRequirements > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-default-600">
+                      {t("common.show")}:
+                    </span>
+                    <Select
+                      className="w-20"
+                      selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
+                      size="sm"
+                      onSelectionChange={(keys) => {
+                        const newSize = parseInt(Array.from(keys)[0] as string);
+                        handlePageSizeChange(newSize);
+                      }}
+                    >
+                      {PAGE_SIZE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                    <span className="text-sm text-default-600">
+                      {t("pagination.perPage")}
+                    </span>
+                  </div>
+                )}
               </div>
 
+              {/* Clear Filters - New Row */}
               {hasActiveFilters && (
                 <div className="flex items-center gap-2">
                   <Button
-                    color="default"
+                    color="secondary"
                     size="sm"
                     startContent={<X size={16} />}
                     variant="flat"
                     onPress={resetFilters}
                   >
-                    Clear Filters
+                    {t("requirements.clearFilters")}
                   </Button>
                   <span className="text-sm text-default-500">
-                    {totalRequirements} requirements found
+                    {t("requirements.requirementsFound").replace(
+                      "{count}",
+                      totalRequirements.toString(),
+                    )}
                   </span>
                 </div>
               )}
@@ -545,153 +592,18 @@ export default function ApprovalRequestsPage() {
           </div>
         )}
 
-        {/* Page Size Selector */}
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-sm text-default-600">
-            {t("common.show")}
-          </span>
-          <Select
-            className="w-20"
-            selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
-            size="sm"
-            onSelectionChange={(keys) => {
-              const newSize = parseInt(Array.from(keys)[0] as string);
-              handlePageSizeChange(newSize);
-            }}
-          >
-            {PAGE_SIZE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.toString()} textValue={opt.toString()}>
-                {opt}
-              </SelectItem>
-            ))}
-          </Select>
-          <span className="text-sm text-default-600">
-            {t("pagination.perPage")}
-          </span>
-        </div>
-
         {/* Requirement Details Drawer */}
-        <Drawer
+        <RequirementDetailsDrawer
+          getPriorityColor={getPriorityColor}
+          getPriorityLabel={getPriorityLabel}
+          getStatusColor={getStatusColor}
+          getStatusText={getStatusText}
           isOpen={isDrawerOpen}
-          placement="right"
-          size="lg"
+          requirement={selectedRequirement}
+          showApprovalButton={true}
+          onApprove={openApprovalModal}
           onOpenChange={setIsDrawerOpen}
-        >
-          <DrawerContent>
-            {(onClose) => (
-              <>
-                <DrawerHeader className="flex flex-col gap-1">
-                  <h2 className="text-xl font-semibold">
-                    {selectedRequirement?.name}
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <Chip
-                      color={getStatusColor(selectedRequirement?.status || 0)}
-                      size="sm"
-                      variant="flat"
-                    >
-                      {getStatusText(selectedRequirement?.status || 0)}
-                    </Chip>
-                    <Chip
-                      color={getPriorityColor(selectedRequirement?.priority || 0)}
-                      size="sm"
-                      variant="dot"
-                    >
-                      {getPriorityLabel(selectedRequirement?.priority || 0)}
-                    </Chip>
-                  </div>
-                </DrawerHeader>
-                <DrawerBody>
-                  <div className="space-y-6">
-                    {/* Basic Information */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">{t("requirements.requirementDescription")}</h3>
-                      <p className="text-default-600 leading-relaxed whitespace-pre-wrap">
-                        {selectedRequirement?.description || t("requirements.noDescription")}
-                      </p>
-                    </div>
-
-                    {/* Project Information */}
-                    {selectedRequirement?.project && (
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold">{t("requirements.projectInfo")}</h3>
-                        <div className="space-y-2">
-                                <div>
-                                  <span className="font-medium">{t("requirements.project")}: </span>
-                                  <span className="text-default-600">
-                                    {selectedRequirement.project.applicationName}
-                                  </span>
-                                </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Attachments */}
-                    {selectedRequirement?.attachments && selectedRequirement.attachments.length > 0 && (
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold">{t("requirements.attachments")}</h3>
-                        <div className="grid gap-2">
-                          {selectedRequirement.attachments.map((attachment) => (
-                            <div
-                              key={attachment.id}
-                              className="flex items-center justify-between p-3 border border-divider rounded-lg hover:bg-default-50"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="text-default-600">
-                                  {attachment.originalName}
-                                </div>
-                                <div className="text-sm text-default-400">
-                                  {(attachment.fileSize / 1024 / 1024).toFixed(2)} MB
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  isIconOnly
-                                  size="sm"
-                                  variant="light"
-                                  onPress={() => handleFilePreview(attachment)}
-                                >
-                                  <Eye size={16} />
-                                </Button>
-                                <Button
-                                  isIconOnly
-                                  size="sm"
-                                  variant="light"
-                                  onPress={() => handleFilePreview(attachment)}
-                                >
-                                  <Download size={16} />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </DrawerBody>
-                <DrawerFooter>
-                  <Button color="default" variant="flat" onPress={onClose}>
-                    Close
-                  </Button>
-                  {hasPermission({ actions: ["requirements.approve"] }) && (
-                    <Button
-                      color="success"
-                      onPress={() => {
-                        onClose();
-                        if (selectedRequirement) {
-                          openApprovalModal(selectedRequirement);
-                        }
-                      }}
-                    >
-                      <Check size={16} />
-                      {t("requirements.approve")}
-                    </Button>
-                  )}
-                </DrawerFooter>
-              </>
-            )}
-          </DrawerContent>
-        </Drawer>
+        />
 
         {/* Approval Confirmation Modal */}
         <Modal
@@ -708,11 +620,14 @@ export default function ApprovalRequestsPage() {
                 <ModalBody>
                   <div className="space-y-4">
                     <p>
-                      Are you sure you want to approve the requirement "{requirementToApprove?.name}"?
+                      {t("requirements.approveConfirmMessage").replace(
+                        "{name}",
+                        requirementToApprove?.name || "",
+                      )}
                     </p>
                     <div className="p-4 bg-warning-50 rounded-lg border border-warning-200">
                       <p className="text-sm text-warning-800">
-                        This will change the status to "Approved" and make it available for development assignment.
+                        {t("requirements.approveWarningMessage")}
                       </p>
                     </div>
                   </div>
@@ -724,8 +639,10 @@ export default function ApprovalRequestsPage() {
                   <Button
                     color="success"
                     isLoading={isApproving}
+                    variant="flat"
                     onPress={handleApprovalSubmit}
                   >
+                    <Check size={16} />
                     {t("requirements.approve")}
                   </Button>
                 </ModalFooter>

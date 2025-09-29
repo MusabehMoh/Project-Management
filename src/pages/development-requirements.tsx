@@ -30,19 +30,8 @@ import {
   DrawerBody,
   DrawerFooter,
 } from "@heroui/drawer";
-import {
-  Search,
-  Calendar,
-  Code,
-  Eye,
-  Users,
-  Paperclip,
-  Download,
-  Plus,
-  Edit,
-} from "lucide-react";
+import { Search, Calendar, Code, Eye, Plus, Edit, X } from "lucide-react";
 
-import { RefreshIcon } from "@/components/icons";
 import { FilePreview } from "@/components/FilePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useApprovedRequirements } from "@/hooks/useApprovedRequirements";
@@ -56,6 +45,7 @@ import { useFilePreview } from "@/hooks/useFilePreview";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import { GlobalPagination } from "@/components/GlobalPagination";
+import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import { REQUIREMENT_STATUS } from "@/constants/projectRequirements";
 
@@ -238,7 +228,7 @@ const RequirementCard = ({
 // }
 
 export default function DevelopmentRequirementsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
   const [searchParams] = useSearchParams();
@@ -618,7 +608,7 @@ export default function DevelopmentRequirementsPage() {
           <CardBody>
             <div className="flex flex-col md:flex-row gap-4 items-end">
               <Input
-                className="md:w-100"
+                className="md:w-120"
                 placeholder={t("requirements.searchRequirements")}
                 startContent={<Search className="w-4 h-4" />}
                 value={searchTerm}
@@ -626,7 +616,7 @@ export default function DevelopmentRequirementsPage() {
               />
 
               <Select
-                className="md:w-86"
+                className="md:w-90"
                 placeholder={t("taskPlan.filterByProject")}
                 selectedKeys={
                   filters.projectId ? [String(filters.projectId)] : []
@@ -648,12 +638,12 @@ export default function DevelopmentRequirementsPage() {
               </Select>
 
               <Select
-                className="md:max-w-xs"
+                className="md:w-43"
                 items={[
                   { value: "", label: t("requirements.allStatuses") },
                   ...(statuses || []).map((status) => ({
                     value: status.value.toString(),
-                    label: status.nameEn,
+                    label: language === "ar" ? status.nameAr : status.nameEn,
                   })),
                 ]}
                 placeholder={t("requirements.filterByStatus")}
@@ -672,12 +662,12 @@ export default function DevelopmentRequirementsPage() {
               </Select>
 
               <Select
-                className="md:max-w-xs"
+                className="md:w-43"
                 items={[
                   { value: "", label: t("requirements.allPriorities") },
                   ...priorityOptions.map((p) => ({
                     value: p.value.toString(),
-                    label: p.label,
+                    label: language === "ar" ? p.labelAr : p.label,
                   })),
                 ]}
                 placeholder={t("requirements.filterByPriority")}
@@ -694,48 +684,72 @@ export default function DevelopmentRequirementsPage() {
               </Select>
 
               {/* Grid-only view (no toggle) */}
+            </div>
 
-              {/* Page size selector */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-default-600">
-                  {t("common.show")}
-                </span>
-                <Select
-                  className="w-20"
-                  selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
-                  size="sm"
-                  onSelectionChange={(keys) => {
-                    const newSize = parseInt(Array.from(keys)[0] as string);
-
-                    handlePageSizeChange(newSize);
-                  }}
-                >
-                  {PAGE_SIZE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.toString()} textValue={opt.toString()}>
-                      {opt}
-                    </SelectItem>
-                  ))}
-                </Select>
-                <span className="text-sm text-default-600">
-                  {t("pagination.perPage")}
-                </span>
-              </div>
-
-              {/* Reset filters button */}
-              {hasActiveFilters && (
+            {/* Clear Filters - New Row */}
+            {hasActiveFilters && (
+              <div className="flex items-center gap-2 mt-2">
                 <Button
-                  className="min-w-fit"
-                  size="lg"
-                  startContent={<RefreshIcon className="w-4 h-4" />}
+                  color="secondary"
+                  size="sm"
+                  startContent={<X size={16} />}
                   variant="flat"
                   onPress={resetFilters}
                 >
-                  {t("common.reset")}
+                  {t("requirements.clearFilters")}
                 </Button>
-              )}
-            </div>
+                <span className="text-sm text-default-500">
+                  {t("requirements.requirementsFound").replace(
+                    "{count}",
+                    totalRequirements.toString(),
+                  )}
+                </span>
+              </div>
+            )}
           </CardBody>
         </Card>
+
+        {/* Pagination Controls */}
+        {requirements.length > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4">
+            <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
+              <span className="text-sm text-default-600">
+                {t("common.show")}
+              </span>
+              <Select
+                className="w-20"
+                selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
+                size="sm"
+                onSelectionChange={(keys) => {
+                  const newSize = parseInt(Array.from(keys)[0] as string);
+
+                  handlePageSizeChange(newSize);
+                }}
+              >
+                {PAGE_SIZE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </Select>
+              <span className="text-sm text-default-600">
+                {t("pagination.perPage")}
+              </span>
+            </div>
+
+            {totalPages > 1 && (
+              <GlobalPagination
+                currentPage={currentPage}
+                isLoading={loading}
+                pageSize={pageSize}
+                showInfo={false}
+                totalItems={totalRequirements}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </div>
+        )}
 
         {/* Requirements Content */}
         {requirements.length === 0 ? (
@@ -803,377 +817,18 @@ export default function DevelopmentRequirementsPage() {
         )}
 
         {/* Requirement Details Drawer */}
-        <Drawer
+        <RequirementDetailsDrawer
+          getPriorityColor={getPriorityColor}
+          getPriorityLabel={getPriorityLabel}
+          getStatusColor={getStatusColor}
+          getStatusText={getStatusText}
           isOpen={isDrawerOpen}
-          placement="right"
-          size="lg"
+          requirement={selectedRequirement}
+          showTaskTimelineButtons={true}
+          onCreateTask={openTaskModal}
+          onCreateTimeline={openTimelineModal}
           onOpenChange={setIsDrawerOpen}
-        >
-          <DrawerContent>
-            <DrawerHeader className="flex flex-col gap-1">
-              <h2 className="text-xl font-semibold">
-                {selectedRequirement?.name}
-              </h2>
-              <p className="text-sm text-default-500">
-                {selectedRequirement?.project?.applicationName || "N/A"}
-              </p>
-            </DrawerHeader>
-            <DrawerBody>
-              {selectedRequirement && (
-                <div className="space-y-6">
-                  {/* Status, Priority, and Type */}
-                  <div className="flex flex-wrap gap-3">
-                    <Chip
-                      color={getPriorityColor(selectedRequirement.priority)}
-                      size="sm"
-                      variant="flat"
-                    >
-                      {getPriorityLabel(selectedRequirement.priority) ||
-                        t(
-                          `requirements.priority.${selectedRequirement.priority}`,
-                        )}
-                    </Chip>
-                    <Chip
-                      color={getStatusColor(selectedRequirement.status)}
-                      size="sm"
-                      variant="flat"
-                    >
-                      {getStatusText(selectedRequirement.status)}
-                    </Chip>
-                    {selectedRequirement.type && (
-                      <Chip color="default" size="sm" variant="flat">
-                        {t(`requirements.type.${selectedRequirement.type}`)}
-                      </Chip>
-                    )}
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      {t("requirements.description")}
-                    </h3>
-                    <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                      <p
-                        dangerouslySetInnerHTML={{
-                          __html: selectedRequirement.description,
-                        }}
-                        className="text-sm leading-relaxed"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Expected Completion Date */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      {t("requirements.expectedCompletion")}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-default-400" />
-                      <span className="text-sm">
-                        {formatDate(selectedRequirement.expectedCompletionDate)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Additional Details */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-default-600 mb-1">
-                        {t("requirements.id")}
-                      </h4>
-                      <p className="text-sm">{selectedRequirement.id}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-default-600 mb-1">
-                        {t("requirements.type")}
-                      </h4>
-                      <p className="text-sm">
-                        {t(`requirements.type.${selectedRequirement.type}`) ||
-                          "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-default-600 mb-1">
-                        {t("requirements.created")}
-                      </h4>
-                      <p className="text-sm">
-                        {selectedRequirement.createdAt
-                          ? formatDate(selectedRequirement.createdAt)
-                          : "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-default-600 mb-1">
-                        {t("requirements.updated")}
-                      </h4>
-                      <p className="text-sm">
-                        {selectedRequirement.updatedAt
-                          ? formatDate(selectedRequirement.updatedAt)
-                          : "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Project Information */}
-                  {selectedRequirement.project && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                        <Code className="w-5 h-5 text-default-400" />
-                        {t("requirements.projectInfo")}
-                      </h3>
-                      <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg space-y-3">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="text-sm font-medium text-default-600 mb-1">
-                              {t("projects.applicationName")}
-                            </h4>
-                            <p className="text-sm">
-                              {selectedRequirement.project.applicationName}
-                            </p>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-default-600 mb-1">
-                              {t("projects.projectId")}
-                            </h4>
-                            <p className="text-sm">
-                              {selectedRequirement.project.id}
-                            </p>
-                          </div>
-                        </div>
-                        {selectedRequirement.project.applicationName && (
-                          <div>
-                            <h4 className="text-sm font-medium text-default-600 mb-1">
-                              {t("projects.description")}
-                            </h4>
-                            <p className="text-sm">
-                              {selectedRequirement.project.applicationName}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Analysts Team */}
-                  {selectedRequirement.project?.analysts && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                        <Users className="w-5 h-5 text-default-400" />
-                        {t("projects.analysts")}
-                      </h3>
-                      <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                        <div className="flex flex-wrap gap-2">
-                          {selectedRequirement.project.analysts
-                            .split(", ")
-                            .map((analyst, index) => (
-                              <Chip
-                                key={index}
-                                color="secondary"
-                                size="sm"
-                                variant="flat"
-                              >
-                                {analyst}
-                              </Chip>
-                            ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Attachments */}
-                  {selectedRequirement.attachments &&
-                    selectedRequirement.attachments.length > 0 && (
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                          <Paperclip className="w-5 h-5 text-default-400" />
-                          {t("requirements.attachments")} (
-                          {selectedRequirement.attachments.length})
-                        </h3>
-                        <div className="space-y-2">
-                          {selectedRequirement.attachments.map((attachment) => (
-                            <div
-                              key={attachment.id}
-                              className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg hover:bg-default-100 dark:hover:bg-default-100/20 transition-colors"
-                            >
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                  <Paperclip className="w-5 h-5 text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate">
-                                    {attachment.originalName}
-                                  </p>
-                                  <div className="flex items-center gap-4 text-xs text-default-500 mt-1">
-                                    <span>
-                                      {(
-                                        (attachment.fileSize || 0) /
-                                        1024 /
-                                        1024
-                                      ).toFixed(2)}{" "}
-                                      MB
-                                    </span>
-                                    {attachment.uploadedAt && (
-                                      <span>
-                                        {t("requirements.uploadedOn")}:{" "}
-                                        {formatDate(attachment.uploadedAt)}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex gap-2 flex-shrink-0">
-                                {/* Preview Button for supported file types */}
-                                {(attachment.originalName
-                                  .toLowerCase()
-                                  .endsWith(".pdf") ||
-                                  attachment.originalName
-                                    .toLowerCase()
-                                    .match(
-                                      /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/,
-                                    )) && (
-                                  <Button
-                                    color="default"
-                                    size="sm"
-                                    startContent={<Eye className="w-4 h-4" />}
-                                    variant="light"
-                                    onPress={() =>
-                                      handleFilePreview(attachment)
-                                    }
-                                  >
-                                    {t("common.preview")}
-                                  </Button>
-                                )}
-                                {hasPermission({
-                                  actions: [
-                                    "requirements.attachments.download",
-                                  ],
-                                }) && (
-                                  <Button
-                                    color="primary"
-                                    size="sm"
-                                    startContent={
-                                      <Download className="w-4 h-4" />
-                                    }
-                                    variant="light"
-                                    onPress={async () => {
-                                      try {
-                                        const blob =
-                                          await projectRequirementsService.downloadAttachment(
-                                            selectedRequirement.id,
-                                            attachment.id,
-                                          );
-                                        const url =
-                                          window.URL.createObjectURL(blob);
-                                        const a = document.createElement("a");
-
-                                        a.href = url;
-                                        a.download = attachment.originalName;
-                                        document.body.appendChild(a);
-                                        a.click();
-                                        window.URL.revokeObjectURL(url);
-                                        document.body.removeChild(a);
-                                      } catch {
-                                        // Handle download error silently
-                                      }
-                                    }}
-                                  >
-                                    {t("common.download")}
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Task Information */}
-                  {selectedRequirement.task && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                        <Users className="w-5 h-5 text-default-400" />
-                        {t("requirements.taskInfo")}
-                      </h3>
-                      <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg space-y-3">
-                        <div className="grid grid-cols-2 gap-4">
-                          {selectedRequirement.task.developerId && (
-                            <div>
-                              <h4 className="text-sm font-medium text-default-600 mb-1">
-                                {t("tasks.developer")}
-                              </h4>
-                              <p className="text-sm">
-                                {selectedRequirement.task.developerName ||
-                                  `Developer ID: ${selectedRequirement.task.developerId}`}
-                              </p>
-                            </div>
-                          )}
-                          {selectedRequirement.task.qcId && (
-                            <div>
-                              <h4 className="text-sm font-medium text-default-600 mb-1">
-                                {t("tasks.qcMember")}
-                              </h4>
-                              <p className="text-sm">
-                                {selectedRequirement.task.qcName ||
-                                  `QC ID: ${selectedRequirement.task.qcId}`}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        {selectedRequirement.task.createdAt && (
-                          <div>
-                            <h4 className="text-sm font-medium text-default-600 mb-1">
-                              {t("tasks.assignedOn")}
-                            </h4>
-                            <p className="text-sm">
-                              {formatDate(selectedRequirement.task.createdAt)}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Timeline Information */}
-                  {selectedRequirement.timeline && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-default-400" />
-                        {t("requirements.timelineInfo")}
-                      </h3>
-                      <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg space-y-3">
-                        <div>
-                          <h4 className="text-sm font-medium text-default-600 mb-1">
-                            {t("timeline.name")}
-                          </h4>
-                          <p className="text-sm">
-                            {selectedRequirement.timeline.name}
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-default-600 mb-1">
-                            {t("timeline.id")}
-                          </h4>
-                          <p className="text-sm">
-                            {selectedRequirement.timeline.id}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </DrawerBody>
-            <DrawerFooter>
-              <Button
-                color="danger"
-                variant="light"
-                onPress={() => setIsDrawerOpen(false)}
-              >
-                {t("common.close")}
-              </Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+        />
 
         {/* Task Creation/Edit Modal */}
         <Modal

@@ -22,4 +22,9 @@ public interface IMappingService
     
     // Project Requirement mapping methods
     ProjectRequirement MapToProjectRequirement(CreateProjectRequirementDto dto, ProjectRequirement? existing = null);
+    
+    // Timeline mapping methods
+    TimelineDto MapToTimelineDto(Timeline timeline);
+    Timeline MapToTimeline(CreateTimelineDto createDto);
+    void UpdateTimelineFromDto(Timeline timeline, UpdateTimelineDto updateDto);
 }

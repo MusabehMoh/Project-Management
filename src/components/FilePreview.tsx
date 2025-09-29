@@ -7,8 +7,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@heroui/modal";
-import { Button } from "@heroui/button";
+  Button,
+} from "@heroui/react";
 import {
   Download,
   FileText,

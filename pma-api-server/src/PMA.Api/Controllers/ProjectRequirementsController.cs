@@ -358,11 +358,14 @@ public class ProjectRequirementsController : ApiBaseController
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetApprovedRequirements(
         [FromQuery] int page = 1,
-        [FromQuery] int limit = 20)
+        [FromQuery] int limit = 20,
+        [FromQuery] int? projectId = null,
+        [FromQuery] string? priority = null,
+        [FromQuery] string? search = null)
     {
         try
         {
-            var (requirements, totalCount) = await _projectRequirementService.GetApprovedRequirementsAsync(page, limit);
+            var (requirements, totalCount) = await _projectRequirementService.GetApprovedRequirementsAsync(page, limit, projectId, priority, search);
             var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
             return Success(requirements, pagination);
         }
@@ -379,11 +382,14 @@ public class ProjectRequirementsController : ApiBaseController
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetPendingApprovalRequirements(
         [FromQuery] int page = 1,
-        [FromQuery] int limit = 20)
+        [FromQuery] int limit = 20,
+        [FromQuery] int? status = null,
+        [FromQuery] string? priority = null,
+        [FromQuery] string? search = null)
     {
         try
         {
-            var (requirements, totalCount) = await _projectRequirementService.GetPendingApprovalRequirementsAsync(page, limit);
+            var (requirements, totalCount) = await _projectRequirementService.GetPendingApprovalRequirementsAsync(page, limit, status, priority, search);
             var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
             return Success(requirements, pagination);
         }

@@ -128,5 +128,11 @@ public interface ILookupRepository : IRepository<Lookup>
     System.Threading.Tasks.Task<IEnumerable<Lookup>> GetLookupsByCategoryAsync(string code);
 }
 
+public interface ITimelineRepository : IRepository<Timeline>
+{
+    System.Threading.Tasks.Task<(IEnumerable<Timeline> Timelines, int TotalCount)> GetTimelinesAsync(int page, int limit, int? projectId = null);
+    System.Threading.Tasks.Task<IEnumerable<Timeline>> GetTimelinesByProjectAsync(int projectId);
+}
+
 
 

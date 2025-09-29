@@ -256,7 +256,8 @@ export default function ProjectRequirementsPage() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = searchTerm || statusFilter !== null || priorityFilter;
+  const hasActiveFilters =
+    searchTerm || statusFilter !== null || priorityFilter;
 
   // Handle highlighting and scrolling for specific requirements
   useEffect(() => {
@@ -452,7 +453,7 @@ export default function ProjectRequirementsPage() {
       // Error saving requirement
     }
   };
- 
+
   const confirmDelete = async () => {
     if (requirementToDelete) {
       try {
@@ -563,21 +564,38 @@ export default function ProjectRequirementsPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              onPress={() => navigate("/requirements")}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">
-                {t("requirements.managementForProject")} {projectId}
-              </h1>
-              <p className="text-default-500">{t("requirements.subtitle")}</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onPress={() => navigate("/requirements")}
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">
+                  {t("requirements.managementForProject")} {projectId}
+                </h1>
+                <p className="text-default-500">{t("requirements.subtitle")}</p>
+              </div>
             </div>
+
+            {/* Add Requirement Button */}
+            {hasPermission({
+              actions: ["requirements.create"],
+            }) ? (
+              <Button
+                className="sm:min-w-fit"
+                color="primary"
+                size="lg"
+                startContent={<Plus className="w-4 h-4" />}
+                onPress={handleCreateRequirement}
+              >
+                {t("requirements.addRequirement")}
+              </Button>
+            ) : null}
           </div>
 
           {/* Stats Cards */}
@@ -670,152 +688,133 @@ export default function ProjectRequirementsPage() {
         </div>
 
         {/* Filters and Search */}
-        {loading && (isInitialLoad || requirements.length === 0) ? (
-          // Skeleton Loader for Filters - show on initial load or when no data
-          <Card>
-            <CardBody>
-              <div className="flex flex-col md:flex-row gap-4 items-end">
-                <Skeleton className="h-10 w-full md:max-w-xs rounded-lg" />
-                <Skeleton className="h-10 w-full md:max-w-xs rounded-lg" />
-                <Skeleton className="h-10 w-full md:max-w-xs rounded-lg" />
-                <Skeleton className="h-10 w-32 rounded-lg" />
-              </div>
-            </CardBody>
-          </Card>
-        ) : (
-          <Card>
-            <CardBody>
-              <div className="flex flex-col md:flex-row gap-4 items-end">
-                <Input
-                  className="md:max-w-xs"
-                  placeholder={t("requirements.searchRequirements")}
-                  startContent={
-                    <Search
-                      className={`w-4 h-4 ${
-                        loading && !isInitialLoad
-                          ? "animate-pulse text-primary"
-                          : ""
-                      }`}
-                    />
-                  }
-                  value={searchTerm}
-                  onValueChange={setSearchTerm}
-                />
+        <Card>
+          <CardBody>
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <Input
+                className="md:max-w-xs"
+                isDisabled={loading && isInitialLoad}
+                placeholder={t("requirements.searchRequirements")}
+                startContent={
+                  <Search
+                    className={`w-4 h-4 ${
+                      loading && !isInitialLoad
+                        ? "animate-pulse text-primary"
+                        : ""
+                    }`}
+                  />
+                }
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+              />
 
+              <Select
+                className="md:max-w-xs"
+                isDisabled={loading && isInitialLoad}
+                items={[
+                  { value: "", label: t("requirements.allStatuses") },
+                  ...(statuses || []).map((status) => ({
+                    value: status.value.toString(),
+                    label: language === "ar" ? status.nameAr : status.nameEn,
+                  })),
+                ]}
+                placeholder={t("requirements.filterByStatus")}
+                selectedKeys={
+                  statusFilter !== null ? [statusFilter.toString()] : []
+                }
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+
+                  setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
+                }}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
+
+              <Select
+                className="md:max-w-xs"
+                isDisabled={loading && isInitialLoad}
+                items={[
+                  { value: "", label: t("requirements.allPriorities") },
+                  ...priorityOptions.map((p) => ({
+                    value: p.value.toString(),
+                    label: language === "ar" ? p.labelAr : p.label,
+                  })),
+                ]}
+                placeholder={t("requirements.filterByPriority")}
+                selectedKeys={priorityFilter ? [priorityFilter.toString()] : []}
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+
+                  setPriorityFilter(selectedKey || "");
+                }}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
+
+              {/* Page Size Selector */}
+              <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
+                <span className="text-sm text-default-600">
+                  {t("common.show")}:
+                </span>
                 <Select
-                  className="md:max-w-xs"
-                  items={[
-                    { value: "", label: t("requirements.allStatuses") },
-                    ...(statuses || []).map((status) => ({
-                      value: status.value.toString(),
-                      label: language === "ar" ? status.nameAr : status.nameEn,
-                    })),
-                  ]}
-                  placeholder={t("requirements.filterByStatus")}
-                  selectedKeys={
-                    statusFilter !== null ? [statusFilter.toString()] : []
-                  }
+                  className="w-24 flex-shrink-0"
+                  isDisabled={loading && isInitialLoad}
+                  selectedKeys={[effectivePageSize.toString()]}
+                  size="sm"
                   onSelectionChange={(keys) => {
-                    const selectedKey = Array.from(keys)[0] as string;
+                    const newSizeStr = Array.from(keys)[0] as string;
 
-                    setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
+                    if (!newSizeStr) return;
+                    const newSize = parseInt(newSizeStr, 10);
+
+                    if (!Number.isNaN(newSize)) {
+                      handlePageSizeChange(newSize);
+                    }
                   }}
                 >
-                  {(item) => (
-                    <SelectItem key={item.value}>{item.label}</SelectItem>
-                  )}
+                  {PAGE_SIZE_OPTIONS.map((opt) => {
+                    const val = opt.toString();
+
+                    return (
+                      <SelectItem key={val} textValue={val}>
+                        {val}
+                      </SelectItem>
+                    );
+                  })}
                 </Select>
-
-                <Select
-                  className="md:max-w-xs"
-                  items={[
-                    { value: "", label: t("requirements.allPriorities") },
-                    ...priorityOptions.map((p) => ({
-                      value: p.value.toString(),
-                      label: language === "ar" ? p.labelAr : p.label,
-                    })),
-                  ]}
-                  placeholder={t("requirements.filterByPriority")}
-                  selectedKeys={
-                    priorityFilter ? [priorityFilter.toString()] : []
-                  }
-                  onSelectionChange={(keys) => {
-                    const selectedKey = Array.from(keys)[0] as string;
-
-                    setPriorityFilter(selectedKey || "");
-                  }}
-                >
-                  {(item) => (
-                    <SelectItem key={item.value}>{item.label}</SelectItem>
-                  )}
-                </Select>
-
-                {hasActiveFilters && (
-                  <Button
-                    className="min-w-fit"
-                    size="lg"
-                    startContent={<RotateCcw className="w-4 h-4" />}
-                    variant="flat"
-                    onPress={resetFilters}
-                  >
-                    {t("common.reset")}
-                  </Button>
-                )}
-
-                {/* Page Size Selector */}
-                {!loading && totalRequirements > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-default-600">
-                      {t("common.show")}:
-                    </span>
-                    <Select
-                      className="w-24"
-                      selectedKeys={[effectivePageSize.toString()]}
-                      size="sm"
-                      onSelectionChange={(keys) => {
-                        const newSizeStr = Array.from(keys)[0] as string;
-
-                        if (!newSizeStr) return;
-                        const newSize = parseInt(newSizeStr, 10);
-
-                        if (!Number.isNaN(newSize)) {
-                          handlePageSizeChange(newSize);
-                        }
-                      }}
-                    >
-                      {PAGE_SIZE_OPTIONS.map((opt) => {
-                        const val = opt.toString();
-
-                        return (
-                          <SelectItem key={val} textValue={val}>
-                            {val}
-                          </SelectItem>
-                        );
-                      })}
-                    </Select>
-                    <span className="text-sm text-default-600">
-                      {t("pagination.perPage")}
-                    </span>
-                  </div>
-                )}
-
-                {hasPermission({
-                  actions: ["requirements.create"],
-                }) ? (
-                  <Button
-                    className="min-w-fit"
-                    color="primary"
-                    size="lg"
-                    startContent={<Plus className="w-4 h-4" />}
-                    onPress={handleCreateRequirement}
-                  >
-                    {t("requirements.addRequirement")}
-                  </Button>
-                ) : null}
+                <span className="text-sm text-default-600">
+                  {t("pagination.perPage")}
+                </span>
               </div>
-            </CardBody>
-          </Card>
-        )}
+            </div>
+
+            {/* Clear Filters */}
+            {hasActiveFilters && (
+              <div className="flex items-center gap-2 mt-2">
+                <Button
+                  color="secondary"
+                  size="sm"
+                  startContent={<X size={16} />}
+                  variant="flat"
+                  onPress={resetFilters}
+                >
+                  {t("requirements.clearFilters")}
+                </Button>
+                <span className="text-sm text-default-500">
+                  {t("requirements.requirementsFound").replace(
+                    "{count}",
+                    totalRequirements.toString(),
+                  )}
+                </span>
+              </div>
+            )}
+          </CardBody>
+        </Card>
 
         {/* Requirements Table */}
         <Card>
@@ -1081,61 +1080,125 @@ export default function ProjectRequirementsPage() {
       {/* Create/Edit Modal */}
       <Modal
         isOpen={isCreateOpen || isEditOpen}
-        scrollBehavior="inside"
-        size="2xl"
+        scrollBehavior="outside"
+        size="4xl"
         onOpenChange={
           selectedRequirement ? onEditOpenChange : onCreateOpenChange
         }
       >
-        <ModalContent>
+        <ModalContent className="max-h-[90vh]">
           {(onClose) => (
             <>
-              <ModalHeader>
+              <ModalHeader className="flex-shrink-0">
                 {selectedRequirement
                   ? t("requirements.editRequirement")
                   : t("requirements.newRequirement")}
               </ModalHeader>
-              <ModalBody>
-                <div className="space-y-4">
-                  <Input
-                    isRequired
-                    errorMessage={validationErrors.name}
-                    isInvalid={!!validationErrors.name}
-                    label={t("requirements.requirementName")}
-                    placeholder={t("requirements.requirementNamePlaceholder")}
-                    value={formData.name}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, name: value })
-                    }
-                  />
+              <ModalBody className="flex-1 overflow-y-auto px-6">
+                <div className="space-y-6">
+                  {/* Top Row - Basic Information */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <Input
+                      isRequired
+                      errorMessage={validationErrors.name}
+                      isInvalid={!!validationErrors.name}
+                      label={t("requirements.requirementName")}
+                      placeholder={t("requirements.requirementNamePlaceholder")}
+                      value={formData.name}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, name: value })
+                      }
+                    />
+                    <Select
+                      isRequired
+                      label={t("requirements.priority")}
+                      placeholder={t("requirements.selectPriority")}
+                      selectedKeys={[formData.priority.toString()]}
+                      onSelectionChange={(keys) =>
+                        setFormData({
+                          ...formData,
+                          priority: parseInt(Array.from(keys)[0] as string),
+                        })
+                      }
+                    >
+                      {priorityOptions.map((priority) => (
+                        <SelectItem key={priority.value.toString()}>
+                          {language === "ar"
+                            ? priority.labelAr
+                            : priority.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
+                    <Select
+                      isRequired
+                      label={t("requirements.type")}
+                      placeholder={t("requirements.selectType")}
+                      selectedKeys={[formData.type.toString()]}
+                      onSelectionChange={(keys) =>
+                        setFormData({
+                          ...formData,
+                          type: parseInt(Array.from(keys)[0] as string),
+                        })
+                      }
+                    >
+                      <SelectItem key={REQUIREMENT_TYPE.NEW.toString()}>
+                        {t("requirements.new")}
+                      </SelectItem>
+                      <SelectItem
+                        key={REQUIREMENT_TYPE.CHANGE_REQUEST.toString()}
+                      >
+                        {t("requirements.changeRequest")}
+                      </SelectItem>
+                    </Select>
+                    <DatePicker
+                      isRequired
+                      errorMessage={validationErrors.expectedCompletionDate}
+                      isInvalid={!!validationErrors.expectedCompletionDate}
+                      label={t("requirements.expectedCompletion")}
+                      value={formData.expectedCompletionDate}
+                      onChange={(date) =>
+                        setFormData({
+                          ...formData,
+                          expectedCompletionDate: date,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Full Width Description Editor */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
                       {t("requirements.requirementDescription")} *
                     </label>
-                    <ReactQuill
-                      className="rtl-editor"
-                      modules={{
-                        toolbar: [
-                          ["bold", "italic", "underline"],
-                          [{ list: "ordered" }, { list: "bullet" }],
-                          ["clean"],
-                        ],
-                      }}
-                      placeholder={t(
-                        "requirements.requirementDescriptionPlaceholder",
-                      )}
-                      style={{
-                        borderColor: validationErrors.description
-                          ? "#f31260"
-                          : undefined,
-                      }}
-                      theme="snow"
-                      value={formData.description}
-                      onChange={(value) =>
-                        setFormData({ ...formData, description: value })
-                      }
-                    />
+                    <div className="min-h-[240px]">
+                      <ReactQuill
+                        className="rtl-editor"
+                        modules={{
+                          toolbar: [
+                            ["bold", "italic", "underline"],
+                            [{ list: "ordered" }, { list: "bullet" }],
+                            ["clean"],
+                          ],
+                        }}
+                        placeholder={t(
+                          "requirements.requirementDescriptionPlaceholder",
+                        )}
+                        style={{
+                          height: "200px",
+                          borderColor: validationErrors.description
+                            ? "#f31260"
+                            : undefined,
+                        }}
+                        theme="snow"
+                        value={formData.description}
+                        onChange={(value) =>
+                          setFormData({ ...formData, description: value })
+                        }
+                      />
+                    </div>
                     {validationErrors.description && (
                       <p className="text-tiny text-danger">
                         {validationErrors.description}
@@ -1143,194 +1206,152 @@ export default function ProjectRequirementsPage() {
                     )}
                   </div>
 
-                  <Select
-                    isRequired
-                    label={t("requirements.priority")}
-                    placeholder={t("requirements.selectPriority")}
-                    selectedKeys={[formData.priority.toString()]}
-                    onSelectionChange={(keys) =>
-                      setFormData({
-                        ...formData,
-                        priority: parseInt(Array.from(keys)[0] as string),
-                      })
-                    }
-                  >
-                    {priorityOptions.map((priority) => (
-                      <SelectItem key={priority.value.toString()}>
-                        {language === "ar" ? priority.labelAr : priority.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Select
-                    isRequired
-                    label={t("requirements.type")}
-                    placeholder={t("requirements.selectType")}
-                    selectedKeys={[formData.type.toString()]}
-                    onSelectionChange={(keys) =>
-                      setFormData({
-                        ...formData,
-                        type: parseInt(Array.from(keys)[0] as string),
-                      })
-                    }
-                  >
-                    <SelectItem key={REQUIREMENT_TYPE.NEW.toString()}>
-                      {t("requirements.new")}
-                    </SelectItem>
-                    <SelectItem
-                      key={REQUIREMENT_TYPE.CHANGE_REQUEST.toString()}
-                    >
-                      {t("requirements.changeRequest")}
-                    </SelectItem>
-                  </Select>
-
-                  <DatePicker
-                    isRequired
-                    errorMessage={validationErrors.expectedCompletionDate}
-                    isInvalid={!!validationErrors.expectedCompletionDate}
-                    label={t("requirements.expectedCompletion")}
-                    value={formData.expectedCompletionDate}
-                    onChange={(date) =>
-                      setFormData({ ...formData, expectedCompletionDate: date })
-                    }
-                  />
-
-                  {/* File Upload Section */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-foreground">
-                      {t("requirements.attachments")}
-                    </label>
-
-                    {/* File Upload Input */}
-                    <div className="border-2 border-dashed border-default-300 rounded-lg p-4 hover:border-default-400 transition-colors">
-                      <input
-                        multiple
-                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.rar"
-                        className="hidden"
-                        id="file-upload"
-                        type="file"
-                        onChange={(e) => handleFileSelect(e.target.files)}
-                      />
-                      <label
-                        className="cursor-pointer flex flex-col items-center justify-center space-y-2"
-                        htmlFor="file-upload"
-                      >
-                        <Upload className="w-8 h-8 text-default-400" />
-                        <div className="text-center">
-                          <p className="text-sm font-medium text-default-700">
-                            {t("requirements.uploadFiles")}
-                          </p>
-                          <p className="text-xs text-default-500">
-                            PDF, DOC, XLS, PPT, Images, ZIP (Max 10MB each)
-                          </p>
-                        </div>
+                  {/* File Attachments Section */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* File Upload Area */}
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-foreground">
+                        {t("requirements.attachments")}
                       </label>
+
+                      {/* File Upload Input */}
+                      <div className="border-2 border-dashed border-default-300 rounded-lg p-3 hover:border-default-400 transition-colors">
+                        <input
+                          multiple
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.rar"
+                          className="hidden"
+                          id="file-upload"
+                          type="file"
+                          onChange={(e) => handleFileSelect(e.target.files)}
+                        />
+                        <label
+                          className="cursor-pointer flex flex-col items-center justify-center space-y-2"
+                          htmlFor="file-upload"
+                        >
+                          <Upload className="w-6 h-6 text-default-400" />
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-default-700">
+                              {t("requirements.uploadFiles")}
+                            </p>
+                            <p className="text-xs text-default-500">
+                              PDF, DOC, XLS, PPT, Images, ZIP
+                            </p>
+                          </div>
+                        </label>
+                      </div>
                     </div>
 
-                    {/* Existing Attachments */}
-                    {formData.existingAttachments.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium text-default-700">
-                          {t("requirements.existingAttachments")}
-                        </h4>
-                        {formData.existingAttachments.map((attachment) => (
-                          <div
-                            key={attachment.id}
-                            className="flex items-center justify-between p-3 bg-default-50 rounded-lg"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <FileText className="w-4 h-4 text-default-500" />
-                              <div>
-                                <p className="text-sm font-medium">
-                                  {attachment.originalName}
-                                </p>
-                                <p className="text-xs text-default-500">
-                                  {formatFileSize(attachment.fileSize)} •{" "}
-                                  {new Date(
-                                    attachment.uploadedAt,
-                                  ).toLocaleDateString()}
-                                </p>
+                    {/* Attachments List */}
+                    <div className="space-y-4">
+                      {/* Existing & New Attachments in Scrollable Area */}
+                      <div className="max-h-64 overflow-y-auto space-y-2">
+                        {/* Existing Attachments */}
+                        {formData.existingAttachments.length > 0 && (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-default-700 sticky top-0 bg-background py-1">
+                              {t("requirements.existingAttachments")}
+                            </h4>
+                            {formData.existingAttachments.map((attachment) => (
+                              <div
+                                key={attachment.id}
+                                className="flex items-center justify-between p-2 bg-default-50 rounded-lg"
+                              >
+                                <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                  <FileText className="w-4 h-4 text-default-500 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium truncate">
+                                      {attachment.originalName}
+                                    </p>
+                                    <p className="text-xs text-default-500">
+                                      {formatFileSize(attachment.fileSize)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-1 flex-shrink-0">
+                                  <Button
+                                    isIconOnly
+                                    size="sm"
+                                    variant="light"
+                                    onPress={() =>
+                                      handleFilePreview(attachment)
+                                    }
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    isIconOnly
+                                    size="sm"
+                                    variant="light"
+                                    onPress={() => {
+                                      downloadAttachment(
+                                        selectedRequirement?.id || 0,
+                                        attachment.id,
+                                        attachment.originalName,
+                                      );
+                                    }}
+                                  >
+                                    <Download className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    isIconOnly
+                                    color="danger"
+                                    size="sm"
+                                    variant="light"
+                                    onPress={() =>
+                                      handleRemoveExistingAttachment(
+                                        attachment.id,
+                                      )
+                                    }
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="light"
-                                onPress={() => handleFilePreview(attachment)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="light"
-                                onPress={() => {
-                                  downloadAttachment(
-                                    selectedRequirement?.id || 0,
-                                    attachment.id,
-                                    attachment.originalName,
-                                  );
-                                }}
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                isIconOnly
-                                color="danger"
-                                size="sm"
-                                variant="light"
-                                onPress={() =>
-                                  handleRemoveExistingAttachment(attachment.id)
-                                }
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        )}
 
-                    {/* New Uploaded Files */}
-                    {formData.uploadedFiles.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium text-default-700">
-                          {t("requirements.newFiles")}
-                        </h4>
-                        {formData.uploadedFiles.map((file, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 bg-primary-50 rounded-lg"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <FileText className="w-4 h-4 text-primary-500" />
-                              <div>
-                                <p className="text-sm font-medium">
-                                  {file.name}
-                                </p>
-                                <p className="text-xs text-default-500">
-                                  {formatFileSize(file.size)}
-                                </p>
+                        {/* New Uploaded Files */}
+                        {formData.uploadedFiles.length > 0 && (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-default-700 sticky top-0 bg-background py-1">
+                              {t("requirements.newFiles")}
+                            </h4>
+                            {formData.uploadedFiles.map((file, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-2 bg-primary-50 rounded-lg"
+                              >
+                                <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                  <FileText className="w-4 h-4 text-primary-500 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium truncate">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-xs text-default-500">
+                                      {formatFileSize(file.size)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  isIconOnly
+                                  color="danger"
+                                  size="sm"
+                                  variant="light"
+                                  onPress={() => handleRemoveFile(index)}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
                               </div>
-                            </div>
-                            <Button
-                              isIconOnly
-                              color="danger"
-                              size="sm"
-                              variant="light"
-                              onPress={() => handleRemoveFile(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </ModalBody>
-              <ModalFooter>
+              <ModalFooter className="flex-shrink-0">
                 <Button variant="light" onPress={onClose}>
                   {t("requirements.cancel")}
                 </Button>
@@ -1350,7 +1371,7 @@ export default function ProjectRequirementsPage() {
                     <Button
                       color="primary"
                       isLoading={loading}
-                       onPress={() => handleSaveRequirement(false)}
+                      onPress={() => handleSaveRequirement(false)}
                     >
                       {t("requirements.requestApproval")}
                     </Button>

@@ -99,11 +99,12 @@ public class ProjectRequirementService : IProjectRequirementService
         return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, null, (int)RequirementStatusEnum.New, null);
     }
 
-    public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetApprovedRequirementsAsync(int page, int limit)
+    public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetApprovedRequirementsAsync(int page, int limit, int? projectId = null, string? priority = null, string? search = null)
     {
         // Get requirements with status NOT in "New" (1) or "ManagerReview" (2)
         // This returns all requirements that are approved or further in the process
-        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, null, null, null, null, new[] { 1, 2 });
+        // Apply additional filters on top of the status filtering
+        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, null, priority, search, new[] { 1, 2 });
     }
 
     public async Task<bool> SendRequirementAsync(int id)
@@ -120,10 +121,12 @@ public class ProjectRequirementService : IProjectRequirementService
         return true;
     }
 
-    public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetPendingApprovalRequirementsAsync(int page, int limit)
+    public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetPendingApprovalRequirementsAsync(int page, int limit, int? status = null, string? priority = null, string? search = null)
     {
         // Get requirements with status "ManagerReview" (2) - waiting for manager approval
-        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, null, (int)RequirementStatusEnum.ManagerReview, null);
+        // But allow overriding with the status parameter if provided
+        var filterStatus = status ?? (int)RequirementStatusEnum.ManagerReview;
+        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, null, filterStatus, priority, search);
     }
 
     public async Task<bool> ApproveRequirementAsync(int id)

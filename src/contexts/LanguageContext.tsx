@@ -656,6 +656,7 @@ const translations = {
     "projects.updateProjectInfo": "Update project information",
     "projects.searchByName": "Search by name, military number, or username",
     "projects.noRemarks": "No remarks",
+    "projects.projectsFound": "{count} projects found",
 
     // Project Filter Messages
     "projects.filterActive": "Filter Active",
@@ -736,6 +737,8 @@ const translations = {
     "requirements.addRequirement": "Add Requirement",
     "requirements.filterByStatus": "Filter by Status",
     "requirements.filterByPriority": "Filter by Priority",
+    "requirements.clearFilters": "Clear Filters",
+    "requirements.requirementsFound": "{count} requirements found",
     "requirements.searchRequirements": "Search requirements...",
     "requirements.confirmDelete": "Confirm Delete",
     "requirements.deleteConfirmMessage":
@@ -765,6 +768,8 @@ const translations = {
       "There are currently no requirements waiting for approval.",
     "requirements.approve": "Approve",
     "requirements.approveRequirement": "Approve Requirement",
+    "requirements.approveConfirmMessage": 'Are you sure you want to approve the requirement "{name}"?',
+    "requirements.approveWarningMessage": 'This will change the status to "Approved" and make it available for development assignment.',
     "requirements.approveSuccess": "Requirement approved successfully",
     "requirements.approveError": "Failed to approve requirement",
     "requirements.noDevelopmentRequirements": "No requirements in development",
@@ -834,6 +839,8 @@ const translations = {
     "requirements.emptyState.description":
       "Start by adding your first requirement for this project",
     "requirements.emptyState.action": "Add First Requirement",
+    "requirements.noResultsTitle": "No Results Found",
+    "requirements.noResultsDescription": "No requirements found for",
 
     // File Upload Keys
     "requirements.uploadFiles": "Click to upload files",
@@ -900,6 +907,7 @@ const translations = {
     "users.activeDescription": "User is active and can access the system",
     "users.inactiveDescription":
       "User is inactive and cannot access the system",
+    "users.usersFound": "{count} users found",
 
     // Department Management
     "departments.title": "Department Management",
@@ -2045,6 +2053,7 @@ const translations = {
     "projects.updateError": "فشل في تحديث المشروع",
     "projects.saveError": "خطأ في حفظ المشروع",
     "projects.saveErrorDescription": "يرجى التحقق من إدخالك والمحاولة مرة أخرى",
+    "projects.projectsFound": "{count} مشروع موجود",
 
     // Project Filter Messages
     "projects.filterActive": "الفلتر نشط",
@@ -2122,6 +2131,8 @@ const translations = {
     "requirements.addRequirement": "إضافة متطلب",
     "requirements.filterByStatus": "ترشيح حسب الحالة",
     "requirements.filterByPriority": "ترشيح حسب الأولوية",
+    "requirements.clearFilters": "مسح المرشحات",
+    "requirements.requirementsFound": "{count} متطلبات موجودة",
     "requirements.searchRequirements": "البحث عن متطلبات...",
     "requirements.confirmDelete": "تأكيد الحذف",
     "requirements.deleteConfirmMessage": "هل أنت متأكد من حذف هذا المتطلب؟",
@@ -2150,6 +2161,8 @@ const translations = {
       "لا توجد حالياً متطلبات في انتظار الموافقة.",
     "requirements.approve": "موافقة",
     "requirements.approveRequirement": "الموافقة على المتطلب",
+    "requirements.approveConfirmMessage": 'هل أنت متأكد من أنك تريد الموافقة على المتطلب "{name}"؟',
+    "requirements.approveWarningMessage": 'سيؤدي هذا إلى تغيير الحالة إلى "معتمد" وجعله متاحاً لمرحلة التطوير.',
     "requirements.approveSuccess": "تمت الموافقة على المتطلب بنجاح",
     "requirements.approveError": "فشل في الموافقة على المتطلب",
     "requirements.noDevelopmentRequirements": "لا توجد متطلبات قيد التطوير",
@@ -2218,6 +2231,8 @@ const translations = {
     "requirements.emptyState.title": "لا توجد متطلبات بعد",
     "requirements.emptyState.description": "ابدأ بإضافة أول متطلب لهذا المشروع",
     "requirements.emptyState.action": "إضافة أول متطلب",
+    "requirements.noResultsTitle": "لم يتم العثور على نتائج",
+    "requirements.noResultsDescription": "لم يتم العثور على متطلبات لـ",
 
     // File Upload Keys (Arabic)
     "requirements.uploadFiles": "انقر لرفع الملفات",
@@ -2284,6 +2299,7 @@ const translations = {
     "users.accountStatus": "حالة الحساب",
     "users.activeDescription": "المستخدم نشط ويمكنه الوصول للنظام",
     "users.inactiveDescription": "المستخدم غير نشط ولا يمكنه الوصول للنظام",
+    "users.usersFound": "{count} مستخدم موجود",
 
     // Department Management
     "departments.title": "إدارة الأقسام",
