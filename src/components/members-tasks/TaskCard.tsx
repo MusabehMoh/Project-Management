@@ -78,13 +78,12 @@ export const TaskCard = ({
 
   return (
     <Card
-      isPressable
       className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg ${
         task.isOverdue
           ? "border-l-4 border-l-danger-500 bg-danger-50/30 dark:bg-danger-900/20"
           : `border-l-4 border-l-${task.status.color as any}-500 bg-${task.status.color as any}-50/30 dark:bg-${task.status.color as any}-900/20`
       }`}
-      onPress={handleCardClick}
+      onClick={handleCardClick}
     >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full gap-3">
@@ -287,7 +286,7 @@ export const TaskCard = ({
                   variant="faded"
                   onPress={() => handleRequestDesignClick()}
                 >
-                  {t("changeAssignees")}
+                  {t("requestDesign")}
                 </Button>
               )}
 
