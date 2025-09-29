@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import { LookupDto } from "@/types/timeline";
 import { lookupServiceInstance } from "@/services/api";
 

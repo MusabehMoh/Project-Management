@@ -553,7 +553,9 @@ export class ActionsController {
 
       if (category && typeof category === "string") {
         filteredActions = mockActions.filter(
-          (action) => (action.category || action.categoryName)?.toLowerCase() === category.toLowerCase(),
+          (action) =>
+            (action.category || action.categoryName)?.toLowerCase() ===
+            category.toLowerCase(),
         );
       }
 

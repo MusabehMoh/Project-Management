@@ -32,7 +32,7 @@ export interface TaskSearchParams {
   memberIds?: number[]; // Filter by member IDs
   memberFilterMode?: "any" | "all"; // How to apply member filter
   departmentIds?: string[]; // Filter by department IDs
-  statusIds?: number[]; // Filter by status IDs  
+  statusIds?: number[]; // Filter by status IDs
   priorityIds?: number[]; // Filter by priority IDs
   statusId?: number; // Legacy single status filter
   priorityId?: number; // Legacy single priority filter

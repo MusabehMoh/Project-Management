@@ -256,7 +256,8 @@ export default function ProjectRequirementsPage() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = searchTerm || statusFilter !== null || priorityFilter;
+  const hasActiveFilters =
+    searchTerm || statusFilter !== null || priorityFilter;
 
   // Handle highlighting and scrolling for specific requirements
   useEffect(() => {
@@ -452,7 +453,7 @@ export default function ProjectRequirementsPage() {
       // Error saving requirement
     }
   };
- 
+
   const confirmDelete = async () => {
     if (requirementToDelete) {
       try {
@@ -1350,7 +1351,7 @@ export default function ProjectRequirementsPage() {
                     <Button
                       color="primary"
                       isLoading={loading}
-                       onPress={() => handleSaveRequirement(false)}
+                      onPress={() => handleSaveRequirement(false)}
                     >
                       {t("requirements.requestApproval")}
                     </Button>

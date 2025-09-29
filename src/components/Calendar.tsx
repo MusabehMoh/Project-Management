@@ -35,7 +35,7 @@ import { useCalendar } from "@/hooks/useCalendar";
 
 interface CalendarComponentProps {
   showSidebar?: boolean;
-  // removed maxHeight to allow natural growth
+  maxHeight?: string;
 }
 
 const CalendarComponent: React.FC<CalendarComponentProps> = ({
@@ -239,6 +239,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     endTime: null as Time | null,
     type: "meeting" as CalendarEvent["type"],
     priority: "medium" as CalendarEvent["priority"],
+    status: "upcoming" as CalendarEvent["status"],
     location: "",
     isAllDay: false,
   });
@@ -371,12 +372,17 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 
     const days = [];
-    const current = new Date(startDate);
+    let currentDay = 0; // Track the day offset from startDate
 
     for (let week = 0; week < 6; week++) {
       const weekDays = [];
 
       for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+        // Create a new Date object for each day to avoid mutation issues
+        const current = new Date(
+          startDate.getTime() + currentDay * 24 * 60 * 60 * 1000,
+        );
+
         const dayEvents = getFilteredEventsForDate(current);
         const isCurrentMonth = current.getMonth() === month;
         const isToday = current.toDateString() === new Date().toDateString();
@@ -388,12 +394,16 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           isToday,
         });
 
-        current.setDate(current.getDate() + 1);
+        currentDay++;
       }
       days.push(weekDays);
 
       // Stop if we've covered the month and have reached the end of a week
-      if (current > lastDay && current.getDay() === 0) break;
+      const lastDayInGrid = new Date(
+        startDate.getTime() + (currentDay - 1) * 24 * 60 * 60 * 1000,
+      );
+
+      if (lastDayInGrid > lastDay && lastDayInGrid.getDay() === 6) break;
     }
 
     return days;
@@ -485,7 +495,9 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
 
     if (hasErrors) {
       return;
-    } // Create ISO date strings
+    }
+
+    // Create ISO date strings
     const createISOString = (
       date: CalendarDate,
       time?: Time | null,
@@ -495,7 +507,8 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         return `${date.toString()}T00:00:00.000Z`;
       }
       if (time) {
-        return `${date.toString()}T${time.toString()}:00.000Z`;
+        // Time.toString() returns "HH:MM:SS", so we just need to add milliseconds and timezone
+        return `${date.toString()}T${time.toString()}.000Z`;
       }
 
       return `${date.toString()}T00:00:00.000Z`;
@@ -515,7 +528,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
       : eventForm.isAllDay
         ? `${eventForm.startDate!.toString()}T23:59:59.999Z`
         : eventForm.startTime
-          ? `${eventForm.startDate!.toString()}T${eventForm.startTime.add({ hours: 1 }).toString()}:00.000Z`
+          ? `${eventForm.startDate!.toString()}T${eventForm.startTime.add({ hours: 1 }).toString()}.000Z`
           : `${eventForm.startDate!.toString()}T01:00:00.000Z`;
     const eventData = {
       title: eventForm.title.trim(),
@@ -596,7 +609,9 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" />
-              <h3 className="text-lg font-semibold">{t("calendar.title")} - {t("calendar.eventTypes.meeting")}</h3>
+              <h3 className="text-lg font-semibold">
+                {t("calendar.title")} - {t("calendar.eventTypes.meeting")}
+              </h3>
             </div>
 
             {/* View Mode Selector */}
@@ -1395,7 +1410,9 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
         <ModalContent>
           <ModalHeader>
             <h3 className="text-lg font-semibold">
-              {editingEvent ? t("calendar.editMeeting") : t("calendar.addMeeting")}
+              {editingEvent
+                ? t("calendar.editMeeting")
+                : t("calendar.addMeeting")}
             </h3>
           </ModalHeader>
           <ModalBody className="px-6 py-6">
@@ -1490,14 +1507,15 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 </Select>
 
                 <Select
+                  classNames={{
+                    label: "text-foreground-600",
+                  }}
                   label={t("calendar.status")}
                   selectedKeys={[eventForm.status]}
                   onSelectionChange={(keys) => {
-                    const key = Array.from(keys)[0] as CalendarEvent['status'];
-                    setEventForm({...eventForm, status: key});
-                  }}
-                  classNames={{
-                    label: "text-foreground-600"
+                    const key = Array.from(keys)[0] as CalendarEvent["status"];
+
+                    setEventForm({ ...eventForm, status: key });
                   }}
                 >
                   <SelectItem key="upcoming">

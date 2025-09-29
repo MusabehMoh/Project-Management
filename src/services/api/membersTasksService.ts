@@ -42,7 +42,7 @@ export class MembersTasksService {
     if (taskRequest?.limit) {
       params.append("limit", taskRequest.limit.toString());
     }
-    
+
     if (taskRequest?.search) {
       params.append("search", taskRequest.search);
     }
@@ -51,7 +51,7 @@ export class MembersTasksService {
     if (taskRequest?.memberIds && taskRequest.memberIds.length > 0) {
       params.append("memberIds", taskRequest.memberIds.join(","));
     }
-    
+
     if (taskRequest?.memberFilterMode) {
       params.append("memberFilterMode", taskRequest.memberFilterMode);
     }
@@ -94,60 +94,71 @@ export class MembersTasksService {
     if (taskRequest?.sortBy) {
       params.append("sortBy", taskRequest.sortBy);
     }
-    
+
     if (taskRequest?.sortOrder) {
       params.append("sortOrder", taskRequest.sortOrder);
     }
 
     const endpoint = `${this.baseUrl}${params.toString() ? "?" + params.toString() : ""}`;
 
-    const res = await apiClient.get<TasksResponse | ApiResponse<TasksResponse>>(endpoint);
+    const res = await apiClient.get<TasksResponse | ApiResponse<TasksResponse>>(
+      endpoint,
+    );
 
     // If backend already returns ApiResponse shape
-    if (res && typeof (res as any).success === 'boolean') {
+    if (res && typeof (res as any).success === "boolean") {
       return res as ApiResponse<TasksResponse>;
     }
 
     // Otherwise it's a raw TasksResponse (mock server current behavior)
     const raw = res as unknown as TasksResponse;
+
     if (raw && Array.isArray(raw.tasks)) {
       return {
         success: true,
         data: raw,
-        message: 'ok',
+        message: "ok",
         timestamp: new Date().toISOString(),
         pagination: {
           page: raw.currentPage,
-            limit: taskRequest?.limit || raw.tasks.length,
-            total: raw.totalCount,
-            totalPages: raw.totalPages
-        }
+          limit: taskRequest?.limit || raw.tasks.length,
+          total: raw.totalCount,
+          totalPages: raw.totalPages,
+        },
       };
     }
 
-    throw new Error('Unexpected tasks response shape');
+    throw new Error("Unexpected tasks response shape");
   }
 
   /**
    * Get filter data for tasks
    */
   async getFiltersData(): Promise<ApiResponse<TaskFiltersData>> {
-    const res = await apiClient.get<TaskFiltersData | any>(`${this.baseUrl}/filters`);
+    const res = await apiClient.get<TaskFiltersData | any>(
+      `${this.baseUrl}/filters`,
+    );
+
     // Some mock/legacy endpoints might return the raw object instead of ApiResponse shape
-    if (res && typeof res.success === 'boolean') {
+    if (res && typeof res.success === "boolean") {
       return res as ApiResponse<TaskFiltersData>;
     }
     // If the response is the raw filters object
     const maybeRaw = res as unknown as TaskFiltersData;
-    if (maybeRaw && Array.isArray(maybeRaw.statuses) && Array.isArray(maybeRaw.priorities)) {
+
+    if (
+      maybeRaw &&
+      Array.isArray(maybeRaw.statuses) &&
+      Array.isArray(maybeRaw.priorities)
+    ) {
       return {
         success: true,
         data: maybeRaw,
-        message: 'ok',
-        timestamp: new Date().toISOString()
+        message: "ok",
+        timestamp: new Date().toISOString(),
       };
     }
-    throw new Error('Unexpected filters response shape');
+    throw new Error("Unexpected filters response shape");
   }
 
   /**

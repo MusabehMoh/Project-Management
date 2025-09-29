@@ -51,10 +51,7 @@ function App() {
           element={<DevelopmentRequirementsPage />}
           path="development-requirements"
         />
-        <Route
-          element={<ApprovalRequestsPage />}
-          path="approval-requests"
-        />
+        <Route element={<ApprovalRequestsPage />} path="approval-requests" />
         <Route element={<UsersPage />} path="users" />
         <Route element={<DepartmentsPage />} path="departments" />
         <Route element={<TimelinePage />} path="timeline" />

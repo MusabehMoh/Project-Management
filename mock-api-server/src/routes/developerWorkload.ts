@@ -52,13 +52,17 @@ router.get(
 // GET /api/developer-workload/capacity-planning - Get capacity planning data
 router.get(
   "/capacity-planning",
-  developerWorkloadController.getCapacityPlanning.bind(developerWorkloadController),
+  developerWorkloadController.getCapacityPlanning.bind(
+    developerWorkloadController,
+  ),
 );
 
 // GET /api/developer-workload/burnout-analysis - Get burnout analysis
 router.get(
   "/burnout-analysis",
-  developerWorkloadController.getBurnoutAnalysis.bind(developerWorkloadController),
+  developerWorkloadController.getBurnoutAnalysis.bind(
+    developerWorkloadController,
+  ),
 );
 
 // POST /api/developer-workload/assign-task - Assign task to developer
@@ -76,7 +80,9 @@ router.get(
 // GET /api/developer-workload/productivity-trends - Get productivity trends
 router.get(
   "/productivity-trends",
-  developerWorkloadController.getProductivityTrends.bind(developerWorkloadController),
+  developerWorkloadController.getProductivityTrends.bind(
+    developerWorkloadController,
+  ),
 );
 
 // GET /api/code-reviews/metrics - Get code review metrics

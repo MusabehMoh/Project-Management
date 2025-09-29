@@ -70,9 +70,9 @@ export function FilePreview({
                   <div className="flex items-center gap-2">
                     <Button
                       isIconOnly
+                      className="text-white hover:bg-gray-700"
                       size="sm"
                       variant="light"
-                      className="text-white hover:bg-gray-700"
                       onPress={() => setZoom(Math.max(25, zoom - 25))}
                     >
                       <ZoomOut className="w-4 h-4" />
@@ -80,23 +80,25 @@ export function FilePreview({
                     <span className="text-sm px-2">{zoom}%</span>
                     <Button
                       isIconOnly
+                      className="text-white hover:bg-gray-700"
                       size="sm"
                       variant="light"
-                      className="text-white hover:bg-gray-700"
                       onPress={() => setZoom(Math.min(200, zoom + 25))}
                     >
                       <ZoomIn className="w-4 h-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Button
                       isIconOnly
+                      className="text-white hover:bg-gray-700"
+                      isDisabled={currentPage <= 1}
                       size="sm"
                       variant="light"
-                      className="text-white hover:bg-gray-700"
-                      onPress={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      isDisabled={currentPage <= 1}
+                      onPress={() =>
+                        setCurrentPage(Math.max(1, currentPage - 1))
+                      }
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
@@ -105,24 +107,29 @@ export function FilePreview({
                     </span>
                     <Button
                       isIconOnly
+                      className="text-white hover:bg-gray-700"
+                      isDisabled={currentPage >= totalPages}
                       size="sm"
                       variant="light"
-                      className="text-white hover:bg-gray-700"
-                      onPress={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      isDisabled={currentPage >= totalPages}
+                      onPress={() =>
+                        setCurrentPage(Math.min(totalPages, currentPage + 1))
+                      }
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
-                
+
                 {/* PDF Viewer */}
                 <div className="flex-1 bg-gray-700 p-4 rounded-b-lg">
                   <iframe
-                    title={previewState.file.name}
-                    src={`${previewState.file.url}#page=${currentPage}&zoom=${zoom}&toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
                     className="w-full h-full border-0 rounded bg-white"
-                    style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}
+                    src={`${previewState.file.url}#page=${currentPage}&zoom=${zoom}&toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                    style={{
+                      transform: `scale(${zoom / 100})`,
+                      transformOrigin: "top left",
+                    }}
+                    title={previewState.file.name}
                   />
                 </div>
               </>
@@ -137,15 +144,15 @@ export function FilePreview({
             )}
           </div>
         );
-      
+
       case "image":
         return (
           <div className="w-full max-h-[600px] flex items-center justify-center">
             {previewState.file?.url ? (
               <img
-                src={previewState.file.url}
                 alt={previewState.file.name}
                 className="max-w-full max-h-full object-contain rounded-lg"
+                src={previewState.file.url}
               />
             ) : (
               <div className="flex flex-col items-center gap-4">
@@ -158,7 +165,7 @@ export function FilePreview({
             )}
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -166,11 +173,11 @@ export function FilePreview({
 
   return (
     <Modal
-      isOpen={previewState.isOpen}
-      onOpenChange={() => onClose()}
-      size="4xl"
-      scrollBehavior="inside"
       className={className}
+      isOpen={previewState.isOpen}
+      scrollBehavior="inside"
+      size="4xl"
+      onOpenChange={() => onClose()}
     >
       <ModalContent>
         {(_onClose) => (
@@ -197,9 +204,7 @@ export function FilePreview({
               </div>
             </ModalHeader>
             <ModalBody className="p-0">
-              <div className="p-6">
-                {renderPreviewContent()}
-              </div>
+              <div className="p-6">{renderPreviewContent()}</div>
             </ModalBody>
             <ModalFooter>
               <Button

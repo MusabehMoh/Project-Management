@@ -106,7 +106,8 @@ export const mockDeveloperWorkloadData: DeveloperWorkload[] = mockUsers
     const completedTasks = getRandomInt(15, 50);
     const currentTasks = status === "on-leave" ? 0 : getRandomInt(1, 8);
 
-    const workloadPercentage = status === "on-leave" ? 0 : getRandomInt(30, 100);
+    const workloadPercentage =
+      status === "on-leave" ? 0 : getRandomInt(30, 100);
     const availableHours = status === "on-leave" ? 0 : getRandomInt(0, 8);
 
     return {

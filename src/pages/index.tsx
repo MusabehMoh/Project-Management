@@ -1,7 +1,6 @@
 import React from "react";
 
 import DeveloperManagerDashboard from "@/components/dashboard/DeveloperManagerDashboard";
-import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks";
 

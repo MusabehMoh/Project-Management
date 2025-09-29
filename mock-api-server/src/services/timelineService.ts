@@ -103,7 +103,7 @@ export class TimelineService {
     }
 
     TimelineService.timelines.splice(index, 1);
-    
+
     // Also update the original mockTimelines array to keep in sync
     const mockIndex = mockTimelines.findIndex(
       (timeline) => timeline.id === timelineId,

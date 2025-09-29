@@ -899,7 +899,8 @@ const additionalDraftRequirements = [
     id: 100,
     projectId: 1,
     name: "Social Media Integration",
-    description: "Integrate social media login and sharing capabilities for enhanced user engagement.",
+    description:
+      "Integrate social media login and sharing capabilities for enhanced user engagement.",
     priority: 2 as const,
     type: "new" as const,
     expectedCompletionDate: "2025-06-15",
@@ -921,7 +922,8 @@ const additionalDraftRequirements = [
     id: 101,
     projectId: 2,
     name: "Fraud Detection System",
-    description: "Implement AI-powered fraud detection and prevention system for banking transactions.",
+    description:
+      "Implement AI-powered fraud detection and prevention system for banking transactions.",
     priority: 3 as const,
     type: "new" as const,
     expectedCompletionDate: "2025-07-01",
@@ -943,7 +945,8 @@ const additionalDraftRequirements = [
     id: 102,
     projectId: 3,
     name: "Inventory Management Module",
-    description: "Enhanced inventory tracking and management module with real-time updates.",
+    description:
+      "Enhanced inventory tracking and management module with real-time updates.",
     priority: 2 as const,
     type: "change request" as const,
     expectedCompletionDate: "2025-06-30",

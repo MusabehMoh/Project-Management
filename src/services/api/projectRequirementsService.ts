@@ -26,7 +26,8 @@ const ENDPOINTS = {
   DEVELOPMENT_REQUIREMENTS: "/project-requirements/development-requirements",
   DRAFT_REQUIREMENTS: "/project-requirements/draft-requirements",
   APPROVED_REQUIREMENTS: "/project-requirements/approved-requirements",
-  PENDING_APPROVAL_REQUIREMENTS: "/project-requirements/pending-approval-requirements",
+  PENDING_APPROVAL_REQUIREMENTS:
+    "/project-requirements/pending-approval-requirements",
   APPROVE_REQUIREMENT: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/approve`,
   CREATE_REQUIREMENT_TASK: (requirementId: number) =>
@@ -425,7 +426,7 @@ class ProjectRequirementsService {
     if (files.length === 0) return [];
     const formData = new FormData();
     // Use plural key matching new backend multi-file support.
-    
+
     for (const f of files) {
       formData.append("files", f);
     }
@@ -436,7 +437,7 @@ class ProjectRequirementsService {
       );
       // When backend returns single object for legacy, normalize
       const data = result.data as any;
-      
+
       if (Array.isArray(data)) return data;
 
       if (data && typeof data === "object") return [data];
@@ -462,7 +463,7 @@ class ProjectRequirementsService {
     if (newFiles.length === 0 && removeIds.length === 0) return [];
 
     const formData = new FormData();
-    
+
     for (const f of newFiles) {
       formData.append("files", f);
     }
@@ -474,7 +475,7 @@ class ProjectRequirementsService {
         ENDPOINTS.UPLOAD_ATTACHMENT(requirementId) + "/sync",
         formData,
       );
-      
+
       return result.data;
     } catch {
       // Endpoint might not exist (older backend); return null to allow fallback
@@ -512,7 +513,7 @@ class ProjectRequirementsService {
     const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
 
     const headerInit: Record<string, string> = { Accept: "*/*" };
-    
+
     if (authHeader.Authorization) {
       headerInit["Authorization"] = authHeader.Authorization;
     }

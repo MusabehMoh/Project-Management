@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
+
 import {
   allDeveloperWorkloadData,
   teamPerformanceMetrics,
-  type DeveloperWorkload,
 } from "../data/mockDeveloperWorkload";
 
 export class DeveloperWorkloadController {
@@ -29,6 +29,7 @@ export class DeveloperWorkloadController {
 
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
+
         filteredDevelopers = filteredDevelopers.filter(
           (dev) =>
             dev.developerName.toLowerCase().includes(query) ||
@@ -82,7 +83,10 @@ export class DeveloperWorkloadController {
       const totalPages = Math.ceil(totalItems / pageSize);
       const startIndex = (page - 1) * pageSize;
       const endIndex = startIndex + pageSize;
-      const paginatedDevelopers = filteredDevelopers.slice(startIndex, endIndex);
+      const paginatedDevelopers = filteredDevelopers.slice(
+        startIndex,
+        endIndex,
+      );
 
       const workloadData = {
         developers: paginatedDevelopers,
@@ -323,11 +327,36 @@ export class DeveloperWorkloadController {
           { week: "Week 4", capacity: 80, allocated: 62, utilization: 78 },
         ],
         developerAvailability: [
-          { developerId: "1", name: "Ahmed Ali", hoursAvailable: 35, hoursAllocated: 30 },
-          { developerId: "2", name: "Sara Hassan", hoursAvailable: 38, hoursAllocated: 36 },
-          { developerId: "3", name: "Omar Khaled", hoursAvailable: 40, hoursAllocated: 24 },
-          { developerId: "4", name: "Fatima Nour", hoursAvailable: 0, hoursAllocated: 0 },
-          { developerId: "5", name: "Youssef Ahmed", hoursAvailable: 35, hoursAllocated: 28 },
+          {
+            developerId: "1",
+            name: "Ahmed Ali",
+            hoursAvailable: 35,
+            hoursAllocated: 30,
+          },
+          {
+            developerId: "2",
+            name: "Sara Hassan",
+            hoursAvailable: 38,
+            hoursAllocated: 36,
+          },
+          {
+            developerId: "3",
+            name: "Omar Khaled",
+            hoursAvailable: 40,
+            hoursAllocated: 24,
+          },
+          {
+            developerId: "4",
+            name: "Fatima Nour",
+            hoursAvailable: 0,
+            hoursAllocated: 0,
+          },
+          {
+            developerId: "5",
+            name: "Youssef Ahmed",
+            hoursAvailable: 35,
+            hoursAllocated: 28,
+          },
         ],
       };
 
@@ -359,8 +388,16 @@ export class DeveloperWorkloadController {
             riskLevel: "High",
             workloadPercentage: 95,
             overtimeHours: 12,
-            stressIndicators: ["High workload", "Frequent overtime", "Multiple projects"],
-            recommendations: ["Reduce task allocation", "Consider time off", "Redistribute tasks"],
+            stressIndicators: [
+              "High workload",
+              "Frequent overtime",
+              "Multiple projects",
+            ],
+            recommendations: [
+              "Reduce task allocation",
+              "Consider time off",
+              "Redistribute tasks",
+            ],
           },
         ],
         mediumRiskDevelopers: [
@@ -454,10 +491,10 @@ export class DeveloperWorkloadController {
             developerId: "1",
             name: "Ahmed Ali",
             skills: {
-              "React": { level: 4, experience: "3 years" },
+              React: { level: 4, experience: "3 years" },
               "Node.js": { level: 4, experience: "2.5 years" },
-              "TypeScript": { level: 3, experience: "2 years" },
-              "MongoDB": { level: 3, experience: "1.5 years" },
+              TypeScript: { level: 3, experience: "2 years" },
+              MongoDB: { level: 3, experience: "1.5 years" },
             },
           },
           {
@@ -465,18 +502,18 @@ export class DeveloperWorkloadController {
             name: "Sara Hassan",
             skills: {
               "Vue.js": { level: 5, experience: "4 years" },
-              "Python": { level: 4, experience: "3 years" },
-              "PostgreSQL": { level: 4, experience: "3.5 years" },
-              "Docker": { level: 3, experience: "1 year" },
+              Python: { level: 4, experience: "3 years" },
+              PostgreSQL: { level: 4, experience: "3.5 years" },
+              Docker: { level: 3, experience: "1 year" },
             },
           },
           {
             developerId: "3",
             name: "Omar Khaled",
             skills: {
-              "Angular": { level: 3, experience: "2 years" },
-              "Java": { level: 4, experience: "4 years" },
-              "MySQL": { level: 4, experience: "3 years" },
+              Angular: { level: 3, experience: "2 years" },
+              Java: { level: 4, experience: "4 years" },
+              MySQL: { level: 4, experience: "3 years" },
               "Spring Boot": { level: 3, experience: "2 years" },
             },
           },

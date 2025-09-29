@@ -63,12 +63,11 @@ export function useApprovedRequirements({
     setError(null);
 
     try {
-      const result =
-        await projectRequirementsService.getApprovedRequirements({
-          ...filters,
-          page: currentPage,
-          limit: pageSizeState,
-        });
+      const result = await projectRequirementsService.getApprovedRequirements({
+        ...filters,
+        page: currentPage,
+        limit: pageSizeState,
+      });
 
       setRequirements(result.data);
       setTotalPages(result.pagination.totalPages);

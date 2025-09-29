@@ -791,7 +791,8 @@ const translations = {
     "requirements.createSuccess": "Requirement created successfully",
     "requirements.updateSuccess": "Requirement updated successfully",
     "requirements.deleteSuccess": "Requirement deleted successfully",
-    "requirements.sendSuccess": "Requirement submitted for approval successfully",
+    "requirements.sendSuccess":
+      "Requirement submitted for approval successfully",
     "requirements.uploadSuccess": "uploaded successfully",
     "requirements.attachmentDeleteSuccess": "Attachment deleted successfully",
     "requirements.downloadSuccess": "File downloaded successfully",
@@ -813,7 +814,7 @@ const translations = {
     "tasks.selectDeveloper": "Search for developer...",
     "tasks.selectQC": "Search for QC member...",
     "tasks.assignedOn": "Assigned On",
-    
+
     // Additional requirements keys
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
@@ -821,7 +822,7 @@ const translations = {
     "requirements.timelineInfo": "Timeline Information",
     "timeline.name": "Timeline Name",
     "timeline.id": "Timeline ID",
-    
+
     // Common keys
     "common.preview": "Preview",
     "common.download": "Download",
@@ -2199,7 +2200,7 @@ const translations = {
     "tasks.selectDeveloper": "البحث عن مطور...",
     "tasks.selectQC": "البحث عن مسؤول ضمان الجودة...",
     "tasks.assignedOn": "تم التعيين في",
-    
+
     // Additional requirements keys (Arabic)
     "requirements.updated": "تاريخ التحديث",
     "requirements.uploadedOn": "تم الرفع في",
@@ -2207,7 +2208,7 @@ const translations = {
     "requirements.timelineInfo": "معلومات الجدول الزمني",
     "timeline.name": "اسم الجدول الزمني",
     "timeline.id": "معرّف الجدول الزمني",
-    
+
     // Common keys (Arabic)
     "common.preview": "معاينة",
     "common.download": "تحميل",

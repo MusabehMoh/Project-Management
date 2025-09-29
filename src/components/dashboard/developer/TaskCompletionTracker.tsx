@@ -223,7 +223,7 @@ export default function TaskCompletionTracker({
   const refresh = async () => {
     setRefreshing(true);
     setError(null);
-    
+
     try {
       if (useMockData) {
         // Simulate API call delay
