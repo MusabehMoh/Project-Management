@@ -52,7 +52,7 @@ export function useTaskSearch(options: TaskSearchOptions = {}) {
               label: task.name,
               secondary: task.status,
               metadata: task, // Store original task data
-            })
+            }),
           );
         } else {
           throw new Error(response.message || "Failed to search tasks");
@@ -62,7 +62,7 @@ export function useTaskSearch(options: TaskSearchOptions = {}) {
         throw error;
       }
     },
-    []
+    [],
   );
 
   const {
@@ -84,7 +84,7 @@ export function useTaskSearch(options: TaskSearchOptions = {}) {
 
   // Transform back toTaskSearchResult for easier consumption
   const workItems: WorkItem[] = searchResults.map(
-    (result) => result.metadata as WorkItem
+    (result) => result.metadata as WorkItem,
   );
 
   return {

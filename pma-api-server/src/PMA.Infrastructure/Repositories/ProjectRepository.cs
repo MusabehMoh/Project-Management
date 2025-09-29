@@ -136,7 +136,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .Include(p => p.Tasks)
-            .Include(p => p.Requirements)
+            .Include(p => p.ProjectRequirements)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN for optional alternative owner
             .Include(p => p.ProjectAnalysts!) // LEFT JOIN for optional analysts collection
                 .ThenInclude(pa => pa.Analyst)
@@ -186,7 +186,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         var query = _context.Projects
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
-            .Include(p => p.Requirements)
+            .Include(p => p.ProjectRequirements)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN for optional alternative owner
             .Include(p => p.ProjectAnalysts!) // LEFT JOIN for optional analysts collection
                 .ThenInclude(pa => pa.Analyst)
@@ -224,8 +224,8 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         // Projects are already loaded with ProjectAnalysts and their related Analyst entities
         var assignedProjects = projects.Select(project =>
         {
-            var totalRequirements = project.Requirements?.Count() ?? 0;
-            var completedRequirements = project.Requirements?.Count(r => r.Status == RequirementStatus.Completed) ?? 0;
+            var totalRequirements = project.ProjectRequirements?.Count() ?? 0;
+            var completedRequirements = project.ProjectRequirements?.Count(r => r.Status == RequirementStatusEnum.Completed) ?? 0;
             
             // Extract analyst names from ProjectAnalyst junction table entities
             string analystNames = string.Empty;

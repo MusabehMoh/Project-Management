@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -6,7 +6,6 @@ import { Spinner } from "@heroui/spinner";
 import { Progress } from "@heroui/progress";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
-import { Pagination } from "@heroui/pagination";
 import {
   Table,
   TableHeader,
@@ -19,7 +18,6 @@ import { Avatar } from "@heroui/avatar";
 import { Tooltip } from "@heroui/tooltip";
 import {
   RefreshCw,
-  User,
   TrendingUp,
   TrendingDown,
   Clock,
@@ -35,7 +33,6 @@ import {
   developerWorkloadService,
   type DeveloperWorkload,
   type TeamPerformanceMetrics,
-  type WorkloadResponse,
   type PaginationInfo,
 } from "@/services/api/developerWorkloadService";
 
@@ -62,6 +59,7 @@ const getStatusColor = (status: string) => {
 const getEfficiencyColor = (efficiency: number) => {
   if (efficiency >= 85) return "success";
   if (efficiency >= 70) return "warning";
+
   return "danger";
 };
 
@@ -187,47 +185,55 @@ export default function DeveloperWorkloadPerformance({
 
       if (useMockData) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        
+
         // Apply filtering to mock data
         let filteredDevelopers = [...mockDevelopers];
-        
+
         // Apply status filter
         if (statusFilter) {
-          filteredDevelopers = filteredDevelopers.filter(dev => dev.status === statusFilter);
+          filteredDevelopers = filteredDevelopers.filter(
+            (dev) => dev.status === statusFilter,
+          );
         }
-        
+
         // Apply search filter
         if (searchQuery.trim()) {
           const searchLower = searchQuery.toLowerCase();
-          filteredDevelopers = filteredDevelopers.filter(dev =>
-            dev.developerName.toLowerCase().includes(searchLower) ||
-            dev.skills.some(skill => skill.toLowerCase().includes(searchLower)) ||
-            dev.currentProjects.some(project => project.toLowerCase().includes(searchLower))
+
+          filteredDevelopers = filteredDevelopers.filter(
+            (dev) =>
+              dev.developerName.toLowerCase().includes(searchLower) ||
+              dev.skills.some((skill) =>
+                skill.toLowerCase().includes(searchLower),
+              ) ||
+              dev.currentProjects.some((project) =>
+                project.toLowerCase().includes(searchLower),
+              ),
           );
         }
-        
+
         // Apply sorting
         filteredDevelopers.sort((a, b) => {
           let aValue: any, bValue: any;
-          
+
           switch (sortBy) {
-            case 'efficiency':
+            case "efficiency":
               aValue = a.efficiency;
               bValue = b.efficiency;
               break;
-            case 'workload':
+            case "workload":
               aValue = a.workloadPercentage;
               bValue = b.workloadPercentage;
               break;
-            case 'name':
+            case "name":
               aValue = a.developerName;
               bValue = b.developerName;
               break;
-            case 'tasks':
+            case "tasks":
               aValue = a.currentTasks;
               bValue = b.currentTasks;
               break;
-            case 'completed':
+            case "completed":
               aValue = a.completedTasks;
               bValue = b.completedTasks;
               break;
@@ -235,31 +241,36 @@ export default function DeveloperWorkloadPerformance({
               aValue = a.efficiency;
               bValue = b.efficiency;
           }
-          
-          if (typeof aValue === 'string') {
+
+          if (typeof aValue === "string") {
             aValue = aValue.toLowerCase();
             bValue = bValue.toLowerCase();
           }
-          
-          if (sortOrder === 'asc') {
+
+          if (sortOrder === "asc") {
             return aValue > bValue ? 1 : -1;
           } else {
             return aValue < bValue ? 1 : -1;
           }
         });
-        
+
         // Apply pagination
         const startIndex = (page - 1) * pagination.pageSize;
         const endIndex = startIndex + pagination.pageSize;
-        const paginatedDevelopers = filteredDevelopers.slice(startIndex, endIndex);
-        
+        const paginatedDevelopers = filteredDevelopers.slice(
+          startIndex,
+          endIndex,
+        );
+
         setDevelopers(paginatedDevelopers);
         setMetrics(mockMetrics);
         setPagination({
           currentPage: page,
           pageSize: pagination.pageSize,
           totalItems: filteredDevelopers.length,
-          totalPages: Math.ceil(filteredDevelopers.length / pagination.pageSize),
+          totalPages: Math.ceil(
+            filteredDevelopers.length / pagination.pageSize,
+          ),
           hasNextPage: endIndex < filteredDevelopers.length,
           hasPreviousPage: page > 1,
         });
@@ -316,7 +327,8 @@ export default function DeveloperWorkloadPerformance({
         <CardBody className="flex items-center justify-center py-8">
           <Spinner size="lg" />
           <p className="mt-4 text-default-500">
-            {t("developerDashboard.loadingWorkload") || "Loading workload data..."}
+            {t("developerDashboard.loadingWorkload") ||
+              "Loading workload data..."}
           </p>
         </CardBody>
       </Card>
@@ -358,67 +370,96 @@ export default function DeveloperWorkloadPerformance({
                 variant="ghost"
                 onPress={refresh}
               >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+                />
               </Button>
             </div>
-            
+
             {/* Search and Filter Controls */}
             <div className="flex gap-3 items-center">
               <div className="relative">
                 <Input
                   className="max-w-xs"
-                  placeholder={t("developerDashboard.searchDevelopers") || "Search developers..."}
-                  value={searchQuery}
-                  startContent={<Search className="w-4 h-4 text-default-400" />}
                   endContent={
                     searchQuery && (
                       <Button
                         isIconOnly
+                        className="min-w-unit-6 w-6 h-6"
                         size="sm"
                         variant="light"
                         onPress={clearSearch}
-                        className="min-w-unit-6 w-6 h-6"
                       >
                         <X className="w-4 h-4" />
                       </Button>
                     )
                   }
+                  placeholder={
+                    t("developerDashboard.searchDevelopers") ||
+                    "Search developers..."
+                  }
+                  startContent={<Search className="w-4 h-4 text-default-400" />}
+                  value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              
+
               <Select
+                aria-label={t("developerDashboard.filterByStatus") || "Filter by status"}
                 className="max-w-xs"
-                placeholder={t("developerDashboard.filterByStatus") || "Filter by status"}
+                placeholder={
+                  t("developerDashboard.filterByStatus") || "Filter by status"
+                }
                 selectedKeys={statusFilter ? [statusFilter] : []}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
+
                   setStatusFilter(selected || "");
                 }}
               >
-                <SelectItem key="">{t("common.allStatus") || "All Status"}</SelectItem>
-                <SelectItem key="available">{t("developerDashboard.status.available") || "Available"}</SelectItem>
-                <SelectItem key="busy">{t("developerDashboard.status.busy") || "Busy"}</SelectItem>
-                <SelectItem key="blocked">{t("developerDashboard.status.blocked") || "Blocked"}</SelectItem>
-                <SelectItem key="on-leave">{t("developerDashboard.status.on-leave") || "On Leave"}</SelectItem>
+                <SelectItem key="">
+                  {t("common.allStatus") || "All Status"}
+                </SelectItem>
+                <SelectItem key="available">
+                  {t("developerDashboard.status.available") || "Available"}
+                </SelectItem>
+                <SelectItem key="busy">
+                  {t("developerDashboard.status.busy") || "Busy"}
+                </SelectItem>
+                <SelectItem key="blocked">
+                  {t("developerDashboard.status.blocked") || "Blocked"}
+                </SelectItem>
+                <SelectItem key="on-leave">
+                  {t("developerDashboard.status.on-leave") || "On Leave"}
+                </SelectItem>
               </Select>
-              
+
               <Select
+                aria-label={t("common.sortBy") || "Sort by"}
                 className="max-w-xs"
                 placeholder={t("common.sortBy") || "Sort by"}
                 selectedKeys={[sortBy]}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
+
                   setSortBy(selected);
                 }}
               >
-                <SelectItem key="efficiency">{t("developerDashboard.efficiency") || "Efficiency"}</SelectItem>
-                <SelectItem key="workload">{t("developerDashboard.workload") || "Workload"}</SelectItem>
+                <SelectItem key="efficiency">
+                  {t("developerDashboard.efficiency") || "Efficiency"}
+                </SelectItem>
+                <SelectItem key="workload">
+                  {t("developerDashboard.workload") || "Workload"}
+                </SelectItem>
                 <SelectItem key="name">{t("common.name") || "Name"}</SelectItem>
-                <SelectItem key="tasks">{t("developerDashboard.currentTasks") || "Current Tasks"}</SelectItem>
-                <SelectItem key="completed">{t("developerDashboard.tasksCompleted") || "Completed Tasks"}</SelectItem>
+                <SelectItem key="tasks">
+                  {t("developerDashboard.currentTasks") || "Current Tasks"}
+                </SelectItem>
+                <SelectItem key="completed">
+                  {t("developerDashboard.tasksCompleted") || "Completed Tasks"}
+                </SelectItem>
               </Select>
-              
+
               <Button
                 size="sm"
                 variant="flat"
@@ -426,10 +467,9 @@ export default function DeveloperWorkloadPerformance({
                   setSortOrder(sortOrder === "asc" ? "desc" : "asc");
                 }}
               >
-                {sortOrder === "asc" ? 
-                  `↑ ${t("common.ascending") || "Asc"}` : 
-                  `↓ ${t("common.descending") || "Desc"}`
-                }
+                {sortOrder === "asc"
+                  ? `↑ ${t("common.ascending") || "Asc"}`
+                  : `↓ ${t("common.descending") || "Desc"}`}
               </Button>
             </div>
           </div>
@@ -452,7 +492,8 @@ export default function DeveloperWorkloadPerformance({
                     {metrics.totalTasksCompleted}
                   </div>
                   <div className="text-xs text-default-500">
-                    {t("developerDashboard.tasksCompleted") || "Tasks Completed"}
+                    {t("developerDashboard.tasksCompleted") ||
+                      "Tasks Completed"}
                   </div>
                 </div>
                 <div className="text-center">
@@ -478,11 +519,21 @@ export default function DeveloperWorkloadPerformance({
           {/* Developers Table */}
           <Table removeWrapper aria-label="Developer workload performance">
             <TableHeader>
-              <TableColumn>{t("developerDashboard.developer") || "Developer"}</TableColumn>
-              <TableColumn>{t("developerDashboard.workload") || "Workload"}</TableColumn>
-              <TableColumn>{t("developerDashboard.efficiency") || "Efficiency"}</TableColumn>
-              <TableColumn>{t("developerDashboard.currentTasks") || "Tasks"}</TableColumn>
-              <TableColumn>{t("developerDashboard.status") || "Status"}</TableColumn>
+              <TableColumn>
+                {t("developerDashboard.developer") || "Developer"}
+              </TableColumn>
+              <TableColumn>
+                {t("developerDashboard.workload") || "Workload"}
+              </TableColumn>
+              <TableColumn>
+                {t("developerDashboard.efficiency") || "Efficiency"}
+              </TableColumn>
+              <TableColumn>
+                {t("developerDashboard.currentTasks") || "Tasks"}
+              </TableColumn>
+              <TableColumn>
+                {t("developerDashboard.status") || "Status"}
+              </TableColumn>
             </TableHeader>
             <TableBody>
               {developers.map((developer) => (
@@ -490,9 +541,9 @@ export default function DeveloperWorkloadPerformance({
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar
+                        className="flex-shrink-0"
                         name={developer.developerName}
                         size="sm"
-                        className="flex-shrink-0"
                       />
                       <div className="flex flex-col">
                         <span className="font-medium text-sm">
@@ -502,9 +553,9 @@ export default function DeveloperWorkloadPerformance({
                           {developer.skills.slice(0, 2).map((skill) => (
                             <Chip
                               key={skill}
+                              className="text-xs"
                               size="sm"
                               variant="flat"
-                              className="text-xs"
                             >
                               {skill}
                             </Chip>
@@ -513,7 +564,11 @@ export default function DeveloperWorkloadPerformance({
                             <Tooltip
                               content={developer.skills.slice(2).join(", ")}
                             >
-                              <Chip size="sm" variant="flat" className="text-xs">
+                              <Chip
+                                className="text-xs"
+                                size="sm"
+                                variant="flat"
+                              >
                                 +{developer.skills.length - 2}
                               </Chip>
                             </Tooltip>
@@ -525,13 +580,19 @@ export default function DeveloperWorkloadPerformance({
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <Progress
-                        color={developer.workloadPercentage > 90 ? "danger" : 
-                               developer.workloadPercentage > 75 ? "warning" : "success"}
+                        color={
+                          developer.workloadPercentage > 90
+                            ? "danger"
+                            : developer.workloadPercentage > 75
+                              ? "warning"
+                              : "success"
+                        }
                         size="sm"
                         value={developer.workloadPercentage}
                       />
                       <span className="text-xs text-default-500">
-                        {developer.workloadPercentage}% • {developer.availableHours}h available
+                        {developer.workloadPercentage}% •{" "}
+                        {developer.availableHours}h available
                       </span>
                     </div>
                   </TableCell>
@@ -548,8 +609,8 @@ export default function DeveloperWorkloadPerformance({
                             developer.efficiency >= 85
                               ? "text-success"
                               : developer.efficiency >= 70
-                              ? "text-warning"
-                              : "text-danger"
+                                ? "text-warning"
+                                : "text-danger"
                           }`}
                         >
                           {developer.efficiency}%
@@ -561,7 +622,9 @@ export default function DeveloperWorkloadPerformance({
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-default-400" />
-                        <span className="text-sm">{developer.currentTasks}</span>
+                        <span className="text-sm">
+                          {developer.currentTasks}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <CheckCircle className="w-3 h-3 text-success" />
@@ -577,8 +640,8 @@ export default function DeveloperWorkloadPerformance({
                       size="sm"
                       variant="flat"
                     >
-                      {t(`developerDashboard.status.${developer.status}`) || 
-                       developer.status.replace("-", " ")}
+                      {t(`developerDashboard.status.${developer.status}`) ||
+                        developer.status.replace("-", " ")}
                     </Chip>
                   </TableCell>
                 </TableRow>
@@ -586,22 +649,22 @@ export default function DeveloperWorkloadPerformance({
             </TableBody>
           </Table>
         </CardBody>
-        
+
         {/* Global Pagination */}
         {pagination.totalPages > 1 && (
           <div className="flex justify-center p-4 border-t border-default-200">
             <GlobalPagination
               currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
               pageSize={pagination.pageSize}
+              showQuickJumper={true}
+              showSizeChanger={true}
               totalItems={pagination.totalItems}
+              totalPages={pagination.totalPages}
               onPageChange={(page) => fetchData(page)}
               onPageSizeChange={(pageSize) => {
-                setPagination(prev => ({ ...prev, pageSize }));
+                setPagination((prev) => ({ ...prev, pageSize }));
                 fetchData(1);
               }}
-              showSizeChanger={true}
-              showQuickJumper={true}
             />
           </div>
         )}

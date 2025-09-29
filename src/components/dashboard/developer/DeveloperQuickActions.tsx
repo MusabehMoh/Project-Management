@@ -1,39 +1,45 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { parseDate, today, getLocalTimeZone, CalendarDate } from "@internationalized/date";
-
-import { useLanguage } from "@/contexts/LanguageContext";
+import React, { useState, useEffect } from "react";
+import { today, getLocalTimeZone, CalendarDate } from "@internationalized/date";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
 import { Alert } from "@heroui/alert";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Textarea } from "@heroui/input";
 import { DatePicker } from "@heroui/date-picker";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { addToast } from "@heroui/toast";
-import {
-  RefreshCw,
-  AlertTriangle,
-  Code,
-  User,
-  Clock,
-} from "lucide-react";
+import { RefreshCw, AlertTriangle, Code, User, Clock } from "lucide-react";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActionsV2";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
 
 // Animated Counter Component
-const AnimatedCounter = ({ value, duration = 1000 }: { value: number; duration?: number }) => {
+const AnimatedCounter = ({
+  value,
+  duration = 1000,
+}: {
+  value: number;
+  duration?: number;
+}) => {
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
     if (value === 0) {
       setDisplayValue(0);
+
       return;
     }
 
@@ -44,11 +50,13 @@ const AnimatedCounter = ({ value, duration = 1000 }: { value: number; duration?:
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      
+
       // Easing function for smooth animation
       const easeOutCubic = 1 - Math.pow(1 - progress, 3);
-      const currentValue = Math.floor(startValue + (endValue - startValue) * easeOutCubic);
-      
+      const currentValue = Math.floor(
+        startValue + (endValue - startValue) * easeOutCubic,
+      );
+
       setDisplayValue(currentValue);
 
       if (progress < 1) {
@@ -59,21 +67,26 @@ const AnimatedCounter = ({ value, duration = 1000 }: { value: number; duration?:
     requestAnimationFrame(step);
   }, [value, duration, displayValue]);
 
-  return (
-    <span className="tabular-nums">
-      {displayValue}
-    </span>
-  );
+  return <span className="tabular-nums">{displayValue}</span>;
 };
 
 // Custom Alert Component with dynamic color styling
 const CustomAlert = React.forwardRef(
   (
-    {title, children, variant = "faded", color = "danger", className, classNames = {}, direction, ...props},
+    {
+      title,
+      children,
+      variant = "faded",
+      color = "danger",
+      className,
+      classNames = {},
+      direction,
+      ...props
+    },
     ref,
   ) => {
     const isRTL = direction === "rtl";
-    
+
     // Dynamic border color based on the color prop
     const getBorderColor = (color: string) => {
       switch (color) {
@@ -86,7 +99,7 @@ const CustomAlert = React.forwardRef(
           return "before:bg-danger";
       }
     };
-    
+
     return (
       <Alert
         ref={ref}
@@ -96,21 +109,44 @@ const CustomAlert = React.forwardRef(
             "bg-default-50 dark:bg-background shadow-sm",
             "border-1 border-default-200 dark:border-default-100",
             "relative before:content-[''] before:absolute before:z-10",
-            isRTL ? "before:right-0 before:top-[-1px] before:bottom-[-1px] before:w-1" : "before:left-0 before:top-[-1px] before:bottom-[-1px] before:w-1",
+            isRTL
+              ? "before:right-0 before:top-[-1px] before:bottom-[-1px] before:w-1"
+              : "before:left-0 before:top-[-1px] before:bottom-[-1px] before:w-1",
             isRTL ? "rounded-r-none border-r-0" : "rounded-l-none border-l-0",
             getBorderColor(color),
             classNames.base,
             className,
-          ].filter(Boolean).join(" "),
-          mainWrapper: ["pt-1 flex items-start justify-between", classNames.mainWrapper].filter(Boolean).join(" "),
-          iconWrapper: ["dark:bg-transparent", classNames.iconWrapper].filter(Boolean).join(" "),
-          title: [isRTL ? "text-right" : "text-left", "text-sm font-medium", classNames.title].filter(Boolean).join(" "),
-          description: [isRTL ? "text-right" : "text-left", "text-xs text-default-500 mt-1", classNames.description].filter(Boolean).join(" "),
+          ]
+            .filter(Boolean)
+            .join(" "),
+          mainWrapper: [
+            "pt-1 flex items-start justify-between",
+            classNames.mainWrapper,
+          ]
+            .filter(Boolean)
+            .join(" "),
+          iconWrapper: ["dark:bg-transparent", classNames.iconWrapper]
+            .filter(Boolean)
+            .join(" "),
+          title: [
+            isRTL ? "text-right" : "text-left",
+            "text-sm font-medium",
+            classNames.title,
+          ]
+            .filter(Boolean)
+            .join(" "),
+          description: [
+            isRTL ? "text-right" : "text-left",
+            "text-xs text-default-500 mt-1",
+            classNames.description,
+          ]
+            .filter(Boolean)
+            .join(" "),
         }}
         color={color}
+        dir={direction}
         title={title}
         variant={variant}
-        dir={direction}
         {...props}
       >
         {children}
@@ -140,7 +176,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [selectedPR, setSelectedPR] = useState<any>(null);
-  const [selectedDevelopers, setSelectedDevelopers] = useState<MemberSearchResult[]>([]);
+  const [selectedDevelopers, setSelectedDevelopers] = useState<
+    MemberSearchResult[]
+  >([]);
   const [developerInputValue, setDeveloperInputValue] = useState<string>("");
 
   // Use the same team search hook as projects page
@@ -179,10 +217,16 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
 
   if (loading) {
     return (
-      <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
+      <Card
+        className={`${className} border-default-200`}
+        dir={direction}
+        shadow="sm"
+      >
         <CardBody className="flex items-center justify-center py-8">
           <Spinner color="default" size="md" />
-          <p className="mt-3 text-default-500">{t("common.loading") || "Loading..."}</p>
+          <p className="mt-3 text-default-500">
+            {t("common.loading") || "Loading..."}
+          </p>
         </CardBody>
       </Card>
     );
@@ -190,16 +234,18 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
 
   if (error) {
     return (
-      <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
+      <Card
+        className={`${className} border-default-200`}
+        dir={direction}
+        shadow="sm"
+      >
         <CardBody className="text-center py-6">
           <AlertTriangle className="h-8 w-8 text-default-400 mx-auto mb-3" />
-          <p className="font-medium text-foreground mb-2">{t("common.error") || "Error"}</p>
+          <p className="font-medium text-foreground mb-2">
+            {t("common.error") || "Error"}
+          </p>
           <p className="text-sm text-default-500 mb-4">{error}</p>
-          <Button
-            size="sm"
-            variant="flat"
-            onPress={refresh}
-          >
+          <Button size="sm" variant="flat" onPress={refresh}>
             {t("common.retry") || "Retry"}
           </Button>
         </CardBody>
@@ -224,28 +270,30 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         for (const developer of selectedDevelopers) {
           await assignDeveloper(selectedTask.id, developer.id.toString());
         }
-        
+
         // Show success toast
         addToast({
-          title: t("developerQuickActions.assignmentSuccess") || "Assignment Successful",
-          description: 
-            selectedDevelopers.length === 1 
+          title:
+            t("developerQuickActions.assignmentSuccess") ||
+            "Assignment Successful",
+          description:
+            selectedDevelopers.length === 1
               ? `1 developer assigned to ${selectedTask.title}`
               : `${selectedDevelopers.length} developers assigned to ${selectedTask.title}`,
           color: "success",
           timeout: 4000,
         });
-        
+
         setIsTaskModalOpen(false);
         setSelectedTask(null);
         setSelectedDevelopers([]);
         setDeveloperInputValue("");
         clearDeveloperResults();
-        
       } catch (error) {
         // Show error toast
         addToast({
-          title: t("developerQuickActions.assignmentError") || "Assignment Failed",
+          title:
+            t("developerQuickActions.assignmentError") || "Assignment Failed",
           description: "Failed to assign developer(s). Please try again.",
           color: "danger",
           timeout: 5000,
@@ -257,42 +305,52 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   const handlePRAssign = async () => {
     if (selectedPR && selectedDevelopers.length > 0 && onAssignReviewer) {
       try {
-        console.log("DeveloperQuickActions: Starting code review assignment...", {
-          prId: selectedPR.id,
-          reviewerIds: selectedDevelopers.map(d => d.id.toString()),
-          prTitle: selectedPR.title,
-        });
-        
+        console.log(
+          "DeveloperQuickActions: Starting code review assignment...",
+          {
+            prId: selectedPR.id,
+            reviewerIds: selectedDevelopers.map((d) => d.id.toString()),
+            prTitle: selectedPR.title,
+          },
+        );
+
         // Assign each reviewer to the PR
         for (const reviewer of selectedDevelopers) {
           await onAssignReviewer(selectedPR, reviewer.id.toString());
         }
-        
+
         // Show success toast
         addToast({
-          title: t("developerQuickActions.reviewAssignmentSuccess") || "Review Assignment Successful",
-          description: 
-            selectedDevelopers.length === 1 
+          title:
+            t("developerQuickActions.reviewAssignmentSuccess") ||
+            "Review Assignment Successful",
+          description:
+            selectedDevelopers.length === 1
               ? `1 reviewer assigned to ${selectedPR.title}`
               : `${selectedDevelopers.length} reviewers assigned to ${selectedPR.title}`,
           color: "success",
           timeout: 4000,
         });
-        
+
         setIsPRModalOpen(false);
         setSelectedPR(null);
         setSelectedDevelopers([]);
         setDeveloperInputValue("");
         clearDeveloperResults();
-        
+
         // Refresh the pending code reviews list
         await refresh();
       } catch (error) {
-        console.error("DeveloperQuickActions: Failed to assign reviewer:", error);
-        
+        console.error(
+          "DeveloperQuickActions: Failed to assign reviewer:",
+          error,
+        );
+
         // Show error toast
         addToast({
-          title: t("developerQuickActions.reviewAssignmentError") || "Review Assignment Failed",
+          title:
+            t("developerQuickActions.reviewAssignmentError") ||
+            "Review Assignment Failed",
           description: "Failed to assign reviewer(s). Please try again.",
           color: "danger",
           timeout: 5000,
@@ -331,18 +389,19 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       }
 
       // Convert CalendarDate to string format
-      const dateString = `${selectedDate.year}-${String(selectedDate.month).padStart(2, '0')}-${String(selectedDate.day).padStart(2, '0')}`;
+      const dateString = `${selectedDate.year}-${String(selectedDate.month).padStart(2, "0")}-${String(selectedDate.day).padStart(2, "0")}`;
 
       setIsSubmitting(true);
       try {
         await extendTask(selectedTask.id, dateString, extensionReason);
         addToast({
           title: t("common.success") || "Success",
-          description: t("common.taskExtended") || "Task deadline extended successfully",
+          description:
+            t("common.taskExtended") || "Task deadline extended successfully",
           color: "success",
           timeout: 3000,
         });
-        
+
         // Reset form and close modal
         setSelectedDate(null);
         setExtensionReason("");
@@ -350,8 +409,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         setSelectedTask(null);
       } catch (error) {
         addToast({
-          title: t("common.error") || "Error", 
-          description: error instanceof Error ? error.message : "Failed to extend task",
+          title: t("common.error") || "Error",
+          description:
+            error instanceof Error ? error.message : "Failed to extend task",
           color: "danger",
           timeout: 5000,
         });
@@ -369,9 +429,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
 
     return (
       <Modal
+        dir={direction}
         isOpen={isExtendModalOpen}
         onOpenChange={setIsExtendModalOpen}
-        dir={direction}
       >
         <ModalContent>
           <ModalHeader>
@@ -384,44 +444,56 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               Task: <strong>{selectedTask?.name}</strong>
             </p>
             <p className="text-sm text-default-600 mb-4">
-              Current Deadline: <strong>{selectedTask?.endDate ? new Date(selectedTask.endDate).toLocaleDateString() : 'N/A'}</strong>
+              Current Deadline:{" "}
+              <strong>
+                {selectedTask?.endDate
+                  ? new Date(selectedTask.endDate).toLocaleDateString()
+                  : "N/A"}
+              </strong>
             </p>
-            
+
             <div className="space-y-4">
               <DatePicker
-                label={t("common.newDeadline") || "New Deadline"}
-                value={selectedDate}
-                onChange={setSelectedDate}
-                minValue={minDate}
                 isRequired
                 showMonthAndYearPickers
-                description={t("common.selectNewDate") || "Select a new deadline date"}
+                description={
+                  t("common.selectNewDate") || "Select a new deadline date"
+                }
+                label={t("common.newDeadline") || "New Deadline"}
+                minValue={minDate}
+                value={selectedDate}
+                onChange={setSelectedDate}
               />
-              
+
               <Textarea
+                isRequired
                 label={t("common.reason") || "Reason for Extension"}
-                placeholder={t("common.reasonPlaceholder") || "Please provide a reason for extending this task..."}
+                maxRows={6}
+                minRows={3}
+                placeholder={
+                  t("common.reasonPlaceholder") ||
+                  "Please provide a reason for extending this task..."
+                }
                 value={extensionReason}
                 onChange={(e) => setExtensionReason(e.target.value)}
-                minRows={3}
-                maxRows={6}
-                isRequired
               />
             </div>
           </ModalBody>
           <ModalFooter>
             <Button
+              disabled={isSubmitting}
               variant="flat"
               onPress={handleCancel}
-              disabled={isSubmitting}
             >
               {t("common.cancel") || "Cancel"}
             </Button>
             <Button
               color="primary"
-              onPress={handleExtendTask}
-              disabled={!selectedDate || !extensionReason.trim() || isSubmitting}
+              disabled={
+                !selectedDate || !extensionReason.trim() || isSubmitting
+              }
               isLoading={isSubmitting}
+              onPress={handleExtendTask}
             >
               {t("common.extendDeadline") || "Extend Deadline"}
             </Button>
@@ -433,9 +505,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
 
   const TaskAssignmentModal = () => (
     <Modal
+      dir={direction}
       isOpen={isTaskModalOpen}
       onOpenChange={setIsTaskModalOpen}
-      dir={direction}
     >
       <ModalContent>
         <ModalHeader>
@@ -443,14 +515,18 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         </ModalHeader>
         <ModalBody>
           <p className="text-sm text-default-600 mb-4">
-            {t("developerQuickActions.assignDeveloperTo") || "Assign developers to"}: {selectedTask?.title}
+            {t("developerQuickActions.assignDeveloperTo") ||
+              "Assign developers to"}
+            : {selectedTask?.title}
           </p>
-          
+
           {/* Selected Developers Display */}
           {selectedDevelopers.length > 0 && (
             <div className="mb-4">
               <p className="text-sm font-medium text-foreground mb-2">
-                {t("developerQuickActions.selectedDevelopers") || "Selected Developers"}:
+                {t("developerQuickActions.selectedDevelopers") ||
+                  "Selected Developers"}
+                :
               </p>
               <div className="flex flex-wrap gap-2">
                 {selectedDevelopers.map((developer) => (
@@ -459,7 +535,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                     color="primary"
                     variant="flat"
                     onClose={() => {
-                      setSelectedDevelopers(prev => prev.filter(d => d.id !== developer.id));
+                      setSelectedDevelopers((prev) =>
+                        prev.filter((d) => d.id !== developer.id),
+                      );
                     }}
                   >
                     {developer.fullName}
@@ -468,15 +546,23 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               </div>
             </div>
           )}
-          
+
           <Autocomplete
             isClearable
-            items={developerEmployees.filter(emp => !selectedDevelopers.some(selected => selected.id === emp.id))}
-            label={t("developerQuickActions.selectDeveloper") || "Select Developers"}
-            placeholder={t("developerQuickActions.chooseDeveloper") || "Search and select developers"}
             inputValue={developerInputValue}
             isLoading={developerSearchLoading}
+            items={developerEmployees.filter(
+              (emp) =>
+                !selectedDevelopers.some((selected) => selected.id === emp.id),
+            )}
+            label={
+              t("developerQuickActions.selectDeveloper") || "Select Developers"
+            }
             menuTrigger="input"
+            placeholder={
+              t("developerQuickActions.chooseDeveloper") ||
+              "Search and select developers"
+            }
             onInputChange={(value) => {
               setDeveloperInputValue(value);
               // Search for developers
@@ -488,8 +574,13 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                   (d) => d.id.toString() === key,
                 );
 
-                if (developer && !selectedDevelopers.some(selected => selected.id === developer.id)) {
-                  setSelectedDevelopers(prev => [...prev, developer]);
+                if (
+                  developer &&
+                  !selectedDevelopers.some(
+                    (selected) => selected.id === developer.id,
+                  )
+                ) {
+                  setSelectedDevelopers((prev) => [...prev, developer]);
                   setDeveloperInputValue("");
                 }
               }
@@ -511,18 +602,16 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
           </Autocomplete>
         </ModalBody>
         <ModalFooter>
-          <Button
-            variant="flat"
-            onPress={handleTaskCancel}
-          >
+          <Button variant="flat" onPress={handleTaskCancel}>
             {t("common.cancel") || "Cancel"}
           </Button>
           <Button
             color="primary"
-            onPress={handleTaskAssign}
             disabled={selectedDevelopers.length === 0}
+            onPress={handleTaskAssign}
           >
-            {t("developerQuickActions.assign") || "Assign"} ({selectedDevelopers.length})
+            {t("developerQuickActions.assign") || "Assign"} (
+            {selectedDevelopers.length})
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -531,9 +620,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
 
   const CodeReviewAssignmentModal = () => (
     <Modal
+      dir={direction}
       isOpen={isPRModalOpen}
       onOpenChange={setIsPRModalOpen}
-      dir={direction}
     >
       <ModalContent>
         <ModalHeader>
@@ -541,14 +630,18 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         </ModalHeader>
         <ModalBody>
           <p className="text-sm text-default-600 mb-4">
-            {t("developerQuickActions.assignReviewerTo") || "Assign reviewers to"}: {selectedPR?.title}
+            {t("developerQuickActions.assignReviewerTo") ||
+              "Assign reviewers to"}
+            : {selectedPR?.title}
           </p>
-          
+
           {/* Selected Developers Display */}
           {selectedDevelopers.length > 0 && (
             <div className="mb-4">
               <p className="text-sm font-medium text-foreground mb-2">
-                {t("developerQuickActions.selectedReviewers") || "Selected Reviewers"}:
+                {t("developerQuickActions.selectedReviewers") ||
+                  "Selected Reviewers"}
+                :
               </p>
               <div className="flex flex-wrap gap-2">
                 {selectedDevelopers.map((developer) => (
@@ -557,7 +650,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                     color="primary"
                     variant="flat"
                     onClose={() => {
-                      setSelectedDevelopers(prev => prev.filter(d => d.id !== developer.id));
+                      setSelectedDevelopers((prev) =>
+                        prev.filter((d) => d.id !== developer.id),
+                      );
                     }}
                   >
                     {developer.fullName}
@@ -566,15 +661,23 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               </div>
             </div>
           )}
-          
+
           <Autocomplete
             isClearable
-            items={developerEmployees.filter(emp => !selectedDevelopers.some(selected => selected.id === emp.id))}
-            label={t("developerQuickActions.selectReviewer") || "Select Reviewers"}
-            placeholder={t("developerQuickActions.chooseReviewer") || "Search and select reviewers"}
             inputValue={developerInputValue}
             isLoading={developerSearchLoading}
+            items={developerEmployees.filter(
+              (emp) =>
+                !selectedDevelopers.some((selected) => selected.id === emp.id),
+            )}
+            label={
+              t("developerQuickActions.selectReviewer") || "Select Reviewers"
+            }
             menuTrigger="input"
+            placeholder={
+              t("developerQuickActions.chooseReviewer") ||
+              "Search and select reviewers"
+            }
             onInputChange={(value) => {
               setDeveloperInputValue(value);
               // Search for developers
@@ -586,8 +689,13 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                   (d) => d.id.toString() === key,
                 );
 
-                if (developer && !selectedDevelopers.some(selected => selected.id === developer.id)) {
-                  setSelectedDevelopers(prev => [...prev, developer]);
+                if (
+                  developer &&
+                  !selectedDevelopers.some(
+                    (selected) => selected.id === developer.id,
+                  )
+                ) {
+                  setSelectedDevelopers((prev) => [...prev, developer]);
                   setDeveloperInputValue("");
                 }
               }
@@ -609,18 +717,16 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
           </Autocomplete>
         </ModalBody>
         <ModalFooter>
-          <Button
-            variant="flat"
-            onPress={handlePRCancel}
-          >
+          <Button variant="flat" onPress={handlePRCancel}>
             {t("common.cancel") || "Cancel"}
           </Button>
           <Button
             color="primary"
-            onPress={handlePRAssign}
             disabled={selectedDevelopers.length === 0}
+            onPress={handlePRAssign}
           >
-            {t("developerQuickActions.assign") || "Assign"} ({selectedDevelopers.length})
+            {t("developerQuickActions.assign") || "Assign"} (
+            {selectedDevelopers.length})
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -637,7 +743,11 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
           }
         `}
       </style>
-      <Card className={`${className} border-default-200`} shadow="sm" dir={direction}>
+      <Card
+        className={`${className} border-default-200`}
+        dir={direction}
+        shadow="sm"
+      >
         <CardHeader className="flex items-center justify-between pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -645,15 +755,15 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                 {t("dashboard.myActions") || "My Actions"}
               </h3>
               {totalActionsCount > 0 && (
-                <Chip 
-                  size="sm" 
-                  variant="flat" 
+                <Chip
                   className="bg-danger-50 text-danger-600 border border-danger-200 animate-pulse"
+                  size="sm"
                   style={{
-                    animation: 'fadeInOut 2s ease-in-out infinite'
+                    animation: "fadeInOut 2s ease-in-out infinite",
                   }}
+                  variant="flat"
                 >
-                  <AnimatedCounter value={totalActionsCount} duration={600} />
+                  <AnimatedCounter duration={600} value={totalActionsCount} />
                 </Chip>
               )}
             </div>
@@ -664,10 +774,10 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
           </div>
           <Button
             isIconOnly
-            size="sm"
-            variant="light"
             className="text-default-400 hover:text-default-600"
             disabled={refreshing}
+            size="sm"
+            variant="light"
             onPress={refresh}
           >
             <RefreshCw
@@ -687,20 +797,25 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                 <Accordion selectionMode="single" variant="splitted">
                   <AccordionItem
                     key="unassigned-tasks"
+                    className="border border-default-200 rounded-lg"
                     title={
                       <div className="flex items-center justify-between w-full">
                         <h3 className="text-lg font-semibold text-foreground">
-                          {t("developerQuickActions.unassignedTasks") || "Unassigned Tasks"}
+                          {t("developerQuickActions.unassignedTasks") ||
+                            "Unassigned Tasks"}
                         </h3>
-                        <Chip size="sm" variant="flat" className="bg-danger-50 text-danger-600">
+                        <Chip
+                          className="bg-danger-50 text-danger-600"
+                          size="sm"
+                          variant="flat"
+                        >
                           {unassignedTasks.length}
                         </Chip>
                       </div>
                     }
-                    className="border border-default-200 rounded-lg"
                   >
-                    <ScrollShadow 
-                      className="max-h-64" 
+                    <ScrollShadow
+                      className="max-h-64"
                       hideScrollBar={true}
                       size={20}
                     >
@@ -708,23 +823,26 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                         {unassignedTasks.map((task) => (
                           <CustomAlert
                             key={task.id}
-                            title={task.title}
                             description={`${task.projectName} • ${task.owningUnit} • ${task.estimatedHours}h • Due: ${new Date(task.dueDate).toLocaleDateString()}`}
                             direction={direction}
+                            title={task.title}
                           >
                             <Divider className="bg-default-200 my-3" />
-                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                            <div
+                              className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
+                            >
                               <Button
                                 className="bg-background text-default-700 font-medium border-1 shadow-small"
                                 size="sm"
-                                variant="bordered"
                                 startContent={<Code className="w-4 h-4" />}
+                                variant="bordered"
                                 onPress={() => {
                                   setSelectedTask(task);
                                   setIsTaskModalOpen(true);
                                 }}
                               >
-                                {t("developerQuickActions.assignTask") || "Assign Task"}
+                                {t("developerQuickActions.assignTask") ||
+                                  "Assign Task"}
                               </Button>
                             </div>
                           </CustomAlert>
@@ -742,20 +860,25 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                 <Accordion selectionMode="single" variant="splitted">
                   <AccordionItem
                     key="almost-completed-tasks"
+                    className="border border-default-200 rounded-lg"
                     title={
                       <div className="flex items-center justify-between w-full">
                         <h3 className="text-lg font-semibold text-foreground">
-                          {t("developerQuickActions.almostCompletedTasks") || "Almost Completed Tasks"}
+                          {t("developerQuickActions.almostCompletedTasks") ||
+                            "Almost Completed Tasks"}
                         </h3>
-                        <Chip size="sm" variant="flat" className="bg-warning-50 text-warning-600">
+                        <Chip
+                          className="bg-warning-50 text-warning-600"
+                          size="sm"
+                          variant="flat"
+                        >
                           {almostCompletedTasks.length}
                         </Chip>
                       </div>
                     }
-                    className="border border-default-200 rounded-lg"
                   >
-                    <ScrollShadow 
-                      className="max-h-64" 
+                    <ScrollShadow
+                      className="max-h-64"
                       hideScrollBar={true}
                       size={20}
                     >
@@ -763,19 +886,21 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                         {almostCompletedTasks.map((task) => (
                           <CustomAlert
                             key={task.id}
-                            title={task.name}
+                            color={task.isOverdue ? "danger" : "warning"}
                             description={`${task.projectName} • ${task.sprintName} • ${task.assigneeName || "Unassigned"} • Progress: ${task.progress || 0}% • ${task.isOverdue ? "Overdue" : `Due in ${task.daysUntilDeadline} days`}`}
                             direction={direction}
+                            title={task.name}
                             variant="faded"
-                            color={task.isOverdue ? "danger" : "warning"}
                           >
                             <Divider className="bg-default-200 my-3" />
-                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                            <div
+                              className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
+                            >
                               <Button
                                 className="bg-background text-default-700 font-medium border-1 shadow-small"
                                 size="sm"
-                                variant="bordered"
                                 startContent={<Clock className="w-4 h-4" />}
+                                variant="bordered"
                                 onPress={() => {
                                   setSelectedTask(task);
                                   setIsExtendModalOpen(true);
@@ -799,20 +924,25 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                 <Accordion selectionMode="single" variant="splitted">
                   <AccordionItem
                     key="available-developers"
+                    className="border border-default-200 rounded-lg"
                     title={
                       <div className="flex items-center justify-between w-full">
                         <h3 className="text-lg font-semibold text-foreground">
-                          {t("developerQuickActions.availableDevelopers") || "Available Team Developers"}
+                          {t("developerQuickActions.availableDevelopers") ||
+                            "Available Team Developers"}
                         </h3>
-                        <Chip size="sm" variant="flat" className="bg-success-50 text-success-600">
+                        <Chip
+                          className="bg-success-50 text-success-600"
+                          size="sm"
+                          variant="flat"
+                        >
                           {availableDevelopers.length}
                         </Chip>
                       </div>
                     }
-                    className="border border-default-200 rounded-lg"
                   >
-                    <ScrollShadow 
-                      className="max-h-64" 
+                    <ScrollShadow
+                      className="max-h-64"
                       hideScrollBar={true}
                       size={20}
                     >
@@ -820,19 +950,21 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                         {availableDevelopers.map((developer) => (
                           <CustomAlert
                             key={developer.userId}
-                            title={developer.fullName}
+                            color="success"
                             description={`${developer.department} • ${developer.gradeName} • ${developer.totalTasks} tasks • ${developer.skills.join(", ")}`}
                             direction={direction}
+                            title={developer.fullName}
                             variant="faded"
-                            color="success"
                           >
                             <Divider className="bg-default-200 my-3" />
-                            <div className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}>
+                            <div
+                              className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
+                            >
                               <Button
                                 className="bg-background text-default-700 font-medium border-1 shadow-small"
                                 size="sm"
-                                variant="bordered"
                                 startContent={<User className="w-4 h-4" />}
+                                variant="bordered"
                                 onPress={() => {
                                   // Navigate to team workload page or developer details
                                   window.location.href = `/team-workload`;

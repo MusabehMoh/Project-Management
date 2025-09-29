@@ -35,7 +35,7 @@ const getPerformanceColor = (score: number) => {
 // Format busy until date for tooltip
 const formatBusyUntil = (
   busyUntil: string | undefined,
-  t: (key: string) => string
+  t: (key: string) => string,
 ) => {
   if (!busyUntil) return "";
 
@@ -52,7 +52,7 @@ const formatBusyUntil = (
 
   return t("team.busyUntilDate").replace(
     "{date}",
-    busyDate.toLocaleDateString()
+    busyDate.toLocaleDateString(),
   );
 };
 
@@ -78,8 +78,9 @@ const TeamWorkloadPerformance: React.FC = () => {
   // Get unique departments for filter
   const departments = useMemo(() => {
     const depts = Array.from(
-      new Set(teamData.map((member) => member.department))
+      new Set(teamData.map((member) => member.department)),
     );
+
     return depts.sort();
   }, [teamData]);
 
@@ -209,9 +210,9 @@ const TeamWorkloadPerformance: React.FC = () => {
             <div className="flex items-center gap-2">
               {hasActiveFilters && (
                 <Chip
+                  color="primary"
                   size="sm"
                   variant="flat"
-                  color="primary"
                   onClose={resetFilters}
                 >
                   {filteredTeamData.length} / {teamData.length}{" "}
@@ -219,9 +220,9 @@ const TeamWorkloadPerformance: React.FC = () => {
                 </Chip>
               )}
               <Button
+                isIconOnly
                 size="sm"
                 variant="ghost"
-                isIconOnly
                 onPress={() => setShowFilters(!showFilters)}
               >
                 <Filter className="w-4 h-4" />
@@ -236,25 +237,26 @@ const TeamWorkloadPerformance: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Search Filter */}
                 <Input
-                  size="sm"
+                  isClearable
                   label={t("team.search")}
                   placeholder={t("team.searchPlaceholder")}
+                  size="sm"
                   value={filters.search}
                   onChange={(e) =>
                     setFilters({ ...filters, search: e.target.value })
                   }
-                  isClearable
                   onClear={() => setFilters({ ...filters, search: "" })}
                 />
 
                 {/* Department Filter */}
                 <Select
-                  size="sm"
                   label={t("team.department")}
                   placeholder={t("team.allDepartments")}
                   selectedKeys={filters.department ? [filters.department] : []}
+                  size="sm"
                   onSelectionChange={(keys) => {
                     const value = (Array.from(keys)[0] as string) || "";
+
                     setFilters({ ...filters, department: value });
                   }}
                 >
@@ -267,12 +269,13 @@ const TeamWorkloadPerformance: React.FC = () => {
 
                 {/* Busy Status Filter */}
                 <Select
-                  size="sm"
                   label={t("team.busyStatus")}
                   placeholder={t("team.allStatuses")}
                   selectedKeys={filters.busyStatus ? [filters.busyStatus] : []}
+                  size="sm"
                   onSelectionChange={(keys) => {
                     const value = (Array.from(keys)[0] as string) || "";
+
                     setFilters({ ...filters, busyStatus: value });
                   }}
                 >
@@ -282,14 +285,15 @@ const TeamWorkloadPerformance: React.FC = () => {
 
                 {/* Performance Range Filter */}
                 <Select
-                  size="sm"
                   label={t("team.performanceRange")}
                   placeholder={t("team.allPerformance")}
                   selectedKeys={
                     filters.performanceRange ? [filters.performanceRange] : []
                   }
+                  size="sm"
                   onSelectionChange={(keys) => {
                     const value = (Array.from(keys)[0] as string) || "";
+
                     setFilters({ ...filters, performanceRange: value });
                   }}
                 >
@@ -308,10 +312,10 @@ const TeamWorkloadPerformance: React.FC = () => {
               {hasActiveFilters && (
                 <div className="mt-3 flex justify-end">
                   <Button
-                    size="sm"
-                    variant="flat"
                     color="default"
+                    size="sm"
                     startContent={<X className="w-4 h-4" />}
+                    variant="flat"
                     onPress={resetFilters}
                   >
                     {t("team.clearFilters")}
@@ -322,7 +326,7 @@ const TeamWorkloadPerformance: React.FC = () => {
           )}
           {loading ? (
             <div className="flex justify-center items-center py-8">
-              <Spinner size="lg" color="primary" />
+              <Spinner color="primary" size="lg" />
             </div>
           ) : error ? (
             <div className="text-center text-danger py-4">{error}</div>
@@ -411,17 +415,17 @@ const TeamWorkloadPerformance: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Tooltip
-                          content={`${t("team.performance")}: ${member.metrics.performance}%`}
                           showArrow
+                          content={`${t("team.performance")}: ${member.metrics.performance}%`}
                         >
                           <Progress
+                            className="w-full cursor-help"
+                            color={getPerformanceColor(
+                              member.metrics.performance,
+                            )}
+                            showValueLabel={false}
                             size="sm"
                             value={member.metrics.performance}
-                            color={getPerformanceColor(
-                              member.metrics.performance
-                            )}
-                            className="w-full cursor-help"
-                            showValueLabel={false}
                           />
                         </Tooltip>
                       </TableCell>

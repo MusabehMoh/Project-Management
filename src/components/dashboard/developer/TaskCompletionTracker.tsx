@@ -93,10 +93,12 @@ export default function TaskCompletionTracker({
   developerId,
 }: TaskCompletionTrackerProps) {
   const { t, language } = useLanguage();
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 3;
-  const [analytics, setAnalytics] = useState<TaskCompletionAnalytics | null>(null);
+  const [analytics, setAnalytics] = useState<TaskCompletionAnalytics | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +159,7 @@ export default function TaskCompletionTracker({
 
   const allItems = useMemo(() => {
     if (!analytics) return [];
-    
+
     return [
       ...analytics.overdueItems.map((item) => ({
         ...item,
@@ -171,8 +173,10 @@ export default function TaskCompletionTracker({
       if (a.type === "overdue" && b.type !== "overdue") return -1;
       if (a.type !== "overdue" && b.type === "overdue") return 1;
 
-      const aDays = a.type === "overdue" ? a.daysOverdue || 0 : a.daysUntilDeadline || 0;
-      const bDays = b.type === "overdue" ? b.daysOverdue || 0 : b.daysUntilDeadline || 0;
+      const aDays =
+        a.type === "overdue" ? a.daysOverdue || 0 : a.daysUntilDeadline || 0;
+      const bDays =
+        b.type === "overdue" ? b.daysOverdue || 0 : b.daysUntilDeadline || 0;
 
       return a.type === "overdue" ? bDays - aDays : aDays - bDays;
     });
@@ -181,7 +185,7 @@ export default function TaskCompletionTracker({
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    
+
     return allItems.slice(startIndex, endIndex);
   }, [allItems, currentPage, pageSize]);
 
@@ -198,13 +202,15 @@ export default function TaskCompletionTracker({
       try {
         setLoading(true);
         setError(null);
-        
+
         if (useMockData) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           setAnalytics(mockAnalytics);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch task data");
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch task data",
+        );
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -271,7 +277,9 @@ export default function TaskCompletionTracker({
             <div className="flex items-center gap-2">
               {allItems.length > 0 && (
                 <Chip
-                  color={analytics.overdueItems.length > 0 ? "danger" : "warning"}
+                  color={
+                    analytics.overdueItems.length > 0 ? "danger" : "warning"
+                  }
                   size="sm"
                   variant="flat"
                 >
@@ -301,7 +309,8 @@ export default function TaskCompletionTracker({
                 {t("developerDashboard.overallProgress") || "Overall Progress"}
               </span>
               <span className="text-sm text-default-500">
-                {analytics.summary.completedTasks} / {analytics.summary.totalTasks}
+                {analytics.summary.completedTasks} /{" "}
+                {analytics.summary.totalTasks}
               </span>
             </div>
             <Progress
@@ -418,7 +427,8 @@ export default function TaskCompletionTracker({
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-success-600 mx-auto mb-4" />
               <h4 className="text-lg font-semibold text-foreground mb-2">
-                {t("developerDashboard.allTasksOnTrack") || "All Tasks On Track"}
+                {t("developerDashboard.allTasksOnTrack") ||
+                  "All Tasks On Track"}
               </h4>
               <p className="text-sm text-default-500">
                 {t("developerDashboard.noOverdueTasks") ||
@@ -429,14 +439,16 @@ export default function TaskCompletionTracker({
                   <CheckCircle className="w-4 h-4 text-success-600" />
                   <span className="text-success-600">
                     {analytics.summary.onTimeCompleted}{" "}
-                    {t("developerDashboard.completedOnTime") || "completed on time"}
+                    {t("developerDashboard.completedOnTime") ||
+                      "completed on time"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Code className="w-4 h-4 text-default-500" />
                   <span className="text-default-500">
                     {analytics.summary.completedTasks}{" "}
-                    {t("developerDashboard.totalCompleted") || "total completed"}
+                    {t("developerDashboard.totalCompleted") ||
+                      "total completed"}
                   </span>
                 </div>
               </div>

@@ -65,7 +65,7 @@ export default function RequirementCompletionTracker({
   analystId,
 }: RequirementCompletionTrackerProps) {
   const { t, language } = useLanguage();
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 3; // Show only 3 records per page
@@ -80,7 +80,7 @@ export default function RequirementCompletionTracker({
   // Combine overdue and at-risk items for the table
   const allItems = useMemo(() => {
     if (!analytics) return [];
-    
+
     return [
       ...analytics.overdueItems.map((item) => ({
         ...item,
@@ -106,7 +106,7 @@ export default function RequirementCompletionTracker({
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    
+
     return allItems.slice(startIndex, endIndex);
   }, [allItems, currentPage, pageSize]);
 
@@ -186,11 +186,11 @@ export default function RequirementCompletionTracker({
             <div className="flex items-center gap-2">
               {allItems.length > 0 && (
                 <Chip
-                  size="sm"
-                  variant="flat"
                   color={
                     analytics.overdueItems.length > 0 ? "danger" : "warning"
                   }
+                  size="sm"
+                  variant="flat"
                 >
                   {allItems.length}{" "}
                   {t("completion.needsAttention") || "Need Attention"}

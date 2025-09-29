@@ -2,6 +2,7 @@ import type {
   ProjectRequirement,
   AssignedProject,
   CreateRequirementTaskRequest,
+  ProjectRequirementAttachment,
 } from "@/types/projectRequirement";
 import type { MemberSearchResult } from "@/types/timeline";
 import type { CreateTimelineRequest } from "@/types/timeline";
@@ -42,32 +43,21 @@ import {
 } from "lucide-react";
 
 import { RefreshIcon } from "@/components/icons";
-
+import { FilePreview } from "@/components/FilePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useDevelopmentRequirements } from "@/hooks/useDevelopmentRequirements";
+import { useApprovedRequirements } from "@/hooks/useApprovedRequirements";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { useTimeline } from "@/hooks/useTimeline";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRequirementStatus } from "@/hooks/useRequirementStatus";
+import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
+import { useFilePreview } from "@/hooks/useFilePreview";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
-
-// Utility functions for color mapping
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case "high":
-      return "danger";
-    case "medium":
-      return "warning";
-    case "low":
-      return "success";
-    default:
-      return "default";
-  }
-};
+import { REQUIREMENT_STATUS } from "@/constants/projectRequirements";
 
 // Format date helper
 const formatDate = (dateString: string) => {
@@ -86,6 +76,8 @@ const RequirementCard = ({
   onCreateTimeline,
   getStatusColor,
   getStatusText,
+  getPriorityColor,
+  getPriorityLabel,
   isHighlighted = false,
   cardRef,
 }: {
@@ -94,9 +86,13 @@ const RequirementCard = ({
   onCreateTask: (requirement: ProjectRequirement) => void;
   onCreateTimeline: (requirement: ProjectRequirement) => void;
   getStatusColor: (
-    status: string | number,
+    status: number,
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
-  getStatusText: (status: string | number) => string;
+  getStatusText: (status: number) => string;
+  getPriorityColor: (
+    priority: number,
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getPriorityLabel: (priority: number) => string | undefined;
   isHighlighted?: boolean;
   cardRef?: (element: HTMLDivElement | null) => void;
 }) => {
@@ -106,12 +102,10 @@ const RequirementCard = ({
   // Using the formatDate function defined above
 
   return (
-    <Card 
+    <Card
       ref={cardRef}
       className={`h-full flex flex-col transition-all duration-1000 ease-out ${
-        isHighlighted 
-          ? "ring-1 ring-primary/60 bg-primary-50/20 shadow-md" 
-          : ""
+        isHighlighted ? "ring-1 ring-primary/60 bg-primary-50/20 shadow-md" : ""
       }`}
     >
       <CardHeader className="pb-2">
@@ -130,7 +124,8 @@ const RequirementCard = ({
               size="sm"
               variant="flat"
             >
-              {t(`requirements.${requirement.priority}`)}
+              {getPriorityLabel(requirement.priority) ||
+                t(`requirements.priority.${requirement.priority}`)}
             </Chip>
             <Chip
               color={getStatusColor(requirement.status)}
@@ -247,56 +242,84 @@ export default function DevelopmentRequirementsPage() {
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
   const [searchParams] = useSearchParams();
-  
+
   // Refs for scrolling and highlighting
   const requirementRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
-  const [highlightedRequirementId, setHighlightedRequirementId] = useState<number | null>(null);
+  const [highlightedRequirementId, setHighlightedRequirementId] = useState<
+    number | null
+  >(null);
 
   // Set page title
-  usePageTitle("requirements.developmentRequirements");
+  usePageTitle("requirements.approvedRequirements");
 
-  // Requirement status hook for status management
-  const { getRequirementStatusColor } = useRequirementStatus();
+  // Global priority lookups
+  const { getPriorityColor, getPriorityLabel, priorityOptions } =
+    usePriorityLookups();
 
-  // Helper function to convert string status to numeric code
-  const convertStatusToCode = (status: string): number => {
-    switch (status.toLowerCase()) {
-      case "draft":
-        return 1; // New
-      case "approved":
-        return 2; // Under Study
-      case "in-development":
-      case "in_development":
-        return 3; // Under Development
-      case "testing":
-        return 4; // Under Testing
-      case "completed":
-        return 5; // Completed
-      default:
-        return 1; // Default to New
+  // RequirementStatus hook for dynamic status management
+  const { statuses, getRequirementStatusColor, getRequirementStatusName } =
+    useRequirementStatus();
+
+  // File preview hook
+  const { previewState, previewFile, closePreview, downloadCurrentFile } =
+    useFilePreview({
+      downloadFunction: (requirementId, attachmentId, filename) =>
+        projectRequirementsService
+          .downloadAttachment(requirementId, attachmentId)
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }),
+    });
+
+  // Handle file preview with attachment data
+  const handleFilePreview = async (
+    attachment: ProjectRequirementAttachment,
+  ) => {
+    try {
+      // For previewable files, get the blob URL
+      const blob = await projectRequirementsService.downloadAttachment(
+        selectedRequirement?.id || 0,
+        attachment.id,
+      );
+
+      // Create URL for preview
+      const url = window.URL.createObjectURL(blob);
+
+      await previewFile(attachment.originalName, url, attachment.fileSize);
+    } catch {
+      // If preview fails, just download the file
+      await projectRequirementsService
+        .downloadAttachment(selectedRequirement?.id || 0, attachment.id)
+        .then((blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+
+          a.href = url;
+          a.download = attachment.originalName;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        });
     }
   };
 
-  // Helper function to get status color (handles both string and numeric)
-  const getStatusColor = (
-    status: string | number,
-  ): "warning" | "danger" | "primary" | "secondary" | "success" | "default" => {
-    if (typeof status === "string") {
-      return getRequirementStatusColor(convertStatusToCode(status));
-    }
-
+  // Helper function to get status color using RequirementStatus lookup
+  const getStatusColor = (status: number) => {
     return getRequirementStatusColor(status);
   };
 
-  // Helper function to get status text (handles both string and numeric)
-  const getStatusText = (status: string | number): string => {
-    if (typeof status === "string") {
-      const statusCode = convertStatusToCode(status);
-
-      return t(`requirementStatus.${statusCode}`);
-    }
-
-    return t(`requirementStatus.${status}`);
+  // Helper function to get status text using RequirementStatus lookup
+  const getStatusText = (status: number) => {
+    return getRequirementStatusName(status);
   };
 
   // Grid-only view
@@ -316,7 +339,7 @@ export default function DevelopmentRequirementsPage() {
     refreshData,
     projects,
     setProjectFilter,
-  } = useDevelopmentRequirements({
+  } = useApprovedRequirements({
     pageSize: 20,
   });
 
@@ -416,12 +439,12 @@ export default function DevelopmentRequirementsPage() {
 
       if (result) {
         // Update requirement status to in_development after timeline creation
-        if (timelineRequirement?.status === "approved") {
+        if (timelineRequirement?.status === REQUIREMENT_STATUS.APPROVED) {
           await projectRequirementsService.updateRequirement(
             timelineRequirement.id,
             {
               id: timelineRequirement.id,
-              status: "in_development",
+              status: REQUIREMENT_STATUS.UNDER_DEVELOPMENT,
             },
           );
         }
@@ -457,12 +480,12 @@ export default function DevelopmentRequirementsPage() {
       );
 
       // Update requirement status to in_development after task creation
-      if (selectedRequirement.status === "approved") {
+      if (selectedRequirement.status === REQUIREMENT_STATUS.APPROVED) {
         await projectRequirementsService.updateRequirement(
           selectedRequirement.id,
           {
             id: selectedRequirement.id,
-            status: "in_development",
+            status: REQUIREMENT_STATUS.UNDER_DEVELOPMENT,
           },
         );
       }
@@ -496,6 +519,7 @@ export default function DevelopmentRequirementsPage() {
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string>("");
 
   // Update filters when search/filter states change (with debouncing)
@@ -503,6 +527,9 @@ export default function DevelopmentRequirementsPage() {
     const timeoutId = setTimeout(() => {
       const newFilters = {
         ...(searchTerm && { search: searchTerm }),
+        ...(statusFilter !== null && {
+          status: statusFilter.toString(),
+        }),
         ...(priorityFilter && { priority: priorityFilter }),
       };
 
@@ -510,29 +537,43 @@ export default function DevelopmentRequirementsPage() {
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, priorityFilter, updateFilters]);
+  }, [searchTerm, statusFilter, priorityFilter, updateFilters]);
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter(null);
+    setPriorityFilter("");
+    updateFilters({});
+    setProjectFilter(undefined);
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    searchTerm || statusFilter !== null || priorityFilter || filters.projectId;
 
   // Auto-scroll and highlight functionality
   useEffect(() => {
-    const highlightRequirement = searchParams.get('highlightRequirement');
-    const scrollTo = searchParams.get('scrollTo');
-    
+    const highlightRequirement = searchParams.get("highlightRequirement");
+    const scrollTo = searchParams.get("scrollTo");
+
     if (highlightRequirement && scrollTo && requirements.length > 0) {
       const requirementId = parseInt(highlightRequirement, 10);
       const scrollToId = parseInt(scrollTo, 10);
-      
+
       // Set highlighted requirement
       setHighlightedRequirementId(requirementId);
-      
+
       // Scroll to the requirement after a short delay to ensure DOM is ready
       setTimeout(() => {
         const element = requirementRefs.current[scrollToId];
+
         if (element) {
-          element.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
           });
-          
+
           // Remove highlight after 5 seconds for a more subtle fade
           setTimeout(() => {
             setHighlightedRequirementId(null);
@@ -564,10 +605,10 @@ export default function DevelopmentRequirementsPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Code className="w-6 h-6" />
-              {t("requirements.developmentRequirements")}
+              {t("requirements.approvedRequirements")}
             </h1>
             <p className="text-default-500">
-              {t("requirements.developmentRequirementsSubtitle")}
+              {t("requirements.approvedRequirementsSubtitle")}
             </p>
           </div>
         </div>
@@ -584,7 +625,6 @@ export default function DevelopmentRequirementsPage() {
                 onValueChange={setSearchTerm}
               />
 
-              {/* Project filter dropdown - appears before Priority */}
               <Select
                 className="md:w-86"
                 placeholder={t("taskPlan.filterByProject")}
@@ -608,19 +648,49 @@ export default function DevelopmentRequirementsPage() {
               </Select>
 
               <Select
-                className="md:w-40"
-                placeholder={t("requirements.filterByPriority")}
-                selectedKeys={priorityFilter ? [priorityFilter] : []}
-                onSelectionChange={(keys) =>
-                  setPriorityFilter((Array.from(keys)[0] as string) || "")
+                className="md:max-w-xs"
+                items={[
+                  { value: "", label: t("requirements.allStatuses") },
+                  ...(statuses || []).map((status) => ({
+                    value: status.value.toString(),
+                    label: status.nameEn,
+                  })),
+                ]}
+                placeholder={t("requirements.filterByStatus")}
+                selectedKeys={
+                  statusFilter !== null ? [statusFilter.toString()] : []
                 }
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+
+                  setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
+                }}
               >
-                <SelectItem key="">
-                  {t("requirements.allPriorities")}
-                </SelectItem>
-                <SelectItem key="high">{t("requirements.high")}</SelectItem>
-                <SelectItem key="medium">{t("requirements.medium")}</SelectItem>
-                <SelectItem key="low">{t("requirements.low")}</SelectItem>
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
+
+              <Select
+                className="md:max-w-xs"
+                items={[
+                  { value: "", label: t("requirements.allPriorities") },
+                  ...priorityOptions.map((p) => ({
+                    value: p.value.toString(),
+                    label: p.label,
+                  })),
+                ]}
+                placeholder={t("requirements.filterByPriority")}
+                selectedKeys={priorityFilter ? [priorityFilter.toString()] : []}
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+
+                  setPriorityFilter(selectedKey || "");
+                }}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
               </Select>
 
               {/* Grid-only view (no toggle) */}
@@ -652,25 +722,17 @@ export default function DevelopmentRequirementsPage() {
               </div>
 
               {/* Reset filters button */}
-              <div>
+              {hasActiveFilters && (
                 <Button
-                  isIconOnly
-                  variant="bordered"
-                  onPress={() => {
-                    // Clear local UI filters
-                    setSearchTerm("");
-                    setPriorityFilter("");
-                    // Clear hook/server filters
-                    updateFilters({});
-                    // Clear project filter if set
-                    setProjectFilter(undefined);
-                    // Refresh data
-                    refreshData();
-                  }}
+                  className="min-w-fit"
+                  size="lg"
+                  startContent={<RefreshIcon className="w-4 h-4" />}
+                  variant="flat"
+                  onPress={resetFilters}
                 >
-                  <RefreshIcon />
+                  {t("common.reset")}
                 </Button>
-              </div>
+              )}
             </div>
           </CardBody>
         </Card>
@@ -686,10 +748,10 @@ export default function DevelopmentRequirementsPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-default-700">
-                      {t("requirements.noDevelopmentRequirements")}
+                      {t("requirements.noApprovedRequirements")}
                     </h3>
                     <p className="text-default-500">
-                      {t("requirements.noDevelopmentRequirementsDesc")}
+                      {t("requirements.noApprovedRequirementsDesc")}
                     </p>
                   </div>
                 </div>
@@ -703,18 +765,20 @@ export default function DevelopmentRequirementsPage() {
               {requirements.map((requirement) => (
                 <RequirementCard
                   key={requirement.id}
-                  getStatusColor={getStatusColor}
-                  getStatusText={getStatusText}
-                  requirement={requirement}
-                  onCreateTask={openTaskModal}
-                  onCreateTimeline={openTimelineModal}
-                  onViewDetails={openRequirementDetails}
-                  isHighlighted={highlightedRequirementId === requirement.id}
                   cardRef={(element) => {
                     if (element) {
                       requirementRefs.current[requirement.id] = element;
                     }
                   }}
+                  getPriorityColor={getPriorityColor}
+                  getPriorityLabel={getPriorityLabel}
+                  getStatusColor={getStatusColor}
+                  getStatusText={getStatusText}
+                  isHighlighted={highlightedRequirementId === requirement.id}
+                  requirement={requirement}
+                  onCreateTask={openTaskModal}
+                  onCreateTimeline={openTimelineModal}
+                  onViewDetails={openRequirementDetails}
                 />
               ))}
             </div>
@@ -757,14 +821,17 @@ export default function DevelopmentRequirementsPage() {
             <DrawerBody>
               {selectedRequirement && (
                 <div className="space-y-6">
-                  {/* Status and Priority */}
-                  <div className="flex gap-4">
+                  {/* Status, Priority, and Type */}
+                  <div className="flex flex-wrap gap-3">
                     <Chip
                       color={getPriorityColor(selectedRequirement.priority)}
                       size="sm"
                       variant="flat"
                     >
-                      {t(`requirements.${selectedRequirement.priority}`)}
+                      {getPriorityLabel(selectedRequirement.priority) ||
+                        t(
+                          `requirements.priority.${selectedRequirement.priority}`,
+                        )}
                     </Chip>
                     <Chip
                       color={getStatusColor(selectedRequirement.status)}
@@ -773,6 +840,11 @@ export default function DevelopmentRequirementsPage() {
                     >
                       {getStatusText(selectedRequirement.status)}
                     </Chip>
+                    {selectedRequirement.type && (
+                      <Chip color="default" size="sm" variant="flat">
+                        {t(`requirements.type.${selectedRequirement.type}`)}
+                      </Chip>
+                    )}
                   </div>
 
                   {/* Description */}
@@ -813,6 +885,15 @@ export default function DevelopmentRequirementsPage() {
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-default-600 mb-1">
+                        {t("requirements.type")}
+                      </h4>
+                      <p className="text-sm">
+                        {t(`requirements.type.${selectedRequirement.type}`) ||
+                          "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-default-600 mb-1">
                         {t("requirements.created")}
                       </h4>
                       <p className="text-sm">
@@ -821,7 +902,57 @@ export default function DevelopmentRequirementsPage() {
                           : "N/A"}
                       </p>
                     </div>
+                    <div>
+                      <h4 className="text-sm font-medium text-default-600 mb-1">
+                        {t("requirements.updated")}
+                      </h4>
+                      <p className="text-sm">
+                        {selectedRequirement.updatedAt
+                          ? formatDate(selectedRequirement.updatedAt)
+                          : "N/A"}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Project Information */}
+                  {selectedRequirement.project && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        <Code className="w-5 h-5 text-default-400" />
+                        {t("requirements.projectInfo")}
+                      </h3>
+                      <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="text-sm font-medium text-default-600 mb-1">
+                              {t("projects.applicationName")}
+                            </h4>
+                            <p className="text-sm">
+                              {selectedRequirement.project.applicationName}
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-default-600 mb-1">
+                              {t("projects.projectId")}
+                            </h4>
+                            <p className="text-sm">
+                              {selectedRequirement.project.id}
+                            </p>
+                          </div>
+                        </div>
+                        {selectedRequirement.project.applicationName && (
+                          <div>
+                            <h4 className="text-sm font-medium text-default-600 mb-1">
+                              {t("projects.description")}
+                            </h4>
+                            <p className="text-sm">
+                              {selectedRequirement.project.applicationName}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Analysts Team */}
                   {selectedRequirement.project?.analysts && (
@@ -855,51 +986,180 @@ export default function DevelopmentRequirementsPage() {
                       <div>
                         <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                           <Paperclip className="w-5 h-5 text-default-400" />
-                          {t("requirements.attachments")}
+                          {t("requirements.attachments")} (
+                          {selectedRequirement.attachments.length})
                         </h3>
                         <div className="space-y-2">
                           {selectedRequirement.attachments.map((attachment) => (
                             <div
                               key={attachment.id}
-                              className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg"
+                              className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg hover:bg-default-100 dark:hover:bg-default-100/20 transition-colors"
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                                  <Paperclip className="w-4 h-4 text-primary" />
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Paperclip className="w-5 h-5 text-primary" />
                                 </div>
-                                <div>
-                                  <p className="text-sm font-medium">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">
                                     {attachment.originalName}
                                   </p>
-                                  <p className="text-xs text-default-500">
-                                    {(
-                                      attachment.fileSize /
-                                      1024 /
-                                      1024
-                                    ).toFixed(2)}{" "}
-                                    MB
-                                  </p>
+                                  <div className="flex items-center gap-4 text-xs text-default-500 mt-1">
+                                    <span>
+                                      {(
+                                        (attachment.fileSize || 0) /
+                                        1024 /
+                                        1024
+                                      ).toFixed(2)}{" "}
+                                      MB
+                                    </span>
+                                    {attachment.uploadedAt && (
+                                      <span>
+                                        {t("requirements.uploadedOn")}:{" "}
+                                        {formatDate(attachment.uploadedAt)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                              {hasPermission({
-                                actions: ["requirements.attachments.download"],
-                              }) && (
-                                <Button
-                                  color="primary"
-                                  size="sm"
-                                  startContent={
-                                    <Download className="w-4 h-4" />
-                                  }
-                                  variant="light"
-                                >
-                                  {t("projects.downloadFile")}
-                                </Button>
-                              )}
+                              <div className="flex gap-2 flex-shrink-0">
+                                {/* Preview Button for supported file types */}
+                                {(attachment.originalName
+                                  .toLowerCase()
+                                  .endsWith(".pdf") ||
+                                  attachment.originalName
+                                    .toLowerCase()
+                                    .match(
+                                      /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/,
+                                    )) && (
+                                  <Button
+                                    color="default"
+                                    size="sm"
+                                    startContent={<Eye className="w-4 h-4" />}
+                                    variant="light"
+                                    onPress={() =>
+                                      handleFilePreview(attachment)
+                                    }
+                                  >
+                                    {t("common.preview")}
+                                  </Button>
+                                )}
+                                {hasPermission({
+                                  actions: [
+                                    "requirements.attachments.download",
+                                  ],
+                                }) && (
+                                  <Button
+                                    color="primary"
+                                    size="sm"
+                                    startContent={
+                                      <Download className="w-4 h-4" />
+                                    }
+                                    variant="light"
+                                    onPress={async () => {
+                                      try {
+                                        const blob =
+                                          await projectRequirementsService.downloadAttachment(
+                                            selectedRequirement.id,
+                                            attachment.id,
+                                          );
+                                        const url =
+                                          window.URL.createObjectURL(blob);
+                                        const a = document.createElement("a");
+
+                                        a.href = url;
+                                        a.download = attachment.originalName;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        window.URL.revokeObjectURL(url);
+                                        document.body.removeChild(a);
+                                      } catch {
+                                        // Handle download error silently
+                                      }
+                                    }}
+                                  >
+                                    {t("common.download")}
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
+
+                  {/* Task Information */}
+                  {selectedRequirement.task && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-default-400" />
+                        {t("requirements.taskInfo")}
+                      </h3>
+                      <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          {selectedRequirement.task.developerId && (
+                            <div>
+                              <h4 className="text-sm font-medium text-default-600 mb-1">
+                                {t("tasks.developer")}
+                              </h4>
+                              <p className="text-sm">
+                                {selectedRequirement.task.developerName ||
+                                  `Developer ID: ${selectedRequirement.task.developerId}`}
+                              </p>
+                            </div>
+                          )}
+                          {selectedRequirement.task.qcId && (
+                            <div>
+                              <h4 className="text-sm font-medium text-default-600 mb-1">
+                                {t("tasks.qcMember")}
+                              </h4>
+                              <p className="text-sm">
+                                {selectedRequirement.task.qcName ||
+                                  `QC ID: ${selectedRequirement.task.qcId}`}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {selectedRequirement.task.createdAt && (
+                          <div>
+                            <h4 className="text-sm font-medium text-default-600 mb-1">
+                              {t("tasks.assignedOn")}
+                            </h4>
+                            <p className="text-sm">
+                              {formatDate(selectedRequirement.task.createdAt)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Timeline Information */}
+                  {selectedRequirement.timeline && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-default-400" />
+                        {t("requirements.timelineInfo")}
+                      </h3>
+                      <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg space-y-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-default-600 mb-1">
+                            {t("timeline.name")}
+                          </h4>
+                          <p className="text-sm">
+                            {selectedRequirement.timeline.name}
+                          </p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-default-600 mb-1">
+                            {t("timeline.id")}
+                          </h4>
+                          <p className="text-sm">
+                            {selectedRequirement.timeline.id}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </DrawerBody>
@@ -1099,6 +1359,13 @@ export default function DevelopmentRequirementsPage() {
             onOpenChange={setIsTimelineModalOpen}
           />
         )}
+
+        {/* File Preview Modal */}
+        <FilePreview
+          previewState={previewState}
+          onClose={closePreview}
+          onDownload={downloadCurrentFile}
+        />
       </div>
     </>
   );

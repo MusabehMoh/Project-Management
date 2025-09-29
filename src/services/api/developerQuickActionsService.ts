@@ -122,12 +122,15 @@ class DeveloperQuickActionsService {
     extensionReason: string,
     additionalHours?: number,
   ): Promise<void> {
-    const response = await apiClient.post("/developer-quick-actions/extend-task", {
-      taskId,
-      newEndDate,
-      extensionReason,
-      additionalHours,
-    });
+    const response = await apiClient.post(
+      "/developer-quick-actions/extend-task",
+      {
+        taskId,
+        newEndDate,
+        extensionReason,
+        additionalHours,
+      },
+    );
 
     if (!response.success) {
       throw new Error(response.message || "Failed to extend task deadline");

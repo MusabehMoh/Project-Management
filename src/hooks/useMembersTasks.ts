@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { addToast } from "@heroui/toast";
 
 import {
   MemberTask,
@@ -6,7 +7,6 @@ import {
   TaskConfigData,
 } from "@/types/membersTasks";
 import { membersTasksService } from "@/services/api/membersTasksService";
-import { addToast } from "@heroui/toast";
 
 export const mockMemberTasks: MemberTask[] = [
   {
@@ -469,7 +469,7 @@ interface UseMembersTasksResult {
   changeAssignees?: (
     taskId: string,
     memberIds: string[],
-    notes: string
+    notes: string,
   ) => Promise<boolean>;
   tasksConfig: () => Promise<void>;
   handlePageChange: (page: number) => void;
@@ -599,14 +599,14 @@ export const useMembersTasks = (): UseMembersTasksResult => {
   const changeAssignees = async (
     taskId: string,
     memberIds: string[],
-    notes: string
+    notes: string,
   ): Promise<boolean> => {
     console.log("changeAssignees called with:", { taskId, memberIds, notes });
     try {
       const response = await membersTasksService.changeAssignees(
         taskId,
         memberIds,
-        notes
+        notes,
       );
 
       if (response.success) {
@@ -651,7 +651,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
   const changeStatus = async (
     id: string,
     typeId: string,
-    notes: string
+    notes: string,
   ): Promise<boolean> => {
     try {
       setLoading(true);
@@ -660,7 +660,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       const response = await membersTasksService.changeStatus(
         id,
         typeId,
-        notes
+        notes,
       );
 
       if (response.success) {
@@ -713,7 +713,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
         const search = request.search.toLowerCase();
 
         tasks = tasks.filter((task) =>
-          task.name.toLowerCase().includes(search)
+          task.name.toLowerCase().includes(search),
         );
       }
 
@@ -724,13 +724,13 @@ export const useMembersTasks = (): UseMembersTasksResult => {
 
       if (request?.projectId && request?.projectId !== 4) {
         tasks = tasks.filter(
-          (task) => task.project.id === request.projectId?.toString()
+          (task) => task.project.id === request.projectId?.toString(),
         );
       }
 
       if (request?.priorityId && request?.priorityId !== 5) {
         tasks = tasks.filter(
-          (task) => task.priority.id === request.priorityId!
+          (task) => task.priority.id === request.priorityId!,
         );
       }
 

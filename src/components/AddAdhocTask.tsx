@@ -42,7 +42,7 @@ const AddAdhocTask = () => {
     members: [],
   });
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
-    []
+    [],
   );
   const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
   // State for selected members
@@ -222,7 +222,7 @@ const AddAdhocTask = () => {
                       onChange={(date) =>
                         handleInputChange(
                           "startDate",
-                          date ? date.toString() : ""
+                          date ? date.toString() : "",
                         )
                       }
                     />
@@ -241,7 +241,7 @@ const AddAdhocTask = () => {
                       onChange={(date) =>
                         handleInputChange(
                           "endDate",
-                          date ? date.toString() : ""
+                          date ? date.toString() : "",
                         )
                       }
                     />
@@ -270,8 +270,8 @@ const AddAdhocTask = () => {
                             onClick={() => {
                               setSelectedMembers(
                                 selectedMembers.filter(
-                                  (user) => user.id !== employee.id
-                                )
+                                  (user) => user.id !== employee.id,
+                                ),
                               );
                               setFormData({
                                 ...formData,
@@ -390,7 +390,7 @@ const AddAdhocTask = () => {
                         startDate: formData.startDate,
                         endDate: formData.endDate,
                         assignedMembers: selectedMembers.map((m) =>
-                          m.id.toString()
+                          m.id.toString(),
                         ),
                       };
 

@@ -139,7 +139,7 @@ export const mockProjects: Project[] = [
     progress: 25,
   },
   {
-    id: 2,
+    id: 4,
     applicationName: "Mobile Banking App",
     projectOwner: "محمد أحمد الخالد",
     alternativeOwner: "فاطمة حسين النعيمي",
@@ -162,7 +162,7 @@ export const mockProjects: Project[] = [
     progress: 20,
   },
   {
-    id: 3,
+    id: 5,
     applicationName: "ERP System Upgrade",
     projectOwner: "خالد سعد المطيري",
     alternativeOwner: "منى عبدالله العتيبي",

@@ -76,8 +76,13 @@ class ApiClient {
     };
 
     if (data && method !== HttpMethod.GET) {
-      config.body = JSON.stringify(data);
-      requestHeaders["Content-Type"] = "application/json";
+      if (data instanceof FormData) {
+        config.body = data;
+        // Don't set Content-Type for FormData - let browser set it with boundary
+      } else {
+        config.body = JSON.stringify(data);
+        requestHeaders["Content-Type"] = "application/json";
+      }
     }
 
     try {
@@ -92,6 +97,16 @@ class ApiClient {
           response.status,
           errorData,
         );
+      }
+
+      // Handle 204 No Content responses
+      if (response.status === 204) {
+        return {
+          success: true,
+          data: null,
+          message: "Operation completed successfully",
+          timestamp: new Date().toISOString(),
+        } as ApiResponse<T>;
       }
 
       const result = await response.json();

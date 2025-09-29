@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   developerQuickActionsServiceV2 as developerQuickActionsService,
   type UnassignedTask,
-  type AlmostCompletedTask, 
+  type AlmostCompletedTask,
   type AvailableDeveloper,
 } from "@/services/api/developerQuickActionsServiceV2";
 
@@ -64,7 +64,11 @@ interface UseDeveloperQuickActionsResult {
   error: string | null;
   hasActionsAvailable: boolean;
   refresh: () => Promise<void>;
-  extendTask: (taskId: number, newEndDate: string, reason: string) => Promise<void>;
+  extendTask: (
+    taskId: number,
+    newEndDate: string,
+    reason: string,
+  ) => Promise<void>;
 }
 
 interface UseDeveloperQuickActionsOptions {
@@ -73,14 +77,20 @@ interface UseDeveloperQuickActionsOptions {
 }
 
 export function useDeveloperQuickActions(
-  options: UseDeveloperQuickActionsOptions = {}
+  options: UseDeveloperQuickActionsOptions = {},
 ): UseDeveloperQuickActionsResult {
   const { autoRefresh = true, refreshInterval = 30000 } = options;
-  
+
   const [unassignedTasks, setUnassignedTasks] = useState<UnassignedTask[]>([]);
-  const [pendingCodeReviews, setPendingCodeReviews] = useState<PendingCodeReview[]>([]);
-  const [almostCompletedTasks, setAlmostCompletedTasks] = useState<AlmostCompletedTask[]>([]);
-  const [availableDevelopers, setAvailableDevelopers] = useState<AvailableDeveloper[]>([]);
+  const [pendingCodeReviews, setPendingCodeReviews] = useState<
+    PendingCodeReview[]
+  >([]);
+  const [almostCompletedTasks, setAlmostCompletedTasks] = useState<
+    AlmostCompletedTask[]
+  >([]);
+  const [availableDevelopers, setAvailableDevelopers] = useState<
+    AvailableDeveloper[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +113,7 @@ export function useDeveloperQuickActions(
       owningUnit: "Development Team A",
     },
     {
-      id: "task-2", 
+      id: "task-2",
       title: "Fix payment gateway timeout issues",
       description: "Resolve timeout issues with Stripe payment processing",
       priority: "critical",
@@ -120,7 +130,8 @@ export function useDeveloperQuickActions(
     {
       id: "task-3",
       title: "Optimize database queries for product search",
-      description: "Improve search performance by optimizing SQL queries and adding indexes",
+      description:
+        "Improve search performance by optimizing SQL queries and adding indexes",
       priority: "medium",
       status: "todo",
       projectId: "proj-2",
@@ -228,7 +239,8 @@ export function useDeveloperQuickActions(
       actualHours: 28,
       departmentName: "DevOps Team",
     },
-  ];  const mockAvailableDevelopers: AvailableDeveloper[] = [
+  ];
+  const mockAvailableDevelopers: AvailableDeveloper[] = [
     {
       userId: "dev-3",
       fullName: "Omar Khalil",
@@ -241,7 +253,7 @@ export function useDeveloperQuickActions(
     },
     {
       userId: "dev-4",
-      fullName: "Fatima Nasser", 
+      fullName: "Fatima Nasser",
       department: "Backend Development",
       gradeName: "Lead Developer",
       totalTasks: 2,
@@ -252,7 +264,7 @@ export function useDeveloperQuickActions(
     {
       userId: "dev-5",
       fullName: "Hassan Ali",
-      department: "Full Stack Development", 
+      department: "Full Stack Development",
       gradeName: "Developer",
       totalTasks: 1,
       currentWorkload: "low",
@@ -264,16 +276,19 @@ export function useDeveloperQuickActions(
   const fetchData = useCallback(async () => {
     try {
       setError(null);
-      
+
       // Make actual API call to get all developer quick actions
       const response = await developerQuickActionsService.getQuickActions();
-      
+
       setUnassignedTasks(response.unassignedTasks);
       setAlmostCompletedTasks(response.almostCompletedTasks);
       setAvailableDevelopers(response.availableDevelopers);
-      
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch developer quick actions");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch developer quick actions",
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -285,39 +300,43 @@ export function useDeveloperQuickActions(
     await fetchData();
   }, [fetchData]);
 
-  const extendTask = useCallback(async (
-    taskId: number,
-    newEndDate: string,
-    reason: string,
-  ) => {
-    try {
-      // In real implementation, would call:
-      // await developerQuickActionsService.extendTask(taskId, newEndDate, reason);
-      
-      console.log(`Extending task ${taskId} to ${newEndDate}. Reason: ${reason}`);
-      
-      // Update the local state to reflect the change
-      setAlmostCompletedTasks(prev => 
-        prev.map(task => 
-          task.id === taskId 
-            ? { 
-                ...task, 
-                endDate: newEndDate,
-                daysUntilDeadline: Math.ceil(
-                  (new Date(newEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                ),
-                isOverdue: false
-              }
-            : task
-        )
-      );
-      
-      // Refresh data to get updated information
-      await refresh();
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to extend task");
-    }
-  }, [refresh]);
+  const extendTask = useCallback(
+    async (taskId: number, newEndDate: string, reason: string) => {
+      try {
+        // In real implementation, would call:
+        // await developerQuickActionsService.extendTask(taskId, newEndDate, reason);
+
+        console.log(
+          `Extending task ${taskId} to ${newEndDate}. Reason: ${reason}`,
+        );
+
+        // Update the local state to reflect the change
+        setAlmostCompletedTasks((prev) =>
+          prev.map((task) =>
+            task.id === taskId
+              ? {
+                  ...task,
+                  endDate: newEndDate,
+                  daysUntilDeadline: Math.ceil(
+                    (new Date(newEndDate).getTime() - new Date().getTime()) /
+                      (1000 * 60 * 60 * 24),
+                  ),
+                  isOverdue: false,
+                }
+              : task,
+          ),
+        );
+
+        // Refresh data to get updated information
+        await refresh();
+      } catch (err) {
+        throw new Error(
+          err instanceof Error ? err.message : "Failed to extend task",
+        );
+      }
+    },
+    [refresh],
+  );
 
   useEffect(() => {
     fetchData();
@@ -333,9 +352,9 @@ export function useDeveloperQuickActions(
     }
   }, [autoRefresh, refreshInterval, refresh]);
 
-  const hasActionsAvailable = 
-    unassignedTasks.length > 0 || 
-    almostCompletedTasks.length > 0 || 
+  const hasActionsAvailable =
+    unassignedTasks.length > 0 ||
+    almostCompletedTasks.length > 0 ||
     availableDevelopers.length > 0;
 
   return {

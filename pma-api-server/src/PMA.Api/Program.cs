@@ -30,6 +30,10 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.WriteIndented = true;
     });
+
+// Configure AttachmentSettings
+builder.Services.Configure<AttachmentSettings>(builder.Configuration.GetSection("AttachmentSettings"));
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -145,6 +149,7 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<IRequirementService, RequirementService>();
 builder.Services.AddScoped<IProjectRequirementService, PMA.Core.Services.ProjectRequirementService>();
+builder.Services.AddScoped<IFileStorageService, PMA.Infrastructure.Services.FileStorageService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
@@ -152,6 +157,8 @@ builder.Services.AddScoped<IActionService, ActionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ILookupService, LookupService>();
 builder.Services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();
+// Path provider abstraction
+builder.Services.AddSingleton<PMA.Core.Interfaces.IAppPathProvider, PMA.Api.Services.AppPathProvider>();
 
 // Register mapping services
 builder.Services.AddMappingServices();

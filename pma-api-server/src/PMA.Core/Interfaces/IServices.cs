@@ -2,6 +2,7 @@ using PMA.Core.Entities;
 using PMA.Core.DTOs;
 using TaskEntity = PMA.Core.Entities.Task;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace PMA.Core.Interfaces;
 
@@ -177,9 +178,10 @@ public interface IMemberTaskService
     System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByAssigneeAsync(int assigneeId);
 }
 
+
 public interface IProjectRequirementService
 {
-    System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> ProjectRequirements, int TotalCount)> GetProjectRequirementsAsync(int page, int limit, int? projectId = null, string? status = null, string? priority = null);
+    System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> ProjectRequirements, int TotalCount)> GetProjectRequirementsAsync(int page, int limit, int? projectId = null, int? status = null, string? priority = null, string? search = null);
     System.Threading.Tasks.Task<ProjectRequirement?> GetProjectRequirementByIdAsync(int id);
     System.Threading.Tasks.Task<ProjectRequirement> CreateProjectRequirementAsync(ProjectRequirement projectRequirement);
     System.Threading.Tasks.Task<ProjectRequirement> UpdateProjectRequirementAsync(ProjectRequirement projectRequirement);
@@ -187,6 +189,20 @@ public interface IProjectRequirementService
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByProjectAsync(int projectId);
     System.Threading.Tasks.Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(int? userId, int page, int limit, string? search = null, int? projectId = null);
     System.Threading.Tasks.Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId);
+    System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetDevelopmentRequirementsAsync(int page, int limit);
+    System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetDraftRequirementsAsync(int page, int limit);
+    System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetApprovedRequirementsAsync(int page, int limit);
+    System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetPendingApprovalRequirementsAsync(int page, int limit);
+    System.Threading.Tasks.Task<bool> SendRequirementAsync(int id);
+    System.Threading.Tasks.Task<bool> ApproveRequirementAsync(int id);
+    System.Threading.Tasks.Task<RequirementTask?> CreateRequirementTaskAsync(int requirementId, CreateRequirementTaskDto taskDto);
+    System.Threading.Tasks.Task<ProjectRequirementAttachment?> UploadAttachmentAsync(int requirementId, object file);
+    // New bulk upload (does not remove existing attachments)
+    System.Threading.Tasks.Task<IReadOnlyList<ProjectRequirementAttachment>> UploadAttachmentsAsync(int requirementId, IEnumerable<IFormFile> files);
+    System.Threading.Tasks.Task<bool> DeleteAttachmentAsync(int requirementId, int attachmentId);
+    System.Threading.Tasks.Task<DTOs.FileDownloadResult?> DownloadAttachmentAsync(int requirementId, int attachmentId);
+    // Bulk sync: add new files & remove specified attachment IDs in one operation
+    System.Threading.Tasks.Task<IReadOnlyList<ProjectRequirementAttachment>?> SyncAttachmentsAsync(int requirementId, IEnumerable<IFormFile> newFiles, IEnumerable<int> removeIds);
 }
 
 public interface ISubTaskService
@@ -225,5 +241,15 @@ public interface ICacheInvalidationService
     void InvalidateCurrentUserCache(string username);
     System.Threading.Tasks.Task InvalidateCurrentUserCacheByIdAsync(int userId, IUserRepository userRepository);
     void InvalidateAllUserCaches();
+}
+
+public class CreateRequirementTaskDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int AssigneeId { get; set; }
+    public DateTime DueDate { get; set; }
+    public int Priority { get; set; }
+    public int EstimatedHours { get; set; }
 }
 

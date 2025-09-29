@@ -101,7 +101,7 @@ export default function MembersTasksPage() {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
-    []
+    [],
   );
   const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
   // State for selected members
@@ -120,11 +120,11 @@ export default function MembersTasksPage() {
 
   const effectivePageSize = normalizePageSize(
     taskParametersRequest.limit ?? 10,
-    10
+    10,
   );
 
   const [searchValue, setSearchValue] = useState(
-    taskParametersRequest?.search ?? ""
+    taskParametersRequest?.search ?? "",
   );
 
   const isTeamManager = hasAnyRole([
@@ -138,12 +138,13 @@ export default function MembersTasksPage() {
     if (typeof changeAssignees === "function") {
       if (selectedMembers.length === 0) {
         setAssigneeModalError(true);
+
         return;
       } else {
         const success = await changeAssignees(
           selectedTask?.id ?? "0",
           selectedMembers.map((member) => member.id.toString()),
-          notes ?? ""
+          notes ?? "",
         );
 
         if (success) {
@@ -175,7 +176,7 @@ export default function MembersTasksPage() {
     const success = await changeStatus(
       selectedTask?.id ?? "0",
       `${selectedStatus?.id ?? 3}`,
-      notes ?? ""
+      notes ?? "",
     );
 
     if (success) {
@@ -903,8 +904,8 @@ export default function MembersTasksPage() {
                         onClick={() => {
                           setSelectedMembers(
                             selectedMembers.filter(
-                              (user) => user.id !== employee.id
-                            )
+                              (user) => user.id !== employee.id,
+                            ),
                           );
                         }}
                       />
@@ -951,7 +952,7 @@ export default function MembersTasksPage() {
                 onSelectionChange={(key) => {
                   if (key) {
                     const selectedEmployee = employees.find(
-                      (e) => e.id.toString() === key
+                      (e) => e.id.toString() === key,
                     );
 
                     if (selectedEmployee) {
@@ -1100,7 +1101,7 @@ export default function MembersTasksPage() {
                   aria-label="Select task status"
                   onAction={(key) => {
                     const status = tasksConfigData.taskStatus?.find(
-                      (s) => s.id.toString() === key
+                      (s) => s.id.toString() === key,
                     );
 
                     if (status) setSelectedStatus(status);

@@ -23,7 +23,7 @@ import {
   NavbarMenuItem,
 } from "@heroui/navbar";
 import clsx from "clsx";
-import { Bell, CreditCard, LogOut, Settings, User, Users } from "lucide-react";
+import { Bell, LogOut, User } from "lucide-react";
 import { useTheme } from "@heroui/use-theme";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -118,7 +118,7 @@ const AnimatedNavItem = ({
           "relative group transition-all duration-300 ease-in-out transform",
           "hover:scale-105 hover:-translate-y-0.5",
           "text-foreground font-medium",
-          isActive ? "text-primary" : "hover:text-primary"
+          isActive ? "text-primary" : "hover:text-primary",
         )}
         color="foreground"
         href={item.href}
@@ -135,7 +135,7 @@ const AnimatedNavItem = ({
             "bg-primary/10",
             "transition-all duration-300 ease-out",
             "transform -inset-2",
-            isHovered ? "opacity-100 scale-110" : "opacity-0 scale-95"
+            isHovered ? "opacity-100 scale-110" : "opacity-0 scale-95",
           )}
         />
       </Link>
@@ -148,7 +148,7 @@ const getProjectNavItems = (
   t: (key: string) => string,
   hasPermission: any,
   isAdmin: any,
-  hasAnyRole: any
+  hasAnyRole: any,
 ) => {
   const baseItems = [{ label: t("nav.dashboard"), href: "/" }];
 
@@ -206,6 +206,14 @@ const getProjectNavItems = (
       href: "/requirements",
     });
   }
+
+  // Add approval requests for users who can approve requirements
+  if (hasAnyRole(["Administrator", "Analyst Department Manager"])) {
+    requirementsItems.push({
+      label: t("requirements.approvalRequests"),
+      href: "/approval-requests",
+    });
+  }
   /// member tasks or Team Tasks for manager
   if (hasAnyRole(["Analyst Department Manager", "Administrator"])) {
     developmentItems.push({ label: t("nav.teamTasks"), href: "/tasks" });
@@ -237,7 +245,7 @@ export const Navbar = () => {
     t,
     hasPermission,
     isAdmin,
-    hasAnyRole
+    hasAnyRole,
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -298,7 +306,7 @@ export const Navbar = () => {
       <HeroUINavbar
         className={clsx(
           "transition-all duration-500 ease-in-out",
-          "animate-pulse backdrop-blur-md bg-background/70"
+          "animate-pulse backdrop-blur-md bg-background/70",
         )}
         maxWidth="xl"
         position="sticky"
@@ -362,7 +370,7 @@ export const Navbar = () => {
         isScrolled
           ? "backdrop-blur-md bg-background/80 border-b border-divider shadow-lg scale-[0.98]"
           : "backdrop-blur-sm bg-background/60 scale-100",
-        "animate-in slide-in-from-top-full duration-700"
+        "animate-in slide-in-from-top-full duration-700",
       )}
       maxWidth="xl"
       position="sticky"
@@ -374,7 +382,7 @@ export const Navbar = () => {
               "flex justify-start items-center gap-1",
               "transition-all duration-500 ease-out transform",
               "hover:scale-105 active:scale-95",
-              isScrolled ? "scale-90" : "scale-100"
+              isScrolled ? "scale-90" : "scale-100",
             )}
             color="foreground"
             href="/"
@@ -385,7 +393,7 @@ export const Navbar = () => {
                 "w-auto object-contain transition-all duration-500 ease-out",
                 isScrolled
                   ? "h-6 sm:h-8 max-w-[100px] sm:max-w-[130px]"
-                  : "h-8 sm:h-10 max-w-[120px] sm:max-w-[150px]"
+                  : "h-8 sm:h-10 max-w-[120px] sm:max-w-[150px]",
               )}
             />
           </Link>
@@ -432,7 +440,7 @@ export const Navbar = () => {
                   "relative transition-all duration-300 hover:scale-110 active:scale-95",
                   unreadCount > 0
                     ? "hover:bg-danger/10 hover:text-danger"
-                    : "hover:bg-default/10"
+                    : "hover:bg-default/10",
                   // Removed opacity-50 so icon isn't pale when offline; we already show a warning dot
                 )}
                 size="sm"
@@ -448,7 +456,7 @@ export const Navbar = () => {
                   <Bell
                     className={clsx(
                       "transition-transform duration-300",
-                      unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse"
+                      unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse",
                     )}
                     size={16}
                   />
@@ -494,7 +502,7 @@ export const Navbar = () => {
                         className={clsx(
                           "py-3 px-2 cursor-pointer",
                           !notification.read &&
-                            "bg-primary/5 border-l-2 border-primary"
+                            "bg-primary/5 border-l-2 border-primary",
                         )}
                         textValue={notification.message}
                         onPress={() => markAsRead(notification.id)}
@@ -505,7 +513,7 @@ export const Navbar = () => {
                               "text-sm",
                               !notification.read
                                 ? "font-semibold"
-                                : "font-normal"
+                                : "font-normal",
                             )}
                           >
                             {notification.message}
@@ -627,7 +635,7 @@ export const Navbar = () => {
               unreadCount > 0
                 ? "hover:bg-danger/10 hover:text-danger"
                 : "hover:bg-default/10",
-              !isConnected && "opacity-50"
+              !isConnected && "opacity-50",
             )}
             size="sm"
             variant="light"
@@ -635,7 +643,7 @@ export const Navbar = () => {
             <Bell
               className={clsx(
                 "transition-transform duration-300",
-                unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse"
+                unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse",
               )}
               size={16}
             />
@@ -665,7 +673,7 @@ export const Navbar = () => {
                 className={clsx(
                   "transition-all duration-300 hover:scale-105 active:scale-95",
                   "hover:text-primary font-medium",
-                  currentPath === item.href && "border-l-2 border-primary pl-2"
+                  currentPath === item.href && "border-l-2 border-primary pl-2",
                 )}
                 color={currentPath === item.href ? "primary" : "foreground"}
                 href={item.href}

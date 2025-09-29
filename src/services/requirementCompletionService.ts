@@ -1,5 +1,4 @@
 import { apiClient } from "./api/client";
-import type { ApiResponse } from "@/types/project";
 
 export interface RequirementCompletionAnalytics {
   summary: {
@@ -74,10 +73,14 @@ class RequirementCompletionService {
    * Get requirement completion analytics
    */
   async getCompletionAnalytics(): Promise<RequirementCompletionAnalytics> {
-    const response = await apiClient.get<RequirementCompletionAnalytics>("/requirement-completion/analytics");
+    const response = await apiClient.get<RequirementCompletionAnalytics>(
+      "/requirement-completion/analytics",
+    );
 
     if (!response.success || !response.data) {
-      throw new Error(response.message || "Failed to fetch completion analytics");
+      throw new Error(
+        response.message || "Failed to fetch completion analytics",
+      );
     }
 
     return response.data;
@@ -97,7 +100,9 @@ class RequirementCompletionService {
       params.append("analystId", analystId.toString());
     }
 
-    const response = await apiClient.get<RequirementCompletionMetrics>(`/requirement-completion/metrics?${params.toString()}`);
+    const response = await apiClient.get<RequirementCompletionMetrics>(
+      `/requirement-completion/metrics?${params.toString()}`,
+    );
 
     if (!response.success || !response.data) {
       throw new Error(response.message || "Failed to fetch completion metrics");

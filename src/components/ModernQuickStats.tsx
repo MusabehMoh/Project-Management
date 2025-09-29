@@ -5,7 +5,6 @@ import {
   Activity,
   AlertTriangle,
 } from "lucide-react";
-
 import { Card } from "@heroui/card";
 
 import { useLanguage } from "@/contexts/LanguageContext";

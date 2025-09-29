@@ -1,4 +1,4 @@
-# Project Management Application (PMA) - Copilot Instructions
+<!-- # Project Management Application (PMA) - Copilot Instructions
 
 ## Project Overview
 
@@ -303,4 +303,4 @@ These instructions are comprehensive and regularly updated. Trust the informatio
 - Error messages indicate configuration issues not covered
 - API endpoints or data structures have changed
 
-When in doubt, refer to the existing codebase patterns and maintain consistency with established conventions.
+When in doubt, refer to the existing codebase patterns and maintain consistency with established conventions. -->

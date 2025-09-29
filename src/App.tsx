@@ -17,6 +17,7 @@ import DepartmentsPage from "@/pages/departments";
 import RequirementsPage from "@/pages/requirements";
 import ProjectRequirementsPage from "@/pages/project-requirements";
 import DevelopmentRequirementsPage from "@/pages/development-requirements";
+import ApprovalRequestsPage from "@/pages/approval-requests";
 import TimelinePage from "@/pages/timeline";
 import MembersTasksPage from "@/pages/members-tasks";
 import DefaultLayout from "@/layouts/default";
@@ -39,7 +40,7 @@ function App() {
   return (
     <Routes>
       <Route element={<DefaultLayout />} path="/">
-  <Route index element={<IndexPage />} />
+        <Route index element={<IndexPage />} />
         <Route element={<ProjectsPage />} path="projects" />
         <Route element={<RequirementsPage />} path="requirements" />
         <Route
@@ -49,6 +50,10 @@ function App() {
         <Route
           element={<DevelopmentRequirementsPage />}
           path="development-requirements"
+        />
+        <Route
+          element={<ApprovalRequestsPage />}
+          path="approval-requests"
         />
         <Route element={<UsersPage />} path="users" />
         <Route element={<DepartmentsPage />} path="departments" />

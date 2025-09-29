@@ -4,6 +4,7 @@ import { usePageTitle } from "@/hooks";
 export default function PricingPage() {
   // Set page title
   usePageTitle("pricing.title");
+
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
       <div className="inline-block max-w-lg text-center justify-center">

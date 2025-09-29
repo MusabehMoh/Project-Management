@@ -16,10 +16,8 @@ import {
   useDisclosure,
 } from "@heroui/modal";
 
-
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  PlusIcon,
   FilterIcon,
   RefreshIcon,
   BuildingIcon,
@@ -32,7 +30,6 @@ import { timelineService } from "@/services/api";
 import { TimelineView, Timeline } from "@/types/timeline";
 // Import timeline components
 import TimelineTreeView from "@/components/timeline/TimelineTreeView";
-import TimelineGanttView from "@/components/timeline/TimelineGanttView";
 import TimelineDetailsPanel from "@/components/timeline/TimelineDetailsPanel";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import TimelineFilters from "@/components/timeline/TimelineFilters";
@@ -892,10 +889,10 @@ export default function TimelinePage() {
                       // />
 
                       <DHTMLXGantt
+                        projectId={selectedProjectId}
                         timeline={selectedTimeline}
                         onDeleteEntity={deleteEntity}
                         onUpdateEntity={updateEntity}
-                        projectId={selectedProjectId}
                       />
                     ) : (
                       <TimelineTreeView

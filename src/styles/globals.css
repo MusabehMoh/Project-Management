@@ -108,5 +108,38 @@
   order: unset !important;
 }
 
+/* DHTMLX Gantt Chart Styles */
+.gantt-container .gantt-task.priority-high {
+  background-color: #ff4757 !important;
+  border-color: #ff3838 !important;
+}
+
+.gantt-container .gantt-task.priority-medium {
+  background-color: #ffa502 !important;
+  border-color: #ff9500 !important;
+}
+
+.gantt-container .gantt-task.priority-low {
+  background-color: #2ed573 !important;
+  border-color: #1dd1a1 !important;
+}
+
+.gantt-container .gantt_task_progress {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Dark theme support for Gantt */
+.dark .gantt_grid,
+.dark .gantt_task {
+  background-color: hsl(var(--nextui-content2)) !important;
+  color: hsl(var(--nextui-foreground)) !important;
+}
+
+.dark .gantt_grid_head_cell,
+.dark .gantt_grid_head {
+  background-color: hsl(var(--nextui-content1)) !important;
+  border-color: hsl(var(--nextui-border)) !important;
+}
+
 /* Import custom CSS overrides */
 @import "./custom.css";

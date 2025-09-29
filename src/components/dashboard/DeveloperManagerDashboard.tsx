@@ -6,12 +6,10 @@ import { developerQuickActionsService } from "@/services/api/developerQuickActio
 import ModernQuickStats from "@/components/ModernQuickStats";
 import DeveloperQuickActions from "@/components/dashboard/developer/DeveloperQuickActions";
 import DeveloperWorkloadPerformance from "@/components/dashboard/developer/DeveloperWorkloadPerformance";
-import CodeReviewTracker from "@/components/dashboard/developer/CodeReviewTracker";
-import DeploymentPipeline from "@/components/dashboard/developer/DeploymentPipeline";
 import DeveloperCalendar from "@/components/calendar";
-import SprintProgress from "@/components/dashboard/developer/SprintProgress";
 import ApprovedRequirements from "@/components/ApprovedRequirements";
 import TaskCompletionTracker from "@/components/dashboard/developer/TaskCompletionTracker";
+import DHtmlGanttChart from "@/components/dashboard/developer/DHtmlGanttChart";
 
 export default function DeveloperManagerDashboard() {
   const { t, language } = useLanguage();
@@ -98,44 +96,22 @@ export default function DeveloperManagerDashboard() {
           <h2 className="text-2xl font-semibold text-foreground">
             {t("calendar.title") || "Calendar"}
           </h2>
-          <DeveloperCalendar maxHeight="500px" showSidebar={false} />
+          <DeveloperCalendar showSidebar={false} />
         </div>
       </div>
 
-      {/* Deployment Pipeline Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Column - Deployment Pipeline */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-foreground">
-              {t("developerDashboard.deploymentPipeline") ||
-                "Deployment Pipeline"}
-            </h2>
-            <DeploymentPipeline />
-          </div>
+      {/* Full Width Project Timeline Section */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold text-foreground">
+          {t("developerDashboard.projectTimeline") || "Project Timeline"}
+        </h2>
+        <DHtmlGanttChart height="400px" />
+      </div>
 
-          {/* Task Completion Tracking */}
-          <div className="space-y-4">
-            <TaskCompletionTracker useMockData={true} />
-          </div>
-        </div>
-
-        {/* Side Column - Sprint Progress and Code Reviews */}
-        <div className="lg:col-span-1">
-          <div className="space-y-6">
-            {/* Sprint Progress Section */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {t("developerDashboard.sprintProgress") || "Sprint Progress"}
-              </h2>
-              <SprintProgress useMockData={true} />
-            </div>
-
-            {/* Code Review Tracker Section */}
-            <div className="space-y-4">
-              <CodeReviewTracker useMockData={true} />
-            </div>
-          </div>
+      {/* Task Completion Only */}
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <TaskCompletionTracker useMockData={true} />
         </div>
       </div>
     </div>

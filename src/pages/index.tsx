@@ -1,13 +1,12 @@
 import React from "react";
 
-import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
 import DeveloperManagerDashboard from "@/components/dashboard/DeveloperManagerDashboard";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks";
 
 export default function IndexPage() {
   const { hasAnyRole, loading: userLoading } = usePermissions();
-  
+
   // Set page title
   usePageTitle("home.title", { fallback: "Dashboard" });
 

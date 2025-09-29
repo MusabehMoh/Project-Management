@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { pipelineService, type PipelineProject } from "@/services/api/pipelineService";
+
+import {
+  pipelineService,
+  type PipelineProject,
+} from "@/services/api/pipelineService";
 
 interface UsePipelineReturn {
   planning: PipelineProject[];
@@ -23,7 +27,7 @@ export const usePipeline = (): UsePipelineReturn => {
 
     try {
       const response = await pipelineService.getPipelineProjects();
-      
+
       if (response.success) {
         setPlanning(response.data.planning);
         setInProgress(response.data.inProgress);

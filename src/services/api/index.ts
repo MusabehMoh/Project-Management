@@ -11,8 +11,6 @@ import { realUnitService } from "./unitService";
 import { ProjectDetailsApiService } from "./projectDetailsService";
 import { lookupService } from "./lookupService";
 import { ProjectStatusService } from "./projectStatusService";
-import { quickActionsService } from "./quickActionsService";
-import { projectRequirementsService } from "./projectRequirementsService";
 
 // API Client
 export { apiClient, ApiError, API_CONFIG } from "./client";

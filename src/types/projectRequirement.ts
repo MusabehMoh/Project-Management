@@ -3,15 +3,9 @@ export interface ProjectRequirement {
   projectId: number;
   name: string;
   description: string;
-  priority: "low" | "medium" | "high" | "critical";
-  type: "new" | "change request";
-  status:
-    | "new"
-    | "under-study"
-    | "under-development"
-    | "under-testing"
-    | "completed"
-    | "approved";
+  priority: number; // 1=Low, 2=Medium, 3=High, 4=Critical (matches RequirementPriority enum)
+  type: number; // 1=New, 2=ChangeRequest (matches RequirementType enum)
+  status: number; // 1=New, 2=UnderStudy, 3=UnderDevelopment, 4=UnderTesting, 5=Completed, 6=Approved (matches RequirementStatusEnum)
   createdBy: number;
   assignedTo?: number;
   assignedAnalyst?: number;
@@ -43,13 +37,13 @@ export interface ProjectRequirement {
 
 export interface ProjectRequirementAttachment {
   id: number;
-  requirementId: number;
-  fileName: string;
-  originalName: string;
+  projectRequirementId: number;
+  fileName: string; // Physical file name (should be unique/hashed)
+  originalName: string; // Original file name from user
+  filePath?: string; // Relative path to the file
   fileSize: number;
-  mimeType: string;
+  contentType?: string; // MIME type
   uploadedAt: string;
-  uploadedBy: number;
 }
 
 // Task creation for requirements
@@ -95,8 +89,8 @@ export interface AssignedProject {
 export interface CreateProjectRequirementRequest {
   name: string;
   description: string;
-  priority: number;
-  type: "new" | "change request"; // Keep as string in frontend, convert to int in service
+  priority: number; // Backend expects integer values
+  type: number; // Backend expects integer values (1=New, 2=ChangeRequest)
   expectedCompletionDate: any;
   assignedTo?: number;
   projectId: number;
@@ -112,9 +106,9 @@ export interface UpdateProjectRequirementRequest {
   projectId?: number;
   name?: string;
   description?: string;
-  priority?: number;
-  type?: "new" | "change request"; // Keep as string in frontend, convert to int in service
-  status?: number | "draft" | "in_development" | "completed"; // Support both integer and string values
+  priority?: number; // Backend expects integer values
+  type?: number; // Backend expects integer values (1=New, 2=ChangeRequest)
+  status?: number; // Backend expects integer values (1-6)
   assignedTo?: number;
   dueDate?: string;
   estimatedHours?: number;
@@ -138,14 +132,18 @@ export interface ProjectRequirementFilters {
 export interface ProjectRequirementStats {
   total: number;
   draft: number;
+  managerReview: number;
   approved: number;
   inDevelopment: number;
+  underTesting: number;
   completed: number;
   byStatus: {
     draft: number;
+    managerReview: number;
     approved: number;
     rejected: number;
     in_development: number;
+    underTesting: number;
     completed: number;
   };
   byPriority: {

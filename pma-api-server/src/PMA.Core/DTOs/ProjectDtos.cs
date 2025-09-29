@@ -258,6 +258,7 @@ public class ProjectRequirementStatsDto
 {
     public int Total { get; set; }
     public int Draft { get; set; }
+    public int ManagerReview { get; set; }
     public int Approved { get; set; }
     public int InDevelopment { get; set; }
     public int UnderTesting { get; set; }
@@ -269,6 +270,7 @@ public class ProjectRequirementStatsDto
 public class ByStatusDto
 {
     public int Draft { get; set; }
+    public int ManagerReview { get; set; }
     public int Approved { get; set; }
     public int Rejected { get; set; }
     public int InDevelopment { get; set; }
@@ -285,8 +287,9 @@ public class ByPriorityDto
 }
 
  
-public class CreateProjectRequirementDto
+public class CreateUpdateProjectRequirementDto
 {
+    public int Id { get; set; }
     public int ProjectId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -294,19 +297,6 @@ public class CreateProjectRequirementDto
     public RequirementType Type { get; set; } = RequirementType.New;
     public DateTime? ExpectedCompletionDate { get; set; }
     public RequirementStatusEnum Status { get; set; } = RequirementStatusEnum.New;
-    public List<string> Attachments { get; set; } = new();
-}
-
-public class UpdateProjectRequirementDto
-{
-    public int Id { get; set; }
-    public int ProjectId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public RequirementPriority Priority { get; set; }
-    public RequirementType Type { get; set; }
-    public DateTime? ExpectedCompletionDate { get; set; }
-    public RequirementStatusEnum Status { get; set; }
     public List<string> Attachments { get; set; } = new();
 }
 

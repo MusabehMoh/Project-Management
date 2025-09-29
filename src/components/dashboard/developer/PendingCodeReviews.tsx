@@ -100,12 +100,12 @@ export default function PendingCodeReviews({
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
+
       if (useMockData) {
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         setReviews(mockReviews);
       }
-      
+
       setLoading(false);
     };
 
@@ -130,8 +130,8 @@ export default function PendingCodeReviews({
             <h3 className="text-lg font-medium">
               {t("developerDashboard.pendingReviews") || "Pending Code Reviews"}
             </h3>
-            <Chip size="sm" variant="flat" color="primary">
-              {reviews.filter(r => r.status === "pending").length} pending
+            <Chip color="primary" size="sm" variant="flat">
+              {reviews.filter((r) => r.status === "pending").length} pending
             </Chip>
           </div>
         </CardHeader>
@@ -154,9 +154,9 @@ export default function PendingCodeReviews({
                       <div className="flex items-center gap-3 text-xs text-default-500">
                         <div className="flex items-center gap-1">
                           <Avatar
+                            className="w-4 h-4"
                             name={review.author}
                             size="sm"
-                            className="w-4 h-4"
                           />
                           <span>{review.author}</span>
                         </div>
@@ -186,7 +186,7 @@ export default function PendingCodeReviews({
                       </Chip>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 text-xs text-default-500">
                       <span>+{review.linesChanged} lines</span>
@@ -195,11 +195,11 @@ export default function PendingCodeReviews({
                         <span>{review.comments} comments</span>
                       </div>
                     </div>
-                    
+
                     <Button
                       size="sm"
-                      variant="flat"
                       startContent={<Eye className="w-3 h-3" />}
+                      variant="flat"
                     >
                       Review
                     </Button>
@@ -214,8 +214,8 @@ export default function PendingCodeReviews({
                 {t("developerDashboard.noReviews") || "No Pending Reviews"}
               </h4>
               <p className="text-sm text-default-500">
-                {t("developerDashboard.allReviewsComplete") || 
-                 "All code reviews are up to date"}
+                {t("developerDashboard.allReviewsComplete") ||
+                  "All code reviews are up to date"}
               </p>
             </div>
           )}

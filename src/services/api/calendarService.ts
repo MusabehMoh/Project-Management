@@ -6,16 +6,16 @@ export interface CalendarEvent {
   description?: string;
   startDate: string;
   endDate?: string;
-  type: 'project' | 'requirement' | 'meeting' | 'deadline' | 'milestone';
-  status: 'upcoming' | 'in-progress' | 'completed' | 'overdue';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  type: "project" | "requirement" | "meeting" | "deadline" | "milestone";
+  status: "upcoming" | "in-progress" | "completed" | "overdue";
+  priority: "low" | "medium" | "high" | "critical";
   projectId?: number;
   requirementId?: number;
   assignedTo?: number[];
   location?: string;
   isAllDay?: boolean;
   recurring?: {
-    frequency: 'daily' | 'weekly' | 'monthly';
+    frequency: "daily" | "weekly" | "monthly";
     interval: number;
     endDate?: string;
   };
@@ -27,9 +27,9 @@ export interface CalendarEvent {
 export interface CalendarFilters {
   startDate?: string;
   endDate?: string;
-  types?: CalendarEvent['type'][];
-  statuses?: CalendarEvent['status'][];
-  priorities?: CalendarEvent['priority'][];
+  types?: CalendarEvent["type"][];
+  statuses?: CalendarEvent["status"][];
+  priorities?: CalendarEvent["priority"][];
   projectIds?: number[];
   assignedTo?: number[];
 }
@@ -54,8 +54,8 @@ export interface CalendarStatsResponse {
     overdueEvents: number;
     completedThisWeek: number;
     criticalDeadlines: number;
-    eventsByType: Record<CalendarEvent['type'], number>;
-    eventsByStatus: Record<CalendarEvent['status'], number>;
+    eventsByType: Record<CalendarEvent["type"], number>;
+    eventsByStatus: Record<CalendarEvent["status"], number>;
   };
   message: string;
 }
@@ -65,19 +65,28 @@ export class CalendarService {
   /**
    * Get calendar events with optional filters
    */
-  async getCalendarEvents(filters?: CalendarFilters): Promise<CalendarResponse> {
+  async getCalendarEvents(
+    filters?: CalendarFilters,
+  ): Promise<CalendarResponse> {
     try {
       const params = new URLSearchParams();
-      
-      if (filters?.startDate) params.append('startDate', filters.startDate);
-      if (filters?.endDate) params.append('endDate', filters.endDate);
-      if (filters?.types?.length) params.append('types', filters.types.join(','));
-      if (filters?.statuses?.length) params.append('statuses', filters.statuses.join(','));
-      if (filters?.priorities?.length) params.append('priorities', filters.priorities.join(','));
-      if (filters?.projectIds?.length) params.append('projectIds', filters.projectIds.join(','));
-      if (filters?.assignedTo?.length) params.append('assignedTo', filters.assignedTo.join(','));
 
-      const response = await apiClient.get<CalendarEvent[]>(`/calendar/events?${params.toString()}`);
+      if (filters?.startDate) params.append("startDate", filters.startDate);
+      if (filters?.endDate) params.append("endDate", filters.endDate);
+      if (filters?.types?.length)
+        params.append("types", filters.types.join(","));
+      if (filters?.statuses?.length)
+        params.append("statuses", filters.statuses.join(","));
+      if (filters?.priorities?.length)
+        params.append("priorities", filters.priorities.join(","));
+      if (filters?.projectIds?.length)
+        params.append("projectIds", filters.projectIds.join(","));
+      if (filters?.assignedTo?.length)
+        params.append("assignedTo", filters.assignedTo.join(","));
+
+      const response = await apiClient.get<CalendarEvent[]>(
+        `/calendar/events?${params.toString()}`,
+      );
 
       if (response.success) {
         return {
@@ -90,6 +99,7 @@ export class CalendarService {
       throw new Error("Failed to fetch calendar events");
     } catch (error) {
       console.error("Calendar service error:", error);
+
       return {
         success: false,
         data: [],
@@ -114,8 +124,8 @@ export class CalendarService {
             overdueEvents: number;
             completedThisWeek: number;
             criticalDeadlines: number;
-            eventsByType: Record<CalendarEvent['type'], number>;
-            eventsByStatus: Record<CalendarEvent['status'], number>;
+            eventsByType: Record<CalendarEvent["type"], number>;
+            eventsByStatus: Record<CalendarEvent["status"], number>;
           },
           message: "Calendar stats retrieved successfully",
         };
@@ -124,6 +134,7 @@ export class CalendarService {
       throw new Error("Failed to fetch calendar stats");
     } catch (error) {
       console.error("Calendar stats service error:", error);
+
       return {
         success: false,
         data: {
@@ -141,7 +152,7 @@ export class CalendarService {
           },
           eventsByStatus: {
             upcoming: 0,
-            'in-progress': 0,
+            "in-progress": 0,
             completed: 0,
             overdue: 0,
           },
@@ -154,7 +165,9 @@ export class CalendarService {
   /**
    * Create a new calendar event
    */
-  async createEvent(event: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<CalendarResponse> {
+  async createEvent(
+    event: Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">,
+  ): Promise<CalendarResponse> {
     try {
       const response = await apiClient.post("/calendar/events", event);
 
@@ -169,6 +182,7 @@ export class CalendarService {
       throw new Error("Failed to create event");
     } catch (error) {
       console.error("Create event error:", error);
+
       return {
         success: false,
         data: [],
@@ -180,7 +194,10 @@ export class CalendarService {
   /**
    * Update an existing calendar event
    */
-  async updateEvent(id: number, event: Partial<CalendarEvent>): Promise<CalendarResponse> {
+  async updateEvent(
+    id: number,
+    event: Partial<CalendarEvent>,
+  ): Promise<CalendarResponse> {
     try {
       const response = await apiClient.put(`/calendar/events/${id}`, event);
 
@@ -195,6 +212,7 @@ export class CalendarService {
       throw new Error("Failed to update event");
     } catch (error) {
       console.error("Update event error:", error);
+
       return {
         success: false,
         data: [],
@@ -206,7 +224,9 @@ export class CalendarService {
   /**
    * Delete a calendar event
    */
-  async deleteEvent(id: number): Promise<{ success: boolean; message: string }> {
+  async deleteEvent(
+    id: number,
+  ): Promise<{ success: boolean; message: string }> {
     try {
       const response = await apiClient.delete(`/calendar/events/${id}`);
 
@@ -220,6 +240,7 @@ export class CalendarService {
       throw new Error("Failed to delete event");
     } catch (error) {
       console.error("Delete event error:", error);
+
       return {
         success: false,
         message: error instanceof Error ? error.message : "Unknown error",
@@ -230,7 +251,10 @@ export class CalendarService {
   /**
    * Get events for a specific date range (optimized for calendar views)
    */
-  async getEventsForDateRange(startDate: string, endDate: string): Promise<CalendarResponse> {
+  async getEventsForDateRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<CalendarResponse> {
     return this.getCalendarEvents({ startDate, endDate });
   }
 
@@ -240,12 +264,13 @@ export class CalendarService {
   async getUpcomingEvents(limit: number = 10): Promise<CalendarResponse> {
     const today = new Date();
     const nextWeek = new Date(today);
+
     nextWeek.setDate(today.getDate() + 7);
 
     const filters: CalendarFilters = {
-      startDate: today.toISOString().split('T')[0],
-      endDate: nextWeek.toISOString().split('T')[0],
-      statuses: ['upcoming', 'in-progress'],
+      startDate: today.toISOString().split("T")[0],
+      endDate: nextWeek.toISOString().split("T")[0],
+      statuses: ["upcoming", "in-progress"],
     };
 
     return this.getCalendarEvents(filters);
@@ -256,7 +281,7 @@ export class CalendarService {
    */
   async getOverdueEvents(): Promise<CalendarResponse> {
     const filters: CalendarFilters = {
-      statuses: ['overdue'],
+      statuses: ["overdue"],
     };
 
     return this.getCalendarEvents(filters);
