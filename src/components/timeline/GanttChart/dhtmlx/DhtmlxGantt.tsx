@@ -348,7 +348,6 @@ const DHTMLXGantt: FC<{
 
   // === ZOOM CONFIG with localized week formatter ===
   const zoomConfig = useMemo(() => {
-    v;
     const weekFormatter = (date: Date) => {
       const weekNum = gantt.date.date_to_str("%W")(date);
 
