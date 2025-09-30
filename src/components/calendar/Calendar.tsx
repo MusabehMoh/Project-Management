@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Divider } from "@heroui/divider";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import {
@@ -575,8 +575,43 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
   if (loading && events.length === 0) {
     return (
       <Card className="w-full">
-        <CardBody className="flex justify-center items-center py-8">
-          <Spinner label={t("common.loading")} size="lg" />
+        <CardBody className="space-y-6 p-6">
+          {/* Calendar header skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-8 w-8 rounded" />
+              <Skeleton className="h-7 w-40 rounded-lg" />
+              <Skeleton className="h-8 w-8 rounded" />
+            </div>
+            <div className="flex space-x-2">
+              <Skeleton className="h-9 w-20 rounded-lg" />
+              <Skeleton className="h-9 w-20 rounded-lg" />
+              <Skeleton className="h-9 w-24 rounded-lg" />
+            </div>
+          </div>
+          
+          {/* Calendar grid skeleton */}
+          <div className="space-y-4">
+            {/* Week header */}
+            <div className="grid grid-cols-7 gap-2">
+              {[...Array(7)].map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full rounded-lg" />
+              ))}
+            </div>
+            
+            {/* Calendar days */}
+            {[...Array(6)].map((_, weekIndex) => (
+              <div key={weekIndex} className="grid grid-cols-7 gap-2">
+                {[...Array(7)].map((_, dayIndex) => (
+                  <div key={dayIndex} className="h-24 space-y-1">
+                    <Skeleton className="h-6 w-8 rounded" />
+                    <Skeleton className="h-4 w-full rounded" />
+                    <Skeleton className="h-3 w-3/4 rounded" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </CardBody>
       </Card>
     );

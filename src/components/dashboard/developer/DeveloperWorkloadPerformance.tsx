@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Progress } from "@heroui/progress";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -324,12 +324,49 @@ export default function DeveloperWorkloadPerformance({
   if (loading) {
     return (
       <Card className={`${className} border-default-200`} shadow="md">
-        <CardBody className="flex items-center justify-center py-8">
-          <Spinner size="lg" />
-          <p className="mt-4 text-default-500">
-            {t("developerDashboard.loadingWorkload") ||
-              "Loading workload data..."}
-          </p>
+        <CardBody className="space-y-6 p-6">
+          {/* Header with filters skeleton */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <Skeleton className="h-7 w-1/2 rounded-lg" />
+            <div className="flex space-x-2">
+              <Skeleton className="h-10 w-32 rounded-lg" />
+              <Skeleton className="h-10 w-32 rounded-lg" />
+            </div>
+          </div>
+          
+          {/* Performance metrics skeleton */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="text-center space-y-2">
+                <Skeleton className="h-8 w-16 mx-auto rounded-lg" />
+                <Skeleton className="h-4 w-20 mx-auto rounded" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Table skeleton */}
+          <div className="space-y-2">
+            {/* Table header */}
+            <div className="grid grid-cols-4 gap-4 p-3 bg-default-100 rounded-lg">
+              <Skeleton className="h-4 w-20 rounded" />
+              <Skeleton className="h-4 w-16 rounded" />
+              <Skeleton className="h-4 w-24 rounded" />
+              <Skeleton className="h-4 w-16 rounded" />
+            </div>
+            
+            {/* Table rows */}
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="grid grid-cols-4 gap-4 p-3 border-b border-default-200">
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-4 w-24 rounded" />
+                </div>
+                <Skeleton className="h-4 w-12 rounded" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded" />
+              </div>
+            ))}
+          </div>
         </CardBody>
       </Card>
     );

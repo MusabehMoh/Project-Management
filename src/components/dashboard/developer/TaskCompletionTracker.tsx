@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Progress } from "@heroui/progress";
 import {
   Table,
@@ -245,11 +245,51 @@ export default function TaskCompletionTracker({
   if (loading) {
     return (
       <Card className={`${className} border-default-200`} shadow="md">
-        <CardBody className="flex items-center justify-center py-8">
-          <Spinner size="lg" />
-          <p className="mt-4 text-default-500">
-            {t("developerDashboard.loadingTasks") || "Loading task data..."}
-          </p>
+        <CardBody className="space-y-6 p-6">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-7 w-1/2 rounded-lg" />
+            <Skeleton className="h-9 w-24 rounded-lg" />
+          </div>
+          
+          {/* Progress overview skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="text-center space-y-3">
+                <Skeleton className="h-16 w-16 mx-auto rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-6 w-8 mx-auto rounded" />
+                  <Skeleton className="h-4 w-16 mx-auto rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Chart skeleton */}
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-32 rounded-lg" />
+            <Skeleton className="h-64 w-full rounded-lg" />
+          </div>
+          
+          {/* Task list skeleton */}
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-40 rounded-lg" />
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-4 border border-default-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-40 rounded" />
+                    <Skeleton className="h-3 w-24 rounded" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-16 rounded" />
+                  <Skeleton className="h-3 w-12 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         </CardBody>
       </Card>
     );
