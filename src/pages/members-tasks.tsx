@@ -102,7 +102,7 @@ export default function MembersTasksPage() {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
-    [],
+    []
   );
   const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
   // State for selected members
@@ -121,17 +121,25 @@ export default function MembersTasksPage() {
 
   const effectivePageSize = normalizePageSize(
     taskParametersRequest.limit ?? 10,
-    10,
+    10
   );
 
   // Search and filter states (local)
-  const [searchTerm, setSearchTerm] = useState(taskParametersRequest?.search ?? "");
-  const [statusFilter, setStatusFilter] = useState<number | null>(taskParametersRequest?.statusId || null);
-  const [priorityFilter, setPriorityFilter] = useState<number | null>(taskParametersRequest?.priorityId || null);
-  const [projectFilter, setProjectFilter] = useState<number | null>(taskParametersRequest?.projectId || null);
+  const [searchTerm, setSearchTerm] = useState(
+    taskParametersRequest?.search ?? ""
+  );
+  const [statusFilter, setStatusFilter] = useState<number | null>(
+    taskParametersRequest?.statusId || null
+  );
+  const [priorityFilter, setPriorityFilter] = useState<number | null>(
+    taskParametersRequest?.priorityId || null
+  );
+  const [projectFilter, setProjectFilter] = useState<number | null>(
+    taskParametersRequest?.projectId || null
+  );
 
   const [searchValue, setSearchValue] = useState(
-    taskParametersRequest?.search ?? "",
+    taskParametersRequest?.search ?? ""
   );
 
   const isTeamManager = hasAnyRole([
@@ -151,7 +159,7 @@ export default function MembersTasksPage() {
         const success = await changeAssignees(
           selectedTask?.id ?? "0",
           selectedMembers.map((member) => member.id.toString()),
-          notes ?? "",
+          notes ?? ""
         );
 
         if (success) {
@@ -183,7 +191,7 @@ export default function MembersTasksPage() {
     const success = await changeStatus(
       selectedTask?.id ?? "0",
       `${selectedStatus?.id ?? 3}`,
-      notes ?? "",
+      notes ?? ""
     );
 
     if (success) {
@@ -264,21 +272,21 @@ export default function MembersTasksPage() {
       if (searchTerm !== (taskParametersRequest?.search ?? "")) {
         handleSearchChange(searchTerm);
       }
-      
+
       // Update status filter
       if (statusFilter !== (taskParametersRequest?.statusId || null)) {
         if (statusFilter) {
           handleStatusChange(statusFilter);
         }
       }
-      
-      // Update priority filter  
+
+      // Update priority filter
       if (priorityFilter !== (taskParametersRequest?.priorityId || null)) {
         if (priorityFilter) {
           handlePriorityChange(priorityFilter);
         }
       }
-      
+
       // Update project filter
       if (projectFilter !== (taskParametersRequest?.projectId || null)) {
         if (projectFilter) {
@@ -288,7 +296,17 @@ export default function MembersTasksPage() {
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, statusFilter, priorityFilter, projectFilter, handleSearchChange, handleStatusChange, handlePriorityChange, handleProjectChange, taskParametersRequest]);
+  }, [
+    searchTerm,
+    statusFilter,
+    priorityFilter,
+    projectFilter,
+    handleSearchChange,
+    handleStatusChange,
+    handlePriorityChange,
+    handleProjectChange,
+    taskParametersRequest,
+  ]);
 
   // Reset all filters
   const resetAllFilters = () => {
@@ -300,7 +318,11 @@ export default function MembersTasksPage() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = searchTerm || statusFilter !== null || priorityFilter !== null || projectFilter !== null;
+  const hasActiveFilters =
+    searchTerm ||
+    statusFilter !== null ||
+    priorityFilter !== null ||
+    projectFilter !== null;
 
   const handleRefresh = () => refreshTasks();
 
@@ -484,7 +506,10 @@ export default function MembersTasksPage() {
                 >
                   <SelectItem key="">{t("project")}</SelectItem>
                   {(tasksConfigData.projects ?? []).map((project) => (
-                    <SelectItem key={String(project.id)} value={String(project.id)}>
+                    <SelectItem
+                      key={String(project.id)}
+                      value={String(project.id)}
+                    >
                       {project.name}
                     </SelectItem>
                   ))}
@@ -493,7 +518,9 @@ export default function MembersTasksPage() {
                 <Select
                   className="md:w-43"
                   placeholder={t("status")}
-                  selectedKeys={statusFilter !== null ? [statusFilter.toString()] : []}
+                  selectedKeys={
+                    statusFilter !== null ? [statusFilter.toString()] : []
+                  }
                   onSelectionChange={(keys) => {
                     const selectedKey = Array.from(keys)[0] as string;
                     setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
@@ -501,7 +528,10 @@ export default function MembersTasksPage() {
                 >
                   <SelectItem key="">{t("status")}</SelectItem>
                   {(tasksConfigData.taskStatus ?? []).map((status) => (
-                    <SelectItem key={String(status.id)} value={String(status.id)}>
+                    <SelectItem
+                      key={String(status.id)}
+                      value={String(status.id)}
+                    >
                       {status.label}
                     </SelectItem>
                   ))}
@@ -510,15 +540,22 @@ export default function MembersTasksPage() {
                 <Select
                   className="md:w-43"
                   placeholder={t("priority")}
-                  selectedKeys={priorityFilter !== null ? [priorityFilter.toString()] : []}
+                  selectedKeys={
+                    priorityFilter !== null ? [priorityFilter.toString()] : []
+                  }
                   onSelectionChange={(keys) => {
                     const selectedKey = Array.from(keys)[0] as string;
-                    setPriorityFilter(selectedKey ? parseInt(selectedKey) : null);
+                    setPriorityFilter(
+                      selectedKey ? parseInt(selectedKey) : null
+                    );
                   }}
                 >
                   <SelectItem key="">{t("priority")}</SelectItem>
                   {(tasksConfigData.taskPriority ?? []).map((priority) => (
-                    <SelectItem key={String(priority.id)} value={String(priority.id)}>
+                    <SelectItem
+                      key={String(priority.id)}
+                      value={String(priority.id)}
+                    >
                       {priority.label}
                     </SelectItem>
                   ))}
@@ -538,7 +575,8 @@ export default function MembersTasksPage() {
                     {t("requirements.clearFilters")}
                   </Button>
                   <span className="text-sm text-default-500">
-                    {t("pagination.showing")} {totalCount} {t("pagination.items")}
+                    {t("pagination.showing")} {totalCount}{" "}
+                    {t("pagination.items")}
                   </span>
                 </div>
               )}
@@ -555,7 +593,9 @@ export default function MembersTasksPage() {
               </span>
               <Select
                 className="w-20"
-                selectedKeys={[normalizePageSize(effectivePageSize, 10).toString()]}
+                selectedKeys={[
+                  normalizePageSize(effectivePageSize, 10).toString(),
+                ]}
                 size="sm"
                 onSelectionChange={(keys) => {
                   const newSize = parseInt(Array.from(keys)[0] as string);
@@ -634,7 +674,8 @@ export default function MembersTasksPage() {
               </div>
 
               <span className="text-sm text-foreground-600">
-                {t("pagination.showing")} {tasks.length} {t("pagination.of")} {totalCount} {t("common.tasks")}
+                {t("pagination.showing")} {tasks.length} {t("pagination.of")}{" "}
+                {totalCount} {t("common.tasks")}
               </span>
             </div>
           </div>
@@ -963,8 +1004,8 @@ export default function MembersTasksPage() {
                         onClick={() => {
                           setSelectedMembers(
                             selectedMembers.filter(
-                              (user) => user.id !== employee.id,
-                            ),
+                              (user) => user.id !== employee.id
+                            )
                           );
                         }}
                       />
@@ -1011,7 +1052,7 @@ export default function MembersTasksPage() {
                 onSelectionChange={(key) => {
                   if (key) {
                     const selectedEmployee = employees.find(
-                      (e) => e.id.toString() === key,
+                      (e) => e.id.toString() === key
                     );
 
                     if (selectedEmployee) {
@@ -1160,7 +1201,7 @@ export default function MembersTasksPage() {
                   aria-label="Select task status"
                   onAction={(key) => {
                     const status = tasksConfigData.taskStatus?.find(
-                      (s) => s.id.toString() === key,
+                      (s) => s.id.toString() === key
                     );
 
                     if (status) setSelectedStatus(status);

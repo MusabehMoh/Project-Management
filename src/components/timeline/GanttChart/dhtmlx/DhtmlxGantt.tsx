@@ -74,7 +74,7 @@ const DHTMLXGantt: FC<{
 
     return Math.max(
       1,
-      Math.ceil(Math.abs(B.getTime() - A.getTime()) / (1000 * 60 * 60 * 24)),
+      Math.ceil(Math.abs(B.getTime() - A.getTime()) / (1000 * 60 * 60 * 24))
     );
   };
 
@@ -122,7 +122,7 @@ const DHTMLXGantt: FC<{
         day_short: ["أحد", "اثن", "ثلث", "أرب", "خمي", "جمع", "سبت"],
       },
     }),
-    [],
+    []
   );
 
   const enLocale = useMemo(
@@ -168,7 +168,7 @@ const DHTMLXGantt: FC<{
         day_short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       },
     }),
-    [],
+    []
   );
 
   // --- layouts ---
@@ -187,7 +187,7 @@ const DHTMLXGantt: FC<{
         { view: "scrollbar", id: "scrollHor", height: 20 },
       ],
     }),
-    [],
+    []
   );
 
   const rtlLayout = useMemo(
@@ -205,7 +205,7 @@ const DHTMLXGantt: FC<{
         { view: "scrollbar", id: "scrollHor", height: 20 },
       ],
     }),
-    [],
+    []
   );
 
   const formatDateForGantt = (date: string | Date) => {
@@ -256,6 +256,7 @@ const DHTMLXGantt: FC<{
 
   // ==== INIT ====
   useEffect(() => {
+    console.log("Gantt init : timeline is: ", timeline?.name);
     if (!el.current) return;
 
     gantt.clearAll();
@@ -289,28 +290,28 @@ const DHTMLXGantt: FC<{
     inited.current = true;
 
     // Perform an initial parse if tasks already passed in (tasks-only mode)
-    if (!timeline && tasks && tasks.length > 0) {
-      const colors = ["#3B82F6", "#22C55E", "#8B5CF6", "#EAB308"];
-      const data = {
-        data: tasks.map((task, index) => ({
-          id: task.id,
-          text: task.name,
-          description: task.description ?? "",
-          start_date: formatDate(task.startDate),
-          duration: daysBetween(task.startDate, task.endDate),
-          open: false,
-          type: "task",
-          color: colors[index % colors.length],
-          border: colors[index % colors.length],
-        })),
-        links: [] as any[],
-      };
+    // if (!timeline && tasks && tasks.length > 0) {
+    //   const colors = ["#3B82F6", "#22C55E", "#8B5CF6", "#EAB308"];
+    //   const data = {
+    //     data: tasks.map((task, index) => ({
+    //       id: task.id,
+    //       text: task.name,
+    //       description: task.description ?? "",
+    //       start_date: formatDate(task.startDate),
+    //       duration: daysBetween(task.startDate, task.endDate),
+    //       open: false,
+    //       type: "task",
+    //       color: colors[index % colors.length],
+    //       border: colors[index % colors.length],
+    //     })),
+    //     links: [] as any[],
+    //   };
 
-      gantt.silent(() => {
-        gantt.clearAll();
-        gantt.parse(data);
-      });
-    }
+    //   gantt.silent(() => {
+    //     gantt.clearAll();
+    //     gantt.parse(data);
+    //   });
+    // }
 
     ///dialog
     if (onTaskClick) {
@@ -343,10 +344,11 @@ const DHTMLXGantt: FC<{
       gantt.clearAll();
     };
     // run once
-  }, [isFullScreen, tasks, timeline]);
+  }, [isFullScreen]);
 
   // === ZOOM CONFIG with localized week formatter ===
   const zoomConfig = useMemo(() => {
+    v;
     const weekFormatter = (date: Date) => {
       const weekNum = gantt.date.date_to_str("%W")(date);
 
@@ -371,7 +373,7 @@ const DHTMLXGantt: FC<{
   }, [language]);
 
   const [zoomLevel, setZoomLevel] = useState<"day" | "week" | "month" | "year">(
-    "month",
+    "month"
   );
 
   const applyZoom = (level: "day" | "week" | "month" | "year") => {
@@ -527,7 +529,7 @@ const DHTMLXGantt: FC<{
           ) {
             totalScrollable = Math.max(
               0,
-              newState.width - newState.inner_width,
+              newState.width - newState.inner_width
             );
           } else if (typeof newState.width === "number") {
             totalScrollable = newState.width;
@@ -580,6 +582,8 @@ const DHTMLXGantt: FC<{
 
     const data = { data: [] as any[], links: [] as any[] };
     const id = (p: string, n: string | number) => `${p}-${n}`;
+
+    console.log("Gantt writing data:  ");
 
     if (timeline) {
       data.data.push({
@@ -638,7 +642,7 @@ const DHTMLXGantt: FC<{
               start_date: formatDate(sub.startDate || task.startDate),
               duration: daysBetween(
                 sub.startDate || task.startDate,
-                sub.endDate || task.endDate,
+                sub.endDate || task.endDate
               ),
               parent: rid,
               type: "subtask",
@@ -835,7 +839,7 @@ const DHTMLXGantt: FC<{
                       ? new CalendarDate(
                           new Date(selectedTask.start_date).getFullYear(),
                           new Date(selectedTask.start_date).getMonth() + 1,
-                          new Date(selectedTask.start_date).getDate(),
+                          new Date(selectedTask.start_date).getDate()
                         )
                       : null
                   }
@@ -845,7 +849,7 @@ const DHTMLXGantt: FC<{
                       start_date: val
                         ? `${val.year}-${String(val.month).padStart(
                             2,
-                            "0",
+                            "0"
                           )}-${String(val.day).padStart(2, "0")}`
                         : "",
                     })
@@ -906,7 +910,7 @@ const DHTMLXGantt: FC<{
                       if (!onDeleteEntity) return;
                       const success = await onDeleteEntity(
                         selectedTask.id,
-                        selectedTask.type,
+                        selectedTask.type
                       );
 
                       if (success) {
@@ -928,11 +932,11 @@ const DHTMLXGantt: FC<{
                           name: selectedTask.text,
                           description: selectedTask.description,
                           startDate: formatDateForGantt(
-                            selectedTask.start_date,
+                            selectedTask.start_date
                           ),
                           duration: selectedTask.duration,
                           progress: selectedTask.progress ?? 0,
-                        },
+                        }
                       );
 
                       if (success) {
