@@ -5,7 +5,7 @@ import { Input } from "@heroui/input";
 import { Avatar } from "@heroui/avatar";
 import { Divider } from "@heroui/divider";
 import { Chip } from "@heroui/chip";
-import { User, Mail, Phone, Shield, Calendar, Building2 } from "lucide-react";
+import { User, Shield, Calendar, Building2 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useUserContext } from "@/contexts/UserContext";
@@ -16,8 +16,6 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
   });
 
   if (!user) {
@@ -38,8 +36,6 @@ export default function ProfilePage() {
     // Reset form data to original values
     setFormData({
       fullName: user.fullName,
-      email: user.email || "",
-      phone: user.phone || "",
     });
     setIsEditing(false);
   };
@@ -166,38 +162,6 @@ export default function ProfilePage() {
                 value={user.department}
                 variant="flat"
               />
-            </div>
-
-            <Divider />
-
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <h4 className="text-medium font-semibold">{t("profile.contactInfo")}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  isReadOnly={!isEditing}
-                  label={t("user.email")}
-                  labelPlacement="outside"
-                  startContent={<Mail size={16} className="text-default-500" />}
-                  type="email"
-                  value={isEditing ? formData.email : (user.email || "")}
-                  variant={isEditing ? "bordered" : "flat"}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                />
-                <Input
-                  isReadOnly={!isEditing}
-                  label={t("user.phone")}
-                  labelPlacement="outside"
-                  startContent={<Phone size={16} className="text-default-500" />}
-                  value={isEditing ? formData.phone : (user.phone || "")}
-                  variant={isEditing ? "bordered" : "flat"}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                />
-              </div>
             </div>
 
             {isEditing && (
