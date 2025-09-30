@@ -258,8 +258,10 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
           {(task) => (
             <TableRow
               key={task.id}
-              className={`cursor-pointer hover:bg-default-100 transition-colors ${
-                task.isOverdue ? "bg-danger-50/30 dark:bg-danger-900/20" : ""
+              className={`cursor-pointer transition-colors ${
+                task.isOverdue
+                  ? "bg-danger-50/50 dark:bg-danger-950/30 hover:bg-danger-100/70 dark:hover:bg-danger-900/40"
+                  : "hover:bg-default-50 dark:hover:bg-default-100/20"
               }`}
               onClick={() => onTaskClick?.(task)}
             >
