@@ -1464,6 +1464,9 @@ const translations = {
     dates: "Start - End",
     tags: "Tags",
 
+    // Actions
+    "actions.deselectAll": "Deselect All",
+
     // Page Titles
     "home.title": "Dashboard",
     "about.title": "About",
@@ -2886,6 +2889,9 @@ const translations = {
     department: "القسم",
     dates: "البداية - النهاية",
     tags: "الوسوم",
+
+    // Actions
+    "actions.deselectAll": "إلغاء تحديد الكل",
 
     // Page Titles
     "home.title": "لوحة التحكم",

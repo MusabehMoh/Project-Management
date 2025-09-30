@@ -948,24 +948,57 @@ export default function UsersPage() {
                           {t("actions.defaultActionsForRole")} &quot;
                           {getSelectedRoleData()?.name}&quot;
                         </p>
-                        <Card className="bg-default-50">
+                        <Card className="bg-success-50 border border-success-200">
                           <CardBody className="py-3">
-                            <div className="flex flex-wrap gap-2">
-                              {getRoleDefaultActions().map((action) => (
-                                <Chip
-                                  key={action.id}
-                                  color="success"
-                                  size="sm"
-                                  startContent={
-                                    <span className="text-success">✓</span>
+                            {/* Group role default actions by category */}
+                            {Object.entries(
+                              getRoleDefaultActions().reduce(
+                                (acc, action) => {
+                                  const category =
+                                    action.categoryName || "Uncategorized";
+
+                                  if (!acc[category]) {
+                                    acc[category] = [];
                                   }
-                                  variant="flat"
-                                >
-                                  {action.name}
-                                </Chip>
-                              ))}
-                            </div>
-                            <p className="text-tiny text-default-500 mt-2">
+
+                                  acc[category].push(action);
+
+                                  return acc;
+                                },
+                                {} as { [categoryName: string]: Action[] },
+                              ),
+                            ).map(([category, categoryActions]) => (
+                              <div key={category} className="mb-3 last:mb-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs font-medium text-success-700 uppercase tracking-wider">
+                                    {category}
+                                  </span>
+                                  <Chip
+                                    color="success"
+                                    size="sm"
+                                    variant="flat"
+                                  >
+                                    {categoryActions.length}
+                                  </Chip>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {categoryActions.map((action) => (
+                                    <Chip
+                                      key={action.id}
+                                      color="success"
+                                      size="sm"
+                                      startContent={
+                                        <span className="text-success">✓</span>
+                                      }
+                                      variant="flat"
+                                    >
+                                      {action.name}
+                                    </Chip>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                            <p className="text-tiny text-success-600 mt-3 pt-2 border-t border-success-200">
                               {t("actions.defaultActionsNote")}
                             </p>
                           </CardBody>
@@ -1142,6 +1175,11 @@ export default function UsersPage() {
                         <SelectItem key="all" textValue={t("common.all")}>
                           {t("common.all")}
                         </SelectItem>
+                        {getActionCategories().map((category) => (
+                          <SelectItem key={category} textValue={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
                       </Select>
                     </div>
 
@@ -1208,13 +1246,57 @@ export default function UsersPage() {
                           },
                           {} as { [categoryName: string]: Action[] },
                         ),
-                      ).map(([category, categoryActions]) => (
-                        <Card
-                          key={category}
-                          className="border border-default-200"
-                        >
-                          <CardBody className="p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      ).map(([category, categoryActions]) => {
+                        const selectedInCategory = categoryActions.filter(
+                          (action) =>
+                            selectedAdditionalActions.includes(action.id),
+                        ).length;
+
+                        const allSelected =
+                          selectedInCategory === categoryActions.length;
+                        const someSelected = selectedInCategory > 0;
+
+                        return (
+                          <Card
+                            key={category}
+                            className="border border-default-200"
+                          >
+                            <CardBody className="p-4">
+                              {/* Category Header */}
+                              <div className="flex items-center justify-between mb-4 pb-3 border-b border-default-100">
+                                <div className="flex items-center gap-3">
+                                  <h4 className="text-medium font-semibold text-foreground">
+                                    {category}
+                                  </h4>
+                                  <Chip
+                                    color={someSelected ? "success" : "default"}
+                                    size="sm"
+                                    variant="flat"
+                                  >
+                                    {selectedInCategory}/{categoryActions.length}
+                                  </Chip>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    color={allSelected ? "danger" : "primary"}
+                                    size="sm"
+                                    variant="flat"
+                                    onPress={() =>
+                                      handleCategoryBulkSelection(
+                                        category,
+                                        !allSelected,
+                                      )
+                                    }
+                                  >
+                                    {allSelected
+                                      ? t("actions.deselectAll")
+                                      : t("actions.selectAll")}
+                                  </Button>
+                                </div>
+                              </div>
+                              
+                              {/* Actions Grid */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               {categoryActions.map((action) => (
                                 <Card
                                   key={action.id}
@@ -1276,10 +1358,11 @@ export default function UsersPage() {
                                   </CardBody>
                                 </Card>
                               ))}
-                            </div>
-                          </CardBody>
-                        </Card>
-                      ))}
+                              </div>
+                            </CardBody>
+                          </Card>
+                        );
+                      })}
 
                       {getFilteredAdditionalActions().length === 0 && (
                         <Card className="border border-default-200">
