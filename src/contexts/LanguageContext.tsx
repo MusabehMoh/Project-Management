@@ -919,6 +919,10 @@ const translations = {
     "users.searchEmployees":
       "Search employees by name, military number, or username",
     "users.noEmployeesFound": "No employees found",
+    "users.noUsersFound": "No users found matching your search",
+    "users.noUsersAvailable": "No users available",
+    "users.tryDifferentSearch": "Try adjusting your search terms or filters.",
+    "users.createFirstUser": "Start by creating your first user.",
     "users.selectEmployee": "Select Employee",
     "users.employeeNotFound": "Employee not found",
     "users.assignRoles": "Assign Role",
@@ -2341,6 +2345,10 @@ const translations = {
     "users.searchEmployees":
       "البحث عن الموظفين بالاسم أو الرقم العسكري أو اسم المستخدم",
     "users.noEmployeesFound": "لم يتم العثور على موظفين",
+    "users.noUsersFound": "لم يتم العثور على مستخدمين يطابقون بحثك",
+    "users.noUsersAvailable": "لا يوجد مستخدمين متاحين",
+    "users.tryDifferentSearch": "جرب تعديل كلمات البحث أو المرشحات.",
+    "users.createFirstUser": "ابدأ بإنشاء مستخدمك الأول.",
     "users.selectEmployee": "اختر موظف",
     "users.employeeNotFound": "لم يتم العثور على الموظف",
     "users.assignRoles": "تعيين دور",
