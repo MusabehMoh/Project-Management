@@ -199,9 +199,9 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
               <span className="text-tiny">{formatDate(task.endDate)}</span>
             </div>
             {task.isOverdue && (
-              <Badge color="danger" size="sm" variant="flat">
+              <Chip color="danger" size="sm" variant="flat">
                 Overdue
-              </Badge>
+              </Chip>
             )}
           </div>
         );
