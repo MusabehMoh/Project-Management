@@ -267,28 +267,53 @@ export default function MembersTasksPage() {
       
       // Update status filter
       if (statusFilter !== (taskParametersRequest?.statusId || null)) {
-        if (statusFilter) {
+        if (statusFilter !== null) {
           handleStatusChange(statusFilter);
+        } else {
+          // If status filter is reset to null, we need to refresh with other filters
+          const hasOtherFilters = searchTerm || priorityFilter !== null || projectFilter !== null;
+          if (hasOtherFilters) {
+            // Trigger a refresh that maintains other filters but clears status
+            fetchTasks();
+          } else {
+            handleResetFilters();
+          }
         }
       }
       
       // Update priority filter  
       if (priorityFilter !== (taskParametersRequest?.priorityId || null)) {
-        if (priorityFilter) {
+        if (priorityFilter !== null) {
           handlePriorityChange(priorityFilter);
+        } else {
+          // If priority filter is reset to null, refresh with other filters
+          const hasOtherFilters = searchTerm || statusFilter !== null || projectFilter !== null;
+          if (hasOtherFilters) {
+            fetchTasks();
+          } else {
+            handleResetFilters();
+          }
         }
       }
       
       // Update project filter
       if (projectFilter !== (taskParametersRequest?.projectId || null)) {
-        if (projectFilter) {
+        if (projectFilter !== null) {
           handleProjectChange(projectFilter);
+        } else {
+          // If project filter is reset to null, refresh with other filters
+          const hasOtherFilters = searchTerm || statusFilter !== null || priorityFilter !== null;
+          if (hasOtherFilters) {
+            fetchTasks();
+          } else {
+            handleResetFilters();
+          }
         }
       }
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, statusFilter, priorityFilter, projectFilter, handleSearchChange, handleStatusChange, handlePriorityChange, handleProjectChange, taskParametersRequest]);
+  }, [searchTerm, statusFilter, priorityFilter, projectFilter, handleSearchChange, handleStatusChange, handlePriorityChange, handleProjectChange, handleResetFilters, fetchTasks, taskParametersRequest]);
 
   // Reset all filters
   const resetAllFilters = () => {
@@ -479,7 +504,8 @@ export default function MembersTasksPage() {
                   selectedKeys={projectFilter ? [String(projectFilter)] : []}
                   onSelectionChange={(keys) => {
                     const val = Array.from(keys)[0] as string;
-                    setProjectFilter(val ? Number(val) : null);
+                    const newProjectFilter = val && val !== "" ? Number(val) : null;
+                    setProjectFilter(newProjectFilter);
                   }}
                 >
                   <SelectItem key="">{t("project")}</SelectItem>
@@ -496,7 +522,8 @@ export default function MembersTasksPage() {
                   selectedKeys={statusFilter !== null ? [statusFilter.toString()] : []}
                   onSelectionChange={(keys) => {
                     const selectedKey = Array.from(keys)[0] as string;
-                    setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
+                    const newStatusFilter = selectedKey && selectedKey !== "" ? parseInt(selectedKey) : null;
+                    setStatusFilter(newStatusFilter);
                   }}
                 >
                   <SelectItem key="">{t("status")}</SelectItem>
@@ -513,7 +540,8 @@ export default function MembersTasksPage() {
                   selectedKeys={priorityFilter !== null ? [priorityFilter.toString()] : []}
                   onSelectionChange={(keys) => {
                     const selectedKey = Array.from(keys)[0] as string;
-                    setPriorityFilter(selectedKey ? parseInt(selectedKey) : null);
+                    const newPriorityFilter = selectedKey && selectedKey !== "" ? parseInt(selectedKey) : null;
+                    setPriorityFilter(newPriorityFilter);
                   }}
                 >
                   <SelectItem key="">{t("priority")}</SelectItem>
