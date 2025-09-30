@@ -27,4 +27,10 @@ public interface IMappingService
     TimelineDto MapToTimelineDto(Timeline timeline);
     Timeline MapToTimeline(CreateTimelineDto createDto);
     void UpdateTimelineFromDto(Timeline timeline, UpdateTimelineDto updateDto);
+    
+    // Project with timelines mapping methods
+    TimelineWithSprintsDto MapToTimelineWithSprintsDto(Timeline timeline);
+    SprintDto MapToSprintDto(Sprint sprint);
+    TaskDto MapToTaskDto(PMA.Core.Entities.Task task);
+    ProjectWithTimelinesDto MapToProjectWithTimelinesDto(Project project);
 }

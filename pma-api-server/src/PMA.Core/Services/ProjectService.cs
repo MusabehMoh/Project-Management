@@ -137,6 +137,16 @@ public class ProjectService : IProjectService
 
         return project;
     }
+
+    public async System.Threading.Tasks.Task<IEnumerable<Project>> GetProjectsWithTimelinesAsync()
+    {
+        return await _projectRepository.GetProjectsWithTimelinesAsync();
+    }
+
+    public async System.Threading.Tasks.Task<Project?> GetProjectWithTimelinesAsync(int projectId)
+    {
+        return await _projectRepository.GetProjectWithTimelinesAsync(projectId);
+    }
 }
 
 

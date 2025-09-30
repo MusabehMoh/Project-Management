@@ -79,6 +79,7 @@ public class Project
 
     public ICollection<Task>? Tasks { get; set; }
     public ICollection<ProjectRequirement>? ProjectRequirements { get; set; }
+    public ICollection<Timeline>? Timelines { get; set; }
 }
 
 public enum ProjectStatus
