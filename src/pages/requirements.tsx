@@ -5,7 +5,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Select, SelectItem } from "@heroui/select";
 import { useNavigate } from "react-router-dom";
 import { FolderOpen, Clock, Users, Info, X } from "lucide-react";
@@ -19,6 +19,7 @@ import {
 import { Input } from "@heroui/input";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import LoadingLogo from "@/components/LoadingLogo";
 import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { usePageTitle } from "@/hooks";
@@ -163,11 +164,11 @@ export default function RequirementsPage() {
     setIsDrawerOpen(true);
   };
 
-  // Show global spinner only for non-assigned-projects loading states
+  // Show global loading logo only for non-assigned-projects loading states
   if (loading && !assignedProjectsLoading) {
     return (
       <div className="flex justify-center items-center min-h-96">
-        <Spinner label={t("common.loading")} size="lg" />
+        <LoadingLogo showText size="lg" text={t("common.loading")} />
       </div>
     );
   }
@@ -286,21 +287,53 @@ export default function RequirementsPage() {
             )}
 
             {assignedProjectsLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="text-center space-y-4">
-                  <Spinner color="primary" size="lg" />
-                  <div>
-                    <p className="text-default-600">{t("common.loading")}</p>
-                    <p className="text-sm text-default-500">
-                      {assignedProjectsCurrentPage > 1
-                        ? t("pagination.loadingPage").replace(
-                            "{page}",
-                            assignedProjectsCurrentPage.toString(),
-                          )
-                        : t("common.pleaseWait")}
-                    </p>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Card
+                    key={`skeleton-${index}`}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex flex-col gap-2 w-full">
+                        <div className="flex justify-between items-start">
+                          <Skeleton className="h-6 w-3/4 rounded" />
+                          <Skeleton className="h-6 w-16 rounded-full" />
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <Divider />
+                    <CardBody className="space-y-4">
+                      {/* Project Info Skeleton */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded" />
+                          <Skeleton className="h-4 w-24 rounded" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded" />
+                          <Skeleton className="h-4 w-20 rounded" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded" />
+                          <Skeleton className="h-4 w-16 rounded" />
+                        </div>
+                      </div>
+                      
+                      {/* Requirements Skeleton */}
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-32 rounded" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-full rounded" />
+                          <Skeleton className="h-4 w-full rounded" />
+                          <Skeleton className="h-4 w-3/4 rounded" />
+                        </div>
+                      </div>
+                      
+                      {/* Action Button Skeleton */}
+                      <Skeleton className="h-10 w-full rounded-lg" />
+                    </CardBody>
+                  </Card>
+                ))}
               </div>
             ) : !assignedProjects || assignedProjects.length === 0 ? (
               <Card>

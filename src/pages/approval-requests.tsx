@@ -9,7 +9,6 @@ import {
   Select,
   SelectItem,
   Chip,
-  Spinner,
   Modal,
   ModalContent,
   ModalHeader,
@@ -19,6 +18,7 @@ import {
 } from "@heroui/react";
 import { Search, Filter, X, Eye, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import LoadingLogo from "@/components/LoadingLogo";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
@@ -441,7 +441,7 @@ export default function ApprovalRequestsPage() {
   if (loading && requirements.length === 0) {
     return (
       <div className="flex justify-center items-center min-h-96">
-        <Spinner label={t("common.loading")} size="lg" />
+        <LoadingLogo showText size="lg" text={t("common.loading")} />
       </div>
     );
   }
