@@ -5,7 +5,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, Clock, User, AlertCircle } from "lucide-react";
 
@@ -94,9 +94,32 @@ export default function ApprovedRequirements({
         dir={direction}
         shadow="sm"
       >
-        <CardBody className="flex items-center justify-center min-h-[200px]">
-          <Spinner aria-label={t("common.loading")} size="lg" />
-          <p className="mt-3 text-default-500">{t("common.loading")}</p>
+        <CardBody className="space-y-4 p-6">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-2/3 rounded-lg" />
+            <Skeleton className="h-8 w-20 rounded-lg" />
+          </div>
+          
+          {/* Requirements list skeleton */}
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="p-3 border border-default-200 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-1/2 rounded" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-3/4 rounded" />
+                <div className="flex space-x-2">
+                  <Skeleton className="h-3 w-16 rounded" />
+                  <Skeleton className="h-3 w-20 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Footer skeleton */}
+          <Skeleton className="h-10 w-full rounded-lg" />
         </CardBody>
       </Card>
     );

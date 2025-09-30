@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
+import { Skeleton } from "@heroui/skeleton";
 
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -185,6 +186,44 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
               <Button color="primary" size="sm" onPress={handleRetry}>
                 {language === "ar" ? "إعادة المحاولة" : "Retry"}
               </Button>
+            </div>
+          </div>
+        ) : loading ? (
+          <div className="space-y-4 p-6" style={{ height }}>
+            {/* Gantt header skeleton */}
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-2">
+                <Skeleton className="h-8 w-16 rounded-lg" />
+                <Skeleton className="h-8 w-20 rounded-lg" />
+                <Skeleton className="h-8 w-24 rounded-lg" />
+              </div>
+              <div className="flex space-x-2">
+                <Skeleton className="h-8 w-24 rounded-lg" />
+                <Skeleton className="h-8 w-8 rounded" />
+              </div>
+            </div>
+            
+            {/* Gantt timeline skeleton */}
+            <div className="space-y-2">
+              {/* Timeline header */}
+              <div className="grid grid-cols-12 gap-1 h-8">
+                {[...Array(12)].map((_, i) => (
+                  <Skeleton key={i} className="h-full w-full rounded" />
+                ))}
+              </div>
+              
+              {/* Task rows */}
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="grid grid-cols-12 gap-1 h-10">
+                  <div className="col-span-3 flex items-center space-x-2">
+                    <Skeleton className="h-6 w-6 rounded" />
+                    <Skeleton className="h-4 w-32 rounded" />
+                  </div>
+                  {[...Array(9)].map((_, j) => (
+                    <Skeleton key={j} className="h-6 w-full rounded" />
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         ) : (

@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Alert } from "@heroui/alert";
 import {
   Modal,
@@ -222,11 +222,38 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         dir={direction}
         shadow="sm"
       >
-        <CardBody className="flex items-center justify-center py-8">
-          <Spinner color="default" size="md" />
-          <p className="mt-3 text-default-500">
-            {t("common.loading") || "Loading..."}
-          </p>
+        <CardBody className="space-y-6 py-6">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-1/3 rounded-lg" />
+            <Skeleton className="h-10 w-24 rounded-lg" />
+          </div>
+          
+          {/* Tabs skeleton */}
+          <div className="flex space-x-4">
+            <Skeleton className="h-10 w-32 rounded-lg" />
+            <Skeleton className="h-10 w-32 rounded-lg" />
+            <Skeleton className="h-10 w-32 rounded-lg" />
+          </div>
+          
+          {/* Content skeleton */}
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-4 border border-default-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-48 rounded" />
+                    <Skeleton className="h-3 w-32 rounded" />
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <Skeleton className="h-8 w-20 rounded-lg" />
+                  <Skeleton className="h-8 w-16 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
         </CardBody>
       </Card>
     );
