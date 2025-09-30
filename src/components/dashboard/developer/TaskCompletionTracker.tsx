@@ -435,8 +435,18 @@ export default function TaskCompletionTracker({
                         <Tooltip
                           content={
                             item.type === "overdue"
-                              ? `${item.daysOverdue} days overdue`
-                              : `${item.daysUntilDeadline} days remaining`
+                              ? item.daysOverdue === 1
+                                ? t("completion.oneDayOverdue")
+                                : t("completion.daysOverdue").replace(
+                                    "{days}",
+                                    item.daysOverdue?.toString() || "0",
+                                  )
+                              : item.daysUntilDeadline === 1
+                                ? t("completion.oneDayLeft")
+                                : t("completion.daysLeft").replace(
+                                    "{days}",
+                                    item.daysUntilDeadline?.toString() || "0",
+                                  )
                           }
                         >
                           <Chip
