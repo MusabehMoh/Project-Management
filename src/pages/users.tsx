@@ -137,6 +137,23 @@ export default function UsersPage() {
     );
   };
 
+  // Helper function to get category from action
+  const getActionCategory = (action: Action) => {
+    // First try categoryName, then category, then extract from name
+    if (action.categoryName) {
+      return action.categoryName;
+    }
+    if ((action as any).category) {
+      return (action as any).category;
+    }
+    // Extract category from action name (e.g., "users.create" -> "Users")
+    if (action.name && action.name.includes('.')) {
+      const prefix = action.name.split('.')[0];
+      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+    return "Uncategorized";
+  };
+
   // Filter actions based on search and category
   const getFilteredAdditionalActions = () => {
     let filteredActions = getAvailableAdditionalActions();
@@ -158,8 +175,7 @@ export default function UsersPage() {
     // Filter by category
     if (selectedActionCategory !== "all") {
       filteredActions = filteredActions.filter(
-        (action) =>
-          action.categoryName && action.categoryName === selectedActionCategory,
+        (action) => getActionCategory(action) === selectedActionCategory,
       );
     }
 
@@ -171,9 +187,7 @@ export default function UsersPage() {
     const availableActions = getAvailableAdditionalActions();
     const categories = [
       ...new Set(
-        availableActions.map(
-          (action) => action.categoryName || "Uncategorized",
-        ),
+        availableActions.map((action) => getActionCategory(action)),
       ),
     ];
 
@@ -186,7 +200,7 @@ export default function UsersPage() {
     selectAll: boolean,
   ) => {
     const categoryActions = getAvailableAdditionalActions().filter(
-      (action) => (action.categoryName || "Uncategorized") === categoryName,
+      (action) => getActionCategory(action) === categoryName,
     );
     const categoryActionIds = categoryActions.map((action) => action.id);
 
@@ -954,8 +968,7 @@ export default function UsersPage() {
                             {Object.entries(
                               getRoleDefaultActions().reduce(
                                 (acc, action) => {
-                                  const category =
-                                    action.categoryName || "Uncategorized";
+                                  const category = getActionCategory(action);
 
                                   if (!acc[category]) {
                                     acc[category] = [];
@@ -1233,9 +1246,7 @@ export default function UsersPage() {
                       {Object.entries(
                         getFilteredAdditionalActions().reduce(
                           (acc, action) => {
-                            // Use "Uncategorized" as default if categoryName is missing
-                            const category =
-                              action.categoryName || "Uncategorized";
+                            const category = getActionCategory(action);
 
                             if (!acc[category]) {
                               acc[category] = [];
