@@ -755,7 +755,10 @@ export const Navbar = () => {
                   }
                   onPress={async () => {
                     try {
-                      // Clear local storage
+                      // Get current app URL
+                      const currentUrl = window.location.origin;
+                      
+                      // Clear local storage first
                       localStorage.removeItem("authToken");
                       localStorage.removeItem("currentUser");
                       sessionStorage.removeItem("authToken");
@@ -763,7 +766,39 @@ export const Navbar = () => {
                       // Clear user context
                       setUser(null);
                       
-                      // Navigate to login or home page
+                      // Open app in new window
+                      const newWindow = window.open(currentUrl, "_blank");
+                      
+                      if (newWindow) {
+                        // Focus the new window
+                        newWindow.focus();
+                        
+                        // Show instructions for private browsing
+                        const userAgent = navigator.userAgent.toLowerCase();
+                        let shortcut = "Ctrl+Shift+N"; // Chrome default
+                        
+                        if (userAgent.includes("firefox")) {
+                          shortcut = "Ctrl+Shift+P";
+                        } else if (userAgent.includes("safari") && !userAgent.includes("chrome")) {
+                          shortcut = "Cmd+Shift+N";
+                        } else if (userAgent.includes("edge")) {
+                          shortcut = "Ctrl+Shift+N";
+                        }
+                        
+                        // Optional: Show a toast or alert with instructions
+                        setTimeout(() => {
+                          if (window.confirm(
+                            `${t("user.privateWindowTip") || "Tip: For complete privacy, press"} ${shortcut} ${t("user.privateWindowTip2") || "to open in private/incognito mode."}\n\n${t("user.closeCurrentWindow") || "Would you like to close this window?"}`
+                          )) {
+                            window.close();
+                          }
+                        }, 1000);
+                      } else {
+                        // Fallback if popup was blocked
+                        alert(t("user.popupBlocked") || "Popup blocked. Please allow popups and try again, or manually open a private window.");
+                      }
+                      
+                      // Navigate current window to login page as fallback
                       navigate("/");
                       
                       // Optional: Call logout API endpoint
