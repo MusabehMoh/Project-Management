@@ -389,6 +389,7 @@ const TeamWorkloadPerformance: React.FC = () => {
                     {t("common.show")}:
                   </span>
                   <Select
+                    aria-label={t("pagination.itemsPerPage") || "Items per page"}
                     className="w-20"
                     selectedKeys={[pageSize.toString()]}
                     size="sm"
