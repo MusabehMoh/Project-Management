@@ -1082,23 +1082,27 @@ export default function ProjectsPage() {
               ) : projects.length === 0 ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="text-center space-y-4">
-                    {searchQuery ? (
+                    {(searchQuery || projectNameFilter.trim()) ? (
                       <SearchIcon 
                         className="mx-auto text-default-400" 
                         height={64} 
                         width={64}
                       />
                     ) : (
-                      <div className="text-6xl">📋</div>
+                      <SearchIcon 
+                        className="mx-auto text-default-400" 
+                        height={64} 
+                        width={64}
+                      />
                     )}
                     <div>
                       <p className="text-lg text-default-600">
-                        {searchQuery
-                          ? t("projects.noSearchResults") || `No projects found matching "${searchQuery}"`
+                        {(searchQuery || projectNameFilter.trim())
+                          ? t("projects.noSearchResults") || `No projects found matching "${searchQuery || projectNameFilter}"`
                           : t("projects.noProjectsFound") || "No projects found"}
                       </p>
                       <p className="text-sm text-default-500">
-                        {searchQuery
+                        {(searchQuery || projectNameFilter.trim())
                           ? t("projects.tryDifferentSearch") || "Try adjusting your search terms or filters."
                           : totalProjects > 0
                             ? t("projects.noProjectsOnPage") ||
