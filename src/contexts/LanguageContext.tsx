@@ -296,6 +296,15 @@ const translations = {
     "quickActions.selectedAnalysts": "Selected Analysts",
     "quickActions.assignmentSuccess": "Assignment Successful",
     "quickActions.assignmentError": "Assignment Failed",
+
+    // Projects
+    "projects.noProjectsFound": "No projects found",
+    "projects.noSearchResults": "No projects found matching your search",
+    "projects.tryDifferentSearch": "Try adjusting your search terms or filters.",
+    "projects.noProjectsOnPage": "No projects on this page. Try a different page.",
+    "projects.startFirstProject": "Start by creating your first project.",
+    "projects.newProject": "New Project",
+
     "dashboard.viewAllProjects": "View All Projects",
     "dashboard.teamName": "Team Name",
     "dashboard.progressMapped": "Progress Mapped",
@@ -1720,6 +1729,15 @@ const translations = {
     "quickActions.selectedAnalysts": "المحللين المختارين",
     "quickActions.assignmentSuccess": "تم التعيين بنجاح",
     "quickActions.assignmentError": "فشل في التعيين",
+
+    // Projects
+    "projects.noProjectsFound": "لم يتم العثور على مشاريع",
+    "projects.noSearchResults": "لم يتم العثور على مشاريع تطابق بحثك",
+    "projects.tryDifferentSearch": "جرب تعديل كلمات البحث أو المرشحات.",
+    "projects.noProjectsOnPage": "لا توجد مشاريع في هذه الصفحة. جرب صفحة أخرى.",
+    "projects.startFirstProject": "ابدأ بإنشاء مشروعك الأول.",
+    "projects.newProject": "مشروع جديد",
+
     "dashboard.viewAllProjects": "عرض جميع المشاريع",
     "dashboard.teamName": "اسم الفريق",
     "dashboard.progressMapped": "التقدم المخطط",

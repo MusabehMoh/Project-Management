@@ -48,6 +48,7 @@ import {
   MoreVerticalIcon,
   SendIcon,
   DownloadIcon,
+  SearchIcon,
 } from "@/components/icons";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { UnitSelector } from "@/components/UnitSelector";
@@ -1081,17 +1082,29 @@ export default function ProjectsPage() {
               ) : projects.length === 0 ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="text-center space-y-4">
-                    <div className="text-6xl">📋</div>
+                    {searchQuery ? (
+                      <SearchIcon 
+                        className="mx-auto text-default-400" 
+                        height={64} 
+                        width={64}
+                      />
+                    ) : (
+                      <div className="text-6xl">📋</div>
+                    )}
                     <div>
                       <p className="text-lg text-default-600">
-                        {t("projects.noProjectsFound") || "No projects found"}
+                        {searchQuery
+                          ? t("projects.noSearchResults") || `No projects found matching "${searchQuery}"`
+                          : t("projects.noProjectsFound") || "No projects found"}
                       </p>
                       <p className="text-sm text-default-500">
-                        {totalProjects > 0
-                          ? t("projects.noProjectsOnPage") ||
-                            `No projects on page ${currentPage}. Try a different page.`
-                          : t("projects.startFirstProject") ||
-                            "Start by creating your first project."}
+                        {searchQuery
+                          ? t("projects.tryDifferentSearch") || "Try adjusting your search terms or filters."
+                          : totalProjects > 0
+                            ? t("projects.noProjectsOnPage") ||
+                              `No projects on page ${currentPage}. Try a different page.`
+                            : t("projects.startFirstProject") ||
+                              "Start by creating your first project."}
                       </p>
                     </div>
                     <Button
