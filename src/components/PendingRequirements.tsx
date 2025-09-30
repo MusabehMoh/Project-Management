@@ -22,8 +22,9 @@ export default function PendingRequirements({
   const { draftRequirements, loading, error, refresh, total } =
     useDraftRequirements();
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority?.toLowerCase()) {
+  const getPriorityColor = (priority: string | number | null | undefined) => {
+    const priorityStr = priority?.toString()?.toLowerCase() || "";
+    switch (priorityStr) {
       case "high":
         return "danger";
       case "medium":
@@ -35,8 +36,9 @@ export default function PendingRequirements({
     }
   };
 
-  const getPriorityText = (priority: string) => {
-    switch (priority?.toLowerCase()) {
+  const getPriorityText = (priority: string | number | null | undefined) => {
+    const priorityStr = priority?.toString()?.toLowerCase() || "";
+    switch (priorityStr) {
       case "high":
         return t("priority.high");
       case "medium":
@@ -44,7 +46,7 @@ export default function PendingRequirements({
       case "low":
         return t("priority.low");
       default:
-        return priority;
+        return priority?.toString() || t("priority.unknown") || "Unknown";
     }
   };
 

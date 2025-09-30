@@ -380,6 +380,7 @@ const translations = {
     "priority.medium": "Medium",
     "priority.low": "Low",
     "priority.critical": "Critical",
+    "priority.unknown": "Unknown",
 
     // Common
     "common.total": "Total",
@@ -1816,6 +1817,7 @@ const translations = {
     "priority.medium": "متوسطة",
     "priority.low": "منخفضة",
     "priority.critical": "حرجة",
+    "priority.unknown": "غير معروف",
 
     // Common
     "common.total": "المجموع",
