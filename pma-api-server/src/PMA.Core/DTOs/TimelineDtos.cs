@@ -1,5 +1,6 @@
 using PMA.Core.Entities;
 using System.ComponentModel.DataAnnotations;
+using TaskStatus = PMA.Core.Entities.TaskStatus;
 
 namespace PMA.Core.DTOs;
 
@@ -20,8 +21,7 @@ public class TimelineDto
 
 public class CreateTimelineDto
 {
-    
-
+ 
     [Required(ErrorMessage = "ProjectId is required")]
     public int ProjectId { get; set; }
 
@@ -57,4 +57,53 @@ public class UpdateTimelineDto
 
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+}
+
+public class SprintDto
+{
+    public int Id { get; set; }
+    public string TreeId { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public SprintStatus Status { get; set; }
+    public int? ProjectId { get; set; }
+    public int? TimelineId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public List<TaskDto> Tasks { get; set; } = new List<TaskDto>();
+}
+
+public class TaskDto
+{
+    public int Id { get; set; }
+    public string TreeId { get; set; } = string.Empty;
+    public int SprintId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public TaskStatus StatusId { get; set; }
+    public Priority PriorityId { get; set; }
+    public int? DepartmentId { get; set; }
+    public int? AssigneeId { get; set; }
+    public string? AssigneeName { get; set; }
+    public decimal? EstimatedHours { get; set; }
+    public decimal? ActualHours { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class TimelineWithSprintsDto : TimelineDto
+{
+    public List<SprintDto> Sprints { get; set; } = new List<SprintDto>();
+}
+
+public class ProjectWithTimelinesDto
+{
+    public int ProjectId { get; set; }
+    public string ProjectName { get; set; } = string.Empty;
+    public int TimelineCount { get; set; }
+    public List<TimelineWithSprintsDto> Timelines { get; set; } = new List<TimelineWithSprintsDto>();
 }

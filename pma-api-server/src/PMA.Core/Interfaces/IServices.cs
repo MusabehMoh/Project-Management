@@ -16,6 +16,8 @@ public interface IProjectService
     System.Threading.Tasks.Task<IEnumerable<Project>> SearchProjectsAsync(string query, int? status = null, string? priority = null, int page = 1, int limit = 20);
     System.Threading.Tasks.Task<object> GetProjectStatsAsync();
     System.Threading.Tasks.Task<Project> SendProjectAsync(int projectId);
+    System.Threading.Tasks.Task<IEnumerable<Project>> GetProjectsWithTimelinesAsync();
+    System.Threading.Tasks.Task<Project?> GetProjectWithTimelinesAsync(int projectId);
 }
 
 public interface IUserService

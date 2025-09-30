@@ -258,6 +258,29 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
 
         return (assignedProjects, totalCount);
     }
+
+    public async Task<IEnumerable<Project>> GetProjectsWithTimelinesAsync()
+    {
+        return await _context.Projects
+            .Include(p => p.Timelines!)
+                .ThenInclude(t => t.Sprints!)
+                    .ThenInclude(s => s.Tasks)
+            .Include(p => p.ProjectOwnerEmployee)
+            .Include(p => p.OwningUnitEntity)
+            .OrderBy(p => p.ApplicationName)
+            .ToListAsync();
+    }
+
+    public async Task<Project?> GetProjectWithTimelinesAsync(int projectId)
+    {
+        return await _context.Projects
+            .Include(p => p.Timelines!)
+                .ThenInclude(t => t.Sprints!)
+                    .ThenInclude(s => s.Tasks)
+            .Include(p => p.ProjectOwnerEmployee)
+            .Include(p => p.OwningUnitEntity)
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+    }
 }
 
 

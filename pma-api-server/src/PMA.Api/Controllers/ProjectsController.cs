@@ -293,6 +293,56 @@ public class ProjectsController : ApiBaseController
             return Error<object>("Internal server error", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Get all projects with their timelines, sprints, and tasks
+    /// </summary>
+    [HttpGet("with-timelines")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProjectWithTimelinesDto>>), 200)]
+    public async Task<IActionResult> GetProjectsWithTimelines()
+    {
+        try
+        {
+            var projects = await _projectService.GetProjectsWithTimelinesAsync();
+
+            var projectWithTimelinesDtos = projects.Select(p => _mappingService.MapToProjectWithTimelinesDto(p));
+
+            return Success(projectWithTimelinesDtos, message: "Projects with timelines retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving projects with timelines. StackTrace: {StackTrace}", ex.StackTrace);
+            return Error<IEnumerable<ProjectWithTimelinesDto>>("Internal server error", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get timelines for a specific project
+    /// </summary>
+    [HttpGet("{projectId}/timelines")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<TimelineWithSprintsDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> GetProjectTimelines(int projectId)
+    {
+        try
+        {
+            var projectWithTimelines = await _projectService.GetProjectWithTimelinesAsync(projectId);
+
+            if (projectWithTimelines == null)
+            {
+                return Error<object>("Project not found", status: 404);
+            }
+
+            var timelinesDtos = projectWithTimelines.Timelines?.Select(t => _mappingService.MapToTimelineWithSprintsDto(t)) ?? new List<TimelineWithSprintsDto>();
+
+            return Success(timelinesDtos, message: "Project timelines retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving project timelines. ProjectId: {ProjectId}. StackTrace: {StackTrace}", projectId, ex.StackTrace);
+            return Error<IEnumerable<TimelineWithSprintsDto>>("Internal server error", ex.Message);
+        }
+    }
 }
 
 

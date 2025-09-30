@@ -400,4 +400,87 @@ public class MappingService : IMappingService
             timeline.EndDate = updateDto.EndDate.Value;
         timeline.UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Maps a Timeline entity to TimelineWithSprintsDto with generated treeId
+    /// </summary>
+    public TimelineWithSprintsDto MapToTimelineWithSprintsDto(Timeline timeline)
+    {
+        return new TimelineWithSprintsDto
+        {
+            Id = timeline.Id,
+            TreeId = $"timeline-{timeline.Id}",
+            ProjectId = timeline.ProjectId,
+            ProjectRequirementId = timeline.ProjectRequirementId,
+            Name = timeline.Name,
+            Description = timeline.Description,
+            StartDate = timeline.StartDate,
+            EndDate = timeline.EndDate,
+            CreatedAt = timeline.CreatedAt,
+            UpdatedAt = timeline.UpdatedAt,
+            Sprints = timeline.Sprints?.Select(MapToSprintDto).ToList() ?? new List<SprintDto>()
+        };
+    }
+
+    /// <summary>
+    /// Maps a Sprint entity to SprintDto with generated treeId
+    /// </summary>
+    public SprintDto MapToSprintDto(Sprint sprint)
+    {
+        return new SprintDto
+        {
+            Id = sprint.Id,
+            TreeId = $"sprint-{sprint.Id}",
+            Name = sprint.Name,
+            Description = sprint.Description,
+            StartDate = sprint.StartDate,
+            EndDate = sprint.EndDate,
+            Status = sprint.Status,
+            ProjectId = sprint.ProjectId,
+            TimelineId = sprint.TimelineId,
+            CreatedAt = sprint.CreatedAt,
+            UpdatedAt = sprint.UpdatedAt,
+            Tasks = sprint.Tasks?.Select(MapToTaskDto).ToList() ?? new List<TaskDto>()
+        };
+    }
+
+    /// <summary>
+    /// Maps a Task entity to TaskDto with generated treeId
+    /// </summary>
+    public TaskDto MapToTaskDto(PMA.Core.Entities.Task task)
+    {
+        return new TaskDto
+        {
+            Id = task.Id,
+            TreeId = $"task-{task.Id}",
+            SprintId = task.SprintId,
+            Name = task.Name,
+            Description = task.Description,
+            StartDate = task.StartDate,
+            EndDate = task.EndDate,
+            StatusId = task.StatusId,
+            PriorityId = task.PriorityId,
+            DepartmentId = task.DepartmentId,
+            AssigneeId = task.AssigneeId,
+            AssigneeName = task.AssigneeName,
+            EstimatedHours = task.EstimatedHours,
+            ActualHours = task.ActualHours,
+            CreatedAt = task.CreatedAt,
+            UpdatedAt = task.UpdatedAt
+        };
+    }
+
+    /// <summary>
+    /// Maps a Project entity to ProjectWithTimelinesDto with generated treeIds
+    /// </summary>
+    public ProjectWithTimelinesDto MapToProjectWithTimelinesDto(Project project)
+    {
+        return new ProjectWithTimelinesDto
+        {
+            ProjectId = project.Id,
+            ProjectName = project.ApplicationName,
+            TimelineCount = project.Timelines?.Count ?? 0,
+            Timelines = project.Timelines?.Select(MapToTimelineWithSprintsDto).ToList() ?? new List<TimelineWithSprintsDto>()
+        };
+    }
 }
