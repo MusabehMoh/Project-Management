@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { today, getLocalTimeZone, CalendarDate } from "@internationalized/date";
+import { today, getLocalTimeZone, CalendarDate, parseDate } from "@internationalized/date";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -21,9 +21,10 @@ import { Avatar } from "@heroui/avatar";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { addToast } from "@heroui/toast";
-import { RefreshCw, AlertTriangle, Code, User, Clock } from "lucide-react";
+import { RefreshCw, AlertTriangle, Code, User, Clock, X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { UseAdhocTasks } from "@/hooks/useAdhocTask";
 import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActionsV2";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
@@ -764,6 +765,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   );
 
   const AddAdhocTaskModal = () => {
+    const { addAdhocTask, loading: isCreating, error: createError } = UseAdhocTasks();
     const [formData, setFormData] = useState({
       name: "",
       description: "",
@@ -900,8 +902,17 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                       isInvalid={!!errors.startDate}
                       label={t("timeline.detailsPanel.startDate") || "Start Date"}
                       minValue={today(getLocalTimeZone())}
-                      value={formData.startDate ? parseDate(formData.startDate.substring(0, 10)) : null}
-                      onChange={(date) => handleInputChange("startDate", date ? date.toString() : "")}
+                      value={
+                        formData.startDate
+                          ? parseDate(formData.startDate.substring(0, 10))
+                          : null
+                      }
+                      onChange={(date) =>
+                        handleInputChange(
+                          "startDate",
+                          date ? date.toString() : "",
+                        )
+                      }
                     />
 
                     <DatePicker
@@ -909,9 +920,19 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                       errorMessage={errors.endDate}
                       isInvalid={!!errors.endDate}
                       label={t("timeline.detailsPanel.endDate") || "End Date"}
-                      minValue={today("UTC")}
-                      value={formData.endDate ? parseDate(formData.endDate.substring(0, 10)) : null}
-                      onChange={(date) => handleInputChange("endDate", date ? date.toString() : "")}
+                      minValue={
+                        formData.startDate
+                          ? parseDate(formData.startDate.substring(0, 10))
+                          : today(getLocalTimeZone())
+                      }
+                      value={
+                        formData.endDate
+                          ? parseDate(formData.endDate.substring(0, 10))
+                          : null
+                      }
+                      onChange={(date) =>
+                        handleInputChange("endDate", date ? date.toString() : "")
+                      }
                     />
                   </div>
 
@@ -1021,14 +1042,21 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                 </Button>
                 <Button
                   color="primary"
+                  isLoading={isCreating}
                   onPress={async () => {
                     if (validateForm()) {
-                      addToast({
-                        title: t("success") || "Success",
-                        description: t("taskCreated") || "Task created successfully",
-                        color: "success",
-                      });
-                      handleClose();
+                      const newTask = {
+                        name: formData.name,
+                        description: formData.description,
+                        startDate: formData.startDate,
+                        endDate: formData.endDate,
+                        assignedMembers: selectedMembers.map((m) => m.id.toString()),
+                      };
+
+                      const success = await addAdhocTask(newTask);
+                      if (success) {
+                        handleClose();
+                      }
                     }
                   }}
                 >
