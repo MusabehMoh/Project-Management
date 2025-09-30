@@ -9,7 +9,7 @@ import {
   TableCell,
 } from "@heroui/table";
 import { Progress } from "@heroui/progress";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Tooltip } from "@heroui/tooltip";
 import { Select, SelectItem } from "@heroui/select";
 import { Input } from "@heroui/input";
@@ -325,8 +325,46 @@ const TeamWorkloadPerformance: React.FC = () => {
             </div>
           )}
           {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Spinner color="primary" size="lg" />
+            <div className="space-y-4">
+              {/* Header metrics skeleton */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center space-y-2">
+                  <Skeleton className="h-8 w-16 mx-auto rounded" />
+                  <Skeleton className="h-4 w-20 mx-auto rounded" />
+                </div>
+                <div className="text-center space-y-2">
+                  <Skeleton className="h-8 w-16 mx-auto rounded" />
+                  <Skeleton className="h-4 w-24 mx-auto rounded" />
+                </div>
+                <div className="text-center space-y-2">
+                  <Skeleton className="h-8 w-16 mx-auto rounded" />
+                  <Skeleton className="h-4 w-28 mx-auto rounded" />
+                </div>
+              </div>
+              
+              {/* Table skeleton */}
+              <div className="space-y-3">
+                {/* Table header */}
+                <div className="grid grid-cols-4 gap-4 pb-3 border-b border-default-200">
+                  <Skeleton className="h-4 w-20 rounded" />
+                  <Skeleton className="h-4 w-24 rounded" />
+                  <Skeleton className="h-4 w-28 rounded" />
+                  <Skeleton className="h-4 w-20 rounded" />
+                </div>
+                
+                {/* Table rows */}
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="grid grid-cols-4 gap-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <Skeleton className="h-4 w-20 rounded" />
+                    </div>
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-4 w-12 rounded" />
+                    <Skeleton className="h-4 w-14 rounded" />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : error ? (
             <div className="text-center text-danger py-4">{error}</div>
@@ -351,6 +389,7 @@ const TeamWorkloadPerformance: React.FC = () => {
                     {t("common.show")}:
                   </span>
                   <Select
+                    aria-label={t("pagination.itemsPerPage") || "Items per page"}
                     className="w-20"
                     selectedKeys={[pageSize.toString()]}
                     size="sm"

@@ -5,7 +5,7 @@ import { Card, CardHeader, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { ScrollShadow } from "@heroui/scroll-shadow";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Progress } from "@heroui/progress";
 import { useNavigate } from "react-router-dom";
 
@@ -177,8 +177,34 @@ const ProjectPipeline: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Spinner color="primary" size="lg" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Pipeline columns skeleton */}
+        {[...Array(3)].map((_, colIndex) => (
+          <div key={colIndex} className="space-y-4">
+            {/* Column header */}
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-24 rounded" />
+              <Skeleton className="h-4 w-16 rounded" />
+            </div>
+            
+            {/* Project cards */}
+            <div className="space-y-3">
+              {[...Array(4)].map((_, cardIndex) => (
+                <div key={cardIndex} className="p-4 border border-default-200 rounded-lg space-y-3">
+                  <Skeleton className="h-5 w-full rounded" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-6 w-6 rounded-full" />
+                    <Skeleton className="h-4 w-20 rounded" />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-16 rounded" />
+                    <Skeleton className="h-6 w-12 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

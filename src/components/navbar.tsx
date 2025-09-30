@@ -5,6 +5,7 @@ import { Link } from "@heroui/link";
 import { Input } from "@heroui/input";
 import { User as UserComponent } from "@heroui/user";
 import { Badge } from "@heroui/badge";
+import { Skeleton } from "@heroui/skeleton";
 import { useDisclosure } from "@heroui/modal";
 import {
   Dropdown,
@@ -398,7 +399,7 @@ export const Navbar = () => {
       <HeroUINavbar
         className={clsx(
           "transition-all duration-500 ease-in-out",
-          "animate-pulse backdrop-blur-md bg-background/70",
+          "backdrop-blur-md bg-background/70",
         )}
         maxWidth="xl"
         position="sticky"
@@ -414,13 +415,49 @@ export const Navbar = () => {
             </Link>
           </NavbarBrand>
         </NavbarContent>
-        <NavbarContent justify="end">
+        
+        {/* Desktop Navigation */}
+        <NavbarContent className="hidden lg:flex gap-4" justify="center">
           <NavbarItem>
-            <div className="flex items-center gap-2">
-              <span className="text-small text-default-500">
-                {t("user.loading")}
-              </span>
-              <div className="animate-spin bg-primary rounded-full w-8 h-8 opacity-70" />
+            <Skeleton className="h-8 w-20 rounded-lg" />
+          </NavbarItem>
+          <NavbarItem>
+            <Skeleton className="h-8 w-24 rounded-lg" />
+          </NavbarItem>
+          <NavbarItem>
+            <Skeleton className="h-8 w-28 rounded-lg" />
+          </NavbarItem>
+        </NavbarContent>
+        
+        <NavbarContent justify="end">
+          {/* Search skeleton */}
+          <NavbarItem className="hidden lg:flex">
+            <Skeleton className="h-10 w-64 rounded-lg" />
+          </NavbarItem>
+          
+          {/* Notifications skeleton */}
+          <NavbarItem>
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </NavbarItem>
+          
+          {/* Language switcher skeleton */}
+          <NavbarItem>
+            <Skeleton className="h-8 w-8 rounded" />
+          </NavbarItem>
+          
+          {/* Theme switch skeleton */}
+          <NavbarItem>
+            <Skeleton className="h-8 w-8 rounded" />
+          </NavbarItem>
+          
+          {/* User profile skeleton */}
+          <NavbarItem>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="hidden sm:flex flex-col gap-1">
+                <Skeleton className="h-4 w-24 rounded" />
+                <Skeleton className="h-3 w-20 rounded" />
+              </div>
             </div>
           </NavbarItem>
         </NavbarContent>
@@ -718,7 +755,10 @@ export const Navbar = () => {
                   }
                   onPress={async () => {
                     try {
-                      // Clear local storage
+                      // Get current app URL
+                      const currentUrl = window.location.origin;
+                      
+                      // Clear local storage first
                       localStorage.removeItem("authToken");
                       localStorage.removeItem("currentUser");
                       sessionStorage.removeItem("authToken");
@@ -726,7 +766,39 @@ export const Navbar = () => {
                       // Clear user context
                       setUser(null);
                       
-                      // Navigate to login or home page
+                      // Open app in new window
+                      const newWindow = window.open(currentUrl, "_blank");
+                      
+                      if (newWindow) {
+                        // Focus the new window
+                        newWindow.focus();
+                        
+                        // Show instructions for private browsing
+                        const userAgent = navigator.userAgent.toLowerCase();
+                        let shortcut = "Ctrl+Shift+N"; // Chrome default
+                        
+                        if (userAgent.includes("firefox")) {
+                          shortcut = "Ctrl+Shift+P";
+                        } else if (userAgent.includes("safari") && !userAgent.includes("chrome")) {
+                          shortcut = "Cmd+Shift+N";
+                        } else if (userAgent.includes("edge")) {
+                          shortcut = "Ctrl+Shift+N";
+                        }
+                        
+                        // Optional: Show a toast or alert with instructions
+                        setTimeout(() => {
+                          if (window.confirm(
+                            `${t("user.privateWindowTip") || "Tip: For complete privacy, press"} ${shortcut} ${t("user.privateWindowTip2") || "to open in private/incognito mode."}\n\n${t("user.closeCurrentWindow") || "Would you like to close this window?"}`
+                          )) {
+                            window.close();
+                          }
+                        }, 1000);
+                      } else {
+                        // Fallback if popup was blocked
+                        alert(t("user.popupBlocked") || "Popup blocked. Please allow popups and try again, or manually open a private window.");
+                      }
+                      
+                      // Navigate current window to login page as fallback
                       navigate("/");
                       
                       // Optional: Call logout API endpoint

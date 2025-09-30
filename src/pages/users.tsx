@@ -14,7 +14,7 @@ import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { Avatar } from "@heroui/avatar";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Switch } from "@heroui/switch";
 import {
   Modal,
@@ -561,12 +561,81 @@ export default function UsersPage() {
         <Card>
           <CardBody className="p-0">
             {loading ? (
-              <div className="flex justify-center items-center h-40">
-                <Spinner size="lg" />
+              <div className="space-y-4 p-6">
+                {/* Table header skeleton */}
+                <div className="grid grid-cols-7 gap-4 pb-4 border-b border-default-200">
+                  <Skeleton className="h-4 w-24 rounded" />
+                  <Skeleton className="h-4 w-28 rounded" />
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-4 w-20 rounded" />
+                  <Skeleton className="h-4 w-16 rounded" />
+                  <Skeleton className="h-4 w-20 rounded" />
+                  <Skeleton className="h-4 w-16 rounded" />
+                </div>
+                
+                {/* Table rows skeleton */}
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="grid grid-cols-7 gap-4 py-4 border-b border-default-100">
+                    {/* Username with avatar */}
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <Skeleton className="h-4 w-24 rounded" />
+                    </div>
+                    
+                    {/* Full name */}
+                    <Skeleton className="h-4 w-32 rounded" />
+                    
+                    {/* Military number */}
+                    <Skeleton className="h-4 w-20 rounded" />
+                    
+                    {/* Grade */}
+                    <Skeleton className="h-4 w-16 rounded" />
+                    
+                    {/* Roles */}
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    
+                    {/* Status */}
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    
+                    {/* Actions */}
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                ))}
               </div>
             ) : error ? (
               <div className="flex justify-center items-center h-40 text-danger">
                 {error}
+              </div>
+            ) : users.length === 0 ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="text-center space-y-4">
+                  <SearchIcon 
+                    className="mx-auto text-default-400" 
+                    height={64} 
+                    width={64}
+                  />
+                  <div>
+                    <p className="text-lg text-default-600">
+                      {hasActiveFilters
+                        ? t("users.noUsersFound") || "No users found matching your search"
+                        : t("users.noUsersAvailable") || "No users available"}
+                    </p>
+                    <p className="text-sm text-default-500">
+                      {hasActiveFilters
+                        ? t("users.tryDifferentSearch") || "Try adjusting your search terms or filters."
+                        : t("users.createFirstUser") || "Start by creating your first user."}
+                    </p>
+                  </div>
+                  {!hasActiveFilters && hasPermission({ actions: ["users.create"] }) && (
+                    <Button
+                      color="primary"
+                      startContent={<PlusIcon />}
+                      onPress={onOpen}
+                    >
+                      {t("users.addUser")}
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <Table aria-label="Users table">

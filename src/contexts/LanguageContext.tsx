@@ -230,6 +230,10 @@ const translations = {
     "user.departmentsDesc": "Manage department members",
     "user.billingDesc": "View billing information",
     "user.logoutDesc": "Sign out of your account",
+    "user.privateWindowTip": "Tip: For complete privacy, press",
+    "user.privateWindowTip2": "to open in private/incognito mode.",
+    "user.closeCurrentWindow": "Would you like to close this window?",
+    "user.popupBlocked": "Popup blocked. Please allow popups and try again, or manually open a private window.",
     "user.administration": "Administration",
     "user.userManagement": "User Management",
     "user.userManagementDesc": "Manage users and permissions",
@@ -292,6 +296,15 @@ const translations = {
     "quickActions.selectedAnalysts": "Selected Analysts",
     "quickActions.assignmentSuccess": "Assignment Successful",
     "quickActions.assignmentError": "Assignment Failed",
+
+    // Projects
+    "projects.noProjectsFound": "No projects found",
+    "projects.noSearchResults": "No projects found matching your search",
+    "projects.tryDifferentSearch": "Try adjusting your search terms or filters.",
+    "projects.noProjectsOnPage": "No projects on this page. Try a different page.",
+    "projects.startFirstProject": "Start by creating your first project.",
+    "projects.newProject": "New Project",
+
     "dashboard.viewAllProjects": "View All Projects",
     "dashboard.teamName": "Team Name",
     "dashboard.progressMapped": "Progress Mapped",
@@ -367,6 +380,7 @@ const translations = {
     "priority.medium": "Medium",
     "priority.low": "Low",
     "priority.critical": "Critical",
+    "priority.unknown": "Unknown",
 
     // Common
     "common.total": "Total",
@@ -413,6 +427,7 @@ const translations = {
     "pagination.items": "items",
     "pagination.page": "Page",
     "pagination.perPage": "per page",
+    "pagination.itemsPerPage": "Items per page",
     "pagination.goTo": "Go to page",
     "pagination.previous": "Previous",
     "pagination.next": "Next",
@@ -906,6 +921,10 @@ const translations = {
     "users.searchEmployees":
       "Search employees by name, military number, or username",
     "users.noEmployeesFound": "No employees found",
+    "users.noUsersFound": "No users found matching your search",
+    "users.noUsersAvailable": "No users available",
+    "users.tryDifferentSearch": "Try adjusting your search terms or filters.",
+    "users.createFirstUser": "Start by creating your first user.",
     "users.selectEmployee": "Select Employee",
     "users.employeeNotFound": "Employee not found",
     "users.assignRoles": "Assign Role",
@@ -1653,6 +1672,10 @@ const translations = {
     "user.departmentsDesc": "إدارة أعضاء الأقسام",
     "user.billingDesc": "عرض معلومات الفواتير",
     "user.logoutDesc": "تسجيل الخروج من حسابك",
+    "user.privateWindowTip": "نصيحة: للحصول على خصوصية كاملة، اضغط",
+    "user.privateWindowTip2": "للفتح في وضع التصفح الخاص.",
+    "user.closeCurrentWindow": "هل تريد إغلاق هذه النافذة؟",
+    "user.popupBlocked": "تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة والمحاولة مرة أخرى، أو فتح نافذة خاصة يدوياً.",
     "user.administration": "الإدارة",
     "user.userManagement": "إدارة المستخدمين",
     "user.userManagementDesc": "إدارة المستخدمين والصلاحيات",
@@ -1712,6 +1735,15 @@ const translations = {
     "quickActions.selectedAnalysts": "المحللين المختارين",
     "quickActions.assignmentSuccess": "تم التعيين بنجاح",
     "quickActions.assignmentError": "فشل في التعيين",
+
+    // Projects
+    "projects.noProjectsFound": "لم يتم العثور على مشاريع",
+    "projects.noSearchResults": "لم يتم العثور على مشاريع تطابق بحثك",
+    "projects.tryDifferentSearch": "جرب تعديل كلمات البحث أو المرشحات.",
+    "projects.noProjectsOnPage": "لا توجد مشاريع في هذه الصفحة. جرب صفحة أخرى.",
+    "projects.startFirstProject": "ابدأ بإنشاء مشروعك الأول.",
+    "projects.newProject": "مشروع جديد",
+
     "dashboard.viewAllProjects": "عرض جميع المشاريع",
     "dashboard.teamName": "اسم الفريق",
     "dashboard.progressMapped": "التقدم المخطط",
@@ -1786,6 +1818,7 @@ const translations = {
     "priority.medium": "متوسطة",
     "priority.low": "منخفضة",
     "priority.critical": "حرجة",
+    "priority.unknown": "غير معروف",
 
     // Common
     "common.total": "المجموع",
@@ -1832,6 +1865,7 @@ const translations = {
     "pagination.items": "عنصر",
     "pagination.page": "صفحة",
     "pagination.perPage": "لكل صفحة",
+    "pagination.itemsPerPage": "عناصر لكل صفحة",
     "pagination.goTo": "الذهاب إلى الصفحة",
     "pagination.previous": "السابق",
     "pagination.next": "التالي",
@@ -2315,6 +2349,10 @@ const translations = {
     "users.searchEmployees":
       "البحث عن الموظفين بالاسم أو الرقم العسكري أو اسم المستخدم",
     "users.noEmployeesFound": "لم يتم العثور على موظفين",
+    "users.noUsersFound": "لم يتم العثور على مستخدمين يطابقون بحثك",
+    "users.noUsersAvailable": "لا يوجد مستخدمين متاحين",
+    "users.tryDifferentSearch": "جرب تعديل كلمات البحث أو المرشحات.",
+    "users.createFirstUser": "ابدأ بإنشاء مستخدمك الأول.",
     "users.selectEmployee": "اختر موظف",
     "users.employeeNotFound": "لم يتم العثور على الموظف",
     "users.assignRoles": "تعيين دور",
