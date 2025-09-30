@@ -17,7 +17,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined,
+  undefined
 );
 
 // Translation dictionary
@@ -233,7 +233,8 @@ const translations = {
     "user.privateWindowTip": "Tip: For complete privacy, press",
     "user.privateWindowTip2": "to open in private/incognito mode.",
     "user.closeCurrentWindow": "Would you like to close this window?",
-    "user.popupBlocked": "Popup blocked. Please allow popups and try again, or manually open a private window.",
+    "user.popupBlocked":
+      "Popup blocked. Please allow popups and try again, or manually open a private window.",
     "user.administration": "Administration",
     "user.userManagement": "User Management",
     "user.userManagementDesc": "Manage users and permissions",
@@ -242,7 +243,7 @@ const translations = {
     "user.loading": "Loading user data...",
     "user.loadingProfile": "Loading user profile...",
     "user.fullName": "Full Name",
-    "user.militaryNumber": "Military Number", 
+    "user.militaryNumber": "Military Number",
     "user.grade": "Grade",
     "user.department": "Department",
     "user.email": "Email",
@@ -250,7 +251,7 @@ const translations = {
     "user.roles": "Roles",
     "profile.subtitle": "Manage your personal information and settings",
     "profile.personalInfo": "Personal Information",
-    "profile.contactInfo": "Contact Information", 
+    "profile.contactInfo": "Contact Information",
     "profile.joinedDate": "Joined Date",
 
     // Dashboard
@@ -300,8 +301,10 @@ const translations = {
     // Projects
     "projects.noProjectsFound": "No projects found",
     "projects.noSearchResults": "No projects found matching your search",
-    "projects.tryDifferentSearch": "Try adjusting your search terms or filters.",
-    "projects.noProjectsOnPage": "No projects on this page. Try a different page.",
+    "projects.tryDifferentSearch":
+      "Try adjusting your search terms or filters.",
+    "projects.noProjectsOnPage":
+      "No projects on this page. Try a different page.",
     "projects.startFirstProject": "Start by creating your first project.",
     "projects.newProject": "New Project",
 
@@ -589,7 +592,6 @@ const translations = {
     // Projects
     "projects.title": "Projects Management",
     "projects.subtitle": "Manage all organizational applications and projects",
-    "projects.newProject": "New Project",
     "projects.importProjects": "Import Projects",
     "projects.exportData": "Export Data",
     "projects.totalProjects": "Total Projects",
@@ -678,10 +680,6 @@ const translations = {
     "projects.deleteConfirmMessage":
       "Are you sure you want to delete the project",
     "projects.actionCannotBeUndone": "This action cannot be undone.",
-    "projects.noProjectsFound": "No projects found",
-    "projects.noProjectsOnPage":
-      "No projects on this page. Try a different page.",
-    "projects.startFirstProject": "Start by creating your first project.",
     "projects.fillProjectDetails": "Fill in the project details below",
     "projects.updateProjectInfo": "Update project information",
     "projects.searchByName": "Search by name, military number, or username",
@@ -798,8 +796,10 @@ const translations = {
       "There are currently no requirements waiting for approval.",
     "requirements.approve": "Approve",
     "requirements.approveRequirement": "Approve Requirement",
-    "requirements.approveConfirmMessage": 'Are you sure you want to approve the requirement "{name}"?',
-    "requirements.approveWarningMessage": 'This will change the status to "Approved" and make it available for development assignment.',
+    "requirements.approveConfirmMessage":
+      'Are you sure you want to approve the requirement "{name}"?',
+    "requirements.approveWarningMessage":
+      'This will change the status to "Approved" and make it available for development assignment.',
     "requirements.approveSuccess": "Requirement approved successfully",
     "requirements.approveError": "Failed to approve requirement",
     "requirements.noDevelopmentRequirements": "No requirements in development",
@@ -1675,7 +1675,8 @@ const translations = {
     "user.privateWindowTip": "نصيحة: للحصول على خصوصية كاملة، اضغط",
     "user.privateWindowTip2": "للفتح في وضع التصفح الخاص.",
     "user.closeCurrentWindow": "هل تريد إغلاق هذه النافذة؟",
-    "user.popupBlocked": "تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة والمحاولة مرة أخرى، أو فتح نافذة خاصة يدوياً.",
+    "user.popupBlocked":
+      "تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة والمحاولة مرة أخرى، أو فتح نافذة خاصة يدوياً.",
     "user.administration": "الإدارة",
     "user.userManagement": "إدارة المستخدمين",
     "user.userManagementDesc": "إدارة المستخدمين والصلاحيات",
@@ -1685,7 +1686,7 @@ const translations = {
     "user.loadingProfile": "جاري تحميل الملف الشخصي...",
     "user.fullName": "الاسم الكامل",
     "user.militaryNumber": "الرقم العسكري",
-    "user.grade": "الرتبة", 
+    "user.grade": "الرتبة",
     "user.department": "القسم",
     "user.email": "البريد الإلكتروني",
     "user.phone": "رقم الهاتف",
@@ -2024,7 +2025,6 @@ const translations = {
     // Projects
     "projects.title": "إدارة المشاريع",
     "projects.subtitle": "إدارة جميع تطبيقات ومشاريع المؤسسة",
-    "projects.newProject": "مشروع جديد",
     "projects.importProjects": "استيراد المشاريع",
     "projects.exportData": "تصدير البيانات",
     "projects.totalProjects": "إجمالي المشاريع",
@@ -2106,9 +2106,6 @@ const translations = {
     "projects.confirmDelete": "تأكيد الحذف",
     "projects.deleteConfirmMessage": "هل أنت متأكد من رغبتك في حذف المشروع",
     "projects.actionCannotBeUndone": "لا يمكن التراجع عن هذا الإجراء.",
-    "projects.noProjectsFound": "لم يتم العثور على مشاريع",
-    "projects.noProjectsOnPage": "لا توجد مشاريع في هذه الصفحة. جرب صفحة أخرى.",
-    "projects.startFirstProject": "ابدأ بإنشاء مشروعك الأول.",
     "projects.fillProjectDetails": "املأ تفاصيل المشروع أدناه",
     "projects.updateProjectInfo": "تحديث معلومات المشروع",
     "projects.searchByName": "البحث بالاسم أو الرقم العسكري أو اسم المستخدم",
@@ -2227,8 +2224,10 @@ const translations = {
       "لا توجد حالياً متطلبات في انتظار الموافقة.",
     "requirements.approve": "موافقة",
     "requirements.approveRequirement": "الموافقة على المتطلب",
-    "requirements.approveConfirmMessage": 'هل أنت متأكد من أنك تريد الموافقة على المتطلب "{name}"؟',
-    "requirements.approveWarningMessage": 'سيؤدي هذا إلى تغيير الحالة إلى "معتمد" وجعله متاحاً لمرحلة التطوير.',
+    "requirements.approveConfirmMessage":
+      'هل أنت متأكد من أنك تريد الموافقة على المتطلب "{name}"؟',
+    "requirements.approveWarningMessage":
+      'سيؤدي هذا إلى تغيير الحالة إلى "معتمد" وجعله متاحاً لمرحلة التطوير.',
     "requirements.approveSuccess": "تمت الموافقة على المتطلب بنجاح",
     "requirements.approveError": "فشل في الموافقة على المتطلب",
     "requirements.noDevelopmentRequirements": "لا توجد متطلبات قيد التطوير",
