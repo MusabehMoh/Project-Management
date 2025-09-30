@@ -650,18 +650,6 @@ export default function MembersTasksPage() {
                 {t("pagination.perPage")}
               </span>
             </div>
-
-            {totalPages > 1 && (
-              <GlobalPagination
-                currentPage={taskParametersRequest.page || 1}
-                isLoading={loading}
-                pageSize={effectivePageSize}
-                showInfo={false}
-                totalItems={totalCount}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
           </div>
         )}
 
