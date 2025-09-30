@@ -1457,6 +1457,13 @@ const translations = {
     taskValidEndDate: "Task end date must be after start date",
     taskAssigneeRequired: "Select one member at least",
 
+    // Task List Columns
+    taskName: "Task Name",
+    assignees: "Assignees",
+    department: "Department",
+    dates: "Start - End",
+    tags: "Tags",
+
     // Page Titles
     "home.title": "Dashboard",
     "about.title": "About",
@@ -2872,6 +2879,13 @@ const translations = {
     taskEndDateRequired: "تاريخ نهاية المهمة مطلوب",
     taskValidEndDate: "يجب أن يكون تاريخ نهاية المهمة بعد تاريخ البداية",
     taskAssigneeRequired: "اختار معين واحد على الأقل مطلوب",
+
+    // Task List Columns
+    taskName: "اسم المهمة",
+    assignees: "المعينون",
+    department: "القسم",
+    dates: "البداية - النهاية",
+    tags: "الوسوم",
 
     // Page Titles
     "home.title": "لوحة التحكم",

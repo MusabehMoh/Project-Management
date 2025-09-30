@@ -71,14 +71,14 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
   };
 
   const columns = [
-    { key: "name", label: t("taskName") || "Task Name" },
-    { key: "assignees", label: t("assignees") || "Assignees" },
-    { key: "department", label: t("department") || "Department" },
-    { key: "status", label: t("status") || "Status" },
-    { key: "priority", label: t("priority") || "Priority" },
-    { key: "progress", label: t("progress") || "Progress" },
-    { key: "dates", label: t("dates") || "Start - End" },
-    { key: "tags", label: t("tags") || "Tags" },
+    { key: "name", label: t("taskName") },
+    { key: "assignees", label: t("assignees") },
+    { key: "department", label: t("department") },
+    { key: "status", label: t("status") },
+    { key: "priority", label: t("priority") },
+    { key: "progress", label: t("taskProgress") },
+    { key: "dates", label: t("dates") },
+    { key: "tags", label: t("tags") },
   ];
 
   const renderCell = (task: MemberTask, columnKey: string) => {
