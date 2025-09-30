@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import React from "react";
 import { Button } from "@heroui/button";
 import { Search, ChevronDown, X } from "lucide-react";
 import { Card, CardBody } from "@heroui/card";
@@ -122,6 +123,12 @@ export default function MembersTasksPage() {
     taskParametersRequest.limit ?? 10,
     10,
   );
+
+  // Search and filter states (local)
+  const [searchTerm, setSearchTerm] = useState(taskParametersRequest?.search ?? "");
+  const [statusFilter, setStatusFilter] = useState<number | null>(taskParametersRequest?.statusId || null);
+  const [priorityFilter, setPriorityFilter] = useState<number | null>(taskParametersRequest?.priorityId || null);
+  const [projectFilter, setProjectFilter] = useState<number | null>(taskParametersRequest?.projectId || null);
 
   const [searchValue, setSearchValue] = useState(
     taskParametersRequest?.search ?? "",
@@ -250,14 +257,75 @@ export default function MembersTasksPage() {
     setSelectedEmployee(null);
   };
 
-  // Auto search effect
-  useEffect(() => {
-    if (searchValue.length >= 3) {
-      handleSearchChange(searchValue);
-    } else if (searchValue.length === 0) {
-      handleSearchChange(""); // reset if cleared
-    }
-  }, [searchValue]);
+  // Update filters when search/filter states change (with debouncing)
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      // Update search if it's different
+      if (searchTerm !== (taskParametersRequest?.search ?? "")) {
+        handleSearchChange(searchTerm);
+      }
+      
+      // Update status filter
+      if (statusFilter !== (taskParametersRequest?.statusId || null)) {
+        if (statusFilter !== null) {
+          handleStatusChange(statusFilter);
+        } else {
+          // If status filter is reset to null, we need to refresh with other filters
+          const hasOtherFilters = searchTerm || priorityFilter !== null || projectFilter !== null;
+          if (hasOtherFilters) {
+            // Trigger a refresh that maintains other filters but clears status
+            fetchTasks();
+          } else {
+            handleResetFilters();
+          }
+        }
+      }
+      
+      // Update priority filter  
+      if (priorityFilter !== (taskParametersRequest?.priorityId || null)) {
+        if (priorityFilter !== null) {
+          handlePriorityChange(priorityFilter);
+        } else {
+          // If priority filter is reset to null, refresh with other filters
+          const hasOtherFilters = searchTerm || statusFilter !== null || projectFilter !== null;
+          if (hasOtherFilters) {
+            fetchTasks();
+          } else {
+            handleResetFilters();
+          }
+        }
+      }
+      
+      // Update project filter
+      if (projectFilter !== (taskParametersRequest?.projectId || null)) {
+        if (projectFilter !== null) {
+          handleProjectChange(projectFilter);
+        } else {
+          // If project filter is reset to null, refresh with other filters
+          const hasOtherFilters = searchTerm || statusFilter !== null || priorityFilter !== null;
+          if (hasOtherFilters) {
+            fetchTasks();
+          } else {
+            handleResetFilters();
+          }
+        }
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, statusFilter, priorityFilter, projectFilter, handleSearchChange, handleStatusChange, handlePriorityChange, handleProjectChange, handleResetFilters, fetchTasks, taskParametersRequest]);
+
+  // Reset all filters
+  const resetAllFilters = () => {
+    setSearchTerm("");
+    setStatusFilter(null);
+    setPriorityFilter(null);
+    setProjectFilter(null);
+    handleResetFilters();
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchTerm || statusFilter !== null || priorityFilter !== null || projectFilter !== null;
 
   const handleRefresh = () => refreshTasks();
 
@@ -339,7 +407,7 @@ export default function MembersTasksPage() {
                 variant="flat"
                 onPress={handleRefresh}
               >
-                {t("refresh")}
+                {t("common.refresh")}
               </Button>
             </div>
           </div>
@@ -417,121 +485,133 @@ export default function MembersTasksPage() {
           </div>
         )}
 
-        {/* Filters */}
+        {/* Filters and Search */}
         {!initialLoading && (
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-content1/40 p-3 rounded-xl">
-            <div className="flex items-center gap-2 w-full sm:w-80">
-              <Input
-                aria-label={t("common.search")}
-                className="flex-1"
-                placeholder={t("common.search") + "..."}
-                startContent={<Search className="w-4 h-4 text-default-400" />}
-                value={searchValue}
-                onValueChange={setSearchValue}
-              />
-            </div>
+          <Card>
+            <CardBody>
+              <div className="flex flex-col md:flex-row gap-4 items-end">
+                <Input
+                  className="md:w-120"
+                  placeholder={t("common.search") + "..."}
+                  startContent={<Search className="w-4 h-4" />}
+                  value={searchTerm}
+                  onValueChange={setSearchTerm}
+                />
 
-            <div className="flex flex-wrap gap-3">
-              {/* Status */}
-              <Select
-                className="w-40"
-                selectedKeys={[
-                  taskParametersRequest.statusId
-                    ? `${taskParametersRequest.statusId}`
-                    : "",
-                ]}
-                size="sm"
-                onSelectionChange={(keys) => {
-                  const selectedStr = String(Array.from(keys)[0] ?? "");
-
-                  if (selectedStr)
-                    handleStatusChange(parseInt(selectedStr, 10));
-                }}
-              >
-                <SelectItem key="" isDisabled>
-                  {t("status")}
-                </SelectItem>
-                {(tasksConfigData.taskStatus ?? []).map((opt) => (
-                  <SelectItem key={opt.id}>{opt.label}</SelectItem>
-                ))}
-              </Select>
-
-              {/* Priority */}
-              <Select
-                className="w-40"
-                selectedKeys={[
-                  taskParametersRequest.priorityId
-                    ? `${taskParametersRequest.priorityId}`
-                    : "",
-                ]}
-                size="sm"
-                onSelectionChange={(keys) => {
-                  const selectedStr = String(Array.from(keys)[0] ?? "");
-
-                  if (selectedStr)
-                    handlePriorityChange(parseInt(selectedStr, 10));
-                }}
-              >
-                <SelectItem key="" isDisabled>
-                  {t("priority")}
-                </SelectItem>
-                {(tasksConfigData.taskPriority ?? []).map((opt) => (
-                  <SelectItem key={opt.id}>{opt.label}</SelectItem>
-                ))}
-              </Select>
-
-              {/* Project */}
-              <Select
-                className="w-48"
-                selectedKeys={[
-                  taskParametersRequest.projectId
-                    ? `${taskParametersRequest.projectId}`
-                    : "",
-                ]}
-                size="sm"
-                onSelectionChange={(keys) => {
-                  const selectedStr = String(Array.from(keys)[0] ?? "");
-
-                  if (selectedStr)
-                    handleProjectChange(parseInt(selectedStr, 10));
-                }}
-              >
-                <SelectItem key="" isDisabled>
-                  {t("project")}
-                </SelectItem>
-                {(tasksConfigData.projects ?? []).map((project) => (
-                  <SelectItem key={Number(project.id)}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </Select>
-
-              {/* Page Size */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-default-600">
-                  {t("common.show")}:
-                </span>
                 <Select
-                  className="w-24"
-                  selectedKeys={[`${effectivePageSize}`]}
-                  size="sm"
+                  className="md:w-90"
+                  placeholder={t("project")}
+                  selectedKeys={projectFilter ? [String(projectFilter)] : []}
                   onSelectionChange={(keys) => {
-                    const newSize = Number(Array.from(keys)[0]);
-
-                    if (!isNaN(newSize)) handlePageSizeChange(newSize);
+                    const val = Array.from(keys)[0] as string;
+                    const newProjectFilter = val && val !== "" ? Number(val) : null;
+                    setProjectFilter(newProjectFilter);
                   }}
                 >
-                  {PAGE_SIZE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt} textValue={`${opt}`}>
-                      {opt}
+                  <SelectItem key="">{t("project")}</SelectItem>
+                  {(tasksConfigData.projects ?? []).map((project) => (
+                    <SelectItem key={String(project.id)} value={String(project.id)}>
+                      {project.name}
                     </SelectItem>
                   ))}
                 </Select>
-                <span className="text-sm text-default-600">
-                  {t("pagination.perPage")}
-                </span>
+
+                <Select
+                  className="md:w-43"
+                  placeholder={t("status")}
+                  selectedKeys={statusFilter !== null ? [statusFilter.toString()] : []}
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0] as string;
+                    const newStatusFilter = selectedKey && selectedKey !== "" ? parseInt(selectedKey) : null;
+                    setStatusFilter(newStatusFilter);
+                  }}
+                >
+                  <SelectItem key="">{t("status")}</SelectItem>
+                  {(tasksConfigData.taskStatus ?? []).map((status) => (
+                    <SelectItem key={String(status.id)} value={String(status.id)}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </Select>
+
+                <Select
+                  className="md:w-43"
+                  placeholder={t("priority")}
+                  selectedKeys={priorityFilter !== null ? [priorityFilter.toString()] : []}
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0] as string;
+                    const newPriorityFilter = selectedKey && selectedKey !== "" ? parseInt(selectedKey) : null;
+                    setPriorityFilter(newPriorityFilter);
+                  }}
+                >
+                  <SelectItem key="">{t("priority")}</SelectItem>
+                  {(tasksConfigData.taskPriority ?? []).map((priority) => (
+                    <SelectItem key={String(priority.id)} value={String(priority.id)}>
+                      {priority.label}
+                    </SelectItem>
+                  ))}
+                </Select>
               </div>
+
+              {/* Clear Filters - New Row */}
+              {hasActiveFilters && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Button
+                    color="danger"
+                    size="sm"
+                    startContent={<X size={16} />}
+                    variant="flat"
+                    onPress={resetAllFilters}
+                  >
+                    {t("requirements.clearFilters")}
+                  </Button>
+                  <span className="text-sm text-default-500">
+                    {t("pagination.showing")} {totalCount} {t("pagination.items")}
+                  </span>
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Pagination Controls */}
+        {!initialLoading && tasks.length > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4">
+            <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
+              <span className="text-sm text-default-600">
+                {t("common.show")}
+              </span>
+              <Select
+                className="w-20"
+                selectedKeys={[normalizePageSize(effectivePageSize, 10).toString()]}
+                size="sm"
+                onSelectionChange={(keys) => {
+                  const newSize = parseInt(Array.from(keys)[0] as string);
+                  handlePageSizeChange(newSize);
+                }}
+              >
+                {PAGE_SIZE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </Select>
+              <span className="text-sm text-default-600">
+                {t("pagination.perPage")}
+              </span>
             </div>
+
+            {totalPages > 1 && (
+              <GlobalPagination
+                currentPage={taskParametersRequest.page || 1}
+                isLoading={loading}
+                pageSize={effectivePageSize}
+                showInfo={false}
+                totalItems={totalCount}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
         )}
 
@@ -582,7 +662,7 @@ export default function MembersTasksPage() {
               </div>
 
               <span className="text-sm text-foreground-600">
-                Showing {tasks.length} of {totalCount} tasks
+                {t("pagination.showing")} {tasks.length} {t("pagination.of")} {totalCount} {t("common.tasks")}
               </span>
             </div>
           </div>
@@ -612,26 +692,33 @@ export default function MembersTasksPage() {
         {loading ? (
           <TaskGridSkeleton />
         ) : tasks.length === 0 ? (
-          <Card>
-            <CardBody className="text-center py-16">
-              <Grid3X3 className="w-16 h-16 text-foreground-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {t("noTasksFound")}
-              </h3>
-              <p className="text-foreground-600 mb-6">
-                {t("adjustFiltersMessage")}
-              </p>
-              <Button
-                color="primary"
-                variant="flat"
-                onPress={() => {
-                  handleResetFilters();
-                }}
-              >
-                {t("calendar.clearFilters")}
-              </Button>
-            </CardBody>
-          </Card>
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center py-12">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-20 h-20 bg-default-100 rounded-full flex items-center justify-center">
+                  <Grid3X3 className="w-10 h-10 text-default-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-default-700 mb-2">
+                    {t("noTasksFound")}
+                  </h3>
+                  <p className="text-default-500 text-sm mb-4">
+                    {t("adjustFiltersMessage")}
+                  </p>
+                </div>
+                {hasActiveFilters && (
+                  <Button
+                    color="danger"
+                    size="sm"
+                    variant="flat"
+                    onPress={resetAllFilters}
+                  >
+                    {t("requirements.clearFilters")}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
         ) : (
           <>
             {viewType === "grid" && (
