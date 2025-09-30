@@ -33,4 +33,12 @@ public interface IMappingService
     SprintDto MapToSprintDto(Sprint sprint);
     TaskDto MapToTaskDto(PMA.Core.Entities.Task task);
     ProjectWithTimelinesDto MapToProjectWithTimelinesDto(Project project);
+
+    // Sprint creation and update mapping methods
+    Sprint MapToSprint(CreateSprintDto createSprintDto);
+    void UpdateSprintFromDto(Sprint sprint, UpdateSprintDto updateSprintDto);
+
+    // Task creation and update mapping methods
+    PMA.Core.Entities.Task MapToTask(CreateTaskDto createTaskDto);
+    void UpdateTaskFromDto(PMA.Core.Entities.Task task, UpdateTaskDto updateTaskDto);
 }

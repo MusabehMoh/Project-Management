@@ -46,6 +46,7 @@ public interface ITaskService
     System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksBySprintAsync(int sprintId);
     System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByAssigneeAsync(int assigneeId);
     System.Threading.Tasks.Task<TaskEntity?> GetTaskWithSubTasksAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> SearchTasksAsync(string query, int? timelineId = null, int limit = 25);
 }
 
 public interface ISprintService
@@ -228,16 +229,7 @@ public interface ITimelineService
     System.Threading.Tasks.Task<IEnumerable<Timeline>> GetTimelinesByProjectAsync(int projectId);
 }
 
-public interface ITimelineRequirementService
-{
-    System.Threading.Tasks.Task<(IEnumerable<TimelineRequirement> TimelineRequirements, int TotalCount)> GetTimelineRequirementsAsync(int page, int limit, int? timelineId = null, int? statusId = null);
-    System.Threading.Tasks.Task<TimelineRequirement?> GetTimelineRequirementByIdAsync(int id);
-    System.Threading.Tasks.Task<TimelineRequirement> CreateTimelineRequirementAsync(TimelineRequirement timelineRequirement);
-    System.Threading.Tasks.Task<TimelineRequirement> UpdateTimelineRequirementAsync(TimelineRequirement timelineRequirement);
-    System.Threading.Tasks.Task<bool> DeleteTimelineRequirementAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<TimelineRequirement>> GetTimelineRequirementsByTimelineAsync(int timelineId);
-}
-
+ 
 public interface ICacheInvalidationService
 {
     void InvalidateCurrentUserCache(string username);

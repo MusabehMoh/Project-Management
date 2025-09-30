@@ -16,8 +16,8 @@ export class LookupService {
   }
 
   // Task Status Lookups
-  async getTaskStatuses(): Promise<ApiResponse<TaskStatusLookup[]>> {
-    return apiClient.get<TaskStatusLookup[]>(`${this.baseUrl}/task-statuses`);
+  async getTaskStatuses(): Promise<ApiResponse<LookupDto[]>> {
+    return this.getByCode("TaskStatus");
   }
 
   async getTaskStatusById(id: string): Promise<ApiResponse<TaskStatusLookup>> {
@@ -50,10 +50,8 @@ export class LookupService {
   }
 
   // Task Priority Lookups
-  async getTaskPriorities(): Promise<ApiResponse<TaskPriorityLookup[]>> {
-    return apiClient.get<TaskPriorityLookup[]>(
-      `${this.baseUrl}/task-priorities`,
-    );
+  async getTaskPriorities(): Promise<ApiResponse<LookupDto[]>> {
+    return this.getByCode("Priority");
   }
 
   async getTaskPriorityById(

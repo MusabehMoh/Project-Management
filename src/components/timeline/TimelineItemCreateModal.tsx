@@ -12,12 +12,13 @@ import { DatePicker } from "@heroui/date-picker";
 import { Select, SelectItem } from "@heroui/select";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Avatar } from "@heroui/avatar";
-import { Slider } from "@heroui/slider";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Department, MemberSearchResult, WorkItem } from "@/types/timeline";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import useTaskSearch from "@/hooks/useTaskSearch";
+import { useTimelineFormHelpers } from "@/hooks/useTimelineFormHelpers";
+import { useTimelineFormValidation } from "@/hooks/useTimelineFormValidation";
 
 export interface TimelineItemCreateModalFormData {
   name: string;
@@ -42,19 +43,9 @@ interface TimelineItemCreateModalProps {
   onSubmit: (data: TimelineItemCreateModalFormData) => Promise<void>;
   type: "sprint" | "requirement" | "task" | "subtask";
   departments: Department[];
-  statusOptions: Array<{ id: number; label: string; color: string }>;
-  priorityOptions: Array<{ id: number; label: string; color: string }>;
-  getProgressColor: (
-    progress: number,
-  ) =>
-    | "primary"
-    | "secondary"
-    | "success"
-    | "warning"
-    | "danger"
-    | "foreground";
   loading?: boolean;
   parentName?: string;
+  timelineId?: number;
 }
 
 export default function TimelineItemCreateModal({
@@ -63,13 +54,18 @@ export default function TimelineItemCreateModal({
   onSubmit,
   type,
   departments,
-  statusOptions,
-  priorityOptions,
-  getProgressColor,
   loading = false,
   parentName,
+  timelineId,
 }: TimelineItemCreateModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Use shared helpers and validation
+  const { statusOptions, priorityOptions } = useTimelineFormHelpers();
+  const { validateForm, errors, clearError } = useTimelineFormValidation();
+
+  // Helper functions to map between numeric IDs and string keys
+  // Status and priority now use direct value mapping
 
   // Local form state uses DatePicker values for dates; we'll convert to strings on submit
   type LocalFormData = Omit<
@@ -115,20 +111,12 @@ export default function TimelineItemCreateModal({
     workItems: tasks,
     loading: taskSearchLoading,
     searchTasks,
-  } = useTaskSearch({ minLength: 1, maxResults: 20 });
-
-  // Add validation errors state
-  const [errors, setErrors] = useState<{
-    name?: string;
-    startDate?: string;
-    endDate?: string;
-  }>({});
+  } = useTaskSearch({ minLength: 1, maxResults: 20, timelineId });
 
   // Reset form data when modal opens
   useEffect(() => {
     if (isOpen) {
       setFormData(getInitialFormData());
-      setErrors({}); // Clear errors when modal opens
       // Reset selections
       setSelectedMembers([]);
       setSelectedTasks([]);
@@ -139,50 +127,24 @@ export default function TimelineItemCreateModal({
     }
   }, [isOpen]);
 
-  // Validation function
-  const validateForm = () => {
-    const newErrors: typeof errors = {};
-
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = t("validation.nameRequired");
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = t("validation.nameMinLength");
-    }
-
-    // Start date validation
-    if (!formData.startDate) {
-      newErrors.startDate = t("validation.startDateRequired");
-    }
-
-    // End date validation
-    if (!formData.endDate) {
-      newErrors.endDate = t("validation.endDateRequired");
-    } else if (formData.startDate && formData.endDate) {
-      const start = new Date(formData.startDate.toString());
-      const end = new Date(formData.endDate.toString());
-
-      if (start >= end) {
-        newErrors.endDate = t("validation.endDateAfterStart");
-      }
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleInputChange = (field: keyof LocalFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear error for the field being changed
     if (errors[field as keyof typeof errors]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+      clearError(field as keyof typeof errors);
     }
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    // Convert form data for validation
+    const validationData = {
+      name: formData.name,
+      startDate: formData.startDate?.toString() || "",
+      endDate: formData.endDate?.toString() || "",
+    };
+    
+    if (!validateForm(validationData)) {
       return; // Don't submit if validation fails
     }
 
@@ -212,7 +174,6 @@ export default function TimelineItemCreateModal({
 
   const handleClose = () => {
     setFormData(getInitialFormData()); // Reset form data on close
-    setErrors({}); // Clear errors on close
     setSelectedMembers([]);
     setSelectedTasks([]);
     setSelectedEmployee(null);
@@ -226,7 +187,7 @@ export default function TimelineItemCreateModal({
     <Modal
       isOpen={isOpen}
       scrollBehavior="inside"
-      size="2xl"
+      size="5xl"
       onClose={handleClose}
     >
       <ModalContent>
@@ -238,35 +199,53 @@ export default function TimelineItemCreateModal({
           )}
         </ModalHeader>
         <ModalBody>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                {t("timeline.treeView.name")}
-              </label>
-              <Input
-                errorMessage={errors.name}
-                isInvalid={!!errors.name}
-                placeholder={`Enter ${type} name`}
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-              />
+          <div className="space-y-3">
+            {/* Main Info Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  {t("timeline.treeView.name")}
+                </label>
+                <Input
+                  errorMessage={errors.name}
+                  isInvalid={!!errors.name}
+                  placeholder={`Enter ${type} name`}
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  {t("timeline.detailsPanel.department")}
+                </label>
+                <Select
+                  placeholder={t("timeline.detailsPanel.selectDepartment")}
+                  selectedKeys={
+                    formData.departmentId ? [formData.departmentId] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string;
+
+                    handleInputChange("departmentId", selected || "");
+                  }}
+                >
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id.toString()} textValue={dept.name}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: dept.color }}
+                        />
+                        {dept.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                {t("timeline.detailsPanel.description")}
-              </label>
-              <Textarea
-                minRows={3}
-                placeholder={`Enter ${type} description`}
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Dates and Status Section */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <DatePicker
                 isRequired
                 errorMessage={errors.startDate}
@@ -275,7 +254,6 @@ export default function TimelineItemCreateModal({
                 value={formData.startDate}
                 onChange={(date) => handleInputChange("startDate", date)}
               />
-
               <DatePicker
                 isRequired
                 errorMessage={errors.endDate}
@@ -284,128 +262,117 @@ export default function TimelineItemCreateModal({
                 value={formData.endDate}
                 onChange={(date) => handleInputChange("endDate", date)}
               />
+              {(type === "task" ||
+                type === "subtask" ||
+                type === "requirement") && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      {t("timeline.detailsPanel.status")}
+                    </label>
+                    <Select
+                      items={statusOptions.map((s) => ({
+                        value: s.value.toString(),
+                        label: language === "ar" ? s.labelAr : s.labelEn,
+                        color: s.color,
+                      }))}
+                      placeholder={t("timeline.detailsPanel.selectStatus")}
+                      selectedKeys={
+                        formData.statusId ? [formData.statusId.toString()] : []
+                      }
+                      onSelectionChange={(keys) => {
+                        const selectedKey = Array.from(keys)[0] as string;
+                        const statusValue = selectedKey
+                          ? parseInt(selectedKey)
+                          : 1;
+
+                        handleInputChange("statusId", statusValue);
+                      }}
+                    >
+                      {(item) => (
+                        <SelectItem key={item.value} textValue={item.label}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: item.color }}
+                            />
+                            {item.label}
+                          </div>
+                        </SelectItem>
+                      )}
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      {t("timeline.detailsPanel.priority")}
+                    </label>
+                    <Select
+                      items={priorityOptions.map((p) => ({
+                        value: p.value.toString(),
+                        label: language === "ar" ? p.labelAr : p.labelEn,
+                        color: p.color,
+                      }))}
+                      placeholder={t("timeline.detailsPanel.selectPriority")}
+                      selectedKeys={
+                        formData.priorityId
+                          ? [formData.priorityId.toString()]
+                          : []
+                      }
+                      onSelectionChange={(keys) => {
+                        const selectedKey = Array.from(keys)[0] as string;
+                        const priorityValue = selectedKey
+                          ? parseInt(selectedKey)
+                          : 2;
+
+                        handleInputChange("priorityId", priorityValue);
+                      }}
+                    >
+                      {(item) => (
+                        <SelectItem key={item.value} textValue={item.label}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: item.color }}
+                            />
+                            {item.label}
+                          </div>
+                        </SelectItem>
+                      )}
+                    </Select>
+                  </div>
+                </>
+              )}
             </div>
 
+            {/* Description Section */}
             <div>
-              <label className="block text-sm font-medium mb-2">
-                {t("timeline.detailsPanel.department")}
+              <label className="block text-sm font-medium mb-1">
+                {t("timeline.detailsPanel.description")}
               </label>
-              <Select
-                placeholder={t("timeline.detailsPanel.selectDepartment")}
-                selectedKeys={
-                  formData.departmentId ? [formData.departmentId] : []
+              <Textarea
+                minRows={2}
+                placeholder={`Enter ${type} description`}
+                value={formData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
                 }
-                onSelectionChange={(keys) => {
-                  const selected = Array.from(keys)[0] as string;
-
-                  handleInputChange("departmentId", selected || "");
-                }}
-              >
-                {departments.map((dept) => (
-                  <SelectItem key={dept.id.toString()} textValue={dept.name}>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: dept.color }}
-                      />
-                      {dept.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </Select>
+              />
             </div>
 
             {(type === "task" ||
               type === "subtask" ||
               type === "requirement") && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {t("timeline.detailsPanel.status")}
-                  </label>
-                  <Select
-                    placeholder={t("timeline.detailsPanel.selectStatus")}
-                    selectedKeys={
-                      formData.statusId ? [formData.statusId.toString()] : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-
-                      handleInputChange(
-                        "statusId",
-                        selected ? parseInt(selected) : 1,
-                      );
-                    }}
-                  >
-                    {statusOptions.map((status) => (
-                      <SelectItem
-                        key={status.id.toString()}
-                        textValue={status.label}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: status.color }}
-                          />
-                          {status.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {t("timeline.detailsPanel.priority")}
-                  </label>
-                  <Select
-                    placeholder={t("timeline.detailsPanel.selectPriority")}
-                    selectedKeys={
-                      formData.priorityId
-                        ? [formData.priorityId.toString()]
-                        : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-
-                      handleInputChange(
-                        "priorityId",
-                        selected ? parseInt(selected) : 2,
-                      );
-                    }}
-                  >
-                    {priorityOptions.map((priority) => (
-                      <SelectItem
-                        key={priority.id.toString()}
-                        textValue={priority.label}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: priority.color }}
-                          />
-                          {priority.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-              </div>
-            )}
-
-            {(type === "task" ||
-              type === "subtask" ||
-              type === "requirement") && (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Dependent Tasks selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-1">
                     {t("timeline.selectPredecessors")}
                   </label>
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
                     {selectedTasks.map((task) => (
                       <div
                         key={task.id}
-                        className="flex items-center gap-2 rounded-full bg-default-200 px-3 py-1 text-xs"
+                        className="flex items-center gap-2 rounded-full bg-default-200 px-2 py-1 text-xs"
                       >
                         <span>{task.name}</span>
                         <button
@@ -430,6 +397,7 @@ export default function TimelineItemCreateModal({
                     menuTrigger="input"
                     placeholder={t("timeline.selectPredecessorsPlaceholder")}
                     selectedKey={selectedTask?.id?.toString()}
+                    size="sm"
                     onInputChange={(value) => {
                       setTaskInputValue(value);
                       if (selectedTask && value !== `${selectedTask.name}`) {
@@ -481,14 +449,14 @@ export default function TimelineItemCreateModal({
 
                 {/* Members selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-1">
                     {t("users.selectEmployee")}
                   </label>
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
                     {selectedMembers.map((m) => (
                       <div
                         key={m.id}
-                        className="flex items-center gap-2 rounded-full bg-default-200 px-3 py-1 text-xs"
+                        className="flex items-center gap-2 rounded-full bg-default-200 px-2 py-1 text-xs"
                       >
                         <span>
                           {m.gradeName} {m.fullName}
@@ -515,6 +483,7 @@ export default function TimelineItemCreateModal({
                     menuTrigger="input"
                     placeholder={t("users.searchEmployees")}
                     selectedKey={selectedEmployee?.id?.toString()}
+                    size="sm"
                     onInputChange={(value) => {
                       setEmployeeInputValue(value);
                       if (
@@ -583,56 +552,18 @@ export default function TimelineItemCreateModal({
               </div>
             )}
 
-            {(type === "task" ||
-              type === "subtask" ||
-              type === "requirement") && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium" dir="auto">
-                    {t("timeline.detailsPanel.progress")}
-                  </label>
-                  <span className="text-sm font-medium" dir="ltr">
-                    {formData.progress}%
-                  </span>
-                </div>
-                <div className="max-w-md" dir="ltr">
-                  <Slider
-                    color={getProgressColor(formData.progress)}
-                    getValue={(value) => `${value}%`}
-                    marks={[
-                      { value: 0, label: "0%" },
-                      { value: 25, label: "25%" },
-                      { value: 50, label: "50%" },
-                      { value: 75, label: "75%" },
-                      { value: 100, label: "100%" },
-                    ]}
-                    maxValue={100}
-                    minValue={0}
-                    showTooltip={true}
-                    size="md"
-                    step={5}
-                    value={formData.progress}
-                    onChange={(value) =>
-                      handleInputChange(
-                        "progress",
-                        Array.isArray(value) ? value[0] : value,
-                      )
-                    }
-                  />
-                </div>
+                <label className="block text-sm font-medium mb-1">
+                  {t("timeline.treeView.notes")}
+                </label>
+                <Textarea
+                  minRows={2}
+                  placeholder={t("timeline.detailsPanel.additionalNotes")}
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange("notes", e.target.value)}
+                />
               </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                {t("timeline.treeView.notes")}
-              </label>
-              <Textarea
-                minRows={2}
-                placeholder={t("timeline.detailsPanel.additionalNotes")}
-                value={formData.notes}
-                onChange={(e) => handleInputChange("notes", e.target.value)}
-              />
             </div>
           </div>
         </ModalBody>

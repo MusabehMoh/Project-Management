@@ -141,6 +141,7 @@ builder.Services.AddScoped<IActionRepository, ActionRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ILookupRepository, LookupRepository>();
 builder.Services.AddScoped<ITimelineRepository, TimelineRepository>();
+builder.Services.AddScoped<IMemberTaskRepository, MemberTaskRepository>();
 
 // Register services
 builder.Services.AddScoped<IProjectService, ProjectService>();
@@ -158,6 +159,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IActionService, ActionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ILookupService, LookupService>();
+builder.Services.AddScoped<IMemberTaskService, MemberTaskService>();
 builder.Services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();
 // Path provider abstraction
 builder.Services.AddSingleton<PMA.Core.Interfaces.IAppPathProvider, PMA.Api.Services.AppPathProvider>();

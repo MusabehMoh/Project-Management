@@ -35,9 +35,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProjectRequirement> ProjectRequirements { get; set; }
     public DbSet<ProjectRequirementAttachment> ProjectRequirementAttachments { get; set; }
     public DbSet<RequirementTask> RequirementTasks { get; set; }
-    public DbSet<Timeline> Timelines { get; set; }
-    public DbSet<TimelineRequirement> TimelineRequirements { get; set; }
-    public DbSet<TimelineRequirementAssignment> TimelineRequirementAssignments { get; set; }
+    public DbSet<Timeline> Timelines { get; set; } 
     public DbSet<CalendarEvent> CalendarEvents { get; set; }
     public DbSet<CalendarEventAssignment> CalendarEventAssignments { get; set; }
     public DbSet<SubTaskAssignment> SubTaskAssignments { get; set; }

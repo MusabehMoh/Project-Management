@@ -8,7 +8,7 @@ import TimelineEditModal, {
 } from "./TimelineEditModal";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useTimelineHelpers } from "@/hooks/useTimelineHelpers";
+import { useTimelineFormHelpers } from "@/hooks/useTimelineFormHelpers";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   Timeline,
@@ -21,6 +21,7 @@ import {
   UpdateTaskRequest,
   UpdateSubtaskRequest,
 } from "@/types/timeline";
+import { formatDateRange } from "@/utils/dateFormatter";
 import { EditIcon } from "@/components/icons";
 
 interface TimelineDetailsPanelProps {
@@ -46,19 +47,21 @@ export default function TimelineDetailsPanel({
   departments,
   loading = false,
 }: TimelineDetailsPanelProps) {
-  const { t, direction } = useLanguage();
+  const { t, direction, language } = useLanguage();
   const { hasPermission } = usePermissions();
+
+  // Use shared form helpers instead of duplicate functions
   const {
-    getStatusColor,
+    statusOptions,
+    priorityOptions,
     getProgressColor,
+    getStatusColor,
     getPriorityColor,
-    getDepartmentColor,
     getStatusName,
     getPriorityName,
+    getDepartmentColor,
     getDepartmentName,
-    STATUS_OPTIONS,
-    PRIORITY_OPTIONS,
-  } = useTimelineHelpers(departments);
+  } = useTimelineFormHelpers(departments);
 
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -154,7 +157,7 @@ export default function TimelineDetailsPanel({
     }
 
     if (selectedItemType === "sprint") {
-      const sprint = timeline.sprints.find(
+      const sprint = (timeline.sprints || []).find(
         (s) => s.treeId.toString() === selectedItem,
       );
 
@@ -162,7 +165,7 @@ export default function TimelineDetailsPanel({
     }
 
     if (selectedItemType === "task") {
-      for (const sprint of timeline.sprints) {
+      for (const sprint of timeline.sprints || []) {
         // Check requirements structure first
         for (const requirement of sprint.tasks || []) {
           const task = (requirement.subtasks || []).find(
@@ -189,7 +192,10 @@ export default function TimelineDetailsPanel({
     <div className="space-y-4">
       <div>
         <h4 className="font-semibold text-lg">{timeline.name}</h4>
-        <p className="text-sm text-default-600 mt-1">{timeline.description}</p>
+        <p
+          dangerouslySetInnerHTML={{ __html: timeline.description || "" }}
+          className="text-sm text-default-600 mt-1"
+        />
       </div>
 
       <div className="space-y-3">
@@ -198,8 +204,10 @@ export default function TimelineDetailsPanel({
             {t("timeline.detailsPanel.duration")}
           </p>
           <p className="text-sm text-default-600">
-            {timeline.startDate} {direction === "rtl" ? "←" : "→"}{" "}
-            {timeline.endDate}
+            {formatDateRange(timeline.startDate, timeline.endDate, {
+              language,
+              direction: direction === "rtl" ? "rtl" : "ltr",
+            })}
           </p>
         </div>
 
@@ -216,11 +224,11 @@ export default function TimelineDetailsPanel({
           </p>
           <div className="flex gap-2 mt-1">
             <Chip color="primary" size="sm" variant="flat">
-              {timeline.sprints.length} {t("timeline.sprints")}
-              {timeline.sprints.length !== 1 ? "" : ""}
+              {(timeline.sprints || []).length} {t("timeline.sprints")}
+              {(timeline.sprints || []).length !== 1 ? "" : ""}
             </Chip>
             <Chip color="warning" size="sm" variant="flat">
-              {timeline.sprints.reduce((acc, sprint) => {
+              {(timeline.sprints || []).reduce((acc, sprint) => {
                 // Count from requirements structure
                 const reqSubtasks = (sprint.tasks || []).reduce(
                   (reqAcc, req) => reqAcc + (req.subtasks?.length || 0),
@@ -274,7 +282,10 @@ export default function TimelineDetailsPanel({
               {t("timeline.sprint")}
             </Chip>
           </div>
-          <p className="text-sm text-default-600">{sprint.description}</p>
+          <p
+            dangerouslySetInnerHTML={{ __html: sprint.description || "" }}
+            className="text-sm text-default-600"
+          />
         </div>
 
         <div className="space-y-3">
@@ -283,8 +294,10 @@ export default function TimelineDetailsPanel({
               {t("timeline.detailsPanel.duration")}
             </p>
             <p className="text-sm text-default-600">
-              {sprint.startDate} {direction === "rtl" ? "←" : "→"}{" "}
-              {sprint.endDate}
+              {formatDateRange(sprint.startDate, sprint.endDate, {
+                language,
+                direction: direction === "rtl" ? "rtl" : "ltr",
+              })}
             </p>
             <p className="text-xs text-default-500">
               {sprint.duration} {t("timeline.detailsPanel.days")}
@@ -365,7 +378,10 @@ export default function TimelineDetailsPanel({
               {t("timeline.task")}
             </Chip>
           </div>
-          <p className="text-sm text-default-600">{task.description}</p>
+          <p
+            dangerouslySetInnerHTML={{ __html: task.description || "" }}
+            className="text-sm text-default-600"
+          />
         </div>
 
         <div className="space-y-3">
@@ -374,7 +390,10 @@ export default function TimelineDetailsPanel({
               {t("timeline.detailsPanel.duration")}
             </p>
             <p className="text-sm text-default-600">
-              {task.startDate} {direction === "rtl" ? "←" : "→"} {task.endDate}
+              {formatDateRange(task.startDate, task.endDate, {
+                language,
+                direction: direction === "rtl" ? "rtl" : "ltr",
+              })}
             </p>
             <p className="text-xs text-default-500">
               {task.duration} {t("timeline.detailsPanel.days")}
@@ -522,8 +541,10 @@ export default function TimelineDetailsPanel({
               {t("timeline.detailsPanel.duration")}
             </p>
             <p className="text-sm text-default-600">
-              {subtask.startDate} {direction === "rtl" ? "←" : "→"}{" "}
-              {subtask.endDate}
+              {formatDateRange(subtask.startDate, subtask.endDate, {
+                language,
+                direction: direction === "rtl" ? "rtl" : "ltr",
+              })}
             </p>
             <p className="text-xs text-default-500">
               {subtask.duration} {t("timeline.detailsPanel.days")}
@@ -660,8 +681,9 @@ export default function TimelineDetailsPanel({
         initialValues={editModalInitialValues}
         isOpen={isEditModalOpen}
         loading={loading}
-        priorityOptions={PRIORITY_OPTIONS}
-        statusOptions={STATUS_OPTIONS}
+        priorityOptions={priorityOptions}
+        statusOptions={statusOptions}
+        timelineId={timeline.id}
         type={editModalType}
         onClose={handleCloseEditModal}
         onSubmit={handleSubmitEdit}

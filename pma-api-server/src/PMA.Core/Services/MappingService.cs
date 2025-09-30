@@ -461,9 +461,9 @@ public class MappingService : IMappingService
             StatusId = task.StatusId,
             PriorityId = task.PriorityId,
             DepartmentId = task.DepartmentId,
-            AssigneeId = task.AssigneeId,
-            AssigneeName = task.AssigneeName,
+            TimelineId=task.TimelineId,
             EstimatedHours = task.EstimatedHours,
+            ProjectRequirementId=task.ProjectRequirementId, 
             ActualHours = task.ActualHours,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt
@@ -482,5 +482,106 @@ public class MappingService : IMappingService
             TimelineCount = project.Timelines?.Count ?? 0,
             Timelines = project.Timelines?.Select(MapToTimelineWithSprintsDto).ToList() ?? new List<TimelineWithSprintsDto>()
         };
+    }
+
+    /// <summary>
+    /// Maps a CreateSprintDto to Sprint entity
+    /// </summary>
+    public Sprint MapToSprint(CreateSprintDto createSprintDto)
+    {
+        return new Sprint
+        {
+            Name = createSprintDto.Name,
+            Description = createSprintDto.Description,
+            StartDate = createSprintDto.StartDate,
+            EndDate = createSprintDto.EndDate,
+            Status = createSprintDto.Status,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    /// <summary>
+    /// Updates a Sprint entity from UpdateSprintDto
+    /// </summary>
+    public void UpdateSprintFromDto(Sprint sprint, UpdateSprintDto updateSprintDto)
+    {
+        if (!string.IsNullOrEmpty(updateSprintDto.Name))
+            sprint.Name = updateSprintDto.Name;
+
+        if (updateSprintDto.Description != null)
+            sprint.Description = updateSprintDto.Description;
+
+        if (updateSprintDto.StartDate.HasValue)
+            sprint.StartDate = updateSprintDto.StartDate.Value;
+
+        if (updateSprintDto.EndDate.HasValue)
+            sprint.EndDate = updateSprintDto.EndDate.Value;
+
+        if (updateSprintDto.Status.HasValue)
+            sprint.Status = updateSprintDto.Status.Value;
+
+        sprint.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Maps a CreateTaskDto to Task entity
+    /// </summary>
+    public PMA.Core.Entities.Task MapToTask(CreateTaskDto createTaskDto)
+    {
+        return new PMA.Core.Entities.Task
+        {
+            SprintId = createTaskDto.SprintId,
+            Name = createTaskDto.Name,
+            Description = createTaskDto.Description,
+            StartDate = createTaskDto.StartDate,
+            EndDate = createTaskDto.EndDate,
+            StatusId = createTaskDto.StatusId,
+            PriorityId = createTaskDto.PriorityId,
+            DepartmentId = createTaskDto.DepartmentId,
+            ProjectRequirementId = createTaskDto.ProjectRequirementId,
+            TimelineId=createTaskDto.TimelineId,
+            EstimatedHours = createTaskDto.EstimatedHours,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    /// <summary>
+    /// Updates a Task entity from UpdateTaskDto
+    /// </summary>
+    public void UpdateTaskFromDto(PMA.Core.Entities.Task task, UpdateTaskDto updateTaskDto)
+    {
+        if (!string.IsNullOrEmpty(updateTaskDto.Name))
+            task.Name = updateTaskDto.Name;
+
+        if (updateTaskDto.Description != null)
+            task.Description = updateTaskDto.Description;
+
+        if (updateTaskDto.StartDate.HasValue)
+            task.StartDate = updateTaskDto.StartDate.Value;
+
+        if (updateTaskDto.EndDate.HasValue)
+            task.EndDate = updateTaskDto.EndDate.Value;
+
+        if (updateTaskDto.StatusId.HasValue)
+            task.StatusId = updateTaskDto.StatusId.Value;
+
+        if (updateTaskDto.PriorityId.HasValue)
+            task.PriorityId = updateTaskDto.PriorityId.Value;
+
+        if (updateTaskDto.DepartmentId.HasValue)
+            task.DepartmentId = updateTaskDto.DepartmentId;
+
+        
+   
+
+        if (updateTaskDto.EstimatedHours.HasValue)
+            task.EstimatedHours = updateTaskDto.EstimatedHours;
+
+        if (updateTaskDto.ActualHours.HasValue)
+            task.ActualHours = updateTaskDto.ActualHours;
+
+        task.UpdatedAt = DateTime.UtcNow;
     }
 }

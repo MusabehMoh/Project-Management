@@ -31,4 +31,5 @@ public class Timeline
     public virtual Project? Project { get; set; }
     public virtual ProjectRequirement? ProjectRequirement { get; set; }
     public virtual ICollection<Sprint> Sprints { get; set; } = new List<Sprint>();
+    public virtual ICollection<Task> Tasks { get; set; } = new List<Task>();
 }

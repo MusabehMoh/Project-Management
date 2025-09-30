@@ -239,6 +239,7 @@ export interface UpdateSprintRequest extends Partial<CreateSprintRequest> {
 
 export interface CreateTaskRequest {
   sprintId: string;
+  timelineId: string;
   name: string;
   description?: string;
   startDate: string;
