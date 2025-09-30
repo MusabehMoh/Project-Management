@@ -529,7 +529,7 @@ export default function MembersTasksPage() {
               {hasActiveFilters && (
                 <div className="flex items-center gap-2 mt-2">
                   <Button
-                    color="secondary"
+                    color="danger"
                     size="sm"
                     startContent={<X size={16} />}
                     variant="flat"
@@ -634,7 +634,7 @@ export default function MembersTasksPage() {
               </div>
 
               <span className="text-sm text-foreground-600">
-                Showing {tasks.length} of {totalCount} tasks
+                {t("pagination.showing")} {tasks.length} {t("pagination.of")} {totalCount} {t("common.tasks")}
               </span>
             </div>
           </div>
@@ -664,26 +664,33 @@ export default function MembersTasksPage() {
         {loading ? (
           <TaskGridSkeleton />
         ) : tasks.length === 0 ? (
-          <Card>
-            <CardBody className="text-center py-16">
-              <Grid3X3 className="w-16 h-16 text-foreground-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {t("noTasksFound")}
-              </h3>
-              <p className="text-foreground-600 mb-6">
-                {t("adjustFiltersMessage")}
-              </p>
-              <Button
-                color="primary"
-                variant="flat"
-                onPress={() => {
-                  handleResetFilters();
-                }}
-              >
-                {t("calendar.clearFilters")}
-              </Button>
-            </CardBody>
-          </Card>
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center py-12">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-20 h-20 bg-default-100 rounded-full flex items-center justify-center">
+                  <Grid3X3 className="w-10 h-10 text-default-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-default-700 mb-2">
+                    {t("noTasksFound")}
+                  </h3>
+                  <p className="text-default-500 text-sm mb-4">
+                    {t("adjustFiltersMessage")}
+                  </p>
+                </div>
+                {hasActiveFilters && (
+                  <Button
+                    color="danger"
+                    size="sm"
+                    variant="flat"
+                    onPress={resetAllFilters}
+                  >
+                    {t("requirements.clearFilters")}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
         ) : (
           <>
             {viewType === "grid" && (
