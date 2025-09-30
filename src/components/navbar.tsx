@@ -23,7 +23,7 @@ import {
   NavbarMenuItem,
 } from "@heroui/navbar";
 import clsx from "clsx";
-import { Bell, LogOut, User, ChevronDown, Users, Building2 } from "lucide-react";
+import { Bell, LogOut, User, ChevronDown, Building2 } from "lucide-react";
 import { useTheme } from "@heroui/use-theme";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -185,7 +185,7 @@ const ManagementDropdown = ({
           className={clsx(
             "relative group transition-all duration-300 ease-in-out transform",
             "hover:scale-105 hover:-translate-y-0.5",
-            "text-foreground font-medium bg-transparent p-0 h-auto min-w-0",
+            "text-foreground font-medium text-base bg-transparent p-0 h-auto min-w-0",
             isActive ? "text-primary" : "hover:text-primary",
           )}
           variant="light"
@@ -199,8 +199,7 @@ const ManagementDropdown = ({
             />
           }
         >
-          <span className="relative z-10 flex items-center gap-2">
-            <Users size={16} />
+          <span className="relative z-10">
             {t("nav.management")}
           </span>
           {/* Hover background glow */}
@@ -227,7 +226,7 @@ const ManagementDropdown = ({
               "transition-all duration-200",
               currentPath === "/users" && "bg-primary/10 text-primary",
             )}
-            startContent={<Users size={16} />}
+            startContent={<User size={16} />}
             textValue="User Management"
             onPress={() => navigate("/users")}
           >
@@ -830,7 +829,7 @@ export const Navbar = () => {
                 onClick={(e) => handleNav(e, "/users")}
               >
                 <div className="flex items-center gap-2">
-                  <Users size={16} />
+                  <User size={16} />
                   {t("nav.userManagement")}
                 </div>
               </Link>
