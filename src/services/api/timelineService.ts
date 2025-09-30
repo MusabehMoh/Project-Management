@@ -29,7 +29,7 @@ const ENDPOINTS = {
   REQUIREMENTS: (sprintId: string) => `/sprints/${sprintId}/requirements`,
   TASKS: "/tasks", // For direct task operations
   TASK_BY_ID: (id: string) => `/tasks/${id}`,
-  DEPARTMENTS: "/timelines/departments",
+  DEPARTMENTS: "/departments/all",
   RESOURCES: "/timelines/resources",
 } as const;
 

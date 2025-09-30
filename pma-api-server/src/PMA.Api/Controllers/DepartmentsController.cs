@@ -260,4 +260,34 @@ public class DepartmentsController : ApiBaseController
             return Error<TeamMemberDto>("An error occurred while removing the department member", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Get all departments without pagination (for dropdowns, timelines, etc.)
+    /// </summary>
+    [HttpGet("all")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<object>>), 200)]
+    public async Task<IActionResult> GetAllDepartments()
+    {
+        try
+        {
+            // Get all departments without pagination (using a large limit)
+            var (departmentsWithCount, totalCount) = await _departmentService.GetDepartmentsAsync(1, int.MaxValue, true);
+            
+            var departments = departmentsWithCount.Select(d => new
+            {
+                id = d.Department.Id.ToString(),
+                name = d.Department.Name,
+                color =  "#6366F1", // Default color if none specified
+                description = d.Department.Description ?? d.Department.Name,
+                memberCount = d.MemberCount
+            });
+
+            return Success(departments, message: "All departments retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving all departments. StackTrace: {StackTrace}", ex.StackTrace);
+            return Error<IEnumerable<object>>("Internal server error", ex.Message);
+        }
+    }
 }

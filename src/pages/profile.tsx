@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -8,15 +8,45 @@ import { Chip } from "@heroui/chip";
 import { User, Shield, Calendar, Building2 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useUserContext } from "@/contexts/UserContext";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function ProfilePage() {
   const { t } = useLanguage();
-  const { user } = useUserContext();
+  const { user, loading, error, refetch } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
   });
+
+  // Update formData when user data loads
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.fullName || "",
+      });
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">{t("user.loading")}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-danger mb-4">{error}</p>
+          <Button color="primary" onPress={refetch}>
+            {t("common.retry")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -34,9 +64,11 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     // Reset form data to original values
-    setFormData({
-      fullName: user.fullName,
-    });
+    if (user) {
+      setFormData({
+        fullName: user.fullName || "",
+      });
+    }
     setIsEditing(false);
   };
 
