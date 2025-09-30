@@ -3,7 +3,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Alert } from "@heroui/alert";
 import {
   Modal,
@@ -211,11 +211,35 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         dir={direction}
         shadow="sm"
       >
-        <CardBody className="flex items-center justify-center py-8">
-          <Spinner color="default" size="md" />
-          <p className="mt-3 text-default-500">
-            {t("common.loading") || "Loading..."}
-          </p>
+        <CardBody className="p-6 space-y-4">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-4">
+            <Skeleton className="h-6 w-32 rounded" />
+            <Skeleton className="h-8 w-20 rounded" />
+          </div>
+          
+          {/* Tab navigation skeleton */}
+          <div className="flex space-x-4 mb-6">
+            <Skeleton className="h-8 w-24 rounded" />
+            <Skeleton className="h-8 w-28 rounded" />
+            <Skeleton className="h-8 w-32 rounded" />
+          </div>
+          
+          {/* Content cards skeleton */}
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-4 border border-default-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32 rounded" />
+                    <Skeleton className="h-3 w-24 rounded" />
+                  </div>
+                </div>
+                <Skeleton className="h-8 w-16 rounded" />
+              </div>
+            ))}
+          </div>
         </CardBody>
       </Card>
     );

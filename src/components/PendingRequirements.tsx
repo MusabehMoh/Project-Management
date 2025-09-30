@@ -3,7 +3,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { PenTool, Clock, User, AlertCircle } from "lucide-react";
 
@@ -74,11 +74,55 @@ export default function PendingRequirements({
         dir={direction}
         shadow="sm"
       >
-        <CardBody className="flex items-center justify-center min-h-[200px]">
-          <Spinner size="lg" />
-          <p className="mt-3 text-default-500">
-            {t("common.loading") || "Loading..."}
-          </p>
+        <CardBody className="p-6 space-y-4">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-40 rounded" />
+              <Skeleton className="h-4 w-32 rounded" />
+            </div>
+            <Skeleton className="h-8 w-20 rounded" />
+          </div>
+          
+          {/* Requirements list skeleton */}
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="p-4 border border-default-200 rounded-lg space-y-3">
+                {/* Requirement header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-32 rounded" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                    <Skeleton className="h-3 w-full rounded" />
+                    <Skeleton className="h-3 w-3/4 rounded" />
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded" />
+                </div>
+                
+                {/* Requirement metadata */}
+                <div className="flex items-center justify-between pt-2 border-t border-default-100">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-4 w-4 rounded" />
+                      <Skeleton className="h-3 w-16 rounded" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-4 w-4 rounded" />
+                      <Skeleton className="h-3 w-12 rounded" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* View all button skeleton */}
+          <div className="pt-4 border-t border-default-200">
+            <Skeleton className="h-9 w-full rounded" />
+          </div>
         </CardBody>
       </Card>
     );

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Progress } from "@heroui/progress";
 import {
   Table,
@@ -123,11 +123,38 @@ export default function RequirementCompletionTracker({
   if (loading) {
     return (
       <Card className={`${className} border-default-200`} shadow="md">
-        <CardBody className="flex items-center justify-center py-8">
-          <Spinner size="lg" />
-          <p className="mt-4 text-default-500">
-            {t("completion.loading") || "Loading completion data..."}
-          </p>
+        <CardBody className="p-6 space-y-6">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-48 rounded" />
+              <Skeleton className="h-4 w-32 rounded" />
+            </div>
+            <Skeleton className="h-8 w-24 rounded" />
+          </div>
+          
+          {/* Stats grid skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="text-center space-y-2">
+                <Skeleton className="h-8 w-12 mx-auto rounded" />
+                <Skeleton className="h-4 w-16 mx-auto rounded" />
+              </div>
+            ))}
+          </div>
+          
+          {/* Progress bars skeleton */}
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-24 rounded" />
+                  <Skeleton className="h-4 w-12 rounded" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
+            ))}
+          </div>
         </CardBody>
       </Card>
     );
