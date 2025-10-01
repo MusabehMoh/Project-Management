@@ -474,7 +474,8 @@ public class ProjectRequirementsController : ApiBaseController
     }
 
     /// <summary>
-    /// Create a task for a specific requirement
+    /// Create or update a task for a specific requirement
+    /// If a task already exists for the requirement, it will be updated; otherwise, a new task will be created.
     /// </summary>
     [HttpPost("requirements/{id}/tasks")]
     [ProducesResponseType(201)]

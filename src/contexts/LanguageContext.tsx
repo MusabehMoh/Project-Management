@@ -857,6 +857,7 @@ const translations = {
     "common.viewDetails": "View Details",
     // Task creation keys
     "tasks.createTask": "Create Task",
+    "tasks.viewTask": "View Task",
     "tasks.editTask": "Edit Task",
     "tasks.developer": "Developer",
     "tasks.qcMember": "QC Member",
@@ -1155,6 +1156,7 @@ const translations = {
     "timeline.noTimelinesGeneral":
       "Select a project and create your first timeline to get started.",
     "timeline.createTimeline": "Create Timeline",
+    "timeline.viewTimeline": "View Timeline",
     "timeline.selectTimeline": "Select a timeline",
     "timeline.selectTimelineDescription":
       "Choose a timeline from the dropdown above to view its details.",
@@ -2354,6 +2356,7 @@ const translations = {
     "common.viewDetails": "عرض التفاصيل",
     // Task creation keys (Arabic)
     "tasks.createTask": "إنشاء مهمة",
+    "tasks.viewTask": "عرض المهمة",
     "tasks.editTask": "تحرير المهمة",
     "tasks.developer": "المطور",
     "tasks.qcMember": "مسؤول ضمان الجودة",
@@ -2653,6 +2656,7 @@ const translations = {
     "timeline.noTimelinesGeneral":
       "اختر مشروعاً وأنشئ جدولك الزمني الأول للبدء.",
     "timeline.createTimeline": "إنشاء جدول زمني",
+    "timeline.viewTimeline": "عرض الجدول الزمني",
     "timeline.selectTimeline": "اختر جدولاً زمنياً",
     "timeline.selectTimelineDescription":
       "اختر جدولاً زمنياً من القائمة المنسدلة أعلاه لعرض تفاصيله.",
