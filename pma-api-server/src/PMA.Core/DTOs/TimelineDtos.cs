@@ -93,6 +93,10 @@ public class TaskDto
     public decimal? ActualHours { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    
+    // Task assignments and dependencies - matching frontend naming
+    public List<int> MemberIds { get; set; } = new List<int>();
+    public List<int> DepTaskIds { get; set; } = new List<int>();
 }
 
 public class CreateTaskDto
@@ -112,13 +116,19 @@ public class CreateTaskDto
 
     [Required(ErrorMessage = "EndDate is required")]
     public DateTime EndDate { get; set; }
-
+    public TaskTypes TypeId { get; set; } = TaskTypes.TimeLine;   
     public TaskStatus StatusId { get; set; } = TaskStatus.ToDo;
     public Priority PriorityId { get; set; } = Priority.Medium;
     public int? DepartmentId { get; set; }
     public int? TimelineId { get; set; }
     public int? ProjectRequirementId { get; set; }
     public decimal? EstimatedHours { get; set; }
+    public int Progress { get; set; } = 0;
+    public string? Notes { get; set; }
+    
+    // New fields for task assignments and dependencies - matching frontend naming
+    public List<int>? MemberIds { get; set; }
+    public List<int>? DepTaskIds { get; set; }
 }
 
 public class UpdateTaskDto
@@ -138,6 +148,12 @@ public class UpdateTaskDto
     public int? ProjectRequirementId { get; set; }
     public decimal? EstimatedHours { get; set; }
     public decimal? ActualHours { get; set; }
+    public int? Progress { get; set; }
+    public string? Notes { get; set; }
+    
+    // New fields for task assignments and dependencies - matching frontend naming
+    public List<int>? MemberIds { get; set; }
+    public List<int>? DepTaskIds { get; set; }
 }
 
 public class MoveTaskDto

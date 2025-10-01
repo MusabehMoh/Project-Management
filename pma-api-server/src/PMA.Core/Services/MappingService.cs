@@ -466,7 +466,9 @@ public class MappingService : IMappingService
             ProjectRequirementId=task.ProjectRequirementId, 
             ActualHours = task.ActualHours,
             CreatedAt = task.CreatedAt,
-            UpdatedAt = task.UpdatedAt
+            UpdatedAt = task.UpdatedAt,
+            MemberIds = task.Assignments?.Select(a => a.PrsId).ToList() ?? new List<int>(),
+            DepTaskIds = task.Dependencies_Relations?.Select(d => d.DependsOnTaskId).ToList() ?? new List<int>()
         };
     }
 
@@ -540,10 +542,13 @@ public class MappingService : IMappingService
             PriorityId = createTaskDto.PriorityId,
             DepartmentId = createTaskDto.DepartmentId,
             ProjectRequirementId = createTaskDto.ProjectRequirementId,
-            TimelineId=createTaskDto.TimelineId,
+            TimelineId = createTaskDto.TimelineId,
             EstimatedHours = createTaskDto.EstimatedHours,
+            Progress = createTaskDto.Progress,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            TypeId = createTaskDto.TypeId
+
         };
     }
 
@@ -573,14 +578,14 @@ public class MappingService : IMappingService
         if (updateTaskDto.DepartmentId.HasValue)
             task.DepartmentId = updateTaskDto.DepartmentId;
 
-        
-   
-
         if (updateTaskDto.EstimatedHours.HasValue)
             task.EstimatedHours = updateTaskDto.EstimatedHours;
 
         if (updateTaskDto.ActualHours.HasValue)
             task.ActualHours = updateTaskDto.ActualHours;
+
+        if (updateTaskDto.Progress.HasValue)
+            task.Progress = updateTaskDto.Progress.Value;
 
         task.UpdatedAt = DateTime.UtcNow;
     }

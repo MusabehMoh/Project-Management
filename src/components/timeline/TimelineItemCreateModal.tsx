@@ -19,7 +19,6 @@ import useTeamSearch from "@/hooks/useTeamSearch";
 import useTaskSearch from "@/hooks/useTaskSearch";
 import { useTimelineFormHelpers } from "@/hooks/useTimelineFormHelpers";
 import { useTimelineFormValidation } from "@/hooks/useTimelineFormValidation";
-import { useTimelineToasts } from "@/hooks/useTimelineToasts";
 
 export interface TimelineItemCreateModalFormData {
   name: string;
@@ -35,7 +34,7 @@ export interface TimelineItemCreateModalFormData {
   members?: MemberSearchResult[];
   depTasks?: WorkItem[];
   memberIds?: number[];
-  depTaskIds?: (string | number)[];
+  depTaskIds?: number[];
 }
 
 interface TimelineItemCreateModalProps {
@@ -60,7 +59,6 @@ export default function TimelineItemCreateModal({
   timelineId,
 }: TimelineItemCreateModalProps) {
   const { t, language } = useLanguage();
-  const toasts = useTimelineToasts();
 
   // Use shared helpers and validation
   const { statusOptions, priorityOptions } = useTimelineFormHelpers();
@@ -164,7 +162,7 @@ export default function TimelineItemCreateModal({
         members: selectedMembers,
         depTasks: selectedTasks,
         memberIds: selectedMembers.map((m) => m.id),
-        depTaskIds: selectedTasks.map((t) => t.id),
+        depTaskIds: selectedTasks.map((t) => Number(t.id)),
       };
 
       await onSubmit(payload);
@@ -172,10 +170,9 @@ export default function TimelineItemCreateModal({
       // Don't show toasts here - let the parent component handle them
       // to avoid duplicate toasts
       onClose();
-    } catch {
-      // Show error toast only for form/validation errors
-      // API errors should be handled by the parent component
-      toasts.onCreateError();
+    } catch (error) {
+      // Re-throw error to let parent component handle toasts
+      throw error;
     }
   };
 

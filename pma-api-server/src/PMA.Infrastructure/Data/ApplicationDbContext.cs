@@ -40,12 +40,27 @@ public class ApplicationDbContext : DbContext
     public DbSet<CalendarEventAssignment> CalendarEventAssignments { get; set; }
     public DbSet<SubTaskAssignment> SubTaskAssignments { get; set; }
     public DbSet<ProjectAnalyst> ProjectAnalysts { get; set; }
+    
+    // New DbSets for task assignments and dependencies
+    public DbSet<TaskAssignment> TaskAssignments { get; set; }
+    public DbSet<TaskDependency> TaskDependencies { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // All configurations moved to Data Annotations
+        // Configure TaskDependency to avoid cycles
+        modelBuilder.Entity<TaskDependency>()
+            .HasOne(td => td.Task)
+            .WithMany(t => t.Dependencies_Relations)
+            .HasForeignKey(td => td.TaskId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<TaskDependency>()
+            .HasOne(td => td.DependsOnTask)
+            .WithMany(t => t.DependentTasks)
+            .HasForeignKey(td => td.DependsOnTaskId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }
 

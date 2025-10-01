@@ -73,6 +73,26 @@ public class TaskService : ITaskService
     {
         return await _taskRepository.SearchTasksAsync(query, timelineId, limit);
     }
+
+    public async System.Threading.Tasks.Task UpdateTaskAssignmentsAsync(int taskId, IEnumerable<int> memberIds)
+    {
+        await _taskRepository.UpdateTaskAssignmentsAsync(taskId, memberIds);
+    }
+
+    public async System.Threading.Tasks.Task UpdateTaskDependenciesAsync(int taskId, IEnumerable<int> predecessorIds)
+    {
+        await _taskRepository.UpdateTaskDependenciesAsync(taskId, predecessorIds);
+    }
+
+    public async System.Threading.Tasks.Task<IEnumerable<TaskAssignment>> GetTaskAssignmentsAsync(int taskId)
+    {
+        return await _taskRepository.GetTaskAssignmentsAsync(taskId);
+    }
+
+    public async System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId)
+    {
+        return await _taskRepository.GetTaskDependenciesAsync(taskId);
+    }
 }
 
 

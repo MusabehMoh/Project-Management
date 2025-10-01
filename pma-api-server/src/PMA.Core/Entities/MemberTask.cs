@@ -64,9 +64,11 @@ public class MemberTaskAssignment
     public int MemberTaskId { get; set; }
 
     [Required]
-    public int UserId { get; set; }
+    public int PrsId { get; set; }
 
     // Navigation properties
     public virtual MemberTask? MemberTask { get; set; }
-    public virtual User? User { get; set; }
+    
+    [ForeignKey("PrsId")]
+    public virtual Employee? Employee { get; set; }
 }

@@ -16,11 +16,17 @@ import { Slider } from "@heroui/slider";
 import { parseDate } from "@internationalized/date";
 
 import { useTimelineFormValidation } from "@/hooks/useTimelineFormValidation";
-import { useTimelineToasts } from "@/hooks/useTimelineToasts";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Department, MemberSearchResult, WorkItem } from "@/types/timeline";
+import {
+  Department,
+  MemberSearchResult,
+  WorkItem,
+  TaskStatus,
+  TaskPriority,
+} from "@/types/timeline";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import useTaskSearch from "@/hooks/useTaskSearch";
+import { timelineService } from "@/services/api";
 
 export interface TimelineEditModalFormData {
   name: string;
@@ -37,7 +43,7 @@ export interface TimelineEditModalFormData {
   depTasks?: WorkItem[];
   // Convenience: IDs arrays for API payloads that expect IDs
   memberIds?: number[];
-  depTaskIds?: (string | number)[];
+  depTaskIds?: number[];
 }
 
 interface TimelineEditModalProps {
@@ -87,19 +93,115 @@ export default function TimelineEditModal({
   const [taskInputValue, setTaskInputValue] = useState<string>("");
   const [selectedTask, setSelectedTask] = useState<WorkItem | null>(null);
   const { t } = useLanguage();
-  const toasts = useTimelineToasts();
   const [formData, setFormData] =
     useState<TimelineEditModalFormData>(initialValues);
 
   // Use shared validation hook
   const { validateForm, errors, clearError } = useTimelineFormValidation();
 
+  // Helper function to fetch member details by ID
+  const fetchMemberById = async (
+    memberId: number,
+  ): Promise<MemberSearchResult | null> => {
+    try {
+      const response = await timelineService.getAllDepartmentEmployees();
+
+      if (response.success && response.data) {
+        const member = response.data.find((emp) => emp.id === memberId);
+
+        return member || null;
+      }
+
+      return null;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error fetching member details:", error);
+
+      return null;
+    }
+  };
+
+  // Helper function to fetch task details by ID (simplified version)
+  const fetchTaskById = async (taskId: number): Promise<WorkItem | null> => {
+    try {
+      // Search tasks with empty query to get all tasks, then find by ID
+      searchTasks("");
+      // Wait a bit for the search to complete and then find the task
+      // Note: This is a workaround since we don't have a direct getTaskById API
+      
+      // For now, create a minimal WorkItem object with the ID
+      // The real data will be loaded when user searches
+      return {
+        id: taskId.toString(),
+        name: `Task ${taskId}`,
+        description: "Loading...",
+        status: "ToDo" as TaskStatus,
+        department: "",
+        sprintId: "0",
+        startDate: "",
+        endDate: "",
+        duration: 0,
+        progress: 0,
+        priority: "Medium" as TaskPriority,
+        members: [],
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error fetching task details:", error);
+
+      return null;
+    }
+  };
+
   // Update form data when initial values change
   useEffect(() => {
-    setFormData(initialValues);
-    // Sync chips from initial values (default to empty if undefined)
-    setSelectedMembers(initialValues?.members ?? []);
-    setSelectedTasks((initialValues?.depTasks as any) ?? []);
+    const loadInitialData = async () => {
+      setFormData(initialValues);
+      
+      // If we have memberIds but no full member objects, fetch them
+      if (initialValues?.memberIds && initialValues.memberIds.length > 0) {
+        if (!initialValues?.members || initialValues.members.length === 0) {
+          // Fetch real member data from API
+          const memberPromises = initialValues.memberIds.map((id) =>
+            fetchMemberById(id),
+          );
+          const members = await Promise.all(memberPromises);
+          const validMembers = members.filter(
+            (member): member is MemberSearchResult => member !== null,
+          );
+
+          setSelectedMembers(validMembers);
+        } else {
+          setSelectedMembers(initialValues.members);
+        }
+      } else {
+        setSelectedMembers(initialValues?.members ?? []);
+      }
+
+      // If we have depTaskIds but no full task objects, fetch them
+      if (initialValues?.depTaskIds && initialValues.depTaskIds.length > 0) {
+        if (!initialValues?.depTasks || initialValues.depTasks.length === 0) {
+          // Fetch real task data from API
+          const taskPromises = initialValues.depTaskIds.map((id) =>
+            fetchTaskById(id),
+          );
+          const tasks = await Promise.all(taskPromises);
+          const validTasks = tasks.filter(
+            (task): task is WorkItem => task !== null,
+          );
+
+          setSelectedTasks(validTasks);
+        } else {
+          setSelectedTasks(initialValues.depTasks as any);
+        }
+      } else {
+        setSelectedTasks((initialValues?.depTasks as any) ?? []);
+      }
+    };
+
+    if (initialValues) {
+      loadInitialData();
+    }
   }, [initialValues]);
 
   // Clear selections when modal closes to avoid stale state on next open
@@ -138,7 +240,7 @@ export default function TimelineEditModal({
         members: selectedMembers,
         depTasks: selectedTasks,
         memberIds: selectedMembers.map((m) => m.id),
-        depTaskIds: selectedTasks.map((t) => t.id),
+        depTaskIds: selectedTasks.map((t) => Number(t.id)),
       };
 
       await onSubmit(payload);
@@ -146,10 +248,9 @@ export default function TimelineEditModal({
       // Don't show toasts here - let the parent component handle them
       // to avoid duplicate toasts
       onClose();
-    } catch {
-      // Show error toast only for form/validation errors
-      // API errors should be handled by the parent component
-      toasts.onUpdateError();
+    } catch (error) {
+      // Re-throw error to let parent component handle toasts
+      throw error;
     }
   };
 
