@@ -6,7 +6,6 @@ import GanttChartFullScreen from "./pages/GanttChartFullScreen";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AccessDenied } from "@/components/AccessDenied";
-import { TasksTest } from "@/components/TasksTest";
 import DocsPage from "@/pages/docs";
 import PricingPage from "@/pages/pricing";
 import BlogPage from "@/pages/blog";
@@ -57,7 +56,6 @@ function App() {
         <Route element={<DepartmentsPage />} path="departments" />
         <Route element={<ProfilePage />} path="profile" />
         <Route element={<TimelinePage />} path="timeline" />
-        <Route element={<TasksTest />} path="test-tasks" />
         <Route element={<MembersTasksPage />} path="tasks" />
         <Route element={<DocsPage />} path="docs" />
         <Route element={<PricingPage />} path="pricing" />
