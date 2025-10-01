@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using PMA.Core.Services;
 using TaskEntity = PMA.Core.Entities.Task;
 
 namespace PMA.Api.Controllers;
@@ -11,10 +12,12 @@ namespace PMA.Api.Controllers;
 public class TasksController : ApiBaseController
 {
     private readonly ITaskService _taskService;
+    private readonly IMappingService _mappingService;
 
-    public TasksController(ITaskService taskService)
+    public TasksController(ITaskService taskService, IMappingService mappingService)
     {
         _taskService = taskService;
+        _mappingService = mappingService;
     }
 
     /// <summary>
@@ -108,29 +111,31 @@ public class TasksController : ApiBaseController
     /// Create a new task
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(TaskEntity), 201)]
-    [ProducesResponseType(400)]
-    public async Task<IActionResult> CreateTask([FromBody] TaskEntity task)
+    [ProducesResponseType(typeof(ApiResponse<TaskDto>), 201)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto createTaskDto)
     {
         try
         {
             if (!ModelState.IsValid)
             {
-                return Error<TaskEntity>("Validation failed", string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
             }
 
+            // Map DTO to entity
+            var task = _mappingService.MapToTask(createTaskDto);
+
+            // Create the task
             var createdTask = await _taskService.CreateTaskAsync(task);
-            var response = new ApiResponse<TaskEntity>
-            {
-                Success = true,
-                Data = createdTask,
-                Message = "Task created successfully"
-            };
-            return CreatedAtAction(nameof(GetTaskById), new { id = createdTask.Id }, response);
+
+            // Map back to DTO for response
+            var taskDto = _mappingService.MapToTaskDto(createdTask);
+
+            return Created(taskDto, nameof(GetTaskById), new { id = createdTask.Id }, "Task created successfully");
         }
         catch (Exception ex)
         {
-            return Error<TaskEntity>("An error occurred while creating the task", ex.Message);
+            return Error<TaskDto>("An error occurred while creating the task", ex.Message);
         }
     }
 
@@ -138,39 +143,39 @@ public class TasksController : ApiBaseController
     /// Update an existing task
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(TaskEntity), 200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskEntity task)
+    [ProducesResponseType(typeof(ApiResponse<TaskDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> UpdateTask(int id, [FromBody] UpdateTaskDto updateTaskDto)
     {
         try
         {
             if (!ModelState.IsValid)
             {
-                return Error<TaskEntity>("Validation failed", string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
             }
 
-            if (id != task.Id)
+            // Get existing task
+            var existingTask = await _taskService.GetTaskByIdAsync(id);
+            if (existingTask == null)
             {
-                return Error<TaskEntity>("ID mismatch");
+                return Error<object>("Task not found", status: 404);
             }
 
-            var updatedTask = await _taskService.UpdateTaskAsync(task);
-            if (updatedTask == null)
-            {
-                return Error<TaskEntity>("Task not found");
-            }
-            var response = new ApiResponse<TaskEntity>
-            {
-                Success = true,
-                Data = updatedTask,
-                Message = "Task updated successfully"
-            };
-            return Ok(response);
+            // Update the task using the mapping service
+            _mappingService.UpdateTaskFromDto(existingTask, updateTaskDto);
+
+            // Update the task
+            var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
+
+            // Map back to DTO for response
+            var taskDto = _mappingService.MapToTaskDto(updatedTask);
+
+            return Success(taskDto, message: "Task updated successfully");
         }
         catch (Exception ex)
         {
-            return Error<TaskEntity>("An error occurred while updating the task", ex.Message);
+            return Error<TaskDto>("An error occurred while updating the task", ex.Message);
         }
     }
 
@@ -194,6 +199,116 @@ public class TasksController : ApiBaseController
         catch (Exception ex)
         {
             return Error<object>("An error occurred while deleting the task", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Move a task by specified number of days
+    /// </summary>
+    [HttpPost("{id}/move")]
+    [ProducesResponseType(typeof(ApiResponse<TaskDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> MoveTask(int id, [FromBody] MoveTaskDto moveTaskDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            // Get existing task
+            var existingTask = await _taskService.GetTaskByIdAsync(id);
+            if (existingTask == null)
+            {
+                return Error<object>("Task not found", status: 404);
+            }
+
+            // Move the task by the specified number of days
+            var daysToMove = moveTaskDto.MoveDays;
+            existingTask.StartDate = existingTask.StartDate.AddDays(daysToMove);
+            existingTask.EndDate = existingTask.EndDate.AddDays(daysToMove);
+            existingTask.UpdatedAt = DateTime.UtcNow;
+
+            // Update the task
+            var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
+
+            // Map to DTO for response
+            var taskDto = _mappingService.MapToTaskDto(updatedTask);
+
+            return Success(taskDto, message: $"Task moved by {daysToMove} days successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<TaskDto>("An error occurred while moving the task", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Move a task to another sprint
+    /// </summary>
+    [HttpPost("{id}/move-to-sprint")]
+    [ProducesResponseType(typeof(ApiResponse<TaskDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> MoveTaskToSprint(int id, [FromBody] MoveTaskToSprintDto moveTaskToSprintDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            // Get existing task
+            var existingTask = await _taskService.GetTaskByIdAsync(id);
+            if (existingTask == null)
+            {
+                return Error<object>("Task not found", status: 404);
+            }
+
+            // Move the task to the target sprint
+            existingTask.SprintId = moveTaskToSprintDto.TargetSprintId;
+            existingTask.UpdatedAt = DateTime.UtcNow;
+
+            // Update the task
+            var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
+
+            // Map to DTO for response
+            var taskDto = _mappingService.MapToTaskDto(updatedTask);
+
+            return Success(taskDto, message: $"Task moved to sprint {moveTaskToSprintDto.TargetSprintId} successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<TaskDto>("An error occurred while moving the task to sprint", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Search tasks by query and optional timeline filter
+    /// </summary>
+    [HttpGet("searchTasks")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> SearchTasks(
+        [FromQuery] string query,
+        [FromQuery] int? timelineId = null,
+        [FromQuery] int limit = 25)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Error<IEnumerable<TaskEntity>>("Query parameter is required", status: 400);
+            }
+
+            var tasks = await _taskService.SearchTasksAsync(query, timelineId, limit);
+            return Success(tasks);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<TaskEntity>>("An error occurred while searching tasks", ex.Message);
         }
     }
 }

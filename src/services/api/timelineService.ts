@@ -3,7 +3,6 @@ import { differenceInDays, parseISO, format } from "date-fns";
 import { apiClient } from "./client";
 
 import { ApiResponse } from "@/types/project";
-import { apiCache } from "@/utils/apiCache";
 import {
   Timeline,
   Sprint,
@@ -36,37 +35,29 @@ const ENDPOINTS = {
 // Timeline API Service Class
 export class TimelineApiService {
   /**
-   * Get all timelines for a project (with caching)
+   * Get all timelines for a project
    */
   async getProjectTimelines(
     projectId: number,
   ): Promise<ApiResponse<Timeline[]>> {
-    const cacheKey = apiCache.generateKey("project-timelines", { projectId });
-
-    return apiCache.getOrFetch(cacheKey, () =>
-      apiClient.get<Timeline[]>(ENDPOINTS.PROJECT_TIMELINES(projectId)),
-    );
+    return apiClient.get<Timeline[]>(ENDPOINTS.PROJECT_TIMELINES(projectId));
   }
 
   /**
-   * Get all projects that have timelines (with caching)
+   * Get all projects that have timelines
    */
   async getProjectsWithTimelines(): Promise<
     ApiResponse<
       Array<{ projectId: number; timelineCount: number; timelines: Timeline[] }>
     >
   > {
-    const cacheKey = apiCache.generateKey("projects-with-timelines");
-
-    return apiCache.getOrFetch(cacheKey, () =>
-      apiClient.get<
-        Array<{
-          projectId: number;
-          timelineCount: number;
-          timelines: Timeline[];
-        }>
-      >("/projects/with-timelines"),
-    );
+    return apiClient.get<
+      Array<{
+        projectId: number;
+        timelineCount: number;
+        timelines: Timeline[];
+      }>
+    >("/projects/with-timelines");
   }
 
   /**
@@ -97,38 +88,32 @@ export class TimelineApiService {
   /**
    * Search all members added to our system by username, military number, or full name
    */
-  async searchTasks(query: string): Promise<ApiResponse<WorkItem[]>> {
-    console.log("----> real API Reached");
-    const params = new URLSearchParams({ q: query });
+  async searchTasks(
+    query: string,
+    timelineId?: number,
+  ): Promise<ApiResponse<WorkItem[]>> {
+    const params = new URLSearchParams({ query: query });
+    
+    if (timelineId) {
+      params.append("timelineId", timelineId.toString());
+    }
 
-    return apiClient.get<WorkItem[]>(`/employees/searchTasks?${params}`); ///TODO change endpoit path
+    return apiClient.get<WorkItem[]>(`/tasks/searchTasks?${params}`);
   }
   /**
-   * Get departments (with caching)
+   * Get departments
    */
   async getDepartments(): Promise<ApiResponse<Department[]>> {
-    const cacheKey = apiCache.generateKey("departments");
-
-    return apiCache.getOrFetch(cacheKey, () =>
-      apiClient.get<Department[]>(ENDPOINTS.DEPARTMENTS),
-    );
+    return apiClient.get<Department[]>(ENDPOINTS.DEPARTMENTS);
   }
 
   /**
-   * Create a new timeline (invalidate cache on success)
+   * Create a new timeline
    */
   async createTimeline(
     data: CreateTimelineRequest,
   ): Promise<ApiResponse<Timeline>> {
-    const result = await apiClient.post<Timeline>(ENDPOINTS.TIMELINES, data);
-
-    if (result.success) {
-      // Invalidate related caches
-      apiCache.invalidate("project-timelines");
-      apiCache.invalidate("projects-with-timelines");
-    }
-
-    return result;
+    return apiClient.post<Timeline>(ENDPOINTS.TIMELINES, data);
   }
 
   /**
@@ -139,39 +124,20 @@ export class TimelineApiService {
   }
 
   /**
-   * Update timeline (invalidate cache on success)
+   * Update timeline
    */
   async updateTimeline(
     id: string,
     data: UpdateTimelineRequest,
   ): Promise<ApiResponse<Timeline>> {
-    const result = await apiClient.put<Timeline>(
-      ENDPOINTS.TIMELINE_BY_ID(id),
-      data,
-    );
-
-    if (result.success) {
-      // Invalidate related caches
-      apiCache.invalidate("project-timelines");
-      apiCache.invalidate("projects-with-timelines");
-    }
-
-    return result;
+    return apiClient.put<Timeline>(ENDPOINTS.TIMELINE_BY_ID(id), data);
   }
 
   /**
-   * Delete timeline (invalidate cache on success)
+   * Delete timeline
    */
   async deleteTimeline(id: string): Promise<ApiResponse<void>> {
-    const result = await apiClient.delete<void>(ENDPOINTS.TIMELINE_BY_ID(id));
-
-    if (result.success) {
-      // Invalidate related caches
-      apiCache.invalidate("project-timelines");
-      apiCache.invalidate("projects-with-timelines");
-    }
-
-    return result;
+    return apiClient.delete<void>(ENDPOINTS.TIMELINE_BY_ID(id));
   }
 
   // Sprint operations

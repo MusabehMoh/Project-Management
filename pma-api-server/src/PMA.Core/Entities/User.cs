@@ -54,8 +54,7 @@ public class User
     public Employee? Employee { get; set; }
 
     public ICollection<UserRole>? UserRoles { get; set; }
-    public ICollection<UserAction>? UserActions { get; set; }
-    public ICollection<Task>? AssignedTasks { get; set; }
+    public ICollection<UserAction>? UserActions { get; set; } 
 }
 
 public class Employee

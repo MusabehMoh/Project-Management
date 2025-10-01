@@ -31,11 +31,6 @@ public class Task
 
     public int? DepartmentId { get; set; }
 
-    public int? AssigneeId { get; set; }
-
-    [MaxLength(100)]
-    public string? AssigneeName { get; set; }
-
     [Column(TypeName = "decimal(5,2)")]
     public decimal? EstimatedHours { get; set; }
 
@@ -43,8 +38,9 @@ public class Task
     public decimal? ActualHours { get; set; }
 
     public string? Dependencies { get; set; }
-     
+    public int? TimelineId { get; set; }
     public int? ProjectRequirementId { get; set; }
+    
 
     [Required]
     [Range(0, 100)]
@@ -63,10 +59,10 @@ public class Task
     [ForeignKey("DepartmentId")]
     public Department? Department { get; set; }
 
-    [ForeignKey("AssigneeId")]
-    public User? Assignee { get; set; }
+    [ForeignKey("TimelineId")]
+    public Timeline? Timeline { get; set; }
+ 
 
-    public ICollection<SubTask>? SubTasks { get; set; }
 }
 
 public enum TaskStatus

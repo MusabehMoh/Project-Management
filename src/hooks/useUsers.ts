@@ -303,8 +303,26 @@ export const useActions = () => {
   const actionsByCategory = useCallback(() => {
     return actions.reduce(
       (acc, action) => {
-        // Use "Uncategorized" as default if categoryName is missing
-        const category = action.categoryName || "Uncategorized";
+        // Helper function to get category from action
+        const getActionCategory = (action: Action) => {
+          // First try categoryName, then category, then extract from name
+          if (action.categoryName) {
+            return action.categoryName;
+          }
+          if ((action as any).category) {
+            return (action as any).category;
+          }
+          // Extract category from action name (e.g., "users.create" -> "Users")
+          if (action.name && action.name.includes(".")) {
+            const prefix = action.name.split(".")[0];
+
+            return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+          }
+
+          return "Uncategorized";
+        };
+
+        const category = getActionCategory(action);
 
         if (!acc[category]) {
           acc[category] = [];

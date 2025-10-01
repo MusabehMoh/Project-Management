@@ -12,7 +12,7 @@ import { Select, SelectItem } from "@heroui/select";
 import { DatePicker } from "@heroui/date-picker";
 import { Avatar } from "@heroui/avatar";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import {
   Modal,
   ModalContent,
@@ -1063,22 +1063,72 @@ export default function ProjectsPage() {
           <Card>
             <CardBody className="p-0 overflow-x-auto">
               {loading ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="text-center space-y-4">
-                    <Spinner color="primary" size="lg" />
-                    <div>
-                      <p className="text-default-600">{t("common.loading")}</p>
-                      <p className="text-sm text-default-500">
-                        {currentPage > 1
-                          ? t("pagination.loadingPage").replace(
-                              "{page}",
-                              currentPage.toString(),
-                            )
-                          : t("common.pleaseWait")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <Table aria-label="Loading projects table">
+                  <TableHeader>
+                    <TableColumn className="min-w-[200px]">
+                      {t("projects.applicationName")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[150px]">
+                      {t("projects.projectOwner")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[150px]">
+                      {t("projects.alternativeOwner")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[120px]">
+                      {t("projects.owningUnit")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[110px]">
+                      {t("projects.startDate")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[120px]">
+                      {t("projects.expectedCompletion")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[100px]">
+                      {t("projects.status")}
+                    </TableColumn>
+                    <TableColumn className="min-w-[80px]">
+                      {t("projects.actions")}
+                    </TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={`skeleton-${index}`}>
+                        <TableCell>
+                          <div className="flex flex-col space-y-2">
+                            <Skeleton className="h-4 w-3/4 rounded" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-4 w-20 rounded" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-4 w-20 rounded" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-24 rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20 rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-20 rounded" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-16 rounded-full" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-8 w-8 rounded" />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               ) : projects.length === 0 ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="text-center space-y-4">

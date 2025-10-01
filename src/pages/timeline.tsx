@@ -44,9 +44,6 @@ export default function TimelinePage() {
   const timelineId = searchParams.get("timelineId")
     ? parseInt(searchParams.get("timelineId")!)
     : undefined;
-  const requirementId = searchParams.get("requirementId")
-    ? parseInt(searchParams.get("requirementId")!)
-    : undefined;
   const [selectedProjectId, setSelectedProjectId] = useState<
     number | undefined
   >(projectId);
@@ -128,69 +125,66 @@ export default function TimelinePage() {
     // Error clearing would be handled by the hook
   }, []);
 
-  // Load all projects and their timelines with a single API call (Performance Optimized)
-  const loadAllProjectsWithTimelines = useCallback(async () => {
+  // Load projects with basic timeline info for dropdown (Performance Optimized)
+  const loadProjectsWithTimelineInfo = useCallback(async () => {
     if (!projects || projects.length === 0) return;
 
     const initialProjects = projects.map((project) => ({
       project,
-      timelines: [],
+      timelines: [], // Only basic timeline info for dropdown
       loading: true,
     }));
 
     setProjectsWithTimelines(initialProjects);
 
-    try {
-      // Try the bulk endpoint first for optimal performance
-      const response = await timelineService.getProjectsWithTimelines();
+    // Get basic timeline info for all projects (no full hierarchy)
+    const response = await timelineService.getProjectsWithTimelines();
 
-      if (response.success && response.data) {
-        const projectsWithTimelineData = projects.map((project) => {
-          const projectData = response.data.find(
-            (p: any) => p.projectId === project.id,
-          );
+    if (response.success && response.data) {
+      const projectsWithTimelineData = projects.map((project) => {
+        const projectData = response.data.find(
+          (p: any) => p.projectId === project.id,
+        );
 
-          return {
-            project,
-            timelines: projectData?.timelines || [],
-            loading: false,
-          };
-        });
-
-        setProjectsWithTimelines(projectsWithTimelineData);
-
-        return;
-      }
-
-      // Fall back to individual API calls
-      throw new Error("Bulk endpoint failed");
-    } catch {
-      // Fall back to individual API calls
-      const projectTimelinePromises = projects.map(async (project) => {
-        try {
-          const response = await timelineService.getProjectTimelines(
-            project.id,
-          );
-
-          return {
-            project,
-            timelines: response.data || [],
-            loading: false,
-          };
-        } catch {
-          return {
-            project,
-            timelines: [],
-            loading: false,
-          };
-        }
+        return {
+          project,
+          timelines: projectData?.timelines || [], // Basic timeline info only
+          loading: false,
+        };
       });
 
-      const results = await Promise.all(projectTimelinePromises);
+      setProjectsWithTimelines(projectsWithTimelineData);
 
-      setProjectsWithTimelines(results);
+      return;
     }
   }, [projects]);
+
+  // Load full timeline hierarchy for a specific project (only when needed)
+  const loadProjectTimelinesHierarchy = useCallback(
+    async (projectId: number) => {
+      try {
+        const response = await timelineService.getProjectTimelines(projectId);
+
+        if (response.success && response.data) {
+          // Update the specific project in projectsWithTimelines with full hierarchy
+          setProjectsWithTimelines((prev) =>
+            prev.map((item) =>
+              item.project.id === projectId
+                ? { ...item, timelines: response.data, loading: false }
+                : item,
+            ),
+          );
+
+          return response.data;
+        }
+      } catch {
+        // Error handled silently - projectsWithTimelines will show basic info
+      }
+
+      return [];
+    },
+    [],
+  );
 
   // Enhanced timeline creation that refreshes data and auto-selects new timeline
   const handleCreateTimeline = useCallback(
@@ -204,9 +198,9 @@ export default function TimelinePage() {
         if (newTimeline) {
           // Refresh timelines for the current project
           await fetchTimelines();
-          // Refresh projects with timelines for the dropdown
+          // Refresh projects with basic timeline info for the dropdown
           if (projects.length > 0) {
-            loadAllProjectsWithTimelines();
+            loadProjectsWithTimelineInfo();
           }
           // The useEffect will auto-select the new timeline
         }
@@ -220,7 +214,7 @@ export default function TimelinePage() {
       createTimeline,
       fetchTimelines,
       projects.length,
-      loadAllProjectsWithTimelines,
+      loadProjectsWithTimelineInfo,
       setSelectedTimeline,
     ],
   );
@@ -232,9 +226,9 @@ export default function TimelinePage() {
         const newSprint = await createSprint(sprintData);
 
         if (newSprint) {
-          // Refresh projects with timelines for the dropdown
+          // Refresh projects with basic timeline info for the dropdown
           if (projects.length > 0) {
-            loadAllProjectsWithTimelines();
+            loadProjectsWithTimelineInfo();
           }
         }
 
@@ -243,7 +237,7 @@ export default function TimelinePage() {
         throw error; // Re-throw to let the component handle it
       }
     },
-    [createSprint, projects.length, loadAllProjectsWithTimelines],
+    [createSprint, projects.length, loadProjectsWithTimelineInfo],
   );
 
   // Enhanced task update that refreshes dropdown data
@@ -253,9 +247,9 @@ export default function TimelinePage() {
         const updatedTask = await updateTask(data);
 
         if (updatedTask) {
-          // Refresh projects with timelines for the dropdown to reflect changes
+          // Refresh projects with basic timeline info for the dropdown to reflect changes
           if (projects.length > 0) {
-            loadAllProjectsWithTimelines();
+            loadProjectsWithTimelineInfo();
           }
         }
 
@@ -264,7 +258,7 @@ export default function TimelinePage() {
         throw error; // Re-throw to let the component handle it
       }
     },
-    [updateTask, projects.length, loadAllProjectsWithTimelines],
+    [updateTask, projects.length, loadProjectsWithTimelineInfo],
   );
 
   // Enhanced sprint update that refreshes dropdown data
@@ -274,9 +268,9 @@ export default function TimelinePage() {
         const updatedSprint = await updateSprint(data);
 
         if (updatedSprint) {
-          // Refresh projects with timelines for the dropdown to reflect changes
+          // Refresh projects with basic timeline info for the dropdown to reflect changes
           if (projects.length > 0) {
-            loadAllProjectsWithTimelines();
+            loadProjectsWithTimelineInfo();
           }
         }
 
@@ -285,7 +279,7 @@ export default function TimelinePage() {
         throw error; // Re-throw to let the component handle it
       }
     },
-    [updateSprint, projects.length, loadAllProjectsWithTimelines],
+    [updateSprint, projects.length, loadProjectsWithTimelineInfo],
   );
 
   const refreshData = useCallback(() => {
@@ -294,24 +288,24 @@ export default function TimelinePage() {
       fetchTimelines();
     }
 
-    // Always refresh all projects with timelines for the dropdown
+    // Always refresh all projects with basic timeline info for the dropdown
     if (projects.length > 0) {
-      loadAllProjectsWithTimelines();
+      loadProjectsWithTimelineInfo();
     }
   }, [
     fetchTimelines,
     selectedProjectId,
     projects.length,
-    loadAllProjectsWithTimelines,
+    loadProjectsWithTimelineInfo,
   ]);
 
-  // Load projects with timelines when projects change - ALWAYS load for dropdown
+  // Load projects with basic timeline info when projects change - ALWAYS load for dropdown
   useEffect(() => {
     if (projects.length > 0) {
-      // Always load all projects with timelines for the dropdown
-      loadAllProjectsWithTimelines();
+      // Always load all projects with basic timeline info for the dropdown
+      loadProjectsWithTimelineInfo();
     }
-  }, [projects.length, loadAllProjectsWithTimelines]); // ✅ Remove selectedProjectId dependency
+  }, [projects.length, loadProjectsWithTimelineInfo]); // ✅ Remove selectedProjectId dependency
 
   // Auto-select timeline when data loads and we have a selected project
   useEffect(() => {
@@ -329,24 +323,20 @@ export default function TimelinePage() {
           }
         }
 
-        // Fallback: Try to find in projectsWithTimelines
-        if (projectsWithTimelines.length > 0) {
-          for (const projectWithTimelines of projectsWithTimelines) {
-            const urlTimeline = projectWithTimelines.timelines.find(
-              (t) => t.id === timelineId,
+        // Fallback: Load full hierarchy for the project to find the timeline
+        loadProjectTimelinesHierarchy(selectedProjectId).then(
+          (projectTimelines) => {
+            const urlTimeline = projectTimelines.find(
+              (t: any) => t.id === timelineId,
             );
 
             if (urlTimeline) {
-              // Also update the selected project if the timeline belongs to a different project
-              if (projectWithTimelines.project.id !== selectedProjectId) {
-                setSelectedProjectId(projectWithTimelines.project.id);
-              }
               setSelectedTimeline(urlTimeline);
-
-              return;
             }
-          }
-        }
+          },
+        );
+
+        return;
       }
 
       // Priority 2: Use timelines from useTimelines hook (more up-to-date)
@@ -359,14 +349,27 @@ export default function TimelinePage() {
         return;
       }
 
-      // Priority 3: Fall back to projectsWithTimelines if timelines not loaded yet
-      if (projectsWithTimelines.length > 0) {
-        const projectWithTimelines = projectsWithTimelines.find(
-          (p) => p.project.id === selectedProjectId,
-        );
+      // Priority 3: Load full hierarchy if only basic info is available
+      const projectWithTimelines = projectsWithTimelines.find(
+        (p) => p.project.id === selectedProjectId,
+      );
 
-        if (projectWithTimelines && projectWithTimelines.timelines.length > 0) {
-          setSelectedTimeline(projectWithTimelines.timelines[0]);
+      if (projectWithTimelines && projectWithTimelines.timelines.length > 0) {
+        // Check if we have basic info only (no sprints/tasks hierarchy)
+        const firstTimeline = projectWithTimelines.timelines[0];
+
+        if (!firstTimeline.sprints || firstTimeline.sprints.length === 0) {
+          // Load full hierarchy
+          loadProjectTimelinesHierarchy(selectedProjectId).then(
+            (projectTimelines) => {
+              if (projectTimelines.length > 0) {
+                setSelectedTimeline(projectTimelines[0]);
+              }
+            },
+          );
+        } else {
+          // We already have full hierarchy
+          setSelectedTimeline(firstTimeline);
         }
       }
     }
@@ -378,6 +381,7 @@ export default function TimelinePage() {
     selectedTimeline,
     setSelectedTimeline,
     setSelectedProjectId,
+    loadProjectTimelinesHierarchy,
     t,
   ]);
 
@@ -714,7 +718,29 @@ export default function TimelinePage() {
 
                     if (timeline && timeline.timeline) {
                       handleProjectSelect(projectIdStr);
-                      setSelectedTimeline(timeline.timeline);
+
+                      // Check if we need to load full hierarchy
+                      if (
+                        !timeline.timeline.sprints ||
+                        timeline.timeline.sprints.length === 0
+                      ) {
+                        // Load full hierarchy for better timeline view
+                        loadProjectTimelinesHierarchy(
+                          parseInt(projectIdStr),
+                        ).then((projectTimelines) => {
+                          const fullTimeline = projectTimelines.find(
+                            (t: any) => t.id === timeline.timeline.id,
+                          );
+
+                          if (fullTimeline) {
+                            setSelectedTimeline(fullTimeline);
+                          } else {
+                            setSelectedTimeline(timeline.timeline);
+                          }
+                        });
+                      } else {
+                        setSelectedTimeline(timeline.timeline);
+                      }
                     }
                   }
                 }}
@@ -770,13 +796,13 @@ export default function TimelinePage() {
               {selectedTimeline && (
                 <div className="flex gap-2">
                   <Chip size="sm" variant="flat">
-                    {selectedTimeline.sprints.length}{" "}
-                    {selectedTimeline.sprints.length !== 1
+                    {selectedTimeline.sprints?.length || 0}{" "}
+                    {(selectedTimeline.sprints?.length || 0) !== 1
                       ? t("timeline.sprints")
                       : t("timeline.sprint")}
                   </Chip>
                   <Chip size="sm" variant="flat">
-                    {selectedTimeline.sprints.reduce(
+                    {(selectedTimeline.sprints || []).reduce(
                       (acc: number, sprint: any) => {
                         // Count direct sprint tasks
                         const directTasks = (sprint.tasks || []).length;

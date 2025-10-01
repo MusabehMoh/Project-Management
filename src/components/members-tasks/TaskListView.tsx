@@ -71,14 +71,14 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
   };
 
   const columns = [
-    { key: "name", label: t("taskName") || "Task Name" },
-    { key: "assignees", label: t("assignees") || "Assignees" },
-    { key: "department", label: t("department") || "Department" },
-    { key: "status", label: t("status") || "Status" },
-    { key: "priority", label: t("priority") || "Priority" },
-    { key: "progress", label: t("progress") || "Progress" },
-    { key: "dates", label: t("dates") || "Start - End" },
-    { key: "tags", label: t("tags") || "Tags" },
+    { key: "name", label: t("taskName") },
+    { key: "assignees", label: t("assignees") },
+    { key: "department", label: t("department") },
+    { key: "status", label: t("status") },
+    { key: "priority", label: t("priority") },
+    { key: "progress", label: t("taskProgress") },
+    { key: "dates", label: t("dates") },
+    { key: "tags", label: t("tags") },
   ];
 
   const renderCell = (task: MemberTask, columnKey: string) => {
@@ -199,9 +199,9 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
               <span className="text-tiny">{formatDate(task.endDate)}</span>
             </div>
             {task.isOverdue && (
-              <Badge color="danger" size="sm" variant="flat">
+              <Chip color="danger" size="sm" variant="flat">
                 Overdue
-              </Badge>
+              </Chip>
             )}
           </div>
         );
@@ -258,8 +258,10 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
           {(task) => (
             <TableRow
               key={task.id}
-              className={`cursor-pointer hover:bg-default-100 transition-colors ${
-                task.isOverdue ? "bg-danger-50/30 dark:bg-danger-900/20" : ""
+              className={`cursor-pointer transition-colors ${
+                task.isOverdue
+                  ? "bg-danger-50/50 dark:bg-danger-950/30 hover:bg-danger-100/70 dark:hover:bg-red-500/40 dark:hover:border-red-500/50"
+                  : "hover:bg-default-50 dark:hover:bg-default-100/20"
               }`}
               onClick={() => onTaskClick?.(task)}
             >

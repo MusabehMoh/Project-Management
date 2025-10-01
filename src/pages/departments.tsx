@@ -13,7 +13,7 @@ import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Avatar } from "@heroui/avatar";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
-import { Spinner } from "@heroui/spinner";
+import { Skeleton } from "@heroui/skeleton";
 import { Switch } from "@heroui/switch";
 import {
   Modal,
@@ -290,9 +290,38 @@ export default function DepartmentsPage() {
       <Card>
         <CardBody className="p-0">
           {loading ? (
-            <div className="flex justify-center items-center p-8">
-              <Spinner size="lg" />
-            </div>
+            <Table aria-label="Loading departments table">
+              <TableHeader>
+                <TableColumn>{t("departments.name")}</TableColumn>
+                <TableColumn>{t("departments.status")}</TableColumn>
+                <TableColumn>{t("departments.memberCount")}</TableColumn>
+                <TableColumn>{t("departments.actions")}</TableColumn>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={`dept-skeleton-${index}`}>
+                    <TableCell>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 rounded" />
+                        <Skeleton className="h-3 w-24 rounded" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-4 rounded" />
+                        <Skeleton className="h-4 w-8 rounded" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-8 rounded" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : error ? (
             <div className="text-center text-danger p-8">{error}</div>
           ) : departments.length === 0 ? (
@@ -447,9 +476,50 @@ export default function DepartmentsPage() {
 
                 {/* Members Table */}
                 {membersLoading ? (
-                  <div className="flex justify-center items-center p-8">
-                    <Spinner size="lg" />
-                  </div>
+                  <Table aria-label="Loading department members table">
+                    <TableHeader>
+                      <TableColumn>
+                        {t("departments.members.fullName")}
+                      </TableColumn>
+                      <TableColumn>
+                        {t("departments.members.militaryNumber")}
+                      </TableColumn>
+                      <TableColumn>
+                        {t("departments.members.gradeName")}
+                      </TableColumn>
+                      <TableColumn>
+                        {t("departments.members.joinDate")}
+                      </TableColumn>
+                      <TableColumn>{t("departments.actions")}</TableColumn>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <TableRow key={`member-skeleton-${index}`}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                              <div className="space-y-1">
+                                <Skeleton className="h-4 w-24 rounded" />
+                                <Skeleton className="h-3 w-16 rounded" />
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-20 rounded" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-16 rounded" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-20 rounded" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-8 w-8 rounded" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 ) : members.length === 0 ? (
                   <div className="text-center p-8 text-default-500">
                     {t("departments.members.noMembersFound")}

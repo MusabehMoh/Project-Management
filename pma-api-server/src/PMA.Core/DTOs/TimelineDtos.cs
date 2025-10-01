@@ -87,17 +87,105 @@ public class TaskDto
     public TaskStatus StatusId { get; set; }
     public Priority PriorityId { get; set; }
     public int? DepartmentId { get; set; }
-    public int? AssigneeId { get; set; }
-    public string? AssigneeName { get; set; }
+    public int? TimelineId { get; set; }
+    public int? ProjectRequirementId { get; set; }
     public decimal? EstimatedHours { get; set; }
     public decimal? ActualHours { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
 
+public class CreateTaskDto
+{
+    [Required(ErrorMessage = "SprintId is required")]
+    public int SprintId { get; set; }
+
+    [Required(ErrorMessage = "Name is required")]
+    [MaxLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+    public string? Description { get; set; }
+
+    [Required(ErrorMessage = "StartDate is required")]
+    public DateTime StartDate { get; set; }
+
+    [Required(ErrorMessage = "EndDate is required")]
+    public DateTime EndDate { get; set; }
+
+    public TaskStatus StatusId { get; set; } = TaskStatus.ToDo;
+    public Priority PriorityId { get; set; } = Priority.Medium;
+    public int? DepartmentId { get; set; }
+    public int? TimelineId { get; set; }
+    public int? ProjectRequirementId { get; set; }
+    public decimal? EstimatedHours { get; set; }
+}
+
+public class UpdateTaskDto
+{
+    [MaxLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
+    public string? Name { get; set; }
+
+    [MaxLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+    public string? Description { get; set; }
+
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public TaskStatus? StatusId { get; set; }
+    public Priority? PriorityId { get; set; }
+    public int? DepartmentId { get; set; }
+    public int? TimelineId { get; set; }
+    public int? ProjectRequirementId { get; set; }
+    public decimal? EstimatedHours { get; set; }
+    public decimal? ActualHours { get; set; }
+}
+
+public class MoveTaskDto
+{
+    [Required(ErrorMessage = "MoveDays is required")]
+    public int MoveDays { get; set; }
+}
+
+public class MoveTaskToSprintDto
+{
+    [Required(ErrorMessage = "TargetSprintId is required")]
+    public int TargetSprintId { get; set; }
+}
+
 public class TimelineWithSprintsDto : TimelineDto
 {
     public List<SprintDto> Sprints { get; set; } = new List<SprintDto>();
+}
+
+public class CreateSprintDto
+{
+    [Required(ErrorMessage = "Name is required")]
+    [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+    public string? Description { get; set; }
+
+    [Required(ErrorMessage = "StartDate is required")]
+    public DateTime StartDate { get; set; }
+
+    [Required(ErrorMessage = "EndDate is required")]
+    public DateTime EndDate { get; set; }
+
+    public SprintStatus Status { get; set; } = SprintStatus.Planned;
+}
+
+public class UpdateSprintDto
+{
+    [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
+    public string? Name { get; set; }
+
+    [MaxLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+    public string? Description { get; set; }
+
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public SprintStatus? Status { get; set; }
 }
 
 public class ProjectWithTimelinesDto

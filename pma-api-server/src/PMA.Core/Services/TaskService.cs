@@ -68,6 +68,11 @@ public class TaskService : ITaskService
     {
         return await _taskRepository.GetTaskWithSubTasksAsync(id);
     }
+
+    public async System.Threading.Tasks.Task<IEnumerable<TaskEntity>> SearchTasksAsync(string query, int? timelineId = null, int limit = 25)
+    {
+        return await _taskRepository.SearchTasksAsync(query, timelineId, limit);
+    }
 }
 
 

@@ -16,6 +16,8 @@ export interface TaskSearchOptions {
   loadInitialResults?: boolean;
   /** Initial results limit */
   initialResultsLimit?: number;
+  /** Timeline ID to filter tasks within specific timeline */
+  timelineId?: number;
 }
 
 export function useTaskSearch(options: TaskSearchOptions = {}) {
@@ -34,7 +36,10 @@ export function useTaskSearch(options: TaskSearchOptions = {}) {
     async (query: string, limit?: number): Promise<SearchResult[]> => {
       console.log("--->>>>>>> start api call");
       try {
-        const response = await timelineService.searchTasks(query);
+        const response = await timelineService.searchTasks(
+          query,
+          config.timelineId,
+        );
 
         if (response.success) {
           console.log("--->>>>>>> api success");
@@ -62,7 +67,7 @@ export function useTaskSearch(options: TaskSearchOptions = {}) {
         throw error;
       }
     },
-    [],
+    [config.timelineId],
   );
 
   const {

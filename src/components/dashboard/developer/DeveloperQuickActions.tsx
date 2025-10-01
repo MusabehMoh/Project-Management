@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { today, getLocalTimeZone, CalendarDate } from "@internationalized/date";
+import { today, getLocalTimeZone, CalendarDate, parseDate } from "@internationalized/date";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/skeleton";
@@ -16,12 +17,14 @@ import {
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Textarea } from "@heroui/input";
 import { DatePicker } from "@heroui/date-picker";
+import { Avatar } from "@heroui/avatar";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { addToast } from "@heroui/toast";
-import { RefreshCw, AlertTriangle, Code, User, Clock } from "lucide-react";
+import { RefreshCw, AlertTriangle, Code, User, Clock, X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { UseAdhocTasks } from "@/hooks/useAdhocTask";
 import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActionsV2";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
@@ -174,6 +177,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isPRModalOpen, setIsPRModalOpen] = useState(false);
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [selectedPR, setSelectedPR] = useState<any>(null);
   const [selectedDevelopers, setSelectedDevelopers] = useState<
@@ -760,6 +764,312 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     </Modal>
   );
 
+  const AddAdhocTaskModal = () => {
+    const { addAdhocTask, loading: isCreating, error: createError } = UseAdhocTasks();
+    const [formData, setFormData] = useState({
+      name: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      members: [],
+    });
+    const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>([]);
+    const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
+    const [selectedEmployee, setSelectedEmployee] = useState<MemberSearchResult | null>(null);
+    const [errors, setErrors] = useState<{
+      name?: string;
+      description?: string;
+      startDate?: string;
+      endDate?: string;
+      members?: string;
+    }>({});
+
+    const validateForm = () => {
+      const newErrors: {
+        name?: string;
+        description?: string;
+        startDate?: string;
+        endDate?: string;
+        members?: string;
+      } = {};
+
+      if (!formData.name.trim()) {
+        newErrors.name = t("taskNameRequired") || "Task name is required";
+      }
+      if (!formData.description.trim()) {
+        newErrors.description = t("taskDescriptionRequired") || "Task description is required";
+      }
+      if (!formData.startDate) {
+        newErrors.startDate = t("taskStartDateRequired") || "Start date is required";
+      }
+      if (!formData.endDate) {
+        newErrors.endDate = t("taskEndDateRequired") || "End date is required";
+      }
+
+      if (formData.startDate && formData.endDate) {
+        const start = new Date(formData.startDate);
+        const end = new Date(formData.endDate);
+        if (end < start) {
+          newErrors.endDate = t("taskValidEndDate") || "End date must be after start date";
+        }
+      }
+
+      if (selectedMembers.length === 0) {
+        newErrors.members = t("taskAssigneeRequired") || "At least one assignee is required";
+      }
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    const handleInputChange = (field: string, value: any) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      if (errors[field as keyof typeof errors]) {
+        setErrors(prev => ({ ...prev, [field]: undefined }));
+      }
+    };
+
+    const handleEmployeeSelect = (employee: MemberSearchResult) => {
+      setSelectedEmployee(employee);
+      setEmployeeInputValue(`${employee.gradeName} ${employee.fullName}`);
+      if (!selectedMembers.some(user => user.id === employee.id)) {
+        setSelectedMembers([...selectedMembers, employee]);
+      }
+      setEmployeeInputValue("");
+      setSelectedEmployee(null);
+    };
+
+    const handleClose = () => {
+      setIsAddTaskModalOpen(false);
+      setFormData({
+        name: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        members: [],
+      });
+      setSelectedMembers([]);
+      setErrors({});
+      setEmployeeInputValue("");
+      setSelectedEmployee(null);
+    };
+
+    return (
+      <Modal
+        isOpen={isAddTaskModalOpen}
+        size="2xl"
+        onOpenChange={setIsAddTaskModalOpen}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="text-center w-full flex justify-center">
+                {t("common.AddAdhocTask") || "Add Adhoc Task"}
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      {t("timeline.treeView.name") || "Task Name"}
+                    </label>
+                    <Input
+                      errorMessage={errors.name}
+                      isInvalid={!!errors.name}
+                      placeholder={t("timeline.treeView.name") || "Task Name"}
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      {t("timeline.detailsPanel.description") || "Description"}
+                    </label>
+                    <Textarea
+                      errorMessage={errors.description}
+                      isInvalid={!!errors.description}
+                      minRows={3}
+                      placeholder={t("timeline.detailsPanel.description") || "Description"}
+                      value={formData.description}
+                      onChange={(e) => handleInputChange("description", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <DatePicker
+                      isRequired
+                      errorMessage={errors.startDate}
+                      isInvalid={!!errors.startDate}
+                      label={t("timeline.detailsPanel.startDate") || "Start Date"}
+                      minValue={today(getLocalTimeZone())}
+                      value={
+                        formData.startDate
+                          ? parseDate(formData.startDate.substring(0, 10))
+                          : null
+                      }
+                      onChange={(date) =>
+                        handleInputChange(
+                          "startDate",
+                          date ? date.toString() : "",
+                        )
+                      }
+                    />
+
+                    <DatePicker
+                      isRequired
+                      errorMessage={errors.endDate}
+                      isInvalid={!!errors.endDate}
+                      label={t("timeline.detailsPanel.endDate") || "End Date"}
+                      minValue={
+                        formData.startDate
+                          ? parseDate(formData.startDate.substring(0, 10))
+                          : today(getLocalTimeZone())
+                      }
+                      value={
+                        formData.endDate
+                          ? parseDate(formData.endDate.substring(0, 10))
+                          : null
+                      }
+                      onChange={(date) =>
+                        handleInputChange("endDate", date ? date.toString() : "")
+                      }
+                    />
+                  </div>
+
+                  {/* Selected Members Display */}
+                  {selectedMembers.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                      {selectedMembers.map((employee, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            background: "#e0e0e0",
+                            padding: "5px 10px",
+                            borderRadius: "20px",
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="light"
+                              onPress={() => {
+                                setSelectedMembers(selectedMembers.filter(user => user.id !== employee.id));
+                              }}
+                            >
+                              <X size={16} />
+                            </Button>
+                            <div className="flex flex-col">
+                              <span className="text-xs">
+                                {employee.gradeName} {employee.fullName || "Unknown User"}
+                              </span>
+                              <span className="text-xs text-default-400">
+                                @{employee.department || "unknown"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <label>{t("users.selectEmployee") || "Select Employee"}</label>
+                  <Autocomplete
+                    isClearable
+                    errorMessage={errors.members}
+                    isInvalid={!!errors.members}
+                    isLoading={developerSearchLoading}
+                    label={t("users.selectEmployee") || "Select Employee"}
+                    menuTrigger="input"
+                    placeholder={t("users.searchEmployees") || "Search employees"}
+                    selectedKey={selectedEmployee?.id.toString()}
+                    inputValue={employeeInputValue}
+                    onInputChange={(value) => {
+                      setEmployeeInputValue(value);
+                      if (selectedEmployee && value !== `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`) {
+                        setSelectedEmployee(null);
+                      }
+                      searchDeveloperEmployees(value);
+                      if (errors.members) {
+                        setErrors(prev => ({ ...prev, members: undefined }));
+                      }
+                    }}
+                    onSelectionChange={(key) => {
+                      if (key) {
+                        const selectedEmployee = developerEmployees.find(e => e.id.toString() === key);
+                        if (selectedEmployee) {
+                          handleEmployeeSelect(selectedEmployee);
+                          setErrors(prev => ({ ...prev, members: undefined }));
+                        }
+                      } else {
+                        setSelectedEmployee(null);
+                        setEmployeeInputValue("");
+                      }
+                    }}
+                  >
+                    {developerEmployees.map((employee) => (
+                      <AutocompleteItem
+                        key={employee.id.toString()}
+                        textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar name={employee.fullName || "Unknown"} size="sm" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {employee.gradeName} {employee.fullName || "Unknown User"}
+                            </span>
+                            <span className="text-sm text-default-500">
+                              {employee.militaryNumber || "N/A"}
+                            </span>
+                            <span className="text-xs text-default-400">
+                              @{employee.userName || "unknown"}
+                            </span>
+                            <span className="text-xs text-default-400">
+                              @{employee.department || "unknown"}
+                            </span>
+                          </div>
+                        </div>
+                      </AutocompleteItem>
+                    ))}
+                  </Autocomplete>
+                </div>
+              </ModalBody>
+              <ModalFooter className="flex justify-end gap-2">
+                <Button color="default" variant="flat" onPress={handleClose}>
+                  {t("cancel") || "Cancel"}
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={isCreating}
+                  onPress={async () => {
+                    if (validateForm()) {
+                      const newTask = {
+                        name: formData.name,
+                        description: formData.description,
+                        startDate: formData.startDate,
+                        endDate: formData.endDate,
+                        assignedMembers: selectedMembers.map((m) => m.id.toString()),
+                      };
+
+                      const success = await addAdhocTask(newTask);
+                      if (success) {
+                        handleClose();
+                      }
+                    }
+                  }}
+                >
+                  {t("confirm") || "Create Task"}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    );
+  };
+
   return (
     <>
       <style>
@@ -993,11 +1303,10 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                                 startContent={<User className="w-4 h-4" />}
                                 variant="bordered"
                                 onPress={() => {
-                                  // Navigate to team workload page or developer details
-                                  window.location.href = `/team-workload`;
+                                  setIsAddTaskModalOpen(true);
                                 }}
                               >
-                                {t("common.viewDetails") || "View Details"}
+                                {t("common.addTask") || "Add Task"}
                               </Button>
                             </div>
                           </CustomAlert>
@@ -1014,6 +1323,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       <TaskExtensionModal />
       <TaskAssignmentModal />
       <CodeReviewAssignmentModal />
+      <AddAdhocTaskModal />
     </>
   );
 };

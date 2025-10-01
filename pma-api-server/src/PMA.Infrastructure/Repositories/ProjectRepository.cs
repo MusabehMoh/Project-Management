@@ -261,10 +261,9 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
 
     public async Task<IEnumerable<Project>> GetProjectsWithTimelinesAsync()
     {
+        // Performance optimized: Get ALL projects with basic timeline info only (no sprints/tasks)
         return await _context.Projects
-            .Include(p => p.Timelines!)
-                .ThenInclude(t => t.Sprints!)
-                    .ThenInclude(s => s.Tasks)
+            .Include(p => p.Timelines!) // Only include timelines, no sprints/tasks
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .OrderBy(p => p.ApplicationName)

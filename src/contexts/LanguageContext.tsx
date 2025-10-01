@@ -407,6 +407,7 @@ const translations = {
     "common.delete": "Delete",
     "common.remove": "Remove",
     "common.add": "Add",
+    "common.addTask": "Add Task",
     "common.create": "Create",
     "common.update": "Update",
     "common.error": "Error",
@@ -1456,6 +1457,16 @@ const translations = {
     taskValidEndDate: "Task end date must be after start date",
     taskAssigneeRequired: "Select one member at least",
 
+    // Task List Columns
+    taskName: "Task Name",
+    assignees: "Assignees",
+    department: "Department",
+    dates: "Start - End",
+    tags: "Tags",
+
+    // Actions
+    "actions.deselectAll": "Deselect All",
+
     // Page Titles
     "home.title": "Dashboard",
     "about.title": "About",
@@ -1843,6 +1854,7 @@ const translations = {
     "common.delete": "حذف",
     "common.remove": "إزالة",
     "common.add": "إضافة",
+    "common.addTask": "إضافة مهمة",
     "common.create": "إنشاء",
     "common.update": "تحديث",
     "common.error": "خطأ",
@@ -2870,6 +2882,16 @@ const translations = {
     taskEndDateRequired: "تاريخ نهاية المهمة مطلوب",
     taskValidEndDate: "يجب أن يكون تاريخ نهاية المهمة بعد تاريخ البداية",
     taskAssigneeRequired: "اختار معين واحد على الأقل مطلوب",
+
+    // Task List Columns
+    taskName: "اسم المهمة",
+    assignees: "المعينون",
+    department: "القسم",
+    dates: "البداية - النهاية",
+    tags: "الوسوم",
+
+    // Actions
+    "actions.deselectAll": "إلغاء تحديد الكل",
 
     // Page Titles
     "home.title": "لوحة التحكم",

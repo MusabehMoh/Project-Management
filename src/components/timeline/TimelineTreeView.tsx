@@ -31,6 +31,7 @@ import TimelineItemCreateModal, {
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimelineHelpers } from "@/hooks/useTimelineHelpers";
+import { useTimelineFormHelpers } from "@/hooks/useTimelineFormHelpers";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   Timeline,
@@ -46,6 +47,7 @@ import {
   UpdateTaskRequest,
   UpdateSubtaskRequest,
 } from "@/types/timeline";
+import { formatDateRange } from "@/utils/dateFormatter";
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -104,7 +106,7 @@ export default function TimelineTreeView({
   selectedItem,
   loading = false,
 }: TimelineTreeViewProps) {
-  const { t, direction } = useLanguage();
+  const { t, direction, language } = useLanguage();
   const { hasPermission } = usePermissions();
   const containerRef = useRef<HTMLDivElement>(null);
   // Some backends may omit treeId immediately after creation; ensure a stable fallback
@@ -117,16 +119,15 @@ export default function TimelineTreeView({
       : `timeline-${String(timeline?.id ?? "0")}`;
   }, [timeline?.treeId, timeline?.id]);
   const {
-    getStatusColor,
-    getPriorityColor,
     getDepartmentColor,
-    getStatusName,
-    getPriorityName,
     getDepartmentName,
     getProgressColor,
     STATUS_OPTIONS,
     PRIORITY_OPTIONS,
   } = useTimelineHelpers(departments);
+
+  // Use shared form helpers for consistent color/name mapping
+  const { getStatusColor, getPriorityColor, getStatusName, getPriorityName } = useTimelineFormHelpers();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
     new Set([safeTimelineTreeId]),
   );
@@ -300,10 +301,10 @@ export default function TimelineTreeView({
       filters.status.length === 0 &&
       filters.priority.length === 0
     ) {
-      return timeline;
+      return { ...timeline, sprints: timeline.sprints || [] };
     }
 
-    const filteredSprints = timeline.sprints
+    const filteredSprints = (timeline.sprints || [])
       .map((sprint) => {
         // Check if sprint matches filters
         const sprintMatches =
@@ -399,11 +400,11 @@ export default function TimelineTreeView({
       filters.status.length > 0 ||
       filters.priority.length > 0;
 
-    if (hasActiveFilters && filteredTimeline.sprints.length > 0) {
+    if (hasActiveFilters && (filteredTimeline.sprints || []).length > 0) {
       // Auto-expand all items that have matching children
       const itemsToExpand = new Set([safeTimelineTreeId]); // Always expand timeline
 
-      filteredTimeline.sprints.forEach((sprint) => {
+      (filteredTimeline.sprints || []).forEach((sprint) => {
         itemsToExpand.add(sprint.treeId);
         sprint.tasks?.forEach((task) => {
           itemsToExpand.add(task.treeId);
@@ -529,7 +530,7 @@ export default function TimelineTreeView({
     let sprintTreeId = "";
     let taskTreeId = "";
 
-    for (const sprint of timeline.sprints) {
+    for (const sprint of (timeline.sprints || [])) {
       const task = (sprint.tasks || []).find((t) => t.id.toString() === taskId);
 
       if (task) {
@@ -562,7 +563,7 @@ export default function TimelineTreeView({
 
   // Create a task directly under a sprint
   const handleCreateTask = (sprintId: string) => {
-    const sprint = timeline.sprints.find((s) => s.id.toString() === sprintId);
+    const sprint = (timeline.sprints || []).find((s) => s.id.toString() === sprintId);
 
     setCreateModalType("task");
     setCreateModalParentName(sprint?.name || "Sprint");
@@ -589,6 +590,7 @@ export default function TimelineTreeView({
         setExpandedItems((prev) => new Set(prev).add(safeTimelineTreeId));
       } else if (createModalType === "task") {
         await onCreateTask({
+          timelineId: timeline.id.toString(),
           sprintId: createParentId,
           ...formData,
         });
@@ -631,7 +633,7 @@ export default function TimelineTreeView({
         handleCloseMoveTaskModal();
 
         // Find the target sprint name for user feedback
-        const targetSprint = timeline.sprints.find(
+        const targetSprint = (timeline.sprints || []).find(
           (s) => s.id.toString() === targetSprintId,
         );
 
@@ -822,14 +824,19 @@ export default function TimelineTreeView({
           </div>
           <div>
             <h3 className="font-semibold text-lg">{timeline.name}</h3>
-            <p className="text-sm text-default-600">{timeline.description}</p>
+            <p
+              dangerouslySetInnerHTML={{ __html: timeline.description }}
+              className="text-sm text-default-600"
+            />
             <div className="flex items-center flex-wrap gap-4 mt-2 text-xs text-default-500">
               <span>
-                {timeline.startDate} {direction === "rtl" ? "←" : "→"}{" "}
-                {timeline.endDate}
+                {formatDateRange(timeline.startDate, timeline.endDate, {
+                  language,
+                  direction: direction === "rtl" ? "rtl" : "ltr",
+                })}
               </span>
               <span>
-                {filteredTimeline.sprints.length} {t("timeline.sprints")}
+                {(filteredTimeline.sprints || []).length} {t("timeline.sprints")}
               </span>
             </div>
           </div>
@@ -916,11 +923,16 @@ export default function TimelineTreeView({
             </div>
             <div>
               <h4 className="font-medium">{sprint.name}</h4>
-              <p className="text-sm text-default-600">{sprint.description}</p>
+              <p
+                dangerouslySetInnerHTML={{ __html: sprint.description }}
+                className="text-sm text-default-600"
+              />
               <div className="flex items-center flex-wrap gap-4 mt-1 text-xs text-default-500">
                 <span>
-                  {sprint.startDate} {direction === "rtl" ? "←" : "→"}{" "}
-                  {sprint.endDate}
+                  {formatDateRange(sprint.startDate, sprint.endDate, {
+                    language,
+                    direction: direction === "rtl" ? "rtl" : "ltr",
+                  })}
                 </span>
                 <span>
                   {sprint.duration} {t("timeline.detailsPanel.days")}
@@ -1172,11 +1184,16 @@ export default function TimelineTreeView({
             </div>
             <div>
               <h6 className="font-medium">{task.name}</h6>
-              <p className="text-sm text-default-600">{task.description}</p>
+              <p
+                dangerouslySetInnerHTML={{ __html: task.description }}
+                className="text-sm text-default-600"
+              />
               <div className="flex items-center flex-wrap gap-4 mt-1 text-xs text-default-500">
                 <span>
-                  {task.startDate} {direction === "rtl" ? "←" : "→"}{" "}
-                  {task.endDate}
+                  {formatDateRange(task.startDate, task.endDate, {
+                    language,
+                    direction: direction === "rtl" ? "rtl" : "ltr",
+                  })}
                 </span>
                 <span>
                   {task.duration} {t("timeline.detailsPanel.days")}
@@ -1338,8 +1355,10 @@ export default function TimelineTreeView({
               <div className="flex items-center gap-4 mt-1 text-xs text-default-500">
                 {subtask.startDate && subtask.endDate && (
                   <span>
-                    {subtask.startDate} {direction === "rtl" ? "←" : "→"}{" "}
-                    {subtask.endDate}
+                    {formatDateRange(subtask.startDate, subtask.endDate, {
+                      language,
+                      direction: direction === "rtl" ? "rtl" : "ltr",
+                    })}
                   </span>
                 )}
                 {subtask.estimatedHours && (
@@ -1483,7 +1502,7 @@ export default function TimelineTreeView({
             <div className="space-y-1 pb-8">
               {renderTimelineHeader()}
               {expandedItems.has(safeTimelineTreeId) &&
-                filteredTimeline.sprints.map((sprint) => renderSprint(sprint))}
+                (filteredTimeline.sprints || []).map((sprint) => renderSprint(sprint))}
             </div>
           </CardBody>
         </Card>
@@ -1497,18 +1516,17 @@ export default function TimelineTreeView({
         loading={loading}
         priorityOptions={PRIORITY_OPTIONS}
         statusOptions={STATUS_OPTIONS}
+        timelineId={timeline.id}
         type={editModalType}
         onClose={handleCloseEditModal}
         onSubmit={handleSubmitEdit}
       />
       <TimelineItemCreateModal
         departments={departments}
-        getProgressColor={getProgressColor}
         isOpen={isCreateModalOpen}
         loading={loading}
         parentName={createModalParentName}
-        priorityOptions={PRIORITY_OPTIONS}
-        statusOptions={STATUS_OPTIONS}
+        timelineId={timeline.id}
         type={createModalType}
         onClose={handleCloseCreateModal}
         onSubmit={handleSubmitCreate}
@@ -1542,7 +1560,7 @@ export default function TimelineTreeView({
                           <p className="text-sm text-default-600">
                             {t("timeline.treeView.currentSprint")}:{" "}
                             {
-                              timeline.sprints.find(
+                              (timeline.sprints || []).find(
                                 (s) => s.id === taskToMove.sprintId,
                               )?.name
                             }
@@ -1570,14 +1588,17 @@ export default function TimelineTreeView({
                       }
                     }}
                   >
-                    {timeline.sprints
+                    {(timeline.sprints || [])
                       .filter((sprint) => sprint.id !== taskToMove.sprintId)
                       .map((sprint) => (
                         <SelectItem key={sprint.id.toString()}>
                           <div>
                             <div className="font-medium">{sprint.name}</div>
                             <div className="text-xs text-default-500">
-                              {sprint.startDate} - {sprint.endDate}
+                              {formatDateRange(sprint.startDate, sprint.endDate, {
+                                language,
+                                direction: direction === "rtl" ? "rtl" : "ltr",
+                              })}
                             </div>
                           </div>
                         </SelectItem>

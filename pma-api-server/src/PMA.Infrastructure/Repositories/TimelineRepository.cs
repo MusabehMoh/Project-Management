@@ -12,11 +12,25 @@ public class TimelineRepository : Repository<Timeline>, ITimelineRepository
     {
     }
 
+    // Override GetByIdAsync to include related sprints and tasks
+    public new async Task<Timeline?> GetByIdAsync(int id)
+    {
+        return await _context.Timelines
+            .Include(t => t.Project)
+            .Include(t => t.ProjectRequirement)
+            .Include(t => t.Sprints)
+                .ThenInclude(s => s.Tasks) 
+
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
     public async Task<(IEnumerable<Timeline> Timelines, int TotalCount)> GetTimelinesAsync(int page, int limit, int? projectId = null)
     {
         var query = _context.Timelines
             .Include(t => t.Project)
             .Include(t => t.ProjectRequirement)
+            .Include(t => t.Sprints)
+            .ThenInclude(s => s.Tasks) 
             .AsQueryable();
 
         if (projectId.HasValue)
@@ -39,6 +53,8 @@ public class TimelineRepository : Repository<Timeline>, ITimelineRepository
         return await _context.Timelines
             .Include(t => t.Project)
             .Include(t => t.ProjectRequirement)
+            .Include(t => t.Sprints)
+             .ThenInclude(s => s.Tasks) 
             .Where(t => t.ProjectId == projectId)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
