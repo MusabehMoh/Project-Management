@@ -108,21 +108,21 @@ export function MemberAutocomplete({
             key={employee.id.toString()}
             textValue={employee.fullName}
           >
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col">
+            <span className="flex items-center gap-2">
+              <span className="flex flex-col">
                 <span className="text-sm font-medium">{employee.fullName}</span>
                 {employee.userName && (
                   <span className="text-xs text-default-500">
                     {employee.userName}
                   </span>
                 )}
-              </div>
+              </span>
               {employee.department && (
                 <span className="text-xs text-default-400">
                   {employee.department}
                 </span>
               )}
-            </div>
+            </span>
           </AutocompleteItem>
         ))}
       </Autocomplete>

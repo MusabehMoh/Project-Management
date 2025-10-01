@@ -16,6 +16,7 @@ import { Slider } from "@heroui/slider";
 import { parseDate } from "@internationalized/date";
 
 import { useTimelineFormValidation } from "@/hooks/useTimelineFormValidation";
+import { useTimelineToasts } from "@/hooks/useTimelineToasts";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Department, MemberSearchResult, WorkItem } from "@/types/timeline";
 import useTeamSearch from "@/hooks/useTeamSearch";
@@ -86,6 +87,7 @@ export default function TimelineEditModal({
   const [taskInputValue, setTaskInputValue] = useState<string>("");
   const [selectedTask, setSelectedTask] = useState<WorkItem | null>(null);
   const { t } = useLanguage();
+  const toasts = useTimelineToasts();
   const [formData, setFormData] =
     useState<TimelineEditModalFormData>(initialValues);
 
@@ -140,9 +142,14 @@ export default function TimelineEditModal({
       };
 
       await onSubmit(payload);
+      
+      // Don't show toasts here - let the parent component handle them
+      // to avoid duplicate toasts
       onClose();
     } catch {
-      // TODO: surface error to user via toast if needed
+      // Show error toast only for form/validation errors
+      // API errors should be handled by the parent component
+      toasts.onUpdateError();
     }
   };
 
@@ -228,13 +235,7 @@ export default function TimelineEditModal({
                         key={dept.id.toString()}
                         textValue={dept.name}
                       >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: dept.color }}
-                          />
-                          {dept.name}
-                        </div>
+                        {dept.name}
                       </SelectItem>
                     ))}
                   </Select>
@@ -447,14 +448,14 @@ export default function TimelineEditModal({
                             task.status || ""
                           } ${task.department || ""}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-col">
+                          <span className="flex items-center gap-3">
+                            <span className="flex flex-col">
                               <span className="font-medium">{task.name}</span>
                               <span className="text-xs text-default-500">
                                 {task.description || "unknown"}
                               </span>
-                            </div>
-                          </div>
+                            </span>
+                          </span>
                         </AutocompleteItem>
                       ))}
                     </Autocomplete>
@@ -539,12 +540,12 @@ export default function TimelineEditModal({
                           key={employee.id.toString()}
                           textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
                         >
-                          <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-3">
                             <Avatar
                               name={employee.fullName || "Unknown"}
                               size="sm"
                             />
-                            <div className="flex flex-col">
+                            <span className="flex flex-col">
                               <span className="font-medium">
                                 {employee.gradeName}{" "}
                                 {employee.fullName || "Unknown User"}
@@ -558,8 +559,8 @@ export default function TimelineEditModal({
                               <span className="text-xs text-default-400">
                                 @{employee.department || "unknown"}
                               </span>
-                            </div>
-                          </div>
+                            </span>
+                          </span>
                         </AutocompleteItem>
                       ))}
                     </Autocomplete>

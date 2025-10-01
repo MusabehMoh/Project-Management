@@ -4,7 +4,6 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Select, SelectItem } from "@heroui/select";
-import { Spinner } from "@heroui/spinner";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Divider } from "@heroui/divider";
 import {
@@ -34,6 +33,10 @@ import TimelineDetailsPanel from "@/components/timeline/TimelineDetailsPanel";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import TimelineFilters from "@/components/timeline/TimelineFilters";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
+// Import skeleton components
+import TimelineTreeSkeleton from "@/components/timeline/skeletons/TimelineTreeSkeleton";
+import TimelineGanttSkeleton from "@/components/timeline/skeletons/TimelineGanttSkeleton";
+import TimelineSelectionSkeleton from "@/components/timeline/skeletons/TimelineSelectionSkeleton";
 
 export default function TimelinePage() {
   const { t, language } = useLanguage();
@@ -391,7 +394,7 @@ export default function TimelinePage() {
   // UI state
   const [view, setView] = useState<TimelineView>({
     type: "tree", // Start with tree view by default
-    showDetails: true,
+    showDetails: false, // Hidden by default
     selectedItem: undefined,
     selectedItemType: undefined,
     filters: {
@@ -587,14 +590,69 @@ export default function TimelinePage() {
   if (loading && timelines.length === 0) {
     return (
       <>
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-center space-y-4">
-            <Spinner color="primary" size="lg" />
+        <div className={`space-y-6 ${language === "ar" ? "rtl" : "ltr"}`}>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <p className="text-default-600">{t("common.loading")}</p>
-              <p className="text-sm text-default-500">
-                Loading project timelines...
+              <h1 className="text-3xl font-bold text-foreground">
+                {t("timeline.pageTitle")}
+              </h1>
+              <p className="text-default-600">
+                {t("timeline.pageDescription")}
               </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                startContent={<FilterIcon />}
+                variant="bordered"
+                onPress={onFiltersOpen}
+              >
+                {t("timeline.filters")}
+              </Button>
+              <Button
+                isIconOnly
+                isLoading={true}
+                variant="bordered"
+                onPress={refreshData}
+              >
+                <RefreshIcon />
+              </Button>
+            </div>
+          </div>
+
+          {/* Timeline Selection Skeleton */}
+          <TimelineSelectionSkeleton />
+
+          {/* Main Content Skeleton */}
+          <div className="space-y-6">
+            {/* View Tabs Skeleton */}
+            <div className="flex gap-2">
+              <div className="h-10 w-24 bg-default-200 rounded-lg animate-pulse" />
+              <div className="h-10 w-24 bg-default-100 rounded-lg animate-pulse" />
+            </div>
+
+            {/* Timeline Content Skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <TimelineTreeSkeleton />
+              </div>
+              <div className="lg:col-span-1">
+                <Card className="h-[600px]">
+                  <CardHeader className="flex justify-between items-center">
+                    <div className="h-6 w-16 bg-default-200 rounded animate-pulse" />
+                    <div className="h-8 w-8 bg-default-200 rounded animate-pulse" />
+                  </CardHeader>
+                  <Divider />
+                  <CardBody className="p-4">
+                    <div className="space-y-4">
+                      <div className="h-4 w-3/4 bg-default-200 rounded animate-pulse" />
+                      <div className="h-4 w-1/2 bg-default-200 rounded animate-pulse" />
+                      <div className="h-4 w-2/3 bg-default-200 rounded animate-pulse" />
+                    </div>
+                  </CardBody>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
@@ -671,162 +729,162 @@ export default function TimelinePage() {
         </div>
 
         {/* Timeline Selection and Quick Stats */}
-        <Card>
-          <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <Select
-                className="min-w-[400px]"
-                label={t("timeline.selectProjectTimeline")}
-                placeholder={t("timeline.chooseProjectTimeline")}
-                selectedKeys={(() => {
-                  let keysToSelect: string[] = [];
+        {projectsLoading ? (
+          <TimelineSelectionSkeleton />
+        ) : (
+          <Card>
+            <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <Select
+                  className="min-w-[400px]"
+                  label={t("timeline.selectProjectTimeline")}
+                  placeholder={t("timeline.chooseProjectTimeline")}
+                  selectedKeys={(() => {
+                    let keysToSelect: string[] = [];
 
-                  if (selectedTimeline && selectedProjectId) {
-                    const timelineKey = `${selectedProjectId}-${selectedTimeline.id}`;
+                    if (selectedTimeline && selectedProjectId) {
+                      const timelineKey = `${selectedProjectId}-${selectedTimeline.id}`;
 
-                    if (allTimelines.some((t) => t.key === timelineKey)) {
-                      keysToSelect = [timelineKey];
+                      if (allTimelines.some((t) => t.key === timelineKey)) {
+                        keysToSelect = [timelineKey];
+                      }
+                    } else if (selectedProjectId) {
+                      const projectKey = `project-${selectedProjectId}`;
+
+                      if (allTimelines.some((t) => t.key === projectKey)) {
+                        keysToSelect = [projectKey];
+                      }
                     }
-                  } else if (selectedProjectId) {
-                    const projectKey = `project-${selectedProjectId}`;
 
-                    if (allTimelines.some((t) => t.key === projectKey)) {
-                      keysToSelect = [projectKey];
-                    }
-                  }
+                    return keysToSelect;
+                  })()}
+                  size="sm"
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0] as string;
 
-                  return keysToSelect;
-                })()}
-                size="sm"
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
+                    if (selectedKey && selectedKey.startsWith("project-")) {
+                      // User clicked on a project header - just select the project
+                      const projectIdStr = selectedKey.replace("project-", "");
 
-                  if (selectedKey && selectedKey.startsWith("project-")) {
-                    // User clicked on a project header - just select the project
-                    const projectIdStr = selectedKey.replace("project-", "");
-
-                    handleProjectSelect(projectIdStr);
-                  } else if (
-                    selectedKey &&
-                    !selectedKey.startsWith("no-timelines-")
-                  ) {
-                    // User selected an actual timeline
-                    const [projectIdStr] = selectedKey.split("-");
-                    const timeline = allTimelines.find(
-                      (t) => t.key === selectedKey && !t.isProject,
-                    );
-
-                    if (timeline && timeline.timeline) {
                       handleProjectSelect(projectIdStr);
+                    } else if (
+                      selectedKey &&
+                      !selectedKey.startsWith("no-timelines-")
+                    ) {
+                      // User selected an actual timeline
+                      const [projectIdStr] = selectedKey.split("-");
+                      const timeline = allTimelines.find(
+                        (t) => t.key === selectedKey && !t.isProject,
+                      );
 
-                      // Check if we need to load full hierarchy
-                      if (
-                        !timeline.timeline.sprints ||
-                        timeline.timeline.sprints.length === 0
-                      ) {
-                        // Load full hierarchy for better timeline view
-                        loadProjectTimelinesHierarchy(
-                          parseInt(projectIdStr),
-                        ).then((projectTimelines) => {
-                          const fullTimeline = projectTimelines.find(
-                            (t: any) => t.id === timeline.timeline.id,
+                      if (timeline && timeline.timeline) {
+                        handleProjectSelect(projectIdStr);
+
+                        // Check if we need to load full hierarchy
+                        if (
+                          !timeline.timeline.sprints ||
+                          timeline.timeline.sprints.length === 0
+                        ) {
+                          // Load full hierarchy for better timeline view
+                          loadProjectTimelinesHierarchy(
+                            parseInt(projectIdStr),
+                          ).then((projectTimelines) => {
+                            const fullTimeline = projectTimelines.find(
+                              (t: any) => t.id === timeline.timeline.id,
+                            );
+
+                            if (fullTimeline) {
+                              setSelectedTimeline(fullTimeline);
+                            } else {
+                              setSelectedTimeline(timeline.timeline);
+                            }
+                          });
+                        } else {
+                          setSelectedTimeline(timeline.timeline);
+                        }
+                      }
+                    }
+                  }}
+                >
+                  {allTimelines.length === 0 ? (
+                    <SelectItem key="no-projects" isDisabled>
+                      {t("timeline.noProjectsAvailable")}
+                    </SelectItem>
+                  ) : (
+                    allTimelines.map((item) => (
+                      <SelectItem
+                        key={item.key}
+                        isDisabled={
+                          item.key.startsWith("no-timelines-") ||
+                          item.key.startsWith("loading-")
+                        }
+                        textValue={item.name}
+                      >
+                        {item.isProject ? (
+                          <div className="flex items-center gap-2 font-medium text-foreground">
+                            <BuildingIcon className="w-4 h-4" />
+                            {item.name}
+                            {item.loading && (
+                              <span className="text-xs text-default-400">
+                                (loading...)
+                              </span>
+                            )}
+                          </div>
+                        ) : item.key.startsWith("loading-") ? (
+                          <div className="ml-6 text-default-400 italic text-sm flex items-center gap-2">
+                            <div className="w-3 h-3 border border-default-300 border-t-primary rounded-full animate-spin" />
+                            {t("timeline.loadingTimelines")}
+                          </div>
+                        ) : item.key.startsWith("no-timelines-") ? (
+                          <div className="ml-6 text-default-500 italic text-sm">
+                            {t("timeline.noTimelines")}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 ml-6 text-default-700">
+                            <CalendarIcon className="w-4 h-4" />
+                            {item.name}
+                          </div>
+                        )}
+                      </SelectItem>
+                    ))
+                  )}
+                </Select>
+
+                {selectedTimeline && (
+                  <div className="flex gap-2">
+                    <Chip size="sm" variant="flat">
+                      {selectedTimeline.sprints?.length || 0}{" "}
+                      {(selectedTimeline.sprints?.length || 0) !== 1
+                        ? t("timeline.sprints")
+                        : t("timeline.sprint")}
+                    </Chip>
+                    <Chip size="sm" variant="flat">
+                      {(selectedTimeline.sprints || []).reduce(
+                        (acc: number, sprint: any) => {
+                          // Count direct sprint tasks
+                          const directTasks = (sprint.tasks || []).length;
+
+                          // Count tasks in requirements structure
+                          const requirementTasks = (
+                            sprint.requirements || []
+                          ).reduce(
+                            (reqAcc: number, req: any) =>
+                              reqAcc + (req.tasks?.length || 0),
+                            0,
                           );
 
-                          if (fullTimeline) {
-                            setSelectedTimeline(fullTimeline);
-                          } else {
-                            setSelectedTimeline(timeline.timeline);
-                          }
-                        });
-                      } else {
-                        setSelectedTimeline(timeline.timeline);
-                      }
-                    }
-                  }
-                }}
-              >
-                {projectsLoading ? (
-                  <SelectItem key="loading-projects" isDisabled>
-                    {t("timeline.loadingProjects")}
-                  </SelectItem>
-                ) : allTimelines.length === 0 ? (
-                  <SelectItem key="no-projects" isDisabled>
-                    {t("timeline.noProjectsAvailable")}
-                  </SelectItem>
-                ) : (
-                  allTimelines.map((item) => (
-                    <SelectItem
-                      key={item.key}
-                      isDisabled={
-                        item.key.startsWith("no-timelines-") ||
-                        item.key.startsWith("loading-")
-                      }
-                      textValue={item.name}
-                    >
-                      {item.isProject ? (
-                        <div className="flex items-center gap-2 font-medium text-foreground">
-                          <BuildingIcon className="w-4 h-4" />
-                          {item.name}
-                          {item.loading && (
-                            <span className="text-xs text-default-400">
-                              (loading...)
-                            </span>
-                          )}
-                        </div>
-                      ) : item.key.startsWith("loading-") ? (
-                        <div className="ml-6 text-default-400 italic text-sm flex items-center gap-2">
-                          <div className="w-3 h-3 border border-default-300 border-t-primary rounded-full animate-spin" />
-                          {t("timeline.loadingTimelines")}
-                        </div>
-                      ) : item.key.startsWith("no-timelines-") ? (
-                        <div className="ml-6 text-default-500 italic text-sm">
-                          {t("timeline.noTimelines")}
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 ml-6 text-default-700">
-                          <CalendarIcon className="w-4 h-4" />
-                          {item.name}
-                        </div>
-                      )}
-                    </SelectItem>
-                  ))
+                          return acc + directTasks + requirementTasks;
+                        },
+                        0,
+                      )}{" "}
+                      {t("timeline.tasks")}
+                    </Chip>
+                  </div>
                 )}
-              </Select>
-
-              {selectedTimeline && (
-                <div className="flex gap-2">
-                  <Chip size="sm" variant="flat">
-                    {selectedTimeline.sprints?.length || 0}{" "}
-                    {(selectedTimeline.sprints?.length || 0) !== 1
-                      ? t("timeline.sprints")
-                      : t("timeline.sprint")}
-                  </Chip>
-                  <Chip size="sm" variant="flat">
-                    {(selectedTimeline.sprints || []).reduce(
-                      (acc: number, sprint: any) => {
-                        // Count direct sprint tasks
-                        const directTasks = (sprint.tasks || []).length;
-
-                        // Count tasks in requirements structure
-                        const requirementTasks = (
-                          sprint.requirements || []
-                        ).reduce(
-                          (reqAcc: number, req: any) =>
-                            reqAcc + (req.tasks?.length || 0),
-                          0,
-                        );
-
-                        return acc + directTasks + requirementTasks;
-                      },
-                      0,
-                    )}{" "}
-                    {t("timeline.tasks")}
-                  </Chip>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-        </Card>
+              </div>
+            </CardHeader>
+          </Card>
+        )}
 
         {/* Main Content */}
         {timelines.length === 0 ? (
@@ -895,25 +953,14 @@ export default function TimelinePage() {
               >
                 <Card className="h-[600px]">
                   <CardBody className="p-0">
-                    {view.type === "gantt" ? (
-                      // <TimelineGanttView
-                      //   departments={departments}
-                      //   filters={filters}
-                      //   loading={loading}
-                      //   selectedItem={view.selectedItem}
-                      //   timeline={selectedTimeline}
-                      //   onCreateSprint={handleCreateSprint}
-                      //   onCreateSubtask={createSubtask}
-                      //   onCreateTask={createTask}
-                      //   onDeleteSprint={deleteSprint}
-                      //   onDeleteSubtask={deleteSubtask}
-                      //   onDeleteTask={deleteTask}
-                      //   onItemSelect={handleItemSelect}
-                      //   onUpdateSprint={handleUpdateSprint}
-                      //   onUpdateSubtask={updateSubtask}
-                      //   onUpdateTask={handleUpdateTask}
-                      // />
-
+                    {loading && selectedTimeline ? (
+                      // Show skeleton when refreshing existing timeline
+                      view.type === "gantt" ? (
+                        <TimelineGanttSkeleton height="600px" />
+                      ) : (
+                        <TimelineTreeSkeleton />
+                      )
+                    ) : view.type === "gantt" ? (
                       <DHTMLXGantt
                         projectId={selectedProjectId}
                         timeline={selectedTimeline}

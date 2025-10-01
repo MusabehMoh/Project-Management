@@ -207,9 +207,9 @@ export default function TimelineFilters({
               key={employee.id.toString()}
               textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
             >
-              <div className="flex items-center gap-3">
+              <span className="flex items-center gap-3">
                 <Avatar name={employee.fullName || "Unknown"} size="sm" />
-                <div className="flex flex-col">
+                <span className="flex flex-col">
                   <span className="font-medium">
                     {employee.gradeName} {employee.fullName || "Unknown User"}
                   </span>
@@ -222,8 +222,8 @@ export default function TimelineFilters({
                   <span className="text-xs text-default-400">
                     {employee.department || "unknown"}
                   </span>
-                </div>
-              </div>
+                </span>
+              </span>
             </AutocompleteItem>
           ))}
         </Autocomplete>

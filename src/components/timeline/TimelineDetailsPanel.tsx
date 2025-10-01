@@ -59,7 +59,6 @@ export default function TimelineDetailsPanel({
     getPriorityColor,
     getStatusName,
     getPriorityName,
-    getDepartmentColor,
     getDepartmentName,
   } = useTimelineFormHelpers(departments);
 
@@ -309,17 +308,9 @@ export default function TimelineDetailsPanel({
               <p className="text-sm font-medium text-default-700">
                 {t("timeline.detailsPanel.department")}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{
-                    backgroundColor: getDepartmentColor(sprint.departmentId),
-                  }}
-                />
-                <span className="text-sm text-default-600">
-                  {getDepartmentName(sprint.departmentId)}
-                </span>
-              </div>
+              <span className="text-sm text-default-600">
+                {getDepartmentName(sprint.departmentId)}
+              </span>
             </div>
           )}
 
@@ -442,17 +433,9 @@ export default function TimelineDetailsPanel({
               <p className="text-sm font-medium text-default-700">
                 {t("timeline.detailsPanel.department")}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{
-                    backgroundColor: getDepartmentColor(task.departmentId),
-                  }}
-                />
-                <span className="text-sm text-default-600">
-                  {getDepartmentName(task.departmentId)}
-                </span>
-              </div>
+              <span className="text-sm text-default-600">
+                {getDepartmentName(task.departmentId)}
+              </span>
             </div>
           )}
 
@@ -595,17 +578,9 @@ export default function TimelineDetailsPanel({
               <p className="text-sm font-medium text-default-700">
                 {t("timeline.detailsPanel.department")}
               </p>
-              <div className="flex items-center gap-2 mt-1">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{
-                    backgroundColor: getDepartmentColor(subtask.departmentId),
-                  }}
-                />
-                <span className="text-sm text-default-600">
-                  {getDepartmentName(subtask.departmentId)}
-                </span>
-              </div>
+              <span className="text-sm text-default-600">
+                {getDepartmentName(subtask.departmentId)}
+              </span>
             </div>
           )}
 

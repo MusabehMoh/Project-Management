@@ -48,6 +48,7 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import { REQUIREMENT_STATUS } from "@/constants/projectRequirements";
+import { createTimelineToasts } from "@/utils/toast";
 
 // Format date helper
 const formatDate = (dateString: string) => {
@@ -232,6 +233,9 @@ export default function DevelopmentRequirementsPage() {
   const navigate = useNavigate();
   const { hasPermission } = usePermissions();
   const [searchParams] = useSearchParams();
+
+  // Initialize toast helpers
+  const toasts = createTimelineToasts(t);
 
   // Refs for scrolling and highlighting
   const requirementRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
@@ -438,8 +442,16 @@ export default function DevelopmentRequirementsPage() {
 
         setIsTimelineModalOpen(false);
         setTimelineRequirement(null);
-        // Refresh data to get updated timeline information
-        await refreshData();
+        
+        // Show success toast
+        toasts.timelineCreated();
+        
+        // Add a small delay for smooth user experience before redirect
+        setTimeout(() => {
+          navigate(
+            `/timeline?projectId=${timelineRequirement?.project?.id}&timelineId=${result.id}&requirementId=${timelineRequirement?.id}`,
+          );
+        }, 1000); // 1 second delay
       }
 
       return result;

@@ -19,6 +19,7 @@ import useTeamSearch from "@/hooks/useTeamSearch";
 import useTaskSearch from "@/hooks/useTaskSearch";
 import { useTimelineFormHelpers } from "@/hooks/useTimelineFormHelpers";
 import { useTimelineFormValidation } from "@/hooks/useTimelineFormValidation";
+import { useTimelineToasts } from "@/hooks/useTimelineToasts";
 
 export interface TimelineItemCreateModalFormData {
   name: string;
@@ -59,6 +60,7 @@ export default function TimelineItemCreateModal({
   timelineId,
 }: TimelineItemCreateModalProps) {
   const { t, language } = useLanguage();
+  const toasts = useTimelineToasts();
 
   // Use shared helpers and validation
   const { statusOptions, priorityOptions } = useTimelineFormHelpers();
@@ -166,9 +168,14 @@ export default function TimelineItemCreateModal({
       };
 
       await onSubmit(payload);
+      
+      // Don't show toasts here - let the parent component handle them
+      // to avoid duplicate toasts
       onClose();
     } catch {
-      // TODO: surface error to user via toast if needed
+      // Show error toast only for form/validation errors
+      // API errors should be handled by the parent component
+      toasts.onCreateError();
     }
   };
 
@@ -231,13 +238,7 @@ export default function TimelineItemCreateModal({
                 >
                   {departments.map((dept) => (
                     <SelectItem key={dept.id.toString()} textValue={dept.name}>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: dept.color }}
-                        />
-                        {dept.name}
-                      </div>
+                      {dept.name}
                     </SelectItem>
                   ))}
                 </Select>
@@ -434,14 +435,14 @@ export default function TimelineItemCreateModal({
                           task.status || ""
                         } ${task.department || ""}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="flex flex-col">
+                        <span className="flex items-center gap-3">
+                          <span className="flex flex-col">
                             <span className="font-medium">{task.name}</span>
                             <span className="text-xs text-default-500">
                               {task.description || "unknown"}
                             </span>
-                          </div>
-                        </div>
+                          </span>
+                        </span>
                       </AutocompleteItem>
                     ))}
                   </Autocomplete>
@@ -524,12 +525,12 @@ export default function TimelineItemCreateModal({
                         key={employee.id.toString()}
                         textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
                       >
-                        <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-3">
                           <Avatar
                             name={employee.fullName || "Unknown"}
                             size="sm"
                           />
-                          <div className="flex flex-col">
+                          <span className="flex flex-col">
                             <span className="font-medium">
                               {employee.gradeName}{" "}
                               {employee.fullName || "Unknown User"}
@@ -543,8 +544,8 @@ export default function TimelineItemCreateModal({
                             <span className="text-xs text-default-400">
                               @{employee.department || "unknown"}
                             </span>
-                          </div>
-                        </div>
+                          </span>
+                        </span>
                       </AutocompleteItem>
                     ))}
                   </Autocomplete>

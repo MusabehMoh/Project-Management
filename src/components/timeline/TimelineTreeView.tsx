@@ -32,6 +32,7 @@ import TimelineItemCreateModal, {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimelineHelpers } from "@/hooks/useTimelineHelpers";
 import { useTimelineFormHelpers } from "@/hooks/useTimelineFormHelpers";
+import { useTimelineToasts } from "@/hooks/useTimelineToasts";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   Timeline,
@@ -108,6 +109,7 @@ export default function TimelineTreeView({
 }: TimelineTreeViewProps) {
   const { t, direction, language } = useLanguage();
   const { hasPermission } = usePermissions();
+  const toasts = useTimelineToasts();
   const containerRef = useRef<HTMLDivElement>(null);
   // Some backends may omit treeId immediately after creation; ensure a stable fallback
   const safeTimelineTreeId = useMemo(() => {
@@ -127,7 +129,8 @@ export default function TimelineTreeView({
   } = useTimelineHelpers(departments);
 
   // Use shared form helpers for consistent color/name mapping
-  const { getStatusColor, getPriorityColor, getStatusName, getPriorityName } = useTimelineFormHelpers();
+  const { getStatusColor, getPriorityColor, getStatusName, getPriorityName } =
+    useTimelineFormHelpers();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
     new Set([safeTimelineTreeId]),
   );
@@ -482,6 +485,7 @@ export default function TimelineTreeView({
           timelineId: (editingItem.timelineId ?? timeline.id).toString(),
           ...formData,
         });
+        toasts.onSprintUpdateSuccess();
       } else if (editModalType === "task") {
         await _onUpdateTask({
           id: editingItem.id,
@@ -491,6 +495,7 @@ export default function TimelineTreeView({
           statusId: formData.statusId,
           priorityId: formData.priorityId,
         });
+        toasts.onTaskUpdateSuccess();
       } else if (editModalType === "subtask" && _onUpdateSubtask) {
         await _onUpdateSubtask({
           id: editingItem.id,
@@ -498,10 +503,24 @@ export default function TimelineTreeView({
           statusId: formData.statusId,
           priorityId: formData.priorityId,
         });
+        toasts.onSubtaskUpdateSuccess();
       }
-    } catch (error) {
-      // update failed
-      throw error; // Re-throw to let the modal handle it
+    } catch {
+      // Show error toast based on type
+      switch (editModalType) {
+        case "sprint":
+          toasts.onSprintUpdateError();
+          break;
+        case "task":
+          toasts.onTaskUpdateError();
+          break;
+        case "subtask":
+          toasts.onSubtaskUpdateError();
+          break;
+        default:
+          toasts.onUpdateError();
+      }
+      throw new Error("Update operation failed"); // Re-throw to let the modal handle it
     }
   };
 
@@ -530,7 +549,7 @@ export default function TimelineTreeView({
     let sprintTreeId = "";
     let taskTreeId = "";
 
-    for (const sprint of (timeline.sprints || [])) {
+    for (const sprint of timeline.sprints || []) {
       const task = (sprint.tasks || []).find((t) => t.id.toString() === taskId);
 
       if (task) {
@@ -563,7 +582,9 @@ export default function TimelineTreeView({
 
   // Create a task directly under a sprint
   const handleCreateTask = (sprintId: string) => {
-    const sprint = (timeline.sprints || []).find((s) => s.id.toString() === sprintId);
+    const sprint = (timeline.sprints || []).find(
+      (s) => s.id.toString() === sprintId,
+    );
 
     setCreateModalType("task");
     setCreateModalParentName(sprint?.name || "Sprint");
@@ -588,6 +609,7 @@ export default function TimelineTreeView({
         });
         // Expand timeline to show new sprint
         setExpandedItems((prev) => new Set(prev).add(safeTimelineTreeId));
+        toasts.onSprintCreateSuccess();
       } else if (createModalType === "task") {
         await onCreateTask({
           timelineId: timeline.id.toString(),
@@ -596,15 +618,30 @@ export default function TimelineTreeView({
         });
         // Expand sprint to show new task
         setExpandedItems((prev) => new Set(prev).add(createParentId));
+        toasts.onTaskCreateSuccess();
       } else if (createModalType === "subtask" && onCreateSubtask) {
         await onCreateSubtask({
           taskId: createParentId,
           ...formData,
         });
+        toasts.onSubtaskCreateSuccess();
       }
-    } catch (error) {
-      // creation failed
-      throw error; // Re-throw to let the modal handle it
+    } catch {
+      // Show error toast based on type
+      switch (createModalType) {
+        case "sprint":
+          toasts.onSprintCreateError();
+          break;
+        case "task":
+          toasts.onTaskCreateError();
+          break;
+        case "subtask":
+          toasts.onSubtaskCreateError();
+          break;
+        default:
+          toasts.onCreateError();
+      }
+      throw new Error("Create operation failed"); // Re-throw to let the modal handle it
     }
   };
 
@@ -666,13 +703,31 @@ export default function TimelineTreeView({
     try {
       if (type === "sprint") {
         await onDeleteSprint(id);
+        toasts.onSprintDeleteSuccess();
       } else if (type === "task") {
         await onDeleteTask(id);
+        toasts.onTaskDeleteSuccess();
       } else if (type === "subtask") {
-        if (onDeleteSubtask) await onDeleteSubtask(id);
+        if (onDeleteSubtask) {
+          await onDeleteSubtask(id);
+          toasts.onSubtaskDeleteSuccess();
+        }
       }
-    } catch (error) {
-      // deletion failed
+    } catch {
+      // Show error toast based on type
+      switch (type) {
+        case "sprint":
+          toasts.onSprintDeleteError();
+          break;
+        case "task":
+          toasts.onTaskDeleteError();
+          break;
+        case "subtask":
+          toasts.onSubtaskDeleteError();
+          break;
+        default:
+          toasts.onDeleteError();
+      }
     }
   };
 
@@ -681,7 +736,7 @@ export default function TimelineTreeView({
 
     try {
       await onMoveTask(task.id.toString(), moveDays);
-    } catch (error) {
+    } catch {
       // move failed
     }
   };
@@ -696,7 +751,7 @@ export default function TimelineTreeView({
     try {
       await onMoveTask(task.id.toString(), days);
       setPopoverCustomDays(""); // Clear input after successful move
-    } catch (error) {
+    } catch {
       // custom move failed
     }
   };
@@ -798,28 +853,35 @@ export default function TimelineTreeView({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center w-6 h-6 hover:bg-default-100 rounded cursor-pointer"
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleExpanded(safeTimelineTreeId);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleExpanded(safeTimelineTreeId);
-              }
-            }}
-          >
-            {expandedItems.has(safeTimelineTreeId) ? (
-              <ChevronDownIcon className="w-4 h-4" />
-            ) : (
-              <ChevronRightIcon
-                className={`w-4 h-4 ${direction === "rtl" ? "rotate-180" : ""}`}
-              />
+          <div className="flex items-center gap-2">
+            {(filteredTimeline.sprints || []).length > 0 && (
+              <div
+                className="flex items-center justify-center w-6 h-6 hover:bg-default-100 rounded cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpanded(safeTimelineTreeId);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleExpanded(safeTimelineTreeId);
+                  }
+                }}
+              >
+                {expandedItems.has(safeTimelineTreeId) ? (
+                  <ChevronDownIcon className="w-4 h-4" />
+                ) : (
+                  <ChevronRightIcon
+                    className={`w-4 h-4 ${direction === "rtl" ? "rotate-180" : ""}`}
+                  />
+                )}
+              </div>
+            )}
+            {(filteredTimeline.sprints || []).length === 0 && (
+              <div className="w-6" />
             )}
           </div>
           <div>
@@ -836,7 +898,8 @@ export default function TimelineTreeView({
                 })}
               </span>
               <span>
-                {(filteredTimeline.sprints || []).length} {t("timeline.sprints")}
+                {(filteredTimeline.sprints || []).length}{" "}
+                {t("timeline.sprints")}
               </span>
             </div>
           </div>
@@ -897,28 +960,35 @@ export default function TimelineTreeView({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center w-6 h-6 hover:bg-default-100 rounded cursor-pointer"
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpanded(sprint.treeId);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toggleExpanded(sprint.treeId);
-                }
-              }}
-            >
-              {expandedItems.has(sprint.treeId) ? (
-                <ChevronDownIcon className="w-4 h-4" />
-              ) : (
-                <ChevronRightIcon
-                  className={`w-4 h-4 ${direction === "rtl" ? "rotate-180" : ""}`}
-                />
+            <div className="flex items-center gap-2">
+              {(sprint.tasks || []).length > 0 && (
+                <div
+                  className="flex items-center justify-center w-6 h-6 hover:bg-default-100 rounded cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpanded(sprint.treeId);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleExpanded(sprint.treeId);
+                    }
+                  }}
+                >
+                  {expandedItems.has(sprint.treeId) ? (
+                    <ChevronDownIcon className="w-4 h-4" />
+                  ) : (
+                    <ChevronRightIcon
+                      className={`w-4 h-4 ${direction === "rtl" ? "rotate-180" : ""}`}
+                    />
+                  )}
+                </div>
+              )}
+              {(sprint.tasks || []).length === 0 && (
+                <div className="w-6" />
               )}
             </div>
             <div>
@@ -1502,7 +1572,9 @@ export default function TimelineTreeView({
             <div className="space-y-1 pb-8">
               {renderTimelineHeader()}
               {expandedItems.has(safeTimelineTreeId) &&
-                (filteredTimeline.sprints || []).map((sprint) => renderSprint(sprint))}
+                (filteredTimeline.sprints || []).map((sprint) =>
+                  renderSprint(sprint),
+                )}
             </div>
           </CardBody>
         </Card>
@@ -1595,10 +1667,15 @@ export default function TimelineTreeView({
                           <div>
                             <div className="font-medium">{sprint.name}</div>
                             <div className="text-xs text-default-500">
-                              {formatDateRange(sprint.startDate, sprint.endDate, {
-                                language,
-                                direction: direction === "rtl" ? "rtl" : "ltr",
-                              })}
+                              {formatDateRange(
+                                sprint.startDate,
+                                sprint.endDate,
+                                {
+                                  language,
+                                  direction:
+                                    direction === "rtl" ? "rtl" : "ltr",
+                                },
+                              )}
                             </div>
                           </div>
                         </SelectItem>

@@ -107,19 +107,19 @@ export function TaskAutocomplete({
       >
         {tasks.map((task) => (
           <AutocompleteItem key={task.id.toString()} textValue={task.name}>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col">
+            <span className="flex items-center gap-2">
+              <span className="flex flex-col">
                 <span className="text-sm font-medium">{task.name}</span>
                 {task.description && (
                   <span className="text-xs text-default-500 truncate max-w-48">
                     {task.description}
                   </span>
                 )}
-              </div>
+              </span>
               {task.description && (
                 <span className="text-xs text-default-400">Task</span>
               )}
-            </div>
+            </span>
           </AutocompleteItem>
         ))}
       </Autocomplete>

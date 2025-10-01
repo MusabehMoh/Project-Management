@@ -17,7 +17,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined
+  undefined,
 );
 
 // Translation dictionary
@@ -420,6 +420,20 @@ const translations = {
     "common.noDataFound": "No data found",
     "common.unexpectedError": "An unexpected error occurred",
     "common.AddAdhocTask": "Add Adhoc Task",
+
+    // Toast Messages
+    "toast.success": "Success",
+    "toast.error": "Error",
+    "toast.warning": "Warning",
+    "toast.info": "Information",
+    "toast.createSuccess": "Successfully created",
+    "toast.createError": "Failed to create",
+    "toast.updateSuccess": "Successfully updated",
+    "toast.updateError": "Failed to update",
+    "toast.deleteSuccess": "Successfully deleted",
+    "toast.deleteError": "Failed to delete",
+    "toast.saveSuccess": "Successfully saved",
+    "toast.saveError": "Failed to save",
 
     // Table
     "table.noData": "No data available",
@@ -1141,6 +1155,8 @@ const translations = {
     "timeline.applyFilters": "Apply Filters",
     "timeline.autoSelectingFirst": "Auto-selecting first timeline for project",
     "timeline.loading": "loading...",
+    "timeline.loadingContent": "Loading timeline content...",
+    "timeline.refreshing": "Refreshing data...",
 
     // Timeline Create Modal
     "timeline.createModal.title": "Create Timeline",
@@ -1245,6 +1261,38 @@ const translations = {
     "timeline.moveRequirement.success": "Success!",
     "timeline.moveRequirement.successMessage": "Requirement moved successfully",
     "timeline.treeView.moveRequirement": "Move Requirement",
+
+    // Timeline Toast Messages
+    "timeline.toast.timelineCreated": "Timeline created successfully",
+    "timeline.toast.timelineCreateError": "Failed to create timeline",
+    "timeline.toast.timelineUpdated": "Timeline updated successfully",
+    "timeline.toast.timelineUpdateError": "Failed to update timeline",
+    "timeline.toast.timelineDeleted": "Timeline deleted successfully",
+    "timeline.toast.timelineDeleteError": "Failed to delete timeline",
+    "timeline.toast.sprintCreated": "Sprint created successfully",
+    "timeline.toast.sprintCreateError": "Failed to create sprint",
+    "timeline.toast.sprintUpdated": "Sprint updated successfully",
+    "timeline.toast.sprintUpdateError": "Failed to update sprint",
+    "timeline.toast.sprintDeleted": "Sprint deleted successfully",
+    "timeline.toast.sprintDeleteError": "Failed to delete sprint",
+    "timeline.toast.requirementCreated": "Requirement created successfully",
+    "timeline.toast.requirementCreateError": "Failed to create requirement",
+    "timeline.toast.requirementUpdated": "Requirement updated successfully",
+    "timeline.toast.requirementUpdateError": "Failed to update requirement",
+    "timeline.toast.requirementDeleted": "Requirement deleted successfully",
+    "timeline.toast.requirementDeleteError": "Failed to delete requirement",
+    "timeline.toast.taskCreated": "Task created successfully",
+    "timeline.toast.taskCreateError": "Failed to create task",
+    "timeline.toast.taskUpdated": "Task updated successfully",
+    "timeline.toast.taskUpdateError": "Failed to update task",
+    "timeline.toast.taskDeleted": "Task deleted successfully",
+    "timeline.toast.taskDeleteError": "Failed to delete task",
+    "timeline.toast.subtaskCreated": "Subtask created successfully",
+    "timeline.toast.subtaskCreateError": "Failed to create subtask",
+    "timeline.toast.subtaskUpdated": "Subtask updated successfully",
+    "timeline.toast.subtaskUpdateError": "Failed to update subtask",
+    "timeline.toast.subtaskDeleted": "Subtask deleted successfully",
+    "timeline.toast.subtaskDeleteError": "Failed to delete subtask",
 
     // Move Task Between Requirements translations
     "timeline.moveTaskToRequirement.title": "Move Task",
@@ -1867,6 +1915,20 @@ const translations = {
     "common.noDataFound": "لا توجد بيانات",
     "common.unexpectedError": "حدث خطأ غير متوقع",
     "common.AddAdhocTask": "إضافة مهمة عاجلة",
+
+    // Toast Messages
+    "toast.success": "نجح",
+    "toast.error": "خطأ",
+    "toast.warning": "تحذير",
+    "toast.info": "معلومات",
+    "toast.createSuccess": "تم الإنشاء بنجاح",
+    "toast.createError": "فشل في الإنشاء",
+    "toast.updateSuccess": "تم التحديث بنجاح",
+    "toast.updateError": "فشل في التحديث",
+    "toast.deleteSuccess": "تم الحذف بنجاح",
+    "toast.deleteError": "فشل في الحذف",
+    "toast.saveSuccess": "تم الحفظ بنجاح",
+    "toast.saveError": "فشل في الحفظ",
 
     // Table
     "table.noData": "لا توجد بيانات متاحة",
@@ -2575,6 +2637,8 @@ const translations = {
     "timeline.applyFilters": "تطبيق المرشحات",
     "timeline.autoSelectingFirst": "اختيار تلقائي للجدول الزمني الأول للمشروع",
     "timeline.loading": "جاري التحميل...",
+    "timeline.loadingContent": "جاري تحميل محتوى المخطط الزمني...",
+    "timeline.refreshing": "جاري تحديث البيانات...",
 
     // Timeline Create Modal
     "timeline.createModal.title": "إنشاء جدول زمني",
@@ -2677,6 +2741,38 @@ const translations = {
     "timeline.moveRequirement.success": "نجح!",
     "timeline.moveRequirement.successMessage": "تم نقل المتطلب بنجاح",
     "timeline.treeView.moveRequirement": "نقل المتطلب",
+
+    // Timeline Toast Messages
+    "timeline.toast.timelineCreated": "تم إنشاء الجدول الزمني بنجاح",
+    "timeline.toast.timelineCreateError": "فشل في إنشاء الجدول الزمني",
+    "timeline.toast.timelineUpdated": "تم تحديث الجدول الزمني بنجاح",
+    "timeline.toast.timelineUpdateError": "فشل في تحديث الجدول الزمني",
+    "timeline.toast.timelineDeleted": "تم حذف الجدول الزمني بنجاح",
+    "timeline.toast.timelineDeleteError": "فشل في حذف الجدول الزمني",
+    "timeline.toast.sprintCreated": "تم إنشاء السبرنت بنجاح",
+    "timeline.toast.sprintCreateError": "فشل في إنشاء السبرنت",
+    "timeline.toast.sprintUpdated": "تم تحديث السبرنت بنجاح",
+    "timeline.toast.sprintUpdateError": "فشل في تحديث السبرنت",
+    "timeline.toast.sprintDeleted": "تم حذف السبرنت بنجاح",
+    "timeline.toast.sprintDeleteError": "فشل في حذف السبرنت",
+    "timeline.toast.requirementCreated": "تم إنشاء المتطلب بنجاح",
+    "timeline.toast.requirementCreateError": "فشل في إنشاء المتطلب",
+    "timeline.toast.requirementUpdated": "تم تحديث المتطلب بنجاح",
+    "timeline.toast.requirementUpdateError": "فشل في تحديث المتطلب",
+    "timeline.toast.requirementDeleted": "تم حذف المتطلب بنجاح",
+    "timeline.toast.requirementDeleteError": "فشل في حذف المتطلب",
+    "timeline.toast.taskCreated": "تم إنشاء المهمة بنجاح",
+    "timeline.toast.taskCreateError": "فشل في إنشاء المهمة",
+    "timeline.toast.taskUpdated": "تم تحديث المهمة بنجاح",
+    "timeline.toast.taskUpdateError": "فشل في تحديث المهمة",
+    "timeline.toast.taskDeleted": "تم حذف المهمة بنجاح",
+    "timeline.toast.taskDeleteError": "فشل في حذف المهمة",
+    "timeline.toast.subtaskCreated": "تم إنشاء المهمة الفرعية بنجاح",
+    "timeline.toast.subtaskCreateError": "فشل في إنشاء المهمة الفرعية",
+    "timeline.toast.subtaskUpdated": "تم تحديث المهمة الفرعية بنجاح",
+    "timeline.toast.subtaskUpdateError": "فشل في تحديث المهمة الفرعية",
+    "timeline.toast.subtaskDeleted": "تم حذف المهمة الفرعية بنجاح",
+    "timeline.toast.subtaskDeleteError": "فشل في حذف المهمة الفرعية",
 
     // Move Task Between Requirements translations (Arabic)
     "timeline.moveTaskToRequirement.title": "نقل المهمة",
