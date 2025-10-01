@@ -148,18 +148,59 @@ public class ProjectRequirementService : IProjectRequirementService
         if (requirement == null)
             return null;
 
+        // Validate dates for each role if both are provided
+        if (taskDto.DeveloperStartDate.HasValue && taskDto.DeveloperEndDate.HasValue && 
+            taskDto.DeveloperStartDate.Value >= taskDto.DeveloperEndDate.Value)
+        {
+            throw new ArgumentException("Developer end date must be after start date");
+        }
+
+        if (taskDto.QcStartDate.HasValue && taskDto.QcEndDate.HasValue && 
+            taskDto.QcStartDate.Value >= taskDto.QcEndDate.Value)
+        {
+            throw new ArgumentException("QC end date must be after start date");
+        }
+
+        if (taskDto.DesignerStartDate.HasValue && taskDto.DesignerEndDate.HasValue && 
+            taskDto.DesignerStartDate.Value >= taskDto.DesignerEndDate.Value)
+        {
+            throw new ArgumentException("Designer end date must be after start date");
+        }
+
         // Create a new task associated with the requirement
         var task = new RequirementTask
         {
             ProjectRequirementId = requirementId,
-            DeveloperId = taskDto.AssigneeId,
+            DeveloperId = taskDto.DeveloperId,
+            QcId = taskDto.QcId,
+            DesignerId = taskDto.DesignerId,
+            Description = taskDto.Description,
+            DeveloperStartDate = taskDto.DeveloperStartDate,
+            DeveloperEndDate = taskDto.DeveloperEndDate,
+            QcStartDate = taskDto.QcStartDate,
+            QcEndDate = taskDto.QcEndDate,
+            DesignerStartDate = taskDto.DesignerStartDate,
+            DesignerEndDate = taskDto.DesignerEndDate,
             Status = "not-started",
             CreatedBy = 1, // This should be the current user ID
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        // This would need actual implementation with a task repository
+        // Add the task to the requirement's tasks collection
+        requirement.Tasks.Add(task);
+
+        // Update requirement status to "under development" if it was approved
+        if (requirement.Status == RequirementStatusEnum.Approved)
+        {
+            requirement.Status = RequirementStatusEnum.UnderDevelopment;
+        }
+
+        requirement.UpdatedAt = DateTime.UtcNow;
+
+        // Save the requirement (which will cascade save the task due to EF Core relationships)
+        await _projectRequirementRepository.UpdateAsync(requirement);
+
         return task;
     }
 
