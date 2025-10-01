@@ -860,11 +860,22 @@ const translations = {
     "tasks.editTask": "Edit Task",
     "tasks.developer": "Developer",
     "tasks.qcMember": "QC Member",
+    "tasks.designer": "Designer",
     "tasks.selectDeveloper": "Search for developer...",
     "tasks.selectQC": "Search for QC member...",
-    "tasks.assignedOn": "Assigned On",
-
-    // Additional requirements keys
+    "tasks.selectDesigner": "Search for designer...",
+    "tasks.description": "Description",
+    "tasks.startDate": "Start Date",
+    "tasks.endDate": "End Date",
+    "tasks.developerDates": "Developer Schedule",
+    "tasks.designerDates": "Designer Schedule",
+    "tasks.qcDates": "QC Schedule",
+    "tasks.assignmentNote": "Select at least one team member for this task. Each role is optional but at least one assignment is required.",
+    "tasks.selectAtLeastOne": "Please select at least one team member (Developer, Designer, or QC).",
+    "tasks.validation.startDateMustBeBeforeEndDate": "Start date must be before end date",
+    "tasks.validation.bothDatesRequired":
+      "Both start and end dates are required when a role is assigned",
+    "tasks.assignedOn": "Assigned On", // Additional requirements keys
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
     "requirements.taskInfo": "Task Information",
@@ -2346,8 +2357,24 @@ const translations = {
     "tasks.editTask": "تحرير المهمة",
     "tasks.developer": "المطور",
     "tasks.qcMember": "مسؤول ضمان الجودة",
+    "tasks.designer": "المصمم",
     "tasks.selectDeveloper": "البحث عن مطور...",
     "tasks.selectQC": "البحث عن مسؤول ضمان الجودة...",
+    "tasks.selectDesigner": "البحث عن مصمم...",
+    "tasks.description": "الوصف",
+    "tasks.startDate": "تاريخ البداية",
+    "tasks.endDate": "تاريخ النهاية",
+    "tasks.developerDates": "جدولة المطور",
+    "tasks.designerDates": "جدولة المصمم",
+    "tasks.qcDates": "جدولة ضمان الجودة",
+    "tasks.assignmentNote":
+      "اختر عضو فريق واحد على الأقل لهذه المهمة. كل دور اختياري ولكن يجب تعيين واحد على الأقل.",
+    "tasks.selectAtLeastOne":
+      "يرجى اختيار عضو فريق واحد على الأقل (مطور، مصمم، أو ضمان الجودة).",
+    "tasks.validation.startDateMustBeBeforeEndDate":
+      "يجب أن يكون تاريخ البداية قبل تاريخ النهاية",
+    "tasks.validation.bothDatesRequired":
+      "تاريخ البداية والنهاية مطلوبان عند تعيين دور",
     "tasks.assignedOn": "تم التعيين في",
 
     // Additional requirements keys (Arabic)

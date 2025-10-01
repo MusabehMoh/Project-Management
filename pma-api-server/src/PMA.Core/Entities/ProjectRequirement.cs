@@ -84,6 +84,22 @@ public class RequirementTask
 
     public int? DeveloperId { get; set; }
     public int? QcId { get; set; }
+    public int? DesignerId { get; set; }
+
+    [MaxLength(1000)]
+    public string? Description { get; set; }
+
+    // Developer dates
+    public DateTime? DeveloperStartDate { get; set; }
+    public DateTime? DeveloperEndDate { get; set; }
+
+    // QC dates
+    public DateTime? QcStartDate { get; set; }
+    public DateTime? QcEndDate { get; set; }
+
+    // Designer dates
+    public DateTime? DesignerStartDate { get; set; }
+    public DateTime? DesignerEndDate { get; set; }
 
     [Required]
     [MaxLength(20)]
@@ -98,5 +114,6 @@ public class RequirementTask
     public virtual ProjectRequirement? ProjectRequirement { get; set; }
     public virtual User? Developer { get; set; }
     public virtual User? Qc { get; set; }
+    public virtual User? Designer { get; set; }
     public virtual User? Creator { get; set; }
 }

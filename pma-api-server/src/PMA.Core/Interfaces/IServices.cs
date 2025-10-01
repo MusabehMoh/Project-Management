@@ -239,11 +239,21 @@ public interface ICacheInvalidationService
 
 public class CreateRequirementTaskDto
 {
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public int AssigneeId { get; set; }
-    public DateTime DueDate { get; set; }
-    public int Priority { get; set; }
-    public int EstimatedHours { get; set; }
+    public int? DeveloperId { get; set; }
+    public int? QcId { get; set; }
+    public int? DesignerId { get; set; }
+    public string? Description { get; set; }
+    
+    // Developer dates
+    public DateTime? DeveloperStartDate { get; set; }
+    public DateTime? DeveloperEndDate { get; set; }
+
+    // QC dates
+    public DateTime? QcStartDate { get; set; }
+    public DateTime? QcEndDate { get; set; }
+
+    // Designer dates
+    public DateTime? DesignerStartDate { get; set; }
+    public DateTime? DesignerEndDate { get; set; }
 }
 

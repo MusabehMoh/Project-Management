@@ -493,6 +493,10 @@ public class ProjectRequirementsController : ApiBaseController
             
             return CreatedAtAction(nameof(GetProjectRequirementById), new { id = id }, Success(task));
         }
+        catch (ArgumentException ex)
+        {
+            return Error<RequirementTask>("Validation failed", ex.Message, 400);
+        }
         catch (Exception ex)
         {
             return Error<RequirementTask>("An error occurred while creating the requirement task", ex.Message);

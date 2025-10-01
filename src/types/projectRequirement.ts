@@ -54,6 +54,20 @@ export interface RequirementTask {
   developerName?: string;
   qcId?: number;
   qcName?: string;
+  designerId?: number;
+  designerName?: string;
+  controllerId?: number;
+  controllerName?: string;
+  description?: string;
+  // Developer dates
+  developerStartDate?: string;
+  developerEndDate?: string;
+  // QC dates
+  qcStartDate?: string;
+  qcEndDate?: string;
+  // Designer dates
+  designerStartDate?: string;
+  designerEndDate?: string;
   status: "not-started" | "in-progress" | "testing" | "completed";
   createdAt: string;
   updatedAt: string;
@@ -64,6 +78,17 @@ export interface CreateRequirementTaskRequest {
   requirementId: number;
   developerId?: number;
   qcId?: number;
+  designerId?: number;
+  description?: string;
+  // Developer dates
+  developerStartDate?: string;
+  developerEndDate?: string;
+  // QC dates
+  qcStartDate?: string;
+  qcEndDate?: string;
+  // Designer dates
+  designerStartDate?: string;
+  designerEndDate?: string;
 }
 
 export interface UpdateRequirementTaskRequest

@@ -23,13 +23,7 @@ import {
   ModalFooter,
 } from "@heroui/modal";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  DrawerFooter,
-} from "@heroui/drawer";
+import { DatePicker } from "@heroui/date-picker";
 import { Search, Calendar, Code, Eye, Plus, Edit, X } from "lucide-react";
 
 import { FilePreview } from "@/components/FilePreview";
@@ -347,10 +341,31 @@ export default function DevelopmentRequirementsPage() {
   const [selectedDeveloper, setSelectedDeveloper] =
     useState<MemberSearchResult | null>(null);
   const [selectedQC, setSelectedQC] = useState<MemberSearchResult | null>(null);
+  const [selectedDesigner, setSelectedDesigner] =
+    useState<MemberSearchResult | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+  // Task description and dates
+  const [taskDescription, setTaskDescription] = useState<string>("");
+  // Developer dates
+  const [developerStartDate, setDeveloperStartDate] = useState<any>(null);
+  const [developerEndDate, setDeveloperEndDate] = useState<any>(null);
+  // QC dates
+  const [qcStartDate, setQcStartDate] = useState<any>(null);
+  const [qcEndDate, setQcEndDate] = useState<any>(null);
+  // Designer dates
+  const [designerStartDate, setDesignerStartDate] = useState<any>(null);
+  const [designerEndDate, setDesignerEndDate] = useState<any>(null);
   // Controlled input values for Autocomplete components (needed by HeroUI Autocomplete)
   const [developerInputValue, setDeveloperInputValue] = useState<string>("");
   const [qcInputValue, setQcInputValue] = useState<string>("");
+  const [designerInputValue, setDesignerInputValue] = useState<string>("");
+
+  // Date validation error states
+  const [dateValidationErrors, setDateValidationErrors] = useState<{
+    developer?: string;
+    designer?: string;
+    qc?: string;
+  }>({});
 
   // Timeline creation modal state
   const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
@@ -379,8 +394,85 @@ export default function DevelopmentRequirementsPage() {
     maxResults: 15,
   });
 
+  const {
+    employees: designers,
+    loading: loadingDesigners,
+    searchEmployees: searchDesigners,
+  } = useTeamSearch({
+    minLength: 2,
+    maxResults: 15,
+  });
+
   // Debug: log team search results to help diagnose autocomplete issues
   // Debug hooks intentionally left out to keep production linting clean.
+
+  // Date validation functions
+  const validateDateRange = (startDate: any, endDate: any): string | null => {
+    if (!startDate || !endDate) return null;
+    
+    const start = new Date(startDate.toString());
+    const end = new Date(endDate.toString());
+    
+    if (start >= end) {
+      return t("tasks.validation.startDateMustBeBeforeEndDate");
+    }
+    
+    return null;
+  };
+
+  const validateAllDates = (): boolean => {
+    const errors: { developer?: string; designer?: string; qc?: string } = {};
+    let hasErrors = false;
+
+    // Validate developer dates - required if developer is selected
+    if (selectedDeveloper) {
+      if (!developerStartDate || !developerEndDate) {
+        errors.developer = t("tasks.validation.bothDatesRequired");
+        hasErrors = true;
+      } else {
+        const error = validateDateRange(developerStartDate, developerEndDate);
+
+        if (error) {
+          errors.developer = error;
+          hasErrors = true;
+        }
+      }
+    }
+
+    // Validate designer dates - required if designer is selected
+    if (selectedDesigner) {
+      if (!designerStartDate || !designerEndDate) {
+        errors.designer = t("tasks.validation.bothDatesRequired");
+        hasErrors = true;
+      } else {
+        const error = validateDateRange(designerStartDate, designerEndDate);
+
+        if (error) {
+          errors.designer = error;
+          hasErrors = true;
+        }
+      }
+    }
+
+    // Validate QC dates - required if QC is selected
+    if (selectedQC) {
+      if (!qcStartDate || !qcEndDate) {
+        errors.qc = t("tasks.validation.bothDatesRequired");
+        hasErrors = true;
+      } else {
+        const error = validateDateRange(qcStartDate, qcEndDate);
+
+        if (error) {
+          errors.qc = error;
+          hasErrors = true;
+        }
+      }
+    }
+
+    setDateValidationErrors(errors);
+
+    return !hasErrors;
+  };
 
   // Function to open drawer with requirement details
   const openRequirementDetails = (requirement: ProjectRequirement) => {
@@ -392,6 +484,10 @@ export default function DevelopmentRequirementsPage() {
   const openTaskModal = (requirement: ProjectRequirement) => {
     setSelectedRequirement(requirement);
     setIsTaskModalOpen(true);
+    
+    // Pre-populate description with requirement description
+    setTaskDescription(requirement.description || "");
+    
     // If task exists, pre-populate the form
     if (requirement.task) {
       const existingDev = developers.find(
@@ -400,9 +496,33 @@ export default function DevelopmentRequirementsPage() {
       const existingQC = qcMembers.find(
         (qc) => qc.id === requirement.task?.qcId,
       );
+      const existingDesigner = designers.find(
+        (designer) => designer.id === requirement.task?.designerId,
+      );
 
       setSelectedDeveloper(existingDev || null);
       setSelectedQC(existingQC || null);
+      setSelectedDesigner(existingDesigner || null);
+      
+      // Pre-populate task-specific fields
+      setTaskDescription(
+        requirement.task.description || requirement.description || "",
+      );
+      // TODO: Parse dates from existing task when available
+      setDeveloperStartDate(null);
+      setDeveloperEndDate(null);
+      setQcStartDate(null);
+      setQcEndDate(null);
+      setDesignerStartDate(null);
+      setDesignerEndDate(null);
+    } else {
+      // Reset dates for new tasks
+      setDeveloperStartDate(null);
+      setDeveloperEndDate(null);
+      setQcStartDate(null);
+      setQcEndDate(null);
+      setDesignerStartDate(null);
+      setDesignerEndDate(null);
     }
   };
 
@@ -464,12 +584,25 @@ export default function DevelopmentRequirementsPage() {
   const handleTaskSubmit = async () => {
     if (!selectedRequirement) return;
 
+    // Validate dates before submission
+    if (!validateAllDates()) {
+      return; // Stop submission if validation fails
+    }
+
     setIsCreatingTask(true);
     try {
       const taskData: CreateRequirementTaskRequest = {
         requirementId: selectedRequirement.id,
         developerId: selectedDeveloper?.id,
         qcId: selectedQC?.id,
+        designerId: selectedDesigner?.id,
+        description: taskDescription,
+        developerStartDate: developerStartDate?.toString(),
+        developerEndDate: developerEndDate?.toString(),
+        qcStartDate: qcStartDate?.toString(),
+        qcEndDate: qcEndDate?.toString(),
+        designerStartDate: designerStartDate?.toString(),
+        designerEndDate: designerEndDate?.toString(),
       };
 
       // Call API to create/update task
@@ -489,8 +622,10 @@ export default function DevelopmentRequirementsPage() {
       setIsTaskModalOpen(false);
       setSelectedDeveloper(null);
       setSelectedQC(null);
+      setSelectedDesigner(null);
       setDeveloperInputValue("");
       setQcInputValue("");
+      setDesignerInputValue("");
 
       // Refresh requirements data to get updated task info
       refreshData();
@@ -506,9 +641,19 @@ export default function DevelopmentRequirementsPage() {
     setIsTaskModalOpen(false);
     setSelectedDeveloper(null);
     setSelectedQC(null);
+    setSelectedDesigner(null);
     setSelectedRequirement(null);
+    setTaskDescription("");
+    setDeveloperStartDate(null);
+    setDeveloperEndDate(null);
+    setQcStartDate(null);
+    setQcEndDate(null);
+    setDesignerStartDate(null);
+    setDesignerEndDate(null);
     setDeveloperInputValue("");
     setQcInputValue("");
+    setDesignerInputValue("");
+    setDateValidationErrors({});
   };
 
   // edit/delete removed; grid is read-only
@@ -891,10 +1036,34 @@ export default function DevelopmentRequirementsPage() {
                 </ModalHeader>
                 <ModalBody>
                   <div className="space-y-4">
+                    {/* Task Description */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-default-700">
+                        {t("tasks.description")}
+                      </label>
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: taskDescription || "",
+                        }}
+                        contentEditable
+                        className="w-full min-h-[80px] p-3 border border-default-200 rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+                        onInput={(e) =>
+                          setTaskDescription(e.currentTarget.innerHTML)
+                        }
+                      />
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="p-3 bg-default-50 rounded-lg">
+                      <p className="text-xs text-default-600">
+                        {t("tasks.assignmentNote")}
+                      </p>
+                    </div>
+
                     {/* Developer Selection */}
                     <div>
                       <label className="text-sm font-medium text-default-700 mb-2 block">
-                        {t("tasks.developer")}
+                        {t("tasks.developer")} *
                       </label>
                       <Autocomplete
                         defaultFilter={() => true}
@@ -921,6 +1090,10 @@ export default function DevelopmentRequirementsPage() {
                           );
 
                           setSelectedDeveloper(developer || null);
+                          // Clear input value after selection
+                          if (developer) {
+                            setDeveloperInputValue("");
+                          }
                         }}
                       >
                         {developers.map((developer) => (
@@ -949,10 +1122,160 @@ export default function DevelopmentRequirementsPage() {
                       )}
                     </div>
 
+                    {/* Developer Dates */}
+                    {selectedDeveloper && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-default-700">
+                          {t("tasks.developerDates")} *
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <DatePicker
+                            label={t("tasks.startDate")}
+                            value={developerStartDate}
+                            onChange={(date) => {
+                              setDeveloperStartDate(date);
+                              // Clear validation error when user changes date
+                              if (dateValidationErrors.developer) {
+                                setDateValidationErrors((prev) => ({
+                                  ...prev,
+                                  developer: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                          <DatePicker
+                            label={t("tasks.endDate")}
+                            value={developerEndDate}
+                            onChange={(date) => {
+                              setDeveloperEndDate(date);
+                              // Clear validation error when user changes date
+                              if (dateValidationErrors.developer) {
+                                setDateValidationErrors((prev) => ({
+                                  ...prev,
+                                  developer: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                        </div>
+                        {dateValidationErrors.developer && (
+                          <p className="text-xs text-danger mt-1">
+                            {dateValidationErrors.developer}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Designer Selection */}
+                    <div>
+                      <label className="text-sm font-medium text-default-700 mb-2 block">
+                        {t("tasks.designer")} *
+                      </label>
+                      <Autocomplete
+                        defaultFilter={() => true}
+                        inputValue={designerInputValue}
+                        isLoading={loadingDesigners}
+                        menuTrigger="input"
+                        placeholder={t("tasks.selectDesigner")}
+                        selectedKey={selectedDesigner?.id?.toString() || ""}
+                        onInputChange={(value) => {
+                          setDesignerInputValue(value);
+                          // clear selection if input no longer matches selected
+                          if (
+                            selectedDesigner &&
+                            value !==
+                              `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`
+                          ) {
+                            setSelectedDesigner(null);
+                          }
+                          searchDesigners(value);
+                        }}
+                        onSelectionChange={(key) => {
+                          const designer = designers.find(
+                            (member) => member.id.toString() === String(key),
+                          );
+
+                          setSelectedDesigner(designer || null);
+                          // Clear input value after selection
+                          if (designer) {
+                            setDesignerInputValue("");
+                          }
+                        }}
+                      >
+                        {designers.map((designer) => (
+                          <AutocompleteItem
+                            key={designer.id.toString()}
+                            textValue={`${designer.gradeName} ${designer.fullName} ${designer.userName} ${designer.militaryNumber}`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {designer.fullName}
+                              </span>
+                              <span className="text-xs text-default-500">
+                                {designer.militaryNumber} -{" "}
+                                {designer.gradeName}
+                              </span>
+                            </div>
+                          </AutocompleteItem>
+                        ))}
+                      </Autocomplete>
+                      {selectedDesigner && (
+                        <div className="mt-2">
+                          <Chip color="secondary" size="sm" variant="flat">
+                            {selectedDesigner.fullName}
+                          </Chip>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Designer Dates */}
+                    {selectedDesigner && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-default-700">
+                          {t("tasks.designerDates")} *
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <DatePicker
+                            label={t("tasks.startDate")}
+                            value={designerStartDate}
+                            onChange={(date) => {
+                              setDesignerStartDate(date);
+                              // Clear validation error when user changes date
+                              if (dateValidationErrors.designer) {
+                                setDateValidationErrors((prev) => ({
+                                  ...prev,
+                                  designer: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                          <DatePicker
+                            label={t("tasks.endDate")}
+                            value={designerEndDate}
+                            onChange={(date) => {
+                              setDesignerEndDate(date);
+                              // Clear validation error when user changes date
+                              if (dateValidationErrors.designer) {
+                                setDateValidationErrors((prev) => ({
+                                  ...prev,
+                                  designer: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                        </div>
+                        {dateValidationErrors.designer && (
+                          <p className="text-xs text-danger mt-1">
+                            {dateValidationErrors.designer}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {/* QC Selection */}
                     <div>
                       <label className="text-sm font-medium text-default-700 mb-2 block">
-                        {t("tasks.qcMember")}
+                        {t("tasks.qcMember")} *
                       </label>
                       <Autocomplete
                         defaultFilter={() => true}
@@ -978,6 +1301,10 @@ export default function DevelopmentRequirementsPage() {
                           );
 
                           setSelectedQC(qc || null);
+                          // Clear input value after selection
+                          if (qc) {
+                            setQcInputValue("");
+                          }
                         }}
                       >
                         {qcMembers.map((qcMember) => (
@@ -1004,6 +1331,50 @@ export default function DevelopmentRequirementsPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* QC Dates */}
+                    {selectedQC && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-default-700">
+                          {t("tasks.qcDates")} *
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <DatePicker
+                            label={t("tasks.startDate")}
+                            value={qcStartDate}
+                            onChange={(date) => {
+                              setQcStartDate(date);
+                              // Clear validation error when user changes date
+                              if (dateValidationErrors.qc) {
+                                setDateValidationErrors((prev) => ({
+                                  ...prev,
+                                  qc: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                          <DatePicker
+                            label={t("tasks.endDate")}
+                            value={qcEndDate}
+                            onChange={(date) => {
+                              setQcEndDate(date);
+                              // Clear validation error when user changes date
+                              if (dateValidationErrors.qc) {
+                                setDateValidationErrors((prev) => ({
+                                  ...prev,
+                                  qc: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                        </div>
+                        {dateValidationErrors.qc && (
+                          <p className="text-xs text-danger mt-1">
+                            {dateValidationErrors.qc}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </ModalBody>
                 <ModalFooter>
@@ -1021,7 +1392,9 @@ export default function DevelopmentRequirementsPage() {
                   }) && (
                     <Button
                       color="primary"
-                      isDisabled={!selectedDeveloper && !selectedQC}
+                      isDisabled={
+                        !selectedDeveloper && !selectedQC && !selectedDesigner
+                      }
                       isLoading={isCreatingTask}
                       onPress={handleTaskSubmit}
                     >
@@ -1029,6 +1402,12 @@ export default function DevelopmentRequirementsPage() {
                         ? t("common.update")
                         : t("common.create")}
                     </Button>
+                  )}
+                  
+                  {!selectedDeveloper && !selectedQC && !selectedDesigner && (
+                    <p className="text-xs text-danger mt-2">
+                      {t("tasks.selectAtLeastOne")}
+                    </p>
                   )}
                 </ModalFooter>
               </>
