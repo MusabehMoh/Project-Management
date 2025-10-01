@@ -6,6 +6,7 @@ using PMA.Core.Interfaces;
 using Microsoft.Extensions.Options;
 using PMA.Api.Config;
 using PMA.Core.Services;
+using TaskStatus = PMA.Core.Entities.TaskStatus;
 namespace PMA.Api.Controllers;
 
 [ApiController]
@@ -17,19 +18,22 @@ public class ProjectRequirementsController : ApiBaseController
     private readonly ILogger<ProjectRequirementsController> _logger;
     private readonly AttachmentSettings _attachmentSettings;
     private readonly IMappingService _mappingService; 
+    private readonly IRequirementTaskManagementService _requirementTaskManagementService;
 
     public ProjectRequirementsController(
         IProjectRequirementService projectRequirementService, 
         ICurrentUserService currentUser,
         ILogger<ProjectRequirementsController> logger,
         IOptions<AttachmentSettings> attachmentSettings,
-        IMappingService mappingService)
+        IMappingService mappingService,
+        IRequirementTaskManagementService requirementTaskManagementService)
     {
         _projectRequirementService = projectRequirementService;
         _currentUser = currentUser;
         _logger = logger;
         _attachmentSettings = attachmentSettings.Value;
         _mappingService = mappingService;
+        _requirementTaskManagementService = requirementTaskManagementService;
     }
 
     #region Private Helpers
@@ -485,14 +489,22 @@ public class ProjectRequirementsController : ApiBaseController
     {
         try
         {
-            if (!ModelState.IsValid)
-                return Error<object>("Validation failed", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), 400);
+            var validationResult = ValidateModelState();
+            if (validationResult != null) 
+                return validationResult;
 
-            var task = await _projectRequirementService.CreateRequirementTaskAsync(id, taskDto);
-            if (task == null)
-                return Error<RequirementTask>("Project requirement not found", null, 404);
+            var result = await _requirementTaskManagementService.CreateOrUpdateRequirementTaskAsync(id, taskDto);
             
-            return CreatedAtAction(nameof(GetProjectRequirementById), new { id = id }, Success(task));
+            if (!result.Success)
+            {
+                return Error<RequirementTask>(result.ErrorMessage ?? "An error occurred", null, 404);
+            }
+
+            return CreatedAtAction(nameof(GetProjectRequirementById), new { id = id }, Success(new
+            {
+                RequirementTask = result.RequirementTask,
+                CreatedTasks = result.CreatedTasks
+            }));
         }
         catch (ArgumentException ex)
         {
@@ -500,7 +512,8 @@ public class ProjectRequirementsController : ApiBaseController
         }
         catch (Exception ex)
         {
-            return Error<RequirementTask>("An error occurred while creating the requirement task", ex.Message);
+            _logger.LogError(ex, "Error creating requirement tasks for requirement {RequirementId}", id);
+            return Error<RequirementTask>("An error occurred while creating the requirement tasks", ex.Message);
         }
     }
 

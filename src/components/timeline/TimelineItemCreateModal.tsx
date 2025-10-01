@@ -35,6 +35,8 @@ export interface TimelineItemCreateModalFormData {
   depTasks?: WorkItem[];
   memberIds?: number[];
   depTaskIds?: number[];
+  // TypeId is automatically set to TaskTypes.TimeLine (1) on the backend
+  typeId?: number;
 }
 
 interface TimelineItemCreateModalProps {
@@ -97,8 +99,6 @@ export default function TimelineItemCreateModal({
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
     [],
   );
-  const [taskInputValue, setTaskInputValue] = useState<string>("");
-  const [selectedTask, setSelectedTask] = useState<WorkItem | null>(null);
   const [selectedTasks, setSelectedTasks] = useState<WorkItem[]>([]);
 
   // Search hooks
@@ -107,11 +107,11 @@ export default function TimelineItemCreateModal({
     loading: employeeSearchLoading,
     searchEmployees,
   } = useTeamSearch({ minLength: 1, maxResults: 20 });
-  const {
-    workItems: tasks,
-    loading: taskSearchLoading,
-    searchTasks,
-  } = useTaskSearch({ minLength: 1, maxResults: 20, timelineId });
+  const { workItems: tasks, loading: taskSearchLoading } = useTaskSearch({
+    maxResults: 100,
+    loadInitialResults: true,
+    timelineId,
+  });
 
   // Reset form data when modal opens
   useEffect(() => {
@@ -121,9 +121,7 @@ export default function TimelineItemCreateModal({
       setSelectedMembers([]);
       setSelectedTasks([]);
       setSelectedEmployee(null);
-      setSelectedTask(null);
       setEmployeeInputValue("");
-      setTaskInputValue("");
     }
   }, [isOpen]);
 
@@ -181,9 +179,7 @@ export default function TimelineItemCreateModal({
     setSelectedMembers([]);
     setSelectedTasks([]);
     setSelectedEmployee(null);
-    setSelectedTask(null);
     setEmployeeInputValue("");
-    setTaskInputValue("");
     onClose();
   };
 
@@ -366,83 +362,44 @@ export default function TimelineItemCreateModal({
                   <label className="block text-sm font-medium mb-1">
                     {t("timeline.selectPredecessors")}
                   </label>
-                  <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
-                    {selectedTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="flex items-center gap-2 rounded-full bg-default-200 px-2 py-1 text-xs"
-                      >
-                        <span>{task.name}</span>
-                        <button
-                          className="text-danger"
-                          onClick={() =>
-                            setSelectedTasks((prev) =>
-                              prev.filter((t) => t.id !== task.id),
-                            )
-                          }
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <Autocomplete
-                    isClearable
-                    defaultFilter={() => true}
-                    inputValue={taskInputValue}
+                  <Select
                     isLoading={taskSearchLoading}
+                    items={tasks}
                     label={t("timeline.selectPredecessors")}
-                    menuTrigger="input"
                     placeholder={t("timeline.selectPredecessorsPlaceholder")}
-                    selectedKey={selectedTask?.id?.toString()}
-                    size="sm"
-                    onInputChange={(value) => {
-                      setTaskInputValue(value);
-                      if (selectedTask && value !== `${selectedTask.name}`) {
-                        setSelectedTask(null);
-                      }
-                      searchTasks(value);
-                    }}
-                    onSelectionChange={(key) => {
-                      if (!key) {
-                        setSelectedTask(null);
-                        setTaskInputValue("");
-
-                        return;
-                      }
-
-                      const found = tasks.find((t) => t.id.toString() === key);
-
-                      if (found) {
-                        setSelectedTasks((prev) =>
-                          prev.some((t) => t.id === found.id)
-                            ? prev
-                            : [...prev, found],
-                        );
-                        // reset for next pick
-                        setSelectedTask(null);
-                        setTaskInputValue("");
-                      }
+                    selectedKeys={
+                      selectedTasks.map(
+                        (task) => task.id.toString(),
+                      )
+                    }
+                    selectionMode="multiple"
+                    onSelectionChange={(keys) => {
+                      if (keys === "all") return;
+                      
+                      const selectedKeys = Array.from(keys);
+                      const newSelectedTasks = tasks.filter(
+                        (task) => selectedKeys.includes(task.id.toString()),
+                      );
+                      
+                      setSelectedTasks(newSelectedTasks);
                     }}
                   >
-                    {tasks.map((task) => (
-                      <AutocompleteItem
+                    {(task) => (
+                      <SelectItem
                         key={task.id.toString()}
-                        textValue={`${task.name} ${task.description || ""} ${
-                          task.status || ""
-                        } ${task.department || ""}`}
+                        textValue={task.name}
                       >
-                        <span className="flex items-center gap-3">
+                        <div className="flex items-center gap-3">
                           <span className="flex flex-col">
                             <span className="font-medium">{task.name}</span>
                             <span className="text-xs text-default-500">
                               {task.description || "unknown"}
                             </span>
                           </span>
-                        </span>
-                      </AutocompleteItem>
-                    ))}
-                  </Autocomplete>
+                        </div>
+                      </SelectItem>
+                    )}
+                  </Select>
                 </div>
 
                 {/* Members selection */}

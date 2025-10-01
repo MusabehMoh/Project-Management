@@ -151,6 +151,7 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<IRequirementService, RequirementService>();
 builder.Services.AddScoped<IProjectRequirementService, PMA.Core.Services.ProjectRequirementService>();
+builder.Services.AddScoped<IRequirementTaskManagementService, RequirementTaskManagementService>();
 builder.Services.AddScoped<ITimelineService, TimelineService>();
 builder.Services.AddScoped<IFileStorageService, PMA.Infrastructure.Services.FileStorageService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();

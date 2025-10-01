@@ -10,7 +10,6 @@ import {
   ModalFooter,
 } from "@heroui/modal";
 import { Select, SelectItem } from "@heroui/select";
-import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Avatar } from "@heroui/avatar";
 import { Slider } from "@heroui/slider";
 import { parseDate } from "@internationalized/date";
@@ -81,23 +80,30 @@ export default function TimelineEditModal({
   loading = false,
   timelineId,
 }: TimelineEditModalProps) {
-  const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
-  // State for selected members
-  const [selectedEmployee, setSelectedEmployee] =
-    useState<MemberSearchResult | null>(null);
+  // State for selected members and tasks
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
     [],
   );
-
   const [selectedTasks, setSelectedTasks] = useState<WorkItem[]>([]);
-  const [taskInputValue, setTaskInputValue] = useState<string>("");
-  const [selectedTask, setSelectedTask] = useState<WorkItem | null>(null);
   const { t } = useLanguage();
   const [formData, setFormData] =
     useState<TimelineEditModalFormData>(initialValues);
 
   // Use shared validation hook
   const { validateForm, errors, clearError } = useTimelineFormValidation();
+  
+  // Team members data
+  const { employees, loading: employeeSearchLoading } = useTeamSearch({
+    maxResults: 100,
+    loadInitialResults: true,
+  });
+
+  // Task data
+  const { workItems: tasks, loading: taskSearchLoading } = useTaskSearch({
+    maxResults: 100,
+    loadInitialResults: true,
+    timelineId,
+  });
 
   // Helper function to fetch member details by ID
   const fetchMemberById = async (
@@ -120,17 +126,11 @@ export default function TimelineEditModal({
       return null;
     }
   };
-
+  
   // Helper function to fetch task details by ID (simplified version)
   const fetchTaskById = async (taskId: number): Promise<WorkItem | null> => {
     try {
-      // Search tasks with empty query to get all tasks, then find by ID
-      searchTasks("");
-      // Wait a bit for the search to complete and then find the task
-      // Note: This is a workaround since we don't have a direct getTaskById API
-      
-      // For now, create a minimal WorkItem object with the ID
-      // The real data will be loaded when user searches
+      // Create a placeholder task
       return {
         id: taskId.toString(),
         name: `Task ${taskId}`,
@@ -153,7 +153,7 @@ export default function TimelineEditModal({
     }
   };
 
-  // Update form data when initial values change
+  // Update form data when initial values change or tasks are loaded
   useEffect(() => {
     const loadInitialData = async () => {
       setFormData(initialValues);
@@ -181,38 +181,49 @@ export default function TimelineEditModal({
       // If we have depTaskIds but no full task objects, fetch them
       if (initialValues?.depTaskIds && initialValues.depTaskIds.length > 0) {
         if (!initialValues?.depTasks || initialValues.depTasks.length === 0) {
-          // Fetch real task data from API
+          // Try to match task IDs with loaded tasks first
+          if (tasks.length > 0) {
+            const validTasks = initialValues.depTaskIds
+              .map((id) => 
+                tasks.find((task) => task.id.toString() === id.toString()),
+              )
+              .filter((task): task is WorkItem => task !== null && task !== undefined,);
+            
+            if (validTasks.length === initialValues.depTaskIds.length) {
+              setSelectedTasks(validTasks);
+              
+              return;
+            }
+          }
+          
+          // If we can't find all tasks in the loaded list, create temporary placeholders
           const taskPromises = initialValues.depTaskIds.map((id) =>
             fetchTaskById(id),
           );
-          const tasks = await Promise.all(taskPromises);
-          const validTasks = tasks.filter(
+          const fetchedTasks = await Promise.all(taskPromises);
+          const validTasks = fetchedTasks.filter(
             (task): task is WorkItem => task !== null,
           );
 
           setSelectedTasks(validTasks);
         } else {
-          setSelectedTasks(initialValues.depTasks as any);
+          setSelectedTasks(initialValues.depTasks as WorkItem[]);
         }
       } else {
-        setSelectedTasks((initialValues?.depTasks as any) ?? []);
+        setSelectedTasks((initialValues?.depTasks as WorkItem[]) ?? []);
       }
     };
 
     if (initialValues) {
       loadInitialData();
     }
-  }, [initialValues]);
+  }, [initialValues, tasks]);
 
   // Clear selections when modal closes to avoid stale state on next open
   useEffect(() => {
     if (!isOpen) {
       setSelectedMembers([]);
       setSelectedTasks([]);
-      setSelectedEmployee(null);
-      setSelectedTask(null);
-      setEmployeeInputValue("");
-      setTaskInputValue("");
     }
   }, [isOpen]);
 
@@ -256,36 +267,32 @@ export default function TimelineEditModal({
 
   const handleClose = () => {
     setFormData(initialValues); // Reset form data on close
-    // Also clear chips and inputs
+    // Clear selected members and tasks
     setSelectedMembers([]);
     setSelectedTasks([]);
-    setSelectedEmployee(null);
-    setSelectedTask(null);
-    setEmployeeInputValue("");
-    setTaskInputValue("");
     onClose();
   };
-  // Employee search hooks for employees
-  const {
-    employees: employees,
-    loading: employeeSearchLoading,
-    searchEmployees: searchEmployees,
-  } = useTeamSearch({
-    minLength: 1,
-    maxResults: 20,
-    loadInitialResults: false,
-  });
-
-  const {
-    workItems: tasks,
-    loading: taskSearchLoading,
-    searchTasks: searchTasks,
-  } = useTaskSearch({
-    minLength: 1,
-    maxResults: 20,
-    loadInitialResults: false,
-    timelineId,
-  });
+  
+  // Update selected tasks when tasks list is loaded and we have depTaskIds
+  useEffect(() => {
+    if (
+      tasks.length > 0 && 
+      initialValues?.depTaskIds && 
+      initialValues.depTaskIds.length > 0
+    ) {
+      const tasksById = new Map(
+        tasks.map((task) => [task.id.toString(), task]),
+      );
+      
+      const matchedTasks = initialValues.depTaskIds
+        .map((id) => tasksById.get(id.toString()))
+        .filter((task): task is WorkItem => !!task);
+        
+      if (matchedTasks.length > 0) {
+        setSelectedTasks(matchedTasks);
+      }
+    }
+  }, [tasks, initialValues?.depTaskIds]);
 
   return (
     <Modal
@@ -501,65 +508,50 @@ export default function TimelineEditModal({
                         </div>
                       ))}
                     </div>
-                    <Autocomplete
-                      isClearable
-                      defaultFilter={() => true}
-                      inputValue={taskInputValue}
+                    <Select
+                      disallowEmptySelection={false}
                       isLoading={taskSearchLoading}
+                      items={tasks.filter((task) => 
+                        // Only show tasks that aren't already selected
+                        !selectedTasks.some((st) => st.id === task.id)
+                      )}
                       label={t("timeline.selectPredecessors")}
-                      menuTrigger="input"
                       placeholder={t("timeline.selectPredecessorsPlaceholder")}
-                      selectedKey={selectedTask?.id?.toString()}
-                      size="sm"
-                      onInputChange={(value) => {
-                        setTaskInputValue(value);
-                        if (selectedTask && value !== `${selectedTask.name}`) {
-                          setSelectedTask(null);
-                        }
-                        searchTasks(value);
-                      }}
-                      onSelectionChange={(key) => {
-                        if (!key) {
-                          setSelectedTask(null);
-                          setTaskInputValue("");
-
-                          return;
-                        }
-
+                      selectionMode="single"
+                      onSelectionChange={(keys) => {
+                        if (keys === "all") return;
+                        
+                        const selectedKeys = Array.from(keys);
+                        
+                        if (selectedKeys.length === 0) return;
+                        
+                        const key = selectedKeys[0];
                         const found = tasks.find(
                           (t) => t.id.toString() === key,
                         );
-
+                        
                         if (found) {
-                          setSelectedTasks((prev) =>
-                            prev.some((t) => t.id === found.id)
-                              ? prev
-                              : [...prev, found],
-                          );
-                          // reset for next pick
-                          setSelectedTask(null);
-                          setTaskInputValue("");
+                          // Add the selected task
+                          setSelectedTasks((prev) => [...prev, found]);
                         }
                       }}
                     >
-                      {tasks.map((task) => (
-                        <AutocompleteItem
-                          key={task.id.toString()}
-                          textValue={`${task.name} ${task.description || ""} ${
-                            task.status || ""
-                          } ${task.department || ""}`}
-                        >
-                          <span className="flex items-center gap-3">
+                      {(task) => (
+                      <SelectItem 
+                        key={task.id.toString()}
+                        textValue={task.name}
+                      >
+                          <div className="flex items-center gap-3">
                             <span className="flex flex-col">
                               <span className="font-medium">{task.name}</span>
                               <span className="text-xs text-default-500">
                                 {task.description || "unknown"}
                               </span>
                             </span>
-                          </span>
-                        </AutocompleteItem>
-                      ))}
-                    </Autocomplete>
+                          </div>
+                        </SelectItem>
+                      )}
+                    </Select>
                   </div>
                 )}
 
@@ -580,66 +572,50 @@ export default function TimelineEditModal({
                           </span>
                           <button
                             className="text-danger"
-                            onClick={() =>
-                              setSelectedMembers((prev) =>
-                                prev.filter((x) => x.id !== m.id),
-                              )
-                            }
+                            onClick={() => {
+                              setSelectedMembers((prev) => {
+                                return prev.filter((x) => x.id !== m.id);
+                              });
+                            }}
                           >
                             ×
                           </button>
                         </div>
                       ))}
                     </div>
-                    <Autocomplete
-                      isClearable
-                      defaultFilter={() => true}
-                      inputValue={employeeInputValue}
+                    <Select
+                      disallowEmptySelection={false}
                       isLoading={employeeSearchLoading}
+                      items={employees.filter(
+                        (employee) =>
+                          // Only show employees that aren't already selected
+                          !selectedMembers.some((m) => m.id === employee.id),
+                      )}
                       label={t("users.selectEmployee")}
-                      menuTrigger="input"
                       placeholder={t("users.searchEmployees")}
-                      selectedKey={selectedEmployee?.id?.toString()}
-                      size="sm"
-                      onInputChange={(value) => {
-                        setEmployeeInputValue(value);
-                        if (
-                          selectedEmployee &&
-                          value !==
-                            `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
-                        ) {
-                          setSelectedEmployee(null);
-                        }
-                        searchEmployees(value);
-                      }}
-                      onSelectionChange={(key) => {
-                        if (!key) {
-                          setSelectedEmployee(null);
-                          setEmployeeInputValue("");
-
-                          return;
-                        }
-
+                      selectionMode="single"
+                      onSelectionChange={(keys) => {
+                        if (keys === "all") return;
+                        
+                        const selectedKeys = Array.from(keys);
+                        
+                        if (selectedKeys.length === 0) return;
+                        
+                        const key = selectedKeys[0];
                         const found = employees.find(
                           (e) => e.id.toString() === key,
                         );
-
+                        
                         if (found) {
-                          setSelectedMembers((prev) =>
-                            prev.some((x) => x.id === found.id)
-                              ? prev
-                              : [...prev, found],
-                          );
-                          // reset for next pick
-                          setSelectedEmployee(null);
-                          setEmployeeInputValue("");
+                          // Add the selected employee
+                          setSelectedMembers((prev) => [...prev, found]);
                         }
                       }}
                     >
-                      {employees.map((employee) => (
-                        <AutocompleteItem
+                      {(employee) => (
+                        <SelectItem
                           key={employee.id.toString()}
-                          textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
+                          textValue={`${employee.gradeName} ${employee.fullName}`}
                         >
                           <span className="flex items-center gap-3">
                             <Avatar
@@ -662,9 +638,9 @@ export default function TimelineEditModal({
                               </span>
                             </span>
                           </span>
-                        </AutocompleteItem>
-                      ))}
-                    </Autocomplete>
+                        </SelectItem>
+                      )}
+                    </Select>
                   </div>
                 )}
               </div>

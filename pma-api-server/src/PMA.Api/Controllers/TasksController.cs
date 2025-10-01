@@ -330,4 +330,42 @@ public class TasksController : ApiBaseController
             return Error<IEnumerable<TaskEntity>>("An error occurred while searching tasks", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Create a new AdHoc task
+    /// </summary>
+    [HttpPost("adhoc")]
+    [ProducesResponseType(typeof(ApiResponse<TaskDto>), 201)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> CreateAdHocTask([FromBody] CreateAdHocTaskDto createAdHocTaskDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            // Map DTO to entity
+            var task = _mappingService.MapToAdHocTask(createAdHocTaskDto);
+
+            // Create the task
+            var createdTask = await _taskService.CreateTaskAsync(task);
+
+            // Handle assignments - AdHoc tasks always have assignments
+            if (createAdHocTaskDto.AssignedMembers != null && createAdHocTaskDto.AssignedMembers.Any())
+            {
+                await _taskService.UpdateTaskAssignmentsAsync(createdTask.Id, createAdHocTaskDto.AssignedMembers);
+            }
+
+            // Map back to DTO for response
+            var taskDto = _mappingService.MapToTaskDto(createdTask);
+
+            return Created(taskDto, nameof(GetTaskById), new { id = createdTask.Id }, "AdHoc task created successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<TaskDto>("An error occurred while creating the AdHoc task", ex.Message);
+        }
+    }
 }

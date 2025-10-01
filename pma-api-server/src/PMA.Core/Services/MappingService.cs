@@ -453,7 +453,7 @@ public class MappingService : IMappingService
         {
             Id = task.Id,
             TreeId = $"task-{task.Id}",
-            SprintId = task.SprintId,
+            SprintId = task.SprintId??null,
             Name = task.Name,
             Description = task.Description,
             StartDate = task.StartDate,
@@ -549,6 +549,27 @@ public class MappingService : IMappingService
             UpdatedAt = DateTime.UtcNow,
             TypeId = createTaskDto.TypeId
 
+        };
+    }
+
+    /// <summary>
+    /// Maps a CreateAdHocTaskDto to Task entity
+    /// </summary>
+    public PMA.Core.Entities.Task MapToAdHocTask(CreateAdHocTaskDto createAdHocTaskDto)
+    {
+        return new PMA.Core.Entities.Task
+        {
+            SprintId = 1, // Default sprint for adhoc tasks
+            Name = createAdHocTaskDto.Name,
+            Description = createAdHocTaskDto.Description,
+            StartDate = createAdHocTaskDto.StartDate,
+            EndDate = createAdHocTaskDto.EndDate,
+            StatusId = PMA.Core.Entities.TaskStatus.ToDo,
+            PriorityId = Priority.Medium,
+            TypeId = TaskTypes.AdHoc, // Set TypeId to AdHoc
+            Progress = 0,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
     }
 

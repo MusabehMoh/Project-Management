@@ -8,13 +8,14 @@ public class Task
     [Key]
     public int Id { get; set; }
 
-    [Required]
-    public int SprintId { get; set; }
+     
+    public int? SprintId { get; set; }
 
     [Required]
     [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
-
+    
+    public string? RoleType { get; set; }
     public string? Description { get; set; }
 
     [Required]
@@ -117,7 +118,10 @@ public enum TaskStatus
     ToDo = 1,
     InProgress = 2,
     InReview = 3,
-    Done = 4
+    Rework = 4,
+    Completed = 5,
+    OnHold = 6
+
 }
 public enum TaskTypes
 {

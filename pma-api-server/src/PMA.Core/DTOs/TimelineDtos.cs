@@ -79,7 +79,7 @@ public class TaskDto
 {
     public int Id { get; set; }
     public string TreeId { get; set; } = string.Empty;
-    public int SprintId { get; set; }
+    public int? SprintId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public DateTime StartDate { get; set; }
@@ -101,7 +101,7 @@ public class TaskDto
 
 public class CreateTaskDto
 {
-    [Required(ErrorMessage = "SprintId is required")]
+     
     public int SprintId { get; set; }
 
     [Required(ErrorMessage = "Name is required")]
@@ -129,6 +129,25 @@ public class CreateTaskDto
     // New fields for task assignments and dependencies - matching frontend naming
     public List<int>? MemberIds { get; set; }
     public List<int>? DepTaskIds { get; set; }
+}
+
+public class CreateAdHocTaskDto
+{
+    [Required(ErrorMessage = "Name is required")]
+    [MaxLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+    public string? Description { get; set; }
+
+    [Required(ErrorMessage = "StartDate is required")]
+    public DateTime StartDate { get; set; }
+
+    [Required(ErrorMessage = "EndDate is required")]
+    public DateTime EndDate { get; set; }
+
+    [Required(ErrorMessage = "At least one member must be assigned")]
+    public List<int> AssignedMembers { get; set; } = new List<int>();
 }
 
 public class UpdateTaskDto

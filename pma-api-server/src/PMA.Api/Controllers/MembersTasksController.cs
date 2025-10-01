@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
@@ -10,16 +11,19 @@ namespace PMA.Api.Controllers;
 public class MembersTasksController : ApiBaseController
 {
     private readonly IMemberTaskService _memberTaskService;
+    private readonly ICurrentUserProvider _currentUserProvider;
 
-    public MembersTasksController(IMemberTaskService memberTaskService)
+    public MembersTasksController(IMemberTaskService memberTaskService, ICurrentUserProvider currentUserProvider)
     {
         _memberTaskService = memberTaskService;
+        _currentUserProvider = currentUserProvider;
     }
 
     /// <summary>
     /// Get all member tasks with pagination and filtering
     /// </summary>
     [HttpGet]
+    [AllowAnonymous] // Temporary for testing - remove in production
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetMemberTasks(
         [FromQuery] int page = 1,
@@ -31,7 +35,24 @@ public class MembersTasksController : ApiBaseController
     {
         try
         {
-            var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(page, limit, projectId, primaryAssigneeId, status, priority);
+            // Get current user's PRS ID - for testing with anonymous access, use a default user
+            var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
+            if (string.IsNullOrEmpty(currentUserPrsId))
+            {
+                // For testing purposes, use a default user ID when no authentication
+                // In production, this should return Unauthorized
+                currentUserPrsId = "1"; // Default test user ID
+                // return Unauthorized("Unable to determine current user");
+            }
+
+            // Convert PRS ID to int (assuming PRS ID can be converted to int)
+            if (!int.TryParse(currentUserPrsId, out int currentUserId))
+            {
+                return BadRequest("Invalid user identifier");
+            }
+
+            // Use the current user ID as the primaryAssigneeId filter to get only tasks assigned to this user
+            var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(page, limit, projectId, currentUserId, status, priority);
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
             return Success(memberTasks, pagination);

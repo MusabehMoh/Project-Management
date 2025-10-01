@@ -15,7 +15,7 @@ import { apiClient, API_CONFIG } from "./client";
  * Handles all members tasks-related API operations
  */
 export class MembersTasksService {
-  private baseUrl = "/members-tasks";
+  private baseUrl = "/MembersTasks";
 
   /**
    * Get all tasks with filtering and pagination
@@ -331,14 +331,16 @@ export class MembersTasksService {
 
   /* Add adhoc task */
   async addAdhocTask(newTask: AdhocTask): Promise<ApiResponse<void>> {
-    return {
-      success: true,
-      data: undefined,
-      message: "Task saved successfully",
-      timestamp: "22-08-2025",
+    // Transform the frontend AdhocTask to match backend CreateAdHocTaskDto
+    const taskData = {
+      name: newTask.name,
+      description: newTask.description,
+      startDate: newTask.startDate,
+      endDate: newTask.endDate,
+      assignedMembers: newTask.assignedMembers.map(id => parseInt(id))
     };
-    ///TODO uncomment this when api available and comment above mock data
-    // return apiClient.post<void>(`${this.baseUrl}/addAdhocTask`, newTask);
+
+    return apiClient.post<void>(`/tasks/adhoc`, taskData);
   }
 }
 

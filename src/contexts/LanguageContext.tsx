@@ -428,6 +428,8 @@ const translations = {
     "toast.info": "Information",
     "toast.createSuccess": "Successfully created",
     "toast.createError": "Failed to create",
+    "toast.adhocTaskCreated": "AdHoc task created successfully",
+    "toast.adhocTaskCreateError": "Failed to create AdHoc task",
     "toast.updateSuccess": "Successfully updated",
     "toast.updateError": "Failed to update",
     "toast.deleteSuccess": "Successfully deleted",
@@ -1942,6 +1944,8 @@ const translations = {
     "toast.deleteError": "فشل في الحذف",
     "toast.saveSuccess": "تم الحفظ بنجاح",
     "toast.saveError": "فشل في الحفظ",
+    "toast.adhocTaskCreated": "تم إنشاء المهمة العاجلة بنجاح",
+    "toast.adhocTaskCreateError": "فشل في إنشاء المهمة العاجلة",
 
     // Table
     "table.noData": "لا توجد بيانات متاحة",

@@ -60,7 +60,6 @@ import useTeamSearch from "@/hooks/useTeamSearch";
 import { Project, ProjectFormData } from "@/types/project";
 import { usePageTitle } from "@/hooks";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
-import AddAdhocTask from "@/components/AddAdhocTask";
 
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
@@ -871,7 +870,6 @@ export default function ProjectsPage() {
             >
               {t("projects.exportData")}
             </Button>
-            <AddAdhocTask />
           </div>
         </div>
 

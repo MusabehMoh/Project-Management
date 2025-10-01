@@ -48,6 +48,7 @@ import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MemberTask, TaskStatus } from "@/types/membersTasks";
 import GlobalPagination from "@/components/GlobalPagination";
+import AddAdhocTask from "@/components/AddAdhocTask";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -392,6 +393,9 @@ export default function MembersTasksPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Add Adhoc Task Button */}
+              <AddAdhocTask />
+
               {/* Export Dropdown */}
               <Dropdown>
                 <DropdownTrigger>
@@ -623,7 +627,7 @@ export default function MembersTasksPage() {
         )}
 
         {/* Pagination Controls */}
-        {!initialLoading && tasks.length > 0 && (
+        {!initialLoading && (tasks?.length || 0) > 0 && (
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4">
             <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
               <span className="text-sm text-default-600">
@@ -700,8 +704,7 @@ export default function MembersTasksPage() {
               </div>
 
               <span className="text-sm text-foreground-600">
-                {t("pagination.showing")} {tasks.length} {t("pagination.of")}{" "}
-                {totalCount} {t("common.tasks")}
+                {t("pagination.showing")} {tasks?.length || 0} {t("pagination.of")} {totalCount} {t("common.tasks")}
               </span>
             </div>
           </div>
@@ -730,7 +733,7 @@ export default function MembersTasksPage() {
         {/* Tasks */}
         {loading ? (
           <TaskGridSkeleton />
-        ) : tasks.length === 0 ? (
+        ) : (tasks?.length || 0) === 0 ? (
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center py-12">
               <div className="flex flex-col items-center space-y-4">

@@ -71,6 +71,7 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .Include(t => t.Sprint)
             .Include(t => t.Assignments)
             .Include(t => t.Dependencies_Relations)
+            .Where(t => t.Assignments.Any(a => a.PrsId == assigneeId))
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
     }
