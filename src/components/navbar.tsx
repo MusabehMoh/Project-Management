@@ -24,7 +24,7 @@ import {
   NavbarMenuItem,
 } from "@heroui/navbar";
 import clsx from "clsx";
-import { Bell, LogOut, User, ChevronDown, Building2 } from "lucide-react";
+import { Bell, User, ChevronDown, Building2 } from "lucide-react";
 import { useTheme } from "@heroui/use-theme";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -120,7 +120,7 @@ const AnimatedNavItem = ({
           "relative group transition-all duration-300 ease-in-out transform",
           "hover:scale-105 hover:-translate-y-0.5",
           "text-foreground font-medium",
-          isActive ? "text-primary" : "hover:text-primary",
+          isActive ? "text-primary" : "hover:text-primary"
         )}
         color="foreground"
         href={item.href}
@@ -137,7 +137,7 @@ const AnimatedNavItem = ({
             "bg-primary/10",
             "transition-all duration-300 ease-out",
             "transform -inset-2",
-            isHovered ? "opacity-100 scale-110" : "opacity-0 scale-95",
+            isHovered ? "opacity-100 scale-110" : "opacity-0 scale-95"
           )}
         />
       </Link>
@@ -160,12 +160,15 @@ const ManagementDropdown = ({
   currentPath: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   // Check if user has access to either users or departments
-  const hasUsersAccess = isAdmin() || hasPermission({ actions: ["users.read"] });
-  const hasDepartmentsAccess = isAdmin() || hasPermission({ 
-    actions: ["Department Management", "Manage Departments"] 
-  });
+  const hasUsersAccess =
+    isAdmin() || hasPermission({ actions: ["users.read"] });
+  const hasDepartmentsAccess =
+    isAdmin() ||
+    hasPermission({
+      actions: ["Department Management", "Manage Departments"],
+    });
 
   // Don't render if user has no access to either
   if (!hasUsersAccess && !hasDepartmentsAccess) {
@@ -175,11 +178,11 @@ const ManagementDropdown = ({
   const isActive = currentPath === "/users" || currentPath === "/departments";
 
   return (
-    <Dropdown 
-      isOpen={isOpen}
-      onOpenChange={setIsOpen}
-      placement="bottom-start"
+    <Dropdown
       className="min-w-[200px]"
+      isOpen={isOpen}
+      placement="bottom-start"
+      onOpenChange={setIsOpen}
     >
       <DropdownTrigger>
         <Button
@@ -187,9 +190,8 @@ const ManagementDropdown = ({
             "relative group transition-all duration-300 ease-in-out transform",
             "hover:scale-105 hover:-translate-y-0.5",
             "text-foreground font-medium text-base bg-transparent p-0 h-auto min-w-0",
-            isActive ? "text-primary" : "hover:text-primary",
+            isActive ? "text-primary" : "hover:text-primary"
           )}
-          variant="light"
           endContent={
             <ChevronDown
               className={clsx(
@@ -199,10 +201,9 @@ const ManagementDropdown = ({
               size={14}
             />
           }
+          variant="light"
         >
-          <span className="relative z-10">
-            {t("nav.management")}
-          </span>
+          <span className="relative z-10">{t("nav.management")}</span>
           {/* Hover background glow */}
           <span
             className={clsx(
@@ -210,7 +211,7 @@ const ManagementDropdown = ({
               "bg-primary/10",
               "transition-all duration-300 ease-out",
               "transform -inset-2",
-              isOpen ? "opacity-100 scale-110" : "opacity-0 scale-95",
+              isOpen ? "opacity-100 scale-110" : "opacity-0 scale-95"
             )}
           />
         </Button>
@@ -225,7 +226,7 @@ const ManagementDropdown = ({
             key="users"
             className={clsx(
               "transition-all duration-200",
-              currentPath === "/users" && "bg-primary/10 text-primary",
+              currentPath === "/users" && "bg-primary/10 text-primary"
             )}
             startContent={<User size={16} />}
             textValue="User Management"
@@ -239,7 +240,7 @@ const ManagementDropdown = ({
             key="departments"
             className={clsx(
               "transition-all duration-200",
-              currentPath === "/departments" && "bg-primary/10 text-primary",
+              currentPath === "/departments" && "bg-primary/10 text-primary"
             )}
             startContent={<Building2 size={16} />}
             textValue="Department Management"
@@ -258,7 +259,7 @@ const getProjectNavItems = (
   t: (key: string) => string,
   hasPermission: any,
   isAdmin: any,
-  hasAnyRole: any,
+  hasAnyRole: any
 ) => {
   const baseItems = [{ label: t("nav.dashboard"), href: "/" }];
 
@@ -338,7 +339,7 @@ export const Navbar = () => {
     t,
     hasPermission,
     isAdmin,
-    hasAnyRole,
+    hasAnyRole
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -399,7 +400,7 @@ export const Navbar = () => {
       <HeroUINavbar
         className={clsx(
           "transition-all duration-500 ease-in-out",
-          "backdrop-blur-md bg-background/70",
+          "backdrop-blur-md bg-background/70"
         )}
         maxWidth="xl"
         position="sticky"
@@ -415,7 +416,7 @@ export const Navbar = () => {
             </Link>
           </NavbarBrand>
         </NavbarContent>
-        
+
         {/* Desktop Navigation */}
         <NavbarContent className="hidden lg:flex gap-4" justify="center">
           <NavbarItem>
@@ -428,28 +429,28 @@ export const Navbar = () => {
             <Skeleton className="h-8 w-28 rounded-lg" />
           </NavbarItem>
         </NavbarContent>
-        
+
         <NavbarContent justify="end">
           {/* Search skeleton */}
           <NavbarItem className="hidden lg:flex">
             <Skeleton className="h-10 w-64 rounded-lg" />
           </NavbarItem>
-          
+
           {/* Notifications skeleton */}
           <NavbarItem>
             <Skeleton className="h-10 w-10 rounded-full" />
           </NavbarItem>
-          
+
           {/* Language switcher skeleton */}
           <NavbarItem>
             <Skeleton className="h-8 w-8 rounded" />
           </NavbarItem>
-          
+
           {/* Theme switch skeleton */}
           <NavbarItem>
             <Skeleton className="h-8 w-8 rounded" />
           </NavbarItem>
-          
+
           {/* User profile skeleton */}
           <NavbarItem>
             <div className="flex items-center gap-3">
@@ -499,7 +500,7 @@ export const Navbar = () => {
         isScrolled
           ? "backdrop-blur-md bg-background/80 border-b border-divider shadow-lg scale-[0.98]"
           : "backdrop-blur-sm bg-background/60 scale-100",
-        "animate-in slide-in-from-top-full duration-700",
+        "animate-in slide-in-from-top-full duration-700"
       )}
       maxWidth="xl"
       position="sticky"
@@ -511,7 +512,7 @@ export const Navbar = () => {
               "flex justify-start items-center gap-1",
               "transition-all duration-500 ease-out transform",
               "hover:scale-105 active:scale-95",
-              isScrolled ? "scale-90" : "scale-100",
+              isScrolled ? "scale-90" : "scale-100"
             )}
             color="foreground"
             href="/"
@@ -522,7 +523,7 @@ export const Navbar = () => {
                 "w-auto object-contain transition-all duration-500 ease-out",
                 isScrolled
                   ? "h-6 sm:h-8 max-w-[100px] sm:max-w-[130px]"
-                  : "h-8 sm:h-10 max-w-[120px] sm:max-w-[150px]",
+                  : "h-8 sm:h-10 max-w-[120px] sm:max-w-[150px]"
               )}
             />
           </Link>
@@ -581,7 +582,7 @@ export const Navbar = () => {
                   "relative transition-all duration-300 hover:scale-110 active:scale-95",
                   unreadCount > 0
                     ? "hover:bg-danger/10 hover:text-danger"
-                    : "hover:bg-default/10",
+                    : "hover:bg-default/10"
                   // Removed opacity-50 so icon isn't pale when offline; we already show a warning dot
                 )}
                 size="sm"
@@ -597,7 +598,7 @@ export const Navbar = () => {
                   <Bell
                     className={clsx(
                       "transition-transform duration-300",
-                      unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse",
+                      unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse"
                     )}
                     size={16}
                   />
@@ -643,7 +644,7 @@ export const Navbar = () => {
                         className={clsx(
                           "py-3 px-2 cursor-pointer",
                           !notification.read &&
-                            "bg-primary/5 border-l-2 border-primary",
+                            "bg-primary/5 border-l-2 border-primary"
                         )}
                         textValue={notification.message}
                         onPress={() => markAsRead(notification.id)}
@@ -654,7 +655,7 @@ export const Navbar = () => {
                               "text-sm",
                               !notification.read
                                 ? "font-semibold"
-                                : "font-normal",
+                                : "font-normal"
                             )}
                           >
                             {notification.message}
@@ -694,6 +695,47 @@ export const Navbar = () => {
 
         {/* User Profile Dropdown */}
         <NavbarItem
+          className="animate-in slide-in-from-right duration-500"
+          style={{ animationDelay: "600ms" }}
+        >
+          <div
+            aria-label={t("user.profile")}
+            className="transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              if (location.pathname !== "/profile") {
+                navigate("/profile");
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+                e.preventDefault();
+                if (location.pathname !== "/profile") {
+                  navigate("/profile");
+                }
+              }
+            }}
+          >
+            <UserComponent
+              as="button"
+              avatarProps={{
+                size: "sm",
+                name: currentUser.fullName,
+                className:
+                  "transition-all duration-300 hover:ring-2 hover:ring-primary/50",
+              }}
+              className="transition-all duration-300"
+              description={
+                userRole
+                  ? `${currentUser.gradeName} • ${userRole}`
+                  : currentUser.gradeName
+              }
+              name={currentUser.fullName}
+            />
+          </div>
+        </NavbarItem>
+        {/* <NavbarItem
           className="animate-in slide-in-from-right duration-500"
           style={{ animationDelay: "600ms" }}
         >
@@ -757,50 +799,58 @@ export const Navbar = () => {
                     try {
                       // Get current app URL
                       const currentUrl = window.location.origin;
-                      
+
                       // Clear local storage first
                       localStorage.removeItem("authToken");
                       localStorage.removeItem("currentUser");
                       sessionStorage.removeItem("authToken");
-                      
+
                       // Clear user context
                       setUser(null);
-                      
+
                       // Open app in new window
                       const newWindow = window.open(currentUrl, "_blank");
-                      
+
                       if (newWindow) {
                         // Focus the new window
                         newWindow.focus();
-                        
+
                         // Show instructions for private browsing
                         const userAgent = navigator.userAgent.toLowerCase();
                         let shortcut = "Ctrl+Shift+N"; // Chrome default
-                        
+
                         if (userAgent.includes("firefox")) {
                           shortcut = "Ctrl+Shift+P";
-                        } else if (userAgent.includes("safari") && !userAgent.includes("chrome")) {
+                        } else if (
+                          userAgent.includes("safari") &&
+                          !userAgent.includes("chrome")
+                        ) {
                           shortcut = "Cmd+Shift+N";
                         } else if (userAgent.includes("edge")) {
                           shortcut = "Ctrl+Shift+N";
                         }
-                        
+
                         // Optional: Show a toast or alert with instructions
                         setTimeout(() => {
-                          if (window.confirm(
-                            `${t("user.privateWindowTip") || "Tip: For complete privacy, press"} ${shortcut} ${t("user.privateWindowTip2") || "to open in private/incognito mode."}\n\n${t("user.closeCurrentWindow") || "Would you like to close this window?"}`
-                          )) {
+                          if (
+                            window.confirm(
+                              `${t("user.privateWindowTip") || "Tip: For complete privacy, press"} ${shortcut} ${t("user.privateWindowTip2") || "to open in private/incognito mode."}\n\n${t("user.closeCurrentWindow") || "Would you like to close this window?"}`
+                            )
+                          ) {
                             window.close();
                           }
                         }, 1000);
                       } else {
                         // Fallback if popup was blocked
-                        alert(t("user.popupBlocked") || "Popup blocked. Please allow popups and try again, or manually open a private window.");
+                        alert(
+                          t("user.popupBlocked") ||
+                            "Popup blocked. Please allow popups and try again, or manually open a private window."
+                        );
                       }
-                      
+
                       // Navigate current window to login page as fallback
                       navigate("/");
-                      
+
                       // Optional: Call logout API endpoint
                       // await authService.logout();
                     } catch (error) {
@@ -815,7 +865,7 @@ export const Navbar = () => {
               </DropdownSection>
             </DropdownMenu>
           </Dropdown>
-        </NavbarItem>
+        </NavbarItem> */}
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -833,7 +883,7 @@ export const Navbar = () => {
               unreadCount > 0
                 ? "hover:bg-danger/10 hover:text-danger"
                 : "hover:bg-default/10",
-              !isConnected && "opacity-50",
+              !isConnected && "opacity-50"
             )}
             size="sm"
             variant="light"
@@ -841,7 +891,7 @@ export const Navbar = () => {
             <Bell
               className={clsx(
                 "transition-transform duration-300",
-                unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse",
+                unreadCount > 0 ? "animate-pulse" : "hover:animate-pulse"
               )}
               size={16}
             />
@@ -871,7 +921,7 @@ export const Navbar = () => {
                 className={clsx(
                   "transition-all duration-300 hover:scale-105 active:scale-95",
                   "hover:text-primary font-medium",
-                  currentPath === item.href && "border-l-2 border-primary pl-2",
+                  currentPath === item.href && "border-l-2 border-primary pl-2"
                 )}
                 color={currentPath === item.href ? "primary" : "foreground"}
                 href={item.href}
@@ -882,18 +932,20 @@ export const Navbar = () => {
               </Link>
             </NavbarMenuItem>
           ))}
-          
+
           {/* Add Management Items for Mobile */}
           {(isAdmin() || hasPermission({ actions: ["users.read"] })) && (
             <NavbarMenuItem
               className="animate-in slide-in-from-left duration-500"
-              style={{ animationDelay: `${(projectNavItems.length + 1) * 100}ms` }}
+              style={{
+                animationDelay: `${(projectNavItems.length + 1) * 100}ms`,
+              }}
             >
               <Link
                 className={clsx(
                   "transition-all duration-300 hover:scale-105 active:scale-95",
                   "hover:text-primary font-medium",
-                  currentPath === "/users" && "border-l-2 border-primary pl-2",
+                  currentPath === "/users" && "border-l-2 border-primary pl-2"
                 )}
                 color={currentPath === "/users" ? "primary" : "foreground"}
                 href="/users"
@@ -907,19 +959,27 @@ export const Navbar = () => {
               </Link>
             </NavbarMenuItem>
           )}
-          
-          {(isAdmin() || hasPermission({ actions: ["Department Management", "Manage Departments"] })) && (
+
+          {(isAdmin() ||
+            hasPermission({
+              actions: ["Department Management", "Manage Departments"],
+            })) && (
             <NavbarMenuItem
               className="animate-in slide-in-from-left duration-500"
-              style={{ animationDelay: `${(projectNavItems.length + 2) * 100}ms` }}
+              style={{
+                animationDelay: `${(projectNavItems.length + 2) * 100}ms`,
+              }}
             >
               <Link
                 className={clsx(
                   "transition-all duration-300 hover:scale-105 active:scale-95",
                   "hover:text-primary font-medium",
-                  currentPath === "/departments" && "border-l-2 border-primary pl-2",
+                  currentPath === "/departments" &&
+                    "border-l-2 border-primary pl-2"
                 )}
-                color={currentPath === "/departments" ? "primary" : "foreground"}
+                color={
+                  currentPath === "/departments" ? "primary" : "foreground"
+                }
                 href="/departments"
                 size="lg"
                 onClick={(e) => handleNav(e, "/departments")}
@@ -931,7 +991,7 @@ export const Navbar = () => {
               </Link>
             </NavbarMenuItem>
           )}
-          
+
           <NavbarMenuItem
             className="flex flex-row gap-2 items-center animate-in slide-in-from-left duration-500"
             style={{
