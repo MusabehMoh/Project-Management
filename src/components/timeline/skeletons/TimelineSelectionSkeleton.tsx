@@ -1,9 +1,11 @@
 import { Card, CardHeader } from "@heroui/card";
 import { Skeleton } from "@heroui/skeleton";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 export default function TimelineSelectionSkeleton() {
   const { language } = useLanguage();
   const direction = language === "ar" ? "rtl" : "ltr";
+
   return (
     <Card>
       <CardHeader
@@ -27,4 +29,3 @@ export default function TimelineSelectionSkeleton() {
     </Card>
   );
 }
-

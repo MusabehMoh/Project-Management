@@ -38,7 +38,6 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
-
 import { X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -147,10 +146,12 @@ export default function UsersPage() {
       return (action as any).category;
     }
     // Extract category from action name (e.g., "users.create" -> "Users")
-    if (action.name && action.name.includes('.')) {
-      const prefix = action.name.split('.')[0];
+    if (action.name && action.name.includes(".")) {
+      const prefix = action.name.split(".")[0];
+
       return prefix.charAt(0).toUpperCase() + prefix.slice(1);
     }
+
     return "Uncategorized";
   };
 
@@ -186,9 +187,7 @@ export default function UsersPage() {
   const getActionCategories = () => {
     const availableActions = getAvailableAdditionalActions();
     const categories = [
-      ...new Set(
-        availableActions.map((action) => getActionCategory(action)),
-      ),
+      ...new Set(availableActions.map((action) => getActionCategory(action))),
     ];
 
     return categories.sort();
@@ -586,31 +585,34 @@ export default function UsersPage() {
                   <Skeleton className="h-4 w-20 rounded" />
                   <Skeleton className="h-4 w-16 rounded" />
                 </div>
-                
+
                 {/* Table rows skeleton */}
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="grid grid-cols-7 gap-4 py-4 border-b border-default-100">
+                  <div
+                    key={i}
+                    className="grid grid-cols-7 gap-4 py-4 border-b border-default-100"
+                  >
                     {/* Username with avatar */}
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-8 w-8 rounded-full" />
                       <Skeleton className="h-4 w-24 rounded" />
                     </div>
-                    
+
                     {/* Full name */}
                     <Skeleton className="h-4 w-32 rounded" />
-                    
+
                     {/* Military number */}
                     <Skeleton className="h-4 w-20 rounded" />
-                    
+
                     {/* Grade */}
                     <Skeleton className="h-4 w-16 rounded" />
-                    
+
                     {/* Roles */}
                     <Skeleton className="h-6 w-20 rounded-full" />
-                    
+
                     {/* Status */}
                     <Skeleton className="h-6 w-16 rounded-full" />
-                    
+
                     {/* Actions */}
                     <Skeleton className="h-8 w-8 rounded" />
                   </div>
@@ -623,32 +625,36 @@ export default function UsersPage() {
             ) : users.length === 0 ? (
               <div className="flex justify-center items-center py-12">
                 <div className="text-center space-y-4">
-                  <SearchIcon 
-                    className="mx-auto text-default-400" 
-                    height={64} 
+                  <SearchIcon
+                    className="mx-auto text-default-400"
+                    height={64}
                     width={64}
                   />
                   <div>
                     <p className="text-lg text-default-600">
                       {hasActiveFilters
-                        ? t("users.noUsersFound") || "No users found matching your search"
+                        ? t("users.noUsersFound") ||
+                          "No users found matching your search"
                         : t("users.noUsersAvailable") || "No users available"}
                     </p>
                     <p className="text-sm text-default-500">
                       {hasActiveFilters
-                        ? t("users.tryDifferentSearch") || "Try adjusting your search terms or filters."
-                        : t("users.createFirstUser") || "Start by creating your first user."}
+                        ? t("users.tryDifferentSearch") ||
+                          "Try adjusting your search terms or filters."
+                        : t("users.createFirstUser") ||
+                          "Start by creating your first user."}
                     </p>
                   </div>
-                  {!hasActiveFilters && hasPermission({ actions: ["users.create"] }) && (
-                    <Button
-                      color="primary"
-                      startContent={<PlusIcon />}
-                      onPress={onOpen}
-                    >
-                      {t("users.addUser")}
-                    </Button>
-                  )}
+                  {!hasActiveFilters &&
+                    hasPermission({ actions: ["users.create"] }) && (
+                      <Button
+                        color="primary"
+                        startContent={<PlusIcon />}
+                        onPress={onOpen}
+                      >
+                        {t("users.addUser")}
+                      </Button>
+                    )}
                 </div>
               </div>
             ) : (
@@ -1284,7 +1290,8 @@ export default function UsersPage() {
                                     size="sm"
                                     variant="flat"
                                   >
-                                    {selectedInCategory}/{categoryActions.length}
+                                    {selectedInCategory}/
+                                    {categoryActions.length}
                                   </Chip>
                                 </div>
                                 <div className="flex gap-2">
@@ -1305,70 +1312,70 @@ export default function UsersPage() {
                                   </Button>
                                 </div>
                               </div>
-                              
+
                               {/* Actions Grid */}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {categoryActions.map((action) => (
-                                <Card
-                                  key={action.id}
-                                  isPressable
-                                  className={`cursor-pointer transition-all ${
-                                    selectedAdditionalActions.includes(
-                                      action.id,
-                                    )
-                                      ? "bg-default-50"
-                                      : "bg-default-50 border-default-200 hover:bg-default-100"
-                                  }`}
-                                  onPress={() => {
-                                    if (
+                                {categoryActions.map((action) => (
+                                  <Card
+                                    key={action.id}
+                                    isPressable
+                                    className={`cursor-pointer transition-all ${
                                       selectedAdditionalActions.includes(
                                         action.id,
                                       )
-                                    ) {
-                                      setSelectedAdditionalActions(
-                                        selectedAdditionalActions.filter(
-                                          (id) => id !== action.id,
-                                        ),
-                                      );
-                                    } else {
-                                      setSelectedAdditionalActions([
-                                        ...selectedAdditionalActions,
-                                        action.id,
-                                      ]);
-                                    }
-                                  }}
-                                >
-                                  <CardBody className="p-3">
-                                    <div className="flex items-start gap-3">
-                                      <div
-                                        className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                                          selectedAdditionalActions.includes(
-                                            action.id,
-                                          )
-                                            ? "bg-success border-success"
-                                            : "border-default-300"
-                                        }`}
-                                      >
-                                        {selectedAdditionalActions.includes(
+                                        ? "bg-default-50"
+                                        : "bg-default-50 border-default-200 hover:bg-default-100"
+                                    }`}
+                                    onPress={() => {
+                                      if (
+                                        selectedAdditionalActions.includes(
                                           action.id,
-                                        ) && (
-                                          <span className="text-white text-xs">
-                                            ✓
-                                          </span>
-                                        )}
+                                        )
+                                      ) {
+                                        setSelectedAdditionalActions(
+                                          selectedAdditionalActions.filter(
+                                            (id) => id !== action.id,
+                                          ),
+                                        );
+                                      } else {
+                                        setSelectedAdditionalActions([
+                                          ...selectedAdditionalActions,
+                                          action.id,
+                                        ]);
+                                      }
+                                    }}
+                                  >
+                                    <CardBody className="p-3">
+                                      <div className="flex items-start gap-3">
+                                        <div
+                                          className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                                            selectedAdditionalActions.includes(
+                                              action.id,
+                                            )
+                                              ? "bg-success border-success"
+                                              : "border-default-300"
+                                          }`}
+                                        >
+                                          {selectedAdditionalActions.includes(
+                                            action.id,
+                                          ) && (
+                                            <span className="text-white text-xs">
+                                              ✓
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium text-small text-foreground">
+                                            {action.name}
+                                          </p>
+                                          <p className="text-tiny text-default-500 mt-1">
+                                            {action.description}
+                                          </p>
+                                        </div>
                                       </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-small text-foreground">
-                                          {action.name}
-                                        </p>
-                                        <p className="text-tiny text-default-500 mt-1">
-                                          {action.description}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </CardBody>
-                                </Card>
-                              ))}
+                                    </CardBody>
+                                  </Card>
+                                ))}
                               </div>
                             </CardBody>
                           </Card>

@@ -24,6 +24,7 @@ export default function PendingRequirements({
 
   const getPriorityColor = (priority: string | number | null | undefined) => {
     const priorityStr = priority?.toString()?.toLowerCase() || "";
+
     switch (priorityStr) {
       case "high":
         return "danger";
@@ -38,6 +39,7 @@ export default function PendingRequirements({
 
   const getPriorityText = (priority: string | number | null | undefined) => {
     const priorityStr = priority?.toString()?.toLowerCase() || "";
+
     switch (priorityStr) {
       case "high":
         return t("priority.high");
@@ -83,11 +85,14 @@ export default function PendingRequirements({
             </div>
             <Skeleton className="h-8 w-20 rounded" />
           </div>
-          
+
           {/* Requirements list skeleton */}
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="p-4 border border-default-200 rounded-lg space-y-3">
+              <div
+                key={i}
+                className="p-4 border border-default-200 rounded-lg space-y-3"
+              >
                 {/* Requirement header */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-2">
@@ -100,7 +105,7 @@ export default function PendingRequirements({
                   </div>
                   <Skeleton className="h-8 w-8 rounded" />
                 </div>
-                
+
                 {/* Requirement metadata */}
                 <div className="flex items-center justify-between pt-2 border-t border-default-100">
                   <div className="flex items-center gap-4">
@@ -118,7 +123,7 @@ export default function PendingRequirements({
               </div>
             ))}
           </div>
-          
+
           {/* View all button skeleton */}
           <div className="pt-4 border-t border-default-200">
             <Skeleton className="h-9 w-full rounded" />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import { Button } from "@heroui/button";
 import { Search, ChevronDown, X } from "lucide-react";
@@ -21,6 +21,9 @@ import {
   BarChart3,
   Calendar,
   Clock,
+  Paperclip,
+  Eye,
+  Download,
 } from "lucide-react";
 import {
   Autocomplete,
@@ -46,7 +49,11 @@ import { TaskListView } from "@/components/members-tasks/TaskListView";
 import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePriorityLookups } from "@/hooks/usePriorityLookups";
+import { useRequirementStatus } from "@/hooks/useRequirementStatus";
+import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { MemberTask, TaskStatus } from "@/types/membersTasks";
+import { ProjectRequirement } from "@/types/projectRequirement";
 import GlobalPagination from "@/components/GlobalPagination";
 import AddAdhocTask from "@/components/AddAdhocTask";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
@@ -54,14 +61,95 @@ import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { usePermissions } from "@/hooks/usePermissions";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
+import { useFilePreview } from "@/hooks/useFilePreview";
+import { FilePreview } from "@/components/FilePreview";
+import { projectRequirementsService } from "@/services/api";
 
 export default function MembersTasksPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Global priority lookups
+  const { getPriorityColor, getPriorityLabel, priorityOptions } =
+    usePriorityLookups();
+
+  // RequirementStatus hook for dynamic status management
+  const { statuses, getRequirementStatusColor, getRequirementStatusName } =
+    useRequirementStatus();
+
+  // Projects (for project filter dropdown)
+  const { assignedProjects: projects, loadAssignedProjects } =
+    useProjectRequirements();
+
+  // Load projects when component initializes (for dropdown)
+  useEffect(() => {
+    // Best-effort load; the underlying hook handles its own loading guard
+    loadAssignedProjects();
+  }, [loadAssignedProjects]);
 
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
   const [viewType, setViewType] = useState<"grid" | "list" | "gantt">("grid");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { hasAnyRole, loading: userLoading } = usePermissions();
+
+  // Add state for full requirement details
+  const [fullRequirement, setFullRequirement] = useState<ProjectRequirement | null>(null);
+  const [loadingRequirement, setLoadingRequirement] = useState(false);
+
+  // File preview hook
+  const { previewState, previewFile, closePreview, downloadCurrentFile } =
+    useFilePreview({
+      downloadFunction: (requirementId, attachmentId, filename) =>
+        projectRequirementsService
+          .downloadAttachment(requirementId, attachmentId)
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }),
+    });
+
+  // File handling functions
+  const handleFilePreview = async (attachment: any) => {
+    if (
+      fullRequirement &&
+      attachment?.originalName &&
+      typeof attachment.originalName === "string"
+    ) {
+      await previewFile(
+        attachment.originalName,
+        attachment.url,
+        attachment.size,
+      );
+    }
+  };
+
+  const handleFileDownload = async (attachment: any) => {
+    if (fullRequirement) {
+      try {
+        const blob = await projectRequirementsService.downloadAttachment(
+          fullRequirement.id,
+          attachment.id,
+        );
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+
+        a.href = url;
+        a.download = attachment.originalName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (error) {
+        console.error("Download failed:", error);
+      }
+    }
+  };
 
   const {
     tasks,
@@ -88,8 +176,6 @@ export default function MembersTasksPage() {
     changeAssignees,
   } = useMembersTasks();
 
-  const { language } = useLanguage();
-
   const [isRequestDesignModalOpend, setIsRequestDesignModalOpend] =
     useState(false);
   const [isChangeAssigneesModalOpened, setIsChangeAssigneesModalOpened] =
@@ -103,7 +189,7 @@ export default function MembersTasksPage() {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
-    []
+    [],
   );
   const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
   // State for selected members
@@ -122,25 +208,16 @@ export default function MembersTasksPage() {
 
   const effectivePageSize = normalizePageSize(
     taskParametersRequest.limit ?? 10,
-    10
+    10,
   );
 
   // Search and filter states (local)
   const [searchTerm, setSearchTerm] = useState(
-    taskParametersRequest?.search ?? ""
-  );
-  const [statusFilter, setStatusFilter] = useState<number | null>(
-    taskParametersRequest?.statusId || null
-  );
-  const [priorityFilter, setPriorityFilter] = useState<number | null>(
-    taskParametersRequest?.priorityId || null
-  );
-  const [projectFilter, setProjectFilter] = useState<number | null>(
-    taskParametersRequest?.projectId || null
+    taskParametersRequest?.search ?? "",
   );
 
   const [searchValue, setSearchValue] = useState(
-    taskParametersRequest?.search ?? ""
+    taskParametersRequest?.search ?? "",
   );
 
   const isTeamManager = hasAnyRole([
@@ -160,7 +237,7 @@ export default function MembersTasksPage() {
         const success = await changeAssignees(
           selectedTask?.id ?? "0",
           selectedMembers.map((member) => member.id.toString()),
-          notes ?? ""
+          notes ?? "",
         );
 
         if (success) {
@@ -192,7 +269,7 @@ export default function MembersTasksPage() {
     const success = await changeStatus(
       selectedTask?.id ?? "0",
       `${selectedStatus?.id ?? 3}`,
-      notes ?? ""
+      notes ?? "",
     );
 
     if (success) {
@@ -204,9 +281,39 @@ export default function MembersTasksPage() {
     }
   };
 
-  const handleTaskClick = (task: MemberTask) => {
+  const handleTaskClick = async (task: MemberTask) => {
+    console.log("MembersTasksPage: Task clicked:", task.id, task.name);
+
+    // Set the selected task immediately
     setSelectedTask(task);
+
+    // Fetch full requirement details if available
+    if (task.requirement?.id) {
+      setLoadingRequirement(true);
+      try {
+        // Get the full requirement details by ID
+        const requirement = await projectRequirementsService.getRequirement(
+          parseInt(task.requirement.id),
+        );
+
+        setFullRequirement(requirement);
+      } catch (error) {
+        console.error("Failed to fetch requirement details:", error);
+        setFullRequirement(null);
+      } finally {
+        setLoadingRequirement(false);
+      }
+    } else {
+      setFullRequirement(null);
+    }
+
+    // Open drawer immediately rather than using setTimeout
     setIsDrawerOpen(true);
+
+    console.log(
+      "MembersTasksPage: Drawer state set to open for task:",
+      task.id,
+    );
   };
 
   const handleChangeAssignees = (task: MemberTask) => {
@@ -273,87 +380,23 @@ export default function MembersTasksPage() {
       if (searchTerm !== (taskParametersRequest?.search ?? "")) {
         handleSearchChange(searchTerm);
       }
-
-      // Update status filter
-      if (statusFilter !== (taskParametersRequest?.statusId || null)) {
-        if (statusFilter !== null) {
-          handleStatusChange(statusFilter);
-        } else {
-          // If status filter is reset to null, we need to refresh with other filters
-          const hasOtherFilters =
-            searchTerm || priorityFilter !== null || projectFilter !== null;
-          if (hasOtherFilters) {
-            // Trigger a refresh that maintains other filters but clears status
-            fetchTasks();
-          } else {
-            handleResetFilters();
-          }
-        }
-      }
-
-      // Update priority filter
-      if (priorityFilter !== (taskParametersRequest?.priorityId || null)) {
-        if (priorityFilter !== null) {
-          handlePriorityChange(priorityFilter);
-        } else {
-          // If priority filter is reset to null, refresh with other filters
-          const hasOtherFilters =
-            searchTerm || statusFilter !== null || projectFilter !== null;
-          if (hasOtherFilters) {
-            fetchTasks();
-          } else {
-            handleResetFilters();
-          }
-        }
-      }
-
-      // Update project filter
-      if (projectFilter !== (taskParametersRequest?.projectId || null)) {
-        if (projectFilter !== null) {
-          handleProjectChange(projectFilter);
-        } else {
-          // If project filter is reset to null, refresh with other filters
-          const hasOtherFilters =
-            searchTerm || statusFilter !== null || priorityFilter !== null;
-          if (hasOtherFilters) {
-            fetchTasks();
-          } else {
-            handleResetFilters();
-          }
-        }
-      }
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [
-    searchTerm,
-    statusFilter,
-    priorityFilter,
-    projectFilter,
-    handleSearchChange,
-    handleStatusChange,
-    handlePriorityChange,
-    handleProjectChange,
-    handleResetFilters,
-    fetchTasks,
-    taskParametersRequest,
-  ]);
+  }, [searchTerm, handleSearchChange, taskParametersRequest]);
 
   // Reset all filters
   const resetAllFilters = () => {
     setSearchTerm("");
-    setStatusFilter(null);
-    setPriorityFilter(null);
-    setProjectFilter(null);
     handleResetFilters();
   };
 
   // Check if any filters are active
   const hasActiveFilters =
     searchTerm ||
-    statusFilter !== null ||
-    priorityFilter !== null ||
-    projectFilter !== null;
+    taskParametersRequest.statusId !== undefined ||
+    taskParametersRequest.priorityId !== undefined ||
+    taskParametersRequest.projectId !== undefined;
 
   const handleRefresh = () => refreshTasks();
 
@@ -363,6 +406,16 @@ export default function MembersTasksPage() {
       month: "short",
       day: "numeric",
     });
+
+  // Helper function to get status color using RequirementStatus lookup
+  const getStatusColor = (status: number) => {
+    return getRequirementStatusColor(status);
+  };
+
+  // Helper function to get status text using RequirementStatus lookup
+  const getStatusText = (status: number) => {
+    return getRequirementStatusName(status);
+  };
 
   const mapColor = (color?: string) => {
     switch (color) {
@@ -523,7 +576,7 @@ export default function MembersTasksPage() {
               <div className="flex flex-col md:flex-row gap-4 items-end">
                 <Input
                   className="md:w-120"
-                  placeholder={t("common.search") + "..."}
+                  placeholder={t("requirements.searchRequirements")}
                   startContent={<Search className="w-4 h-4" />}
                   value={searchTerm}
                   onValueChange={setSearchTerm}
@@ -531,31 +584,42 @@ export default function MembersTasksPage() {
 
                 <Select
                   className="md:w-90"
-                  placeholder={t("project")}
-                  selectedKeys={projectFilter ? [String(projectFilter)] : []}
+                  placeholder={t("taskPlan.filterByProject")}
+                  selectedKeys={
+                    taskParametersRequest.projectId
+                      ? [String(taskParametersRequest.projectId)]
+                      : []
+                  }
                   onSelectionChange={(keys) => {
                     const val = Array.from(keys)[0] as string;
-                    const newProjectFilter =
-                      val && val !== "" ? Number(val) : null;
-                    setProjectFilter(newProjectFilter);
+
+                    handleProjectChange(val ? Number(val) : 0);
                   }}
                 >
-                  <SelectItem key="">{t("project")}</SelectItem>
-                  {(tasksConfigData.projects ?? []).map((project) => (
-                    <SelectItem
-                      key={String(project.id)}
-                      value={String(project.id)}
-                    >
-                      {project.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem key="">{t("taskPlan.allProjects")}</SelectItem>
+                  <>
+                    {projects?.map((p) => (
+                      <SelectItem key={String(p.id)}>
+                        {p.applicationName}
+                      </SelectItem>
+                    ))}
+                  </>
                 </Select>
 
                 <Select
                   className="md:w-43"
-                  placeholder={t("status")}
+                  items={[
+                    { value: "", label: t("requirements.allStatuses") },
+                    ...(statuses || []).map((status) => ({
+                      value: status.value.toString(),
+                      label: language === "ar" ? status.nameAr : status.nameEn,
+                    })),
+                  ]}
+                  placeholder={t("requirements.filterByStatus")}
                   selectedKeys={
-                    statusFilter !== null ? [statusFilter.toString()] : []
+                    taskParametersRequest.statusId
+                      ? [taskParametersRequest.statusId.toString()]
+                      : []
                   }
                   onSelectionChange={(keys) => {
                     const selectedKey = Array.from(keys)[0] as string;
@@ -563,25 +627,44 @@ export default function MembersTasksPage() {
                       selectedKey && selectedKey !== ""
                         ? parseInt(selectedKey)
                         : null;
-                    setStatusFilter(newStatusFilter);
+
+                    if (newStatusFilter !== null) {
+                      handleStatusChange(newStatusFilter);
+                    } else {
+                      // If status filter is reset to null, we need to refresh with other filters
+                      const hasOtherFilters =
+                        searchTerm ||
+                        taskParametersRequest.priorityId ||
+                        taskParametersRequest.projectId;
+
+                      if (hasOtherFilters) {
+                        // Trigger a refresh that maintains other filters but clears status
+                        fetchTasks();
+                      } else {
+                        handleResetFilters();
+                      }
+                    }
                   }}
                 >
-                  <SelectItem key="">{t("status")}</SelectItem>
-                  {(tasksConfigData.taskStatus ?? []).map((status) => (
-                    <SelectItem
-                      key={String(status.id)}
-                      value={String(status.id)}
-                    >
-                      {status.label}
-                    </SelectItem>
-                  ))}
+                  {(item) => (
+                    <SelectItem key={item.value}>{item.label}</SelectItem>
+                  )}
                 </Select>
 
                 <Select
                   className="md:w-43"
-                  placeholder={t("priority")}
+                  items={[
+                    { value: "", label: t("requirements.allPriorities") },
+                    ...priorityOptions.map((p) => ({
+                      value: p.value.toString(),
+                      label: language === "ar" ? p.labelAr : p.label,
+                    })),
+                  ]}
+                  placeholder={t("requirements.filterByPriority")}
                   selectedKeys={
-                    priorityFilter !== null ? [priorityFilter.toString()] : []
+                    taskParametersRequest.priorityId
+                      ? [taskParametersRequest.priorityId.toString()]
+                      : []
                   }
                   onSelectionChange={(keys) => {
                     const selectedKey = Array.from(keys)[0] as string;
@@ -589,18 +672,27 @@ export default function MembersTasksPage() {
                       selectedKey && selectedKey !== ""
                         ? parseInt(selectedKey)
                         : null;
-                    setPriorityFilter(newPriorityFilter);
+
+                    if (newPriorityFilter !== null) {
+                      handlePriorityChange(newPriorityFilter);
+                    } else {
+                      // If priority filter is reset to null, refresh with other filters
+                      const hasOtherFilters =
+                        searchTerm ||
+                        taskParametersRequest.statusId ||
+                        taskParametersRequest.projectId;
+
+                      if (hasOtherFilters) {
+                        fetchTasks();
+                      } else {
+                        handleResetFilters();
+                      }
+                    }
                   }}
                 >
-                  <SelectItem key="">{t("priority")}</SelectItem>
-                  {(tasksConfigData.taskPriority ?? []).map((priority) => (
-                    <SelectItem
-                      key={String(priority.id)}
-                      value={String(priority.id)}
-                    >
-                      {priority.label}
-                    </SelectItem>
-                  ))}
+                  {(item) => (
+                    <SelectItem key={item.value}>{item.label}</SelectItem>
+                  )}
                 </Select>
               </div>
 
@@ -608,7 +700,7 @@ export default function MembersTasksPage() {
               {hasActiveFilters && (
                 <div className="flex items-center gap-2 mt-2">
                   <Button
-                    color="danger"
+                    color="secondary"
                     size="sm"
                     startContent={<X size={16} />}
                     variant="flat"
@@ -617,8 +709,10 @@ export default function MembersTasksPage() {
                     {t("requirements.clearFilters")}
                   </Button>
                   <span className="text-sm text-default-500">
-                    {t("pagination.showing")} {totalCount}{" "}
-                    {t("pagination.items")}
+                    {t("requirements.requirementsFound").replace(
+                      "{count}",
+                      totalCount.toString(),
+                    )}
                   </span>
                 </div>
               )}
@@ -634,6 +728,7 @@ export default function MembersTasksPage() {
                 {t("common.show")}
               </span>
               <Select
+                aria-label={t("pagination.itemsPerPage")}
                 className="w-20"
                 selectedKeys={[
                   normalizePageSize(effectivePageSize, 10).toString(),
@@ -641,6 +736,7 @@ export default function MembersTasksPage() {
                 size="sm"
                 onSelectionChange={(keys) => {
                   const newSize = parseInt(Array.from(keys)[0] as string);
+
                   handlePageSizeChange(newSize);
                 }}
               >
@@ -704,7 +800,8 @@ export default function MembersTasksPage() {
               </div>
 
               <span className="text-sm text-foreground-600">
-                {t("pagination.showing")} {tasks?.length || 0} {t("pagination.of")} {totalCount} {t("common.tasks")}
+                {t("pagination.showing")} {tasks?.length || 0}{" "}
+                {t("pagination.of")} {totalCount} {t("common.tasks")}
               </span>
             </div>
           </div>
@@ -768,6 +865,10 @@ export default function MembersTasksPage() {
                 {tasks.map((task) => (
                   <TaskCard
                     key={task.id}
+                    getPriorityColor={getPriorityColor}
+                    getPriorityLabel={getPriorityLabel}
+                    getStatusColor={getStatusColor}
+                    getStatusText={getStatusText}
                     isTeamManager={isTeamManager}
                     task={task}
                     onChangeAssignees={handleChangeAssignees}
@@ -780,7 +881,14 @@ export default function MembersTasksPage() {
             )}
             {viewType === "list" && (
               <div className="mb-8">
-                <TaskListView tasks={tasks} onTaskClick={handleTaskClick} />
+                <TaskListView
+                  getPriorityColor={getPriorityColor}
+                  getPriorityLabel={getPriorityLabel}
+                  getStatusColor={getStatusColor}
+                  getStatusText={getStatusText}
+                  tasks={tasks}
+                  onTaskClick={handleTaskClick}
+                />
               </div>
             )}
             {viewType === "gantt" && (
@@ -810,15 +918,17 @@ export default function MembersTasksPage() {
           isOpen={isDrawerOpen}
           placement={language === "en" ? "left" : "right"}
           size="lg"
-          onOpenChange={setIsDrawerOpen}
+          onOpenChange={(open) => {
+            console.log("Drawer onOpenChange called with:", open);
+            setIsDrawerOpen(open);
+          }}
         >
           <DrawerContent
-          // className={`min-h-[400px] transition-all duration-200 hover:shadow-lg
-          //   ${
-          //     selectedTask?.isOverdue
-          //       ? "border-l-4 border-l-danger-500 bg-white dark:bg-danger-900/20"
-          //       : `border-l-4 border-l-${selectedTask?.status.color as any}-500 bg-white dark:bg-${selectedTask?.status.color as any}-900/20`
-          //   }`}
+            className={`min-h-[400px] transition-all duration-200 hover:shadow-lg ${
+              selectedTask?.isOverdue
+                ? "border-l-4 border-l-danger-500 bg-white dark:bg-danger-900/20"
+                : `border-l-4 border-l-${mapColor(selectedTask?.status.color)}-500 bg-white dark:bg-${mapColor(selectedTask?.status.color)}-900/20`
+            }`}
           >
             <DrawerHeader className="flex flex-col gap-1">
               <h2 className="text-xl font-semibold">{selectedTask?.name}</h2>
@@ -846,11 +956,12 @@ export default function MembersTasksPage() {
                     <div className="flex flex-col items-start gap-1">
                       <h4 className="text-md">{t("priority")}</h4>
                       <Chip
-                        color={mapColor(selectedTask.priority.color)}
+                        color={getPriorityColor(selectedTask.priority.id)}
                         size="sm"
                         variant="solid"
                       >
-                        {t(`${selectedTask.priority.label}`)}
+                        {getPriorityLabel(selectedTask.priority.id) ||
+                          selectedTask.priority.label}
                       </Chip>
                     </div>
 
@@ -858,29 +969,16 @@ export default function MembersTasksPage() {
                     <div className="flex flex-col items-start gap-1">
                       <h4 className="text-md">{t("status")}</h4>
                       <Chip
-                        color={mapColor(selectedTask.status.color)}
+                        color={getStatusColor(selectedTask.status.id)}
                         size="sm"
                         variant="flat"
                       >
-                        {`${selectedTask.status.label.replace("-", "")}`}
+                        {getStatusText(selectedTask.status.id)}
                       </Chip>
                     </div>
                   </div>
 
-                  {/* Description */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      {t("requirements.description")}
-                    </h3>
-                    <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                      <p
-                        dangerouslySetInnerHTML={{
-                          __html: selectedTask.description,
-                        }}
-                        className="text-sm leading-relaxed"
-                      />
-                    </div>
-                  </div>
+                
 
                   <div className="flex justify-between items-start">
                     {/* Start Date */}
@@ -938,6 +1036,118 @@ export default function MembersTasksPage() {
                     </div>
                   </div>
 
+                  {/* Requirement Description and Files */}
+                  {fullRequirement && (
+                    <>
+                      {/* Requirement Description */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">
+                          {t("requirements.requirementDescription")}
+                        </h3>
+                        <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
+                          <p
+                            dangerouslySetInnerHTML={{
+                              __html:
+                                fullRequirement.description ||
+                                t("requirements.noDescription"),
+                            }}
+                            className="text-sm leading-relaxed"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Requirement Attachments */}
+                      {fullRequirement.attachments &&
+                        fullRequirement.attachments.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                              <Paperclip className="w-5 h-5 text-default-400" />
+                              {t("requirements.attachments")} (
+                              {fullRequirement.attachments.length})
+                            </h3>
+                            <div className="space-y-2">
+                              {fullRequirement.attachments.map((attachment) => (
+                                <div
+                                  key={attachment.id}
+                                  className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg hover:bg-default-100 dark:hover:bg-default-100/20 transition-colors"
+                                >
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                      <Paperclip className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">
+                                        {attachment.originalName}
+                                      </p>
+                                      <div className="flex items-center gap-4 text-xs text-default-500 mt-1">
+                                        <span>
+                                          {(
+                                            (attachment.fileSize || 0) /
+                                            1024 /
+                                            1024
+                                          ).toFixed(2)}{" "}
+                                          MB
+                                        </span>
+                                        {attachment.uploadedAt && (
+                                          <span>
+                                            {t("requirements.uploadedOn")}:{" "}
+                                            {formatDate(attachment.uploadedAt)}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2 flex-shrink-0">
+                                    {/* Preview Button for supported file types */}
+                                    {(attachment.originalName
+                                      .toLowerCase()
+                                      .endsWith(".pdf") ||
+                                      attachment.originalName
+                                        .toLowerCase()
+                                        .match(
+                                          /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/,
+                                        )) && (
+                                      <Button
+                                        color="default"
+                                        size="sm"
+                                        startContent={<Eye className="w-4 h-4" />}
+                                        variant="light"
+                                        onPress={() =>
+                                          handleFilePreview(attachment)
+                                        }
+                                      >
+                                        {t("common.preview")}
+                                      </Button>
+                                    )}
+                                    <Button
+                                      color="primary"
+                                      size="sm"
+                                      startContent={<Download className="w-4 h-4" />}
+                                      variant="light"
+                                      onPress={() =>
+                                        handleFileDownload(attachment)
+                                      }
+                                    >
+                                      {t("common.download")}
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                    </>
+                  )}
+
+                  {/* Loading state for requirement details */}
+                  {loadingRequirement && (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-default-500">
+                        {t("requirements.loadingDetails")}
+                      </p>
+                    </div>
+                  )}
+
                   {/* buttons */}
                   <div className="mt-3 pt-3 flex flex-col gap-3">
                     {isTeamManager ? (
@@ -984,7 +1194,10 @@ export default function MembersTasksPage() {
               <Button
                 color="danger"
                 variant="light"
-                onPress={() => setIsDrawerOpen(false)}
+                onPress={() => {
+                  console.log("Closing drawer");
+                  setIsDrawerOpen(false);
+                }}
               >
                 {t("common.close")}
               </Button>
@@ -1033,8 +1246,8 @@ export default function MembersTasksPage() {
                         onClick={() => {
                           setSelectedMembers(
                             selectedMembers.filter(
-                              (user) => user.id !== employee.id
-                            )
+                              (user) => user.id !== employee.id,
+                            ),
                           );
                         }}
                       />
@@ -1081,7 +1294,7 @@ export default function MembersTasksPage() {
                 onSelectionChange={(key) => {
                   if (key) {
                     const selectedEmployee = employees.find(
-                      (e) => e.id.toString() === key
+                      (e) => e.id.toString() === key,
                     );
 
                     if (selectedEmployee) {
@@ -1230,7 +1443,7 @@ export default function MembersTasksPage() {
                   aria-label="Select task status"
                   onAction={(key) => {
                     const status = tasksConfigData.taskStatus?.find(
-                      (s) => s.id.toString() === key
+                      (s) => s.id.toString() === key,
                     );
 
                     if (status) setSelectedStatus(status);
@@ -1281,6 +1494,13 @@ export default function MembersTasksPage() {
           task={selectedTask}
           onClose={onDetailsClose}
         /> */}
+
+        {/* File Preview Modal */}
+        <FilePreview
+          previewState={previewState}
+          onClose={closePreview}
+          onDownload={downloadCurrentFile}
+        />
       </div>
     </>
   );

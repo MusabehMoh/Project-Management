@@ -23,11 +23,15 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
-    public async Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null)
+    public async Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null, int? priorityId = null)
     {
         var query = _context.Tasks
             .Include(t => t.Sprint)
+                .ThenInclude(s => s!.Project)
             .Include(t => t.Assignments)
+                .ThenInclude(a => a.Employee)
+            .Include(t => t.Department)
+            .Include(t => t.ProjectRequirement)
             .Include(t => t.Dependencies_Relations)
             .AsQueryable();
 
@@ -41,10 +45,19 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             query = query.Where(t => t.Sprint != null && t.Sprint.ProjectId == projectId.Value);
         }
 
+        if (assigneeId.HasValue)
+        {
+            query = query.Where(t => t.Assignments.Any(a => a.PrsId == assigneeId.Value));
+        }
         
         if (statusId.HasValue)
         {
             query = query.Where(t => (int)t.StatusId == statusId.Value);
+        }
+
+        if (priorityId.HasValue)
+        {
+            query = query.Where(t => (int)t.PriorityId == priorityId.Value);
         }
 
         var totalCount = await query.CountAsync();
@@ -69,7 +82,11 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
     {
         return await _context.Tasks
             .Include(t => t.Sprint)
+                .ThenInclude(s => s!.Project)
             .Include(t => t.Assignments)
+                .ThenInclude(a => a.Employee)
+            .Include(t => t.Department)
+            .Include(t => t.ProjectRequirement)
             .Include(t => t.Dependencies_Relations)
             .Where(t => t.Assignments.Any(a => a.PrsId == assigneeId))
             .OrderByDescending(t => t.CreatedAt)
@@ -80,7 +97,11 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
     {
         return await _context.Tasks
             .Include(t => t.Sprint)
+                .ThenInclude(s => s!.Project)
             .Include(t => t.Assignments)
+                .ThenInclude(a => a.Employee)
+            .Include(t => t.Department)
+            .Include(t => t.ProjectRequirement)
             .Include(t => t.Dependencies_Relations)
             .Where(t => t.Sprint != null && t.Sprint.ProjectId == projectId)
             .OrderBy(t => t.StartDate)

@@ -237,13 +237,13 @@ export function useTimelineFormHelpers(departments: Department[] = []) {
     getStatusColor,
     getPriorityColor,
     getProgressColor,
-    
+
     // Name getters
     getStatusName,
     getPriorityName,
     getDepartmentColor,
     getDepartmentName,
-    
+
     // Standardized options for forms
     statusOptions,
     priorityOptions,

@@ -141,7 +141,7 @@ export default function TimelineItemCreateModal({
       startDate: formData.startDate?.toString() || "",
       endDate: formData.endDate?.toString() || "",
     };
-    
+
     if (!validateForm(validationData)) {
       return; // Don't submit if validation fails
     }
@@ -164,7 +164,7 @@ export default function TimelineItemCreateModal({
       };
 
       await onSubmit(payload);
-      
+
       // Don't show toasts here - let the parent component handle them
       // to avoid duplicate toasts
       onClose();
@@ -367,20 +367,18 @@ export default function TimelineItemCreateModal({
                     items={tasks}
                     label={t("timeline.selectPredecessors")}
                     placeholder={t("timeline.selectPredecessorsPlaceholder")}
-                    selectedKeys={
-                      selectedTasks.map(
-                        (task) => task.id.toString(),
-                      )
-                    }
+                    selectedKeys={selectedTasks.map((task) =>
+                      task.id.toString(),
+                    )}
                     selectionMode="multiple"
                     onSelectionChange={(keys) => {
                       if (keys === "all") return;
-                      
+
                       const selectedKeys = Array.from(keys);
-                      const newSelectedTasks = tasks.filter(
-                        (task) => selectedKeys.includes(task.id.toString()),
+                      const newSelectedTasks = tasks.filter((task) =>
+                        selectedKeys.includes(task.id.toString()),
                       );
-                      
+
                       setSelectedTasks(newSelectedTasks);
                     }}
                   >

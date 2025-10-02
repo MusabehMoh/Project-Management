@@ -873,9 +873,12 @@ const translations = {
     "tasks.developerDates": "Developer Schedule",
     "tasks.designerDates": "Designer Schedule",
     "tasks.qcDates": "QC Schedule",
-    "tasks.assignmentNote": "Select at least one team member for this task. Each role is optional but at least one assignment is required.",
-    "tasks.selectAtLeastOne": "Please select at least one team member (Developer, Designer, or QC).",
-    "tasks.validation.startDateMustBeBeforeEndDate": "Start date must be before end date",
+    "tasks.assignmentNote":
+      "Select at least one team member for this task. Each role is optional but at least one assignment is required.",
+    "tasks.selectAtLeastOne":
+      "Please select at least one team member (Developer, Designer, or QC).",
+    "tasks.validation.startDateMustBeBeforeEndDate":
+      "Start date must be before end date",
     "tasks.validation.bothDatesRequired":
       "Both start and end dates are required when a role is assigned",
     "tasks.assignedOn": "Assigned On", // Additional requirements keys
@@ -1491,6 +1494,8 @@ const translations = {
     status: "Status",
     project: "Project",
     requirement: "Requirement",
+    projectLabel: "Project:",
+    requirementLabel: "Requirement:",
     changeStatus: "Change Status",
     requestDesign: "Request Design",
     confirm: "Confirm",
@@ -2985,6 +2990,8 @@ const translations = {
     status: "الحالة",
     project: "المشروع",
     requirement: "المتطلب",
+    projectLabel: "المشروع:",
+    requirementLabel: "المتطلب:",
     changeStatus: "تغيير الحالة",
     requestDesign: "طلب تصميم",
     confirm: "تأكيد",

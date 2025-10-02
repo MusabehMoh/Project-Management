@@ -30,105 +30,87 @@ export class MembersTasksService {
   /**
    * Get all tasks with filtering and pagination
    */
+  /**
+   * Get all tasks with filtering and pagination
+   * @param taskRequest - Optional search parameters
+   */
   async getTasks(
     taskRequest?: TaskSearchParams,
   ): Promise<ApiResponse<TasksResponse>> {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams({
+      page: taskRequest?.page?.toString() || "1",
+      limit: taskRequest?.limit?.toString() || "20",
+    });
 
-    if (taskRequest?.page) {
-      params.append("page", taskRequest.page.toString());
-    }
-
-    if (taskRequest?.limit) {
-      params.append("limit", taskRequest.limit.toString());
-    }
-
-    if (taskRequest?.search) {
-      params.append("search", taskRequest.search);
-    }
-
-    // Member filtering
-    if (taskRequest?.memberIds && taskRequest.memberIds.length > 0) {
-      params.append("memberIds", taskRequest.memberIds.join(","));
-    }
-
-    if (taskRequest?.memberFilterMode) {
-      params.append("memberFilterMode", taskRequest.memberFilterMode);
-    }
-
-    // Department filtering
-    if (taskRequest?.departmentIds && taskRequest.departmentIds.length > 0) {
-      params.append("departmentIds", taskRequest.departmentIds.join(","));
-    }
-
-    // Status filtering (support both new array format and legacy single format)
-    if (taskRequest?.statusIds && taskRequest.statusIds.length > 0) {
-      params.append("statusIds", taskRequest.statusIds.join(","));
-    } else if (taskRequest?.statusId) {
-      params.append("statusIds", taskRequest.statusId.toString());
-    }
-
-    // Priority filtering (support both new array format and legacy single format)
-    if (taskRequest?.priorityIds && taskRequest.priorityIds.length > 0) {
-      params.append("priorityIds", taskRequest.priorityIds.join(","));
-    } else if (taskRequest?.priorityId) {
-      params.append("priorityIds", taskRequest.priorityId.toString());
-    }
-
+    // Add optional filters if provided
     if (taskRequest?.projectId) {
-      params.append("project", taskRequest.projectId.toString());
+      params.append("projectId", taskRequest.projectId.toString());
     }
 
-    // Overdue filter
-    if (taskRequest?.isOverdue) {
-      params.append("isOverdue", "true");
+    // Handle status filter - prefer single statusId but support array too
+    if (taskRequest?.statusId) {
+      params.append("status", taskRequest.statusId.toString());
+    } else if (taskRequest?.statusIds?.length) {
+      params.append("status", taskRequest.statusIds[0].toString());
     }
 
-    // Date range filtering
-    if (taskRequest?.dateRange) {
-      params.append("dateRangeStart", taskRequest.dateRange.start);
-      params.append("dateRangeEnd", taskRequest.dateRange.end);
+    // Handle priority filter - prefer single priorityId but support array too
+    if (taskRequest?.priorityId) {
+      params.append("priority", taskRequest.priorityId.toString());
+    } else if (taskRequest?.priorityIds?.length) {
+      params.append("priority", taskRequest.priorityIds[0].toString());
     }
 
-    // Sorting
-    if (taskRequest?.sortBy) {
-      params.append("sortBy", taskRequest.sortBy);
+    const endpoint = `${this.baseUrl}?${params.toString()}`;
+    const res = await apiClient.get<any>(endpoint);
+
+    // Handle standard ApiResponse format
+    if (res && typeof res.success === "boolean") {
+      const data = res.data;
+      const pagination = res.pagination;
+
+      // Case 1: ApiResponse with array data that needs to be normalized
+      if (Array.isArray(data)) {
+        const normalized: TasksResponse = {
+          tasks: data as MemberTask[],
+          totalCount:
+            pagination?.total || (pagination as any)?.totalCount || data.length,
+          totalPages: pagination?.totalPages || 1,
+          currentPage: pagination?.page || 1,
+          hasNextPage: pagination
+            ? pagination.page < (pagination.totalPages || 1)
+            : false,
+          hasPrevPage: pagination ? pagination.page > 1 : false,
+        };
+
+        return {
+          success: true,
+          data: normalized,
+          message: res.message || "ok",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Case 2: ApiResponse already contains a well-formed TasksResponse
+      if (data && Array.isArray(data.tasks)) {
+        return res as ApiResponse<TasksResponse>;
+      }
     }
 
-    if (taskRequest?.sortOrder) {
-      params.append("sortOrder", taskRequest.sortOrder);
-    }
+    // Case 3: Direct TasksResponse (not wrapped in ApiResponse)
+    // The compiler doesn't know res might be a TasksResponse directly
+    const rawResponse = res as unknown as { tasks?: MemberTask[] };
 
-    const endpoint = `${this.baseUrl}${params.toString() ? "?" + params.toString() : ""}`;
-
-    const res = await apiClient.get<TasksResponse | ApiResponse<TasksResponse>>(
-      endpoint,
-    );
-
-    // If backend already returns ApiResponse shape
-    if (res && typeof (res as any).success === "boolean") {
-      return res as ApiResponse<TasksResponse>;
-    }
-
-    // Otherwise it's a raw TasksResponse (mock server current behavior)
-    const raw = res as unknown as TasksResponse;
-
-    if (raw && Array.isArray(raw.tasks)) {
+    if (rawResponse && Array.isArray(rawResponse.tasks)) {
       return {
         success: true,
-        data: raw,
+        data: rawResponse as TasksResponse,
         message: "ok",
         timestamp: new Date().toISOString(),
-        pagination: {
-          page: raw.currentPage,
-          limit: taskRequest?.limit || raw.tasks.length,
-          total: raw.totalCount,
-          totalPages: raw.totalPages,
-        },
       };
     }
 
-    throw new Error("Unexpected tasks response shape");
+    throw new Error("Unexpected tasks response shape from backend");
   }
 
   /**
@@ -239,22 +221,21 @@ export class MembersTasksService {
     return apiClient.post<void>(`${this.baseUrl}/${id}/request-design`, notes);
   }
 
-  ///change assignees
+  /**
+   * Change task assignees
+   * @param taskId - ID of the task to change assignees for
+   * @param memberIds - Array of member IDs to assign
+   * @param notes - Optional notes about the assignment
+   */
   async changeAssignees(
     taskId: string,
     memberIds: string[],
     notes: string,
   ): Promise<ApiResponse<void>> {
-    return {
-      success: true,
-      data: undefined,
-      message: "Change Status submitted successfully",
-      timestamp: "15-08-2025",
-    };
-    // return apiClient.post<void>(`${this.baseUrl}/${taskId}/change-assignees`, {
-    //   memberIds,
-    //   notes,
-    // });
+    return apiClient.post<void>(`${this.baseUrl}/${taskId}/change-assignees`, {
+      memberIds,
+      notes,
+    });
   }
 
   /*change Status */
@@ -277,59 +258,39 @@ export class MembersTasksService {
 
   /* status drop down values and header data */
   async getCurrentTasksConfig(): Promise<ApiResponse<TaskConfigData>> {
-    await new Promise((resolve) => setTimeout(resolve, 500)); ///TODO remove this line
+    // Call real endpoint
+    const res = await apiClient.get<
+      TaskConfigData | ApiResponse<TaskConfigData>
+    >(`${this.baseUrl}/getTasksConfig`);
 
-    return {
-      success: true,
-      data: {
-        totalTasks: 55,
-        inProgressTasks: 15,
-        overdueTasks: 4,
-        taskStatus: [
-          {
-            id: 1,
-            label: "Not Started",
-          },
-          {
-            id: 2,
-            label: "In Progress",
-          },
-          {
-            id: 3,
-            label: "Review",
-          },
-          {
-            id: 4,
-            label: "Completed",
-          },
-          {
-            id: 5,
-            label: "Blocked",
-          },
-          { id: 6, label: "All" },
-        ],
-        taskPriority: [
-          { id: 1, label: "Low" },
-          { id: 2, label: "Medium" },
-          { id: 3, label: "High" },
-          { id: 4, label: "Critical" },
-          { id: 5, label: "All" },
-        ],
-        projects: [
-          { id: "1", name: "E-Commerce Platform" },
-          { id: "2", name: "Mobile Banking App" },
-          { id: "3", name: "HR Management System" },
-          { id: "4", name: "All" },
-        ],
-      },
-      message: "success",
-      timestamp: "15-08-2025",
-    };
-    ///TODO uncomment this when api available and comment above mock data
-    //return apiClient.get<TaskConfigData>(`${this.baseUrl}/getTasksConfig`);
+    // If backend already wraps in ApiResponse
+    if (res && typeof (res as any).success === "boolean") {
+      return res as ApiResponse<TaskConfigData>;
+    }
+
+    // Otherwise treat as raw TaskConfigData
+    const raw = res as unknown as TaskConfigData;
+
+    if (
+      raw &&
+      Array.isArray(raw.taskStatus) &&
+      Array.isArray(raw.taskPriority) &&
+      Array.isArray(raw.projects)
+    ) {
+      return {
+        success: true,
+        data: raw,
+        message: "ok",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    throw new Error("Unexpected task config response shape");
   }
 
-  /* Add adhoc task */
+  /**
+   * Add an adhoc task
+   */
   async addAdhocTask(newTask: AdhocTask): Promise<ApiResponse<void>> {
     // Transform the frontend AdhocTask to match backend CreateAdHocTaskDto
     const taskData = {
@@ -337,7 +298,7 @@ export class MembersTasksService {
       description: newTask.description,
       startDate: newTask.startDate,
       endDate: newTask.endDate,
-      assignedMembers: newTask.assignedMembers.map(id => parseInt(id))
+      assignedMembers: newTask.assignedMembers.map((id) => parseInt(id)),
     };
 
     return apiClient.post<void>(`/tasks/adhoc`, taskData);

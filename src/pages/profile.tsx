@@ -99,11 +99,7 @@ export default function ProfilePage() {
         {/* Profile Card */}
         <Card className="lg:col-span-1">
           <CardHeader className="flex flex-col items-center pb-2">
-            <Avatar
-              className="w-24 h-24 mb-4"
-              name={user.fullName}
-              size="lg"
-            />
+            <Avatar className="w-24 h-24 mb-4" name={user.fullName} size="lg" />
             <div className="text-center">
               <h2 className="text-xl font-semibold">{user.fullName}</h2>
               <p className="text-default-600">{user.gradeName}</p>
@@ -116,20 +112,22 @@ export default function ProfilePage() {
           <CardBody className="pt-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Building2 size={16} className="text-default-500" />
+                <Building2 className="text-default-500" size={16} />
                 <span className="text-small">{user.department}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar size={16} className="text-default-500" />
+                <Calendar className="text-default-500" size={16} />
                 <span className="text-small">
-                  {t("profile.joinedDate")}: {" "}
-                  {user.createdAt 
+                  {t("profile.joinedDate")}:{" "}
+                  {user.createdAt
                     ? new Date(user.createdAt).toLocaleDateString()
                     : "N/A"}
                 </span>
               </div>
               <div>
-                <p className="text-small font-medium mb-2">{t("user.roles")}:</p>
+                <p className="text-small font-medium mb-2">
+                  {t("user.roles")}:
+                </p>
                 <div className="flex flex-wrap gap-1">
                   {user.roles?.map((role) => (
                     <Chip
@@ -153,7 +151,9 @@ export default function ProfilePage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <User size={20} />
-              <h3 className="text-lg font-semibold">{t("profile.personalInfo")}</h3>
+              <h3 className="text-lg font-semibold">
+                {t("profile.personalInfo")}
+              </h3>
             </div>
           </CardHeader>
           <CardBody className="space-y-6">
@@ -163,7 +163,7 @@ export default function ProfilePage() {
                 isReadOnly={!isEditing}
                 label={t("user.fullName")}
                 labelPlacement="outside"
-                startContent={<User size={16} className="text-default-500" />}
+                startContent={<User className="text-default-500" size={16} />}
                 value={isEditing ? formData.fullName : user.fullName}
                 variant={isEditing ? "bordered" : "flat"}
                 onChange={(e) =>
@@ -174,7 +174,7 @@ export default function ProfilePage() {
                 isReadOnly
                 label={t("user.militaryNumber")}
                 labelPlacement="outside"
-                startContent={<Shield size={16} className="text-default-500" />}
+                startContent={<Shield className="text-default-500" size={16} />}
                 value={user.militaryNumber}
                 variant="flat"
               />
@@ -182,7 +182,7 @@ export default function ProfilePage() {
                 isReadOnly
                 label={t("user.grade")}
                 labelPlacement="outside"
-                startContent={<Shield size={16} className="text-default-500" />}
+                startContent={<Shield className="text-default-500" size={16} />}
                 value={user.gradeName}
                 variant="flat"
               />
@@ -190,7 +190,9 @@ export default function ProfilePage() {
                 isReadOnly
                 label={t("user.department")}
                 labelPlacement="outside"
-                startContent={<Building2 size={16} className="text-default-500" />}
+                startContent={
+                  <Building2 className="text-default-500" size={16} />
+                }
                 value={user.department}
                 variant="flat"
               />
@@ -207,10 +209,7 @@ export default function ProfilePage() {
                   >
                     {t("common.cancel")}
                   </Button>
-                  <Button
-                    color="primary"
-                    onPress={handleSave}
-                  >
+                  <Button color="primary" onPress={handleSave}>
                     {t("common.save")}
                   </Button>
                 </div>

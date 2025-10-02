@@ -1,3 +1,8 @@
+import type {
+  ProjectRequirement,
+  ProjectRequirementAttachment,
+} from "@/types/projectRequirement";
+
 import React from "react";
 import {
   Drawer,
@@ -8,23 +13,12 @@ import {
   Button,
   Chip,
 } from "@heroui/react";
-import {
-  Calendar,
-  Code,
-  Users,
-  Paperclip,
-  Eye,
-  Download,
-  Check,
-} from "lucide-react";
+import { Calendar, Users, Paperclip, Eye, Download, Check } from "lucide-react";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { FilePreview } from "@/components/FilePreview";
-import type {
-  ProjectRequirement,
-  ProjectRequirementAttachment,
-} from "@/types/projectRequirement";
 import { projectRequirementsService } from "@/services/api";
 
 // Format date helper
@@ -40,9 +34,13 @@ interface RequirementDetailsDrawerProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   requirement: ProjectRequirement | null;
-  getStatusColor: (status: number) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getStatusColor: (
+    status: number,
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
   getStatusText: (status: number) => string;
-  getPriorityColor: (priority: number) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getPriorityColor: (
+    priority: number,
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
   getPriorityLabel: (priority: number) => string | undefined;
   // Optional props for different drawer modes
   showApprovalButton?: boolean;
@@ -78,6 +76,7 @@ export default function RequirementDetailsDrawer({
           .then((blob) => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
+
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
@@ -99,6 +98,7 @@ export default function RequirementDetailsDrawer({
         attachment.id,
       );
       const url = window.URL.createObjectURL(blob);
+
       await previewFile(attachment.originalName, url, attachment.fileSize);
     } catch {
       // If preview fails, just download the file
@@ -107,6 +107,7 @@ export default function RequirementDetailsDrawer({
         .then((blob) => {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
+
           a.href = url;
           a.download = attachment.originalName;
           document.body.appendChild(a);
@@ -164,7 +165,9 @@ export default function RequirementDetailsDrawer({
                     <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
                       <p
                         dangerouslySetInnerHTML={{
-                          __html: requirement.description || t("requirements.noDescription"),
+                          __html:
+                            requirement.description ||
+                            t("requirements.noDescription"),
                         }}
                         className="text-sm leading-relaxed"
                       />
@@ -280,7 +283,9 @@ export default function RequirementDetailsDrawer({
                                     size="sm"
                                     startContent={<Eye className="w-4 h-4" />}
                                     variant="light"
-                                    onPress={() => handleFilePreview(attachment)}
+                                    onPress={() =>
+                                      handleFilePreview(attachment)
+                                    }
                                   >
                                     {t("common.preview")}
                                   </Button>
@@ -387,17 +392,13 @@ export default function RequirementDetailsDrawer({
                           <h4 className="text-sm font-medium text-default-600 mb-1">
                             {t("timeline.name")}
                           </h4>
-                          <p className="text-sm">
-                            {requirement.timeline.name}
-                          </p>
+                          <p className="text-sm">{requirement.timeline.name}</p>
                         </div>
                         <div>
                           <h4 className="text-sm font-medium text-default-600 mb-1">
                             {t("timeline.id")}
                           </h4>
-                          <p className="text-sm">
-                            {requirement.timeline.id}
-                          </p>
+                          <p className="text-sm">{requirement.timeline.id}</p>
                         </div>
                       </div>
                     </div>
@@ -405,27 +406,25 @@ export default function RequirementDetailsDrawer({
                 </div>
               </DrawerBody>
               <DrawerFooter>
-                <Button
-                  color="default"
-                  variant="flat"
-                  onPress={onClose}
-                >
+                <Button color="default" variant="flat" onPress={onClose}>
                   {t("common.close")}
                 </Button>
 
                 {/* Approval Button for approval requests */}
-                {showApprovalButton && hasPermission({ actions: ["requirements.approve"] }) && onApprove && (
-                  <Button
-                    color="success"
-                    onPress={() => {
-                      onClose();
-                      onApprove(requirement);
-                    }}
-                  >
-                    <Check size={16} />
-                    {t("requirements.approve")}
-                  </Button>
-                )}
+                {showApprovalButton &&
+                  hasPermission({ actions: ["requirements.approve"] }) &&
+                  onApprove && (
+                    <Button
+                      color="success"
+                      onPress={() => {
+                        onClose();
+                        onApprove(requirement);
+                      }}
+                    >
+                      <Check size={16} />
+                      {t("requirements.approve")}
+                    </Button>
+                  )}
 
                 {/* Task/Timeline Buttons for development requirements */}
                 {showTaskTimelineButtons && (
@@ -434,7 +433,8 @@ export default function RequirementDetailsDrawer({
                     {!requirement.timeline &&
                       hasPermission({
                         actions: ["requirements.tasks.create"],
-                      }) && onCreateTask && (
+                      }) &&
+                      onCreateTask && (
                         <Button
                           color="default"
                           size="sm"
@@ -458,7 +458,8 @@ export default function RequirementDetailsDrawer({
                     {!requirement.task &&
                       hasPermission({
                         actions: ["requirements.timelines.create"],
-                      }) && onCreateTimeline && (
+                      }) &&
+                      onCreateTimeline && (
                         <Button
                           color="default"
                           size="sm"

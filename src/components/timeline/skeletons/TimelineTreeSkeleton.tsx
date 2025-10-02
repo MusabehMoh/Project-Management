@@ -1,5 +1,6 @@
 import { Card, CardBody } from "@heroui/card";
 import { Skeleton } from "@heroui/skeleton";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 interface TimelineTreeSkeletonProps {
   showSearch?: boolean;
@@ -9,6 +10,7 @@ export default function TimelineTreeSkeleton({
 }: TimelineTreeSkeletonProps) {
   const { language } = useLanguage();
   const direction = language === "ar" ? "rtl" : "ltr";
+
   return (
     <Card className="h-full">
       <CardBody
@@ -130,4 +132,3 @@ export default function TimelineTreeSkeleton({
     </Card>
   );
 }
-

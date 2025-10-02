@@ -1,3 +1,8 @@
+import type {
+  ProjectRequirement,
+  ProjectRequirementAttachment,
+} from "@/types/projectRequirement";
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
@@ -17,6 +22,7 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { Search, Filter, X, Eye, Check } from "lucide-react";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import LoadingLogo from "@/components/LoadingLogo";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -28,10 +34,6 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import { FilePreview } from "@/components/FilePreview";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
-import type {
-  ProjectRequirement,
-  ProjectRequirementAttachment,
-} from "@/types/projectRequirement";
 import { projectRequirementsService } from "@/services/api";
 
 // Format date helper
@@ -412,7 +414,8 @@ export default function ApprovalRequestsPage() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = searchTerm || statusFilter !== null || priorityFilter;
+  const hasActiveFilters =
+    searchTerm || statusFilter !== null || priorityFilter;
 
   // Auto-scroll and highlight functionality
   useEffect(() => {
@@ -483,11 +486,14 @@ export default function ApprovalRequestsPage() {
                     selectedKeys={priorityFilter ? [priorityFilter] : []}
                     onSelectionChange={(keys) => {
                       const selected = Array.from(keys)[0] as string;
+
                       setPriorityFilter(selected || "");
                     }}
                   >
                     {priorityOptions.map((option) => (
-                      <SelectItem key={option.value}>{language === "ar" ? option.labelAr : option.label}</SelectItem>
+                      <SelectItem key={option.value}>
+                        {language === "ar" ? option.labelAr : option.label}
+                      </SelectItem>
                     ))}
                   </Select>
                 </div>
@@ -500,15 +506,21 @@ export default function ApprovalRequestsPage() {
                     </span>
                     <Select
                       className="w-20"
-                      selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
+                      selectedKeys={[
+                        normalizePageSize(pageSize, 10).toString(),
+                      ]}
                       size="sm"
                       onSelectionChange={(keys) => {
                         const newSize = parseInt(Array.from(keys)[0] as string);
+
                         handlePageSizeChange(newSize);
                       }}
                     >
                       {PAGE_SIZE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                        <SelectItem
+                          key={opt.toString()}
+                          textValue={opt.toString()}
+                        >
                           {opt}
                         </SelectItem>
                       ))}

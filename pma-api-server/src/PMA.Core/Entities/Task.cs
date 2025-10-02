@@ -63,6 +63,9 @@ public class Task
     [ForeignKey("TimelineId")]
     public Timeline? Timeline { get; set; }
 
+    [ForeignKey("ProjectRequirementId")]
+    public ProjectRequirement? ProjectRequirement { get; set; }
+
     // Task assignments and dependencies
     public virtual ICollection<TaskAssignment> Assignments { get; set; } = new List<TaskAssignment>();
     public virtual ICollection<TaskDependency> Dependencies_Relations { get; set; } = new List<TaskDependency>();

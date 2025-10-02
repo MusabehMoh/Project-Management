@@ -318,7 +318,7 @@ export default function RequirementsPage() {
                           <Skeleton className="h-4 w-16 rounded" />
                         </div>
                       </div>
-                      
+
                       {/* Requirements Skeleton */}
                       <div className="space-y-2">
                         <Skeleton className="h-5 w-32 rounded" />
@@ -328,7 +328,7 @@ export default function RequirementsPage() {
                           <Skeleton className="h-4 w-3/4 rounded" />
                         </div>
                       </div>
-                      
+
                       {/* Action Button Skeleton */}
                       <Skeleton className="h-10 w-full rounded-lg" />
                     </CardBody>

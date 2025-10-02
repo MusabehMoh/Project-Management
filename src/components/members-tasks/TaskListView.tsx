@@ -18,9 +18,24 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface TaskListViewProps {
   tasks: MemberTask[];
   onTaskClick?: (task: MemberTask) => void;
+  getStatusColor: (
+    status: number,
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getStatusText: (status: number) => string;
+  getPriorityColor: (
+    priority: number,
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getPriorityLabel: (priority: number) => string | undefined;
 }
 
-export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
+export const TaskListView = ({
+  tasks,
+  onTaskClick,
+  getStatusColor,
+  getStatusText,
+  getPriorityColor,
+  getPriorityLabel,
+}: TaskListViewProps) => {
   const { t } = useLanguage();
 
   const getProgressColor = (progress: number) => {
@@ -29,41 +44,6 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
     if (progress >= 40) return "warning";
 
     return "danger";
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
-      case "high":
-      case "عالي":
-        return "danger";
-      case "medium":
-      case "متوسط":
-        return "warning";
-      case "low":
-      case "منخفض":
-        return "success";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "completed":
-      case "مكتمل":
-        return "success";
-      case "in progress":
-      case "قيد التنفيذ":
-        return "primary";
-      case "pending":
-      case "معلق":
-        return "warning";
-      case "cancelled":
-      case "ملغي":
-        return "danger";
-      default:
-        return "default";
-    }
   };
 
   const formatDate = (dateString: string) => {
@@ -90,9 +70,12 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
               {task.name}
             </p>
             {task.description && (
-              <p className="text-tiny text-default-400 truncate max-w-[200px]">
-                {task.description}
-              </p>
+              <p
+                dangerouslySetInnerHTML={{
+                  __html: task.description,
+                }}
+                className="text-tiny text-default-400 truncate max-w-[200px]"
+              />
             )}
           </div>
         );
@@ -125,53 +108,26 @@ export const TaskListView = ({ tasks, onTaskClick }: TaskListViewProps) => {
 
       case "department":
         return (
-          <Chip
-            size="sm"
-            style={{
-              backgroundColor: `${task.department.color}20`,
-              color: task.department.color,
-            }}
-            variant="flat"
-          >
+          <Chip size="sm" variant="flat">
             {task.department.name}
           </Chip>
         );
 
       case "status":
         return (
-          <Chip
-            color={
-              (task.status.color as
-                | "success"
-                | "primary"
-                | "warning"
-                | "danger"
-                | "default"
-                | "secondary") ?? "default"
-            }
-            size="sm"
-            variant="flat"
-          >
-            {task.status.label}
+          <Chip color={getStatusColor(task.status.id)} size="sm" variant="flat">
+            {getStatusText(task.status.id)}
           </Chip>
         );
 
       case "priority":
         return (
           <Chip
-            color={
-              (task.priority.color as
-                | "success"
-                | "primary"
-                | "warning"
-                | "danger"
-                | "default"
-                | "secondary") ?? "default"
-            }
+            color={getPriorityColor(task.priority.id)}
             size="sm"
             variant="flat"
           >
-            {task.priority.label}
+            {getPriorityLabel(task.priority.id) || task.priority.label}
           </Chip>
         );
 

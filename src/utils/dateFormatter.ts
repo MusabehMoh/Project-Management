@@ -24,7 +24,7 @@ export const formatDateTime = (
 
   try {
     const date = new Date(dateString);
-    
+
     if (isNaN(date.getTime())) return "-";
 
     // If only showing date

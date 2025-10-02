@@ -1,6 +1,5 @@
 import React from "react";
 
-import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
 import DeveloperManagerDashboard from "@/components/dashboard/DeveloperManagerDashboard";
 import LoadingLogo from "@/components/LoadingLogo";
 import { usePermissions } from "@/hooks/usePermissions";

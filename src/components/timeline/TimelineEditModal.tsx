@@ -91,7 +91,7 @@ export default function TimelineEditModal({
 
   // Use shared validation hook
   const { validateForm, errors, clearError } = useTimelineFormValidation();
-  
+
   // Team members data
   const { employees, loading: employeeSearchLoading } = useTeamSearch({
     maxResults: 100,
@@ -126,7 +126,7 @@ export default function TimelineEditModal({
       return null;
     }
   };
-  
+
   // Helper function to fetch task details by ID (simplified version)
   const fetchTaskById = async (taskId: number): Promise<WorkItem | null> => {
     try {
@@ -157,7 +157,7 @@ export default function TimelineEditModal({
   useEffect(() => {
     const loadInitialData = async () => {
       setFormData(initialValues);
-      
+
       // If we have memberIds but no full member objects, fetch them
       if (initialValues?.memberIds && initialValues.memberIds.length > 0) {
         if (!initialValues?.members || initialValues.members.length === 0) {
@@ -184,18 +184,20 @@ export default function TimelineEditModal({
           // Try to match task IDs with loaded tasks first
           if (tasks.length > 0) {
             const validTasks = initialValues.depTaskIds
-              .map((id) => 
+              .map((id) =>
                 tasks.find((task) => task.id.toString() === id.toString()),
               )
-              .filter((task): task is WorkItem => task !== null && task !== undefined,);
-            
+              .filter(
+                (task): task is WorkItem => task !== null && task !== undefined,
+              );
+
             if (validTasks.length === initialValues.depTaskIds.length) {
               setSelectedTasks(validTasks);
-              
+
               return;
             }
           }
-          
+
           // If we can't find all tasks in the loaded list, create temporary placeholders
           const taskPromises = initialValues.depTaskIds.map((id) =>
             fetchTaskById(id),
@@ -255,7 +257,7 @@ export default function TimelineEditModal({
       };
 
       await onSubmit(payload);
-      
+
       // Don't show toasts here - let the parent component handle them
       // to avoid duplicate toasts
       onClose();
@@ -272,22 +274,22 @@ export default function TimelineEditModal({
     setSelectedTasks([]);
     onClose();
   };
-  
+
   // Update selected tasks when tasks list is loaded and we have depTaskIds
   useEffect(() => {
     if (
-      tasks.length > 0 && 
-      initialValues?.depTaskIds && 
+      tasks.length > 0 &&
+      initialValues?.depTaskIds &&
       initialValues.depTaskIds.length > 0
     ) {
       const tasksById = new Map(
         tasks.map((task) => [task.id.toString(), task]),
       );
-      
+
       const matchedTasks = initialValues.depTaskIds
         .map((id) => tasksById.get(id.toString()))
         .filter((task): task is WorkItem => !!task);
-        
+
       if (matchedTasks.length > 0) {
         setSelectedTasks(matchedTasks);
       }
@@ -511,25 +513,26 @@ export default function TimelineEditModal({
                     <Select
                       disallowEmptySelection={false}
                       isLoading={taskSearchLoading}
-                      items={tasks.filter((task) => 
-                        // Only show tasks that aren't already selected
-                        !selectedTasks.some((st) => st.id === task.id)
+                      items={tasks.filter(
+                        (task) =>
+                          // Only show tasks that aren't already selected
+                          !selectedTasks.some((st) => st.id === task.id),
                       )}
                       label={t("timeline.selectPredecessors")}
                       placeholder={t("timeline.selectPredecessorsPlaceholder")}
                       selectionMode="single"
                       onSelectionChange={(keys) => {
                         if (keys === "all") return;
-                        
+
                         const selectedKeys = Array.from(keys);
-                        
+
                         if (selectedKeys.length === 0) return;
-                        
+
                         const key = selectedKeys[0];
                         const found = tasks.find(
                           (t) => t.id.toString() === key,
                         );
-                        
+
                         if (found) {
                           // Add the selected task
                           setSelectedTasks((prev) => [...prev, found]);
@@ -537,10 +540,10 @@ export default function TimelineEditModal({
                       }}
                     >
                       {(task) => (
-                      <SelectItem 
-                        key={task.id.toString()}
-                        textValue={task.name}
-                      >
+                        <SelectItem
+                          key={task.id.toString()}
+                          textValue={task.name}
+                        >
                           <div className="flex items-center gap-3">
                             <span className="flex flex-col">
                               <span className="font-medium">{task.name}</span>
@@ -596,16 +599,16 @@ export default function TimelineEditModal({
                       selectionMode="single"
                       onSelectionChange={(keys) => {
                         if (keys === "all") return;
-                        
+
                         const selectedKeys = Array.from(keys);
-                        
+
                         if (selectedKeys.length === 0) return;
-                        
+
                         const key = selectedKeys[0];
                         const found = employees.find(
                           (e) => e.id.toString() === key,
                         );
-                        
+
                         if (found) {
                           // Add the selected employee
                           setSelectedMembers((prev) => [...prev, found]);

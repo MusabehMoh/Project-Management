@@ -178,13 +178,13 @@ public interface ILookupService
 
 public interface IMemberTaskService
 {
-    System.Threading.Tasks.Task<(IEnumerable<MemberTask> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, string? status = null, string? priority = null);
-    System.Threading.Tasks.Task<MemberTask?> GetMemberTaskByIdAsync(int id);
-    System.Threading.Tasks.Task<MemberTask> CreateMemberTaskAsync(MemberTask memberTask);
-    System.Threading.Tasks.Task<MemberTask> UpdateMemberTaskAsync(MemberTask memberTask);
+    System.Threading.Tasks.Task<(IEnumerable<MemberTaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null);
+    System.Threading.Tasks.Task<MemberTaskDto?> GetMemberTaskByIdAsync(int id);
+    System.Threading.Tasks.Task<MemberTaskDto> CreateMemberTaskAsync(MemberTaskDto memberTask);
+    System.Threading.Tasks.Task<MemberTaskDto> UpdateMemberTaskAsync(MemberTaskDto memberTask);
     System.Threading.Tasks.Task<bool> DeleteMemberTaskAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByProjectAsync(int projectId);
-    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByAssigneeAsync(int assigneeId);
+    System.Threading.Tasks.Task<IEnumerable<MemberTaskDto>> GetMemberTasksByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<IEnumerable<MemberTaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId);
 }
 
 

@@ -15,6 +15,10 @@ interface TaskCardProps {
   onChangeStatus?: (task: MemberTask) => void;
   onChangeAssignees?: (task: MemberTask) => void;
   isTeamManager: boolean;
+  getStatusColor: (status: number) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getStatusText: (status: number) => string;
+  getPriorityColor: (priority: number) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getPriorityLabel: (priority: number) => string | undefined;
 }
 
 export const TaskCard = ({
@@ -24,8 +28,12 @@ export const TaskCard = ({
   onChangeStatus,
   onChangeAssignees,
   isTeamManager,
+  getStatusColor,
+  getStatusText,
+  getPriorityColor,
+  getPriorityLabel,
 }: TaskCardProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const getProgressColor = (progress: number) => {
     if (progress >= 80) return "success";
@@ -40,7 +48,10 @@ export const TaskCard = ({
   };
 
   const handleCardClick = () => {
+    console.log("TaskCard clicked:", task.id, task.name);
+
     if (onClick) {
+      // Pass the task to the parent component
       onClick(task);
     }
   };
@@ -63,27 +74,16 @@ export const TaskCard = ({
     }
   };
 
-  const getBorderColor = () => {
-    switch (task.status.id) {
-      case 1: /// Not Started
-        return "border-l-4 border-l-default-500 bg-default-50/30 dark:bg-default-900/20";
-      case 2: /// In Progress
-        return "border-l-4 border-l-primary-500 bg-primary-50/30 dark:bg-primary-900/20";
-      case 3: /// Review
-        return "border-l-4 border-l-success-500 bg-success-50/30 dark:bg-success-900/20";
-      default:
-        return "border-l-4 border-l-default-500 bg-default-50/30 dark:bg-default-900/20";
-    }
-  };
-
   return (
     <Card
+      isPressable
       className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg ${
         task.isOverdue
           ? "border-l-4 border-l-danger-500 bg-danger-50/30 dark:bg-danger-900/20"
           : `border-l-4 border-l-${task.status.color as any}-500 bg-${task.status.color as any}-50/30 dark:bg-${task.status.color as any}-900/20`
-      }`}
-      onClick={handleCardClick}
+      } ${language === "ar" ? "text-right" : ""}`}
+      dir={language === "ar" ? "rtl" : "ltr"}
+      onPress={handleCardClick}
     >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full gap-3">
@@ -91,16 +91,21 @@ export const TaskCard = ({
             <h3 className="text-lg font-semibold text-foreground truncate">
               {task.name}
             </h3>
-            <p className="text-sm text-foreground-600 line-clamp-2 mt-1">
-              {task.description}
-            </p>
           </div>
           <div className="flex flex-col gap-2 items-end flex-shrink-0">
-            <Chip color={task.status.color as any} size="sm" variant="flat">
-              {task.status.label}
+            <Chip
+              color={getStatusColor(task.status.id)}
+              size="sm"
+              variant="flat"
+            >
+              {getStatusText(task.status.id)}
             </Chip>
-            <Chip color={task.priority.color as any} size="sm" variant="solid">
-              {task.priority.label}
+            <Chip
+              color={getPriorityColor(task.priority.id)}
+              size="sm"
+              variant="solid"
+            >
+              {getPriorityLabel(task.priority.id) || task.priority.label}
             </Chip>
           </div>
         </div>
@@ -109,10 +114,6 @@ export const TaskCard = ({
       <CardBody className="pt-0">
         {/* Department indicator */}
         <div className="flex items-center gap-2 mb-3">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: task.department.color }}
-          />
           <span className="text-sm text-foreground-600">
             {task.department.name}
           </span>
@@ -122,57 +123,6 @@ export const TaskCard = ({
             </Badge>
           )}
         </div>
-
-        {/* Assignees Display */}
-        {/* <div className="mb-4">
-          <p className="text-xs text-foreground-500 mb-2 uppercase tracking-wide">
-            {t("filterByAssignees")}
-          </p>
-
-          {task.primaryAssignee && (
-            <div className="flex items-center gap-2 mb-2 p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
-              <Avatar
-                className="flex-shrink-0"
-                name={task.primaryAssignee.fullName}
-                size="sm"
-              />
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-xs font-medium text-primary-700 dark:text-primary-300 truncate">
-                  {task.primaryAssignee.gradeName}{" "}
-                  {task.primaryAssignee.fullName}
-                </span>
-                <span className="text-xs text-primary-500 dark:text-primary-400">
-                  {t("primaryAssignee")}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {task.assignedMembers.length > 1 && (
-            <div className="flex items-center gap-2">
-              <AvatarGroup
-                isBordered
-                className="flex-shrink-0"
-                max={3}
-                size="sm"
-              >
-                {task.assignedMembers.slice(1).map((member) => (
-                  <Avatar
-                    key={member.id}
-                    className="text-xs"
-                    name={member.fullName}
-                  />
-                ))}
-              </AvatarGroup>
-              {task.assignedMembers.length > 4 && (
-                <Chip size="sm" variant="flat">
-                  +{task.assignedMembers.length - 4} {t("moreAssignees")}
-                </Chip>
-              )}
-            </div>
-          )}
-        </div> */}
-
         {/* Progress */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
@@ -248,13 +198,17 @@ export const TaskCard = ({
 
         {/* Project & Requirement info */}
         <div className="mt-3 pt-3 border-t border-divider">
-          <div className="text-xs text-foreground-500 space-y-1">
+          <div
+            className={`text-xs text-foreground-500 space-y-1 ${
+              language === "ar" ? "text-right" : "text-left"
+            }`}
+          >
             <div>
-              <span className="font-medium">Project: </span>
+              <span className="font-medium">{t("projectLabel")} </span>
               <span>{task.project.name}</span>
             </div>
             <div>
-              <span className="font-medium">Requirement: </span>
+              <span className="font-medium">{t("requirementLabel")} </span>
               <span>{task.requirement.name}</span>
             </div>
           </div>
@@ -270,7 +224,10 @@ export const TaskCard = ({
                 color="default"
                 size="sm"
                 variant="solid"
-                onPress={() => handleChangeAssigneesClick()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleChangeAssigneesClick();
+                }}
               >
                 {t("changeAssignees")}
               </Button>
@@ -284,7 +241,10 @@ export const TaskCard = ({
                   color="default"
                   size="sm"
                   variant="faded"
-                  onPress={() => handleRequestDesignClick()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRequestDesignClick();
+                  }}
                 >
                   {t("requestDesign")}
                 </Button>
@@ -295,7 +255,10 @@ export const TaskCard = ({
                 color="default"
                 size="sm"
                 variant="solid"
-                onPress={() => handleChangeStatusClick()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleChangeStatusClick();
+                }}
               >
                 {t("changeStatus")}
               </Button>

@@ -132,7 +132,7 @@ export default function RequirementCompletionTracker({
             </div>
             <Skeleton className="h-8 w-24 rounded" />
           </div>
-          
+
           {/* Stats grid skeleton */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
@@ -142,7 +142,7 @@ export default function RequirementCompletionTracker({
               </div>
             ))}
           </div>
-          
+
           {/* Progress bars skeleton */}
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (

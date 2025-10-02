@@ -27,7 +27,7 @@ export function useTaskSearch(options: TaskSearchOptions = {}) {
   const loadAllTimelineTasks = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await timelineService.getAllTimelineTasks(
         config.timelineId,
@@ -61,19 +61,18 @@ export function useTaskSearch(options: TaskSearchOptions = {}) {
       // If query is empty, load all tasks
       if (!query.trim()) {
         loadAllTimelineTasks();
-        
+
         return;
       }
 
       // Filter already loaded tasks by query
-      setWorkItems(
-        (currentItems) =>
-          currentItems.filter(
-            (item) =>
-              item.name.toLowerCase().includes(query.toLowerCase()) ||
-              (item.description &&
-                item.description.toLowerCase().includes(query.toLowerCase())),
-          ),
+      setWorkItems((currentItems) =>
+        currentItems.filter(
+          (item) =>
+            item.name.toLowerCase().includes(query.toLowerCase()) ||
+            (item.description &&
+              item.description.toLowerCase().includes(query.toLowerCase())),
+        ),
       );
     },
     [loadAllTimelineTasks],

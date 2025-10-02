@@ -333,7 +333,7 @@ export default function DeveloperWorkloadPerformance({
               <Skeleton className="h-10 w-32 rounded-lg" />
             </div>
           </div>
-          
+
           {/* Performance metrics skeleton */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
@@ -343,7 +343,7 @@ export default function DeveloperWorkloadPerformance({
               </div>
             ))}
           </div>
-          
+
           {/* Table skeleton */}
           <div className="space-y-2">
             {/* Table header */}
@@ -353,10 +353,13 @@ export default function DeveloperWorkloadPerformance({
               <Skeleton className="h-4 w-24 rounded" />
               <Skeleton className="h-4 w-16 rounded" />
             </div>
-            
+
             {/* Table rows */}
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="grid grid-cols-4 gap-4 p-3 border-b border-default-200">
+              <div
+                key={i}
+                className="grid grid-cols-4 gap-4 p-3 border-b border-default-200"
+              >
                 <div className="flex items-center space-x-2">
                   <Skeleton className="h-8 w-8 rounded-full" />
                   <Skeleton className="h-4 w-24 rounded" />

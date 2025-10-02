@@ -341,7 +341,7 @@ const TeamWorkloadPerformance: React.FC = () => {
                   <Skeleton className="h-4 w-28 mx-auto rounded" />
                 </div>
               </div>
-              
+
               {/* Table skeleton */}
               <div className="space-y-3">
                 {/* Table header */}
@@ -351,7 +351,7 @@ const TeamWorkloadPerformance: React.FC = () => {
                   <Skeleton className="h-4 w-28 rounded" />
                   <Skeleton className="h-4 w-20 rounded" />
                 </div>
-                
+
                 {/* Table rows */}
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="grid grid-cols-4 gap-4 py-3">
@@ -389,7 +389,9 @@ const TeamWorkloadPerformance: React.FC = () => {
                     {t("common.show")}:
                   </span>
                   <Select
-                    aria-label={t("pagination.itemsPerPage") || "Items per page"}
+                    aria-label={
+                      t("pagination.itemsPerPage") || "Items per page"
+                    }
                     className="w-20"
                     selectedKeys={[pageSize.toString()]}
                     size="sm"

@@ -202,7 +202,7 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
                 <Skeleton className="h-8 w-8 rounded" />
               </div>
             </div>
-            
+
             {/* Gantt timeline skeleton */}
             <div className="space-y-2">
               {/* Timeline header */}
@@ -211,7 +211,7 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
                   <Skeleton key={i} className="h-full w-full rounded" />
                 ))}
               </div>
-              
+
               {/* Task rows */}
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="grid grid-cols-12 gap-1 h-10">

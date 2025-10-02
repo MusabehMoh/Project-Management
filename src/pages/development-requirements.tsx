@@ -409,14 +409,14 @@ export default function DevelopmentRequirementsPage() {
   // Date validation functions
   const validateDateRange = (startDate: any, endDate: any): string | null => {
     if (!startDate || !endDate) return null;
-    
+
     const start = new Date(startDate.toString());
     const end = new Date(endDate.toString());
-    
+
     if (start >= end) {
       return t("tasks.validation.startDateMustBeBeforeEndDate");
     }
-    
+
     return null;
   };
 
@@ -506,24 +506,24 @@ export default function DevelopmentRequirementsPage() {
   const openTaskModal = async (requirement: ProjectRequirement) => {
     setSelectedRequirement(requirement);
     setIsTaskModalOpen(true);
-    
+
     // Clear any previous validation errors
     setDateValidationErrors({});
-    
+
     // Pre-populate description with requirement description
     setTaskDescription(requirement.description || "");
-    
+
     // If task exists, pre-populate the form
     if (requirement.task) {
       // Fetch real developer details instead of creating mock objects
       const existingDev = requirement.task.developerId
         ? await fetchMemberById(requirement.task.developerId)
         : null;
-      
+
       const existingQC = requirement.task.qcId
         ? await fetchMemberById(requirement.task.qcId)
         : null;
-      
+
       const existingDesigner = requirement.task.designerId
         ? await fetchMemberById(requirement.task.designerId)
         : null;
@@ -531,12 +531,12 @@ export default function DevelopmentRequirementsPage() {
       setSelectedDeveloper(existingDev);
       setSelectedQC(existingQC);
       setSelectedDesigner(existingDesigner);
-      
+
       // Pre-populate task-specific fields
       setTaskDescription(
         requirement.task.description || requirement.description || "",
       );
-      
+
       // Parse dates from existing task when available
       setDeveloperStartDate(
         requirement.task.developerStartDate
@@ -568,7 +568,7 @@ export default function DevelopmentRequirementsPage() {
           ? parseDate(requirement.task.designerEndDate.split("T")[0])
           : null,
       );
-      
+
       // Clear input values since we have pre-selected values
       setDeveloperInputValue("");
       setQcInputValue("");
@@ -626,10 +626,10 @@ export default function DevelopmentRequirementsPage() {
 
         setIsTimelineModalOpen(false);
         setTimelineRequirement(null);
-        
+
         // Show success toast
         toasts.timelineCreated();
-        
+
         // Add a small delay for smooth user experience before redirect
         setTimeout(() => {
           navigate(
@@ -705,13 +705,13 @@ export default function DevelopmentRequirementsPage() {
     } catch (error) {
       // Show error toast based on operation type
       const isUpdate = Boolean(selectedRequirement.task);
-      
+
       if (isUpdate) {
         toasts.taskUpdateError();
       } else {
         toasts.taskCreateError();
       }
-      
+
       // eslint-disable-next-line no-console
       console.error("Task operation failed:", error);
     } finally {

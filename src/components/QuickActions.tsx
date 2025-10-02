@@ -217,18 +217,21 @@ const QuickActions: React.FC<QuickActionsProps> = ({
             <Skeleton className="h-6 w-32 rounded" />
             <Skeleton className="h-8 w-20 rounded" />
           </div>
-          
+
           {/* Tab navigation skeleton */}
           <div className="flex space-x-4 mb-6">
             <Skeleton className="h-8 w-24 rounded" />
             <Skeleton className="h-8 w-28 rounded" />
             <Skeleton className="h-8 w-32 rounded" />
           </div>
-          
+
           {/* Content cards skeleton */}
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-4 border border-default-200 rounded-lg">
+              <div
+                key={i}
+                className="flex items-center justify-between p-4 border border-default-200 rounded-lg"
+              >
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="space-y-2">
