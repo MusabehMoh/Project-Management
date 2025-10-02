@@ -15,31 +15,34 @@ export const UseAdhocTasks = () => {
     setLoading(true);
     setError(null);
 
-    console.log("Adding adhoc task:", newTask);
-
     try {
       const response = await membersTasksService.addAdhocTask(newTask);
 
       if (response.success) {
         addToast({
-          title: response.message,
+          title: t("toast.adhocTaskCreated"),
           color: "success",
         });
 
         return true;
       } else {
-        setError(response.message || "Failed to add task");
+        const errorMessage =
+          response.message || t("toast.adhocTaskCreateError");
+
+        setError(errorMessage);
         addToast({
-          title: response.message,
+          title: errorMessage,
           color: "danger",
         });
 
         return false;
       }
-    } catch (e) {
-      setError("Something went wrong");
+    } catch {
+      const errorMessage = t("toast.adhocTaskCreateError");
+
+      setError(errorMessage);
       addToast({
-        title: t("common.unexpectedError"),
+        title: errorMessage,
         color: "danger",
       });
 

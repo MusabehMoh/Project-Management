@@ -275,7 +275,12 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         return await _context.Projects
             .Include(p => p.Timelines!)
                 .ThenInclude(t => t.Sprints!)
-                    .ThenInclude(s => s.Tasks)
+                    .ThenInclude(s => s.Tasks!)
+                        .ThenInclude(task => task.Assignments)
+            .Include(p => p.Timelines!)
+                .ThenInclude(t => t.Sprints!)
+                    .ThenInclude(s => s.Tasks!)
+                        .ThenInclude(task => task.Dependencies_Relations)
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .FirstOrDefaultAsync(p => p.Id == projectId);

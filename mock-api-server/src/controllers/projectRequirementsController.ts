@@ -550,7 +550,8 @@ export class ProjectRequirementsController {
 
       // Update only the status
       mockProjectRequirements[requirementIndex].status = status;
-      mockProjectRequirements[requirementIndex].updatedAt = new Date().toISOString();
+      mockProjectRequirements[requirementIndex].updatedAt =
+        new Date().toISOString();
 
       const requirement = mockProjectRequirements[requirementIndex];
 

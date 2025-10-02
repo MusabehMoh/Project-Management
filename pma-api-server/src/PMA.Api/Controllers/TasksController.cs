@@ -128,6 +128,18 @@ public class TasksController : ApiBaseController
             // Create the task
             var createdTask = await _taskService.CreateTaskAsync(task);
 
+            // Handle assignments if provided
+            if (createTaskDto.MemberIds != null && createTaskDto.MemberIds.Any())
+            {
+                await _taskService.UpdateTaskAssignmentsAsync(createdTask.Id, createTaskDto.MemberIds);
+            }
+
+            // Handle dependencies if provided
+            if (createTaskDto.DepTaskIds != null && createTaskDto.DepTaskIds.Any())
+            {
+                await _taskService.UpdateTaskDependenciesAsync(createdTask.Id, createTaskDto.DepTaskIds);
+            }
+
             // Map back to DTO for response
             var taskDto = _mappingService.MapToTaskDto(createdTask);
 
@@ -167,6 +179,18 @@ public class TasksController : ApiBaseController
 
             // Update the task
             var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
+
+            // Update assignments if provided
+            if (updateTaskDto.MemberIds != null)
+            {
+                await _taskService.UpdateTaskAssignmentsAsync(id, updateTaskDto.MemberIds);
+            }
+
+            // Update dependencies if provided
+            if (updateTaskDto.DepTaskIds != null)
+            {
+                await _taskService.UpdateTaskDependenciesAsync(id, updateTaskDto.DepTaskIds);
+            }
 
             // Map back to DTO for response
             var taskDto = _mappingService.MapToTaskDto(updatedTask);
@@ -292,23 +316,56 @@ public class TasksController : ApiBaseController
     [HttpGet("searchTasks")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> SearchTasks(
-        [FromQuery] string query,
+        [FromQuery] string query = "",
         [FromQuery] int? timelineId = null,
         [FromQuery] int limit = 25)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                return Error<IEnumerable<TaskEntity>>("Query parameter is required", status: 400);
-            }
-
             var tasks = await _taskService.SearchTasksAsync(query, timelineId, limit);
             return Success(tasks);
         }
         catch (Exception ex)
         {
             return Error<IEnumerable<TaskEntity>>("An error occurred while searching tasks", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Create a new AdHoc task
+    /// </summary>
+    [HttpPost("adhoc")]
+    [ProducesResponseType(typeof(ApiResponse<TaskDto>), 201)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<IActionResult> CreateAdHocTask([FromBody] CreateAdHocTaskDto createAdHocTaskDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            // Map DTO to entity
+            var task = _mappingService.MapToAdHocTask(createAdHocTaskDto);
+
+            // Create the task
+            var createdTask = await _taskService.CreateTaskAsync(task);
+
+            // Handle assignments - AdHoc tasks always have assignments
+            if (createAdHocTaskDto.AssignedMembers != null && createAdHocTaskDto.AssignedMembers.Any())
+            {
+                await _taskService.UpdateTaskAssignmentsAsync(createdTask.Id, createAdHocTaskDto.AssignedMembers);
+            }
+
+            // Map back to DTO for response
+            var taskDto = _mappingService.MapToTaskDto(createdTask);
+
+            return Created(taskDto, nameof(GetTaskById), new { id = createdTask.Id }, "AdHoc task created successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<TaskDto>("An error occurred while creating the AdHoc task", ex.Message);
         }
     }
 }

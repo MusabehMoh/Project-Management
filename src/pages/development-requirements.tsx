@@ -25,6 +25,7 @@ import {
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { DatePicker } from "@heroui/date-picker";
 import { Search, Calendar, Code, Eye, Plus, Edit, X } from "lucide-react";
+import { parseDate } from "@internationalized/date";
 
 import { FilePreview } from "@/components/FilePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -37,6 +38,7 @@ import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
+import { timelineService } from "@/services/api";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
@@ -178,9 +180,7 @@ const RequirementCard = ({
                 variant="faded"
                 onPress={() => onCreateTask(requirement)}
               >
-                {requirement.task
-                  ? t("common.view") + " Task"
-                  : t("common.create") + " Task"}
+                {requirement.task ? t("tasks.viewTask") : t("tasks.createTask")}
               </Button>
             )}
 
@@ -204,8 +204,8 @@ const RequirementCard = ({
                 onPress={() => onCreateTimeline(requirement)}
               >
                 {requirement.timeline
-                  ? t("common.view") + " Timeline"
-                  : t("common.create") + " Timeline"}
+                  ? t("timeline.viewTimeline")
+                  : t("timeline.createTimeline")}
               </Button>
             )}
         </div>
@@ -409,14 +409,14 @@ export default function DevelopmentRequirementsPage() {
   // Date validation functions
   const validateDateRange = (startDate: any, endDate: any): string | null => {
     if (!startDate || !endDate) return null;
-    
+
     const start = new Date(startDate.toString());
     const end = new Date(endDate.toString());
-    
+
     if (start >= end) {
       return t("tasks.validation.startDateMustBeBeforeEndDate");
     }
-    
+
     return null;
   };
 
@@ -480,49 +480,113 @@ export default function DevelopmentRequirementsPage() {
     setIsDrawerOpen(true);
   };
 
+  // Helper function to fetch member details by ID
+  const fetchMemberById = async (
+    memberId: number,
+  ): Promise<MemberSearchResult | null> => {
+    try {
+      const response = await timelineService.getAllDepartmentEmployees();
+
+      if (response.success && response.data) {
+        const member = response.data.find((emp) => emp.id === memberId);
+
+        return member || null;
+      }
+
+      return null;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error fetching member details:", error);
+
+      return null;
+    }
+  };
+
   // Function to open task creation modal
-  const openTaskModal = (requirement: ProjectRequirement) => {
+  const openTaskModal = async (requirement: ProjectRequirement) => {
     setSelectedRequirement(requirement);
     setIsTaskModalOpen(true);
-    
+
+    // Clear any previous validation errors
+    setDateValidationErrors({});
+
     // Pre-populate description with requirement description
     setTaskDescription(requirement.description || "");
-    
+
     // If task exists, pre-populate the form
     if (requirement.task) {
-      const existingDev = developers.find(
-        (dev) => dev.id === requirement.task?.developerId,
-      );
-      const existingQC = qcMembers.find(
-        (qc) => qc.id === requirement.task?.qcId,
-      );
-      const existingDesigner = designers.find(
-        (designer) => designer.id === requirement.task?.designerId,
-      );
+      // Fetch real developer details instead of creating mock objects
+      const existingDev = requirement.task.developerId
+        ? await fetchMemberById(requirement.task.developerId)
+        : null;
 
-      setSelectedDeveloper(existingDev || null);
-      setSelectedQC(existingQC || null);
-      setSelectedDesigner(existingDesigner || null);
-      
+      const existingQC = requirement.task.qcId
+        ? await fetchMemberById(requirement.task.qcId)
+        : null;
+
+      const existingDesigner = requirement.task.designerId
+        ? await fetchMemberById(requirement.task.designerId)
+        : null;
+
+      setSelectedDeveloper(existingDev);
+      setSelectedQC(existingQC);
+      setSelectedDesigner(existingDesigner);
+
       // Pre-populate task-specific fields
       setTaskDescription(
         requirement.task.description || requirement.description || "",
       );
-      // TODO: Parse dates from existing task when available
-      setDeveloperStartDate(null);
-      setDeveloperEndDate(null);
-      setQcStartDate(null);
-      setQcEndDate(null);
-      setDesignerStartDate(null);
-      setDesignerEndDate(null);
+
+      // Parse dates from existing task when available
+      setDeveloperStartDate(
+        requirement.task.developerStartDate
+          ? parseDate(requirement.task.developerStartDate.split("T")[0])
+          : null,
+      );
+      setDeveloperEndDate(
+        requirement.task.developerEndDate
+          ? parseDate(requirement.task.developerEndDate.split("T")[0])
+          : null,
+      );
+      setQcStartDate(
+        requirement.task.qcStartDate
+          ? parseDate(requirement.task.qcStartDate.split("T")[0])
+          : null,
+      );
+      setQcEndDate(
+        requirement.task.qcEndDate
+          ? parseDate(requirement.task.qcEndDate.split("T")[0])
+          : null,
+      );
+      setDesignerStartDate(
+        requirement.task.designerStartDate
+          ? parseDate(requirement.task.designerStartDate.split("T")[0])
+          : null,
+      );
+      setDesignerEndDate(
+        requirement.task.designerEndDate
+          ? parseDate(requirement.task.designerEndDate.split("T")[0])
+          : null,
+      );
+
+      // Clear input values since we have pre-selected values
+      setDeveloperInputValue("");
+      setQcInputValue("");
+      setDesignerInputValue("");
     } else {
-      // Reset dates for new tasks
+      // Reset all fields for new tasks
+      setSelectedDeveloper(null);
+      setSelectedQC(null);
+      setSelectedDesigner(null);
       setDeveloperStartDate(null);
       setDeveloperEndDate(null);
       setQcStartDate(null);
       setQcEndDate(null);
       setDesignerStartDate(null);
       setDesignerEndDate(null);
+      setDeveloperInputValue("");
+      setQcInputValue("");
+      setDesignerInputValue("");
     }
   };
 
@@ -562,10 +626,10 @@ export default function DevelopmentRequirementsPage() {
 
         setIsTimelineModalOpen(false);
         setTimelineRequirement(null);
-        
+
         // Show success toast
         toasts.timelineCreated();
-        
+
         // Add a small delay for smooth user experience before redirect
         setTimeout(() => {
           navigate(
@@ -605,6 +669,8 @@ export default function DevelopmentRequirementsPage() {
         designerEndDate: designerEndDate?.toString(),
       };
 
+      const isUpdate = Boolean(selectedRequirement.task);
+
       // Call API to create/update task
       await projectRequirementsService.createRequirementTask(
         selectedRequirement.id,
@@ -619,6 +685,13 @@ export default function DevelopmentRequirementsPage() {
         );
       }
 
+      // Show success toast based on operation type
+      if (isUpdate) {
+        toasts.taskUpdated();
+      } else {
+        toasts.taskCreated();
+      }
+
       setIsTaskModalOpen(false);
       setSelectedDeveloper(null);
       setSelectedQC(null);
@@ -629,8 +702,18 @@ export default function DevelopmentRequirementsPage() {
 
       // Refresh requirements data to get updated task info
       refreshData();
-    } catch {
-      // Handle error appropriately
+    } catch (error) {
+      // Show error toast based on operation type
+      const isUpdate = Boolean(selectedRequirement.task);
+
+      if (isUpdate) {
+        toasts.taskUpdateError();
+      } else {
+        toasts.taskCreateError();
+      }
+
+      // eslint-disable-next-line no-console
+      console.error("Task operation failed:", error);
     } finally {
       setIsCreatingTask(false);
     }
@@ -1021,10 +1104,10 @@ export default function DevelopmentRequirementsPage() {
             }
           }}
         >
-          <ModalContent>
+          <ModalContent className="max-h-[90vh]">
             {(_onClose) => (
               <>
-                <ModalHeader className="flex flex-col gap-1">
+                <ModalHeader className="flex flex-col gap-1 flex-shrink-0">
                   <h2 className="text-xl font-semibold">
                     {selectedRequirement?.task
                       ? t("tasks.editTask")
@@ -1034,7 +1117,7 @@ export default function DevelopmentRequirementsPage() {
                     {selectedRequirement?.name}
                   </p>
                 </ModalHeader>
-                <ModalBody>
+                <ModalBody className="overflow-y-auto flex-1">
                   <div className="space-y-4">
                     {/* Task Description */}
                     <div className="space-y-2">
@@ -1114,10 +1197,29 @@ export default function DevelopmentRequirementsPage() {
                         ))}
                       </Autocomplete>
                       {selectedDeveloper && (
-                        <div className="mt-2">
+                        <div className="mt-2 flex items-center gap-2">
                           <Chip color="primary" size="sm" variant="flat">
                             {selectedDeveloper.fullName}
                           </Chip>
+                          <Button
+                            isIconOnly
+                            color="danger"
+                            size="sm"
+                            variant="light"
+                            onPress={() => {
+                              setSelectedDeveloper(null);
+                              setDeveloperInputValue("");
+                              setDeveloperStartDate(null);
+                              setDeveloperEndDate(null);
+                              // Clear validation errors for developer
+                              setDateValidationErrors((prev) => ({
+                                ...prev,
+                                developer: undefined,
+                              }));
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -1212,18 +1314,36 @@ export default function DevelopmentRequirementsPage() {
                                 {designer.fullName}
                               </span>
                               <span className="text-xs text-default-500">
-                                {designer.militaryNumber} -{" "}
-                                {designer.gradeName}
+                                {designer.militaryNumber} - {designer.gradeName}
                               </span>
                             </div>
                           </AutocompleteItem>
                         ))}
                       </Autocomplete>
                       {selectedDesigner && (
-                        <div className="mt-2">
+                        <div className="mt-2 flex items-center gap-2">
                           <Chip color="secondary" size="sm" variant="flat">
                             {selectedDesigner.fullName}
                           </Chip>
+                          <Button
+                            isIconOnly
+                            color="danger"
+                            size="sm"
+                            variant="light"
+                            onPress={() => {
+                              setSelectedDesigner(null);
+                              setDesignerInputValue("");
+                              setDesignerStartDate(null);
+                              setDesignerEndDate(null);
+                              // Clear validation errors for designer
+                              setDateValidationErrors((prev) => ({
+                                ...prev,
+                                designer: undefined,
+                              }));
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -1324,10 +1444,29 @@ export default function DevelopmentRequirementsPage() {
                         ))}
                       </Autocomplete>
                       {selectedQC && (
-                        <div className="mt-2">
+                        <div className="mt-2 flex items-center gap-2">
                           <Chip color="secondary" size="sm" variant="flat">
                             {selectedQC.fullName}
                           </Chip>
+                          <Button
+                            isIconOnly
+                            color="danger"
+                            size="sm"
+                            variant="light"
+                            onPress={() => {
+                              setSelectedQC(null);
+                              setQcInputValue("");
+                              setQcStartDate(null);
+                              setQcEndDate(null);
+                              // Clear validation errors for QC
+                              setDateValidationErrors((prev) => ({
+                                ...prev,
+                                qc: undefined,
+                              }));
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -1377,38 +1516,39 @@ export default function DevelopmentRequirementsPage() {
                     )}
                   </div>
                 </ModalBody>
-                <ModalFooter>
-                  <Button
-                    color="danger"
-                    variant="light"
-                    onPress={resetTaskModal}
-                  >
-                    {t("common.cancel")}
-                  </Button>
-                  {hasPermission({
-                    actions: selectedRequirement?.task
-                      ? ["requirements.tasks.update"]
-                      : ["requirements.tasks.create"],
-                  }) && (
-                    <Button
-                      color="primary"
-                      isDisabled={
-                        !selectedDeveloper && !selectedQC && !selectedDesigner
-                      }
-                      isLoading={isCreatingTask}
-                      onPress={handleTaskSubmit}
-                    >
-                      {selectedRequirement?.task
-                        ? t("common.update")
-                        : t("common.create")}
-                    </Button>
-                  )}
-                  
+                <ModalFooter className="flex flex-col gap-2 flex-shrink-0">
                   {!selectedDeveloper && !selectedQC && !selectedDesigner && (
-                    <p className="text-xs text-danger mt-2">
+                    <p className="text-xs text-danger text-center w-full">
                       {t("tasks.selectAtLeastOne")}
                     </p>
                   )}
+                  <div className="flex justify-end gap-2 w-full">
+                    <Button
+                      color="danger"
+                      variant="light"
+                      onPress={resetTaskModal}
+                    >
+                      {t("common.cancel")}
+                    </Button>
+                    {hasPermission({
+                      actions: selectedRequirement?.task
+                        ? ["requirements.tasks.update"]
+                        : ["requirements.tasks.create"],
+                    }) && (
+                      <Button
+                        color="primary"
+                        isDisabled={
+                          !selectedDeveloper && !selectedQC && !selectedDesigner
+                        }
+                        isLoading={isCreatingTask}
+                        onPress={handleTaskSubmit}
+                      >
+                        {selectedRequirement?.task
+                          ? t("common.update")
+                          : t("common.create")}
+                      </Button>
+                    )}
+                  </div>
                 </ModalFooter>
               </>
             )}

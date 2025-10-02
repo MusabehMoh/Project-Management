@@ -74,7 +74,7 @@ const DHTMLXGantt: FC<{
 
     return Math.max(
       1,
-      Math.ceil(Math.abs(B.getTime() - A.getTime()) / (1000 * 60 * 60 * 24))
+      Math.ceil(Math.abs(B.getTime() - A.getTime()) / (1000 * 60 * 60 * 24)),
     );
   };
 
@@ -122,7 +122,7 @@ const DHTMLXGantt: FC<{
         day_short: ["أحد", "اثن", "ثلث", "أرب", "خمي", "جمع", "سبت"],
       },
     }),
-    []
+    [],
   );
 
   const enLocale = useMemo(
@@ -168,7 +168,7 @@ const DHTMLXGantt: FC<{
         day_short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
       },
     }),
-    []
+    [],
   );
 
   // --- layouts ---
@@ -187,7 +187,7 @@ const DHTMLXGantt: FC<{
         { view: "scrollbar", id: "scrollHor", height: 20 },
       ],
     }),
-    []
+    [],
   );
 
   const rtlLayout = useMemo(
@@ -205,7 +205,7 @@ const DHTMLXGantt: FC<{
         { view: "scrollbar", id: "scrollHor", height: 20 },
       ],
     }),
-    []
+    [],
   );
 
   const formatDateForGantt = (date: string | Date) => {
@@ -372,7 +372,7 @@ const DHTMLXGantt: FC<{
   }, [language]);
 
   const [zoomLevel, setZoomLevel] = useState<"day" | "week" | "month" | "year">(
-    "month"
+    "month",
   );
 
   const applyZoom = (level: "day" | "week" | "month" | "year") => {
@@ -528,7 +528,7 @@ const DHTMLXGantt: FC<{
           ) {
             totalScrollable = Math.max(
               0,
-              newState.width - newState.inner_width
+              newState.width - newState.inner_width,
             );
           } else if (typeof newState.width === "number") {
             totalScrollable = newState.width;
@@ -641,7 +641,7 @@ const DHTMLXGantt: FC<{
               start_date: formatDate(sub.startDate || task.startDate),
               duration: daysBetween(
                 sub.startDate || task.startDate,
-                sub.endDate || task.endDate
+                sub.endDate || task.endDate,
               ),
               parent: rid,
               type: "subtask",
@@ -838,7 +838,7 @@ const DHTMLXGantt: FC<{
                       ? new CalendarDate(
                           new Date(selectedTask.start_date).getFullYear(),
                           new Date(selectedTask.start_date).getMonth() + 1,
-                          new Date(selectedTask.start_date).getDate()
+                          new Date(selectedTask.start_date).getDate(),
                         )
                       : null
                   }
@@ -848,7 +848,7 @@ const DHTMLXGantt: FC<{
                       start_date: val
                         ? `${val.year}-${String(val.month).padStart(
                             2,
-                            "0"
+                            "0",
                           )}-${String(val.day).padStart(2, "0")}`
                         : "",
                     })
@@ -909,7 +909,7 @@ const DHTMLXGantt: FC<{
                       if (!onDeleteEntity) return;
                       const success = await onDeleteEntity(
                         selectedTask.id,
-                        selectedTask.type
+                        selectedTask.type,
                       );
 
                       if (success) {
@@ -931,11 +931,11 @@ const DHTMLXGantt: FC<{
                           name: selectedTask.text,
                           description: selectedTask.description,
                           startDate: formatDateForGantt(
-                            selectedTask.start_date
+                            selectedTask.start_date,
                           ),
                           duration: selectedTask.duration,
                           progress: selectedTask.progress ?? 0,
-                        }
+                        },
                       );
 
                       if (success) {

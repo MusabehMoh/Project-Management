@@ -14,7 +14,7 @@ public class ApplicationDbContext : DbContext
     // DbSets for entities
     public DbSet<Project> Projects { get; set; }
     public DbSet<User> Users { get; set; }
-    public DbSet<Employee> Employees { get; set; }
+    public DbSet<Employee> MawaredEmployees { get; set; }
     public DbSet<TaskEntity> Tasks { get; set; }
     public DbSet<SubTask> SubTasks { get; set; }
     public DbSet<Sprint> Sprints { get; set; }
@@ -40,12 +40,27 @@ public class ApplicationDbContext : DbContext
     public DbSet<CalendarEventAssignment> CalendarEventAssignments { get; set; }
     public DbSet<SubTaskAssignment> SubTaskAssignments { get; set; }
     public DbSet<ProjectAnalyst> ProjectAnalysts { get; set; }
+    
+    // New DbSets for task assignments and dependencies
+    public DbSet<TaskAssignment> TaskAssignments { get; set; }
+    public DbSet<TaskDependency> TaskDependencies { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // All configurations moved to Data Annotations
+        // Configure TaskDependency to avoid cycles
+        modelBuilder.Entity<TaskDependency>()
+            .HasOne(td => td.Task)
+            .WithMany(t => t.Dependencies_Relations)
+            .HasForeignKey(td => td.TaskId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<TaskDependency>()
+            .HasOne(td => td.DependsOnTask)
+            .WithMany(t => t.DependentTasks)
+            .HasForeignKey(td => td.DependsOnTaskId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }
 

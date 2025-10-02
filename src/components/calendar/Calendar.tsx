@@ -589,7 +589,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
               <Skeleton className="h-9 w-24 rounded-lg" />
             </div>
           </div>
-          
+
           {/* Calendar grid skeleton */}
           <div className="space-y-4">
             {/* Week header */}
@@ -598,7 +598,7 @@ const CalendarComponent: React.FC<CalendarComponentProps> = ({
                 <Skeleton key={i} className="h-8 w-full rounded-lg" />
               ))}
             </div>
-            
+
             {/* Calendar days */}
             {[...Array(6)].map((_, weekIndex) => (
               <div key={weekIndex} className="grid grid-cols-7 gap-2">

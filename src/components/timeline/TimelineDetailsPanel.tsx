@@ -9,6 +9,7 @@ import TimelineEditModal, {
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimelineFormHelpers } from "@/hooks/useTimelineFormHelpers";
+import { useTimelineToasts } from "@/hooks/useTimelineToasts";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   Timeline,
@@ -49,6 +50,7 @@ export default function TimelineDetailsPanel({
 }: TimelineDetailsPanelProps) {
   const { t, direction, language } = useLanguage();
   const { hasPermission } = usePermissions();
+  const toasts = useTimelineToasts();
 
   // Use shared form helpers instead of duplicate functions
   const {
@@ -99,7 +101,14 @@ export default function TimelineDetailsPanel({
       progress: item.progress || 0,
       notes: item.notes || "",
       members: item.members || [],
-      memberIds: item.members ? item.members.map((m: any) => m.id) : [],
+      depTasks: item.depTasks || item.dependencies || [],
+      // Use the IDs from the backend if available, otherwise derive from objects
+      memberIds:
+        item.memberIds ||
+        (item.members ? item.members.map((m: any) => m.id) : []),
+      depTaskIds:
+        item.depTaskIds ||
+        (item.depTasks ? item.depTasks.map((t: any) => Number(t.id)) : []),
     });
     setIsEditModalOpen(true);
   };
@@ -118,6 +127,7 @@ export default function TimelineDetailsPanel({
           id: editingItem.id,
           ...formData,
         });
+        toasts.onTimelineUpdateSuccess();
       } else if (editModalType === "sprint") {
         await onUpdateSprint({
           id: editingItem.id,
@@ -125,6 +135,7 @@ export default function TimelineDetailsPanel({
           timelineId: (editingItem.timelineId ?? timeline.id).toString(),
           ...formData,
         });
+        toasts.onSprintUpdateSuccess();
       } else if (editModalType === "task") {
         await onUpdateTask({
           id: editingItem.id,
@@ -132,6 +143,7 @@ export default function TimelineDetailsPanel({
           statusId: formData.statusId,
           priorityId: formData.priorityId,
         });
+        toasts.onTaskUpdateSuccess();
       } else if (editModalType === "subtask") {
         await onUpdateSubtask({
           id: editingItem.id,
@@ -139,8 +151,11 @@ export default function TimelineDetailsPanel({
           statusId: formData.statusId,
           priorityId: formData.priorityId,
         });
+        toasts.onSubtaskUpdateSuccess();
       }
     } catch (error) {
+      // Show error toast
+      toasts.onUpdateError();
       throw error; // Re-throw to let the modal handle it
     }
   };
@@ -459,6 +474,21 @@ export default function TimelineDetailsPanel({
                       </span>
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {task.depTasks && task.depTasks.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-default-700">
+                {t("timeline.selectPredecessors")}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {task.depTasks.map((dep: any) => (
+                  <Chip key={dep.id} color="warning" size="sm" variant="flat">
+                    {dep.name}
+                  </Chip>
                 ))}
               </div>
             </div>

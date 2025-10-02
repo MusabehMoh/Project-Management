@@ -250,6 +250,8 @@ export interface CreateTaskRequest {
   statusId: number;
   priorityId: number;
   progress: number;
+  memberIds?: number[];
+  depTaskIds?: number[];
 }
 
 export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {

@@ -22,6 +22,7 @@ import {
   BuildingIcon,
   CalendarIcon,
 } from "@/components/icons";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { useTimelines } from "@/hooks/useTimelines";
 import { useTimelineProjects } from "@/hooks/useTimelineProjects";
 import { usePageTitle } from "@/hooks";
@@ -665,26 +666,33 @@ export default function TimelinePage() {
       <div className={`space-y-6 ${language === "ar" ? "rtl" : "ltr"}`}>
         {/* Error Display */}
         {error && (
-          <Card className="border-danger">
+          <Card className="border-2 border-danger-200 bg-danger-50 dark:bg-danger-950/30">
             <CardBody>
-              <div className="flex items-center gap-3">
-                <div className="text-danger">⚠️</div>
-                <div>
-                  <p className="text-danger font-medium">
-                    Error Loading Timelines
+              <div className="flex items-start gap-4">
+                <div className="rounded-full bg-danger-100 dark:bg-danger-900/50 p-3 flex-shrink-0">
+                  <AlertCircle className="w-6 h-6 text-danger" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h4 className="text-lg font-semibold text-danger">
+                    {language === "ar"
+                      ? "خطأ في تحميل الجداول الزمنية"
+                      : "Error Loading Timelines"}
+                  </h4>
+                  <p className="text-sm text-danger-700 dark:text-danger-300">
+                    {error}
                   </p>
-                  <p className="text-sm text-default-600">{error}</p>
                   <Button
                     className="mt-2"
                     color="danger"
                     size="sm"
-                    variant="light"
+                    startContent={<RefreshCw className="w-4 h-4" />}
+                    variant="flat"
                     onPress={() => {
                       clearError();
                       refreshData();
                     }}
                   >
-                    Retry
+                    {language === "ar" ? "إعادة المحاولة" : "Try Again"}
                   </Button>
                 </div>
               </div>

@@ -251,7 +251,7 @@ export default function TaskCompletionTracker({
             <Skeleton className="h-7 w-1/2 rounded-lg" />
             <Skeleton className="h-9 w-24 rounded-lg" />
           </div>
-          
+
           {/* Progress overview skeleton */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
@@ -264,18 +264,21 @@ export default function TaskCompletionTracker({
               </div>
             ))}
           </div>
-          
+
           {/* Chart skeleton */}
           <div className="space-y-4">
             <Skeleton className="h-6 w-32 rounded-lg" />
             <Skeleton className="h-64 w-full rounded-lg" />
           </div>
-          
+
           {/* Task list skeleton */}
           <div className="space-y-3">
             <Skeleton className="h-6 w-40 rounded-lg" />
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-4 border border-default-200 rounded-lg">
+              <div
+                key={i}
+                className="flex items-center justify-between p-4 border border-default-200 rounded-lg"
+              >
                 <div className="flex items-center space-x-3">
                   <Skeleton className="h-4 w-4 rounded" />
                   <div className="space-y-1">

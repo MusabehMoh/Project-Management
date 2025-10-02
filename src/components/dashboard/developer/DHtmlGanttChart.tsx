@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Skeleton } from "@heroui/skeleton";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -147,7 +148,7 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
               : "Track project progress and dependencies"}
           </p>
         </div>
-        {showToolbar && (
+        {showToolbar && !error && !loading && (
           <div className="flex gap-2">
             <Button
               className="min-w-0"
@@ -179,49 +180,95 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
 
       <CardBody className="p-0">
         {error ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-red-500 text-2xl mb-2">⚠️</div>
-              <p className="text-sm text-red-600 mb-4">{error}</p>
-              <Button color="primary" size="sm" onPress={handleRetry}>
-                {language === "ar" ? "إعادة المحاولة" : "Retry"}
+          <div
+            className="flex items-center justify-center p-12"
+            style={{ minHeight: height }}
+          >
+            <div className="text-center space-y-4 max-w-md">
+              <div className="flex justify-center">
+                <div className="rounded-full bg-danger-50 dark:bg-danger-950/30 p-4">
+                  <AlertCircle className="w-12 h-12 text-danger" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-lg font-semibold text-foreground">
+                  {language === "ar"
+                    ? "تعذر تحميل المهام"
+                    : "Unable to Load Tasks"}
+                </h4>
+                <p className="text-sm text-default-500">
+                  {language === "ar"
+                    ? "حدث خطأ أثناء محاولة تحميل بيانات الجدول الزمني. يرجى المحاولة مرة أخرى."
+                    : "An error occurred while trying to load the timeline data. Please try again."}
+                </p>
+              </div>
+              <Button
+                color="primary"
+                startContent={<RefreshCw className="w-4 h-4" />}
+                variant="flat"
+                onPress={handleRetry}
+              >
+                {language === "ar" ? "إعادة المحاولة" : "Try Again"}
               </Button>
             </div>
           </div>
         ) : loading ? (
-          <div className="space-y-4 p-6" style={{ height }}>
-            {/* Gantt header skeleton */}
-            <div className="flex items-center justify-between">
-              <div className="flex space-x-2">
-                <Skeleton className="h-8 w-16 rounded-lg" />
+          <div className="p-6 space-y-6" style={{ minHeight: height }}>
+            {/* Timeline header skeleton */}
+            <div className="flex items-center justify-between pb-4 border-b border-default-200">
+              <div className="flex gap-3">
                 <Skeleton className="h-8 w-20 rounded-lg" />
                 <Skeleton className="h-8 w-24 rounded-lg" />
+                <Skeleton className="h-8 w-28 rounded-lg" />
               </div>
-              <div className="flex space-x-2">
-                <Skeleton className="h-8 w-24 rounded-lg" />
-                <Skeleton className="h-8 w-8 rounded" />
+              <div className="flex gap-2">
+                <Skeleton className="h-8 w-32 rounded-lg" />
+                <Skeleton className="h-8 w-10 rounded-lg" />
               </div>
             </div>
-            
-            {/* Gantt timeline skeleton */}
-            <div className="space-y-2">
-              {/* Timeline header */}
-              <div className="grid grid-cols-12 gap-1 h-8">
+
+            {/* Gantt chart skeleton */}
+            <div className="space-y-3">
+              {/* Date headers */}
+              <div className="grid grid-cols-12 gap-2 pb-2">
                 {[...Array(12)].map((_, i) => (
-                  <Skeleton key={i} className="h-full w-full rounded" />
+                  <Skeleton key={i} className="h-6 w-full rounded" />
                 ))}
               </div>
-              
-              {/* Task rows */}
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="grid grid-cols-12 gap-1 h-10">
-                  <div className="col-span-3 flex items-center space-x-2">
-                    <Skeleton className="h-6 w-6 rounded" />
-                    <Skeleton className="h-4 w-32 rounded" />
+
+              {/* Task rows with bars */}
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  {/* Task name */}
+                  <div className="w-48 flex items-center gap-2">
+                    <Skeleton className="h-8 w-8 rounded" />
+                    <Skeleton className="h-5 w-full rounded" />
                   </div>
-                  {[...Array(9)].map((_, j) => (
-                    <Skeleton key={j} className="h-6 w-full rounded" />
-                  ))}
+
+                  {/* Timeline bars */}
+                  <div className="flex-1 grid grid-cols-12 gap-2">
+                    {[...Array(12)].map((_, j) => {
+                      const showBar = j >= i && j <= i + 3;
+
+                      return (
+                        <div key={j} className="h-8 flex items-center">
+                          {showBar && (
+                            <Skeleton className="h-6 w-full rounded-md" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Legend skeleton */}
+            <div className="flex items-center justify-center gap-6 pt-4 border-t border-default-200">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4 rounded-sm" />
+                  <Skeleton className="h-4 w-20 rounded" />
                 </div>
               ))}
             </div>

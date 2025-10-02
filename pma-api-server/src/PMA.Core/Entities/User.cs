@@ -80,7 +80,7 @@ public class Employee
 
     [Required]
     public int StatusId { get; set; }
-
+     
     // Navigation property
     public User? User { get; set; }
 }

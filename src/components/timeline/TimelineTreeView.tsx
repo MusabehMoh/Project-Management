@@ -987,9 +987,7 @@ export default function TimelineTreeView({
                   )}
                 </div>
               )}
-              {(sprint.tasks || []).length === 0 && (
-                <div className="w-6" />
-              )}
+              {(sprint.tasks || []).length === 0 && <div className="w-6" />}
             </div>
             <div>
               <h4 className="font-medium">{sprint.name}</h4>

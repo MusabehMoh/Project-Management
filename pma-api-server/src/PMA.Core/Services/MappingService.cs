@@ -453,7 +453,7 @@ public class MappingService : IMappingService
         {
             Id = task.Id,
             TreeId = $"task-{task.Id}",
-            SprintId = task.SprintId,
+            SprintId = task.SprintId??null,
             Name = task.Name,
             Description = task.Description,
             StartDate = task.StartDate,
@@ -466,7 +466,9 @@ public class MappingService : IMappingService
             ProjectRequirementId=task.ProjectRequirementId, 
             ActualHours = task.ActualHours,
             CreatedAt = task.CreatedAt,
-            UpdatedAt = task.UpdatedAt
+            UpdatedAt = task.UpdatedAt,
+            MemberIds = task.Assignments?.Select(a => a.PrsId).ToList() ?? new List<int>(),
+            DepTaskIds = task.Dependencies_Relations?.Select(d => d.DependsOnTaskId).ToList() ?? new List<int>()
         };
     }
 
@@ -540,8 +542,32 @@ public class MappingService : IMappingService
             PriorityId = createTaskDto.PriorityId,
             DepartmentId = createTaskDto.DepartmentId,
             ProjectRequirementId = createTaskDto.ProjectRequirementId,
-            TimelineId=createTaskDto.TimelineId,
+            TimelineId = createTaskDto.TimelineId,
             EstimatedHours = createTaskDto.EstimatedHours,
+            Progress = createTaskDto.Progress,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            TypeId = createTaskDto.TypeId
+
+        };
+    }
+
+    /// <summary>
+    /// Maps a CreateAdHocTaskDto to Task entity
+    /// </summary>
+    public PMA.Core.Entities.Task MapToAdHocTask(CreateAdHocTaskDto createAdHocTaskDto)
+    {
+        return new PMA.Core.Entities.Task
+        {
+            SprintId = 1, // Default sprint for adhoc tasks
+            Name = createAdHocTaskDto.Name,
+            Description = createAdHocTaskDto.Description,
+            StartDate = createAdHocTaskDto.StartDate,
+            EndDate = createAdHocTaskDto.EndDate,
+            StatusId = PMA.Core.Entities.TaskStatus.ToDo,
+            PriorityId = Priority.Medium,
+            TypeId = TaskTypes.AdHoc, // Set TypeId to AdHoc
+            Progress = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -573,14 +599,14 @@ public class MappingService : IMappingService
         if (updateTaskDto.DepartmentId.HasValue)
             task.DepartmentId = updateTaskDto.DepartmentId;
 
-        
-   
-
         if (updateTaskDto.EstimatedHours.HasValue)
             task.EstimatedHours = updateTaskDto.EstimatedHours;
 
         if (updateTaskDto.ActualHours.HasValue)
             task.ActualHours = updateTaskDto.ActualHours;
+
+        if (updateTaskDto.Progress.HasValue)
+            task.Progress = updateTaskDto.Progress.Value;
 
         task.UpdatedAt = DateTime.UtcNow;
     }

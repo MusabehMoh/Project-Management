@@ -160,6 +160,17 @@ class ProjectRequirementsService {
   }
 
   /**
+   * Get a single requirement by ID
+   */
+  async getRequirement(requirementId: number): Promise<ProjectRequirement> {
+    const result = await apiClient.get<ProjectRequirement>(
+      ENDPOINTS.REQUIREMENT_BY_ID(requirementId),
+    );
+
+    return result.data;
+  }
+
+  /**
    * Update an existing requirement
    */
   async updateRequirement(

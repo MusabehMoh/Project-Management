@@ -1,5 +1,6 @@
 import { Card, CardBody } from "@heroui/card";
 import { Skeleton } from "@heroui/skeleton";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 interface TimelineGanttSkeletonProps {
   height?: string;
@@ -9,6 +10,7 @@ export default function TimelineGanttSkeleton({
 }: TimelineGanttSkeletonProps) {
   const { language } = useLanguage();
   const direction = language === "ar" ? "rtl" : "ltr";
+
   return (
     <Card className="h-full">
       <CardBody
@@ -131,4 +133,3 @@ export default function TimelineGanttSkeleton({
     </Card>
   );
 }
-

@@ -428,6 +428,8 @@ const translations = {
     "toast.info": "Information",
     "toast.createSuccess": "Successfully created",
     "toast.createError": "Failed to create",
+    "toast.adhocTaskCreated": "AdHoc task created successfully",
+    "toast.adhocTaskCreateError": "Failed to create AdHoc task",
     "toast.updateSuccess": "Successfully updated",
     "toast.updateError": "Failed to update",
     "toast.deleteSuccess": "Successfully deleted",
@@ -857,6 +859,7 @@ const translations = {
     "common.viewDetails": "View Details",
     // Task creation keys
     "tasks.createTask": "Create Task",
+    "tasks.viewTask": "View Task",
     "tasks.editTask": "Edit Task",
     "tasks.developer": "Developer",
     "tasks.qcMember": "QC Member",
@@ -870,9 +873,12 @@ const translations = {
     "tasks.developerDates": "Developer Schedule",
     "tasks.designerDates": "Designer Schedule",
     "tasks.qcDates": "QC Schedule",
-    "tasks.assignmentNote": "Select at least one team member for this task. Each role is optional but at least one assignment is required.",
-    "tasks.selectAtLeastOne": "Please select at least one team member (Developer, Designer, or QC).",
-    "tasks.validation.startDateMustBeBeforeEndDate": "Start date must be before end date",
+    "tasks.assignmentNote":
+      "Select at least one team member for this task. Each role is optional but at least one assignment is required.",
+    "tasks.selectAtLeastOne":
+      "Please select at least one team member (Developer, Designer, or QC).",
+    "tasks.validation.startDateMustBeBeforeEndDate":
+      "Start date must be before end date",
     "tasks.validation.bothDatesRequired":
       "Both start and end dates are required when a role is assigned",
     "tasks.assignedOn": "Assigned On", // Additional requirements keys
@@ -1155,6 +1161,7 @@ const translations = {
     "timeline.noTimelinesGeneral":
       "Select a project and create your first timeline to get started.",
     "timeline.createTimeline": "Create Timeline",
+    "timeline.viewTimeline": "View Timeline",
     "timeline.selectTimeline": "Select a timeline",
     "timeline.selectTimelineDescription":
       "Choose a timeline from the dropdown above to view its details.",
@@ -1487,6 +1494,8 @@ const translations = {
     status: "Status",
     project: "Project",
     requirement: "Requirement",
+    projectLabel: "Project:",
+    requirementLabel: "Requirement:",
     changeStatus: "Change Status",
     requestDesign: "Request Design",
     confirm: "Confirm",
@@ -1940,6 +1949,8 @@ const translations = {
     "toast.deleteError": "فشل في الحذف",
     "toast.saveSuccess": "تم الحفظ بنجاح",
     "toast.saveError": "فشل في الحفظ",
+    "toast.adhocTaskCreated": "تم إنشاء المهمة العاجلة بنجاح",
+    "toast.adhocTaskCreateError": "فشل في إنشاء المهمة العاجلة",
 
     // Table
     "table.noData": "لا توجد بيانات متاحة",
@@ -2354,6 +2365,7 @@ const translations = {
     "common.viewDetails": "عرض التفاصيل",
     // Task creation keys (Arabic)
     "tasks.createTask": "إنشاء مهمة",
+    "tasks.viewTask": "عرض المهمة",
     "tasks.editTask": "تحرير المهمة",
     "tasks.developer": "المطور",
     "tasks.qcMember": "مسؤول ضمان الجودة",
@@ -2653,6 +2665,7 @@ const translations = {
     "timeline.noTimelinesGeneral":
       "اختر مشروعاً وأنشئ جدولك الزمني الأول للبدء.",
     "timeline.createTimeline": "إنشاء جدول زمني",
+    "timeline.viewTimeline": "عرض الجدول الزمني",
     "timeline.selectTimeline": "اختر جدولاً زمنياً",
     "timeline.selectTimelineDescription":
       "اختر جدولاً زمنياً من القائمة المنسدلة أعلاه لعرض تفاصيله.",
@@ -2977,6 +2990,8 @@ const translations = {
     status: "الحالة",
     project: "المشروع",
     requirement: "المتطلب",
+    projectLabel: "المشروع:",
+    requirementLabel: "المتطلب:",
     changeStatus: "تغيير الحالة",
     requestDesign: "طلب تصميم",
     confirm: "تأكيد",

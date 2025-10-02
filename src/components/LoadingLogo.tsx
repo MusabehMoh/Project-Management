@@ -1,13 +1,13 @@
 /**
  * LoadingLogo - A reusable theme-aware loading component
- * 
+ *
  * Features:
  * - Automatically switches between light/dark logo versions
  * - Multiple size options (sm, md, lg, xl)
  * - Smooth breathing, floating, and glowing animations
  * - Optional loading text
  * - Fully customizable with className prop
- * 
+ *
  * Usage:
  * <LoadingLogo /> // Default large size
  * <LoadingLogo size="sm" showText text="Please wait..." />
@@ -103,7 +103,8 @@ export const LoadingLogo: React.FC<LoadingLogoProps> = ({
           `}
           src={logoSrc}
           style={{
-            animation: "logoBreath 2s ease-in-out infinite, logoFloat 4s ease-in-out infinite",
+            animation:
+              "logoBreath 2s ease-in-out infinite, logoFloat 4s ease-in-out infinite",
             filter: "brightness(1) drop-shadow(0 2px 8px rgba(0,0,0,0.1))",
           }}
         />

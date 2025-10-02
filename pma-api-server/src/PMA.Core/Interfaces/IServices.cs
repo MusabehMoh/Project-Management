@@ -47,6 +47,12 @@ public interface ITaskService
     System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByAssigneeAsync(int assigneeId);
     System.Threading.Tasks.Task<TaskEntity?> GetTaskWithSubTasksAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<TaskEntity>> SearchTasksAsync(string query, int? timelineId = null, int limit = 25);
+    
+    // New methods for assignments and dependencies
+    System.Threading.Tasks.Task UpdateTaskAssignmentsAsync(int taskId, IEnumerable<int> memberIds);
+    System.Threading.Tasks.Task UpdateTaskDependenciesAsync(int taskId, IEnumerable<int> predecessorIds);
+    System.Threading.Tasks.Task<IEnumerable<TaskAssignment>> GetTaskAssignmentsAsync(int taskId);
+    System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId);
 }
 
 public interface ISprintService
@@ -172,13 +178,13 @@ public interface ILookupService
 
 public interface IMemberTaskService
 {
-    System.Threading.Tasks.Task<(IEnumerable<MemberTask> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, string? status = null, string? priority = null);
-    System.Threading.Tasks.Task<MemberTask?> GetMemberTaskByIdAsync(int id);
-    System.Threading.Tasks.Task<MemberTask> CreateMemberTaskAsync(MemberTask memberTask);
-    System.Threading.Tasks.Task<MemberTask> UpdateMemberTaskAsync(MemberTask memberTask);
+    System.Threading.Tasks.Task<(IEnumerable<MemberTaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null);
+    System.Threading.Tasks.Task<MemberTaskDto?> GetMemberTaskByIdAsync(int id);
+    System.Threading.Tasks.Task<MemberTaskDto> CreateMemberTaskAsync(MemberTaskDto memberTask);
+    System.Threading.Tasks.Task<MemberTaskDto> UpdateMemberTaskAsync(MemberTaskDto memberTask);
     System.Threading.Tasks.Task<bool> DeleteMemberTaskAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByProjectAsync(int projectId);
-    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByAssigneeAsync(int assigneeId);
+    System.Threading.Tasks.Task<IEnumerable<MemberTaskDto>> GetMemberTasksByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<IEnumerable<MemberTaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId);
 }
 
 

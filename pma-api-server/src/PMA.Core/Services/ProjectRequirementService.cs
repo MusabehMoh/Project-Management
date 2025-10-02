@@ -144,7 +144,7 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<RequirementTask?> CreateRequirementTaskAsync(int requirementId, CreateRequirementTaskDto taskDto)
     {
-        var requirement = await _projectRequirementRepository.GetByIdAsync(requirementId);
+        var requirement = await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(requirementId);
         if (requirement == null)
             return null;
 
@@ -167,28 +167,50 @@ public class ProjectRequirementService : IProjectRequirementService
             throw new ArgumentException("Designer end date must be after start date");
         }
 
-        // Create a new task associated with the requirement
-        var task = new RequirementTask
+        // Check if task already exists for this requirement
+        RequirementTask task;
+        
+        if (requirement.Task != null)
         {
-            ProjectRequirementId = requirementId,
-            DeveloperId = taskDto.DeveloperId,
-            QcId = taskDto.QcId,
-            DesignerId = taskDto.DesignerId,
-            Description = taskDto.Description,
-            DeveloperStartDate = taskDto.DeveloperStartDate,
-            DeveloperEndDate = taskDto.DeveloperEndDate,
-            QcStartDate = taskDto.QcStartDate,
-            QcEndDate = taskDto.QcEndDate,
-            DesignerStartDate = taskDto.DesignerStartDate,
-            DesignerEndDate = taskDto.DesignerEndDate,
-            Status = "not-started",
-            CreatedBy = 1, // This should be the current user ID
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            // Update existing task
+            task = requirement.Task;
+            task.DeveloperId = taskDto.DeveloperId;
+            task.QcId = taskDto.QcId;
+            task.DesignerId = taskDto.DesignerId;
+            task.Description = taskDto.Description;
+            task.DeveloperStartDate = taskDto.DeveloperStartDate;
+            task.DeveloperEndDate = taskDto.DeveloperEndDate;
+            task.QcStartDate = taskDto.QcStartDate;
+            task.QcEndDate = taskDto.QcEndDate;
+            task.DesignerStartDate = taskDto.DesignerStartDate;
+            task.DesignerEndDate = taskDto.DesignerEndDate;
+            task.UpdatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            // Create a new task associated with the requirement
+            task = new RequirementTask
+            {
+                ProjectRequirementId = requirementId,
+                DeveloperId = taskDto.DeveloperId,
+                QcId = taskDto.QcId,
+                DesignerId = taskDto.DesignerId,
+                Description = taskDto.Description,
+                DeveloperStartDate = taskDto.DeveloperStartDate,
+                DeveloperEndDate = taskDto.DeveloperEndDate,
+                QcStartDate = taskDto.QcStartDate,
+                QcEndDate = taskDto.QcEndDate,
+                DesignerStartDate = taskDto.DesignerStartDate,
+                DesignerEndDate = taskDto.DesignerEndDate,
+                Status = "not-started",
+                CreatedBy = 1, // This should be the current user ID
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
-        // Add the task to the requirement's tasks collection
-        requirement.Tasks.Add(task);
+            // Add the task to the requirement's tasks collection
+            requirement.Task = task;
+        }
 
         // Update requirement status to "under development" if it was approved
         if (requirement.Status == RequirementStatusEnum.Approved)

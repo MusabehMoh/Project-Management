@@ -13,7 +13,7 @@ public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
 
     public async System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> GetEmployeesAsync(int page, int limit, int? statusId = null)
     {
-        var query = _context.Employees.AsQueryable();
+        var query = _context.MawaredEmployees.AsQueryable();
 
         if (statusId.HasValue)
         {
@@ -32,7 +32,7 @@ public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
 
     public async System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> SearchEmployeesAsync(string query, int page = 1, int limit = 20)
     {
-        var searchQuery = _context.Employees.AsQueryable();
+        var searchQuery = _context.MawaredEmployees.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(query))
         {

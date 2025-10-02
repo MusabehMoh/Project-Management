@@ -40,5 +40,6 @@ public interface IMappingService
 
     // Task creation and update mapping methods
     PMA.Core.Entities.Task MapToTask(CreateTaskDto createTaskDto);
+    PMA.Core.Entities.Task MapToAdHocTask(CreateAdHocTaskDto createAdHocTaskDto);
     void UpdateTaskFromDto(PMA.Core.Entities.Task task, UpdateTaskDto updateTaskDto);
 }

@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { today, getLocalTimeZone, CalendarDate, parseDate } from "@internationalized/date";
+import {
+  today,
+  getLocalTimeZone,
+  CalendarDate,
+  parseDate,
+} from "@internationalized/date";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -232,18 +237,21 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
             <Skeleton className="h-8 w-1/3 rounded-lg" />
             <Skeleton className="h-10 w-24 rounded-lg" />
           </div>
-          
+
           {/* Tabs skeleton */}
           <div className="flex space-x-4">
             <Skeleton className="h-10 w-32 rounded-lg" />
             <Skeleton className="h-10 w-32 rounded-lg" />
             <Skeleton className="h-10 w-32 rounded-lg" />
           </div>
-          
+
           {/* Content skeleton */}
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-4 border border-default-200 rounded-lg">
+              <div
+                key={i}
+                className="flex items-center justify-between p-4 border border-default-200 rounded-lg"
+              >
                 <div className="flex items-center space-x-3">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="space-y-2">
@@ -765,7 +773,11 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   );
 
   const AddAdhocTaskModal = () => {
-    const { addAdhocTask, loading: isCreating, error: createError } = UseAdhocTasks();
+    const {
+      addAdhocTask,
+      loading: isCreating,
+      error: createError,
+    } = UseAdhocTasks();
     const [formData, setFormData] = useState({
       name: "",
       description: "",
@@ -773,9 +785,12 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       endDate: "",
       members: [],
     });
-    const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>([]);
+    const [selectedMembers, setSelectedMembers] = useState<
+      MemberSearchResult[]
+    >([]);
     const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
-    const [selectedEmployee, setSelectedEmployee] = useState<MemberSearchResult | null>(null);
+    const [selectedEmployee, setSelectedEmployee] =
+      useState<MemberSearchResult | null>(null);
     const [errors, setErrors] = useState<{
       name?: string;
       description?: string;
@@ -797,10 +812,12 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         newErrors.name = t("taskNameRequired") || "Task name is required";
       }
       if (!formData.description.trim()) {
-        newErrors.description = t("taskDescriptionRequired") || "Task description is required";
+        newErrors.description =
+          t("taskDescriptionRequired") || "Task description is required";
       }
       if (!formData.startDate) {
-        newErrors.startDate = t("taskStartDateRequired") || "Start date is required";
+        newErrors.startDate =
+          t("taskStartDateRequired") || "Start date is required";
       }
       if (!formData.endDate) {
         newErrors.endDate = t("taskEndDateRequired") || "End date is required";
@@ -809,30 +826,34 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       if (formData.startDate && formData.endDate) {
         const start = new Date(formData.startDate);
         const end = new Date(formData.endDate);
+
         if (end < start) {
-          newErrors.endDate = t("taskValidEndDate") || "End date must be after start date";
+          newErrors.endDate =
+            t("taskValidEndDate") || "End date must be after start date";
         }
       }
 
       if (selectedMembers.length === 0) {
-        newErrors.members = t("taskAssigneeRequired") || "At least one assignee is required";
+        newErrors.members =
+          t("taskAssigneeRequired") || "At least one assignee is required";
       }
 
       setErrors(newErrors);
+
       return Object.keys(newErrors).length === 0;
     };
 
     const handleInputChange = (field: string, value: any) => {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData((prev) => ({ ...prev, [field]: value }));
       if (errors[field as keyof typeof errors]) {
-        setErrors(prev => ({ ...prev, [field]: undefined }));
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
       }
     };
 
     const handleEmployeeSelect = (employee: MemberSearchResult) => {
       setSelectedEmployee(employee);
       setEmployeeInputValue(`${employee.gradeName} ${employee.fullName}`);
-      if (!selectedMembers.some(user => user.id === employee.id)) {
+      if (!selectedMembers.some((user) => user.id === employee.id)) {
         setSelectedMembers([...selectedMembers, employee]);
       }
       setEmployeeInputValue("");
@@ -877,7 +898,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                       isInvalid={!!errors.name}
                       placeholder={t("timeline.treeView.name") || "Task Name"}
                       value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                     />
                   </div>
 
@@ -889,9 +912,13 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                       errorMessage={errors.description}
                       isInvalid={!!errors.description}
                       minRows={3}
-                      placeholder={t("timeline.detailsPanel.description") || "Description"}
+                      placeholder={
+                        t("timeline.detailsPanel.description") || "Description"
+                      }
                       value={formData.description}
-                      onChange={(e) => handleInputChange("description", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("description", e.target.value)
+                      }
                     />
                   </div>
 
@@ -900,7 +927,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                       isRequired
                       errorMessage={errors.startDate}
                       isInvalid={!!errors.startDate}
-                      label={t("timeline.detailsPanel.startDate") || "Start Date"}
+                      label={
+                        t("timeline.detailsPanel.startDate") || "Start Date"
+                      }
                       minValue={today(getLocalTimeZone())}
                       value={
                         formData.startDate
@@ -931,14 +960,19 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                           : null
                       }
                       onChange={(date) =>
-                        handleInputChange("endDate", date ? date.toString() : "")
+                        handleInputChange(
+                          "endDate",
+                          date ? date.toString() : "",
+                        )
                       }
                     />
                   </div>
 
                   {/* Selected Members Display */}
                   {selectedMembers.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                    <div
+                      style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}
+                    >
                       {selectedMembers.map((employee, index) => (
                         <div
                           key={index}
@@ -956,14 +990,19 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                               size="sm"
                               variant="light"
                               onPress={() => {
-                                setSelectedMembers(selectedMembers.filter(user => user.id !== employee.id));
+                                setSelectedMembers(
+                                  selectedMembers.filter(
+                                    (user) => user.id !== employee.id,
+                                  ),
+                                );
                               }}
                             >
                               <X size={16} />
                             </Button>
                             <div className="flex flex-col">
                               <span className="text-xs">
-                                {employee.gradeName} {employee.fullName || "Unknown User"}
+                                {employee.gradeName}{" "}
+                                {employee.fullName || "Unknown User"}
                               </span>
                               <span className="text-xs text-default-400">
                                 @{employee.department || "unknown"}
@@ -975,33 +1014,47 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                     </div>
                   )}
 
-                  <label>{t("users.selectEmployee") || "Select Employee"}</label>
+                  <label>
+                    {t("users.selectEmployee") || "Select Employee"}
+                  </label>
                   <Autocomplete
                     isClearable
                     errorMessage={errors.members}
+                    inputValue={employeeInputValue}
                     isInvalid={!!errors.members}
                     isLoading={developerSearchLoading}
                     label={t("users.selectEmployee") || "Select Employee"}
                     menuTrigger="input"
-                    placeholder={t("users.searchEmployees") || "Search employees"}
+                    placeholder={
+                      t("users.searchEmployees") || "Search employees"
+                    }
                     selectedKey={selectedEmployee?.id.toString()}
-                    inputValue={employeeInputValue}
                     onInputChange={(value) => {
                       setEmployeeInputValue(value);
-                      if (selectedEmployee && value !== `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`) {
+                      if (
+                        selectedEmployee &&
+                        value !==
+                          `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
+                      ) {
                         setSelectedEmployee(null);
                       }
                       searchDeveloperEmployees(value);
                       if (errors.members) {
-                        setErrors(prev => ({ ...prev, members: undefined }));
+                        setErrors((prev) => ({ ...prev, members: undefined }));
                       }
                     }}
                     onSelectionChange={(key) => {
                       if (key) {
-                        const selectedEmployee = developerEmployees.find(e => e.id.toString() === key);
+                        const selectedEmployee = developerEmployees.find(
+                          (e) => e.id.toString() === key,
+                        );
+
                         if (selectedEmployee) {
                           handleEmployeeSelect(selectedEmployee);
-                          setErrors(prev => ({ ...prev, members: undefined }));
+                          setErrors((prev) => ({
+                            ...prev,
+                            members: undefined,
+                          }));
                         }
                       } else {
                         setSelectedEmployee(null);
@@ -1015,10 +1068,14 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                         textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar name={employee.fullName || "Unknown"} size="sm" />
+                          <Avatar
+                            name={employee.fullName || "Unknown"}
+                            size="sm"
+                          />
                           <div className="flex flex-col">
                             <span className="font-medium">
-                              {employee.gradeName} {employee.fullName || "Unknown User"}
+                              {employee.gradeName}{" "}
+                              {employee.fullName || "Unknown User"}
                             </span>
                             <span className="text-sm text-default-500">
                               {employee.militaryNumber || "N/A"}
@@ -1050,10 +1107,13 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                         description: formData.description,
                         startDate: formData.startDate,
                         endDate: formData.endDate,
-                        assignedMembers: selectedMembers.map((m) => m.id.toString()),
+                        assignedMembers: selectedMembers.map((m) =>
+                          m.id.toString(),
+                        ),
                       };
 
                       const success = await addAdhocTask(newTask);
+
                       if (success) {
                         handleClose();
                       }

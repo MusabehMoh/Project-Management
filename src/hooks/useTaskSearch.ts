@@ -1,106 +1,92 @@
-import { useCallback } from "react";
-
-import { useOptimizedSearch, SearchResult } from "./useOptimizedSearch";
+import { useCallback, useState, useEffect } from "react";
 
 import { timelineService } from "@/services/api";
 import { WorkItem } from "@/types/timeline";
 
 export interface TaskSearchOptions {
-  /** Minimum characters before triggering search */
-  minLength?: number;
-  /** Debounce delay in milliseconds */
-  debounceMs?: number;
   /** Maximum number of results to return */
   maxResults?: number;
-  /** Load initial popular employees when component mounts */
+  /** Load tasks when component mounts */
   loadInitialResults?: boolean;
-  /** Initial results limit */
-  initialResultsLimit?: number;
   /** Timeline ID to filter tasks within specific timeline */
   timelineId?: number;
 }
 
 export function useTaskSearch(options: TaskSearchOptions = {}) {
   const defaultOptions: TaskSearchOptions = {
-    minLength: 2,
-    debounceMs: 300,
-    maxResults: 25,
-    loadInitialResults: false,
-    initialResultsLimit: 15,
+    maxResults: 100,
+    loadInitialResults: true,
   };
 
   const config = { ...defaultOptions, ...options };
+  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Transform employee search API call to match SearchResult format
-  const searchTasksApi = useCallback(
-    async (query: string, limit?: number): Promise<SearchResult[]> => {
-      console.log("--->>>>>>> start api call");
-      try {
-        const response = await timelineService.searchTasks(
-          query,
-          config.timelineId,
-        );
+  // Load all timeline tasks instead of searching
+  const loadAllTimelineTasks = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-        if (response.success) {
-          console.log("--->>>>>>> api success");
-          const results = response.data || [];
-          const limitedResults = limit ? results.slice(0, limit) : results;
+    try {
+      const response = await timelineService.getAllTimelineTasks(
+        config.timelineId,
+        config.maxResults,
+      );
 
-          console.log(results);
-          console.log(limitedResults);
-
-          // Transform EmployeeSearchResult to SearchResult format
-          return limitedResults.map(
-            (task): SearchResult => ({
-              id: task.id,
-              value: task.description ?? "Empty",
-              label: task.name,
-              secondary: task.status,
-              metadata: task, // Store original task data
-            }),
-          );
-        } else {
-          throw new Error(response.message || "Failed to search tasks");
-        }
-      } catch (error) {
-        console.error("task search error:", error);
-        throw error;
+      if (response.success) {
+        setWorkItems(response.data || []);
+      } else {
+        throw new Error(response.message || "Failed to load timeline tasks");
       }
+    } catch (err) {
+      // Log error for debugging
+      setError(err instanceof Error ? err : new Error("Unknown error"));
+      setWorkItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [config.timelineId, config.maxResults]);
+
+  // Load tasks on mount if configured
+  useEffect(() => {
+    if (config.loadInitialResults) {
+      loadAllTimelineTasks();
+    }
+  }, [loadAllTimelineTasks, config.loadInitialResults]);
+
+  // Keep the same function name for backward compatibility
+  const searchTasks = useCallback(
+    (query: string) => {
+      // If query is empty, load all tasks
+      if (!query.trim()) {
+        loadAllTimelineTasks();
+
+        return;
+      }
+
+      // Filter already loaded tasks by query
+      setWorkItems((currentItems) =>
+        currentItems.filter(
+          (item) =>
+            item.name.toLowerCase().includes(query.toLowerCase()) ||
+            (item.description &&
+              item.description.toLowerCase().includes(query.toLowerCase())),
+        ),
+      );
     },
-    [config.timelineId],
-  );
-
-  const {
-    results: searchResults,
-    loading,
-    error,
-    search: searchTasks,
-    clearResults,
-    clearCache,
-    loadInitialResults,
-  } = useOptimizedSearch(searchTasksApi, {
-    minLength: config.minLength,
-    debounceMs: config.debounceMs,
-    maxResults: config.maxResults,
-    loadInitialResults: config.loadInitialResults,
-    initialResultsLimit: config.initialResultsLimit,
-    cacheMs: 5 * 60 * 1000, // 5 minutes cache
-  });
-
-  // Transform back toTaskSearchResult for easier consumption
-  const workItems: WorkItem[] = searchResults.map(
-    (result) => result.metadata as WorkItem,
+    [loadAllTimelineTasks],
   );
 
   return {
     workItems,
-    searchResults,
     loading,
     error,
     searchTasks,
-    clearResults,
-    clearCache,
-    loadInitialResults,
+    // For API compatibility with old version
+    clearResults: () => setWorkItems([]),
+    clearCache: () => {}, // No-op since we're not using cache
+    loadInitialResults: loadAllTimelineTasks,
   };
 }
 

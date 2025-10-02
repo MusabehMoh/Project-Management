@@ -69,7 +69,7 @@ public class ProjectRequirement
     public virtual User? Creator { get; set; }
     public virtual User? Analyst { get; set; }
     public virtual ICollection<ProjectRequirementAttachment> Attachments { get; set; } = new List<ProjectRequirementAttachment>();
-    public virtual ICollection<RequirementTask> Tasks { get; set; } = new List<RequirementTask>();
+    public virtual RequirementTask? Task { get; set; }
     public virtual Timeline? Timeline { get; set; }
 }
 
@@ -112,8 +112,8 @@ public class RequirementTask
 
     // Navigation properties
     public virtual ProjectRequirement? ProjectRequirement { get; set; }
-    public virtual User? Developer { get; set; }
-    public virtual User? Qc { get; set; }
-    public virtual User? Designer { get; set; }
-    public virtual User? Creator { get; set; }
+    public virtual Employee? Developer { get; set; }
+    public virtual Employee? Qc { get; set; }
+    public virtual Employee? Designer { get; set; }
+ 
 }

@@ -93,13 +93,31 @@ export class TimelineApiService {
     timelineId?: number,
   ): Promise<ApiResponse<WorkItem[]>> {
     const params = new URLSearchParams({ query: query });
-    
+
     if (timelineId) {
       params.append("timelineId", timelineId.toString());
     }
 
     return apiClient.get<WorkItem[]>(`/tasks/searchTasks?${params}`);
   }
+
+  /**
+   * Get all tasks for a timeline without search filtering
+   */
+  async getAllTimelineTasks(
+    timelineId?: number,
+    limit = 100,
+  ): Promise<ApiResponse<WorkItem[]>> {
+    const params = new URLSearchParams({ limit: limit.toString() });
+
+    if (timelineId) {
+      params.append("timelineId", timelineId.toString());
+    }
+
+    // Use empty query to get all tasks
+    return apiClient.get<WorkItem[]>(`/tasks/searchTasks?${params}&query=`);
+  }
+
   /**
    * Get departments
    */
