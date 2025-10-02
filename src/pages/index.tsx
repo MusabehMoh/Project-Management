@@ -4,6 +4,7 @@ import DeveloperManagerDashboard from "@/components/dashboard/DeveloperManagerDa
 import LoadingLogo from "@/components/LoadingLogo";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks";
+import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
 
 export default function IndexPage() {
   const { hasAnyRole, loading: userLoading } = usePermissions();
@@ -21,12 +22,12 @@ export default function IndexPage() {
   }
 
   // Check if user has Analyst Department Manager role
-  const hasAccess = hasAnyRole(["Analyst Department Manager", "Administrator"]);
-  const hasDevManagerRole = hasAnyRole(["Developer Manager", "Administrator"]);
+  const hasAnalystRole = hasAnyRole(["Analyst Department Manager"]);
+  const hasDevManagerRole = hasAnyRole(["Developer Manager"]);
 
   return (
     <>
-      {/* {hasAccess ? <AnalystManagerDashboard /> : <div />} */}
+      {hasAnalystRole ? <AnalystManagerDashboard /> : <div />}
       {hasDevManagerRole ? <DeveloperManagerDashboard /> : <div />}
     </>
   );

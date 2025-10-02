@@ -141,7 +141,7 @@ builder.Services.AddScoped<IActionRepository, ActionRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ILookupRepository, LookupRepository>();
 builder.Services.AddScoped<ITimelineRepository, TimelineRepository>();
-builder.Services.AddScoped<IMemberTaskRepository, MemberTaskRepository>();
+//builder.Services.AddScoped<IMemberTaskRepository, MemberTaskRepository>();
 
 // Register services
 builder.Services.AddScoped<IProjectService, ProjectService>();

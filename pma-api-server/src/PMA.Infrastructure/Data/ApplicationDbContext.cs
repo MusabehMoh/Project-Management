@@ -30,8 +30,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<RoleAction> RoleActions { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<Lookup> Lookups { get; set; }
-    public DbSet<MemberTask> MemberTasks { get; set; }
-    public DbSet<MemberTaskAssignment> MemberTaskAssignments { get; set; }
+    //public DbSet<MemberTask> MemberTasks { get; set; }
+    //public DbSet<MemberTaskAssignment> MemberTaskAssignments { get; set; }
     public DbSet<ProjectRequirement> ProjectRequirements { get; set; }
     public DbSet<ProjectRequirementAttachment> ProjectRequirementAttachments { get; set; }
     public DbSet<RequirementTask> RequirementTasks { get; set; }

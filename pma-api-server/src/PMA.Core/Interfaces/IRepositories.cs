@@ -143,12 +143,12 @@ public interface ITimelineRepository : IRepository<Timeline>
     System.Threading.Tasks.Task<IEnumerable<Timeline>> GetTimelinesByProjectAsync(int projectId);
 }
 
-public interface IMemberTaskRepository : IRepository<MemberTask>
-{
-    System.Threading.Tasks.Task<(IEnumerable<MemberTask> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, string? status = null, string? priority = null);
-    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByProjectAsync(int projectId);
-    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByAssigneeAsync(int assigneeId);
-}
+//public interface IMemberTaskRepository : IRepository<MemberTask>
+//{
+//    System.Threading.Tasks.Task<(IEnumerable<MemberTask> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, string? status = null, string? priority = null);
+//    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByProjectAsync(int projectId);
+//    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByAssigneeAsync(int assigneeId);
+//}
 
 
 

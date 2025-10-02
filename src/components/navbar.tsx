@@ -308,7 +308,15 @@ const getProjectNavItems = (
   }
 
   // Member tasks or Team Tasks for manager
-  if (hasAnyRole(["Analyst Department Manager", "Administrator"])) {
+  if (
+    hasAnyRole([
+      "Analyst Department Manager",
+      "Development Manager",
+      "Quality Control Manager",
+      "Designer Manager",
+      "Administrator",
+    ])
+  ) {
     developmentItems.push({ label: t("nav.teamTasks"), href: "/tasks" });
   } else {
     developmentItems.push({ label: t("nav.tasks"), href: "/tasks" });
