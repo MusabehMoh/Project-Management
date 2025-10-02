@@ -148,7 +148,7 @@ const DHtmlGanttChart: React.FC<DHtmlGanttChartProps> = ({
               : "Track project progress and dependencies"}
           </p>
         </div>
-        {showToolbar && (
+        {showToolbar && !error && !loading && (
           <div className="flex gap-2">
             <Button
               className="min-w-0"
