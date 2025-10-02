@@ -84,7 +84,6 @@ export const TaskCard = ({
           ? "border-l-4 border-l-danger-500 bg-danger-50/30 dark:bg-danger-900/20"
           : `border-l-4 border-l-${task.status.color as any}-500 bg-${task.status.color as any}-50/30 dark:bg-${task.status.color as any}-900/20`
       }`}
-      onClick={handleCardClick}
     >
       <div
         className="h-full w-full"
