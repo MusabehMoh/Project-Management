@@ -40,6 +40,7 @@ export const TaskCard = ({
   };
 
   const handleCardClick = () => {
+    console.log("Card clicked:", task);
     if (onClick) {
       onClick(task);
     }
@@ -85,46 +86,62 @@ export const TaskCard = ({
       }`}
       onClick={handleCardClick}
     >
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start w-full gap-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-foreground truncate">
-              {task.name}
-            </h3>
-            <p className="text-sm text-foreground-600 line-clamp-2 mt-1">
-              {task.description}
-            </p>
+      <div
+        className="h-full w-full"
+        role="button"
+        style={{ height: "100%" }}
+        tabIndex={0}
+        onClick={handleCardClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            handleCardClick();
+          }
+        }}
+      >
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start w-full gap-3">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-foreground truncate">
+                {task.name}
+              </h3>
+              <p className="text-sm text-foreground-600 line-clamp-2 mt-1">
+                {task.description}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 items-end flex-shrink-0">
+              <Chip color={task.status.color as any} size="sm" variant="flat">
+                {task.status.label}
+              </Chip>
+              <Chip
+                color={task.priority.color as any}
+                size="sm"
+                variant="solid"
+              >
+                {task.priority.label}
+              </Chip>
+            </div>
           </div>
-          <div className="flex flex-col gap-2 items-end flex-shrink-0">
-            <Chip color={task.status.color as any} size="sm" variant="flat">
-              {task.status.label}
-            </Chip>
-            <Chip color={task.priority.color as any} size="sm" variant="solid">
-              {task.priority.label}
-            </Chip>
+        </CardHeader>
+
+        <CardBody className="pt-0">
+          {/* Department indicator */}
+          <div className="flex items-center gap-2 mb-3">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: task.department.color }}
+            />
+            <span className="text-sm text-foreground-600">
+              {task.department.name}
+            </span>
+            {task.isOverdue && (
+              <Badge color="danger" size="sm" variant="flat">
+                {t("overdueTask")}
+              </Badge>
+            )}
           </div>
-        </div>
-      </CardHeader>
 
-      <CardBody className="pt-0">
-        {/* Department indicator */}
-        <div className="flex items-center gap-2 mb-3">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: task.department.color }}
-          />
-          <span className="text-sm text-foreground-600">
-            {task.department.name}
-          </span>
-          {task.isOverdue && (
-            <Badge color="danger" size="sm" variant="flat">
-              {t("overdueTask")}
-            </Badge>
-          )}
-        </div>
-
-        {/* Assignees Display */}
-        {/* <div className="mb-4">
+          {/* Assignees Display */}
+          {/* <div className="mb-4">
           <p className="text-xs text-foreground-500 mb-2 uppercase tracking-wide">
             {t("filterByAssignees")}
           </p>
@@ -173,64 +190,64 @@ export const TaskCard = ({
           )}
         </div> */}
 
-        {/* Progress */}
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-foreground-600">
-              {t("taskProgress")}
-            </span>
-            <span className="text-sm font-medium text-foreground">
-              {task.progress}%
-            </span>
-          </div>
-          <Progress
-            className="mb-1"
-            color={getProgressColor(task.progress)}
-            size="sm"
-            value={task.progress}
-          />
-        </div>
-
-        {/* Time tracking */}
-        <div className="grid grid-cols-2 gap-6 mb-4">
-          {/* Start Date */}
-          <div className="flex gap-2">
-            <CalendarDays className="w-4 h-4 text-foreground-500 mt-1" />
-            <div className="flex flex-col justify-start min-w-0">
-              <span className="text-xs text-foreground-500">
-                {t("startDate")}
+          {/* Progress */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-foreground-600">
+                {t("taskProgress")}
               </span>
               <span className="text-sm font-medium text-foreground">
-                {task.startDate}
+                {task.progress}%
               </span>
+            </div>
+            <Progress
+              className="mb-1"
+              color={getProgressColor(task.progress)}
+              size="sm"
+              value={task.progress}
+            />
+          </div>
+
+          {/* Time tracking */}
+          <div className="grid grid-cols-2 gap-6 mb-4">
+            {/* Start Date */}
+            <div className="flex gap-2">
+              <CalendarDays className="w-4 h-4 text-foreground-500 mt-1" />
+              <div className="flex flex-col justify-start min-w-0">
+                <span className="text-xs text-foreground-500">
+                  {t("startDate")}
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {task.startDate}
+                </span>
+              </div>
+            </div>
+
+            {/* End Date */}
+            <div className="flex gap-2">
+              <CalendarDays className="w-4 h-4 text-foreground-500 mt-1" />
+              <div className="flex flex-col justify-start min-w-0">
+                <span className="text-xs text-foreground-500">
+                  {t("endDate")}
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {task.endDate}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* End Date */}
-          <div className="flex gap-2">
-            <CalendarDays className="w-4 h-4 text-foreground-500 mt-1" />
-            <div className="flex flex-col justify-start min-w-0">
-              <span className="text-xs text-foreground-500">
-                {t("endDate")}
-              </span>
-              <span className="text-sm font-medium text-foreground">
-                {task.endDate}
-              </span>
-            </div>
+          {/* Dates */}
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-foreground-500" />
+            <p className="text-xs text-foreground-500">{t("estimatedTime")}</p>
+            <p className="text-sm font-medium text-foreground">
+              {task.estimatedTime}h
+            </p>
           </div>
-        </div>
 
-        {/* Dates */}
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-foreground-500" />
-          <p className="text-xs text-foreground-500">{t("estimatedTime")}</p>
-          <p className="text-sm font-medium text-foreground">
-            {task.estimatedTime}h
-          </p>
-        </div>
-
-        {/* Tags */}
-        {/* {task.tags.length > 0 && (
+          {/* Tags */}
+          {/* {task.tags.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <Tag className="w-3 h-3 text-foreground-500" />
             {task.tags.slice(0, 3).map((tag, index) => (
@@ -246,63 +263,64 @@ export const TaskCard = ({
           </div>
         )} */}
 
-        {/* Project & Requirement info */}
-        <div className="mt-3 pt-3 border-t border-divider">
-          <div className="text-xs text-foreground-500 space-y-1">
-            <div>
-              <span className="font-medium">Project: </span>
-              <span>{task.project.name}</span>
-            </div>
-            <div>
-              <span className="font-medium">Requirement: </span>
-              <span>{task.requirement.name}</span>
+          {/* Project & Requirement info */}
+          <div className="mt-3 pt-3 border-t border-divider">
+            <div className="text-xs text-foreground-500 space-y-1">
+              <div>
+                <span className="font-medium">Project: </span>
+                <span>{task.project.name}</span>
+              </div>
+              <div>
+                <span className="font-medium">Requirement: </span>
+                <span>{task.requirement.name}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* buttons */}
-        <div className="mt-3 pt-3 border-t border-divider flex flex-col gap-3">
-          {isTeamManager ? (
-            /* actions for team managers */
-            <div className="flex gap-3">
-              <Button
-                className="flex-1"
-                color="default"
-                size="sm"
-                variant="solid"
-                onPress={() => handleChangeAssigneesClick()}
-              >
-                {t("changeAssignees")}
-              </Button>
-            </div>
-          ) : (
-            /* actions for members */
-            <div className="flex gap-3">
-              {task.canRequestDesign && (
+          {/* buttons */}
+          <div className="mt-3 pt-3 border-t border-divider flex flex-col gap-3">
+            {isTeamManager ? (
+              /* actions for team managers */
+              <div className="flex gap-3">
                 <Button
                   className="flex-1"
                   color="default"
                   size="sm"
-                  variant="faded"
-                  onPress={() => handleRequestDesignClick()}
+                  variant="solid"
+                  onPress={() => handleChangeAssigneesClick()}
                 >
-                  {t("requestDesign")}
+                  {t("changeAssignees")}
                 </Button>
-              )}
+              </div>
+            ) : (
+              /* actions for members */
+              <div className="flex gap-3">
+                {task.canRequestDesign && (
+                  <Button
+                    className="flex-1"
+                    color="default"
+                    size="sm"
+                    variant="faded"
+                    onPress={() => handleRequestDesignClick()}
+                  >
+                    {t("requestDesign")}
+                  </Button>
+                )}
 
-              <Button
-                className="flex-1"
-                color="default"
-                size="sm"
-                variant="solid"
-                onPress={() => handleChangeStatusClick()}
-              >
-                {t("changeStatus")}
-              </Button>
-            </div>
-          )}
-        </div>
-      </CardBody>
+                <Button
+                  className="flex-1"
+                  color="default"
+                  size="sm"
+                  variant="solid"
+                  onPress={() => handleChangeStatusClick()}
+                >
+                  {t("changeStatus")}
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardBody>
+      </div>
     </Card>
   );
 };
