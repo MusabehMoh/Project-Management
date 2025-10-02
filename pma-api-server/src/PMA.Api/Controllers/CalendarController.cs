@@ -20,6 +20,7 @@ public class CalendarController : ApiBaseController
     /// Get all calendar events with pagination and filtering
     /// </summary>
     [HttpGet]
+    [HttpGet("events")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetCalendarEvents(
         [FromQuery] int page = 1,
@@ -279,6 +280,37 @@ public class CalendarController : ApiBaseController
             {
                 Success = false,
                 Message = "An error occurred while deleting the calendar event",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Get calendar statistics
+    /// </summary>
+    [HttpGet("stats")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetCalendarStats()
+    {
+        try
+        {
+            var stats = await _calendarEventService.GetCalendarStatsAsync();
+            var response = new ApiResponse<object>
+            {
+                Success = true,
+                Data = stats,
+                Message = "Calendar statistics retrieved successfully"
+            };
+            
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<object>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving calendar statistics",
                 Error = ex.Message
             };
             return StatusCode(500, errorResponse);

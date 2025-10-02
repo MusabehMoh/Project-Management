@@ -175,6 +175,12 @@ public class UpdateTaskDto
     public List<int>? DepTaskIds { get; set; }
 }
 
+public class UpdateTaskStatusDto
+{
+    [Required(ErrorMessage = "StatusId is required")]
+    public TaskStatus StatusId { get; set; }
+}
+
 public class MoveTaskDto
 {
     [Required(ErrorMessage = "MoveDays is required")]

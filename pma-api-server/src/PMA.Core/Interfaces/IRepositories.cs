@@ -143,6 +143,13 @@ public interface ITimelineRepository : IRepository<Timeline>
     System.Threading.Tasks.Task<IEnumerable<Timeline>> GetTimelinesByProjectAsync(int projectId);
 }
 
+public interface ICalendarEventRepository : IRepository<CalendarEvent>
+{
+    System.Threading.Tasks.Task<(IEnumerable<CalendarEvent> CalendarEvents, int TotalCount)> GetCalendarEventsAsync(int page, int limit, int? projectId = null, int? createdBy = null, DateTime? startDate = null, DateTime? endDate = null);
+    System.Threading.Tasks.Task<IEnumerable<CalendarEvent>> GetCalendarEventsByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<IEnumerable<CalendarEvent>> GetCalendarEventsByCreatorAsync(int creatorId);
+}
+
 //public interface IMemberTaskRepository : IRepository<MemberTask>
 //{
 //    System.Threading.Tasks.Task<(IEnumerable<MemberTask> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, string? status = null, string? priority = null);

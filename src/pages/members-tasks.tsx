@@ -64,6 +64,7 @@ import { MemberSearchResult } from "@/types/timeline";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { FilePreview } from "@/components/FilePreview";
 import { projectRequirementsService } from "@/services/api";
+import { RoleIds } from "@/constants/roles";
 
 export default function MembersTasksPage() {
   const { t, language } = useLanguage();
@@ -89,10 +90,11 @@ export default function MembersTasksPage() {
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
   const [viewType, setViewType] = useState<"grid" | "list" | "gantt">("grid");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { hasAnyRole, loading: userLoading } = usePermissions();
+  const { hasAnyRoleById, loading: userLoading } = usePermissions();
 
   // Add state for full requirement details
-  const [fullRequirement, setFullRequirement] = useState<ProjectRequirement | null>(null);
+  const [fullRequirement, setFullRequirement] =
+    useState<ProjectRequirement | null>(null);
   const [loadingRequirement, setLoadingRequirement] = useState(false);
 
   // File preview hook
@@ -220,9 +222,9 @@ export default function MembersTasksPage() {
     taskParametersRequest?.search ?? "",
   );
 
-  const isTeamManager = hasAnyRole([
-    "Analyst Department Manager",
-    "Administrator",
+  const isTeamManager = hasAnyRoleById([
+    RoleIds.ANALYST_DEPARTMENT_MANAGER,
+    RoleIds.ADMINISTRATOR,
   ]);
 
   console.log("isTeamManager", isTeamManager);
@@ -978,8 +980,6 @@ export default function MembersTasksPage() {
                     </div>
                   </div>
 
-                
-
                   <div className="flex justify-between items-start">
                     {/* Start Date */}
                     <div>
@@ -1110,7 +1110,9 @@ export default function MembersTasksPage() {
                                       <Button
                                         color="default"
                                         size="sm"
-                                        startContent={<Eye className="w-4 h-4" />}
+                                        startContent={
+                                          <Eye className="w-4 h-4" />
+                                        }
                                         variant="light"
                                         onPress={() =>
                                           handleFilePreview(attachment)
@@ -1122,7 +1124,9 @@ export default function MembersTasksPage() {
                                     <Button
                                       color="primary"
                                       size="sm"
-                                      startContent={<Download className="w-4 h-4" />}
+                                      startContent={
+                                        <Download className="w-4 h-4" />
+                                      }
                                       variant="light"
                                       onPress={() =>
                                         handleFileDownload(attachment)

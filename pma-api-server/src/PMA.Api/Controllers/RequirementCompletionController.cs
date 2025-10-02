@@ -67,7 +67,7 @@ public class RequirementCompletionController : ApiBaseController
                     priority = pr.Priority,
                     status = pr.Status,
                     ExpectedCompletionDate = pr.ExpectedCompletionDate,
-                    daysOverdue = (today - pr.ExpectedCompletionDate!.Value).Days,
+                    daysOverdue = EF.Functions.DateDiffDay(pr.ExpectedCompletionDate!.Value, today),
                     assignedAnalyst = _context.ProjectAnalysts
                         .Where(pa => pa.ProjectId == pr.ProjectId)
                         .Select(pa => pa.Analyst.FullName)
@@ -92,7 +92,7 @@ public class RequirementCompletionController : ApiBaseController
                     priority = pr.Priority,
                     status = pr.Status,
                     ExpectedCompletionDate = pr.ExpectedCompletionDate,
-                    daysUntilDeadline = (pr.ExpectedCompletionDate!.Value - today).Days,
+                    daysUntilDeadline = EF.Functions.DateDiffDay(today, pr.ExpectedCompletionDate!.Value),
                     assignedAnalyst = _context.ProjectAnalysts
                         .Where(pa => pa.ProjectId == pr.ProjectId)
                         .Select(pa => pa.Analyst.FullName)
@@ -133,21 +133,153 @@ public class RequirementCompletionController : ApiBaseController
                 ? Math.Round((double)onTimeCompletedCount / completedCount * 100, 2) 
                 : 0;
 
+            // Calculate late completed (completed after deadline)
+            var lateCompletedCount = completedCount - onTimeCompletedCount;
+
+            // Calculate average delay days for late completions
+            var avgDelayDays = 0.0;
+            if (lateCompletedCount > 0)
+            {
+                var delayDays = await requirementsQuery
+                    .Where(pr => pr.Status == RequirementStatusEnum.Completed &&
+                               pr.ExpectedCompletionDate.HasValue &&
+                               pr.ExpectedCompletionDate.HasValue &&
+                               pr.ExpectedCompletionDate.Value > pr.ExpectedCompletionDate.Value)
+                    .Select(pr => EF.Functions.DateDiffDay(pr.ExpectedCompletionDate!.Value, pr.ExpectedCompletionDate!.Value))
+                    .ToListAsync();
+                
+                avgDelayDays = delayDays.Any() ? delayDays.Average() : 0;
+            }
+
+            // Get requirements by priority
+            var highPriority = await requirementsQuery.CountAsync(pr => pr.Priority == RequirementPriority.High);
+            var mediumPriority = await requirementsQuery.CountAsync(pr => pr.Priority == RequirementPriority.Medium);
+            var lowPriority = await requirementsQuery.CountAsync(pr => pr.Priority == RequirementPriority.Low);
+
+            var highPriorityOnTime = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.High && 
+                pr.Status == RequirementStatusEnum.Completed &&
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value <= pr.ExpectedCompletionDate.Value);
+
+            var mediumPriorityOnTime = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.Medium && 
+                pr.Status == RequirementStatusEnum.Completed &&
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value <= pr.ExpectedCompletionDate.Value);
+
+            var lowPriorityOnTime = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.Low && 
+                pr.Status == RequirementStatusEnum.Completed &&
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value <= pr.ExpectedCompletionDate.Value);
+
+            var highPriorityLate = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.High && 
+                pr.Status == RequirementStatusEnum.Completed &&
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value > pr.ExpectedCompletionDate.Value);
+
+            var mediumPriorityLate = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.Medium && 
+                pr.Status == RequirementStatusEnum.Completed &&
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value > pr.ExpectedCompletionDate.Value);
+
+            var lowPriorityLate = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.Low && 
+                pr.Status == RequirementStatusEnum.Completed &&
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value > pr.ExpectedCompletionDate.Value);
+
+            var highPriorityOverdue = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.High && 
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value < today &&
+                pr.Status != RequirementStatusEnum.Completed &&
+                pr.Status != RequirementStatusEnum.Cancelled);
+
+            var mediumPriorityOverdue = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.Medium && 
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value < today &&
+                pr.Status != RequirementStatusEnum.Completed &&
+                pr.Status != RequirementStatusEnum.Cancelled);
+
+            var lowPriorityOverdue = await requirementsQuery.CountAsync(pr => 
+                pr.Priority == RequirementPriority.Low && 
+                pr.ExpectedCompletionDate.HasValue &&
+                pr.ExpectedCompletionDate.Value < today &&
+                pr.Status != RequirementStatusEnum.Completed &&
+                pr.Status != RequirementStatusEnum.Cancelled);
+
+            // Get monthly trend for the last 6 months
+            var monthlyTrend = new List<object>();
+            for (int i = 5; i >= 0; i--)
+            {
+                var monthStart = new DateTime(today.Year, today.Month, 1).AddMonths(-i);
+                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+
+                var monthTotal = await requirementsQuery.CountAsync(pr => 
+                    pr.CreatedAt >= monthStart && pr.CreatedAt <= monthEnd);
+
+                var monthOnTime = await requirementsQuery.CountAsync(pr => 
+                    pr.CreatedAt >= monthStart && pr.CreatedAt <= monthEnd &&
+                    pr.Status == RequirementStatusEnum.Completed);
+
+                var monthOnTimeRate = monthTotal > 0 
+                    ? Math.Round((double)monthOnTime / monthTotal * 100, 2) 
+                    : 0;
+
+                monthlyTrend.Add(new
+                {
+                    month = monthStart.ToString("yyyy-MM"),
+                    total = monthTotal,
+                    onTime = monthOnTime,
+                    onTimeRate = monthOnTimeRate
+                });
+            }
+
             var analytics = new
             {
-                overdueItems = overdueRequirements,
-                atRiskItems = atRiskRequirements,
                 summary = new
                 {
                     totalRequirements = totalCount,
                     completedRequirements = completedCount,
-                    inProgressRequirements = inProgressCount,
-                    pendingRequirements = pendingCount,
+                    onTimeCompleted = onTimeCompletedCount,
+                    lateCompleted = lateCompletedCount,
                     overdueRequirements = overdueRequirements.Count,
                     atRiskRequirements = atRiskRequirements.Count,
-                    completionRate,
-                    onTimeCompletionRate = onTimeRate
-                }
+                    onTimeRate = onTimeRate,
+                    avgDelayDays = Math.Round(avgDelayDays, 2)
+                },
+                byPriority = new
+                {
+                    high = new
+                    {
+                        total = highPriority,
+                        onTime = highPriorityOnTime,
+                        late = highPriorityLate,
+                        overdue = highPriorityOverdue
+                    },
+                    medium = new
+                    {
+                        total = mediumPriority,
+                        onTime = mediumPriorityOnTime,
+                        late = mediumPriorityLate,
+                        overdue = mediumPriorityOverdue
+                    },
+                    low = new
+                    {
+                        total = lowPriority,
+                        onTime = lowPriorityOnTime,
+                        late = lowPriorityLate,
+                        overdue = lowPriorityOverdue
+                    }
+                },
+                monthlyTrend = monthlyTrend,
+                overdueItems = overdueRequirements,
+                atRiskItems = atRiskRequirements
             };
 
             return Ok(new
@@ -230,8 +362,7 @@ public class RequirementCompletionController : ApiBaseController
                 {
                     date = g.Key,
                     count = g.Count(),
-                    onTimeCount = g.Count(pr => pr.ExpectedCompletionDate.HasValue && 
-                                              pr.ExpectedCompletionDate!.Value <= pr.ExpectedCompletionDate.Value)
+                    onTimeCount = g.Count(pr => pr.Status == RequirementStatusEnum.Completed)
                 })
                 .OrderBy(x => x.date)
                 .ToListAsync();
@@ -248,29 +379,35 @@ public class RequirementCompletionController : ApiBaseController
                            pr.ExpectedCompletionDate.Value <= today)
                 .CountAsync();
 
-            // Average days to complete
-            var averageDaysToComplete = await requirementsQuery
-                .Where(pr => pr.ExpectedCompletionDate.HasValue &&
-                           pr.CreatedAt >= startDate)
-                .Select(pr => EF.Functions.DateDiffDay(pr.CreatedAt, pr.ExpectedCompletionDate!.Value))
-                .DefaultIfEmpty(0)
-                .AverageAsync();
+            // Get on-time completed requirements in period
+            var onTimeCompletedInPeriod = await requirementsQuery
+                .Where(pr => pr.Status == RequirementStatusEnum.Completed &&
+                           pr.ExpectedCompletionDate.HasValue &&
+                           pr.ExpectedCompletionDate.Value >= startDate &&
+                           pr.ExpectedCompletionDate.Value <= today &&
+                           pr.ExpectedCompletionDate.Value <= pr.ExpectedCompletionDate.Value)
+                .CountAsync();
+
+            // Calculate completion rate
+            var completionRate = createdInPeriod > 0 
+                ? Math.Round((double)completedInPeriod / createdInPeriod * 100, 2) 
+                : 0;
+
+            // Calculate on-time rate
+            var onTimeRate = completedInPeriod > 0 
+                ? Math.Round((double)onTimeCompletedInPeriod / completedInPeriod * 100, 2) 
+                : 0;
 
             var metrics = new
             {
                 period,
                 startDate,
                 endDate = today,
-                completionTrend,
-                summary = new
-                {
-                    requirementsCreated = createdInPeriod,
-                    requirementsCompleted = completedInPeriod,
-                    averageDaysToComplete = Math.Round(averageDaysToComplete, 2),
-                    completionRate = createdInPeriod > 0 
-                        ? Math.Round((double)completedInPeriod / createdInPeriod * 100, 2) 
-                        : 0
-                }
+                totalRequirements = createdInPeriod,
+                completedRequirements = completedInPeriod,
+                onTimeCompleted = onTimeCompletedInPeriod,
+                completionRate,
+                onTimeRate
             };
 
             return Ok(new
@@ -306,7 +443,7 @@ public class RequirementCompletionController : ApiBaseController
 
             var analystQuery = _context.Users
                 .Where(u => _context.UserRoles.Any(ur => ur.UserId == u.Id && 
-                           ur.Role.Name.Contains("Analyst")))
+                           ur.Role != null && ur.Role.Name.Contains("Analyst")))
                 .AsQueryable();
 
             if (analystId.HasValue)
@@ -341,8 +478,6 @@ public class RequirementCompletionController : ApiBaseController
                     onTimeCompletions = _context.ProjectRequirements
                         .Count(pr => pr.Status == RequirementStatusEnum.Completed &&
                                    pr.ExpectedCompletionDate.HasValue &&
-                                   pr.ExpectedCompletionDate.HasValue &&
-                                   pr.ExpectedCompletionDate.Value <= pr.ExpectedCompletionDate.Value &&
                                    _context.ProjectAnalysts
                                        .Any(pa => pa.ProjectId == pr.ProjectId && pa.AnalystId == u.Id))
                 })

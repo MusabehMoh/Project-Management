@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { Button } from "@heroui/button";
 
+import DeveloperQuickActions from "./developer/DeveloperQuickActions";
+import DeveloperWorkloadPerformance from "./developer/DeveloperWorkloadPerformance";
+import ApprovedRequirements from "./ApprovedRequirements";
+import TaskCompletionTracker from "./developer/TaskCompletionTracker";
+import DHtmlGanttChart from "./developer/DHtmlGanttChart";
+import DeveloperCalendar from "./calendar";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { developerQuickActionsService } from "@/services/api/developerQuickActionsService";
 import ModernQuickStats from "@/components/ModernQuickStats";
-import DeveloperQuickActions from "@/components/dashboard/developer/DeveloperQuickActions";
-import DeveloperWorkloadPerformance from "@/components/dashboard/developer/DeveloperWorkloadPerformance";
-import DeveloperCalendar from "@/components/calendar";
-import ApprovedRequirements from "@/components/ApprovedRequirements";
-import TaskCompletionTracker from "@/components/dashboard/developer/TaskCompletionTracker";
-import DHtmlGanttChart from "@/components/dashboard/developer/DHtmlGanttChart";
 
 export default function DeveloperManagerDashboard() {
   const { t, language } = useLanguage();
@@ -46,19 +47,18 @@ export default function DeveloperManagerDashboard() {
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-foreground">
-          {t("developerDashboard.title") || "Developer Management Dashboard"}
+          {t("developerDashboard.title")}
         </h1>
         <p className="text-lg text-default-600">
-          {t("developerDashboard.subtitle") ||
-            "Manage development teams, code reviews, and deployments"}
+          {t("developerDashboard.subtitle")}
         </p>
 
         <div className="flex gap-4 justify-center">
           <Button color="primary" size="lg">
-            {t("developerDashboard.newSprint") || "New Sprint"}
+            {t("developerDashboard.newSprint")}
           </Button>
           <Button size="lg" variant="bordered">
-            {t("developerDashboard.createRelease") || "Create Release"}
+            {t("developerDashboard.createRelease")}
           </Button>
         </div>
       </div>
@@ -86,15 +86,14 @@ export default function DeveloperManagerDashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">
-            {t("developerDashboard.teamWorkload") ||
-              "Development Team Workload"}
+            {t("developerDashboard.teamWorkload")}
           </h2>
           <DeveloperWorkloadPerformance />
         </div>
 
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold text-foreground">
-            {t("calendar.title") || "Calendar"}
+            {t("calendar.title")}
           </h2>
           <DeveloperCalendar showSidebar={false} />
         </div>
@@ -103,7 +102,7 @@ export default function DeveloperManagerDashboard() {
       {/* Full Width Project Timeline Section */}
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold text-foreground">
-          {t("developerDashboard.projectTimeline") || "Project Timeline"}
+          {t("developerDashboard.projectTimeline")}
         </h2>
         <DHtmlGanttChart height="400px" />
       </div>

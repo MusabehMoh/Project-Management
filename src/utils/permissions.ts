@@ -1,8 +1,8 @@
 import type { User } from "@/types/user";
 
 export interface PermissionCheck {
-  roles?: string[];
-  actions?: string[];
+  roles?: readonly string[];
+  actions?: readonly string[];
   requireAll?: boolean; // If true, user must have ALL specified roles/actions. If false, user needs ANY of them.
 }
 
@@ -130,11 +130,71 @@ export const hasAllActions = (
 };
 
 /**
- * Check if user is super admin (highest level)
+ * Quick check for specific role by ID
  */
-export const isSuperAdmin = (user: User | null): boolean => {
-  return hasRole(user, "Super Administrator") || hasRole(user, "SuperAdmin");
+export const hasRoleById = (user: User | null, roleId: number): boolean => {
+  if (!user) return false;
+
+  return user.roles?.some((role) => role.id === roleId) || false;
 };
+
+/**
+ * Check if user has any of the specified role IDs
+ */
+export const hasAnyRoleById = (
+  user: User | null,
+  roleIds: number[],
+): boolean => {
+  if (!user) return false;
+
+  return roleIds.some((roleId) => hasRoleById(user, roleId));
+};
+
+/**
+ * Check if user has all of the specified role IDs
+ */
+export const hasAllRolesById = (
+  user: User | null,
+  roleIds: number[],
+): boolean => {
+  if (!user) return false;
+
+  return roleIds.every((roleId) => hasRoleById(user, roleId));
+};
+
+/**
+ * Quick check for specific action by ID
+ */
+export const hasActionById = (user: User | null, actionId: number): boolean => {
+  if (!user) return false;
+
+  return user.actions?.some((action) => action.id === actionId) || false;
+};
+
+/**
+ * Check if user has any of the specified action IDs
+ */
+export const hasAnyActionById = (
+  user: User | null,
+  actionIds: number[],
+): boolean => {
+  if (!user) return false;
+
+  return actionIds.some((actionId) => hasActionById(user, actionId));
+};
+
+/**
+ * Check if user has all of the specified action IDs
+ */
+export const hasAllActionsById = (
+  user: User | null,
+  actionIds: number[],
+): boolean => {
+  if (!user) return false;
+
+  return actionIds.every((actionId) => hasActionById(user, actionId));
+};
+
 
 /**
  * Alias to check permissions using object-literal style at call-sites.

@@ -48,7 +48,7 @@ export default function PendingRequirements({
       case "low":
         return t("priority.low");
       default:
-        return priority?.toString() || t("priority.unknown") || "Unknown";
+        return priority?.toString() || t("priority.unknown");
     }
   };
 
@@ -143,11 +143,11 @@ export default function PendingRequirements({
         <CardBody className="flex items-center justify-center min-h-[200px] text-center">
           <AlertCircle className="w-8 h-8 text-danger mb-2" />
           <p className="font-medium text-foreground mb-2">
-            {t("common.error") || "Error"}
+            {t("common.error")}
           </p>
           <p className="text-sm text-default-500 mb-4">{error}</p>
           <Button size="sm" variant="flat" onPress={refresh}>
-            {t("common.refresh") || "Refresh"}
+            {t("common.refresh")}
           </Button>
         </CardBody>
       </Card>
@@ -165,7 +165,7 @@ export default function PendingRequirements({
           <div className="flex items-center gap-2">
             <PenTool className="w-5 h-5 text-default-600" />
             <h3 className="text-lg font-semibold text-foreground">
-              {t("requirements.pendingRequirements") || "Pending Requirements"}
+              {t("requirements.pendingRequirements")}
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -182,7 +182,7 @@ export default function PendingRequirements({
                 variant="light"
                 onPress={handleViewAllRequirements}
               >
-                {t("common.viewAll") || "View All"}
+                {t("common.viewAll")}
               </Button>
             )}
           </div>
@@ -196,11 +196,10 @@ export default function PendingRequirements({
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <PenTool className="w-12 h-12 text-default-300 mb-3" />
             <h4 className="font-medium text-foreground mb-1">
-              {t("requirements.noDraftRequirements") || "No Draft Requirements"}
+              {t("requirements.noDraftRequirements")}
             </h4>
             <p className="text-sm text-default-500">
-              {t("requirements.noDraftRequirementsDesc") ||
-                "All requirements have been processed"}
+              {t("requirements.noDraftRequirementsDesc")}
             </p>
           </div>
         ) : (
@@ -260,7 +259,7 @@ export default function PendingRequirements({
                         );
                       }}
                     >
-                      {t("common.view") || "View"}
+                      {t("common.view")}
                     </Button>
                   </div>
                 </div>

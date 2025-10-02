@@ -5,9 +5,10 @@ import LoadingLogo from "@/components/LoadingLogo";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks";
 import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
+import { RoleIds } from "@/constants/roles";
 
 export default function IndexPage() {
-  const { hasAnyRole, loading: userLoading } = usePermissions();
+  const { hasAnyRoleById, loading: userLoading } = usePermissions();
 
   // Set page title
   usePageTitle("home.title", { fallback: "Dashboard" });
@@ -22,8 +23,8 @@ export default function IndexPage() {
   }
 
   // Check if user has Analyst Department Manager role
-  const hasAnalystRole = hasAnyRole(["Analyst Department Manager"]);
-  const hasDevManagerRole = hasAnyRole(["Developer Manager"]);
+  const hasAnalystRole = hasAnyRoleById([RoleIds.ANALYST_DEPARTMENT_MANAGER]);
+  const hasDevManagerRole = hasAnyRoleById([RoleIds.DEVELOPMENT_MANAGER]);
 
   return (
     <>
