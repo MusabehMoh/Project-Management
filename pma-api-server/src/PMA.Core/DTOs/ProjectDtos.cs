@@ -1,4 +1,5 @@
 using PMA.Core.Entities;
+using PMA.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace PMA.Core.DTOs;

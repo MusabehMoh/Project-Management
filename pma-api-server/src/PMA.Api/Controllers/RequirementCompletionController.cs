@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
+using PMA.Core.Enums;
 using PMA.Infrastructure.Data;
 
 namespace PMA.Api.Controllers;

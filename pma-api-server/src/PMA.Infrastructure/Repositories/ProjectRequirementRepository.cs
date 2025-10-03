@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using PMA.Core.Enums;
 using PMA.Infrastructure.Data;
 
 namespace PMA.Infrastructure.Repositories;
@@ -19,7 +20,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
             .Include(pr => pr.Attachments) // Include attachments
-            .Include(pr => pr.Task)
+            .Include(pr => pr.RequirementTask)
             .Include(pr => pr.Timeline)
             .AsQueryable();
 
@@ -75,7 +76,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
             .Include(pr => pr.Attachments)
-            .Include(pr => pr.Task)
+            .Include(pr => pr.RequirementTask)
             .Include(pr => pr.Timeline)
             .Where(pr => pr.ProjectId == projectId)
             .OrderBy(pr => pr.Priority)
@@ -89,7 +90,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Project)
             .Include(pr => pr.Creator)
             .Include(pr => pr.Attachments)
-            .Include(pr => pr.Task)
+            .Include(pr => pr.RequirementTask)
             .Where(pr => pr.AssignedAnalyst == analystId)
             .OrderBy(pr => pr.Priority)
             .ThenBy(pr => pr.ExpectedCompletionDate)
@@ -108,9 +109,9 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
             .Include(pr => pr.Attachments)
-            .Include(pr => pr.Task)
+            .Include(pr => pr.RequirementTask)
                 .ThenInclude(t => t.Developer)
-            .Include(pr => pr.Task)
+            .Include(pr => pr.RequirementTask)
                 .ThenInclude(t => t.Qc)
             .Include(pr => pr.Timeline)
             .FirstOrDefaultAsync(pr => pr.Id == id);

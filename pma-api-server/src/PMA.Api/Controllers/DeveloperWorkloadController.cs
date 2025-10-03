@@ -89,11 +89,11 @@ public class DeveloperWorkloadController : ApiBaseController
 
                 var currentTasks = taskAssignments.Count(ta =>
                     ta.Task != null &&
-                    ta.Task.StatusId != PMA.Core.Entities.TaskStatus.Completed);
+                    ta.Task.StatusId != Core.Enums.TaskStatus.Completed);
 
                 var completedTasks = taskAssignments.Count(ta =>
                     ta.Task != null &&
-                    ta.Task.StatusId == PMA.Core.Entities.TaskStatus.Completed);
+                    ta.Task.StatusId == Core.Enums.TaskStatus.Completed);
 
                 var averageTaskTime = taskAssignments
                     .Where(ta => ta.Task != null && ta.Task.ActualHours.HasValue)
@@ -131,9 +131,9 @@ public class DeveloperWorkloadController : ApiBaseController
                 .ToListAsync();
 
                 var totalTasksCompleted = allTaskAssignments.Count(ta =>
-                    ta.Task != null && ta.Task.StatusId == PMA.Core.Entities.TaskStatus.Completed);
+                    ta.Task != null && ta.Task.StatusId == Core.Enums.TaskStatus.Completed);
                 var totalTasksInProgress = allTaskAssignments.Count(ta =>
-                    ta.Task != null && ta.Task.StatusId == PMA.Core.Entities.TaskStatus.InProgress);            var metrics = new
+                    ta.Task != null && ta.Task.StatusId == Core.Enums.TaskStatus.InProgress);            var metrics = new
             {
                 totalDevelopers = allEmployees.Count,
                 activeDevelopers = allEmployees.Count(e => e.StatusId == 1), // Assuming 1 is active
@@ -266,13 +266,13 @@ public class DeveloperWorkloadController : ApiBaseController
                 developerId = employee.Id.ToString(),
                 developerName = employee.FullName,
                 totalTasks = taskAssignments.Count,
-                completedTasks = taskAssignments.Count(ta => ta.Task?.StatusId == PMA.Core.Entities.TaskStatus.Completed),
-                inProgressTasks = taskAssignments.Count(ta => ta.Task?.StatusId == PMA.Core.Entities.TaskStatus.InProgress),
+                completedTasks = taskAssignments.Count(ta => ta.Task?.StatusId == Core.Enums.TaskStatus.Completed),
+                inProgressTasks = taskAssignments.Count(ta => ta.Task?.StatusId == Core.Enums.TaskStatus.InProgress),
                 averageCompletionTime = taskAssignments
                     .Where(ta => ta.Task?.ActualHours.HasValue == true)
                     .Average(ta => ta.Task?.ActualHours ?? 0),
                 efficiency = taskAssignments.Any() ?
-                    taskAssignments.Count(ta => ta.Task?.StatusId == PMA.Core.Entities.TaskStatus.Completed) * 100.0 / taskAssignments.Count : 0,
+                    taskAssignments.Count(ta => ta.Task?.StatusId == Core.Enums.TaskStatus.Completed) * 100.0 / taskAssignments.Count : 0,
                 recentTasks = taskAssignments
                     .Where(ta => ta.Task != null)
                     .OrderByDescending(ta => ta.AssignedAt)

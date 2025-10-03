@@ -161,8 +161,7 @@ builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IActionService, ActionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<ILookupService, LookupService>();
-builder.Services.AddScoped<IMemberTaskService, MemberTaskService>();
+builder.Services.AddScoped<ILookupService, LookupService>(); 
 builder.Services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();
 // Path provider abstraction
 builder.Services.AddSingleton<PMA.Core.Interfaces.IAppPathProvider, PMA.Api.Services.AppPathProvider>();
@@ -178,7 +177,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:5170" };
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

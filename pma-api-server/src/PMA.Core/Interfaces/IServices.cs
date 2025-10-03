@@ -177,16 +177,7 @@ public interface ILookupService
     System.Threading.Tasks.Task<IEnumerable<LookupDto>> GetLookupsByCategoryAsync(string code);
 }
 
-public interface IMemberTaskService
-{
-    System.Threading.Tasks.Task<(IEnumerable<MemberTaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null);
-    System.Threading.Tasks.Task<MemberTaskDto?> GetMemberTaskByIdAsync(int id);
-    System.Threading.Tasks.Task<MemberTaskDto> CreateMemberTaskAsync(MemberTaskDto memberTask);
-    System.Threading.Tasks.Task<MemberTaskDto> UpdateMemberTaskAsync(MemberTaskDto memberTask);
-    System.Threading.Tasks.Task<bool> DeleteMemberTaskAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<MemberTaskDto>> GetMemberTasksByProjectAsync(int projectId);
-    System.Threading.Tasks.Task<IEnumerable<MemberTaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId);
-}
+ 
 
 
 public interface IProjectRequirementService

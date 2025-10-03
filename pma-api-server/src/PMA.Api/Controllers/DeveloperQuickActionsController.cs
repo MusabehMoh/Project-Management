@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
+using PMA.Core.Enums;
 using PMA.Infrastructure.Data;
+using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 
 namespace PMA.Api.Controllers;
 
@@ -27,7 +29,7 @@ public class DeveloperQuickActionsController : ApiBaseController
             // Get unassigned tasks (tasks with no assignee)
             var unassignedTasks = await _context.Tasks
                 .Where(t => !_context.TaskAssignments.Any(ta => ta.TaskId == t.Id) &&
-                           t.StatusId != Core.Entities.TaskStatus.Completed)
+                           t.StatusId != TaskStatusEnum.Completed)
                 .Include(t => t.ProjectRequirement)
                 .ThenInclude(pr => pr!.Project)
                 .Select(t => new
@@ -54,7 +56,7 @@ public class DeveloperQuickActionsController : ApiBaseController
 
             // Get almost completed tasks (tasks with progress > 80% and not completed)
             var almostCompletedTasks = await _context.Tasks
-                .Where(t => t.Progress > 80 && t.StatusId != Core.Entities.TaskStatus.Completed)
+                .Where(t => t.Progress > 80 && t.StatusId != TaskStatusEnum.Completed)
                 .Include(t => t.ProjectRequirement)
                 .ThenInclude(pr => pr!.Project)
                 .Include(t => t.Assignments)
@@ -98,12 +100,12 @@ public class DeveloperQuickActionsController : ApiBaseController
                     currentTasksCount = _context.TaskAssignments
                         .Count(ta => ta.PrsId == u.Id &&
                               ta.Task != null &&
-                              ta.Task.StatusId != Core.Entities.TaskStatus.Completed),
+                              ta.Task.StatusId != TaskStatusEnum.Completed),
                     totalCapacity = 5, // Assuming 5 tasks max capacity
                     availableCapacity = 5 - _context.TaskAssignments
                         .Count(ta => ta.PrsId == u.Id &&
                               ta.Task != null &&
-                              ta.Task.StatusId != Core.Entities.TaskStatus.Completed)
+                              ta.Task.StatusId != TaskStatusEnum.Completed)
                 })
                 .Where(u => u.availableCapacity > 0)
                 .OrderBy(u => u.currentTasksCount)
@@ -141,7 +143,7 @@ public class DeveloperQuickActionsController : ApiBaseController
         try
         {
             var almostCompletedTasks = await _context.Tasks
-                .Where(t => t.Progress > 80 && t.StatusId != Core.Entities.TaskStatus.Completed)
+                .Where(t => t.Progress > 80 && t.StatusId != TaskStatusEnum.Completed)
                 .Include(t => t.ProjectRequirement)
                 .ThenInclude(pr => pr!.Project)
                 .Include(t => t.Assignments)

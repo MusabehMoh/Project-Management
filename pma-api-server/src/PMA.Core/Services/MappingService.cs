@@ -1,6 +1,8 @@
 using PMA.Core.Entities;
 using PMA.Core.DTOs;
 using PMA.Core.Interfaces;
+using PMA.Core.Enums;
+using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 
 namespace PMA.Core.Services;
 
@@ -564,7 +566,7 @@ public class MappingService : IMappingService
             Description = createAdHocTaskDto.Description,
             StartDate = createAdHocTaskDto.StartDate,
             EndDate = createAdHocTaskDto.EndDate,
-            StatusId = PMA.Core.Entities.TaskStatus.ToDo,
+            StatusId = TaskStatusEnum.ToDo,
             PriorityId = Priority.Medium,
             TypeId = TaskTypes.AdHoc, // Set TypeId to AdHoc
             Progress = 0,

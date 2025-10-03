@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using PMA.Core.Enums;
 
 namespace PMA.Core.Entities;
 
@@ -43,18 +44,6 @@ public class Requirement
     public User? AssignedTo { get; set; }
 
     public ICollection<RequirementComment>? Comments { get; set; }
-}
-
- 
-
-public enum RequirementStatus
-{
-    Draft = 1,
-    InReview = 2,
-    Approved = 3,
-    InProgress = 4,
-    Completed = 5,
-    Rejected = 6
 }
 
 public class RequirementComment

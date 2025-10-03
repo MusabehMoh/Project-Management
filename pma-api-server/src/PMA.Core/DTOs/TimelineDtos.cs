@@ -1,6 +1,7 @@
 using PMA.Core.Entities;
+using PMA.Core.Enums;
 using System.ComponentModel.DataAnnotations;
-using TaskStatus = PMA.Core.Entities.TaskStatus;
+using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 
 namespace PMA.Core.DTOs;
 
@@ -84,7 +85,7 @@ public class TaskDto
     public string? Description { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public TaskStatus StatusId { get; set; }
+    public TaskStatusEnum StatusId { get; set; }
     public Priority PriorityId { get; set; }
     public int? DepartmentId { get; set; }
     public int? TimelineId { get; set; }
@@ -117,7 +118,7 @@ public class CreateTaskDto
     [Required(ErrorMessage = "EndDate is required")]
     public DateTime EndDate { get; set; }
     public TaskTypes TypeId { get; set; } = TaskTypes.TimeLine;   
-    public TaskStatus StatusId { get; set; } = TaskStatus.ToDo;
+    public TaskStatusEnum StatusId { get; set; } = TaskStatusEnum.ToDo;
     public Priority PriorityId { get; set; } = Priority.Medium;
     public int? DepartmentId { get; set; }
     public int? TimelineId { get; set; }
@@ -160,7 +161,7 @@ public class UpdateTaskDto
 
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
-    public TaskStatus? StatusId { get; set; }
+    public TaskStatusEnum? StatusId { get; set; }
     public Priority? PriorityId { get; set; }
     public int? DepartmentId { get; set; }
     public int? TimelineId { get; set; }
@@ -178,7 +179,7 @@ public class UpdateTaskDto
 public class UpdateTaskStatusDto
 {
     [Required(ErrorMessage = "StatusId is required")]
-    public TaskStatus StatusId { get; set; }
+    public TaskStatusEnum StatusId { get; set; }
 }
 
 public class MoveTaskDto
