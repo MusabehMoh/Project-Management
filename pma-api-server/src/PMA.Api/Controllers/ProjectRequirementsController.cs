@@ -119,6 +119,38 @@ public class ProjectRequirementsController : ApiBaseController
     }
 
     /// <summary>
+    /// Get draft/pending project requirements for PendingRequirements component
+    /// </summary>
+    [HttpGet("draft-requirements")]
+    [ProducesResponseType(typeof(PaginatedResponse<ProjectRequirement>), 200)]
+    public async Task<IActionResult> GetDraftRequirements(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 10)
+    {
+        try
+        {
+            // Get requirements with Draft or Pending status
+            var (draftRequirements, totalCount) = await _projectRequirementService
+                .GetProjectRequirementsAsync(page, limit, null, null, null, null);
+            
+            // Filter for Draft and Pending status
+            var filteredRequirements = draftRequirements
+                .Where(r => r.Status == RequirementStatusEnum.New || r.Status == RequirementStatusEnum.ManagerReview)
+                .ToList();
+            
+            var actualTotal = filteredRequirements.Count;
+            var pagination = new PaginationInfo(page, limit, actualTotal, (int)Math.Ceiling((double)actualTotal / limit));
+            
+            return Success(filteredRequirements, pagination, "Draft requirements retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving draft requirements. Page: {Page}, Limit: {Limit}", page, limit);
+            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving draft requirements", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Get projects assigned to current analyst
     /// </summary>
     [HttpGet("assigned-projects")]
@@ -367,25 +399,25 @@ public class ProjectRequirementsController : ApiBaseController
 
     /// <summary>
     /// Get draft requirements (requirements in draft status)
-    /// </summary>
-    [HttpGet("draft-requirements")]
-    [ProducesResponseType(200)]
-    public async Task<IActionResult> GetDraftRequirements(
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 20)
-    {
-        try
-        {
-            var (requirements, totalCount) = await _projectRequirementService
-                .GetDraftRequirementsAsync(page, limit);
-            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
-            return Success(requirements, pagination);
-        }
-        catch (Exception ex)
-        {
-            return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving draft requirements", ex.Message);
-        }
-    }
+    ///// </summary>
+    //[HttpGet("draft-requirements")]
+    //[ProducesResponseType(200)]
+    //public async Task<IActionResult> GetDraftRequirements(
+    //    [FromQuery] int page = 1,
+    //    [FromQuery] int limit = 20)
+    //{
+    //    try
+    //    {
+    //        var (requirements, totalCount) = await _projectRequirementService
+    //            .GetDraftRequirementsAsync(page, limit);
+    //        var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
+    //        return Success(requirements, pagination);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        return Error<IEnumerable<ProjectRequirement>>("An error occurred while retrieving draft requirements", ex.Message);
+    //    }
+    //}
 
     /// <summary>
     /// Get approved requirements (requirements that have been approved)
@@ -650,5 +682,28 @@ public class ProjectRequirementsController : ApiBaseController
         {
             return Error<object>("An error occurred while synchronizing attachments", ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Get team workload performance - Redirect to TeamWorkloadController
+    /// This endpoint exists for backward compatibility with frontend services
+    /// </summary>
+    [HttpGet("team-workload-performance")]
+    [ProducesResponseType(200)]
+    public IActionResult GetTeamWorkloadPerformance(
+        [FromQuery] int? departmentId = null,
+        [FromQuery] string? busyStatus = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 10)
+    {
+        // Redirect to the proper TeamWorkloadController endpoint
+        var queryParams = new List<string>();
+        if (departmentId.HasValue) queryParams.Add($"departmentId={departmentId}");
+        if (!string.IsNullOrEmpty(busyStatus)) queryParams.Add($"busyStatus={busyStatus}");
+        queryParams.Add($"page={page}");
+        queryParams.Add($"limit={limit}");
+        
+        var redirectUrl = $"/api/team-workload/performance?{string.Join("&", queryParams)}";
+        return Redirect(redirectUrl);
     }
 }

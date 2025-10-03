@@ -293,4 +293,60 @@ public class NotificationsController : ApiBaseController
             return StatusCode(500, errorResponse);
         }
     }
+
+    /// <summary>
+    /// Get urgent/high-priority notifications for UrgentNotifications component
+    /// Returns notifications marked as urgent, critical, overdue, or high priority
+    /// </summary>
+    [HttpGet("urgent")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetUrgentNotifications(
+        [FromQuery] int? userId = null,
+        [FromQuery] int limit = 5)
+    {
+        try
+        {
+            // Get recent notifications (last 30 days) filtered by urgent types
+            var (allNotifications, _) = await _notificationService.GetNotificationsAsync(
+                page: 1, 
+                limit: 100, // Get more to filter
+                userId: userId, 
+                isRead: null
+            );
+
+            // Define urgent notification types/patterns
+            var urgentKeywords = new[] { 
+                "URGENT", "CRITICAL", "OVERDUE", "HIGH_PRIORITY", 
+                "DEADLINE", "EMERGENCY", "IMMEDIATE" 
+            };
+
+            // Filter for urgent notifications
+            var urgentNotifications = allNotifications
+                .Where(n => urgentKeywords.Any(keyword => 
+                    //n.Type.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                    n.Message.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
+                .OrderByDescending(n => n.CreatedAt)
+                .Take(limit)
+                .ToList();
+
+            var response = new ApiResponse<IEnumerable<Notification>>
+            {
+                Success = true,
+                Data = urgentNotifications,
+                Message = "Urgent notifications retrieved successfully"
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<IEnumerable<Notification>>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving urgent notifications",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
 }

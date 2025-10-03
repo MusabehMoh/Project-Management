@@ -167,11 +167,11 @@ export default function RequirementCompletionTracker({
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-danger mx-auto mb-4" />
             <p className="font-medium text-foreground mb-2">
-              {t("completion.error") || "Error"}
+              {t("completion.error")}
             </p>
             <p className="text-sm text-default-500 mb-4">{error}</p>
             <Button size="sm" variant="flat" onPress={refresh}>
-              {t("completion.retry") || "Retry"}
+              {t("completion.retry")}
             </Button>
           </div>
         </CardBody>
@@ -193,13 +193,13 @@ export default function RequirementCompletionTracker({
   const getDaysText = (days: number, type: "overdue" | "remaining") => {
     if (days === 1) {
       return type === "overdue"
-        ? t("completion.oneDayOverdue") || "1 day overdue"
-        : t("completion.oneDayLeft") || "1 day left";
+        ? t("completion.oneDayOverdue")
+        : t("completion.oneDayLeft");
     }
 
     return type === "overdue"
-      ? `${days} ${t("completion.days") || "days"} ${t("completion.overdue") || "overdue"}`
-      : `${days} ${t("completion.days") || "days"} ${t("completion.daysLeft") || "left"}`;
+      ? `${days} ${t("completion.days")} ${t("completion.overdue")}`
+      : `${days} ${t("completion.days")} ${t("completion.daysLeft")}`;
   };
 
   return (
@@ -208,7 +208,7 @@ export default function RequirementCompletionTracker({
         <CardHeader className="pb-0">
           <div className="flex justify-between items-center w-full">
             <h3 className="text-lg font-medium">
-              {t("completion.title") || "Requirement Completion"}
+              {t("completion.title")}
             </h3>
             <div className="flex items-center gap-2">
               {allItems.length > 0 && (
@@ -220,7 +220,7 @@ export default function RequirementCompletionTracker({
                   variant="flat"
                 >
                   {allItems.length}{" "}
-                  {t("completion.needsAttention") || "Need Attention"}
+                  {t("completion.needsAttention")}
                 </Chip>
               )}
               <Button
@@ -242,7 +242,7 @@ export default function RequirementCompletionTracker({
           <div className="mb-4 p-4 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-medium text-foreground">
-                {t("completion.overall") || "Overall Progress"}
+                {t("completion.overall")}
               </span>
               <span className="text-sm text-default-500">
                 {analytics.summary.completedRequirements} /{" "}
@@ -258,13 +258,13 @@ export default function RequirementCompletionTracker({
             <div className="flex justify-between text-xs text-default-500">
               <span>
                 {analytics.summary.onTimeRate}%{" "}
-                {t("completion.onTime") || "on time"}
+                {t("completion.onTime")}
               </span>
               {analytics.summary.avgDelayDays > 0 && (
                 <span>
-                  {t("completion.avgDelay") || "Avg delay"}:{" "}
+                  {t("completion.avgDelay")}:{" "}
                   {analytics.summary.avgDelayDays}{" "}
-                  {t("completion.days") || "days"}
+                  {t("completion.days")}
                 </span>
               )}
             </div>
@@ -280,16 +280,16 @@ export default function RequirementCompletionTracker({
               >
                 <TableHeader>
                   <TableColumn>
-                    {t("completion.requirement") || "Requirement"}
+                    {t("completion.requirement")}
                   </TableColumn>
                   <TableColumn>
-                    {t("completion.priority") || "Priority"}
+                    {t("completion.priority")}
                   </TableColumn>
                   <TableColumn>
-                    {t("completion.status") || "Status"}
+                    {t("completion.status")}
                   </TableColumn>
                   <TableColumn>
-                    {t("completion.dueDate") || "Due Date"}
+                    {t("completion.dueDate")}
                   </TableColumn>
                 </TableHeader>
                 <TableBody>
@@ -337,8 +337,8 @@ export default function RequirementCompletionTracker({
                             variant="flat"
                           >
                             {item.type === "overdue"
-                              ? t("completion.overdue") || "Overdue"
-                              : t("completion.dueSoon") || "Due Soon"}
+                              ? t("completion.overdue")
+                              : t("completion.dueSoon")}
                           </Chip>
                         </Tooltip>
                       </TableCell>
@@ -371,7 +371,7 @@ export default function RequirementCompletionTracker({
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-success-600 mx-auto mb-4" />
               <h4 className="text-lg font-semibold text-foreground mb-2">
-                {t("completion.allOnTrack") || "All Requirements On Track"}
+                {t("completion.allOnTrack")}
               </h4>
               <p className="text-sm text-default-500">
                 {t("completion.noOverdue") ||
@@ -382,13 +382,13 @@ export default function RequirementCompletionTracker({
                   <CheckCircle className="w-4 h-4 text-success-600" />
                   <span className="text-success-600">
                     {analytics.summary.onTimeCompleted}{" "}
-                    {t("completion.completedOnTime") || "completed on time"}
+                    {t("completion.completedOnTime")}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-default-500">
                     {analytics.summary.completedRequirements}{" "}
-                    {t("completion.totalCompleted") || "total completed"}
+                    {t("completion.totalCompleted")}
                   </span>
                 </div>
               </div>

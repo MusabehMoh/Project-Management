@@ -141,7 +141,8 @@ builder.Services.AddScoped<IActionRepository, ActionRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ILookupRepository, LookupRepository>();
 builder.Services.AddScoped<ITimelineRepository, TimelineRepository>();
-builder.Services.AddScoped<IMemberTaskRepository, MemberTaskRepository>();
+builder.Services.AddScoped<ICalendarEventRepository, CalendarEventRepository>();
+//builder.Services.AddScoped<IMemberTaskRepository, MemberTaskRepository>();
 
 // Register services
 builder.Services.AddScoped<IProjectService, ProjectService>();
@@ -153,6 +154,7 @@ builder.Services.AddScoped<IRequirementService, RequirementService>();
 builder.Services.AddScoped<IProjectRequirementService, PMA.Core.Services.ProjectRequirementService>();
 builder.Services.AddScoped<IRequirementTaskManagementService, RequirementTaskManagementService>();
 builder.Services.AddScoped<ITimelineService, TimelineService>();
+builder.Services.AddScoped<ICalendarEventService, CalendarEventService>();
 builder.Services.AddScoped<IFileStorageService, PMA.Infrastructure.Services.FileStorageService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IUnitService, UnitService>();

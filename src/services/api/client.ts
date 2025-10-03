@@ -4,7 +4,7 @@ import { ApiResponse } from "@/types/project";
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_URL || "http://localhost:3002/api",
   WS_URL: import.meta.env.VITE_WS_URL || "ws://localhost:3002",
-  TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || "10000"),
+  TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || "20000"),
   HEADERS: {
     Accept: "application/json",
   },

@@ -168,7 +168,18 @@ class DeveloperQuickActionsService {
     taskId: string,
     status: DeveloperTask["status"],
   ): Promise<void> {
-    const response = await apiClient.patch(`/tasks/${taskId}`, { status });
+    // Map frontend status to backend TaskStatus enum
+    const statusMapping: Record<DeveloperTask["status"], number> = {
+      todo: 1, // ToDo
+      "in-progress": 2, // InProgress
+      review: 3, // InReview
+      testing: 4, // Rework (assuming testing maps to rework)
+      done: 5, // Completed
+    };
+
+    const response = await apiClient.patch(`/tasks/${taskId}`, {
+      StatusId: statusMapping[status] || 1,
+    });
 
     if (!response.success) {
       throw new Error(response.message || "Failed to update task status");

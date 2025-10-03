@@ -7,11 +7,16 @@ import {
   hasRole,
   hasAction,
   isAdmin,
-  isSuperAdmin,
   hasAnyRole,
   hasAllRoles,
   hasAnyAction,
   hasAllActions,
+  hasRoleById,
+  hasAnyRoleById,
+  hasAllRolesById,
+  hasActionById,
+  hasAnyActionById,
+  hasAllActionsById,
   Permissions,
   type PermissionCheck,
 } from "@/utils/permissions";
@@ -33,29 +38,39 @@ export const usePermissions = () => {
       hasAnyRole: (roleNames: string[]) => hasAnyRole(user, roleNames),
       hasAllRoles: (roleNames: string[]) => hasAllRoles(user, roleNames),
 
+      // Role checkers by ID
+      hasRoleById: (roleId: number) => hasRoleById(user, roleId),
+      hasAnyRoleById: (roleIds: number[]) => hasAnyRoleById(user, roleIds),
+      hasAllRolesById: (roleIds: number[]) => hasAllRolesById(user, roleIds),
+
       // Action checkers
       hasAction: (actionName: string) => hasAction(user, actionName),
       hasAnyAction: (actionNames: string[]) => hasAnyAction(user, actionNames),
       hasAllActions: (actionNames: string[]) =>
         hasAllActions(user, actionNames),
 
+      // Action checkers by ID
+      hasActionById: (actionId: number) => hasActionById(user, actionId),
+      hasAnyActionById: (actionIds: number[]) => hasAnyActionById(user, actionIds),
+      hasAllActionsById: (actionIds: number[]) =>
+        hasAllActionsById(user, actionIds),
+
       // Convenience checkers
       isAdmin: () => isAdmin(user),
-      isSuperAdmin: () => isSuperAdmin(user),
 
       // Quick access to common permissions
       can: {
         // User management
         manageUsers: () => hasPermission(user, Permissions.USER_MANAGEMENT),
         createUser: () => hasPermission(user, Permissions.USER_CREATE),
-        editUser: () => hasPermission(user, Permissions.USER_EDIT),
+        editUser: () => hasPermission(user, Permissions.USER_UPDATE),
         deleteUser: () => hasPermission(user, Permissions.USER_DELETE),
 
         // Project management
         manageProjects: () =>
           hasPermission(user, Permissions.PROJECT_MANAGEMENT),
         createProject: () => hasPermission(user, Permissions.PROJECT_CREATE),
-        editProject: () => hasPermission(user, Permissions.PROJECT_EDIT),
+        editProject: () => hasPermission(user, Permissions.PROJECT_UPDATE),
         deleteProject: () => hasPermission(user, Permissions.PROJECT_DELETE),
         viewProject: () => hasPermission(user, Permissions.PROJECT_VIEW),
 

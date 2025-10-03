@@ -154,6 +154,7 @@ public interface ICalendarEventService
     System.Threading.Tasks.Task<bool> DeleteCalendarEventAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<CalendarEvent>> GetCalendarEventsByProjectAsync(int projectId);
     System.Threading.Tasks.Task<IEnumerable<CalendarEvent>> GetCalendarEventsByCreatorAsync(int creatorId);
+    System.Threading.Tasks.Task<object> GetCalendarStatsAsync();
 }
 
 public interface IEmployeeService

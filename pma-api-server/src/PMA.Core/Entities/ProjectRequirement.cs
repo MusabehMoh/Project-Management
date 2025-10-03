@@ -25,6 +25,7 @@ public enum RequirementStatusEnum
     UnderDevelopment = 4,
     UnderTesting = 5,
     Completed = 6,
+    Cancelled = 6,
 
 }
 

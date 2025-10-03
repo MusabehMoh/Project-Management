@@ -1,74 +1,74 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+//using System.ComponentModel.DataAnnotations;
+//using System.ComponentModel.DataAnnotations.Schema;
 
-namespace PMA.Core.Entities;
+//namespace PMA.Core.Entities;
 
-[Table("MemberTasks")]
-public class MemberTask
-{
-    [Key]
-    public int Id { get; set; }
+//[Table("MemberTasks")]
+//public class MemberTask
+//{
+//    [Key]
+//    public int Id { get; set; }
 
-    [Required]
-    [MaxLength(200)]
-    public string Name { get; set; } = string.Empty;
+//    [Required]
+//    [MaxLength(200)]
+//    public string Name { get; set; } = string.Empty;
 
-    [MaxLength(1000)]
-    public string? Description { get; set; }
+//    [MaxLength(1000)]
+//    public string? Description { get; set; }
 
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+//    public DateTime? StartDate { get; set; }
+//    public DateTime? EndDate { get; set; }
 
-    [Range(0, 100)]
-    public int Progress { get; set; } = 0;
+//    [Range(0, 100)]
+//    public int Progress { get; set; } = 0;
 
-    [Required]
-    [MaxLength(50)]
-    public string Status { get; set; } = string.Empty;
+//    [Required]
+//    [MaxLength(50)]
+//    public string Status { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(50)]
-    public string Priority { get; set; } = string.Empty;
+//    [Required]
+//    [MaxLength(50)]
+//    public string Priority { get; set; } = string.Empty;
 
-    public int? DepartmentId { get; set; }
-    public int? ProjectId { get; set; }
-    public int? RequirementId { get; set; }
-    public int? PrimaryAssigneeId { get; set; }
+//    public int? DepartmentId { get; set; }
+//    public int? ProjectId { get; set; }
+//    public int? RequirementId { get; set; }
+//    public int? PrimaryAssigneeId { get; set; }
 
-    public int TimeSpent { get; set; } = 0; // hours
-    public int EstimatedTime { get; set; } = 0; // hours
+//    public int TimeSpent { get; set; } = 0; // hours
+//    public int EstimatedTime { get; set; } = 0; // hours
 
-    [MaxLength(500)]
-    public string? Tags { get; set; } // JSON array of tags
+//    [MaxLength(500)]
+//    public string? Tags { get; set; } // JSON array of tags
 
-    public bool IsOverdue { get; set; } = false;
+//    public bool IsOverdue { get; set; } = false;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+//    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+//    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
-    public virtual Department? Department { get; set; }
-    public virtual Project? Project { get; set; }
-    public virtual Requirement? Requirement { get; set; }
-    public virtual User? PrimaryAssignee { get; set; }
-    public virtual ICollection<MemberTaskAssignment> Assignments { get; set; } = new List<MemberTaskAssignment>();
-}
+//    // Navigation properties
+//    public virtual Department? Department { get; set; }
+//    public virtual Project? Project { get; set; }
+//    public virtual Requirement? Requirement { get; set; }
+//    public virtual User? PrimaryAssignee { get; set; }
+//    public virtual ICollection<MemberTaskAssignment> Assignments { get; set; } = new List<MemberTaskAssignment>();
+//}
 
-[Table("MemberTaskAssignments")]
-public class MemberTaskAssignment
-{
-    [Key]
-    public int Id { get; set; }
+////[Table("MemberTaskAssignments")]
+////public class MemberTaskAssignment
+////{
+////    [Key]
+////    public int Id { get; set; }
 
-    [Required]
-    public int MemberTaskId { get; set; }
+////    [Required]
+////    public int MemberTaskId { get; set; }
 
-    [Required]
-    public int PrsId { get; set; }
+////    [Required]
+////    public int PrsId { get; set; }
 
-    // Navigation properties
-    public virtual MemberTask? MemberTask { get; set; }
+////    // Navigation properties
+////    public virtual MemberTask? MemberTask { get; set; }
     
-    [ForeignKey("PrsId")]
-    public virtual Employee? Employee { get; set; }
-}
+////    [ForeignKey("PrsId")]
+////    public virtual Employee? Employee { get; set; }
+////}

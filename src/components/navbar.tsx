@@ -39,6 +39,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 // Import both logo versions
 import logoImageLight from "@/assets/ChatGPT Image Aug 13, 2025, 11_15_09 AM.png";
 import logoImageDark from "@/assets/whitemodlogo.png";
+import { RoleIds } from "@/constants/roles";
 
 // Theme-aware logo component
 const ThemeLogo = ({ className }: { className?: string }) => {
@@ -259,7 +260,7 @@ const getProjectNavItems = (
   t: (key: string) => string,
   hasPermission: any,
   isAdmin: any,
-  hasAnyRole: any,
+  hasAnyRoleById: any,
 ) => {
   const baseItems = [{ label: t("nav.dashboard"), href: "/" }];
 
@@ -280,7 +281,7 @@ const getProjectNavItems = (
   // Development Manager specific items
   const developmentItems = [];
 
-  if (hasAnyRole(["Development Manager", "Administrator"])) {
+  if (hasAnyRoleById([RoleIds.DEVELOPMENT_MANAGER, RoleIds.ADMINISTRATOR])) {
     developmentItems.push({
       label: t("nav.developmentRequirements"),
       href: "/development-requirements",
@@ -292,7 +293,13 @@ const getProjectNavItems = (
   // Requirements specific items
   const requirementsItems = [];
 
-  if (hasAnyRole(["Administrator", "Analyst", "Analyst Department Manager"])) {
+  if (
+    hasAnyRoleById([
+      RoleIds.ADMINISTRATOR,
+      RoleIds.ANALYST,
+      RoleIds.ANALYST_DEPARTMENT_MANAGER,
+    ])
+  ) {
     requirementsItems.push({
       label: t("nav.requirements"),
       href: "/requirements",
@@ -300,7 +307,9 @@ const getProjectNavItems = (
   }
 
   // Add approval requests for users who can approve requirements
-  if (hasAnyRole(["Administrator", "Analyst Department Manager"])) {
+  if (
+    hasAnyRoleById([RoleIds.ADMINISTRATOR, RoleIds.ANALYST_DEPARTMENT_MANAGER])
+  ) {
     requirementsItems.push({
       label: t("requirements.approvalRequests"),
       href: "/approval-requests",
@@ -308,7 +317,15 @@ const getProjectNavItems = (
   }
 
   // Member tasks or Team Tasks for manager
-  if (hasAnyRole(["Analyst Department Manager", "Administrator"])) {
+  if (
+    hasAnyRoleById([
+      RoleIds.ANALYST_DEPARTMENT_MANAGER,
+      RoleIds.DEVELOPMENT_MANAGER,
+      RoleIds.QUALITY_CONTROL_MANAGER,
+      RoleIds.DESIGNER_MANAGER,
+      RoleIds.ADMINISTRATOR,
+    ])
+  ) {
     developmentItems.push({ label: t("nav.teamTasks"), href: "/tasks" });
   } else {
     developmentItems.push({ label: t("nav.tasks"), href: "/tasks" });
@@ -330,7 +347,7 @@ export const Navbar = () => {
     loading: userLoading,
     hasPermission,
     isAdmin,
-    hasAnyRole,
+    hasAnyRoleById,
   } = usePermissions();
   const { setUser } = useUserContext();
   const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } =
@@ -339,7 +356,7 @@ export const Navbar = () => {
     t,
     hasPermission,
     isAdmin,
-    hasAnyRole,
+    hasAnyRoleById,
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isScrolled, setIsScrolled] = useState(false);

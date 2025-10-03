@@ -2,17 +2,18 @@ import React, { useState } from "react";
 import { Button } from "@heroui/button";
 import { useNavigate } from "react-router-dom";
 
+import UrgentNotifications from "./UrgentNotifications";
+import RequirementOverview from "./RequirementOverview";
+import TeamWorkloadPerformance from "./TeamWorkloadPerformanceNew";
+import ProjectPipeline from "./ProjectPipeline";
+import Calendar from "./calendar";
+import PendingRequirements from "./PendingRequirements";
+import RequirementCompletionTracker from "./RequirementCompletionTracker";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { quickActionsService } from "@/services/api";
-import UrgentNotifications from "@/components/UrgentNotifications";
-import RequirementOverview from "@/components/RequirementOverview";
-import TeamWorkloadPerformance from "@/components/TeamWorkloadPerformanceNew";
-import ProjectPipeline from "@/components/ProjectPipeline";
-import Calendar from "@/components/calendar";
 import ModernQuickStats from "@/components/ModernQuickStats";
 import QuickActions from "@/components/QuickActions";
-import PendingRequirements from "@/components/PendingRequirements";
-import RequirementCompletionTracker from "@/components/RequirementCompletionTracker";
 
 export default function AnalystManagerDashboard() {
   const { t, language } = useLanguage();

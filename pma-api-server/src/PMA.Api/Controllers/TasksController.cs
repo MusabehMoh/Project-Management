@@ -368,4 +368,45 @@ public class TasksController : ApiBaseController
             return Error<TaskDto>("An error occurred while creating the AdHoc task", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Update task status
+    /// </summary>
+    [HttpPatch("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<TaskDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> UpdateTaskStatus(int id, [FromBody] UpdateTaskStatusDto updateStatusDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            // Get existing task
+            var existingTask = await _taskService.GetTaskByIdAsync(id);
+            if (existingTask == null)
+            {
+                return Error<object>("Task not found", status: 404);
+            }
+
+            // Update the task status
+            existingTask.StatusId = updateStatusDto.StatusId;
+            existingTask.UpdatedAt = DateTime.UtcNow;
+
+            // Update the task
+            var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
+
+            // Map back to DTO for response
+            var taskDto = _mappingService.MapToTaskDto(updatedTask);
+
+            return Success(taskDto, message: "Task status updated successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<TaskDto>("An error occurred while updating task status", ex.Message);
+        }
+    }
 }
