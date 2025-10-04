@@ -23,6 +23,12 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 // Translation dictionary
 const translations = {
   en: {
+    // Common error messages
+    "error.failedToFetch": "Failed to fetch data",
+    "error.dataLoading": "An error occurred while loading data",
+    "error.tryAgainLater": "Please try again later",
+    "error.retry": "Retry",
+    
     // Navbar
     "nav.dashboard": "Dashboard",
     "nav.projects": "Projects",
@@ -253,6 +259,7 @@ const translations = {
     "profile.personalInfo": "Personal Information",
     "profile.contactInfo": "Contact Information",
     "profile.joinedDate": "Joined Date",
+    "profile.userActions": "User Actions",
 
     // Dashboard
     "dashboard.title": "Project Management Dashboard",
@@ -1544,6 +1551,12 @@ const translations = {
     "tasks.title": "Tasks Management",
   },
   ar: {
+    // Common error messages
+    "error.failedToFetch": "فشل في جلب البيانات",
+    "error.dataLoading": "حدث خطأ أثناء تحميل البيانات",
+    "error.tryAgainLater": "يرجى المحاولة مرة أخرى لاحقًا",
+    "error.retry": "إعادة المحاولة",
+    
     // Navbar
     "nav.dashboard": "لوحة التحكم",
     "nav.projects": "المشاريع",
@@ -1774,6 +1787,7 @@ const translations = {
     "profile.personalInfo": "المعلومات الشخصية",
     "profile.contactInfo": "معلومات الاتصال",
     "profile.joinedDate": "تاريخ الانضمام",
+    "profile.userActions": "صلاحيات المستخدم",
 
     // Dashboard
     "dashboard.title": "لوحة تحكم إدارة المشاريع",

@@ -7,7 +7,7 @@ using PMA.Infrastructure.Data;
 namespace PMA.Api.Controllers;
 
 [ApiController]
-[Route("api/quick-actions")]
+[Route("api/quick-actions1")]
 public class QuickActionsController : ApiBaseController
 {
     private readonly ApplicationDbContext _context;

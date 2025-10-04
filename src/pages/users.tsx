@@ -1011,7 +1011,7 @@ export default function UsersPage() {
                                       }
                                       variant="flat"
                                     >
-                                      {action.name}
+                                      {action.description}
                                     </Chip>
                                   ))}
                                 </div>
@@ -1070,7 +1070,7 @@ export default function UsersPage() {
                                           );
                                         }}
                                       >
-                                        {action.name}
+                                        {action.description}
                                       </Chip>
                                     ))}
                                 </div>
@@ -1364,9 +1364,9 @@ export default function UsersPage() {
                                             </span>
                                           )}
                                         </div>
-                                        <div className="flex-1 min-w-0">
+                                        <div className={`flex-1 min-w-0 ${language === "ar" ? "text-right" : ""}`}>
                                           <p className="font-medium text-small text-foreground">
-                                            {action.name}
+                                            {action.description}
                                           </p>
                                           <p className="text-tiny text-default-500 mt-1">
                                             {action.description}

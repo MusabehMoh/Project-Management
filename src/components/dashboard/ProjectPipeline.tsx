@@ -10,6 +10,7 @@ import { Progress } from "@heroui/progress";
 import { useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import ErrorWithRetry from "@/components/ErrorWithRetry";
 import { usePipeline } from "@/hooks/usePipeline";
 
 // Helper function to format date
@@ -173,7 +174,7 @@ const PipelineStage: React.FC<{
 // Main pipeline component
 const ProjectPipeline: React.FC = () => {
   const { t } = useLanguage();
-  const { planning, inProgress, completed, loading, error } = usePipeline();
+  const { planning, inProgress, completed, loading, error, refetch } = usePipeline();
 
   if (loading) {
     return (
@@ -214,10 +215,10 @@ const ProjectPipeline: React.FC = () => {
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-danger mb-4">{error}</p>
-        <p className="text-sm text-default-500">{t("common.tryAgainLater")}</p>
-      </div>
+      <ErrorWithRetry
+        error={error}
+        onRetry={refetch}
+      />
     );
   }
 

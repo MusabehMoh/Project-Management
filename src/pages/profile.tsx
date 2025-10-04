@@ -11,12 +11,32 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function ProfilePage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, loading, error, refetch } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
   });
+
+  // Categorize user actions
+  const getUserActionsByCategory = () => {
+    if (!user?.actions) return {};
+
+    return user.actions.reduce(
+      (acc, action) => {
+        const category = action.category || "Uncategorized";
+
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+
+        acc[category].push(action);
+
+        return acc;
+      },
+      {} as { [category: string]: typeof user.actions },
+    );
+  };
 
   // Update formData when user data loads
   useEffect(() => {
@@ -125,10 +145,12 @@ export default function ProfilePage() {
                 </span>
               </div>
               <div>
-                <p className="text-small font-medium mb-2">
+                <p
+                  className={`text-small font-medium mb-2 ${language === "ar" ? "text-right" : ""}`}
+                >
                   {t("user.roles")}:
                 </p>
-                <div className="flex flex-wrap gap-1">
+                <div className={`flex flex-wrap gap-1`}>
                   {user.roles?.map((role) => (
                     <Chip
                       key={role.id}
@@ -218,6 +240,57 @@ export default function ProfilePage() {
           </CardBody>
         </Card>
       </div>
+
+      {/* User Actions Section */}
+      {user?.actions && user.actions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Shield size={20} />
+              <h3 className="text-lg font-semibold">
+                {t("profile.userActions")}
+              </h3>
+            </div>
+          </CardHeader>
+          <CardBody className="space-y-6">
+            {Object.entries(getUserActionsByCategory()).map(
+              ([category, actions]) => (
+                <div key={category} className="space-y-3">
+                  <h4
+                    className={`text-md font-medium text-default-700 border-b border-default-200 pb-2 ${language === "ar" ? "text-right" : ""}`}
+                  >
+                    {category}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {actions?.map((action) => (
+                      <Card
+                        key={action.id}
+                        className="bg-default-50 border border-default-200"
+                      >
+                        <CardBody className="p-3">
+                          <div
+                            className={`flex items-start gap-3 ${language === "ar" ? "text-right" : ""}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              {action.description && (
+                                <p
+                                  className={`text-sm text-default-700 line-clamp-2 ${language === "ar" ? "text-right" : ""}`}
+                                >
+                                  {action.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ),
+            )}
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 }

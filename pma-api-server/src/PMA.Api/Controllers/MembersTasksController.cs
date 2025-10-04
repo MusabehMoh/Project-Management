@@ -40,7 +40,7 @@
 //            if (!assigneeId.HasValue)
 //            {
 //                // Get current user's PRS ID - for testing with anonymous access, use a default user
-//                var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync(); 
+//                var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
 //                // Convert PRS ID to int (assuming PRS ID can be converted to int)
 //                if (int.TryParse(currentUserPrsId, out int currentUserId))
 //                {
@@ -79,13 +79,13 @@
 //                };
 //                return NotFound(notFoundResponse);
 //            }
-            
+
 //            var response = new ApiResponse<MemberTaskDto>
 //            {
 //                Success = true,
 //                Data = memberTask
 //            };
-            
+
 //            return Ok(response);
 //        }
 //        catch (Exception ex)
@@ -115,7 +115,7 @@
 //                Success = true,
 //                Data = memberTasks
 //            };
-            
+
 //            return Ok(response);
 //        }
 //        catch (Exception ex)
@@ -145,7 +145,7 @@
 //                Success = true,
 //                Data = memberTasks
 //            };
-            
+
 //            return Ok(response);
 //        }
 //        catch (Exception ex)
@@ -188,7 +188,7 @@
 //                Data = createdMemberTask,
 //                Message = "Member task created successfully"
 //            };
-            
+
 //            return CreatedAtAction(nameof(GetMemberTaskById), new { id = createdMemberTask.Id }, response);
 //        }
 //        catch (Exception ex)
@@ -245,14 +245,14 @@
 //                };
 //                return NotFound(notFoundResponse);
 //            }
-            
+
 //            var response = new ApiResponse<MemberTaskDto>
 //            {
 //                Success = true,
 //                Data = updatedMemberTask,
 //                Message = "Member task updated successfully"
 //            };
-            
+
 //            return Ok(response);
 //        }
 //        catch (Exception ex)
@@ -287,7 +287,7 @@
 //                };
 //                return NotFound(notFoundResponse);
 //            }
-            
+
 //            return NoContent();
 //        }
 //        catch (Exception ex)
