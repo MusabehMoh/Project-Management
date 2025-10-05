@@ -7,7 +7,7 @@ public class UpdateUserRequestDto
     public int PrsId { get; set; }
     public bool IsVisible { get; set; }
     // FullName, MilitaryNumber, GradeName will be populated from Employee
-    public string Department { get; set; } = string.Empty;
+    public int? DepartmentId { get; set; }
     public string? Email { get; set; } // Optional override
     public string? Phone { get; set; } // Optional override
     public List<int> RoleIds { get; set; } = new List<int>();

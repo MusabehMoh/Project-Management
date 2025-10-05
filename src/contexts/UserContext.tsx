@@ -121,7 +121,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    fetchUser();
+    //fetchUser();
   }, []);
 
   const value = useMemo<UserContextState>(

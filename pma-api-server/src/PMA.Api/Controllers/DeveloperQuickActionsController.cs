@@ -96,7 +96,7 @@ public class DeveloperQuickActionsController : ApiBaseController
                     id = u.Id,
                     fullName = u.FullName,
                     email = u.Email,
-                    department = u.Department != null ? u.Department : "",
+                    department = u.Department != null ? u.Department.Name : "",
                     currentTasksCount = _context.TaskAssignments
                         .Count(ta => ta.PrsId == u.Id &&
                               ta.Task != null &&

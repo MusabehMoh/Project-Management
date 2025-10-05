@@ -74,7 +74,7 @@ public class QuickActionsController : ApiBaseController
                     id = u.Id,
                     fullName = u.FullName,
                     email = u.Email,
-                    department = u.Department != null ? u.Department : "",
+                    department = u.Department != null ? u.Department.Name : "",
                     assignedProjectsCount = _context.ProjectAnalysts
                         .Count(pa => pa.AnalystId == u.Id && 
                               pa.Project != null &&
@@ -235,7 +235,7 @@ public class QuickActionsController : ApiBaseController
                     id = u.Id,
                     fullName = u.FullName,
                     email = u.Email,
-                    department = u.Department != null ? u.Department : "",
+                    department = u.Department != null ? u.Department.Name : "",
              
                     assignedProjectsCount = _context.ProjectAnalysts
                         .Count(pa => pa.AnalystId == u.Id && 
@@ -860,7 +860,7 @@ public class QuickActionsController : ApiBaseController
                     id = user.Id,
                     name = user.FullName,
                     role = userRole?.Role?.Name ?? "Unknown",
-                    department = user.Department ?? "",
+                    department = user.Department != null ? user.Department.Name : "",
                     currentTasks = currentTasks,
                     workload = currentTasks > 5 ? "high" : currentTasks > 2 ? "medium" : "low",
                     availability = currentTasks > 5 ? "busy" : "available"

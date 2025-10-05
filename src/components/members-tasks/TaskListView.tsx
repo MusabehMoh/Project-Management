@@ -14,6 +14,7 @@ import { CalendarDays, Clock } from "lucide-react";
 
 import { MemberTask } from "@/types/membersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDateOnly } from "@/utils/dateFormatter";
 
 interface TaskListViewProps {
   tasks: MemberTask[];
@@ -36,7 +37,7 @@ export const TaskListView = ({
   getPriorityColor,
   getPriorityLabel,
 }: TaskListViewProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const getProgressColor = (progress: number) => {
     if (progress >= 80) return "success";
@@ -47,7 +48,7 @@ export const TaskListView = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    return formatDateOnly(dateString, language);
   };
 
   const columns = [
@@ -109,25 +110,25 @@ export const TaskListView = ({
       case "department":
         return (
           <Chip size="sm" variant="flat">
-            {task.department.name}
+            {task.department?.name || ""}
           </Chip>
         );
 
       case "status":
         return (
-          <Chip color={getStatusColor(task.status.id)} size="sm" variant="flat">
-            {getStatusText(task.status.id)}
+          <Chip color={getStatusColor(task.statusId)} size="sm" variant="flat">
+            {getStatusText(task.statusId)}
           </Chip>
         );
 
       case "priority":
         return (
           <Chip
-            color={getPriorityColor(task.priority.id)}
+            color={getPriorityColor(task.priorityId)}
             size="sm"
             variant="flat"
           >
-            {getPriorityLabel(task.priority.id) || task.priority.label}
+            {getPriorityLabel(task.priorityId) || ""}
           </Chip>
         );
 

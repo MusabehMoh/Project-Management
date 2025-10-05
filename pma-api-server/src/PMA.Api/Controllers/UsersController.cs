@@ -3,11 +3,13 @@ using Microsoft.Extensions.Logging;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using PMA.Api.Attributes;
 
 namespace PMA.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/[controller]")] 
+//[RequireRole("Administrator", "AnalystManager", "DevelopmentManager", "QCManager", "DesignerManager")]
 public class UsersController : ApiBaseController
 {
     private readonly IUserService _userService;
@@ -26,6 +28,7 @@ public class UsersController : ApiBaseController
     /// </summary>
     [HttpGet]
     [ProducesResponseType(200)]
+    [RequirePermission("users.read")]
     public async Task<IActionResult> GetUsers(
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
@@ -55,6 +58,7 @@ public class UsersController : ApiBaseController
     [HttpGet("{id}")]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
+
     public async Task<IActionResult> GetUserById(int id)
     {
         try
@@ -107,6 +111,7 @@ public class UsersController : ApiBaseController
     [HttpPost]
     [ProducesResponseType(201)]
     [ProducesResponseType(400)]
+    [RequirePermission("users.create")]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestDto request)
     {
         try
@@ -179,6 +184,7 @@ public class UsersController : ApiBaseController
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
+    [RequirePermission("users.update")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequestDto request)
     {
         try
@@ -210,7 +216,7 @@ public class UsersController : ApiBaseController
                 FullName = employee.FullName, // From employee
                 MilitaryNumber = employee.MilitaryNumber, // From employee
                 GradeName = employee.GradeName, // From employee
-                Department = request.Department,
+                DepartmentId = request.DepartmentId,
                 //Email = request.Email, // Can be overridden in request
                 //Phone = request.Phone, // Can be overridden in request
                 UpdatedAt = DateTime.UtcNow
@@ -258,6 +264,7 @@ public class UsersController : ApiBaseController
     [HttpDelete("{id}")]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
+    [RequirePermission("users.delete")]
     public async Task<IActionResult> DeleteUser(int id)
     {
         try

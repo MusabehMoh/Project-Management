@@ -1,304 +1,361 @@
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.AspNetCore.Authorization;
-//using PMA.Core.Entities;
-//using PMA.Core.Interfaces;
-//using PMA.Core.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using PMA.Core.Entities;
+using PMA.Core.Interfaces;
+using PMA.Core.DTOs;
+using PMA.Core.DTOs.Tasks;
+using PMA.Core.Enums;
 
-//namespace PMA.Api.Controllers;
+namespace PMA.Api.Controllers;
 
-//[ApiController]
-//[Route("api/[controller]")]
-//public class MembersTasksController : ApiBaseController
-//{
-//    private readonly IMemberTaskService _memberTaskService;
-//    private readonly ICurrentUserProvider _currentUserProvider;
+[ApiController]
+[Route("api/[controller]")]
+public class MembersTasksController : ApiBaseController
+{
+    private readonly IMemberTaskService _memberTaskService;
+    private readonly ICurrentUserProvider _currentUserProvider;
+    private readonly IUserService _userService;
+    private readonly IDepartmentService _departmentService;
 
-//    public MembersTasksController(IMemberTaskService memberTaskService, ICurrentUserProvider currentUserProvider)
-//    {
-//        _memberTaskService = memberTaskService;
-//        _currentUserProvider = currentUserProvider;
-//    }
+    public MembersTasksController(IMemberTaskService memberTaskService, ICurrentUserProvider currentUserProvider, IUserService userService, IDepartmentService departmentService)
+    {
+        _memberTaskService = memberTaskService;
+        _currentUserProvider = currentUserProvider;
+        _userService = userService;
+        _departmentService = departmentService;
+    }
 
-//    /// <summary>
-//    /// Get all member tasks with pagination and filtering
-//    /// </summary>
-//    [HttpGet]
-//    [AllowAnonymous] // Temporary for testing - remove in production
-//    [ProducesResponseType(200)]
-//    public async Task<IActionResult> GetMemberTasks(
-//        [FromQuery] int page = 1,
-//        [FromQuery] int limit = 20,
-//        [FromQuery] int? projectId = null,
-//        [FromQuery] int? primaryAssigneeId = null,
-//        [FromQuery] int? status = null,
-//        [FromQuery] int? priority = null)
-//    {
-//        try
-//        {
-//            // If no primaryAssigneeId is provided, use current user's ID
-//            int? assigneeId = primaryAssigneeId;
-//            if (!assigneeId.HasValue)
-//            {
-//                // Get current user's PRS ID - for testing with anonymous access, use a default user
-//                var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
-//                // Convert PRS ID to int (assuming PRS ID can be converted to int)
-//                if (int.TryParse(currentUserPrsId, out int currentUserId))
-//                {
-//                    assigneeId = currentUserId;
-//                }
-//            }
+    private bool IsRoleCode(string? roleCode, RoleCodes targetRole)
+    {
+        if (string.IsNullOrEmpty(roleCode))
+            return false;
 
-//            var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(page, limit, projectId, assigneeId, status, priority);
-//            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
-//            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
-//            return Success(memberTasks, pagination);
-//        }
-//        catch (Exception ex)
-//        {
-//            return Error<IEnumerable<MemberTaskDto>>("An error occurred while retrieving member tasks", ex.Message);
-//        }
-//    }
+        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) && parsedRole == targetRole;
+    }
 
-//    /// <summary>
-//    /// Get member task by ID
-//    /// </summary>
-//    [HttpGet("{id}")]
-//    [ProducesResponseType(200)]
-//    [ProducesResponseType(404)]
-//    public async Task<IActionResult> GetMemberTaskById(int id)
-//    {
-//        try
-//        {
-//            var memberTask = await _memberTaskService.GetMemberTaskByIdAsync(id);
-//            if (memberTask == null)
-//            {
-//                var notFoundResponse = new ApiResponse<MemberTaskDto>
-//                {
-//                    Success = false,
-//                    Message = "Member task not found"
-//                };
-//                return NotFound(notFoundResponse);
-//            }
+    private bool IsManagerRole(string? roleCode)
+    {
+        if (string.IsNullOrEmpty(roleCode))
+            return false;
 
-//            var response = new ApiResponse<MemberTaskDto>
-//            {
-//                Success = true,
-//                Data = memberTask
-//            };
+        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) &&
+               (parsedRole == RoleCodes.AnalystManager ||
+                parsedRole == RoleCodes.DevelopmentManager ||
+                parsedRole == RoleCodes.QCManager ||
+                parsedRole == RoleCodes.DesignerManager);
+    }
 
-//            return Ok(response);
-//        }
-//        catch (Exception ex)
-//        {
-//            var errorResponse = new ApiResponse<MemberTaskDto>
-//            {
-//                Success = false,
-//                Message = "An error occurred while retrieving the member task",
-//                Error = ex.Message
-//            };
-//            return StatusCode(500, errorResponse);
-//        }
-//    }
+    /// <summary>
+    /// Get all member tasks with pagination and filtering
+    /// </summary>
+    [HttpGet]
+    [AllowAnonymous] // Temporary for testing - remove in production
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetMemberTasks(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        [FromQuery] int? projectId = null,
+        [FromQuery] int? primaryAssigneeId = null,
+        [FromQuery] int? status = null,
+        [FromQuery] int? priority = null)
+    {
+        try
+        {
+            // Get current user with roles
+            var currentUser = await _userService.GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                return Error<IEnumerable<TaskDto>>("Unable to retrieve current user information");
+            }
 
-//    /// <summary>
-//    /// Get member tasks by project
-//    /// </summary>
-//    [HttpGet("project/{projectId}")]
-//    [ProducesResponseType(200)]
-//    public async Task<IActionResult> GetMemberTasksByProject(int projectId)
-//    {
-//        try
-//        {
-//            var memberTasks = await _memberTaskService.GetMemberTasksByProjectAsync(projectId);
-//            var response = new ApiResponse<IEnumerable<MemberTaskDto>>
-//            {
-//                Success = true,
-//                Data = memberTasks
-//            };
+            // Check user roles for filtering logic
+            bool isAdministrator = currentUser.Roles?.Any(r => IsRoleCode(r.Code, RoleCodes.Administrator)) ?? false;
+            bool isManager = currentUser.Roles?.Any(r => IsManagerRole(r.Code)) ?? false;
 
-//            return Ok(response);
-//        }
-//        catch (Exception ex)
-//        {
-//            var errorResponse = new ApiResponse<IEnumerable<MemberTaskDto>>
-//            {
-//                Success = false,
-//                Message = "An error occurred while retrieving project member tasks",
-//                Error = ex.Message
-//            };
-//            return StatusCode(500, errorResponse);
-//        }
-//    }
+            int? assigneeId = primaryAssigneeId;
+            int? departmentId = null;
 
-//    /// <summary>
-//    /// Get member tasks by assignee
-//    /// </summary>
-//    [HttpGet("assignee/{assigneeId}")]
-//    [ProducesResponseType(200)]
-//    public async Task<IActionResult> GetMemberTasksByAssignee(int assigneeId)
-//    {
-//        try
-//        {
-//            var memberTasks = await _memberTaskService.GetMemberTasksByAssigneeAsync(assigneeId);
-//            var response = new ApiResponse<IEnumerable<MemberTaskDto>>
-//            {
-//                Success = true,
-//                Data = memberTasks
-//            };
+            if (isAdministrator)
+            {
+                // Administrator sees all tasks - no filtering needed
+                assigneeId = null;
+                departmentId = null;
+            }
+            else if (isManager)
+            {
+                // Managers see all tasks for their department
+                assigneeId = null;
+                // Get department ID from department name
+                if (currentUser?.Roles[0]?.Department?.Id!=null)
+                {
+                    departmentId = currentUser.Roles[0].Department?.Id;
+                }
+            }
+            else
+            {
+                // Regular users see only their assigned tasks
+                if (!assigneeId.HasValue)
+                {
+                    // Get current user's PRS ID
+                    var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
+                    if (int.TryParse(currentUserPrsId, out int currentUserId))
+                    {
+                        assigneeId = currentUserId;
+                    }
+                }
+            }
 
-//            return Ok(response);
-//        }
-//        catch (Exception ex)
-//        {
-//            var errorResponse = new ApiResponse<IEnumerable<MemberTaskDto>>
-//            {
-//                Success = false,
-//                Message = "An error occurred while retrieving assignee member tasks",
-//                Error = ex.Message
-//            };
-//            return StatusCode(500, errorResponse);
-//        }
-//    }
+            var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(page, limit, projectId, assigneeId, status, priority, departmentId);
+            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+            return Success(memberTasks, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<TaskDto>>("An error occurred while retrieving member tasks", ex.Message);
+        }
+    }
 
-//    /// <summary>
-//    /// Create a new member task
-//    /// </summary>
-//    [HttpPost]
-//    [ProducesResponseType(201)]
-//    [ProducesResponseType(400)]
-//    public async Task<IActionResult> CreateMemberTask([FromBody] MemberTaskDto memberTask)
-//    {
-//        try
-//        {
-//            if (!ModelState.IsValid)
-//            {
-//                var validationResponse = new ApiResponse<MemberTaskDto>
-//                {
-//                    Success = false,
-//                    Message = "Validation failed",
-//                    Error = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
-//                };
-//                return BadRequest(validationResponse);
-//            }
+    /// <summary>
+    /// Get member task by ID
+    /// </summary>
+    [HttpGet("{id}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetMemberTaskById(int id)
+    {
+        try
+        {
+            var memberTask = await _memberTaskService.GetMemberTaskByIdAsync(id);
+            if (memberTask == null)
+            {
+                var notFoundResponse = new ApiResponse<TaskDto>
+                {
+                    Success = false,
+                    Message = "Member task not found"
+                };
+                return NotFound(notFoundResponse);
+            }
 
-//            var createdMemberTask = await _memberTaskService.CreateMemberTaskAsync(memberTask);
-//            var response = new ApiResponse<MemberTaskDto>
-//            {
-//                Success = true,
-//                Data = createdMemberTask,
-//                Message = "Member task created successfully"
-//            };
+            var response = new ApiResponse<TaskDto>
+            {
+                Success = true,
+                Data = memberTask
+            };
 
-//            return CreatedAtAction(nameof(GetMemberTaskById), new { id = createdMemberTask.Id }, response);
-//        }
-//        catch (Exception ex)
-//        {
-//            var errorResponse = new ApiResponse<MemberTaskDto>
-//            {
-//                Success = false,
-//                Message = "An error occurred while creating the member task",
-//                Error = ex.Message
-//            };
-//            return StatusCode(500, errorResponse);
-//        }
-//    }
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<TaskDto>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving the member task",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
 
-//    /// <summary>
-//    /// Update an existing member task
-//    /// </summary>
-//    [HttpPut("{id}")]
-//    [ProducesResponseType(200)]
-//    [ProducesResponseType(400)]
-//    [ProducesResponseType(404)]
-//    public async Task<IActionResult> UpdateMemberTask(int id, [FromBody] MemberTaskDto memberTask)
-//    {
-//        try
-//        {
-//            if (!ModelState.IsValid)
-//            {
-//                var validationResponse = new ApiResponse<MemberTaskDto>
-//                {
-//                    Success = false,
-//                    Message = "Validation failed",
-//                    Error = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
-//                };
-//                return BadRequest(validationResponse);
-//            }
+    /// <summary>
+    /// Get member tasks by project
+    /// </summary>
+    [HttpGet("project/{projectId}")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetMemberTasksByProject(int projectId)
+    {
+        try
+        {
+            var memberTasks = await _memberTaskService.GetMemberTasksByProjectAsync(projectId);
+            var response = new ApiResponse<IEnumerable<TaskDto>>
+            {
+                Success = true,
+                Data = memberTasks
+            };
 
-//            if (id != int.Parse(memberTask.Id))
-//            {
-//                var mismatchResponse = new ApiResponse<MemberTaskDto>
-//                {
-//                    Success = false,
-//                    Message = "ID mismatch"
-//                };
-//                return BadRequest(mismatchResponse);
-//            }
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<IEnumerable<TaskDto>>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving project member tasks",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
 
-//            var updatedMemberTask = await _memberTaskService.UpdateMemberTaskAsync(memberTask);
-//            if (updatedMemberTask == null)
-//            {
-//                var notFoundResponse = new ApiResponse<MemberTaskDto>
-//                {
-//                    Success = false,
-//                    Message = "Member task not found"
-//                };
-//                return NotFound(notFoundResponse);
-//            }
+    /// <summary>
+    /// Get member tasks by assignee
+    /// </summary>
+    [HttpGet("assignee/{assigneeId}")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetMemberTasksByAssignee(int assigneeId)
+    {
+        try
+        {
+            var memberTasks = await _memberTaskService.GetMemberTasksByAssigneeAsync(assigneeId);
+            var response = new ApiResponse<IEnumerable<TaskDto>>
+            {
+                Success = true,
+                Data = memberTasks
+            };
 
-//            var response = new ApiResponse<MemberTaskDto>
-//            {
-//                Success = true,
-//                Data = updatedMemberTask,
-//                Message = "Member task updated successfully"
-//            };
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<IEnumerable<TaskDto>>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving assignee member tasks",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
 
-//            return Ok(response);
-//        }
-//        catch (Exception ex)
-//        {
-//            var errorResponse = new ApiResponse<MemberTaskDto>
-//            {
-//                Success = false,
-//                Message = "An error occurred while updating the member task",
-//                Error = ex.Message
-//            };
-//            return StatusCode(500, errorResponse);
-//        }
-//    }
+    /// <summary>
+    /// Create a new member task
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(201)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> CreateMemberTask([FromBody] TaskDto memberTask)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                var validationResponse = new ApiResponse<TaskDto>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Error = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
+                };
+                return BadRequest(validationResponse);
+            }
 
-//    /// <summary>
-//    /// Delete a member task
-//    /// </summary>
-//    [HttpDelete("{id}")]
-//    [ProducesResponseType(204)]
-//    [ProducesResponseType(404)]
-//    public async Task<IActionResult> DeleteMemberTask(int id)
-//    {
-//        try
-//        {
-//            var result = await _memberTaskService.DeleteMemberTaskAsync(id);
-//            if (!result)
-//            {
-//                var notFoundResponse = new ApiResponse<object>
-//                {
-//                    Success = false,
-//                    Message = "Member task not found"
-//                };
-//                return NotFound(notFoundResponse);
-//            }
+            var createdMemberTask = await _memberTaskService.CreateMemberTaskAsync(memberTask);
+            var response = new ApiResponse<TaskDto>
+            {
+                Success = true,
+                Data = createdMemberTask,
+                Message = "Member task created successfully"
+            };
 
-//            return NoContent();
-//        }
-//        catch (Exception ex)
-//        {
-//            var errorResponse = new ApiResponse<object>
-//            {
-//                Success = false,
-//                Message = "An error occurred while deleting the member task",
-//                Error = ex.Message
-//            };
-//            return StatusCode(500, errorResponse);
-//        }
-//    }
-//}
+            return CreatedAtAction(nameof(GetMemberTaskById), new { id = createdMemberTask.Id }, response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<TaskDto>
+            {
+                Success = false,
+                Message = "An error occurred while creating the member task",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Update an existing member task
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateMemberTask(int id, [FromBody] TaskDto memberTask)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                var validationResponse = new ApiResponse<TaskDto>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Error = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
+                };
+                return BadRequest(validationResponse);
+            }
+
+            if (id != memberTask.Id)
+            {
+                var mismatchResponse = new ApiResponse<TaskDto>
+                {
+                    Success = false,
+                    Message = "ID mismatch"
+                };
+                return BadRequest(mismatchResponse);
+            }
+
+            var updatedMemberTask = await _memberTaskService.UpdateMemberTaskAsync(memberTask);
+            if (updatedMemberTask == null)
+            {
+                var notFoundResponse = new ApiResponse<TaskDto>
+                {
+                    Success = false,
+                    Message = "Member task not found"
+                };
+                return NotFound(notFoundResponse);
+            }
+
+            var response = new ApiResponse<TaskDto>
+            {
+                Success = true,
+                Data = updatedMemberTask,
+                Message = "Member task updated successfully"
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<TaskDto>
+            {
+                Success = false,
+                Message = "An error occurred while updating the member task",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Delete a member task
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeleteMemberTask(int id)
+    {
+        try
+        {
+            var result = await _memberTaskService.DeleteMemberTaskAsync(id);
+            if (!result)
+            {
+                var notFoundResponse = new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Member task not found"
+                };
+                return NotFound(notFoundResponse);
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<object>
+            {
+                Success = false,
+                Message = "An error occurred while deleting the member task",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
+}

@@ -146,8 +146,15 @@ public class UserService : IUserService
             {
                 Id = ur.Role?.Id ?? 0,
                 Name = ur.Role?.Name ?? string.Empty,
+                Code = ur.Role?.Code ?? string.Empty,
                 IsActive = ur.Role?.IsActive ?? false,
                 RoleOrder = ur.Role?.RoleOrder ?? 0,
+                Department=ur.Role?.Department != null ? new DepartmentDto
+                {
+                    Id = ur.Role.Department.Id,
+                    Name = ur.Role.Department.Name,
+                    IsActive = ur.Role.Department.IsActive
+                } : null,
                 Actions = ur.Role?.RoleActions?.Select(ra => new ActionDto
                 {
                     Id = ra.Permission?.Id ?? 0,
@@ -187,7 +194,7 @@ public class UserService : IUserService
             UserName = user.UserName,
             PrsId = user.PrsId,
             IsVisible = user.IsVisible,
-            Department = user.Department,
+            DepartmentId = user.DepartmentId,
             Email = user.Email,
             Phone = user.Phone,
             CreatedAt = user.CreatedAt,

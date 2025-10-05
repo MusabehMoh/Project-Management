@@ -9,7 +9,7 @@ public class UserDto
     public string FullName { get; set; } = string.Empty;
     public string MilitaryNumber { get; set; } = string.Empty;
     public string GradeName { get; set; } = string.Empty;
-    public string? Department { get; set; }
+    public int? DepartmentId{ get; set; }
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public DateTime CreatedAt { get; set; }

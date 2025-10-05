@@ -457,7 +457,7 @@ public class RequirementCompletionController : ApiBaseController
                 {
                     analystId = u.Id,
                     analystName = u.FullName,
-                    department = u.Department != null ? u.Department : "N/A",
+                    department = u.Department != null ? u.Department.Name : "",
                     
                     totalRequirements = _context.ProjectRequirements
                         .Count(pr => _context.ProjectAnalysts

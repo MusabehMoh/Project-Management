@@ -30,11 +30,7 @@ public class User
     [Required]
     [MaxLength(50)]
     public string GradeName { get; set; } = string.Empty;
-
-   
-    [MaxLength(100)]
-    public string Department { get; set; } = string.Empty;
-
+     
    
     [MaxLength(100)]
     public string Email { get; set; } = string.Empty;
@@ -43,6 +39,8 @@ public class User
     [MaxLength(50)]
     public string Phone { get; set; } = string.Empty;
 
+ 
+   
     [Required]
     public DateTime CreatedAt { get; set; }
 
@@ -52,7 +50,10 @@ public class User
     // Navigation properties
     [ForeignKey("PrsId")]
     public Employee? Employee { get; set; }
+    public int? DepartmentId { get; set; }
 
+    [ForeignKey("DepartmentId")]
+    public Department? Department { get; set; }
     public ICollection<UserRole>? UserRoles { get; set; }
     public ICollection<UserAction>? UserActions { get; set; } 
 }

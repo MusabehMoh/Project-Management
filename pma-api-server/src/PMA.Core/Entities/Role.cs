@@ -11,7 +11,10 @@ public class Role
     [Required]
     [MaxLength(50)]
     public string Name { get; set; } = string.Empty;
+    [MaxLength(50)]
+    public string Code { get; set; } = string.Empty;
 
+    [MaxLength(50)] 
     public string? Description { get; set; }
 
     [Required]
@@ -26,7 +29,11 @@ public class Role
     [Required]
     public DateTime UpdatedAt { get; set; }
 
+    public int? DepartmentId { get; set; }
     // Navigation properties
+
+    [ForeignKey("DepartmentId")]
+    public Department? Department { get; set; }
     public ICollection<UserRole>? UserRoles { get; set; }
     public ICollection<RoleAction>? RoleActions { get; set; }
 }
