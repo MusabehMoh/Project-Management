@@ -256,6 +256,20 @@ export class MembersTasksService {
     );
   }
 
+  /**
+   * Update task status
+   * @param taskId - The task ID
+   * @param newStatus - The new status string
+   */
+  async updateTaskStatus(
+    taskId: number,
+    newStatus: string,
+  ): Promise<ApiResponse<void>> {
+    return apiClient.put<void>(`${this.baseUrl}/${taskId}/status`, {
+      status: newStatus,
+    });
+  }
+
   /* status drop down values and header data */
   async getCurrentTasksConfig(): Promise<ApiResponse<TaskConfigData>> {
     // Call real endpoint
@@ -302,6 +316,49 @@ export class MembersTasksService {
     };
 
     return apiClient.post<void>(`/tasks/adhoc`, taskData);
+  }
+
+  /**
+   * Get the next upcoming deadline for the current user
+   */
+  async getNextDeadline(): Promise<ApiResponse<MemberTask | null>> {
+    try {
+      const res = await apiClient.get<MemberTask | null>(
+        `${this.baseUrl}/next-deadline`,
+      );
+
+      // Handle standard ApiResponse format
+      if (res && typeof res.success === "boolean") {
+        return res as ApiResponse<MemberTask | null>;
+      }
+
+      // If response is the raw task object
+      const maybeTask = res as unknown as MemberTask;
+
+      if (maybeTask && maybeTask.id) {
+        return {
+          success: true,
+          data: maybeTask,
+          message: "ok",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // No upcoming deadline
+      return {
+        success: true,
+        data: null,
+        message: "No upcoming deadlines found",
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        message: "Failed to fetch next deadline",
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 }
 
