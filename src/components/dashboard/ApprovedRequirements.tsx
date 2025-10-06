@@ -7,9 +7,10 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, Clock, User, AlertCircle } from "lucide-react";
+import { CheckCircle, Clock, User } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import ErrorWithRetry from "@/components/ErrorWithRetry";
 import { useApprovedRequirements } from "@/hooks/useApprovedRequirements";
 
 interface ApprovedRequirementsProps {
@@ -135,15 +136,11 @@ export default function ApprovedRequirements({
         dir={direction}
         shadow="sm"
       >
-        <CardBody className="flex items-center justify-center min-h-[200px] text-center">
-          <AlertCircle className="w-8 h-8 text-danger mb-2" />
-          <p className="font-medium text-foreground mb-2">
-            {t("common.error")}
-          </p>
-          <p className="text-sm text-default-500 mb-4">{error}</p>
-          <Button size="sm" variant="flat" onPress={refresh}>
-            {t("common.refresh")}
-          </Button>
+        <CardBody className="min-h-[200px]">
+          <ErrorWithRetry
+            error={error}
+            onRetry={refresh}
+          />
         </CardBody>
       </Card>
     );

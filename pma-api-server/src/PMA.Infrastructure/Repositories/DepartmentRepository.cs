@@ -35,6 +35,12 @@ public class DepartmentRepository : Repository<Department>, IDepartmentRepositor
 
         return (departmentsWithCounts.Select(x => (x.Department, x.MemberCount)), totalCount);
     }
+
+    public async Task<Department?> GetDepartmentByNameAsync(string name)
+    {
+        return await _context.Departments
+            .FirstOrDefaultAsync(d => d.Name.ToLower() == name.ToLower() && d.IsActive);
+    }
 }
 
 public class TeamRepository : Repository<Team>, ITeamRepository

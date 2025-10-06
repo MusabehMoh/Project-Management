@@ -171,7 +171,7 @@ const RequirementCard = ({
                 color="default"
                 size="sm"
                 startContent={
-                  requirement.task ? (
+                  requirement.requirementTask ? (
                     <Edit className="w-3 h-3 flex-shrink-0" />
                   ) : (
                     <Plus className="w-3 h-3 flex-shrink-0" />
@@ -180,12 +180,14 @@ const RequirementCard = ({
                 variant="faded"
                 onPress={() => onCreateTask(requirement)}
               >
-                {requirement.task ? t("tasks.viewTask") : t("tasks.createTask")}
+                {requirement.requirementTask
+                  ? t("tasks.viewTask")
+                  : t("tasks.createTask")}
               </Button>
             )}
 
           {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
-          {!requirement.task &&
+          {!requirement.requirementTask &&
             hasPermission({
               actions: ["requirements.timelines.create"],
             }) && (
@@ -514,18 +516,18 @@ export default function DevelopmentRequirementsPage() {
     setTaskDescription(requirement.description || "");
 
     // If task exists, pre-populate the form
-    if (requirement.task) {
+    if (requirement.requirementTask) {
       // Fetch real developer details instead of creating mock objects
-      const existingDev = requirement.task.developerId
-        ? await fetchMemberById(requirement.task.developerId)
+      const existingDev = requirement.requirementTask.developerId
+        ? await fetchMemberById(requirement.requirementTask.developerId)
         : null;
 
-      const existingQC = requirement.task.qcId
-        ? await fetchMemberById(requirement.task.qcId)
+      const existingQC = requirement.requirementTask.qcId
+        ? await fetchMemberById(requirement.requirementTask.qcId)
         : null;
 
-      const existingDesigner = requirement.task.designerId
-        ? await fetchMemberById(requirement.task.designerId)
+      const existingDesigner = requirement.requirementTask.designerId
+        ? await fetchMemberById(requirement.requirementTask.designerId)
         : null;
 
       setSelectedDeveloper(existingDev);
@@ -534,38 +536,46 @@ export default function DevelopmentRequirementsPage() {
 
       // Pre-populate task-specific fields
       setTaskDescription(
-        requirement.task.description || requirement.description || "",
+        requirement.requirementTask.description ||
+          requirement.description ||
+          "",
       );
 
       // Parse dates from existing task when available
       setDeveloperStartDate(
-        requirement.task.developerStartDate
-          ? parseDate(requirement.task.developerStartDate.split("T")[0])
+        requirement.requirementTask.developerStartDate
+          ? parseDate(
+              requirement.requirementTask.developerStartDate.split("T")[0],
+            )
           : null,
       );
       setDeveloperEndDate(
-        requirement.task.developerEndDate
-          ? parseDate(requirement.task.developerEndDate.split("T")[0])
+        requirement.requirementTask.developerEndDate
+          ? parseDate(
+              requirement.requirementTask.developerEndDate.split("T")[0],
+            )
           : null,
       );
       setQcStartDate(
-        requirement.task.qcStartDate
-          ? parseDate(requirement.task.qcStartDate.split("T")[0])
+        requirement.requirementTask.qcStartDate
+          ? parseDate(requirement.requirementTask.qcStartDate.split("T")[0])
           : null,
       );
       setQcEndDate(
-        requirement.task.qcEndDate
-          ? parseDate(requirement.task.qcEndDate.split("T")[0])
+        requirement.requirementTask.qcEndDate
+          ? parseDate(requirement.requirementTask.qcEndDate.split("T")[0])
           : null,
       );
       setDesignerStartDate(
-        requirement.task.designerStartDate
-          ? parseDate(requirement.task.designerStartDate.split("T")[0])
+        requirement.requirementTask.designerStartDate
+          ? parseDate(
+              requirement.requirementTask.designerStartDate.split("T")[0],
+            )
           : null,
       );
       setDesignerEndDate(
-        requirement.task.designerEndDate
-          ? parseDate(requirement.task.designerEndDate.split("T")[0])
+        requirement.requirementTask.designerEndDate
+          ? parseDate(requirement.requirementTask.designerEndDate.split("T")[0])
           : null,
       );
 
@@ -669,7 +679,7 @@ export default function DevelopmentRequirementsPage() {
         designerEndDate: designerEndDate?.toString(),
       };
 
-      const isUpdate = Boolean(selectedRequirement.task);
+      const isUpdate = Boolean(selectedRequirement.requirementTask);
 
       // Call API to create/update task
       await projectRequirementsService.createRequirementTask(
@@ -704,7 +714,7 @@ export default function DevelopmentRequirementsPage() {
       refreshData();
     } catch (error) {
       // Show error toast based on operation type
-      const isUpdate = Boolean(selectedRequirement.task);
+      const isUpdate = Boolean(selectedRequirement.requirementTask);
 
       if (isUpdate) {
         toasts.taskUpdateError();
@@ -1109,7 +1119,7 @@ export default function DevelopmentRequirementsPage() {
               <>
                 <ModalHeader className="flex flex-col gap-1 flex-shrink-0">
                   <h2 className="text-xl font-semibold">
-                    {selectedRequirement?.task
+                    {selectedRequirement?.requirementTask
                       ? t("tasks.editTask")
                       : t("tasks.createTask")}
                   </h2>
@@ -1531,7 +1541,7 @@ export default function DevelopmentRequirementsPage() {
                       {t("common.cancel")}
                     </Button>
                     {hasPermission({
-                      actions: selectedRequirement?.task
+                      actions: selectedRequirement?.requirementTask
                         ? ["requirements.tasks.update"]
                         : ["requirements.tasks.create"],
                     }) && (
@@ -1543,7 +1553,7 @@ export default function DevelopmentRequirementsPage() {
                         isLoading={isCreatingTask}
                         onPress={handleTaskSubmit}
                       >
-                        {selectedRequirement?.task
+                        {selectedRequirement?.requirementTask
                           ? t("common.update")
                           : t("common.create")}
                       </Button>

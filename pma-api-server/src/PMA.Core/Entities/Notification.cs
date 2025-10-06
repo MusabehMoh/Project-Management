@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using PMA.Core.Enums;
 
 namespace PMA.Core.Entities;
 
@@ -34,22 +35,6 @@ public class Notification
     // Navigation property
     [ForeignKey("UserId")]
     public User? User { get; set; }
-}
-
-public enum NotificationType
-{
-    Info = 1,
-    Warning = 2,
-    Error = 3,
-    Success = 4
-}
-
-public enum NotificationPriority
-{
-    Low = 1,
-    Medium = 2,
-    High = 3,
-    Critical = 4
 }
 
 

@@ -18,6 +18,7 @@ import { Chip } from "@heroui/chip";
 import { Filter, X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import ErrorWithRetry from "@/components/ErrorWithRetry";
 import {
   teamWorkloadService,
   type TeamMemberMetrics,
@@ -367,7 +368,24 @@ const TeamWorkloadPerformance: React.FC = () => {
               </div>
             </div>
           ) : error ? (
-            <div className="text-center text-danger py-4">{error}</div>
+            <ErrorWithRetry 
+              error={error}
+              onRetry={() => {
+                setLoading(true);
+                setError(null);
+                teamWorkloadService.getTeamWorkloadPerformance().then(response => {
+                  if (response.success) {
+                    setTeamData(response.data);
+                  } else {
+                    setError(t("error.failedToFetch"));
+                  }
+                }).catch(() => {
+                  setError(t("error.failedToFetch"));
+                }).finally(() => {
+                  setLoading(false);
+                });
+              }}
+            />
           ) : filteredTeamData.length === 0 ? (
             <div className="text-center text-default-500 py-4">
               {hasActiveFilters ? t("team.noFilterResults") : t("table.noData")}

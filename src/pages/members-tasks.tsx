@@ -341,8 +341,8 @@ export default function MembersTasksPage() {
     if (isDrawerOpen) setIsDrawerOpen(false);
     setSelectedTask(task);
     setSelectedStatus({
-      id: selectedTask?.status.id ?? 2,
-      label: selectedTask?.status.label ?? "In Progress",
+      id: task.statusId,
+      label: getStatusText(task.statusId),
     });
     setIsChangeStatusModalOpend(true);
     setModalError(false);
@@ -929,7 +929,7 @@ export default function MembersTasksPage() {
             className={`min-h-[400px] transition-all duration-200 hover:shadow-lg ${
               selectedTask?.isOverdue
                 ? "border-l-4 border-l-danger-500 bg-white dark:bg-danger-900/20"
-                : `border-l-4 border-l-${mapColor(selectedTask?.status.color)}-500 bg-white dark:bg-${mapColor(selectedTask?.status.color)}-900/20`
+                : `border-l-4 border-l-${getStatusColor(selectedTask?.statusId || 1)}-500 bg-white dark:bg-${getStatusColor(selectedTask?.statusId || 1)}-900/20`
             }`}
           >
             <DrawerHeader className="flex flex-col gap-1">
@@ -958,12 +958,12 @@ export default function MembersTasksPage() {
                     <div className="flex flex-col items-start gap-1">
                       <h4 className="text-md">{t("priority")}</h4>
                       <Chip
-                        color={getPriorityColor(selectedTask.priority.id)}
+                        color={getPriorityColor(selectedTask.priorityId)}
                         size="sm"
                         variant="solid"
                       >
-                        {getPriorityLabel(selectedTask.priority.id) ||
-                          selectedTask.priority.label}
+                        {getPriorityLabel(selectedTask.priorityId) ||
+                          "Unknown Priority"}
                       </Chip>
                     </div>
 
@@ -971,11 +971,11 @@ export default function MembersTasksPage() {
                     <div className="flex flex-col items-start gap-1">
                       <h4 className="text-md">{t("status")}</h4>
                       <Chip
-                        color={getStatusColor(selectedTask.status.id)}
+                        color={getStatusColor(selectedTask.statusId)}
                         size="sm"
                         variant="flat"
                       >
-                        {getStatusText(selectedTask.status.id)}
+                        {getStatusText(selectedTask.statusId)}
                       </Chip>
                     </div>
                   </div>

@@ -30,7 +30,7 @@ public class UserRepository : Repository<User>, IUserRepository
 
         if (departmentId.HasValue)
         {
-            query = query.Where(u => u.Department == departmentId.Value.ToString());
+            query = query.Where(u => u.DepartmentId == departmentId);
         }
 
         var totalCount = await query.CountAsync();
@@ -47,7 +47,7 @@ public class UserRepository : Repository<User>, IUserRepository
         try
         {
             return await _context.Users
-           .Include("UserRoles.Role")
+           .Include("UserRoles.Role.Department")
            .Include("UserActions.Permission")
            .Include(u => u.Employee)
            .FirstOrDefaultAsync(u => u.UserName == userName.ToLower());
@@ -79,7 +79,7 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId)
     {
         return await _context.Users
-            .Where(u => u.Department == departmentId.ToString())
+            .Where(u => u.DepartmentId == departmentId)
             .ToListAsync();
     }
 }

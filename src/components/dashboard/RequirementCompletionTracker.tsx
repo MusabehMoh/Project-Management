@@ -13,17 +13,12 @@ import {
   TableCell,
 } from "@heroui/table";
 import { Tooltip } from "@heroui/tooltip";
-import {
-  RefreshCw,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Calendar,
-} from "lucide-react";
+import { RefreshCw, Clock, CheckCircle, Calendar, AlertCircle } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRequirementCompletion } from "@/hooks/useRequirementCompletion";
 import { GlobalPagination } from "@/components/GlobalPagination";
+import ErrorWithRetry from "@/components/ErrorWithRetry";
 
 interface RequirementCompletionTrackerProps {
   className?: string;
@@ -163,17 +158,11 @@ export default function RequirementCompletionTracker({
   if (error) {
     return (
       <Card className={`${className} border-default-200`} shadow="md">
-        <CardBody className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-danger mx-auto mb-4" />
-            <p className="font-medium text-foreground mb-2">
-              {t("completion.error")}
-            </p>
-            <p className="text-sm text-default-500 mb-4">{error}</p>
-            <Button size="sm" variant="flat" onPress={refresh}>
-              {t("completion.retry")}
-            </Button>
-          </div>
+        <CardBody className="min-h-[200px]">
+          <ErrorWithRetry
+            error={error}
+            onRetry={refresh}
+          />
         </CardBody>
       </Card>
     );

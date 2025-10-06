@@ -619,8 +619,16 @@ export default function UsersPage() {
                 ))}
               </div>
             ) : error ? (
-              <div className="flex justify-center items-center h-40 text-danger">
-                {error}
+              <div className="flex flex-col justify-center items-center h-40 text-center space-y-4">
+                <div className="text-danger text-lg">{error}</div>
+                <Button
+                  color="primary"
+                  startContent={<SearchIcon size={16} />}
+                  variant="flat"
+                  onPress={() => loadUsers(pagination.page, pagination.limit)}
+                >
+                  {t("error.retry")}
+                </Button>
               </div>
             ) : users.length === 0 ? (
               <div className="flex justify-center items-center py-12">
@@ -1011,7 +1019,7 @@ export default function UsersPage() {
                                       }
                                       variant="flat"
                                     >
-                                      {action.name}
+                                      {action.description}
                                     </Chip>
                                   ))}
                                 </div>
@@ -1070,7 +1078,7 @@ export default function UsersPage() {
                                           );
                                         }}
                                       >
-                                        {action.name}
+                                        {action.description}
                                       </Chip>
                                     ))}
                                 </div>
@@ -1364,9 +1372,11 @@ export default function UsersPage() {
                                             </span>
                                           )}
                                         </div>
-                                        <div className="flex-1 min-w-0">
+                                        <div
+                                          className={`flex-1 min-w-0 ${language === "ar" ? "text-right" : ""}`}
+                                        >
                                           <p className="font-medium text-small text-foreground">
-                                            {action.name}
+                                            {action.description}
                                           </p>
                                           <p className="text-tiny text-default-500 mt-1">
                                             {action.description}

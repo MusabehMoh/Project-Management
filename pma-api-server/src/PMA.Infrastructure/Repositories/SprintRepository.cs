@@ -1,5 +1,6 @@
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
+using PMA.Core.Enums;
 using PMA.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Task = System.Threading.Tasks.Task;

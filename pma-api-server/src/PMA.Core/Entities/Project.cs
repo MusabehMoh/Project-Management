@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using PMA.Core.Enums;
 
 namespace PMA.Core.Entities;
 
@@ -80,24 +81,6 @@ public class Project
     public ICollection<Task>? Tasks { get; set; }
     public ICollection<ProjectRequirement>? ProjectRequirements { get; set; }
     public ICollection<Timeline>? Timelines { get; set; }
-}
-
-public enum ProjectStatus
-{
-    New = 1,
-    UnderStudy = 2,
-    UnderDevelopment = 3,
-    UnderTesting = 4,
-    Production = 5,
-    Delayed = 6
-}
-
-public enum Priority
-{
-    Low,
-    Medium,
-    High,
-    Critical
 }
 
 

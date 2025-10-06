@@ -1,7 +1,8 @@
 using PMA.Core.DTOs;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
-using TaskStatus = PMA.Core.Entities.TaskStatus;
+using PMA.Core.Enums;
+using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 
 namespace PMA.Core.Services;
 
@@ -329,7 +330,7 @@ public static class TaskEntityFactory
             SprintId=null,
             StartDate = startDate ?? defaultStartDate,
             EndDate = endDate ?? defaultEndDate,
-            StatusId = TaskStatus.ToDo,
+            StatusId = TaskStatusEnum.ToDo,
             PriorityId = Priority.Medium,
             TypeId = TaskTypes.ChangeRequest,
             CreatedAt = DateTime.UtcNow,

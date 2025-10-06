@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
+using PMA.Core.Enums;
 using PMA.Infrastructure.Data;
 
 namespace PMA.Api.Controllers;
 
 [ApiController]
-[Route("api/quick-actions")]
+[Route("api/quick-actions1")]
 public class QuickActionsController : ApiBaseController
 {
     private readonly ApplicationDbContext _context;
@@ -28,10 +29,10 @@ public class QuickActionsController : ApiBaseController
             // Active statuses: New, UnderStudy, UnderDevelopment, UnderTesting
             var unassignedProjects = await _context.Projects
                 .Where(p => !_context.ProjectAnalysts.Any(pa => pa.ProjectId == p.Id) &&
-                           (p.Status == Core.Entities.ProjectStatus.New ||
-                            p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                            p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                            p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                           (p.Status == ProjectStatus.New ||
+                            p.Status == ProjectStatus.UnderStudy ||
+                            p.Status == ProjectStatus.UnderDevelopment ||
+                            p.Status == ProjectStatus.UnderTesting))
                 .Select(p => new
                 {
                     id = p.Id,
@@ -47,10 +48,10 @@ public class QuickActionsController : ApiBaseController
             // Get projects without requirements (active projects with no requirements)
             var projectsWithoutRequirements = await _context.Projects
                 .Where(p => !_context.ProjectRequirements.Any(pr => pr.ProjectId == p.Id) &&
-                           (p.Status == Core.Entities.ProjectStatus.New ||
-                            p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                            p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                            p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                           (p.Status == ProjectStatus.New ||
+                            p.Status == ProjectStatus.UnderStudy ||
+                            p.Status == ProjectStatus.UnderDevelopment ||
+                            p.Status == ProjectStatus.UnderTesting))
                 .Select(p => new
                 {
                     id = p.Id,
@@ -73,14 +74,14 @@ public class QuickActionsController : ApiBaseController
                     id = u.Id,
                     fullName = u.FullName,
                     email = u.Email,
-                    department = u.Department != null ? u.Department : "",
+                    department = u.Department != null ? u.Department.Name : "",
                     assignedProjectsCount = _context.ProjectAnalysts
                         .Count(pa => pa.AnalystId == u.Id && 
                               pa.Project != null &&
-                              (pa.Project.Status == Core.Entities.ProjectStatus.New ||
-                               pa.Project.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                               pa.Project.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                               pa.Project.Status == Core.Entities.ProjectStatus.UnderTesting))
+                              (pa.Project.Status == ProjectStatus.New ||
+                               pa.Project.Status == ProjectStatus.UnderStudy ||
+                               pa.Project.Status == ProjectStatus.UnderDevelopment ||
+                               pa.Project.Status == ProjectStatus.UnderTesting))
                 })
                 .ToListAsync();
 
@@ -95,7 +96,7 @@ public class QuickActionsController : ApiBaseController
                     .CountAsync(),
                 overdueProjects = await _context.Projects
                     .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
-                               p.Status != Core.Entities.ProjectStatus.Production)
+                               p.Status != ProjectStatus.Production)
                     .CountAsync()
             };
 
@@ -133,10 +134,10 @@ public class QuickActionsController : ApiBaseController
         {
             var unassignedProjects = await _context.Projects
                 .Where(p => !_context.ProjectAnalysts.Any(pa => pa.ProjectId == p.Id) &&
-                           (p.Status == Core.Entities.ProjectStatus.New ||
-                            p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                            p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                            p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                           (p.Status == ProjectStatus.New ||
+                            p.Status == ProjectStatus.UnderStudy ||
+                            p.Status == ProjectStatus.UnderDevelopment ||
+                            p.Status == ProjectStatus.UnderTesting))
                 .Select(p => new
                 {
                     id = p.Id,
@@ -180,10 +181,10 @@ public class QuickActionsController : ApiBaseController
         {
             var projectsWithoutRequirements = await _context.Projects
                 .Where(p => !_context.ProjectRequirements.Any(pr => pr.ProjectId == p.Id) &&
-                           (p.Status == Core.Entities.ProjectStatus.New ||
-                            p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                            p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                            p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                           (p.Status == ProjectStatus.New ||
+                            p.Status == ProjectStatus.UnderStudy ||
+                            p.Status == ProjectStatus.UnderDevelopment ||
+                            p.Status == ProjectStatus.UnderTesting))
                 .Select(p => new
                 {
                     id = p.Id,
@@ -234,18 +235,18 @@ public class QuickActionsController : ApiBaseController
                     id = u.Id,
                     fullName = u.FullName,
                     email = u.Email,
-                    department = u.Department != null ? u.Department : "",
+                    department = u.Department != null ? u.Department.Name : "",
              
                     assignedProjectsCount = _context.ProjectAnalysts
                         .Count(pa => pa.AnalystId == u.Id && 
                               pa.Project != null &&
-                              (pa.Project.Status == Core.Entities.ProjectStatus.New ||
-                               pa.Project.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                               pa.Project.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                               pa.Project.Status == Core.Entities.ProjectStatus.UnderTesting)),
+                              (pa.Project.Status == ProjectStatus.New ||
+                               pa.Project.Status == ProjectStatus.UnderStudy ||
+                               pa.Project.Status == ProjectStatus.UnderDevelopment ||
+                               pa.Project.Status == ProjectStatus.UnderTesting)),
                     activeRequirementsCount = _context.Requirements
                         .Count(r => r.AssignedToId == u.Id &&
-                               r.Status != Core.Entities.RequirementStatus.Completed )
+                               r.Status != RequirementStatus.Completed )
                 })
                 .OrderBy(u => u.assignedProjectsCount)
                 .ThenBy(u => u.fullName)
@@ -282,18 +283,18 @@ public class QuickActionsController : ApiBaseController
             {
                 unassignedProjects = await _context.Projects
                     .Where(p => !_context.ProjectAnalysts.Any(pa => pa.ProjectId == p.Id) &&
-                               (p.Status == Core.Entities.ProjectStatus.New ||
-                                p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                                p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                                p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                               (p.Status == ProjectStatus.New ||
+                                p.Status == ProjectStatus.UnderStudy ||
+                                p.Status == ProjectStatus.UnderDevelopment ||
+                                p.Status == ProjectStatus.UnderTesting))
                     .CountAsync(),
                 
                 projectsWithoutRequirements = await _context.Projects
                     .Where(p => !_context.ProjectRequirements.Any(pr => pr.ProjectId == p.Id) &&
-                               (p.Status == Core.Entities.ProjectStatus.New ||
-                                p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                                p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                                p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                               (p.Status == ProjectStatus.New ||
+                                p.Status == ProjectStatus.UnderStudy ||
+                                p.Status == ProjectStatus.UnderDevelopment ||
+                                p.Status == ProjectStatus.UnderTesting))
                     .CountAsync(),
                 
                 pendingRequirements = await _context.ProjectRequirements
@@ -302,7 +303,7 @@ public class QuickActionsController : ApiBaseController
                 
                 overdueProjects = await _context.Projects
                     .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
-                               p.Status != Core.Entities.ProjectStatus.Production)
+                               p.Status != ProjectStatus.Production)
                     .CountAsync(),
                 
                 availableAnalysts = await _context.Users
@@ -312,7 +313,7 @@ public class QuickActionsController : ApiBaseController
                 
                 tasksNeedingAssignment = await _context.Tasks
                     .Where(t => !_context.TaskAssignments.Any(ta => ta.TaskId == t.Id) &&
-                               t.StatusId != Core.Entities.TaskStatus.Completed  )
+                               t.StatusId != Core.Enums.TaskStatus.Completed  )
                     .CountAsync()
             };
 
@@ -351,15 +352,15 @@ public class QuickActionsController : ApiBaseController
                 
                 unassignedTasks = await _context.Tasks
                     .Where(t => !_context.TaskAssignments.Any(ta => ta.TaskId == t.Id) &&
-                               t.StatusId != Core.Entities.TaskStatus.Completed)
+                               t.StatusId != Core.Enums.TaskStatus.Completed)
                     .CountAsync(),
                 
                 unassignedProjects = await _context.Projects
                     .Where(p => !_context.ProjectAnalysts.Any(pa => pa.ProjectId == p.Id) &&
-                               (p.Status == Core.Entities.ProjectStatus.New ||
-                                p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                                p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                                p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                               (p.Status == ProjectStatus.New ||
+                                p.Status == ProjectStatus.UnderStudy ||
+                                p.Status == ProjectStatus.UnderDevelopment ||
+                                p.Status == ProjectStatus.UnderTesting))
                     .CountAsync(),
                 
                 pendingApprovals = await _context.ProjectRequirements
@@ -368,24 +369,24 @@ public class QuickActionsController : ApiBaseController
                 
                 overdueItems = await _context.Projects
                     .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
-                               p.Status != Core.Entities.ProjectStatus.Production)
+                               p.Status != ProjectStatus.Production)
                     .CountAsync(),
                 
                 newNotifications = 0, // TODO: Implement notifications count
                 
                 activeProjects = await _context.Projects
-                    .Where(p => p.Status == Core.Entities.ProjectStatus.New ||
-                               p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                               p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                               p.Status == Core.Entities.ProjectStatus.UnderTesting)
+                    .Where(p => p.Status == ProjectStatus.New ||
+                               p.Status == ProjectStatus.UnderStudy ||
+                               p.Status == ProjectStatus.UnderDevelopment ||
+                               p.Status == ProjectStatus.UnderTesting)
                     .CountAsync(),
                 
                 projectsWithoutRequirements = await _context.Projects
                     .Where(p => !_context.ProjectRequirements.Any(pr => pr.ProjectId == p.Id) &&
-                               (p.Status == Core.Entities.ProjectStatus.New ||
-                                p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                                p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                                p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                               (p.Status == ProjectStatus.New ||
+                                p.Status == ProjectStatus.UnderStudy ||
+                                p.Status == ProjectStatus.UnderDevelopment ||
+                                p.Status == ProjectStatus.UnderTesting))
                     .CountAsync(),
                 
                 availableMembers = await _context.Users
@@ -528,15 +529,15 @@ public class QuickActionsController : ApiBaseController
                 
                 unassignedTasks = await _context.Tasks
                     .Where(t => !_context.TaskAssignments.Any(ta => ta.TaskId == t.Id) &&
-                               t.StatusId != Core.Entities.TaskStatus.Completed)
+                               t.StatusId != Core.Enums.TaskStatus.Completed)
                     .CountAsync(),
                 
                 unassignedProjects = await _context.Projects
                     .Where(p => !_context.ProjectAnalysts.Any(pa => pa.ProjectId == p.Id) &&
-                               (p.Status == Core.Entities.ProjectStatus.New ||
-                                p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                                p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                                p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                               (p.Status == ProjectStatus.New ||
+                                p.Status == ProjectStatus.UnderStudy ||
+                                p.Status == ProjectStatus.UnderDevelopment ||
+                                p.Status == ProjectStatus.UnderTesting))
                     .CountAsync(),
                 
                 pendingApprovals = await _context.ProjectRequirements
@@ -545,24 +546,24 @@ public class QuickActionsController : ApiBaseController
                 
                 overdueItems = await _context.Projects
                     .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
-                               p.Status != Core.Entities.ProjectStatus.Production)
+                               p.Status != ProjectStatus.Production)
                     .CountAsync(),
                 
                 newNotifications = 0, // TODO: Implement notifications count
                 
                 activeProjects = await _context.Projects
-                    .Where(p => p.Status == Core.Entities.ProjectStatus.New ||
-                               p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                               p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                               p.Status == Core.Entities.ProjectStatus.UnderTesting)
+                    .Where(p => p.Status == ProjectStatus.New ||
+                               p.Status == ProjectStatus.UnderStudy ||
+                               p.Status == ProjectStatus.UnderDevelopment ||
+                               p.Status == ProjectStatus.UnderTesting)
                     .CountAsync(),
                 
                 projectsWithoutRequirements = await _context.Projects
                     .Where(p => !_context.ProjectRequirements.Any(pr => pr.ProjectId == p.Id) &&
-                               (p.Status == Core.Entities.ProjectStatus.New ||
-                                p.Status == Core.Entities.ProjectStatus.UnderStudy ||
-                                p.Status == Core.Entities.ProjectStatus.UnderDevelopment ||
-                                p.Status == Core.Entities.ProjectStatus.UnderTesting))
+                               (p.Status == ProjectStatus.New ||
+                                p.Status == ProjectStatus.UnderStudy ||
+                                p.Status == ProjectStatus.UnderDevelopment ||
+                                p.Status == ProjectStatus.UnderTesting))
                     .CountAsync(),
                 
                 availableMembers = await _context.Users
@@ -698,7 +699,7 @@ public class QuickActionsController : ApiBaseController
             // Overdue projects
             var overdueProjects = await _context.Projects
                 .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
-                           p.Status != Core.Entities.ProjectStatus.Production)
+                           p.Status != ProjectStatus.Production)
                 .Select(p => new
                 {
                     id = p.Id,
@@ -716,7 +717,7 @@ public class QuickActionsController : ApiBaseController
             // Overdue tasks
             var overdueTasks = await _context.Tasks
                 .Where(t => t.EndDate < DateTime.UtcNow &&
-                           t.StatusId != Core.Entities.TaskStatus.Completed)
+                           t.StatusId != Core.Enums.TaskStatus.Completed)
                 .Include(t => t.Assignments)
                 .ThenInclude(a => a.Employee)
                 .ToListAsync();
@@ -859,7 +860,7 @@ public class QuickActionsController : ApiBaseController
                     id = user.Id,
                     name = user.FullName,
                     role = userRole?.Role?.Name ?? "Unknown",
-                    department = user.Department ?? "",
+                    department = user.Department != null ? user.Department.Name : "",
                     currentTasks = currentTasks,
                     workload = currentTasks > 5 ? "high" : currentTasks > 2 ? "medium" : "low",
                     availability = currentTasks > 5 ? "busy" : "available"

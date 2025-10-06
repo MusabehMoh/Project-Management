@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
+using PMA.Core.Enums;
 
 namespace PMA.Core.Entities;
 
@@ -25,7 +27,7 @@ public class Task
     public DateTime EndDate { get; set; }
 
     [Required]
-    public TaskStatus StatusId { get; set; }
+    public TaskStatusEnum StatusId { get; set; }
     [Required]
     public TaskTypes TypeId { get; set; }
     [Required]
@@ -114,22 +116,5 @@ public class TaskDependency
 
     [ForeignKey("DependsOnTaskId")]
     public virtual Task? DependsOnTask { get; set; }
-}
-
-public enum TaskStatus
-{
-    ToDo = 1,
-    InProgress = 2,
-    InReview = 3,
-    Rework = 4,
-    Completed = 5,
-    OnHold = 6
-
-}
-public enum TaskTypes
-{
-    TimeLine = 1,
-    ChangeRequest = 2,
-    AdHoc = 3
 }
 

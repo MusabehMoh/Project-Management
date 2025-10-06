@@ -33,20 +33,20 @@ public class DeveloperTeamController : ApiBaseController
                     id = u.Id,
                     fullName = u.FullName,
                     email = u.Email,
-                    department = u.Department != null ? u.Department : "",
+                    department = u.Department != null ? u.Department.Name : "",
                     currentTasksCount = _context.TaskAssignments
                         .Count(ta => ta.PrsId == u.Id &&
                               ta.Task != null &&
-                              ta.Task.StatusId != Core.Entities.TaskStatus.Completed),
+                              ta.Task.StatusId != Core.Enums.TaskStatus.Completed),
                     totalCapacity = 5, // Assuming 5 tasks max capacity
                     availableCapacity = 5 - _context.TaskAssignments
                         .Count(ta => ta.PrsId == u.Id &&
                               ta.Task != null &&
-                              ta.Task.StatusId != Core.Entities.TaskStatus.Completed),
+                              ta.Task.StatusId != Core.Enums.TaskStatus.Completed),
                     activeTasks = _context.TaskAssignments
                         .Where(ta => ta.PrsId == u.Id &&
                               ta.Task != null &&
-                              ta.Task.StatusId != Core.Entities.TaskStatus.Completed)
+                              ta.Task.StatusId != Core.Enums.TaskStatus.Completed)
                         .Select(ta => new
                         {
                             id = ta.Task!.Id,

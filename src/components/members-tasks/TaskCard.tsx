@@ -7,6 +7,7 @@ import { Button } from "@heroui/button";
 
 import { MemberTask } from "@/types/membersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDateOnly } from "@/utils/dateFormatter";
 
 interface TaskCardProps {
   task: MemberTask;
@@ -18,9 +19,15 @@ interface TaskCardProps {
   getStatusColor: (
     status: number
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getStatusColor: (
+    statusId: number
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
   getStatusText: (status: number) => string;
   getPriorityColor: (
     priority: number
+  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+  getPriorityColor: (
+    priorityId: number
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
   getPriorityLabel: (priority: number) => string | undefined;
 }
@@ -48,7 +55,7 @@ export const TaskCard = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    return formatDateOnly(dateString, language);
   };
 
   const handleCardClick = () => {
@@ -84,7 +91,7 @@ export const TaskCard = ({
       className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg ${
         task.isOverdue
           ? "border-l-4 border-l-danger-500 bg-danger-50/30 dark:bg-danger-900/20"
-          : `border-l-4 border-l-${task.status.color as any}-500 bg-${task.status.color as any}-50/30 dark:bg-${task.status.color as any}-900/20`
+          : `border-l-4 border-l-${getStatusColor(task.statusId)}-500 bg-${getStatusColor(task.statusId)}-50/30 dark:bg-${getStatusColor(task.statusId)}-900/20`
       } ${language === "ar" ? "text-right" : ""}`}
       dir={language === "ar" ? "rtl" : "ltr"}
       onPress={handleCardClick}
@@ -98,18 +105,18 @@ export const TaskCard = ({
           </div>
           <div className="flex flex-col gap-2 items-end flex-shrink-0">
             <Chip
-              color={getStatusColor(task.status.id)}
+              color={getStatusColor(task.statusId)}
               size="sm"
               variant="flat"
             >
-              {getStatusText(task.status.id)}
+              {getStatusText(task.statusId)}
             </Chip>
             <Chip
-              color={getPriorityColor(task.priority.id)}
+              color={getPriorityColor(task.priorityId)}
               size="sm"
               variant="solid"
             >
-              {getPriorityLabel(task.priority.id) || task.priority.label}
+              {getPriorityLabel(task.priorityId)}
             </Chip>
           </div>
         </div>
@@ -119,7 +126,7 @@ export const TaskCard = ({
         {/* Department indicator */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm text-foreground-600">
-            {task.department.name}
+            {task.department?.name || "Unknown Department"}
           </span>
           {task.isOverdue && (
             <Badge color="danger" size="sm" variant="flat">
@@ -155,7 +162,7 @@ export const TaskCard = ({
                 {t("startDate")}
               </span>
               <span className="text-sm font-medium text-foreground">
-                {task.startDate}
+                {formatDate(task.startDate)}
               </span>
             </div>
           </div>
@@ -168,7 +175,7 @@ export const TaskCard = ({
                 {t("endDate")}
               </span>
               <span className="text-sm font-medium text-foreground">
-                {task.endDate}
+                {formatDate(task.endDate)}
               </span>
             </div>
           </div>
@@ -209,11 +216,11 @@ export const TaskCard = ({
           >
             <div>
               <span className="font-medium">{t("projectLabel")} </span>
-              <span>{task.project.name}</span>
+              <span>{task.project?.applicationName || ""}</span>
             </div>
             <div>
               <span className="font-medium">{t("requirementLabel")} </span>
-              <span>{task.requirement.name}</span>
+              <span>{task.requirement?.name || "Unknown Requirement"}</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
+using PMA.Core.Enums;
 using PMA.Core.Interfaces;
 using PMA.Infrastructure.Data;
 
