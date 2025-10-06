@@ -155,9 +155,7 @@ export default function MembersTasksPage() {
 
   const {
     tasks,
-    tasksConfigData,
     loading,
-    headerLoading,
     initialLoading,
     error,
     totalPages,
@@ -498,78 +496,6 @@ export default function MembersTasksPage() {
             </div>
           </div>
         </div>
-
-        {/* Stats */}
-        {headerLoading ? (
-          // Skeleton Loader
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="transition-all">
-                <CardBody className="flex items-center gap-3">
-                  <Skeleton className="h-12 w-12 rounded-lg" />{" "}
-                  {/* icon placeholder */}
-                  <div className="flex flex-col gap-2">
-                    <Skeleton className="h-7 w-24 rounded-md text-center" />{" "}
-                    {/* label */}
-                    <div className="flex justify-center">
-                      <Skeleton className="h-6 w-10 rounded-md" />{" "}
-                      {/* number */}
-                    </div>
-                    {/* number */}
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card className="transition-all hover:shadow-lg">
-              <CardBody className="flex items-center gap-3">
-                <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
-                  <Grid3X3 className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-foreground-600">
-                    {t("totalTasks")}
-                  </p>
-                  <p className="text-2xl text-center font-bold">
-                    {tasksConfigData.totalTasks}
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card className="transition-all hover:shadow-lg">
-              <CardBody className="flex items-center gap-3">
-                <div className="p-3 bg-warning-100 dark:bg-warning-900/20 rounded-lg">
-                  <RefreshCw className="w-6 h-6 text-warning" />
-                </div>
-                <div>
-                  <p className="text-sm text-foreground-600">
-                    {t("inProgress")}
-                  </p>
-                  <p className="text-2xl text-center font-bold">
-                    {tasksConfigData.inProgressTasks}
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card className="transition-all hover:shadow-lg">
-              <CardBody className="flex items-center gap-3">
-                <div className="p-3 bg-danger-100 dark:bg-danger-900/20 rounded-lg">
-                  <FileText className="w-6 h-6 text-danger" />
-                </div>
-                <div>
-                  <p className="text-sm text-foreground-600">{t("overdue")}</p>
-                  <p className="text-2xl text-center font-bold">
-                    {tasksConfigData.overdueTasks}
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        )}
 
         {/* Filters and Search */}
         {!initialLoading && (
@@ -1446,16 +1372,19 @@ export default function MembersTasksPage() {
                 <DropdownMenu
                   aria-label="Select task status"
                   onAction={(key) => {
-                    const status = tasksConfigData.taskStatus?.find(
-                      (s) => s.id.toString() === key,
+                    const status = statuses?.find(
+                      (s) => s.value.toString() === key,
                     );
 
-                    if (status) setSelectedStatus(status);
+                    if (status) setSelectedStatus({
+                      id: status.value,
+                      label: language === "ar" ? status.nameAr : status.nameEn,
+                    });
                   }}
                 >
-                  {tasksConfigData.taskStatus?.map((status) => (
-                    <DropdownItem key={status.id.toString()}>
-                      {status.label}
+                  {statuses?.map((status) => (
+                    <DropdownItem key={status.value.toString()}>
+                      {language === "ar" ? status.nameAr : status.nameEn}
                     </DropdownItem>
                   ))}
                 </DropdownMenu>

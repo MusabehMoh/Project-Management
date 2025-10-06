@@ -240,7 +240,7 @@ export const TaskCard = ({
           ) : (
             /* actions for members */
             <div className="flex gap-3">
-              {task.canRequestDesign && (
+              {
                 <Button
                   className="flex-1"
                   color="default"
@@ -253,7 +253,7 @@ export const TaskCard = ({
                 >
                   {t("requestDesign")}
                 </Button>
-              )}
+              }
 
               <Button
                 className="flex-1"

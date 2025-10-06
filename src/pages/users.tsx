@@ -42,6 +42,7 @@ import { X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
+import { createGeneralToasts } from "@/utils/toast";
 import {
   PlusIcon,
   EditIcon,
@@ -58,6 +59,9 @@ import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 export default function UsersPage() {
   const { t, language } = useLanguage();
   const { hasPermission } = usePermissions();
+
+  // Toast helpers
+  const toasts = createGeneralToasts(t);
 
   // Set page title
   usePageTitle("users.title");
@@ -116,6 +120,10 @@ export default function UsersPage() {
   const [actionSearchQuery, setActionSearchQuery] = useState("");
   const [selectedActionCategory, setSelectedActionCategory] =
     useState<string>("all");
+
+  // Operation loading states
+  const [isSavingUser, setIsSavingUser] = useState(false);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
 
   // Helper functions for role and action management
   const getSelectedRoleData = () => {
@@ -305,6 +313,8 @@ export default function UsersPage() {
     if (!selectedEmployee || !selectedRole) return;
 
     try {
+      setIsSavingUser(true);
+
       // Get role's default actions
       const selectedRoleData = roles.find((r) => r.id === selectedRole);
       const roleDefaultActions =
@@ -329,25 +339,37 @@ export default function UsersPage() {
           id: selectedUser.id,
           ...userData,
         } as UpdateUserRequest);
+        toasts.updateSuccess();
       } else {
         await createUser(userData as CreateUserRequest);
+        toasts.createSuccess();
       }
 
       onOpenChange();
       resetForm();
     } catch (error) {
-      console.error("Error saving user:", error);
+      if (isEditing) {
+        toasts.updateError();
+      } else {
+        toasts.createError();
+      }
+    } finally {
+      setIsSavingUser(false);
     }
   };
 
   const handleConfirmDelete = async () => {
     if (selectedUser) {
       try {
+        setIsDeletingUser(true);
         await deleteUser(selectedUser.id);
+        toasts.deleteSuccess();
         onDeleteOpenChange();
         setSelectedUser(null);
       } catch (error) {
-        console.error("Error deleting user:", error);
+        toasts.deleteError();
+      } finally {
+        setIsDeletingUser(false);
       }
     }
   };
@@ -822,7 +844,7 @@ export default function UsersPage() {
         <Modal
           isOpen={isOpen}
           scrollBehavior="inside"
-          size="2xl"
+          size="3xl"
           onOpenChange={onOpenChange}
         >
           <ModalContent>
@@ -833,49 +855,47 @@ export default function UsersPage() {
                 </ModalHeader>
                 <ModalBody>
                   <div className="space-y-4">
-                    {/* Employee Selection */}
-                    <div>
-                      <Autocomplete
-                        isClearable
-                        isRequired
-                        isLoading={employeeSearchLoading}
-                        items={employeeOptions}
-                        label={t("users.selectEmployee")}
-                        menuTrigger="input"
-                        placeholder={t("users.searchEmployees")}
-                        selectedKey={selectedEmployee?.id.toString()}
-                        onInputChange={searchEmployees}
-                        onSelectionChange={(key) => {
-                          if (key) {
-                            const employee = employeeOptions.find(
-                              (e) => e.id.toString() === key,
-                            );
+                      {/* Employee Selection */}
+                      <div>
+                        <Autocomplete
+                          isClearable
+                          isRequired
+                          isLoading={employeeSearchLoading}
+                          items={employeeOptions}
+                          label={t("users.selectEmployee")}
+                          menuTrigger="input"
+                          placeholder={t("users.searchEmployees")}
+                          selectedKey={selectedEmployee?.id.toString()}
+                          onInputChange={searchEmployees}
+                          onSelectionChange={(key) => {
+                            if (key) {
+                              const employee = employeeOptions.find(
+                                (e) => e.id.toString() === key,
+                              );
 
-                            if (employee) {
-                              handleEmployeeSelect(employee);
+                              if (employee) {
+                                handleEmployeeSelect(employee);
+                              }
                             }
-                          }
-                        }}
-                      >
-                        {employeeOptions.map((employee) => (
-                          <AutocompleteItem
-                            key={employee.id.toString()}
-                            textValue={`${employee.fullName} (${employee.militaryNumber}) - ${employee.gradeName}`}
-                          >
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {employee.fullName}
-                              </span>
-                              <span className="text-small text-default-500">
-                                {employee.militaryNumber} • {employee.gradeName}
-                              </span>
-                            </div>
-                          </AutocompleteItem>
-                        ))}
-                      </Autocomplete>
-                    </div>
-
-                    {/* Selected Employee Details */}
+                          }}
+                        >
+                          {employeeOptions.map((employee) => (
+                            <AutocompleteItem
+                              key={employee.id.toString()}
+                              textValue={`${employee.fullName} (${employee.militaryNumber}) - ${employee.gradeName}`}
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {employee.fullName}
+                                </span>
+                                <span className="text-small text-default-500">
+                                  {employee.militaryNumber} • {employee.gradeName}
+                                </span>
+                              </div>
+                            </AutocompleteItem>
+                          ))}
+                        </Autocomplete>
+                      </div>                    {/* Selected Employee Details */}
                     {selectedEmployee && (
                       <Card>
                         <CardBody>
@@ -1150,6 +1170,7 @@ export default function UsersPage() {
                   <Button
                     color="primary"
                     isDisabled={!selectedEmployee || !selectedRole}
+                    isLoading={isSavingUser}
                     onPress={handleSaveUser}
                   >
                     {isEditing ? t("common.save") : t("users.addUser")}
@@ -1444,7 +1465,11 @@ export default function UsersPage() {
                   <Button color="default" variant="light" onPress={onClose}>
                     {t("common.cancel")}
                   </Button>
-                  <Button color="danger" onPress={handleConfirmDelete}>
+                  <Button
+                    color="danger"
+                    isLoading={isDeletingUser}
+                    onPress={handleConfirmDelete}
+                  >
                     {t("users.deleteUser")}
                   </Button>
                 </ModalFooter>

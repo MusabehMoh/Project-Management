@@ -79,10 +79,7 @@ export const useUsers = (initialFilters?: UserFilters) => {
           throw new Error(response.message || "Failed to create user");
         }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to create user";
-
-        setError(errorMessage);
+        // Don't set global error state for create operations - let the component handle it
         throw err;
       } finally {
         setLoading(false);
@@ -108,10 +105,7 @@ export const useUsers = (initialFilters?: UserFilters) => {
           throw new Error(response.message || "Failed to update user");
         }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to update user";
-
-        setError(errorMessage);
+        // Don't set global error state for update operations - let the component handle it
         throw err;
       } finally {
         setLoading(false);
@@ -135,10 +129,7 @@ export const useUsers = (initialFilters?: UserFilters) => {
           throw new Error(response.message || "Failed to delete user");
         }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to delete user";
-
-        setError(errorMessage);
+        // Don't set global error state for delete operations - let the component handle it
         throw err;
       } finally {
         setLoading(false);
