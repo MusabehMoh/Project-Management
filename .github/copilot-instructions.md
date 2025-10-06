@@ -271,7 +271,9 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - **AnalystManagerDashboard**: Requirements management, team performance (Role ID: 2)
 - **DeveloperManagerDashboard**: Development team management, approved requirements, deployments (Role ID: 4)
 - **TeamMemberDashboard**: Task management for QC, Developers, Designers (Role IDs: 5, 7, 9)
-  - **Layout**: 3 main sections - ModernQuickStats, TeamQuickActions/MyAssignedTasks (70/30 split), Calendar
+  - **Layout**: Grid layout with ModernQuickStats at top, then 70/30 split below
+  - **Left Column (70%)**: TeamQuickActions stacked with Calendar
+  - **Right Column (30%)**: MyAssignedTasks (full height)
   - **Simplified Design**: No additional stats cards, calendar without sidebar
   - **Focus**: Task management and quick status updates
 - Each dashboard has specialized components in respective subdirectories

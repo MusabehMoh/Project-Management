@@ -45,23 +45,18 @@ export default function TeamMemberDashboard() {
       {/* Quick Stats */}
       <ModernQuickStats />
 
-      {/* Quick Actions and My Tasks Section */}
-      <div className="flex flex-col lg:flex-row gap-6 mb-6">
-        <div className="lg:w-[70%] space-y-4">
+      {/* Grid Layout: Quick Actions with Calendar on left, My Tasks on right */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Quick Actions + Calendar (70%) */}
+        <div className="lg:col-span-2 space-y-6">
           <TeamQuickActions key={refreshKey} onTaskUpdate={handleTaskUpdate} />
+          <Calendar maxHeight="600px" showSidebar={false} />
         </div>
 
-        <div className="lg:w-[30%] space-y-4">
+        {/* Right Column: My Assigned Tasks (30%) */}
+        <div className="lg:col-span-1">
           <MyAssignedTasks key={refreshKey} />
         </div>
-      </div>
-
-      {/* Calendar Section */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-foreground">
-          {t("calendar.title")}
-        </h2>
-        <Calendar maxHeight="600px" showSidebar={false} />
       </div>
     </div>
   );
