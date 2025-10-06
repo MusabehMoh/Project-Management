@@ -11,6 +11,7 @@ export interface Project {
   owningUnitId: number; // Actual ID for owning unit
   analysts?: string; // Display names for analysts (comma-separated)
   analystIds?: number[]; // Actual IDs for analysts
+  managerIds?: number[]; // Actual IDs for managers
   startDate: string;
   expectedCompletionDate: string;
   description: string;
@@ -59,6 +60,7 @@ export interface ProjectFormData {
   alternativeOwner: number; // Numeric ID for alternative owner (prsId)
   owningUnit: number; // Numeric ID for owning unit
   analysts?: number[]; // Array of numeric IDs for analysts
+  managers?: number[]; // Array of numeric IDs for managers
   startDate: any; // CalendarDate | null
   expectedCompletionDate: any; // CalendarDate | null
   description: string;
@@ -104,6 +106,7 @@ export interface CreateProjectRequest {
   alternativeOwner?: number; // Numeric ID for alternative owner (prsId)
   owningUnit: number; // Numeric ID for owning unit
   analysts?: number[]; // Array of numeric IDs for analysts
+  managers: number[];
   startDate: string;
   expectedCompletionDate: string;
   description: string;

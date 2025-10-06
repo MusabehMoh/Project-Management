@@ -17,7 +17,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined,
+  undefined
 );
 
 // Translation dictionary
@@ -28,7 +28,7 @@ const translations = {
     "error.dataLoading": "An error occurred while loading data",
     "error.tryAgainLater": "Please try again later",
     "error.retry": "Retry",
-    
+
     // Navbar
     "nav.dashboard": "Dashboard",
     "nav.projects": "Projects",
@@ -314,6 +314,9 @@ const translations = {
       "No projects on this page. Try a different page.",
     "projects.startFirstProject": "Start by creating your first project.",
     "projects.newProject": "New Project",
+    "projects.selectedManager": "Selected Manager",
+    "projects.selectResponsibleManager": "Select Responsible Manager",
+    "projects.searchManagers": "Search for managers...",
 
     "dashboard.viewAllProjects": "View All Projects",
     "dashboard.teamName": "Team Name",
@@ -1556,7 +1559,7 @@ const translations = {
     "error.dataLoading": "حدث خطأ أثناء تحميل البيانات",
     "error.tryAgainLater": "يرجى المحاولة مرة أخرى لاحقًا",
     "error.retry": "إعادة المحاولة",
-    
+
     // Navbar
     "nav.dashboard": "لوحة التحكم",
     "nav.projects": "المشاريع",
@@ -1837,6 +1840,9 @@ const translations = {
     "projects.noProjectsOnPage": "لا توجد مشاريع في هذه الصفحة. جرب صفحة أخرى.",
     "projects.startFirstProject": "ابدأ بإنشاء مشروعك الأول.",
     "projects.newProject": "مشروع جديد",
+    "projects.selectedManager": "المدير المختار",
+    "projects.selectResponsibleManager": "اختر المدير المسؤول",
+    "projects.searchManagers": "البحث عن المدراء...",
 
     "dashboard.viewAllProjects": "عرض جميع المشاريع",
     "dashboard.teamName": "اسم الفريق",

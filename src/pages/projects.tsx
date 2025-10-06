@@ -150,6 +150,18 @@ export default function ProjectsPage() {
     loadInitialResults: false,
   });
 
+  // Team search hook for responsible manager selection
+  const {
+    employees: responsibleManagers,
+    loading: responsibleManagerSearchLoading,
+    searchEmployees: searchResponsibleManager,
+    clearResults: clearResponsibleManagerResults,
+  } = useTeamSearch({
+    minLength: 1,
+    maxResults: 20,
+    loadInitialResults: false,
+  });
+
   // State for selected employees
   const [selectedOwner, setSelectedOwner] =
     useState<EmployeeSearchResult | null>(null);
@@ -160,7 +172,13 @@ export default function ProjectsPage() {
   const [selectedAnalysts, setSelectedAnalysts] = useState<
     MemberSearchResult[]
   >([]);
+  // State for selected managers (multiple selection)
+  const [selectedManagers, setSelectedManagers] = useState<
+    MemberSearchResult[]
+  >([]);
   const [analystInputValue, setAnalystInputValue] = useState<string>("");
+  const [responsibleManagerInputValue, setResponsibleManagerInputValue] =
+    useState<string>("");
 
   // State for input values to handle manual typing and clearing
   const [ownerInputValue, setOwnerInputValue] = useState<string>("");
@@ -258,11 +276,25 @@ export default function ProjectsPage() {
     setFormData({ ...formData, alternativeOwner: employee.id });
   };
 
+  // Handle manager selection (multiple)
+  const handleManagerSelect = (manager: MemberSearchResult) => {
+    setSelectedManagers([]);
+    setSelectedManagers([manager]);
+
+    // Clear the input
+    setResponsibleManagerInputValue("");
+  };
+
+  // Handle analyst removal
+  const handleManagerRemove = () => {
+    setSelectedManagers([]);
+  };
+
   // Handle analyst selection (multiple)
   const handleAnalystSelect = (analyst: MemberSearchResult) => {
     // Check if analyst is already selected
     const isAlreadySelected = selectedAnalysts.some(
-      (selected) => selected.id === analyst.id,
+      (selected) => selected.id === analyst.id
     );
 
     if (!isAlreadySelected) {
@@ -282,7 +314,7 @@ export default function ProjectsPage() {
   // Handle analyst removal
   const handleAnalystRemove = (analystId: number) => {
     const updatedAnalysts = selectedAnalysts.filter(
-      (analyst) => analyst.id !== analystId,
+      (analyst) => analyst.id !== analystId
     );
 
     setSelectedAnalysts(updatedAnalysts);
@@ -304,6 +336,7 @@ export default function ProjectsPage() {
     alternativeOwner: 0, // Changed to numeric ID
     owningUnit: 0, // Changed to numeric ID
     analysts: [], // Array of analyst IDs
+    managers: [], // manager ID
     startDate: null,
     expectedCompletionDate: null,
     description: "",
@@ -333,7 +366,7 @@ export default function ProjectsPage() {
 
     if (!formData.expectedCompletionDate) {
       errors.expectedCompletionDate = t(
-        "projects.validation.expectedCompletionRequired",
+        "projects.validation.expectedCompletionRequired"
       );
     }
 
@@ -399,6 +432,7 @@ export default function ProjectsPage() {
     clearOwnerResults();
     clearAlternativeOwnerResults();
     clearAnalystResults();
+    clearResponsibleManagerResults();
     setFormData({
       applicationName: "",
       projectOwner: 0, // Reset to 0 for numeric ID
@@ -440,7 +474,7 @@ export default function ProjectsPage() {
     // Find the employees by their IDs and set them as selected
     const ownerEmployee = users.find((u) => u.id === project.projectOwnerId);
     const altOwnerEmployee = users.find(
-      (u) => u.id === project.alternativeOwnerId,
+      (u) => u.id === project.alternativeOwnerId
     );
 
     // Convert User objects to EmployeeSearchResult objects
@@ -476,6 +510,40 @@ export default function ProjectsPage() {
       : project.analystIds
         ? [project.analystIds]
         : [];
+    // Handle managers if they exist in the project
+    // Ensure managerIds is an array
+    const managerIdsArray = Array.isArray(project.managerIds)
+      ? project.managerIds
+      : project.managerIds
+        ? [project.managerIds]
+        : [];
+
+    if (managerIdsArray.length > 0) {
+      const foundManagers: MemberSearchResult[] = [];
+
+      managerIdsArray.forEach((managerId) => {
+        const manager = users.find((u) => String(u.id) === String(managerId));
+
+        if (manager) {
+          // Convert User to MemberSearchResult
+          foundManagers.push({
+            id: manager.id,
+            userName: manager.userName,
+            fullName: manager.fullName,
+            militaryNumber: manager.militaryNumber,
+            gradeName: manager.gradeName,
+            statusId: manager.isVisible ? 1 : 0,
+            department: manager.department || "",
+          });
+          console.log("Found manager:", foundManagers);
+        }
+      });
+
+      setSelectedManagers(foundManagers);
+    } else {
+      // No managers to process
+      setSelectedManagers([]);
+    }
 
     // Since users array now contains department members, we can directly find analysts there
     if (analystIdsArray.length > 0) {
@@ -507,12 +575,12 @@ export default function ProjectsPage() {
 
     // Set input values
     setOwnerInputValue(
-      ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : "",
+      ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : ""
     );
     setAlternativeOwnerInputValue(
       altOwnerResult
         ? `${altOwnerResult.gradeName} ${altOwnerResult.fullName}`
-        : "",
+        : ""
     );
     setAnalystInputValue("");
 
@@ -546,7 +614,7 @@ export default function ProjectsPage() {
         try {
           // Fetch the specific project by ID
           const response = await projectService.getProjectById(
-            parseInt(editProjectId),
+            parseInt(editProjectId)
           );
 
           if (response.success && response.data) {
@@ -555,7 +623,7 @@ export default function ProjectsPage() {
         } catch (error) {
           // If direct fetch fails, try to find in current loaded projects
           const projectToEdit = projects.find(
-            (p) => p.id === parseInt(editProjectId),
+            (p) => p.id === parseInt(editProjectId)
           );
 
           if (projectToEdit) {
@@ -661,6 +729,7 @@ export default function ProjectsPage() {
             formData.expectedCompletionDate?.toString() || "",
           status: formData.status, // Already numeric
           analysts: formData.analysts, // Include analysts array
+          managers: formData.managers ?? [],
         };
 
         const updatedProject = await updateProject(updateData);
@@ -694,6 +763,7 @@ export default function ProjectsPage() {
             formData.expectedCompletionDate?.toString() || "",
           status: formData.status, // Already numeric
           analysts: formData.analysts, // Include analysts array
+          managers: formData.managers ?? [],
         };
 
         const newProject = await createProject(createData);
@@ -772,7 +842,7 @@ export default function ProjectsPage() {
               // Escape commas and quotes in CSV
               return `"${String(value).replace(/"/g, '""')}"`;
             })
-            .join(","),
+            .join(",")
         ),
       ].join("\n");
 
@@ -788,7 +858,7 @@ export default function ProjectsPage() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `projects_export_${new Date().toISOString().split("T")[0]}.csv`,
+        `projects_export_${new Date().toISOString().split("T")[0]}.csv`
       );
       link.style.visibility = "hidden";
 
@@ -1394,7 +1464,7 @@ export default function ProjectsPage() {
                     onSelectionChange={(key) => {
                       if (key) {
                         const selectedEmployee = ownerEmployees.find(
-                          (e) => e.id.toString() === key,
+                          (e) => e.id.toString() === key
                         );
 
                         if (selectedEmployee) {
@@ -1467,7 +1537,7 @@ export default function ProjectsPage() {
                     onSelectionChange={(key) => {
                       if (key) {
                         const selectedEmployee = alternativeOwnerEmployees.find(
-                          (e) => e.id.toString() === key,
+                          (e) => e.id.toString() === key
                         );
 
                         if (selectedEmployee) {
@@ -1528,7 +1598,7 @@ export default function ProjectsPage() {
                       onSelectionChange={(key) => {
                         if (key) {
                           const selectedEmployee = analystEmployees.find(
-                            (e) => e.id.toString() === key,
+                            (e) => e.id.toString() === key
                           );
 
                           if (selectedEmployee) {
@@ -1608,6 +1678,84 @@ export default function ProjectsPage() {
                       }
                     }}
                   />
+                  {/* responsible manager */}
+                  <div>
+                    {selectedUnit && (
+                      <Autocomplete
+                        allowsCustomValue
+                        className="max-w-full"
+                        inputValue={responsibleManagerInputValue}
+                        isLoading={responsibleManagerSearchLoading}
+                        items={responsibleManagers}
+                        label={t("projects.selectResponsibleManager")}
+                        placeholder={t("projects.searchManagers")}
+                        onInputChange={(value) => {
+                          setResponsibleManagerInputValue(value);
+                          searchResponsibleManager(value);
+                        }}
+                        onSelectionChange={(key) => {
+                          if (key) {
+                            const selectedManager = responsibleManagers.find(
+                              (e) => e.id.toString() === key
+                            );
+
+                            if (selectedManager) {
+                              handleManagerSelect(selectedManager);
+                            }
+                          }
+                        }}
+                      >
+                        {responsibleManagers.map((employee) => (
+                          <AutocompleteItem
+                            key={employee.id.toString()}
+                            textValue={`${employee.gradeName} ${employee.fullName}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Avatar
+                                name={employee.fullName || "Unknown"}
+                                size="sm"
+                              />
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {employee.gradeName}{" "}
+                                  {employee.fullName || "Unknown User"}
+                                </span>
+                                <span className="text-sm text-default-500">
+                                  {employee.militaryNumber || "N/A"}
+                                </span>
+                                <span className="text-xs text-default-400">
+                                  @{employee.userName || "unknown"}
+                                </span>
+                              </div>
+                            </div>
+                          </AutocompleteItem>
+                        ))}
+                      </Autocomplete>
+                    )}
+
+                    {/* Selected manager Display */}
+                    {selectedManagers.length > 0 && (
+                      <div className="space-y-2">
+                        <div style={{ borderTop: "15px" }} />
+                        <span className="text-sm text-default-600">
+                          {t("projects.selectedManager")}:
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedManagers.map((manager) => (
+                            <Chip
+                              key={manager.id}
+                              color="primary"
+                              variant="flat"
+                              onClose={() => handleManagerRemove()}
+                            >
+                              {manager.gradeName} {manager.fullName}
+                            </Chip>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <DatePicker
                     errorMessage={validationErrors.startDate}
                     isInvalid={!!validationErrors.startDate}
@@ -1624,6 +1772,7 @@ export default function ProjectsPage() {
                       }
                     }}
                   />
+
                   <DatePicker
                     errorMessage={validationErrors.expectedCompletionDate}
                     isInvalid={!!validationErrors.expectedCompletionDate}
