@@ -1,5 +1,6 @@
 using PMA.Core.Entities;
 using PMA.Core.DTOs;
+using PMA.Core.DTOs.Tasks;
 using TaskEntity = PMA.Core.Entities.Task;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +9,7 @@ namespace PMA.Core.Interfaces;
 
 public interface IProjectService
 {
-        System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null);
+    System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null);
     System.Threading.Tasks.Task<Project?> GetProjectByIdAsync(int id);
     System.Threading.Tasks.Task<Project> CreateProjectAsync(Project project);
     System.Threading.Tasks.Task UpdateProjectAsync(Project project);
@@ -81,6 +82,7 @@ public interface IDepartmentService
 {
     System.Threading.Tasks.Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
     System.Threading.Tasks.Task<Department?> GetDepartmentByIdAsync(int id);
+    System.Threading.Tasks.Task<Department?> GetDepartmentByNameAsync(string name);
     System.Threading.Tasks.Task<Department> CreateDepartmentAsync(Department department);
     System.Threading.Tasks.Task<Department> UpdateDepartmentAsync(Department department);
     System.Threading.Tasks.Task<bool> DeleteDepartmentAsync(int id);
@@ -177,16 +179,7 @@ public interface ILookupService
     System.Threading.Tasks.Task<IEnumerable<LookupDto>> GetLookupsByCategoryAsync(string code);
 }
 
-public interface IMemberTaskService
-{
-    System.Threading.Tasks.Task<(IEnumerable<MemberTaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null);
-    System.Threading.Tasks.Task<MemberTaskDto?> GetMemberTaskByIdAsync(int id);
-    System.Threading.Tasks.Task<MemberTaskDto> CreateMemberTaskAsync(MemberTaskDto memberTask);
-    System.Threading.Tasks.Task<MemberTaskDto> UpdateMemberTaskAsync(MemberTaskDto memberTask);
-    System.Threading.Tasks.Task<bool> DeleteMemberTaskAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<MemberTaskDto>> GetMemberTasksByProjectAsync(int projectId);
-    System.Threading.Tasks.Task<IEnumerable<MemberTaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId);
-}
+ 
 
 
 public interface IProjectRequirementService
@@ -264,3 +257,13 @@ public class CreateRequirementTaskDto
     public DateTime? DesignerEndDate { get; set; }
 }
 
+public interface IMemberTaskService
+{
+    System.Threading.Tasks.Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null);
+    System.Threading.Tasks.Task<TaskDto?> GetMemberTaskByIdAsync(int id);
+    System.Threading.Tasks.Task<TaskDto> CreateMemberTaskAsync(TaskDto memberTask);
+    System.Threading.Tasks.Task<TaskDto> UpdateMemberTaskAsync(TaskDto memberTask);
+    System.Threading.Tasks.Task<bool> DeleteMemberTaskAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<TaskDto>> GetMemberTasksByProjectAsync(int projectId);
+    System.Threading.Tasks.Task<IEnumerable<TaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId);
+}

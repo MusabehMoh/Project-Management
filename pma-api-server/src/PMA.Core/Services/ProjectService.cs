@@ -1,6 +1,7 @@
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using PMA.Core.Enums;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;

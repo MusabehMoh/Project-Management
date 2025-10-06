@@ -23,7 +23,7 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
-    public async Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null, int? priorityId = null)
+    public async Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null, int? priorityId = null, int? departmentId = null)
     {
         var query = _context.Tasks
             .Include(t => t.Sprint)
@@ -32,6 +32,7 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
                 .ThenInclude(a => a.Employee)
             .Include(t => t.Department)
             .Include(t => t.ProjectRequirement)
+                .ThenInclude(pr => pr!.Project)
             .Include(t => t.Dependencies_Relations)
             .AsQueryable();
 
@@ -58,6 +59,11 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
         if (priorityId.HasValue)
         {
             query = query.Where(t => (int)t.PriorityId == priorityId.Value);
+        }
+
+        if (departmentId.HasValue)
+        {
+            query = query.Where(t => t.DepartmentId == departmentId.Value);
         }
 
         var totalCount = await query.CountAsync();

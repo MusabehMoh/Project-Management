@@ -37,7 +37,7 @@ public interface IUserRepository : IRepository<User>
 
 public interface ITaskRepository : IRepository<TaskEntity>
 {
-    System.Threading.Tasks.Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null, int? priorityId = null);
+    System.Threading.Tasks.Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null, int? priorityId = null, int? departmentId = null);
     System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksBySprintAsync(int sprintId);
     System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByAssigneeAsync(int assigneeId);
     System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByProjectAsync(int projectId);
@@ -78,6 +78,7 @@ public interface IProjectRequirementRepository : IRepository<ProjectRequirement>
 public interface IDepartmentRepository : IRepository<Department>
 {
     System.Threading.Tasks.Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
+    System.Threading.Tasks.Task<Department?> GetDepartmentByNameAsync(string name);
 }
 
 public interface ITeamRepository : IRepository<Team>

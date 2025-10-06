@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Options;
 using PMA.Api.Config;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -155,15 +156,16 @@ builder.Services.AddScoped<IProjectRequirementService, PMA.Core.Services.Project
 builder.Services.AddScoped<IRequirementTaskManagementService, RequirementTaskManagementService>();
 builder.Services.AddScoped<ITimelineService, TimelineService>();
 builder.Services.AddScoped<ICalendarEventService, CalendarEventService>();
+builder.Services.AddScoped<IMemberTaskService, MemberTaskService>();
 builder.Services.AddScoped<IFileStorageService, PMA.Infrastructure.Services.FileStorageService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IActionService, ActionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<ILookupService, LookupService>();
-builder.Services.AddScoped<IMemberTaskService, MemberTaskService>();
+builder.Services.AddScoped<ILookupService, LookupService>(); 
 builder.Services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();
+builder.Services.AddScoped<PMA.Core.Interfaces.IAuthorizationService, PMA.Core.Services.AuthorizationService>();
 // Path provider abstraction
 builder.Services.AddSingleton<PMA.Core.Interfaces.IAppPathProvider, PMA.Api.Services.AppPathProvider>();
 
@@ -178,7 +180,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:5170" };
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

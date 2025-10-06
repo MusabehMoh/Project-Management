@@ -3,10 +3,11 @@ using PMA.Api.Services;
 using PMA.Core.DTOs;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
+using PMA.Core.Enums;
 using Microsoft.Extensions.Options;
 using PMA.Api.Config;
 using PMA.Core.Services;
-using TaskStatus = PMA.Core.Entities.TaskStatus;
+using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 namespace PMA.Api.Controllers;
 
 [ApiController]

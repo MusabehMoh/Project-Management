@@ -18,7 +18,7 @@ export interface ProjectRequirement {
   tags?: string[];
   attachments?: ProjectRequirementAttachment[];
   // Task information if exists
-  task?: RequirementTask;
+  requirementTask?: RequirementTask;
   // Timeline information if exists
   timeline?: {
     id: number;

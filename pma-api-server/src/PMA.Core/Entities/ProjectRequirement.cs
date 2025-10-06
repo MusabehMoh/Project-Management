@@ -1,33 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using PMA.Core.Enums;
 
 namespace PMA.Core.Entities;
-
-public enum RequirementPriority
-{
-    Low = 1,
-    Medium = 2,
-    High = 3,
-    Critical = 4
-}
-
-public enum RequirementType
-{
-    New = 1,
-    ChangeRequest = 2
-}
-
-public enum RequirementStatusEnum
-{
-    New = 1,
-    ManagerReview = 2,
-    Approved = 3, 
-    UnderDevelopment = 4,
-    UnderTesting = 5,
-    Completed = 6,
-    Cancelled = 6,
-
-}
 
 [Table("ProjectRequirements")]
 public class ProjectRequirement
@@ -70,7 +45,7 @@ public class ProjectRequirement
     public virtual User? Creator { get; set; }
     public virtual User? Analyst { get; set; }
     public virtual ICollection<ProjectRequirementAttachment> Attachments { get; set; } = new List<ProjectRequirementAttachment>();
-    public virtual RequirementTask? Task { get; set; }
+    public virtual RequirementTask? RequirementTask { get; set; }
     public virtual Timeline? Timeline { get; set; }
 }
 

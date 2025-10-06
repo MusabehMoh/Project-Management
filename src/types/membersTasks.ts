@@ -7,13 +7,13 @@ export interface MemberTask {
   startDate: string;
   endDate: string;
   progress: number; // 0-100
-  status: { id: number; label: string; color: string };
-  priority: { id: number; label: string; color: string };
+  statusId: number;
+  priorityId: number;
   department: Department;
   assignedMembers: MemberSearchResult[]; // Multiple assignees array
   primaryAssignee?: MemberSearchResult; // Main responsible person
   memberIds: number[]; // For API filtering
-  project: { id: string; name: string };
+  project: { id: string; applicationName: string };
   requirement: { id: string; name: string };
   canRequestDesign: boolean;
   //canChangeStatus: boolean;

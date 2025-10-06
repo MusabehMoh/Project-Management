@@ -23,6 +23,11 @@ public class DepartmentService : IDepartmentService
         return await _departmentRepository.GetByIdAsync(id);
     }
 
+    public async System.Threading.Tasks.Task<Department?> GetDepartmentByNameAsync(string name)
+    {
+        return await _departmentRepository.GetDepartmentByNameAsync(name);
+    }
+
     public async System.Threading.Tasks.Task<Department> CreateDepartmentAsync(Department department)
     {
         department.CreatedAt = DateTime.UtcNow;

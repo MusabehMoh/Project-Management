@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using PMA.Core.Enums;
 
 namespace PMA.Core.Entities;
 
@@ -41,14 +42,6 @@ public class Sprint
     public Timeline? Timeline { get; set; }
 
     public ICollection<Task>? Tasks { get; set; }
-}
-
-public enum SprintStatus
-{
-    Planned = 1,
-    Active = 2,
-    Completed = 3,
-    Cancelled = 4
 }
 
 

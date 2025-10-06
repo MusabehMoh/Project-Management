@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
+using PMA.Core.Enums;
 using PMA.Infrastructure.Data;
 
 namespace PMA.Api.Controllers;
@@ -456,7 +457,7 @@ public class RequirementCompletionController : ApiBaseController
                 {
                     analystId = u.Id,
                     analystName = u.FullName,
-                    department = u.Department != null ? u.Department : "N/A",
+                    department = u.Department != null ? u.Department.Name : "",
                     
                     totalRequirements = _context.ProjectRequirements
                         .Count(pr => _context.ProjectAnalysts

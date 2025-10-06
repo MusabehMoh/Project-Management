@@ -31,6 +31,7 @@ import { RefreshCw, AlertTriangle, Code, User, Clock, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { UseAdhocTasks } from "@/hooks/useAdhocTask";
 import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActionsV2";
+import ErrorWithRetry from "@/components/ErrorWithRetry";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
 
@@ -278,15 +279,12 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         dir={direction}
         shadow="sm"
       >
-        <CardBody className="text-center py-6">
-          <AlertTriangle className="h-8 w-8 text-default-400 mx-auto mb-3" />
-          <p className="font-medium text-foreground mb-2">
-            {t("common.error") || "Error"}
-          </p>
-          <p className="text-sm text-default-500 mb-4">{error}</p>
-          <Button size="sm" variant="flat" onPress={refresh}>
-            {t("common.retry") || "Retry"}
-          </Button>
+        <CardBody className="min-h-[200px]">
+          <ErrorWithRetry
+            error={error}
+            onRetry={refresh}
+            icon={<AlertTriangle className="h-8 w-8 text-default-400" />}
+          />
         </CardBody>
       </Card>
     );

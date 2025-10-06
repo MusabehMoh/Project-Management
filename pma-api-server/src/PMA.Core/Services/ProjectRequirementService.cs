@@ -1,6 +1,7 @@
 using PMA.Core.DTOs;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
+using PMA.Core.Enums;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
@@ -170,10 +171,10 @@ public class ProjectRequirementService : IProjectRequirementService
         // Check if task already exists for this requirement
         RequirementTask task;
         
-        if (requirement.Task != null)
+        if (requirement.RequirementTask != null)
         {
             // Update existing task
-            task = requirement.Task;
+            task = requirement.RequirementTask;
             task.DeveloperId = taskDto.DeveloperId;
             task.QcId = taskDto.QcId;
             task.DesignerId = taskDto.DesignerId;
@@ -209,7 +210,7 @@ public class ProjectRequirementService : IProjectRequirementService
             };
 
             // Add the task to the requirement's tasks collection
-            requirement.Task = task;
+            requirement.RequirementTask = task;
         }
 
         // Update requirement status to "under development" if it was approved

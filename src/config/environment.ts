@@ -11,7 +11,8 @@ export const APP_CONFIG = {
 
 // API Configuration
 export const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:3001/api",
+  // First check runtime config, then environment variable, then fallback
+  baseUrl: (window as any).PMA_CONFIG?.apiUrl || import.meta.env.VITE_API_URL || "http://localhost:3001/api",
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || "10000"),
   useMockApi: import.meta.env.VITE_USE_MOCK_API === "true",
 } as const;

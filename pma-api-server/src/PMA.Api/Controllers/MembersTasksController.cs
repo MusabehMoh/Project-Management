@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using PMA.Core.DTOs.Tasks;
+using PMA.Core.Enums;
 
 namespace PMA.Api.Controllers;
 
@@ -12,11 +14,35 @@ public class MembersTasksController : ApiBaseController
 {
     private readonly IMemberTaskService _memberTaskService;
     private readonly ICurrentUserProvider _currentUserProvider;
+    private readonly IUserService _userService;
+    private readonly IDepartmentService _departmentService;
 
-    public MembersTasksController(IMemberTaskService memberTaskService, ICurrentUserProvider currentUserProvider)
+    public MembersTasksController(IMemberTaskService memberTaskService, ICurrentUserProvider currentUserProvider, IUserService userService, IDepartmentService departmentService)
     {
         _memberTaskService = memberTaskService;
         _currentUserProvider = currentUserProvider;
+        _userService = userService;
+        _departmentService = departmentService;
+    }
+
+    private bool IsRoleCode(string? roleCode, RoleCodes targetRole)
+    {
+        if (string.IsNullOrEmpty(roleCode))
+            return false;
+
+        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) && parsedRole == targetRole;
+    }
+
+    private bool IsManagerRole(string? roleCode)
+    {
+        if (string.IsNullOrEmpty(roleCode))
+            return false;
+
+        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) &&
+               (parsedRole == RoleCodes.AnalystManager ||
+                parsedRole == RoleCodes.DevelopmentManager ||
+                parsedRole == RoleCodes.QCManager ||
+                parsedRole == RoleCodes.DesignerManager);
     }
 
     /// <summary>
@@ -35,27 +61,58 @@ public class MembersTasksController : ApiBaseController
     {
         try
         {
-            // If no primaryAssigneeId is provided, use current user's ID
-            int? assigneeId = primaryAssigneeId;
-            if (!assigneeId.HasValue)
+            // Get current user with roles
+            var currentUser = await _userService.GetCurrentUserAsync();
+            if (currentUser == null)
             {
-                // Get current user's PRS ID - for testing with anonymous access, use a default user
-                var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync(); 
-                // Convert PRS ID to int (assuming PRS ID can be converted to int)
-                if (int.TryParse(currentUserPrsId, out int currentUserId))
+                return Error<IEnumerable<TaskDto>>("Unable to retrieve current user information");
+            }
+
+            // Check user roles for filtering logic
+            bool isAdministrator = currentUser.Roles?.Any(r => IsRoleCode(r.Code, RoleCodes.Administrator)) ?? false;
+            bool isManager = currentUser.Roles?.Any(r => IsManagerRole(r.Code)) ?? false;
+
+            int? assigneeId = primaryAssigneeId;
+            int? departmentId = null;
+
+            if (isAdministrator)
+            {
+                // Administrator sees all tasks - no filtering needed
+                assigneeId = null;
+                departmentId = null;
+            }
+            else if (isManager)
+            {
+                // Managers see all tasks for their department
+                assigneeId = null;
+                // Get department ID from department name
+                if (currentUser?.Roles[0]?.Department?.Id!=null)
                 {
-                    assigneeId = currentUserId;
+                    departmentId = currentUser.Roles[0].Department?.Id;
+                }
+            }
+            else
+            {
+                // Regular users see only their assigned tasks
+                if (!assigneeId.HasValue)
+                {
+                    // Get current user's PRS ID
+                    var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
+                    if (int.TryParse(currentUserPrsId, out int currentUserId))
+                    {
+                        assigneeId = currentUserId;
+                    }
                 }
             }
 
-            var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(page, limit, projectId, assigneeId, status, priority);
+            var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(page, limit, projectId, assigneeId, status, priority, departmentId);
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
             return Success(memberTasks, pagination);
         }
         catch (Exception ex)
         {
-            return Error<IEnumerable<MemberTaskDto>>("An error occurred while retrieving member tasks", ex.Message);
+            return Error<IEnumerable<TaskDto>>("An error occurred while retrieving member tasks", ex.Message);
         }
     }
 
@@ -72,25 +129,25 @@ public class MembersTasksController : ApiBaseController
             var memberTask = await _memberTaskService.GetMemberTaskByIdAsync(id);
             if (memberTask == null)
             {
-                var notFoundResponse = new ApiResponse<MemberTaskDto>
+                var notFoundResponse = new ApiResponse<TaskDto>
                 {
                     Success = false,
                     Message = "Member task not found"
                 };
                 return NotFound(notFoundResponse);
             }
-            
-            var response = new ApiResponse<MemberTaskDto>
+
+            var response = new ApiResponse<TaskDto>
             {
                 Success = true,
                 Data = memberTask
             };
-            
+
             return Ok(response);
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<MemberTaskDto>
+            var errorResponse = new ApiResponse<TaskDto>
             {
                 Success = false,
                 Message = "An error occurred while retrieving the member task",
@@ -110,17 +167,17 @@ public class MembersTasksController : ApiBaseController
         try
         {
             var memberTasks = await _memberTaskService.GetMemberTasksByProjectAsync(projectId);
-            var response = new ApiResponse<IEnumerable<MemberTaskDto>>
+            var response = new ApiResponse<IEnumerable<TaskDto>>
             {
                 Success = true,
                 Data = memberTasks
             };
-            
+
             return Ok(response);
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<IEnumerable<MemberTaskDto>>
+            var errorResponse = new ApiResponse<IEnumerable<TaskDto>>
             {
                 Success = false,
                 Message = "An error occurred while retrieving project member tasks",
@@ -140,17 +197,17 @@ public class MembersTasksController : ApiBaseController
         try
         {
             var memberTasks = await _memberTaskService.GetMemberTasksByAssigneeAsync(assigneeId);
-            var response = new ApiResponse<IEnumerable<MemberTaskDto>>
+            var response = new ApiResponse<IEnumerable<TaskDto>>
             {
                 Success = true,
                 Data = memberTasks
             };
-            
+
             return Ok(response);
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<IEnumerable<MemberTaskDto>>
+            var errorResponse = new ApiResponse<IEnumerable<TaskDto>>
             {
                 Success = false,
                 Message = "An error occurred while retrieving assignee member tasks",
@@ -166,13 +223,13 @@ public class MembersTasksController : ApiBaseController
     [HttpPost]
     [ProducesResponseType(201)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> CreateMemberTask([FromBody] MemberTaskDto memberTask)
+    public async Task<IActionResult> CreateMemberTask([FromBody] TaskDto memberTask)
     {
         try
         {
             if (!ModelState.IsValid)
             {
-                var validationResponse = new ApiResponse<MemberTaskDto>
+                var validationResponse = new ApiResponse<TaskDto>
                 {
                     Success = false,
                     Message = "Validation failed",
@@ -182,18 +239,18 @@ public class MembersTasksController : ApiBaseController
             }
 
             var createdMemberTask = await _memberTaskService.CreateMemberTaskAsync(memberTask);
-            var response = new ApiResponse<MemberTaskDto>
+            var response = new ApiResponse<TaskDto>
             {
                 Success = true,
                 Data = createdMemberTask,
                 Message = "Member task created successfully"
             };
-            
+
             return CreatedAtAction(nameof(GetMemberTaskById), new { id = createdMemberTask.Id }, response);
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<MemberTaskDto>
+            var errorResponse = new ApiResponse<TaskDto>
             {
                 Success = false,
                 Message = "An error occurred while creating the member task",
@@ -210,13 +267,13 @@ public class MembersTasksController : ApiBaseController
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> UpdateMemberTask(int id, [FromBody] MemberTaskDto memberTask)
+    public async Task<IActionResult> UpdateMemberTask(int id, [FromBody] TaskDto memberTask)
     {
         try
         {
             if (!ModelState.IsValid)
             {
-                var validationResponse = new ApiResponse<MemberTaskDto>
+                var validationResponse = new ApiResponse<TaskDto>
                 {
                     Success = false,
                     Message = "Validation failed",
@@ -225,9 +282,9 @@ public class MembersTasksController : ApiBaseController
                 return BadRequest(validationResponse);
             }
 
-            if (id != int.Parse(memberTask.Id))
+            if (id != memberTask.Id)
             {
-                var mismatchResponse = new ApiResponse<MemberTaskDto>
+                var mismatchResponse = new ApiResponse<TaskDto>
                 {
                     Success = false,
                     Message = "ID mismatch"
@@ -238,26 +295,26 @@ public class MembersTasksController : ApiBaseController
             var updatedMemberTask = await _memberTaskService.UpdateMemberTaskAsync(memberTask);
             if (updatedMemberTask == null)
             {
-                var notFoundResponse = new ApiResponse<MemberTaskDto>
+                var notFoundResponse = new ApiResponse<TaskDto>
                 {
                     Success = false,
                     Message = "Member task not found"
                 };
                 return NotFound(notFoundResponse);
             }
-            
-            var response = new ApiResponse<MemberTaskDto>
+
+            var response = new ApiResponse<TaskDto>
             {
                 Success = true,
                 Data = updatedMemberTask,
                 Message = "Member task updated successfully"
             };
-            
+
             return Ok(response);
         }
         catch (Exception ex)
         {
-            var errorResponse = new ApiResponse<MemberTaskDto>
+            var errorResponse = new ApiResponse<TaskDto>
             {
                 Success = false,
                 Message = "An error occurred while updating the member task",
@@ -287,7 +344,7 @@ public class MembersTasksController : ApiBaseController
                 };
                 return NotFound(notFoundResponse);
             }
-            
+
             return NoContent();
         }
         catch (Exception ex)

@@ -31,6 +31,7 @@ export interface Role {
 export interface Action {
   id: number;
   name: string;
+  category: string;
   categoryName: string;
   categoryType: string;
   description: string;
