@@ -280,6 +280,10 @@ export default function ProjectsPage() {
   const handleManagerSelect = (manager: MemberSearchResult) => {
     setSelectedManagers([]);
     setSelectedManagers([manager]);
+    setFormData({
+      ...formData,
+      managers: [manager.id],
+    });
 
     // Clear the input
     setResponsibleManagerInputValue("");
@@ -729,7 +733,7 @@ export default function ProjectsPage() {
             formData.expectedCompletionDate?.toString() || "",
           status: formData.status, // Already numeric
           analysts: formData.analysts, // Include analysts array
-          managers: formData.managers ?? [],
+          units: formData.managers ?? [],
         };
 
         const updatedProject = await updateProject(updateData);
@@ -763,7 +767,7 @@ export default function ProjectsPage() {
             formData.expectedCompletionDate?.toString() || "",
           status: formData.status, // Already numeric
           analysts: formData.analysts, // Include analysts array
-          managers: formData.managers ?? [],
+          units: formData.managers ?? [],
         };
 
         const newProject = await createProject(createData);
