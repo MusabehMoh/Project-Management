@@ -595,6 +595,62 @@ const translations = {
     "developerDashboard.filterByStatus": "Filter by status",
     "developerDashboard.searchDevelopers": "Search developers...",
 
+    // Team Member Dashboard
+    "teamDashboard.title": "Team Member Dashboard",
+    "teamDashboard.subtitle":
+      "Manage your tasks, track progress, and collaborate with your team",
+    "teamDashboard.tasksCompleted": "Tasks Completed",
+    "teamDashboard.thisMonth": "This Month",
+    "teamDashboard.averageCompletionTime": "Average Completion Time",
+    "teamDashboard.hours": "Hours",
+    "teamDashboard.upcomingDeadlines": "Upcoming Deadlines",
+    "teamDashboard.nextWeek": "Next Week",
+
+    // Team Member - My Tasks
+    "teamDashboard.myTasks.title": "My Assigned Tasks",
+    "teamDashboard.myTasks.showing": "Showing {count} of {total} tasks",
+    "teamDashboard.myTasks.viewAll": "View All",
+    "teamDashboard.myTasks.noTasks": "No assigned tasks",
+    "teamDashboard.myTasks.noTasksDesc":
+      "You're all caught up! No tasks assigned at the moment.",
+    "teamDashboard.myTasks.error": "Failed to load your assigned tasks",
+    "teamDashboard.myTasks.untitled": "Untitled Task",
+    "teamDashboard.myTasks.project": "Project",
+    "teamDashboard.myTasks.unknown": "Unknown",
+
+    // Team Member - Quick Actions
+    "teamDashboard.quickActions.title": "Quick Actions",
+    "teamDashboard.quickActions.subtitle":
+      "Quickly update your task statuses",
+    "teamDashboard.quickActions.myActiveTasks": "My Active Tasks",
+    "teamDashboard.quickActions.noActions": "No actions needed",
+    "teamDashboard.quickActions.noActionsDesc":
+      "All your tasks are up to date",
+    "teamDashboard.quickActions.untitled": "Untitled Task",
+    "teamDashboard.quickActions.project": "Project",
+    "teamDashboard.quickActions.start": "Start",
+    "teamDashboard.quickActions.pause": "Pause",
+    "teamDashboard.quickActions.complete": "Complete",
+    "teamDashboard.quickActions.updateTaskStatus": "Update Task Status",
+    "teamDashboard.quickActions.taskName": "Task Name",
+    "teamDashboard.quickActions.newStatus": "New Status",
+    "teamDashboard.quickActions.selectStatus": "Select a status",
+    "teamDashboard.quickActions.updateSuccess": "Task Updated",
+    "teamDashboard.quickActions.updateSuccessDesc":
+      "Task {taskName} has been updated",
+    "teamDashboard.quickActions.updateError": "Update Failed",
+    "teamDashboard.quickActions.updateErrorDesc":
+      "Failed to update task status. Please try again.",
+
+    // Team Member - Status
+    "teamDashboard.status.pending": "Pending",
+    "teamDashboard.status.inProgress": "In Progress",
+    "teamDashboard.status.inReview": "In Review",
+    "teamDashboard.status.rework": "Rework",
+    "teamDashboard.status.completed": "Completed",
+    "teamDashboard.status.blocked": "On Hold",
+    "teamDashboard.status.unknown": "Unknown",
+
     // Common translations for filters
     "common.allStatus": "All Status",
     "common.sortBy": "Sort by",
@@ -2113,6 +2169,62 @@ const translations = {
     "developerDashboard.activeDevelopers": "المطورون النشطون",
     "developerDashboard.filterByStatus": "تصفية حسب الحالة",
     "developerDashboard.searchDevelopers": "البحث عن المطورين...",
+
+    // Team Member Dashboard
+    "teamDashboard.title": "لوحة أعضاء الفريق",
+    "teamDashboard.subtitle":
+      "إدارة مهامك، تتبع التقدم، والتعاون مع فريقك",
+    "teamDashboard.tasksCompleted": "المهام المكتملة",
+    "teamDashboard.thisMonth": "هذا الشهر",
+    "teamDashboard.averageCompletionTime": "متوسط وقت الإنجاز",
+    "teamDashboard.hours": "ساعات",
+    "teamDashboard.upcomingDeadlines": "المواعيد النهائية القادمة",
+    "teamDashboard.nextWeek": "الأسبوع القادم",
+
+    // Team Member - My Tasks
+    "teamDashboard.myTasks.title": "مهامي المعينة",
+    "teamDashboard.myTasks.showing": "عرض {count} من أصل {total} مهام",
+    "teamDashboard.myTasks.viewAll": "عرض الكل",
+    "teamDashboard.myTasks.noTasks": "لا توجد مهام معينة",
+    "teamDashboard.myTasks.noTasksDesc":
+      "أنت مواكب للعمل! لا توجد مهام معينة في الوقت الحالي.",
+    "teamDashboard.myTasks.error": "فشل في تحميل مهامك المعينة",
+    "teamDashboard.myTasks.untitled": "مهمة بدون عنوان",
+    "teamDashboard.myTasks.project": "المشروع",
+    "teamDashboard.myTasks.unknown": "غير معروف",
+
+    // Team Member - Quick Actions
+    "teamDashboard.quickActions.title": "الإجراءات السريعة",
+    "teamDashboard.quickActions.subtitle":
+      "تحديث حالة مهامك بسرعة",
+    "teamDashboard.quickActions.myActiveTasks": "مهامي النشطة",
+    "teamDashboard.quickActions.noActions": "لا توجد إجراءات مطلوبة",
+    "teamDashboard.quickActions.noActionsDesc":
+      "جميع مهامك محدثة",
+    "teamDashboard.quickActions.untitled": "مهمة بدون عنوان",
+    "teamDashboard.quickActions.project": "المشروع",
+    "teamDashboard.quickActions.start": "بدء",
+    "teamDashboard.quickActions.pause": "إيقاف مؤقت",
+    "teamDashboard.quickActions.complete": "إكمال",
+    "teamDashboard.quickActions.updateTaskStatus": "تحديث حالة المهمة",
+    "teamDashboard.quickActions.taskName": "اسم المهمة",
+    "teamDashboard.quickActions.newStatus": "الحالة الجديدة",
+    "teamDashboard.quickActions.selectStatus": "اختر الحالة",
+    "teamDashboard.quickActions.updateSuccess": "تم تحديث المهمة",
+    "teamDashboard.quickActions.updateSuccessDesc":
+      "تم تحديث المهمة {taskName}",
+    "teamDashboard.quickActions.updateError": "فشل التحديث",
+    "teamDashboard.quickActions.updateErrorDesc":
+      "فشل في تحديث حالة المهمة. يرجى المحاولة مرة أخرى.",
+
+    // Team Member - Status
+    "teamDashboard.status.pending": "في الانتظار",
+    "teamDashboard.status.inProgress": "قيد التنفيذ",
+    "teamDashboard.status.inReview": "قيد المراجعة",
+    "teamDashboard.status.rework": "إعادة العمل",
+    "teamDashboard.status.completed": "مكتمل",
+    "teamDashboard.status.blocked": "معلق",
+    "teamDashboard.status.unknown": "غير معروف",
 
     // Common translations for filters
     "common.allStatus": "جميع الحالات",

@@ -256,6 +256,20 @@ export class MembersTasksService {
     );
   }
 
+  /**
+   * Update task status
+   * @param taskId - The task ID
+   * @param newStatus - The new status string
+   */
+  async updateTaskStatus(
+    taskId: number,
+    newStatus: string,
+  ): Promise<ApiResponse<void>> {
+    return apiClient.put<void>(`${this.baseUrl}/${taskId}/status`, {
+      status: newStatus,
+    });
+  }
+
   /* status drop down values and header data */
   async getCurrentTasksConfig(): Promise<ApiResponse<TaskConfigData>> {
     // Call real endpoint

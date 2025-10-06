@@ -79,12 +79,18 @@ This is a comprehensive Project Management Application (PMA) built with modern w
   - `dashboard/` - Dashboard-specific components
     - `AnalystManagerDashboard.tsx` - Analyst manager dashboard
     - `DeveloperManagerDashboard.tsx` - Developer manager dashboard
+    - `TeamMemberDashboard.tsx` - Team member dashboard (QC, Developers, Designers)
     - `developer/` - Developer-specific components
+    - `team-member/` - Team member-specific components
+      - `MyAssignedTasks.tsx` - Shows user's assigned tasks
+      - `TeamQuickActions.tsx` - Quick task status updates with Accordion/CustomAlert design
   - `calendar/` - Calendar components
   - `primitives.ts` - Base UI component definitions
 - `pages/` - Main application pages/routes
 - `contexts/` - React contexts (Language, User, Notifications, Search)
 - `hooks/` - Custom React hooks
+  - `useMyAssignedTasks.ts` - Fetch current user's tasks
+  - `useTeamQuickActions.ts` - Fetch and update task statuses
 - `services/` - API service layers
   - `api/` - API service classes and interfaces
 - `types/` - TypeScript type definitions
@@ -100,6 +106,20 @@ This is a comprehensive Project Management Application (PMA) built with modern w
 - `src/services/` - Business logic
 - `src/data/` - Mock data sources
 - `src/signalR/` - Real-time hubs
+
+### .NET API Server (`pma-api-server/`)
+- **Primary API**: .NET 8 Web API (runs on configured port, typically 5000+)
+- `src/PMA.Api/` - Web API project
+  - `Controllers/` - API controllers (MembersTasksController, etc.)
+  - `Services/` - Application services
+- `src/PMA.Core/` - Core domain entities, interfaces, DTOs
+  - `DTOs/` - Data Transfer Objects
+  - `Enums/` - Enumerations (TaskStatus, Priority, RoleCodes)
+  - `Interfaces/` - Service interfaces
+- `src/PMA.Infrastructure/` - Data access and infrastructure
+- **Database**: SQL Server (DESKTOP-88VGRA9, Database: PMA)
+- **Build Command**: `dotnet build` (in PMA.Api directory)
+- **Run Command**: `dotnet run` (in PMA.Api directory)
 
 ### API Configuration
 - **Mock API Server Port**: 3002 (default)
@@ -203,6 +223,16 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - Supports automatic dark/light mode switching
 - Color palette: primary, secondary, success, warning, danger, default
 
+### Design Consistency Patterns
+**CRITICAL**: Maintain consistent design patterns across similar components
+- **Quick Actions Components**: Always use Accordion + CustomAlert pattern
+  - `QuickActions.tsx` (Analyst Manager) - Original design pattern
+  - `TeamQuickActions.tsx` (Team Member) - Matches QuickActions design
+  - **Required Elements**: AnimatedCounter, CustomAlert with colored borders, ScrollShadow, bordered buttons
+- **Task Lists**: Use consistent status/priority color coding
+- **Modal Patterns**: Follow existing modal structures for updates
+- **Loading States**: Use Skeleton components consistently
+
 ## API Integration
 
 ### Service Layer Pattern
@@ -212,29 +242,63 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - Follow RESTful conventions
 - Handle loading states and error states
 
-### Mock API Server
-- Located in `mock-api-server/`
-- Provides realistic data structures
-- Supports SignalR for real-time updates
-- Use for development and testing
+### API Servers
+- **Mock API Server**: Located in `mock-api-server/`, provides realistic data structures for development
+- **.NET API Server**: Primary backend in `pma-api-server/`, connects to SQL Server database
+- Use Mock API for frontend-only testing, .NET API for full integration testing
+
+### Task Status Enum Values
+**CRITICAL**: Task status IDs must match the database enum (`PMA.Core.Enums.TaskStatus`):
+- `ToDo = 1` - Initial task state
+- `InProgress = 2` - Task being worked on
+- `InReview = 3` - Task under review
+- `Rework = 4` - Task needs rework
+- `Completed = 5` - Task finished
+- `OnHold = 6` - Task paused/blocked
+
+### Priority Enum Values
+- `Low = 1`
+- `Medium = 2`
+- `High = 3`
+
+### Key API Endpoints for Team Members
+- `GET /api/MembersTasks` - Get tasks (auto-filters by current user for team members)
+- `PUT /api/MembersTasks/{id}/status` - Update task status (accepts status string in body)
 
 ## Dashboard System
 
 ### Dashboard Types
-- **AnalystManagerDashboard**: Requirements management, team performance
-- **DeveloperManagerDashboard**: Development team management, approved requirements, deployments
+- **AnalystManagerDashboard**: Requirements management, team performance (Role ID: 2)
+- **DeveloperManagerDashboard**: Development team management, approved requirements, deployments (Role ID: 4)
+- **TeamMemberDashboard**: Task management for QC, Developers, Designers (Role IDs: 5, 7, 9)
 - Each dashboard has specialized components in respective subdirectories
 
 ### Dashboard Components
 - **ApprovedRequirements**: Shows approved requirements ready for development (Developer Manager)
 - **PendingRequirements**: Shows draft requirements awaiting approval (Analyst Manager)
-- **DeveloperQuickActions**: Task assignment and management tools
+- **DeveloperQuickActions**: Task assignment and management tools (Developer Manager)
+- **MyAssignedTasks**: Shows tasks assigned to current user (Team Members)
+- **TeamQuickActions**: Quick status updates for assigned tasks (Team Members)
+  - **Design Pattern**: Uses Accordion layout with CustomAlert components (matches QuickActions design)
+  - **Features**: AnimatedCounter for task count, ScrollShadow for scrollable content
+  - **Actions**: Start/Pause/Complete buttons based on task statusId
+  - **Styling**: Colored left borders (primary/warning/danger), bordered buttons with shadow-small
 - Each component uses proper API services and follows consistent design patterns
 
 ### Role-Based Access
 - Use `usePermissions()` hook for role checking
 - Implement proper access controls in routing
 - Support multiple roles per user
+- **Role IDs** (from `src/constants/roles.ts`):
+  - Administrator: 1
+  - Analyst Department Manager: 2
+  - Analyst: 3
+  - Development Manager: 4
+  - Software Developer: 5
+  - Quality Control Manager: 6
+  - Quality Control Team Member: 7
+  - Designer Manager: 8
+  - Designer Team Member: 9
 
 ## Performance Considerations
 

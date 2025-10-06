@@ -5,6 +5,7 @@ import LoadingLogo from "@/components/LoadingLogo";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks";
 import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
+import TeamMemberDashboard from "@/components/dashboard/TeamMemberDashboard";
 import { RoleIds } from "@/constants/roles";
 
 export default function IndexPage() {
@@ -25,11 +26,19 @@ export default function IndexPage() {
   // Check if user has Analyst Department Manager role
   const hasAnalystRole = hasAnyRoleById([RoleIds.ANALYST_DEPARTMENT_MANAGER]);
   const hasDevManagerRole = hasAnyRoleById([RoleIds.DEVELOPMENT_MANAGER]);
+  
+  // Check if user is a team member (QC, Developer, Designer)
+  const isTeamMember = hasAnyRoleById([
+    RoleIds.QUALITY_CONTROL_TEAM_MEMBER,
+    RoleIds.SOFTWARE_DEVELOPER,
+    RoleIds.DESIGNER_TEAM_MEMBER,
+  ]);
 
   return (
     <>
       {hasAnalystRole ? <AnalystManagerDashboard /> : <div />}
       {hasDevManagerRole ? <DeveloperManagerDashboard /> : <div />}
+      {isTeamMember ? <TeamMemberDashboard /> : <div />}
     </>
   );
 }

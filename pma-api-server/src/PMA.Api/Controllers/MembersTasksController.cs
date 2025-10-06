@@ -5,6 +5,7 @@ using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
 using PMA.Core.DTOs.Tasks;
 using PMA.Core.Enums;
+using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 
 namespace PMA.Api.Controllers;
 
@@ -325,6 +326,55 @@ public class MembersTasksController : ApiBaseController
     }
 
     /// <summary>
+    /// Update task status
+    /// </summary>
+    [HttpPut("{id}/status")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateTaskStatus(int id, [FromBody] UpdateTaskStatusRequest request)
+    {
+        try
+        {
+            // Get the task to ensure it exists
+            var task = await _memberTaskService.GetMemberTaskByIdAsync(id);
+            if (task == null)
+            {
+                return Error<object>("Task not found");
+            }
+
+            // Map status string to TaskStatus enum
+            TaskStatusEnum statusId = request.Status?.ToLower() switch
+            {
+                "pending" => TaskStatusEnum.ToDo,
+                "todo" => TaskStatusEnum.ToDo,
+                "in progress" => TaskStatusEnum.InProgress,
+                "inprogress" => TaskStatusEnum.InProgress,
+                "in review" => TaskStatusEnum.InReview,
+                "inreview" => TaskStatusEnum.InReview,
+                "rework" => TaskStatusEnum.Rework,
+                "blocked" => TaskStatusEnum.OnHold,
+                "on hold" => TaskStatusEnum.OnHold,
+                "onhold" => TaskStatusEnum.OnHold,
+                "completed" => TaskStatusEnum.Completed,
+                "done" => TaskStatusEnum.Completed,
+                _ => task.StatusId // Keep existing if invalid
+            };
+
+            // Update the status and progress
+            task.StatusId = statusId;
+            task.Progress = statusId == TaskStatusEnum.Completed ? 100 : task.Progress;
+
+            var updatedTask = await _memberTaskService.UpdateMemberTaskAsync(task);
+            
+            return Success(updatedTask, message: "Task status updated successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while updating task status", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Delete a member task
     /// </summary>
     [HttpDelete("{id}")]
@@ -358,4 +408,9 @@ public class MembersTasksController : ApiBaseController
             return StatusCode(500, errorResponse);
         }
     }
+}
+
+public class UpdateTaskStatusRequest
+{
+    public string Status { get; set; } = string.Empty;
 }
