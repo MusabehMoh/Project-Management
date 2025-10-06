@@ -5,6 +5,7 @@ import { Input } from "@heroui/input";
 import { Avatar } from "@heroui/avatar";
 import { Divider } from "@heroui/divider";
 import { Chip } from "@heroui/chip";
+import { Accordion, AccordionItem } from "@heroui/accordion";
 import { User, Shield, Calendar, Building2 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -35,6 +36,27 @@ export default function ProfilePage() {
         return acc;
       },
       {} as { [category: string]: typeof user.actions },
+    );
+  };
+
+  // Get color for category chip
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      Projects: "primary",
+      Requirements: "secondary",
+      Tasks: "success",
+      Users: "warning",
+      Departments: "danger",
+      Timeline: "default",
+      Uncategorized: "default",
+    };
+
+    return (
+      colors[category as keyof typeof colors] ||
+      (colors as any)[Object.keys(colors).find((key) =>
+        category.toLowerCase().includes(key.toLowerCase()),
+      ) as string] ||
+      "default"
     );
   };
 
@@ -252,42 +274,64 @@ export default function ProfilePage() {
               </h3>
             </div>
           </CardHeader>
-          <CardBody className="space-y-6">
-            {Object.entries(getUserActionsByCategory()).map(
-              ([category, actions]) => (
-                <div key={category} className="space-y-3">
-                  <h4
-                    className={`text-md font-medium text-default-700 border-b border-default-200 pb-2 ${language === "ar" ? "text-right" : ""}`}
+          <CardBody>
+            <Accordion selectionMode="multiple" variant="splitted">
+              {Object.entries(getUserActionsByCategory()).map(
+                ([category, actions]) => (
+                  <AccordionItem
+                    key={category}
+                    className="border border-default-200 rounded-lg"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">
+                          {category}
+                        </span>
+                        <Chip
+                          color={
+                            getCategoryColor(category) as
+                              | "primary"
+                              | "secondary"
+                              | "success"
+                              | "warning"
+                              | "danger"
+                              | "default"
+                          }
+                          size="sm"
+                          variant="flat"
+                        >
+                          {actions?.length || 0}
+                        </Chip>
+                      </div>
+                    }
                   >
-                    {category}
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {actions?.map((action) => (
-                      <Card
-                        key={action.id}
-                        className="bg-default-50 border border-default-200"
-                      >
-                        <CardBody className="p-3">
-                          <div
-                            className={`flex items-start gap-3 ${language === "ar" ? "text-right" : ""}`}
-                          >
-                            <div className="flex-1 min-w-0">
-                              {action.description && (
-                                <p
-                                  className={`text-sm text-default-700 line-clamp-2 ${language === "ar" ? "text-right" : ""}`}
-                                >
-                                  {action.description}
-                                </p>
-                              )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+                      {actions?.map((action) => (
+                        <Card
+                          key={action.id}
+                          className="bg-default-50 border border-default-200"
+                        >
+                          <CardBody className="p-3">
+                            <div
+                              className={`flex items-start gap-3 ${language === "ar" ? "text-right" : ""}`}
+                            >
+                              <div className="flex-1 min-w-0">
+                                {action.description && (
+                                  <p
+                                    className={`text-sm text-default-700 line-clamp-2 ${language === "ar" ? "text-right" : ""}`}
+                                  >
+                                    {action.description}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ),
-            )}
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </div>
+                  </AccordionItem>
+                ),
+              )}
+            </Accordion>
           </CardBody>
         </Card>
       )}
