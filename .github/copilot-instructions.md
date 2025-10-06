@@ -271,6 +271,9 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - **AnalystManagerDashboard**: Requirements management, team performance (Role ID: 2)
 - **DeveloperManagerDashboard**: Development team management, approved requirements, deployments (Role ID: 4)
 - **TeamMemberDashboard**: Task management for QC, Developers, Designers (Role IDs: 5, 7, 9)
+  - **Layout**: 3 main sections - ModernQuickStats, TeamQuickActions/MyAssignedTasks (70/30 split), Calendar
+  - **Simplified Design**: No additional stats cards, calendar without sidebar
+  - **Focus**: Task management and quick status updates
 - Each dashboard has specialized components in respective subdirectories
 
 ### Dashboard Components
@@ -287,6 +290,9 @@ const response = await fetch('/api/project-requirements/approved-requirements');
   - **Features**: AnimatedCounter for task count, ScrollShadow for scrollable content
   - **Actions**: Start/Pause/Complete buttons based on task statusId
   - **Styling**: Colored left borders (primary/warning/danger), bordered buttons with shadow-small
+- **Calendar**: Integrated calendar component (Team Members)
+  - **Configuration**: Full-width display without sidebar (showSidebar={false})
+  - **Purpose**: View meetings and deadlines without overview/upcoming events panel
 - Each component uses proper API services and follows consistent design patterns
 
 ### Role-Based Access

@@ -61,52 +61,7 @@ export default function TeamMemberDashboard() {
         <h2 className="text-2xl font-semibold text-foreground">
           {t("calendar.title")}
         </h2>
-        <Calendar maxHeight="600px" showSidebar={true} />
-      </div>
-
-      {/* Additional Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card shadow="sm">
-          <CardBody className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-default-500">
-                {t("teamDashboard.tasksCompleted")}
-              </p>
-              <p className="text-3xl font-bold text-success">0</p>
-              <p className="text-xs text-default-400">
-                {t("teamDashboard.thisMonth")}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card shadow="sm">
-          <CardBody className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-default-500">
-                {t("teamDashboard.averageCompletionTime")}
-              </p>
-              <p className="text-3xl font-bold text-primary">-</p>
-              <p className="text-xs text-default-400">
-                {t("teamDashboard.hours")}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card shadow="sm">
-          <CardBody className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-default-500">
-                {t("teamDashboard.upcomingDeadlines")}
-              </p>
-              <p className="text-3xl font-bold text-warning">0</p>
-              <p className="text-xs text-default-400">
-                {t("teamDashboard.nextWeek")}
-              </p>
-            </div>
-          </CardBody>
-        </Card>
+        <Calendar maxHeight="600px" showSidebar={false} />
       </div>
     </div>
   );
