@@ -106,7 +106,7 @@ export interface CreateProjectRequest {
   alternativeOwner?: number; // Numeric ID for alternative owner (prsId)
   owningUnit: number; // Numeric ID for owning unit
   analysts?: number[]; // Array of numeric IDs for analysts
-  managers: number[];
+  units: number[];
   startDate: string;
   expectedCompletionDate: string;
   description: string;
