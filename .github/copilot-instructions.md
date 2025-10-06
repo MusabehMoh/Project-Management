@@ -84,6 +84,7 @@ This is a comprehensive Project Management Application (PMA) built with modern w
     - `team-member/` - Team member-specific components
       - `MyAssignedTasks.tsx` - Shows user's assigned tasks with PendingRequirements design pattern
       - `TeamQuickActions.tsx` - Quick task status updates with Accordion/CustomAlert design
+      - `MyNextDeadline.tsx` - Compact deadline tracker with progress and countdown
   - `calendar/` - Calendar components
   - `primitives.ts` - Base UI component definitions
 - `pages/` - Main application pages/routes
@@ -91,6 +92,7 @@ This is a comprehensive Project Management Application (PMA) built with modern w
 - `hooks/` - Custom React hooks
   - `useMyAssignedTasks.ts` - Fetch current user's tasks
   - `useTeamQuickActions.ts` - Fetch and update task statuses
+  - `useMyNextDeadline.ts` - Fetch next upcoming deadline task
 - `services/` - API service layers
   - `api/` - API service classes and interfaces
 - `types/` - TypeScript type definitions
@@ -263,6 +265,7 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 
 ### Key API Endpoints for Team Members
 - `GET /api/MembersTasks` - Get tasks (auto-filters by current user for team members)
+- `GET /api/MembersTasks/next-deadline` - Get the next upcoming task deadline for current user
 - `PUT /api/MembersTasks/{id}/status` - Update task status (accepts status string in body)
 
 ## Dashboard System
@@ -273,9 +276,9 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - **TeamMemberDashboard**: Task management for QC, Developers, Designers (Role IDs: 5, 7, 9)
   - **Layout**: Grid layout with ModernQuickStats at top, then 70/30 split below
   - **Left Column (70%)**: TeamQuickActions stacked with Calendar
-  - **Right Column (30%)**: MyAssignedTasks (full height)
+  - **Right Column (30%)**: MyAssignedTasks stacked with MyNextDeadline
   - **Simplified Design**: No additional stats cards, calendar without sidebar
-  - **Focus**: Task management and quick status updates
+  - **Focus**: Task management, quick status updates, and deadline tracking
 - Each dashboard has specialized components in respective subdirectories
 
 ### Dashboard Components
@@ -295,6 +298,11 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - **Calendar**: Integrated calendar component (Team Members)
   - **Configuration**: Full-width display without sidebar (showSidebar={false})
   - **Purpose**: View meetings and deadlines without overview/upcoming events panel
+- **MyNextDeadline**: Shows next upcoming task deadline (Team Members)
+  - **Design Pattern**: Compact card design with progress bar and deadline countdown
+  - **Features**: Task name, progress percentage, deadline date, days remaining chip
+  - **Color Coding**: Progress bar (success/primary/warning/danger), deadline chip (green >7d, yellow ≤7d, red ≤3d/overdue)
+  - **Layout**: Small component under MyAssignedTasks to complement calendar height
 - Each component uses proper API services and follows consistent design patterns
 
 ### Role-Based Access

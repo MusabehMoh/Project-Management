@@ -5,6 +5,7 @@ import { Card, CardBody } from "@heroui/card";
 import Calendar from "./calendar";
 import MyAssignedTasks from "./team-member/MyAssignedTasks";
 import TeamQuickActions from "./team-member/TeamQuickActions";
+import MyNextDeadline from "./team-member/MyNextDeadline";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import ModernQuickStats from "@/components/ModernQuickStats";
@@ -53,9 +54,10 @@ export default function TeamMemberDashboard() {
           <Calendar maxHeight="600px" showSidebar={false} />
         </div>
 
-        {/* Right Column: My Assigned Tasks (30%) */}
-        <div className="lg:col-span-1">
+        {/* Right Column: My Assigned Tasks + Next Deadline (30%) */}
+        <div className="lg:col-span-1 space-y-6">
           <MyAssignedTasks key={refreshKey} />
+          <MyNextDeadline key={refreshKey} />
         </div>
       </div>
     </div>

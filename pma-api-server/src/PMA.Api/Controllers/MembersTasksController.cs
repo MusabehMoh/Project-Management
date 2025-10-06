@@ -375,6 +375,53 @@ public class MembersTasksController : ApiBaseController
     }
 
     /// <summary>
+    /// Get the next upcoming task deadline for the current user
+    /// </summary>
+    [HttpGet("next-deadline")]
+    [AllowAnonymous] // Temporary for testing - remove in production
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetNextDeadline()
+    {
+        try
+        {
+            // Get current user's PRS ID
+            var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
+            if (!int.TryParse(currentUserPrsId, out int currentUserId))
+            {
+                return Error<TaskDto>("Unable to retrieve current user information");
+            }
+
+            // Get all tasks for current user that are not completed
+            var (memberTasks, _) = await _memberTaskService.GetMemberTasksAsync(
+                page: 1, 
+                limit: 1000, 
+                projectId: null, 
+                primaryAssigneeId: currentUserId, 
+                status: null, 
+                priority: null, 
+                departmentId: null
+            );
+
+            // Filter for incomplete tasks with end dates and get the nearest one
+            var nextTask = memberTasks
+                .Where(t => t.StatusId != TaskStatusEnum.Completed && t.EndDate != default(DateTime))
+                .OrderBy(t => t.EndDate)
+                .FirstOrDefault();
+
+            if (nextTask == null)
+            {
+                return Success<TaskDto?>(null, message: "No upcoming deadlines found");
+            }
+
+            return Success(nextTask, message: "Next deadline retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<TaskDto>("An error occurred while retrieving next deadline", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Delete a member task
     /// </summary>
     [HttpDelete("{id}")]

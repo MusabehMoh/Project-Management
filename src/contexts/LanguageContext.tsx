@@ -619,6 +619,16 @@ const translations = {
     "teamDashboard.myTasks.noProject": "No Project",
     "teamDashboard.myTasks.unknown": "Unknown",
 
+    // Team Member - Next Deadline
+    "teamDashboard.nextDeadline.title": "Next Deadline",
+    "teamDashboard.nextDeadline.noDeadline": "No upcoming deadlines",
+    "teamDashboard.nextDeadline.untitled": "Untitled Task",
+    "teamDashboard.nextDeadline.progress": "Progress",
+    "teamDashboard.nextDeadline.overdue": "overdue",
+    "teamDashboard.nextDeadline.today": "Today",
+    "teamDashboard.nextDeadline.tomorrow": "Tomorrow",
+    "teamDashboard.nextDeadline.left": "left",
+
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "Quick Actions",
     "teamDashboard.quickActions.subtitle":
@@ -2194,6 +2204,16 @@ const translations = {
     "teamDashboard.myTasks.project": "المشروع",
     "teamDashboard.myTasks.noProject": "لا يوجد مشروع",
     "teamDashboard.myTasks.unknown": "غير معروف",
+
+    // Team Member - Next Deadline
+    "teamDashboard.nextDeadline.title": "الموعد النهائي القادم",
+    "teamDashboard.nextDeadline.noDeadline": "لا توجد مواعيد نهائية قادمة",
+    "teamDashboard.nextDeadline.untitled": "مهمة بدون عنوان",
+    "teamDashboard.nextDeadline.progress": "التقدم",
+    "teamDashboard.nextDeadline.overdue": "متأخر",
+    "teamDashboard.nextDeadline.today": "اليوم",
+    "teamDashboard.nextDeadline.tomorrow": "غداً",
+    "teamDashboard.nextDeadline.left": "متبقي",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "الإجراءات السريعة",
