@@ -19,13 +19,9 @@ interface TaskCardProps {
   getStatusColor: (
     status: number
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
-  getStatusColor: (
-    statusId: number
-  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+
   getStatusText: (status: number) => string;
-  getPriorityColor: (
-    priority: number
-  ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
+
   getPriorityColor: (
     priorityId: number
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
