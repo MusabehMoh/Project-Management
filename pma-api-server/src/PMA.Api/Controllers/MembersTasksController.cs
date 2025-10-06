@@ -5,6 +5,7 @@ using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
 using PMA.Core.DTOs.Tasks;
 using PMA.Core.Enums;
+using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 
 namespace PMA.Api.Controllers;
 
@@ -325,6 +326,102 @@ public class MembersTasksController : ApiBaseController
     }
 
     /// <summary>
+    /// Update task status
+    /// </summary>
+    [HttpPut("{id}/status")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateTaskStatus(int id, [FromBody] UpdateTaskStatusRequest request)
+    {
+        try
+        {
+            // Get the task to ensure it exists
+            var task = await _memberTaskService.GetMemberTaskByIdAsync(id);
+            if (task == null)
+            {
+                return Error<object>("Task not found");
+            }
+
+            // Map status string to TaskStatus enum
+            TaskStatusEnum statusId = request.Status?.ToLower() switch
+            {
+                "pending" => TaskStatusEnum.ToDo,
+                "todo" => TaskStatusEnum.ToDo,
+                "in progress" => TaskStatusEnum.InProgress,
+                "inprogress" => TaskStatusEnum.InProgress,
+                "in review" => TaskStatusEnum.InReview,
+                "inreview" => TaskStatusEnum.InReview,
+                "rework" => TaskStatusEnum.Rework,
+                "blocked" => TaskStatusEnum.OnHold,
+                "on hold" => TaskStatusEnum.OnHold,
+                "onhold" => TaskStatusEnum.OnHold,
+                "completed" => TaskStatusEnum.Completed,
+                "done" => TaskStatusEnum.Completed,
+                _ => task.StatusId // Keep existing if invalid
+            };
+
+            // Update the status and progress
+            task.StatusId = statusId;
+            task.Progress = statusId == TaskStatusEnum.Completed ? 100 : task.Progress;
+
+            var updatedTask = await _memberTaskService.UpdateMemberTaskAsync(task);
+            
+            return Success(updatedTask, message: "Task status updated successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while updating task status", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get the next upcoming task deadline for the current user
+    /// </summary>
+    [HttpGet("next-deadline")]
+    [AllowAnonymous] // Temporary for testing - remove in production
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetNextDeadline()
+    {
+        try
+        {
+            // Get current user's PRS ID
+            var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
+            if (!int.TryParse(currentUserPrsId, out int currentUserId))
+            {
+                return Error<TaskDto>("Unable to retrieve current user information");
+            }
+
+            // Get all tasks for current user that are not completed
+            var (memberTasks, _) = await _memberTaskService.GetMemberTasksAsync(
+                page: 1, 
+                limit: 1000, 
+                projectId: null, 
+                primaryAssigneeId: currentUserId, 
+                status: null, 
+                priority: null, 
+                departmentId: null
+            );
+
+            // Filter for incomplete tasks with end dates and get the nearest one
+            var nextTask = memberTasks
+                .Where(t => t.StatusId != TaskStatusEnum.Completed && t.EndDate != default(DateTime))
+                .OrderBy(t => t.EndDate)
+                .FirstOrDefault();
+
+            if (nextTask == null)
+            {
+                return Success<TaskDto?>(null, message: "No upcoming deadlines found");
+            }
+
+            return Success(nextTask, message: "Next deadline retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<TaskDto>("An error occurred while retrieving next deadline", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Delete a member task
     /// </summary>
     [HttpDelete("{id}")]
@@ -358,4 +455,9 @@ public class MembersTasksController : ApiBaseController
             return StatusCode(500, errorResponse);
         }
     }
+}
+
+public class UpdateTaskStatusRequest
+{
+    public string Status { get; set; } = string.Empty;
 }
