@@ -2206,7 +2206,7 @@ const translations = {
     "teamDashboard.myTasks.unknown": "غير معروف",
 
     // Team Member - Next Deadline
-    "teamDashboard.nextDeadline.title": "الموعد النهائي القادم",
+    "teamDashboard.nextDeadline.title": "تاريخ آخر مهمة",
     "teamDashboard.nextDeadline.noDeadline": "لا توجد مواعيد نهائية قادمة",
     "teamDashboard.nextDeadline.untitled": "مهمة بدون عنوان",
     "teamDashboard.nextDeadline.progress": "التقدم",
