@@ -2637,7 +2637,7 @@ const translations = {
 
     // Access Denied
     "access.denied.title": "الوصول مرفوض",
-    "access.denied.message": "ليس لديك صلاحية للوصول إلى هذا المشروع.",
+    "access.denied.message": "ليس لديك صلاحية للوصول إلى هذا النظام.",
     "access.denied.loading": "جاري التحميل...",
 
     // Project Status Options
