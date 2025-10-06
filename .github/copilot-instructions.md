@@ -82,7 +82,7 @@ This is a comprehensive Project Management Application (PMA) built with modern w
     - `TeamMemberDashboard.tsx` - Team member dashboard (QC, Developers, Designers)
     - `developer/` - Developer-specific components
     - `team-member/` - Team member-specific components
-      - `MyAssignedTasks.tsx` - Shows user's assigned tasks
+      - `MyAssignedTasks.tsx` - Shows user's assigned tasks with PendingRequirements design pattern
       - `TeamQuickActions.tsx` - Quick task status updates with Accordion/CustomAlert design
   - `calendar/` - Calendar components
   - `primitives.ts` - Base UI component definitions
@@ -278,6 +278,10 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - **PendingRequirements**: Shows draft requirements awaiting approval (Analyst Manager)
 - **DeveloperQuickActions**: Task assignment and management tools (Developer Manager)
 - **MyAssignedTasks**: Shows tasks assigned to current user (Team Members)
+  - **Design Pattern**: Uses compact list design matching PendingRequirements component
+  - **Features**: Compact card layout with divide-y separators, hover effects, ListTodo icon
+  - **Layout**: Card with header (icon + title + count chip), divider, compact item list
+  - **Item Structure**: Title + priority chip, status text, project + date metadata, View button
 - **TeamQuickActions**: Quick status updates for assigned tasks (Team Members)
   - **Design Pattern**: Uses Accordion layout with CustomAlert components (matches QuickActions design)
   - **Features**: AnimatedCounter for task count, ScrollShadow for scrollable content

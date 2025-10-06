@@ -616,6 +616,7 @@ const translations = {
     "teamDashboard.myTasks.error": "Failed to load your assigned tasks",
     "teamDashboard.myTasks.untitled": "Untitled Task",
     "teamDashboard.myTasks.project": "Project",
+    "teamDashboard.myTasks.noProject": "No Project",
     "teamDashboard.myTasks.unknown": "Unknown",
 
     // Team Member - Quick Actions
@@ -2191,6 +2192,7 @@ const translations = {
     "teamDashboard.myTasks.error": "فشل في تحميل مهامك المعينة",
     "teamDashboard.myTasks.untitled": "مهمة بدون عنوان",
     "teamDashboard.myTasks.project": "المشروع",
+    "teamDashboard.myTasks.noProject": "لا يوجد مشروع",
     "teamDashboard.myTasks.unknown": "غير معروف",
 
     // Team Member - Quick Actions

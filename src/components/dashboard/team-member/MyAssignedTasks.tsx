@@ -5,7 +5,7 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, Clock, AlertCircle, ChevronRight } from "lucide-react";
+import { ListTodo, Clock, User } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
@@ -64,19 +64,6 @@ export default function MyAssignedTasks({
         return "warning";
       default:
         return "default";
-    }
-  };
-
-  const getStatusIcon = (statusId: number | null | undefined) => {
-    switch (statusId) {
-      case 5: // Completed
-        return <CheckCircle className="w-4 h-4" />;
-      case 2: // In Progress
-        return <Clock className="w-4 h-4" />;
-      case 6: // On Hold
-        return <AlertCircle className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
     }
   };
 
@@ -140,18 +127,40 @@ export default function MyAssignedTasks({
                 key={i}
                 className="p-4 border border-default-200 rounded-lg space-y-3"
               >
+                {/* Task header */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
-                      <Skeleton className="h-5 w-5 rounded-full" />
-                      <Skeleton className="h-4 w-24 rounded" />
+                      <Skeleton className="h-4 w-32 rounded" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
                     </div>
-                    <Skeleton className="h-5 w-full rounded" />
-                    <Skeleton className="h-4 w-3/4 rounded" />
+                    <Skeleton className="h-3 w-full rounded" />
+                    <Skeleton className="h-3 w-3/4 rounded" />
                   </div>
+                  <Skeleton className="h-8 w-8 rounded" />
+                </div>
+
+                {/* Task metadata */}
+                <div className="flex items-center justify-between pt-2 border-t border-default-100">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-4 w-4 rounded" />
+                      <Skeleton className="h-3 w-16 rounded" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-4 w-4 rounded" />
+                      <Skeleton className="h-3 w-12 rounded" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-6 w-20 rounded-full" />
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* View all button skeleton */}
+          <div className="pt-4 border-t border-default-200">
+            <Skeleton className="h-9 w-full rounded" />
           </div>
         </CardBody>
       </Card>
@@ -165,17 +174,12 @@ export default function MyAssignedTasks({
         dir={direction}
         shadow="sm"
       >
-        <CardBody className="p-6">
-          <ErrorWithRetry
-            error={error}
-            onRetry={refresh}
-          />
+        <CardBody className="min-h-[200px]">
+          <ErrorWithRetry error={error} onRetry={refresh} />
         </CardBody>
       </Card>
     );
   }
-
-  const displayTasks = tasks.slice(0, 5);
 
   return (
     <Card
@@ -183,92 +187,106 @@ export default function MyAssignedTasks({
       dir={direction}
       shadow="sm"
     >
-      <CardHeader className="flex items-center justify-between px-6 py-4">
-        <div className="space-y-1">
-          <h3 className="text-xl font-semibold text-foreground">
-            {t("teamDashboard.myTasks.title")}
-          </h3>
-          <p className="text-sm text-default-500">
-            {t("teamDashboard.myTasks.showing").replace("{count}", displayTasks.length.toString()).replace("{total}", total.toString())}
-          </p>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <ListTodo className="w-5 h-5 text-default-600" />
+            <h3 className="text-lg font-semibold text-foreground">
+              {t("teamDashboard.myTasks.title")}
+            </h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Chip
+              className="bg-primary-50 text-primary-600"
+              size="sm"
+              variant="flat"
+            >
+              {total}
+            </Chip>
+            {total > 0 && (
+              <Button
+                size="sm"
+                variant="light"
+                onPress={handleViewAllTasks}
+              >
+                {t("common.viewAll")}
+              </Button>
+            )}
+          </div>
         </div>
-        {total > 5 && (
-          <Button
-            className="text-primary"
-            size="sm"
-            variant="light"
-            onPress={handleViewAllTasks}
-          >
-            {t("teamDashboard.myTasks.viewAll")}
-          </Button>
-        )}
       </CardHeader>
 
-      <Divider />
+      <Divider className="bg-default-200" />
 
-      <CardBody className="px-6 py-4">
-        {displayTasks.length === 0 ? (
-          <div className="py-12 text-center">
-            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-success opacity-50" />
-            <p className="text-default-500 mb-2">
+      <CardBody className="p-0">
+        {tasks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <ListTodo className="w-12 h-12 text-default-300 mb-3" />
+            <h4 className="font-medium text-foreground mb-1">
               {t("teamDashboard.myTasks.noTasks")}
-            </p>
-            <p className="text-sm text-default-400">
+            </h4>
+            <p className="text-sm text-default-500">
               {t("teamDashboard.myTasks.noTasksDesc")}
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {displayTasks.map((task: any) => (
+          <div className="divide-y divide-default-200">
+            {tasks.map((task: any) => (
               <div
                 key={task.id}
-                className="group p-4 border border-default-200 rounded-lg hover:border-primary transition-all cursor-pointer hover:shadow-md"
+                className="p-4 hover:bg-default-50 transition-colors cursor-pointer"
                 onClick={() => handleViewTask(task.id)}
               >
-                {/* Task Header */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2 flex-1">
-                    <Chip
-                      className="capitalize"
-                      color={getStatusColor(task.statusId)}
-                      size="sm"
-                      startContent={getStatusIcon(task.statusId)}
-                      variant="flat"
-                    >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h5 className="font-medium text-sm text-foreground truncate">
+                        {task.name || t("teamDashboard.myTasks.untitled")}
+                      </h5>
+                      <Chip
+                        color={getPriorityColor(task.priorityId)}
+                        size="sm"
+                        variant="flat"
+                      >
+                        {getPriorityText(task.priorityId)}
+                      </Chip>
+                    </div>
+
+                    <p className="text-xs text-default-500 mb-2">
                       {getStatusText(task.statusId)}
-                    </Chip>
-                    <Chip
-                      color={getPriorityColor(task.priorityId)}
+                    </p>
+
+                    <div className="flex items-center gap-4 text-xs text-default-400">
+                      <div className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        <span className="truncate">
+                          {task.project?.applicationName ||
+                            t("teamDashboard.myTasks.noProject")}
+                        </span>
+                      </div>
+                      {task.endDate && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{formatDate(task.endDate)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-shrink-0">
+                    <Button
+                      className="min-w-0 px-3"
+                      color="primary"
                       size="sm"
                       variant="flat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewTask(task.id);
+                      }}
                     >
-                      {getPriorityText(task.priorityId)}
-                    </Chip>
+                      {t("common.view")}
+                    </Button>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-default-400 group-hover:text-primary transition-colors" />
-                </div>
-
-                {/* Task Title */}
-                <h4 className="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                  {task.name || t("teamDashboard.myTasks.untitled")}
-                </h4>
-
-                {/* Task Details */}
-                <div className="flex items-center gap-4 text-sm text-default-500">
-                  {task.project?.applicationName && (
-                    <span className="flex items-center gap-1">
-                      <span className="font-medium">
-                        {t("teamDashboard.myTasks.project")}:
-                      </span>
-                      <span>{task.project.applicationName}</span>
-                    </span>
-                  )}
-                  {task.endDate && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{formatDate(task.endDate)}</span>
-                    </span>
-                  )}
                 </div>
               </div>
             ))}
