@@ -15,39 +15,16 @@ public class MembersTasksController : ApiBaseController
 {
     private readonly IMemberTaskService _memberTaskService;
     private readonly IUserContextAccessor _userContextAccessor;
-    private readonly IUserService _userService;
-    private readonly IDepartmentService _departmentService;
 
-    public MembersTasksController(IMemberTaskService memberTaskService, IUserContextAccessor userContextAccessor, IUserService userService, IDepartmentService departmentService)
+    public MembersTasksController(IMemberTaskService memberTaskService, IUserContextAccessor userContextAccessor)
     {
         _memberTaskService = memberTaskService;
         _userContextAccessor = userContextAccessor;
-        _userService = userService;
-        _departmentService = departmentService;
-    }
-
-    private bool IsRoleCode(string? roleCode, RoleCodes targetRole)
-    {
-        if (string.IsNullOrEmpty(roleCode))
-            return false;
-
-        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) && parsedRole == targetRole;
-    }
-
-    private bool IsManagerRole(string? roleCode)
-    {
-        if (string.IsNullOrEmpty(roleCode))
-            return false;
-
-        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) &&
-               (parsedRole == RoleCodes.AnalystManager ||
-                parsedRole == RoleCodes.DevelopmentManager ||
-                parsedRole == RoleCodes.QCManager ||
-                parsedRole == RoleCodes.DesignerManager);
     }
 
     /// <summary>
     /// Get all member tasks with pagination and filtering
+    /// Service layer handles user context and role-based filtering
     /// </summary>
     [HttpGet]
     [AllowAnonymous] // Temporary for testing - remove in production
@@ -62,51 +39,10 @@ public class MembersTasksController : ApiBaseController
     {
         try
         {
-            // Get current user with roles
-            var currentUser = await _userService.GetCurrentUserAsync();
-            if (currentUser == null)
-            {
-                return Error<IEnumerable<TaskDto>>("Unable to retrieve current user information");
-            }
-
-            // Check user roles for filtering logic
-            bool isAdministrator = currentUser.Roles?.Any(r => IsRoleCode(r.Code, RoleCodes.Administrator)) ?? false;
-            bool isManager = currentUser.Roles?.Any(r => IsManagerRole(r.Code)) ?? false;
-
-            int? assigneeId = primaryAssigneeId;
-            int? departmentId = null;
-
-            if (isAdministrator)
-            {
-                // Administrator sees all tasks - no filtering needed
-                assigneeId = null;
-                departmentId = null;
-            }
-            else if (isManager)
-            {
-                // Managers see all tasks for their department
-                assigneeId = null;
-                // Get department ID from department name
-                if (currentUser?.Roles[0]?.Department?.Id!=null)
-                {
-                    departmentId = currentUser.Roles[0].Department?.Id;
-                }
-            }
-            else
-            {
-                // Regular users see only their assigned tasks
-                if (!assigneeId.HasValue)
-                {
-                    // Get current user context
-                    var userContext = await _userContextAccessor.GetUserContextAsync();
-                    if (userContext.IsAuthenticated && int.TryParse(userContext.PrsId, out int currentUserId))
-                    {
-                        assigneeId = currentUserId;
-                    }
-                }
-            }
-
-            var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(page, limit, projectId, assigneeId, status, priority, departmentId);
+            // Service layer handles user context and role-based filtering
+            var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(
+                page, limit, projectId, primaryAssigneeId, status, priority, departmentId: null);
+            
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
             return Success(memberTasks, pagination);

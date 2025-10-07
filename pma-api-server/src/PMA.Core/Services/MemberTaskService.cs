@@ -11,23 +11,98 @@ namespace PMA.Core.Services;
 public class MemberTaskService : IMemberTaskService
 {
     private readonly ITaskRepository _taskRepository;
+    private readonly IUserContextAccessor _userContextAccessor;
+    private readonly IUserService _userService;
+    private readonly IDepartmentService _departmentService;
 
-    public MemberTaskService(ITaskRepository taskRepository)
+    public MemberTaskService(
+        ITaskRepository taskRepository, 
+        IUserContextAccessor userContextAccessor, 
+        IUserService userService, 
+        IDepartmentService departmentService)
     {
         _taskRepository = taskRepository;
+        _userContextAccessor = userContextAccessor;
+        _userService = userService;
+        _departmentService = departmentService;
     }
 
     public async Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null)
     {
+        // Get current user context for filtering logic (similar to ProjectRequirementService pattern)
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.PrsId))
+        {
+            return (Enumerable.Empty<TaskDto>(), 0);
+        }
+
+        // Get current user with roles to determine access level
+        var currentUser = await _userService.GetCurrentUserAsync();
+        if (currentUser == null)
+        {
+            return (Enumerable.Empty<TaskDto>(), 0);
+        }
+
+        // Determine filtering based on user role
+        int? assigneeId = primaryAssigneeId;
+        int? deptId = departmentId;
+
+        bool isAdministrator = currentUser.Roles?.Any(r => IsRoleCode(r.Code, RoleCodes.Administrator)) ?? false;
+        bool isManager = currentUser.Roles?.Any(r => IsManagerRole(r.Code)) ?? false;
+
+        if (isAdministrator)
+        {
+            // Administrator sees all tasks - no filtering needed
+            assigneeId = null;
+            deptId = null;
+        }
+        else if (isManager)
+        {
+            // Managers see all tasks for their department
+            assigneeId = null;
+            if (currentUser.Roles != null && currentUser.Roles.Count > 0 && currentUser.Roles[0]?.Department?.Id != null)
+            {
+                deptId = currentUser.Roles[0].Department?.Id;
+            }
+        }
+        else
+        {
+            // Regular users see only their assigned tasks
+            if (!assigneeId.HasValue && int.TryParse(userContext.PrsId, out int currentUserId))
+            {
+                assigneeId = currentUserId;
+            }
+        }
+
         // Use TaskRepository to get tasks with assignee filter
         int? statusId = status;
         int? priorityId = priority;
 
-        var (tasks, totalCount) = await _taskRepository.GetTasksAsync(page, limit, null, projectId, primaryAssigneeId, statusId, priorityId, departmentId);
+        var (tasks, totalCount) = await _taskRepository.GetTasksAsync(page, limit, null, projectId, assigneeId, statusId, priorityId, deptId);
 
         var memberTasks = tasks.Select(MapTaskEntityToTaskDto);
 
         return (memberTasks, totalCount);
+    }
+
+    private bool IsRoleCode(string? roleCode, RoleCodes targetRole)
+    {
+        if (string.IsNullOrEmpty(roleCode))
+            return false;
+
+        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) && parsedRole == targetRole;
+    }
+
+    private bool IsManagerRole(string? roleCode)
+    {
+        if (string.IsNullOrEmpty(roleCode))
+            return false;
+
+        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) &&
+               (parsedRole == RoleCodes.AnalystManager ||
+                parsedRole == RoleCodes.DevelopmentManager ||
+                parsedRole == RoleCodes.QCManager ||
+                parsedRole == RoleCodes.DesignerManager);
     }
 
     private TaskDto MapTaskEntityToTaskDto(TaskEntity task)

@@ -364,9 +364,6 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       setError(null);
 
       try {
-        // Fetch configurations first
-        await tasksConfig();
-
         // Then fetch tasks with default parameters
         const response = await membersTasksService.getTasks();
 

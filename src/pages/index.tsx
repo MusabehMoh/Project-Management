@@ -26,11 +26,12 @@ export default function IndexPage() {
   // Check if user has Analyst Department Manager role
   const hasAnalystRole = hasAnyRoleById([RoleIds.ANALYST_DEPARTMENT_MANAGER]);
   const hasDevManagerRole = hasAnyRoleById([RoleIds.DEVELOPMENT_MANAGER]);
-  
+
   // Check if user is a team member (QC, Developer, Designer)
   const isTeamMember = hasAnyRoleById([
     RoleIds.QUALITY_CONTROL_TEAM_MEMBER,
     RoleIds.SOFTWARE_DEVELOPER,
+    RoleIds.ANALYST,
     RoleIds.DESIGNER_TEAM_MEMBER,
   ]);
 
