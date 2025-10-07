@@ -638,6 +638,14 @@ const translations = {
     "teamDashboard.nextDeadline.tomorrow": "Tomorrow",
     "teamDashboard.nextDeadline.left": "left",
 
+    // Team Member - Kanban Board
+    "teamDashboard.kanban.title": "Task Board",
+    "teamDashboard.kanban.subtitle": "Drag and drop tasks to update their status",
+    "teamDashboard.kanban.noTasks": "No tasks",
+    "teamDashboard.kanban.project": "Project",
+    "teamDashboard.kanban.requirement": "Requirement",
+    "teamDashboard.kanban.overdue": "Overdue",
+
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "Quick Actions",
     "teamDashboard.quickActions.subtitle":
@@ -2232,6 +2240,14 @@ const translations = {
     "teamDashboard.nextDeadline.today": "اليوم",
     "teamDashboard.nextDeadline.tomorrow": "غداً",
     "teamDashboard.nextDeadline.left": "متبقي",
+
+    // Team Member - Kanban Board
+    "teamDashboard.kanban.title": "لوحة المهام",
+    "teamDashboard.kanban.subtitle": "اسحب وأفلت المهام لتحديث حالتها",
+    "teamDashboard.kanban.noTasks": "لا توجد مهام",
+    "teamDashboard.kanban.project": "المشروع",
+    "teamDashboard.kanban.requirement": "المتطلب",
+    "teamDashboard.kanban.overdue": "متأخر",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "الإجراءات السريعة",
