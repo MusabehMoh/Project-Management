@@ -54,6 +54,10 @@ public interface ITaskService
     System.Threading.Tasks.Task UpdateTaskDependenciesAsync(int taskId, IEnumerable<int> predecessorIds);
     System.Threading.Tasks.Task<IEnumerable<TaskAssignment>> GetTaskAssignmentsAsync(int taskId);
     System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId);
+
+    // TaskStatusHistory methods
+    System.Threading.Tasks.Task<TaskStatusHistory> CreateTaskStatusHistoryAsync(TaskStatusHistory taskStatusHistory);
+    System.Threading.Tasks.Task<IEnumerable<TaskStatusHistory>> GetTaskStatusHistoryAsync(int taskId);
 }
 
 public interface ISprintService

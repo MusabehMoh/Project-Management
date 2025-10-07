@@ -44,6 +44,7 @@ public class ApplicationDbContext : DbContext
     // New DbSets for task assignments and dependencies
     public DbSet<TaskAssignment> TaskAssignments { get; set; }
     public DbSet<TaskDependency> TaskDependencies { get; set; }
+    public DbSet<TaskStatusHistory> TaskStatusHistory { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -8,10 +8,12 @@ namespace PMA.Core.Services;
 public class TaskService : ITaskService
 {
     private readonly ITaskRepository _taskRepository;
+    private readonly ITaskStatusHistoryRepository _taskStatusHistoryRepository;
 
-    public TaskService(ITaskRepository taskRepository)
+    public TaskService(ITaskRepository taskRepository, ITaskStatusHistoryRepository taskStatusHistoryRepository)
     {
         _taskRepository = taskRepository;
+        _taskStatusHistoryRepository = taskStatusHistoryRepository;
     }
 
     public async System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetAllTasksAsync()
@@ -92,6 +94,18 @@ public class TaskService : ITaskService
     public async System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId)
     {
         return await _taskRepository.GetTaskDependenciesAsync(taskId);
+    }
+
+    // TaskStatusHistory methods
+    public async System.Threading.Tasks.Task<TaskStatusHistory> CreateTaskStatusHistoryAsync(TaskStatusHistory taskStatusHistory)
+    {
+        taskStatusHistory.UpdatedAt = DateTime.UtcNow;
+        return await _taskStatusHistoryRepository.AddAsync(taskStatusHistory);
+    }
+
+    public async System.Threading.Tasks.Task<IEnumerable<TaskStatusHistory>> GetTaskStatusHistoryAsync(int taskId)
+    {
+        return await _taskStatusHistoryRepository.GetTaskStatusHistoryAsync(taskId);
     }
 }
 

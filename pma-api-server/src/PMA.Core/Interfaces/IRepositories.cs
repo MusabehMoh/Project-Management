@@ -51,6 +51,11 @@ public interface ITaskRepository : IRepository<TaskEntity>
     System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId);
 }
 
+public interface ITaskStatusHistoryRepository : IRepository<TaskStatusHistory>
+{
+    System.Threading.Tasks.Task<IEnumerable<TaskStatusHistory>> GetTaskStatusHistoryAsync(int taskId);
+}
+
 public interface ISprintRepository : IRepository<Sprint>
 {
     System.Threading.Tasks.Task<(IEnumerable<Sprint> Sprints, int TotalCount)> GetSprintsAsync(int page, int limit, int? projectId = null, int? status = null);

@@ -13,11 +13,13 @@ public class TasksController : ApiBaseController
 {
     private readonly ITaskService _taskService;
     private readonly IMappingService _mappingService;
+    private readonly ICurrentUserProvider _currentUserProvider;
 
-    public TasksController(ITaskService taskService, IMappingService mappingService)
+    public TasksController(ITaskService taskService, IMappingService mappingService, ICurrentUserProvider currentUserProvider)
     {
         _taskService = taskService;
         _mappingService = mappingService;
+        _currentUserProvider = currentUserProvider;
     }
 
     /// <summary>
@@ -391,6 +393,32 @@ public class TasksController : ApiBaseController
             {
                 return Error<object>("Task not found", status: 404);
             }
+
+            // Get current user PrsId
+            var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
+            if (string.IsNullOrEmpty(currentUserPrsId))
+            {
+                return Error<object>("Unable to identify current user", status: 401);
+            }
+
+            // Parse PrsId to int
+            if (!int.TryParse(currentUserPrsId, out var changedByPrsId))
+            {
+                return Error<object>("Invalid user identifier", status: 401);
+            }
+
+            // Create task status history record
+            var taskStatusHistory = new TaskStatusHistory
+            {
+                TaskId = id,
+                OldStatus = existingTask.StatusId,
+                NewStatus = updateStatusDto.StatusId,
+                ChangedByPrsId = changedByPrsId,
+                Comment = updateStatusDto.Comment,
+                UpdatedAt=DateTime.UtcNow
+            };
+
+            await _taskService.CreateTaskStatusHistoryAsync(taskStatusHistory);
 
             // Update the task status
             existingTask.StatusId = updateStatusDto.StatusId;

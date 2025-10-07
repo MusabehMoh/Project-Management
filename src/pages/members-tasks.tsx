@@ -50,7 +50,7 @@ import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
-import { useRequirementStatus } from "@/hooks/useRequirementStatus";
+import { useTaskStatusLookups } from "@/hooks/useTaskLookups";
 import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { MemberTask, TaskStatus } from "@/types/membersTasks";
 import { ProjectRequirement } from "@/types/projectRequirement";
@@ -73,9 +73,9 @@ export default function MembersTasksPage() {
   const { getPriorityColor, getPriorityLabel, priorityOptions } =
     usePriorityLookups();
 
-  // RequirementStatus hook for dynamic status management
-  const { statuses, getRequirementStatusColor, getRequirementStatusName } =
-    useRequirementStatus();
+  // TaskStatus hook for dynamic status management
+  const { statusOptions, getStatusColor, getStatusLabel } =
+    useTaskStatusLookups();
 
   // Projects (for project filter dropdown)
   const { assignedProjects: projects, loadAssignedProjects } =
@@ -407,14 +407,14 @@ export default function MembersTasksPage() {
       day: "numeric",
     });
 
-  // Helper function to get status color using RequirementStatus lookup
-  const getStatusColor = (status: number) => {
-    return getRequirementStatusColor(status);
+  // Helper function to get status color using TaskStatus lookup
+  const getTaskStatusColor = (status: number) => {
+    return getStatusColor(status.toString());
   };
 
-  // Helper function to get status text using RequirementStatus lookup
+  // Helper function to get status text using TaskStatus lookup
   const getStatusText = (status: number) => {
-    return getRequirementStatusName(status);
+    return getStatusLabel(status.toString());
   };
 
   const mapColor = (color?: string) => {
@@ -447,7 +447,13 @@ export default function MembersTasksPage() {
 
             <div className="flex items-center gap-3">
               {/* Add Adhoc Task Button */}
-              <AddAdhocTask />
+              {hasAnyRoleById([
+                RoleIds.ANALYST_DEPARTMENT_MANAGER,
+                RoleIds.DEVELOPMENT_MANAGER,
+                RoleIds.QUALITY_CONTROL_MANAGER,
+                RoleIds.DESIGNER_MANAGER,
+                RoleIds.ADMINISTRATOR,
+              ]) && <AddAdhocTask />}
 
               {/* Export Dropdown */}
               <Dropdown>
@@ -538,9 +544,9 @@ export default function MembersTasksPage() {
                   className="md:w-43"
                   items={[
                     { value: "", label: t("requirements.allStatuses") },
-                    ...(statuses || []).map((status) => ({
-                      value: status.value.toString(),
-                      label: language === "ar" ? status.nameAr : status.nameEn,
+                    ...statusOptions.map((status) => ({
+                      value: status.key,
+                      label: status.label,
                     })),
                   ]}
                   placeholder={t("requirements.filterByStatus")}
@@ -795,7 +801,7 @@ export default function MembersTasksPage() {
                     key={task.id}
                     getPriorityColor={getPriorityColor}
                     getPriorityLabel={getPriorityLabel}
-                    getStatusColor={getStatusColor}
+                    getStatusColor={getTaskStatusColor}
                     getStatusText={getStatusText}
                     isTeamManager={isTeamManager}
                     task={task}
@@ -812,7 +818,7 @@ export default function MembersTasksPage() {
                 <TaskListView
                   getPriorityColor={getPriorityColor}
                   getPriorityLabel={getPriorityLabel}
-                  getStatusColor={getStatusColor}
+                  getStatusColor={getTaskStatusColor}
                   getStatusText={getStatusText}
                   tasks={tasks}
                   onTaskClick={handleTaskClick}
@@ -855,7 +861,7 @@ export default function MembersTasksPage() {
             className={`min-h-[400px] transition-all duration-200 hover:shadow-lg ${
               selectedTask?.isOverdue
                 ? "border-l-4 border-l-danger-500 bg-white dark:bg-danger-900/20"
-                : `border-l-4 border-l-${getStatusColor(selectedTask?.statusId || 1)}-500 bg-white dark:bg-${getStatusColor(selectedTask?.statusId || 1)}-900/20`
+                : `border-l-4 border-l-${getTaskStatusColor(selectedTask?.statusId || 1)}-500 bg-white dark:bg-${getTaskStatusColor(selectedTask?.statusId || 1)}-900/20`
             }`}
           >
             <DrawerHeader className="flex flex-col gap-1">
@@ -897,7 +903,7 @@ export default function MembersTasksPage() {
                     <div className="flex flex-col items-start gap-1">
                       <h4 className="text-md">{t("status")}</h4>
                       <Chip
-                        color={getStatusColor(selectedTask.statusId)}
+                        color={getTaskStatusColor(selectedTask.statusId)}
                         size="sm"
                         variant="flat"
                       >
@@ -1372,20 +1378,17 @@ export default function MembersTasksPage() {
                 <DropdownMenu
                   aria-label="Select task status"
                   onAction={(key) => {
-                    const status = statuses?.find(
-                      (s) => s.value.toString() === key,
-                    );
+                    const status = statusOptions?.find((s) => s.key === key);
 
-                    if (status) setSelectedStatus({
-                      id: status.value,
-                      label: language === "ar" ? status.nameAr : status.nameEn,
-                    });
+                    if (status)
+                      setSelectedStatus({
+                        id: parseInt(status.key),
+                        label: status.label,
+                      });
                   }}
                 >
-                  {statuses?.map((status) => (
-                    <DropdownItem key={status.value.toString()}>
-                      {language === "ar" ? status.nameAr : status.nameEn}
-                    </DropdownItem>
+                  {statusOptions?.map((status) => (
+                    <DropdownItem key={status.key}>{status.label}</DropdownItem>
                   ))}
                 </DropdownMenu>
               </Dropdown>

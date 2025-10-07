@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 
 import { LookupDto } from "@/types/timeline";
 import { lookupServiceInstance } from "@/services/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 export interface LookupOptions {
   useCache?: boolean;
   refreshOnMount?: boolean;
@@ -56,6 +57,7 @@ export function useTaskStatusLookups(options: LookupOptions = {}) {
   const [statusOptions, setStatusOptions] = useState<TaskStatusOptions[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { language } = useLanguage();
   const fetchTaskStatuses = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -67,7 +69,7 @@ export function useTaskStatusLookups(options: LookupOptions = {}) {
         // Convert LookupDto to options format for UI components
         const options = response.data.map((status: LookupDto) => ({
           key: status.value.toString(),
-          label: status.name,
+          label: language === "ar" ? status.nameAr : status.name,
           color: getStatusColorFromValue(status.value),
         }));
 
@@ -95,7 +97,7 @@ export function useTaskStatusLookups(options: LookupOptions = {}) {
     (key: string) => {
       const status = getStatusByKey(key);
 
-      return status?.name || key;
+      return language === "ar" ? status.nameAr : status.name || key;
     },
     [getStatusByKey],
   );

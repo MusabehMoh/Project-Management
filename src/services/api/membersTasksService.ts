@@ -16,6 +16,7 @@ import { apiClient, API_CONFIG } from "./client";
  */
 export class MembersTasksService {
   private baseUrl = "/MembersTasks";
+  private tasksUrl = "/tasks";
 
   /**
    * Get all tasks with filtering and pagination
@@ -250,10 +251,10 @@ export class MembersTasksService {
     //   message: "Change Status submitted successfully",
     //   timestamp: "15-08-2025",
     // };
-    return apiClient.post<void>(
-      `${this.baseUrl}/${id}/change-status/${typeId}`,
-      notes,
-    );
+    return apiClient.patch<void>(`${this.tasksUrl}/${id}`, {
+      StatusId: parseInt(typeId),
+      Comment: notes,
+    });
   }
 
   /**
@@ -351,7 +352,7 @@ export class MembersTasksService {
         message: "No upcoming deadlines found",
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         data: null,

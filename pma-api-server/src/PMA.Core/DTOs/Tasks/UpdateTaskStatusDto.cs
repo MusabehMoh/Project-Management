@@ -8,4 +8,6 @@ public class UpdateTaskStatusDto
 {
     [Required(ErrorMessage = "StatusId is required")]
     public TaskStatusEnum StatusId { get; set; }
+
+    public string? Comment { get; set; }
 }
