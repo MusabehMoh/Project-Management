@@ -12,20 +12,20 @@ public class ProjectRequirementService : IProjectRequirementService
     private readonly IProjectRequirementRepository _projectRequirementRepository;
     private readonly IProjectRepository _projectRepository;
     private readonly IEmployeeRepository _employeeRepository;
-    private readonly ICurrentUserProvider _currentUserProvider;
+    private readonly IUserContextAccessor _userContextAccessor;
     private readonly IAppPathProvider _pathProvider;
 
     public ProjectRequirementService(
         IProjectRequirementRepository projectRequirementRepository, 
         IProjectRepository projectRepository,
         IEmployeeRepository employeeRepository,
-        ICurrentUserProvider currentUserProvider,
+        IUserContextAccessor userContextAccessor,
         IAppPathProvider pathProvider)
     {
         _projectRequirementRepository = projectRequirementRepository;
         _projectRepository = projectRepository;
         _employeeRepository = employeeRepository;
-        _currentUserProvider = currentUserProvider;
+        _userContextAccessor = userContextAccessor;
         _pathProvider = pathProvider;
     }
 
@@ -72,15 +72,15 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(int? userId, int page, int limit, string? search = null, int? projectId = null)
     {
-        // Get current user's PrsId for filtering assigned projects
-        var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
-        if (string.IsNullOrWhiteSpace(currentUserPrsId))
+        // Get current user context for filtering assigned projects
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.PrsId))
         {
             return (Enumerable.Empty<AssignedProjectDto>(), 0);
         }
 
         // Delegate to repository for complex query logic
-        return await _projectRepository.GetAssignedProjectsAsync(currentUserPrsId, page, limit, search, projectId);
+        return await _projectRepository.GetAssignedProjectsAsync(userContext.PrsId, page, limit, search, projectId);
     }
 
     public async Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId)

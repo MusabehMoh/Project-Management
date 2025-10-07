@@ -124,7 +124,7 @@ builder.Services.AddMemoryCache(options =>
 
     // How often the cache checks for expired entries
     options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
-});
+}); 
 
 // Register repositories
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
@@ -196,10 +196,11 @@ builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
 // Register IHttpContextAccessor for accessing HttpContext in services
 builder.Services.AddHttpContextAccessor();
 
-// Register a simple current-user service to expose username and principal
+// Register the new UserContext pattern (preferred approach)
+builder.Services.AddScoped<PMA.Core.Interfaces.IUserContextAccessor, PMA.Api.Services.UserContextAccessor>();
+
+// Register legacy current-user service for backward compatibility (optional - if still needed by API layer)
 builder.Services.AddScoped<PMA.Api.Services.ICurrentUserService, PMA.Api.Services.CurrentUserService>();
-// Also register the core abstraction so core services can depend on it
-builder.Services.AddScoped<PMA.Core.Interfaces.ICurrentUserProvider>(sp => sp.GetRequiredService<PMA.Api.Services.ICurrentUserService>());
 
 // Allow anonymous access to Swagger UI in development
 builder.Services.AddAuthorization(options =>

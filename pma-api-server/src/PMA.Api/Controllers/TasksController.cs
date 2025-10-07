@@ -13,13 +13,13 @@ public class TasksController : ApiBaseController
 {
     private readonly ITaskService _taskService;
     private readonly IMappingService _mappingService;
-    private readonly ICurrentUserProvider _currentUserProvider;
+    private readonly IUserContextAccessor _userContextAccessor;
 
-    public TasksController(ITaskService taskService, IMappingService mappingService, ICurrentUserProvider currentUserProvider)
+    public TasksController(ITaskService taskService, IMappingService mappingService, IUserContextAccessor userContextAccessor)
     {
         _taskService = taskService;
         _mappingService = mappingService;
-        _currentUserProvider = currentUserProvider;
+        _userContextAccessor = userContextAccessor;
     }
 
     /// <summary>
@@ -394,15 +394,15 @@ public class TasksController : ApiBaseController
                 return Error<object>("Task not found", status: 404);
             }
 
-            // Get current user PrsId
-            var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
-            if (string.IsNullOrEmpty(currentUserPrsId))
+            // Get current user context
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrEmpty(userContext.PrsId))
             {
                 return Error<object>("Unable to identify current user", status: 401);
             }
 
             // Parse PrsId to int
-            if (!int.TryParse(currentUserPrsId, out var changedByPrsId))
+            if (!int.TryParse(userContext.PrsId, out var changedByPrsId))
             {
                 return Error<object>("Invalid user identifier", status: 401);
             }

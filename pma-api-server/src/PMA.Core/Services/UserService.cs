@@ -11,7 +11,7 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IActionRepository _actionRepository;
-    private readonly PMA.Core.Interfaces.ICurrentUserProvider _currentUserProvider;
+    private readonly IUserContextAccessor _userContextAccessor;
     private readonly IMemoryCache _cache;
     private readonly ICacheInvalidationService _cacheInvalidationService;
 
@@ -19,14 +19,14 @@ public class UserService : IUserService
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IActionRepository actionRepository,
-        PMA.Core.Interfaces.ICurrentUserProvider currentUserProvider,
+        IUserContextAccessor userContextAccessor,
         IMemoryCache cache,
         ICacheInvalidationService cacheInvalidationService)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _actionRepository = actionRepository;
-        _currentUserProvider = currentUserProvider;
+        _userContextAccessor = userContextAccessor;
         _cache = cache;
         _cacheInvalidationService = cacheInvalidationService;
     }
@@ -60,15 +60,33 @@ public class UserService : IUserService
         return (userDtos, totalCount);
     }
 
-    public async Task<User> UpdateUserAsync(User user)
+    public async Task<User?> UpdateUserAsync(User user)
     {
-        user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user);
+        // Load existing tracked entity to avoid double-tracking issues
+        var existing = await _userRepository.GetByIdAsync(user.Id);
+        if (existing == null)
+        {
+            return null;
+        }
+
+        // Copy fields from incoming DTO/entity onto the tracked instance
+        existing.UserName = user.UserName;
+        existing.PrsId = user.PrsId;
+        existing.IsVisible = user.IsVisible;
+        existing.FullName = user.FullName;
+        existing.MilitaryNumber = user.MilitaryNumber;
+        existing.GradeName = user.GradeName;
+        existing.DepartmentId = user.DepartmentId;
+        existing.Email = user.Email;
+        existing.Phone = user.Phone;
+        existing.UpdatedAt = DateTime.UtcNow;
+
+        await _userRepository.UpdateAsync(existing);
 
         // Invalidate cache for this user
-        await _cacheInvalidationService.InvalidateCurrentUserCacheByIdAsync(user.Id, _userRepository);
+        await _cacheInvalidationService.InvalidateCurrentUserCacheByIdAsync(existing.Id, _userRepository);
 
-        return user;
+        return existing;
     }
 
     public async System.Threading.Tasks.Task<bool> DeleteUserAsync(int id)
@@ -89,24 +107,25 @@ public class UserService : IUserService
 
     public async System.Threading.Tasks.Task<CurrentUserDto?> GetCurrentUserAsync()
     {
-        var username = _currentUserProvider?.UserName;
+        // Use the new UserContext pattern
+        var userContext = await _userContextAccessor.GetUserContextAsync();
 
-        if (string.IsNullOrWhiteSpace(username))
+        if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.UserName))
             return null;
 
-        var cacheKey = CacheInvalidationService.GetCurrentUserCacheKey(username);
+        var cacheKey = CacheInvalidationService.GetCurrentUserCacheKey(userContext.UserName);
 
         // Try to get from cache first
         if (_cache.TryGetValue(cacheKey, out CurrentUserDto? cachedUser))
         {
-            if (cachedUser?.PrsId>0)
+            if (cachedUser?.PrsId > 0)
                 return cachedUser;
             else
                 _cache.Remove(cacheKey); // Remove invalid cache entry
         }
 
-        // The username may include domain (DOMAIN\user). Normalize if needed in repository.
-        var user = await _userRepository.GetByUserNameAsync(username);
+        // Get user from repository using the username from UserContext
+        var user = await _userRepository.GetByUserNameAsync(userContext.UserName);
 
         if (user == null)
             return null;

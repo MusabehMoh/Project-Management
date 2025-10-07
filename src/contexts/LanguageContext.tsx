@@ -29,6 +29,12 @@ const translations = {
     "error.tryAgainLater": "Please try again later",
     "error.retry": "Retry",
 
+    // Toast messages
+    "toast.statusChangedSuccess": "Status changed successfully",
+    "toast.assigneesChangedSuccess": "Assignees changed successfully",
+    "toast.assigneesChangeFailed": "Assignees couldn't be changed",
+    "toast.designRequestedSuccess": "Design requested successfully",
+
     // Navbar
     "nav.dashboard": "Dashboard",
     "nav.projects": "Projects",
@@ -1626,6 +1632,12 @@ const translations = {
     "error.dataLoading": "حدث خطأ أثناء تحميل البيانات",
     "error.tryAgainLater": "يرجى المحاولة مرة أخرى لاحقًا",
     "error.retry": "إعادة المحاولة",
+
+    // Toast messages
+    "toast.statusChangedSuccess": "تم تغيير الحالة بنجاح",
+    "toast.assigneesChangedSuccess": "تم تغيير المسؤولين بنجاح",
+    "toast.assigneesChangeFailed": "لم يتم تغيير المسؤولين",
+    "toast.designRequestedSuccess": "تم طلب التصميم بنجاح",
 
     // Navbar
     "nav.dashboard": "لوحة التحكم",

@@ -47,14 +47,15 @@ public class UserRepository : Repository<User>, IUserRepository
         try
         {
             return await _context.Users
+           .AsNoTracking()
            .Include("UserRoles.Role.Department")
            .Include("UserActions.Permission")
            .Include(u => u.Employee)
            .FirstOrDefaultAsync(u => u.UserName == userName.ToLower());
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return new User();
+            return null;
         }
     }
 

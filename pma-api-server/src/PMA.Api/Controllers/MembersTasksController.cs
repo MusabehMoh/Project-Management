@@ -14,14 +14,14 @@ namespace PMA.Api.Controllers;
 public class MembersTasksController : ApiBaseController
 {
     private readonly IMemberTaskService _memberTaskService;
-    private readonly ICurrentUserProvider _currentUserProvider;
+    private readonly IUserContextAccessor _userContextAccessor;
     private readonly IUserService _userService;
     private readonly IDepartmentService _departmentService;
 
-    public MembersTasksController(IMemberTaskService memberTaskService, ICurrentUserProvider currentUserProvider, IUserService userService, IDepartmentService departmentService)
+    public MembersTasksController(IMemberTaskService memberTaskService, IUserContextAccessor userContextAccessor, IUserService userService, IDepartmentService departmentService)
     {
         _memberTaskService = memberTaskService;
-        _currentUserProvider = currentUserProvider;
+        _userContextAccessor = userContextAccessor;
         _userService = userService;
         _departmentService = departmentService;
     }
@@ -97,9 +97,9 @@ public class MembersTasksController : ApiBaseController
                 // Regular users see only their assigned tasks
                 if (!assigneeId.HasValue)
                 {
-                    // Get current user's PRS ID
-                    var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
-                    if (int.TryParse(currentUserPrsId, out int currentUserId))
+                    // Get current user context
+                    var userContext = await _userContextAccessor.GetUserContextAsync();
+                    if (userContext.IsAuthenticated && int.TryParse(userContext.PrsId, out int currentUserId))
                     {
                         assigneeId = currentUserId;
                     }
@@ -384,9 +384,9 @@ public class MembersTasksController : ApiBaseController
     {
         try
         {
-            // Get current user's PRS ID
-            var currentUserPrsId = await _currentUserProvider.GetCurrentUserPrsIdAsync();
-            if (!int.TryParse(currentUserPrsId, out int currentUserId))
+            // Get current user context
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || !int.TryParse(userContext.PrsId, out int currentUserId))
             {
                 return Error<TaskDto>("Unable to retrieve current user information");
             }

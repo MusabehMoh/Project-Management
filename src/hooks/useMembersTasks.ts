@@ -8,6 +8,7 @@ import {
   TasksResponse,
 } from "@/types/membersTasks";
 import { membersTasksService } from "@/services/api/membersTasksService";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UseMembersTasksResult {
   tasks: MemberTask[];
@@ -15,6 +16,7 @@ interface UseMembersTasksResult {
   loading: boolean;
   headerLoading: boolean;
   initialLoading: boolean;
+  changeStatusLoading: boolean;
   error: string | null;
 
   totalPages: number;
@@ -52,9 +54,12 @@ export const useMembersTasks = (): UseMembersTasksResult => {
   });
   const [loading, setLoading] = useState(false);
   const [headerLoading, setHeaderLoading] = useState(false);
+  const [changeStatusLoading, setChangeStatusLoading] = useState(false);
   const [initialCount, setInitialCount] = useState(0);
   const [initialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { t } = useLanguage();
 
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -167,12 +172,12 @@ export const useMembersTasks = (): UseMembersTasksResult => {
 
       if (response.success) {
         addToast({
-          description: response.message ?? "Assignees changed successfully",
+          description: response.message ?? t("toast.assigneesChangedSuccess"),
           color: "success",
         });
       } else {
         addToast({
-          description: response.message ?? "Assignees couldn't be changed",
+          description: response.message ?? t("toast.assigneesChangeFailed"),
           color: "warning",
         });
       }
@@ -191,7 +196,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
 
       if (response.success) {
         addToast({
-          description: response.message ?? "Design requested successfully",
+          description: response.message ?? t("toast.designRequestedSuccess"),
           color: "success",
         });
       }
@@ -210,7 +215,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     notes: string,
   ): Promise<boolean> => {
     try {
-      setLoading(true);
+      setChangeStatusLoading(true);
       setError(null);
 
       const response = await membersTasksService.changeStatus(
@@ -221,7 +226,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
 
       if (response.success) {
         addToast({
-          description: response.message ?? "Status changed successfully",
+          description: t("toast.statusChangedSuccess"),
           color: "success",
         });
       }
@@ -230,7 +235,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     } catch (err) {
       return false;
     } finally {
-      setLoading(false);
+      setChangeStatusLoading(false);
     }
   };
 
@@ -430,6 +435,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     loading,
     headerLoading,
     initialLoading,
+    changeStatusLoading,
     error,
     totalPages,
     totalCount,

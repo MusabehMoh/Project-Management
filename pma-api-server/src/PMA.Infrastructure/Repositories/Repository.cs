@@ -34,7 +34,17 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async System.Threading.Tasks.Task UpdateAsync(T entity)
     {
-        _context.Set<T>().Update(entity);
+        var entry = _context.Entry(entity);
+        if (entry.State == EntityState.Detached)
+        {
+            // Attach and mark as modified to avoid duplicate tracked instances
+            _context.Set<T>().Attach(entity);
+            entry.State = EntityState.Modified;
+        }
+        else
+        {
+            entry.State = EntityState.Modified;
+        }
         await _context.SaveChangesAsync();
     }
 

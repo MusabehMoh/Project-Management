@@ -13,12 +13,18 @@ public class ProjectService : IProjectService
     private readonly IProjectRepository _projectRepository;
     private readonly INotificationService _notificationService;
     private readonly IUserService _userService;
+    private readonly IUserContextAccessor _userContextAccessor;
 
-    public ProjectService(IProjectRepository projectRepository, INotificationService notificationService, IUserService userService)
+    public ProjectService(
+        IProjectRepository projectRepository, 
+        INotificationService notificationService, 
+        IUserService userService,
+        IUserContextAccessor userContextAccessor)
     {
         _projectRepository = projectRepository;
         _notificationService = notificationService;
         _userService = userService;
+        _userContextAccessor = userContextAccessor;
     }
 
     public async System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null)
@@ -34,8 +40,16 @@ public class ProjectService : IProjectService
 
     public async System.Threading.Tasks.Task<Project> CreateProjectAsync(Project project)
     {
+        // Use the new UserContext pattern to get current user info
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        if (!userContext.IsAuthenticated)
+            throw new UnauthorizedAccessException("User must be authenticated to create a project");
+
         project.CreatedAt = DateTime.UtcNow;
         project.UpdatedAt = DateTime.UtcNow;
+        // Set CreatedBy if your Project entity has such a field
+        // project.CreatedBy = userContext.PrsId;
+        
         return await _projectRepository.AddAsync(project);
     }
 

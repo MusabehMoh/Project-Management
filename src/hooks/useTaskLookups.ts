@@ -97,9 +97,11 @@ export function useTaskStatusLookups(options: LookupOptions = {}) {
     (key: string) => {
       const status = getStatusByKey(key);
 
-      return language === "ar" ? status.nameAr : status.name || key;
+      if (!status) return key;
+
+      return language === "ar" ? status.nameAr || key : status.name || key;
     },
-    [getStatusByKey],
+    [getStatusByKey, language],
   );
   const getStatusColor = useCallback(
     (key: string) => {

@@ -27,7 +27,7 @@ public interface IUserService
     System.Threading.Tasks.Task<User?> GetUserByIdAsync(int id);
     System.Threading.Tasks.Task<User?> GetUserByUserNameAsync(string userName);
     System.Threading.Tasks.Task<User> CreateUserAsync(User user);
-    System.Threading.Tasks.Task<User> UpdateUserAsync(User user);
+    System.Threading.Tasks.Task<User?> UpdateUserAsync(User user);
     System.Threading.Tasks.Task<bool> DeleteUserAsync(int id);
     System.Threading.Tasks.Task<User?> GetUserWithRolesAndActionsAsync(int id);
     System.Threading.Tasks.Task<CurrentUserDto?> GetCurrentUserAsync();

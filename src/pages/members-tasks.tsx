@@ -157,6 +157,7 @@ export default function MembersTasksPage() {
     tasks,
     loading,
     initialLoading,
+    changeStatusLoading,
     error,
     totalPages,
     totalCount,
@@ -504,155 +505,153 @@ export default function MembersTasksPage() {
         </div>
 
         {/* Filters and Search */}
-        {!initialLoading && (
-          <Card>
-            <CardBody>
-              <div className="flex flex-col md:flex-row gap-4 items-end">
-                <Input
-                  className="md:w-120"
-                  placeholder={t("requirements.searchRequirements")}
-                  startContent={<Search className="w-4 h-4" />}
-                  value={searchTerm}
-                  onValueChange={setSearchTerm}
-                />
+        <Card>
+          <CardBody>
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <Input
+                className="md:w-120"
+                placeholder={t("requirements.searchRequirements")}
+                startContent={<Search className="w-4 h-4" />}
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+              />
 
-                <Select
-                  className="md:w-90"
-                  placeholder={t("taskPlan.filterByProject")}
-                  selectedKeys={
-                    taskParametersRequest.projectId
-                      ? [String(taskParametersRequest.projectId)]
-                      : []
-                  }
-                  onSelectionChange={(keys) => {
-                    const val = Array.from(keys)[0] as string;
+              <Select
+                className="md:w-90"
+                placeholder={t("taskPlan.filterByProject")}
+                selectedKeys={
+                  taskParametersRequest.projectId
+                    ? [String(taskParametersRequest.projectId)]
+                    : []
+                }
+                onSelectionChange={(keys) => {
+                  const val = Array.from(keys)[0] as string;
 
-                    handleProjectChange(val ? Number(val) : 0);
-                  }}
-                >
-                  <SelectItem key="">{t("taskPlan.allProjects")}</SelectItem>
-                  <>
-                    {projects?.map((p) => (
-                      <SelectItem key={String(p.id)}>
-                        {p.applicationName}
-                      </SelectItem>
-                    ))}
-                  </>
-                </Select>
+                  handleProjectChange(val ? Number(val) : 0);
+                }}
+              >
+                <SelectItem key="">{t("taskPlan.allProjects")}</SelectItem>
+                <>
+                  {projects?.map((p) => (
+                    <SelectItem key={String(p.id)}>
+                      {p.applicationName}
+                    </SelectItem>
+                  ))}
+                </>
+              </Select>
 
-                <Select
-                  className="md:w-43"
-                  items={[
-                    { value: "", label: t("requirements.allStatuses") },
-                    ...statusOptions.map((status) => ({
-                      value: status.key,
-                      label: status.label,
-                    })),
-                  ]}
-                  placeholder={t("requirements.filterByStatus")}
-                  selectedKeys={
-                    taskParametersRequest.statusId
-                      ? [taskParametersRequest.statusId.toString()]
-                      : []
-                  }
-                  onSelectionChange={(keys) => {
-                    const selectedKey = Array.from(keys)[0] as string;
-                    const newStatusFilter =
-                      selectedKey && selectedKey !== ""
-                        ? parseInt(selectedKey)
-                        : null;
+              <Select
+                className="md:w-43"
+                items={[
+                  { value: "", label: t("requirements.allStatuses") },
+                  ...statusOptions.map((status) => ({
+                    value: status.key,
+                    label: status.label,
+                  })),
+                ]}
+                placeholder={t("requirements.filterByStatus")}
+                selectedKeys={
+                  taskParametersRequest.statusId
+                    ? [taskParametersRequest.statusId.toString()]
+                    : []
+                }
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+                  const newStatusFilter =
+                    selectedKey && selectedKey !== ""
+                      ? parseInt(selectedKey)
+                      : null;
 
-                    if (newStatusFilter !== null) {
-                      handleStatusChange(newStatusFilter);
+                  if (newStatusFilter !== null) {
+                    handleStatusChange(newStatusFilter);
+                  } else {
+                    // If status filter is reset to null, we need to refresh with other filters
+                    const hasOtherFilters =
+                      searchTerm ||
+                      taskParametersRequest.priorityId ||
+                      taskParametersRequest.projectId;
+
+                    if (hasOtherFilters) {
+                      // Trigger a refresh that maintains other filters but clears status
+                      fetchTasks();
                     } else {
-                      // If status filter is reset to null, we need to refresh with other filters
-                      const hasOtherFilters =
-                        searchTerm ||
-                        taskParametersRequest.priorityId ||
-                        taskParametersRequest.projectId;
-
-                      if (hasOtherFilters) {
-                        // Trigger a refresh that maintains other filters but clears status
-                        fetchTasks();
-                      } else {
-                        handleResetFilters();
-                      }
+                      handleResetFilters();
                     }
-                  }}
-                >
-                  {(item) => (
-                    <SelectItem key={item.value}>{item.label}</SelectItem>
-                  )}
-                </Select>
-
-                <Select
-                  className="md:w-43"
-                  items={[
-                    { value: "", label: t("requirements.allPriorities") },
-                    ...priorityOptions.map((p) => ({
-                      value: p.value.toString(),
-                      label: language === "ar" ? p.labelAr : p.label,
-                    })),
-                  ]}
-                  placeholder={t("requirements.filterByPriority")}
-                  selectedKeys={
-                    taskParametersRequest.priorityId
-                      ? [taskParametersRequest.priorityId.toString()]
-                      : []
                   }
-                  onSelectionChange={(keys) => {
-                    const selectedKey = Array.from(keys)[0] as string;
-                    const newPriorityFilter =
-                      selectedKey && selectedKey !== ""
-                        ? parseInt(selectedKey)
-                        : null;
+                }}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
 
-                    if (newPriorityFilter !== null) {
-                      handlePriorityChange(newPriorityFilter);
+              <Select
+                className="md:w-43"
+                items={[
+                  { value: "", label: t("requirements.allPriorities") },
+                  ...priorityOptions.map((p) => ({
+                    value: p.value.toString(),
+                    label: language === "ar" ? p.labelAr : p.label,
+                  })),
+                ]}
+                placeholder={t("requirements.filterByPriority")}
+                selectedKeys={
+                  taskParametersRequest.priorityId
+                    ? [taskParametersRequest.priorityId.toString()]
+                    : []
+                }
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+                  const newPriorityFilter =
+                    selectedKey && selectedKey !== ""
+                      ? parseInt(selectedKey)
+                      : null;
+
+                  if (newPriorityFilter !== null) {
+                    handlePriorityChange(newPriorityFilter);
+                  } else {
+                    // If priority filter is reset to null, refresh with other filters
+                    const hasOtherFilters =
+                      searchTerm ||
+                      taskParametersRequest.statusId ||
+                      taskParametersRequest.projectId;
+
+                    if (hasOtherFilters) {
+                      fetchTasks();
                     } else {
-                      // If priority filter is reset to null, refresh with other filters
-                      const hasOtherFilters =
-                        searchTerm ||
-                        taskParametersRequest.statusId ||
-                        taskParametersRequest.projectId;
-
-                      if (hasOtherFilters) {
-                        fetchTasks();
-                      } else {
-                        handleResetFilters();
-                      }
+                      handleResetFilters();
                     }
-                  }}
+                  }
+                }}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
+            </div>
+
+            {/* Clear Filters - New Row */}
+            {hasActiveFilters && (
+              <div className="flex items-center gap-2 mt-2">
+                <Button
+                  color="secondary"
+                  size="sm"
+                  startContent={<X size={16} />}
+                  variant="flat"
+                  onPress={resetAllFilters}
                 >
-                  {(item) => (
-                    <SelectItem key={item.value}>{item.label}</SelectItem>
+                  {t("requirements.clearFilters")}
+                </Button>
+                <span className="text-sm text-default-500">
+                  {t("requirements.requirementsFound").replace(
+                    "{count}",
+                    totalCount.toString(),
                   )}
-                </Select>
+                </span>
               </div>
-
-              {/* Clear Filters - New Row */}
-              {hasActiveFilters && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Button
-                    color="secondary"
-                    size="sm"
-                    startContent={<X size={16} />}
-                    variant="flat"
-                    onPress={resetAllFilters}
-                  >
-                    {t("requirements.clearFilters")}
-                  </Button>
-                  <span className="text-sm text-default-500">
-                    {t("requirements.requirementsFound").replace(
-                      "{count}",
-                      totalCount.toString(),
-                    )}
-                  </span>
-                </div>
-              )}
-            </CardBody>
-          </Card>
-        )}
+            )}
+          </CardBody>
+        </Card>
 
         {/* Pagination Controls */}
         {!initialLoading && (tasks?.length || 0) > 0 && (
@@ -1412,6 +1411,7 @@ export default function MembersTasksPage() {
               </Button>
               <Button
                 color="primary"
+                isLoading={changeStatusLoading}
                 //isDisabled={!selectedStatus}
                 size="md"
                 variant="flat"

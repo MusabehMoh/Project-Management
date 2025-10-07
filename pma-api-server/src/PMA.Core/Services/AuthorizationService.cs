@@ -6,20 +6,21 @@ namespace PMA.Core.Services
 {
     public class AuthorizationService : IAuthorizationService
     {
-        private readonly ICurrentUserProvider _currentUserProvider;
+        private readonly IUserContextAccessor _userContextAccessor;
         private readonly IUserService _userService;
 
         public AuthorizationService(
-            ICurrentUserProvider currentUserProvider,
+            IUserContextAccessor userContextAccessor,
             IUserService userService)
         {
-            _currentUserProvider = currentUserProvider;
+            _userContextAccessor = userContextAccessor;
             _userService = userService;
         }
 
         public async Task<bool> HasRoleAsync(string roleName)
         {
-            if (!_currentUserProvider.IsAuthenticated)
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated)
                 return false;
 
             var currentUser = await _userService.GetCurrentUserAsync();
@@ -31,7 +32,8 @@ namespace PMA.Core.Services
 
         public async Task<bool> HasPermissionAsync(string resource, string action)
         {
-            if (!_currentUserProvider.IsAuthenticated)
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated)
                 return false;
 
             var currentUser = await _userService.GetCurrentUserAsync();
@@ -78,7 +80,8 @@ namespace PMA.Core.Services
 
         public async Task<IEnumerable<string>> GetUserRolesAsync()
         {
-            if (!_currentUserProvider.IsAuthenticated)
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated)
                 return Enumerable.Empty<string>();
 
             var currentUser = await _userService.GetCurrentUserAsync();
@@ -90,7 +93,8 @@ namespace PMA.Core.Services
 
         public async Task<IEnumerable<Permission>> GetUserPermissionsAsync()
         {
-            if (!_currentUserProvider.IsAuthenticated)
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated)
                 return Enumerable.Empty<Permission>();
 
             var currentUser = await _userService.GetCurrentUserAsync();

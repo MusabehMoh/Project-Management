@@ -2,7 +2,14 @@ using System.Security.Claims;
 
 namespace PMA.Api.Services
 {
-    public interface ICurrentUserService : PMA.Core.Interfaces.ICurrentUserProvider
+    /// <summary>
+    /// Legacy interface - use IUserContextAccessor instead for new code
+    /// </summary>
+    public interface ICurrentUserService
     {
+        string? UserName { get; }
+        ClaimsPrincipal? Principal { get; }
+        bool IsAuthenticated { get; }
+        Task<string?> GetCurrentUserPrsIdAsync();
     }
 }

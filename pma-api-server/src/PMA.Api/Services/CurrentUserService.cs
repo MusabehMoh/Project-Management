@@ -1,66 +1,34 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using PMA.Core.Interfaces;
+using PMA.Core.Models;
 
 namespace PMA.Api.Services
 {
-    public class CurrentUserService : ICurrentUserService, PMA.Core.Interfaces.ICurrentUserProvider
+    /// <summary>
+    /// Legacy service - use IUserContextAccessor instead for new code
+    /// </summary>
+    public class CurrentUserService : ICurrentUserService
     {
+        private readonly IUserContextAccessor _userContextAccessor;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IUserRepository _userRepository;
-        private string? _cachedPrsId;
-        private bool _prsIdFetched;
 
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserRepository userRepository)
+        public CurrentUserService(IUserContextAccessor userContextAccessor, IHttpContextAccessor httpContextAccessor)
         {
+            _userContextAccessor = userContextAccessor;
             _httpContextAccessor = httpContextAccessor;
-            _userRepository = userRepository;
         }
 
         public ClaimsPrincipal? Principal => _httpContextAccessor.HttpContext?.User;
 
-        public string? UserName
-        {
-            get
-            {
-                // For Windows/Negotiate auth the name often comes in the form DOMAIN\\username
-                var name = Principal?.Identity?.Name;
-                if (string.IsNullOrWhiteSpace(name))
-                    return null;
+        public string? UserName => _userContextAccessor.Current?.UserName;
 
-                // If name contains a backslash (DOMAIN\username), return only the username part
-                var idx = name.LastIndexOf('\\');
-                if (idx >= 0 && idx < name.Length - 1)
-                    return name.Substring(idx + 1);
-
-                // Otherwise return the full name
-                return name;
-            }
-        }
-
-        public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated ?? false;
+        public bool IsAuthenticated => _userContextAccessor.Current?.IsAuthenticated ?? false;
 
         public async Task<string?> GetCurrentUserPrsIdAsync()
         {
-            if (!IsAuthenticated)
-                return null;
-
-            // Use cached value if already fetched during this request
-            if (_prsIdFetched)
-                return _cachedPrsId;
-
-            var currentUserName = UserName;
-            if (string.IsNullOrWhiteSpace(currentUserName))
-            {
-                _prsIdFetched = true;
-                return null;
-            }
-
-            var currentUser = await _userRepository.GetByUserNameAsync(currentUserName);
-            _cachedPrsId = currentUser?.PrsId.ToString();
-            _prsIdFetched = true;
-
-            return _cachedPrsId;
+            var context = await _userContextAccessor.GetUserContextAsync();
+            return context.IsAuthenticated ? context.PrsId : null;
         }
     }
 }
