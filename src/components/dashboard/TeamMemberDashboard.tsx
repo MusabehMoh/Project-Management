@@ -6,6 +6,7 @@ import Calendar from "./calendar";
 import MyAssignedTasks from "./team-member/MyAssignedTasks";
 import TeamQuickActions from "./team-member/TeamQuickActions";
 import MyNextDeadline from "./team-member/MyNextDeadline";
+import TeamKanbanBoard from "./team-member/TeamKanbanBoard";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import ModernQuickStats from "@/components/ModernQuickStats";
@@ -45,6 +46,9 @@ export default function TeamMemberDashboard() {
 
       {/* Quick Stats */}
       <ModernQuickStats />
+
+      {/* Kanban Board - Full Width */}
+      <TeamKanbanBoard key={refreshKey} onTaskUpdate={handleTaskUpdate} />
 
       {/* Grid Layout: Quick Actions with Calendar on left, My Tasks on right */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

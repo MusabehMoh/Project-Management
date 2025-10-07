@@ -85,6 +85,7 @@ This is a comprehensive Project Management Application (PMA) built with modern w
       - `MyAssignedTasks.tsx` - Shows user's assigned tasks with PendingRequirements design pattern
       - `TeamQuickActions.tsx` - Quick task status updates with Accordion/CustomAlert design
       - `MyNextDeadline.tsx` - Compact deadline tracker with progress and countdown
+      - `TeamKanbanBoard.tsx` - Drag-and-drop Kanban board with 5 columns (statuses 1-5)
   - `calendar/` - Calendar components
   - `primitives.ts` - Base UI component definitions
 - `pages/` - Main application pages/routes
@@ -93,6 +94,7 @@ This is a comprehensive Project Management Application (PMA) built with modern w
   - `useMyAssignedTasks.ts` - Fetch current user's tasks
   - `useTeamQuickActions.ts` - Fetch and update task statuses
   - `useMyNextDeadline.ts` - Fetch next upcoming deadline task
+  - `useTaskLookups.ts` - Fetch task status and priority lookups dynamically from API
 - `services/` - API service layers
   - `api/` - API service classes and interfaces
 - `types/` - TypeScript type definitions
@@ -274,11 +276,11 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - **AnalystManagerDashboard**: Requirements management, team performance (Role ID: 2)
 - **DeveloperManagerDashboard**: Development team management, approved requirements, deployments (Role ID: 4)
 - **TeamMemberDashboard**: Task management for QC, Developers, Designers (Role IDs: 5, 7, 9)
-  - **Layout**: Grid layout with ModernQuickStats at top, then 70/30 split below
+  - **Layout**: Vertical stack - ModernQuickStats → TeamKanbanBoard (full-width) → Grid layout (70/30 split)
   - **Left Column (70%)**: TeamQuickActions stacked with Calendar
   - **Right Column (30%)**: MyAssignedTasks stacked with MyNextDeadline
   - **Simplified Design**: No additional stats cards, calendar without sidebar
-  - **Focus**: Task management, quick status updates, and deadline tracking
+  - **Focus**: Task management, Kanban board, quick status updates, and deadline tracking
 - Each dashboard has specialized components in respective subdirectories
 
 ### Dashboard Components
@@ -303,6 +305,23 @@ const response = await fetch('/api/project-requirements/approved-requirements');
   - **Features**: Task name, progress percentage, deadline date, days remaining chip
   - **Color Coding**: Progress bar (success/primary/warning/danger), deadline chip (green >7d, yellow ≤7d, red ≤3d/overdue)
   - **Layout**: Small component under MyAssignedTasks to complement calendar height
+- **TeamKanbanBoard**: Drag-and-drop Kanban board for task management (Team Members)
+  - **Design Pattern**: Full-width card with 5-column grid layout (responsive: 1/3/5 columns)
+  - **Features**: Native HTML5 drag-and-drop, real-time status updates via API
+  - **Columns**: Uses dynamic status lookup (statuses 1-5): To Do, In Progress, In Review, Rework, Completed
+  - **Status Names**: Fetched from lookup service (not hardcoded)
+    - Status 1: "To Do" / "جديد"
+    - Status 2: "In Progress" / "جاري"  
+    - Status 3: "In Review" / "تحت الإختبار"
+    - Status 4: "Rework" / "إعادة"
+    - Status 5: "Completed" / "مكتملة"
+  - **Task Cards**: Title, priority chip, project/requirement info, end date, progress %, overdue badge
+  - **Color Coding**: Column headers (default/primary/warning/danger/success), priority chips
+  - **Scrolling**: 500px height ScrollShadow for each column
+  - **API Integration**: Uses `useTaskStatusLookups()` hook and `membersTasksService.getTasks()`
+  - **Drag Behavior**: Updates task status via `membersTasksService.updateTaskStatus()` on drop
+  - **Loading States**: Waits for both status lookups and tasks to load before rendering
+  - **Null Safety**: Handles null project/requirement references gracefully
 - Each component uses proper API services and follows consistent design patterns
 
 ### Role-Based Access
