@@ -268,7 +268,24 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 ### Key API Endpoints for Team Members
 - `GET /api/MembersTasks` - Get tasks (auto-filters by current user for team members)
 - `GET /api/MembersTasks/next-deadline` - Get the next upcoming task deadline for current user
-- `PUT /api/MembersTasks/{id}/status` - Update task status (accepts status string in body)
+- `PUT /api/MembersTasks/{id}/status` - Update task status (accepts status string in body) - **DEPRECATED for Kanban**
+- `PATCH /api/Tasks/{id}` - Update task status with audit trail (preferred for Kanban board)
+
+### Key API Services
+- **`tasksService`** (src/services/api/tasksService.ts):
+  - Uses TasksController (`/api/Tasks`)
+  - **Method**: `updateTaskStatus(taskId, statusId, comment?)`
+  - **Features**: 
+    - Creates TaskStatusHistory records automatically
+    - Tracks user who made the change via UserContext
+    - Supports optional comments for audit trail
+    - Uses numeric status IDs (1-6)
+  - **Use Case**: Kanban board drag-and-drop, status updates requiring audit trail
+  
+- **`membersTasksService`** (src/services/api/membersTasksService.ts):
+  - Uses MembersTasksController (`/api/MembersTasks`)
+  - **Methods**: `getTasks()`, `getNextDeadline()`, `updateTaskStatus()` (string-based, legacy)
+  - **Use Case**: Fetching current user's tasks, quick actions without detailed audit trail
 
 ## Dashboard System
 
@@ -281,6 +298,10 @@ const response = await fetch('/api/project-requirements/approved-requirements');
   - **Right Column (30%)**: MyAssignedTasks stacked with MyNextDeadline
   - **Simplified Design**: No additional stats cards, calendar without sidebar
   - **Focus**: Task management, Kanban board, quick status updates, and deadline tracking
+  - **Refresh Strategy**: 
+    - Kanban board: No refresh on drag-and-drop (optimistic updates only)
+    - Other components (TeamQuickActions, MyAssignedTasks, MyNextDeadline): Refresh only when updates come from TeamQuickActions
+    - Separate handlers: `handleKanbanUpdate()` (no refresh) vs `handleQuickActionsUpdate()` (triggers refresh)
 - Each dashboard has specialized components in respective subdirectories
 
 ### Dashboard Components
@@ -307,7 +328,7 @@ const response = await fetch('/api/project-requirements/approved-requirements');
   - **Layout**: Small component under MyAssignedTasks to complement calendar height
 - **TeamKanbanBoard**: Drag-and-drop Kanban board for task management (Team Members)
   - **Design Pattern**: Full-width card with 5-column grid layout (responsive: 1/3/5 columns)
-  - **Features**: Native HTML5 drag-and-drop, real-time status updates via API, role-based permissions
+  - **Features**: Native HTML5 drag-and-drop, real-time status updates via API, role-based permissions, audit trail
   - **Columns**: Uses dynamic status lookup (statuses 1-5): To Do, In Progress, In Review, Rework, Completed
   - **Status Names**: Fetched from lookup service (not hardcoded)
     - Status 1: "To Do" / "جديد"
@@ -318,8 +339,15 @@ const response = await fetch('/api/project-requirements/approved-requirements');
   - **Task Cards**: Title, priority chip, project/requirement info, end date, progress %, overdue badge
   - **Color Coding**: Column headers (default/primary/warning/danger/success), priority chips
   - **Scrolling**: 500px height ScrollShadow for each column
-  - **API Integration**: Uses `useTaskStatusLookups()` hook and `membersTasksService.getTasks()`
-  - **Drag Behavior**: Updates task status via `membersTasksService.updateTaskStatus()` on drop
+  - **API Integration**: 
+    - Data Fetching: Uses `useTaskStatusLookups()` hook and `membersTasksService.getTasks()`
+    - Status Updates: Uses `tasksService.updateTaskStatus()` via TasksController PATCH endpoint
+  - **Drag Behavior**: 
+    - Calls `PATCH /api/Tasks/{id}` endpoint with `{ statusId: number, comment: string }`
+    - Automatically creates TaskStatusHistory record with old/new status, user, and comment
+    - Optimistic UI updates for seamless UX
+    - No component remounting or refresh on drag-and-drop
+  - **Audit Trail**: Every status change tracked in database with user attribution and timestamp
   - **Loading States**: Waits for both status lookups and tasks to load before rendering
   - **Null Safety**: Handles null project/requirement references gracefully
   - **Role-Based Permissions**: See detailed section below for role-specific workflows
@@ -376,9 +404,19 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - Tooltips use translation keys: `teamDashboard.kanban.notAccessible`, `cannotModify`, `cannotDragFrom`, `cannotDropTo`
 
 #### API Integration
-- Each successful drop calls: `membersTasksService.updateTaskStatus(taskId, statusId)`
-- Permission checks happen before API call
-- Failed transitions are logged to console
+- **Endpoint**: `PATCH /api/Tasks/{id}` (TasksController)
+- **Request Body**: `{ statusId: number, comment?: string }`
+- **Service**: `tasksService.updateTaskStatus(taskId, statusId, comment)`
+- **Status History**: Automatically creates TaskStatusHistory record with:
+  - `TaskId`: The task being updated
+  - `OldStatus`: Previous status ID
+  - `NewStatus`: New status ID
+  - `ChangedByPrsId`: User who made the change (from UserContext)
+  - `Comment`: Descriptive comment (e.g., "Status changed from To Do to In Progress via Kanban board")
+  - `UpdatedAt`: Timestamp of change
+- **Permission Checks**: Happen on frontend before API call
+- **Error Handling**: Failed transitions logged to console, optimistic updates remain
+- **Optimistic UI**: Component updates local state immediately, no refetching or remounting
 
 #### Multi-Role Support
 - Users with multiple roles get union of permissions

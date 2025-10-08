@@ -22,6 +22,7 @@ export { DepartmentService } from "./departmentService";
 export { ProjectDetailsApiService } from "./projectDetailsService";
 export { lookupService } from "./lookupService";
 export { membersTasksService } from "./membersTasksService";
+export { tasksService } from "./tasksService";
 export { teamWorkloadService } from "./teamWorkloadService";
 export { pipelineService } from "./pipelineService";
 export { quickActionsService } from "./quickActionsService";

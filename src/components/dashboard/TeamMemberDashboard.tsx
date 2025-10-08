@@ -15,21 +15,31 @@ export default function TeamMemberDashboard() {
   const { t, language } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Handle task status update from Quick Actions
-  const handleTaskUpdate = async (taskId: number, newStatus: string) => {
+  // Handle task status update from TeamQuickActions only
+  // Kanban board handles its own updates internally, no need to refresh
+  const handleQuickActionsUpdate = async (taskId: number, newStatus: string) => {
     try {
-      console.log("Updating task:", {
+      console.log("Quick Actions updating task:", {
         taskId,
         newStatus,
       });
 
-      // Refresh the components to show updated data
+      // Refresh TeamQuickActions, MyAssignedTasks, MyNextDeadline, and Kanban
       setRefreshKey((prev) => prev + 1);
 
       console.log(`Successfully updated task ${taskId} to status ${newStatus}`);
     } catch (error) {
       console.error("Failed to update task:", error);
     }
+  };
+
+  // Handle Kanban drag-and-drop updates (no refresh needed for other components)
+  const handleKanbanUpdate = async (taskId: number, newStatus: string) => {
+    console.log("Kanban updating task:", {
+      taskId,
+      newStatus,
+    });
+    // Kanban updates its own state optimistically, no need to refresh anything
   };
 
   return (
@@ -48,13 +58,13 @@ export default function TeamMemberDashboard() {
       <ModernQuickStats />
 
       {/* Kanban Board - Full Width */}
-      <TeamKanbanBoard key={refreshKey} onTaskUpdate={handleTaskUpdate} />
+      <TeamKanbanBoard onTaskUpdate={handleKanbanUpdate} />
 
       {/* Grid Layout: Quick Actions with Calendar on left, My Tasks on right */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Quick Actions + Calendar (70%) */}
         <div className="lg:col-span-2 space-y-6">
-          <TeamQuickActions key={refreshKey} onTaskUpdate={handleTaskUpdate} />
+          <TeamQuickActions key={refreshKey} onTaskUpdate={handleQuickActionsUpdate} />
           <Calendar maxHeight="600px" showSidebar={false} />
         </div>
 

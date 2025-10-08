@@ -19,7 +19,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTaskStatusLookups } from "@/hooks/useTaskLookups";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { membersTasksService } from "@/services/api";
+import { membersTasksService, tasksService } from "@/services/api";
 import type { MemberTask } from "@/types/membersTasks";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
 import { getKanbanConfigForRoles, getColumnAccessibility, ColumnRestrictionReason } from "@/utils/kanbanRoleConfig";
@@ -34,11 +34,10 @@ interface KanbanColumn {
 }
 
 interface TeamKanbanBoardProps {
-  refreshKey?: number;
   onTaskUpdate?: (taskId: number, newStatus: string) => void;
 }
 
-export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanbanBoardProps) {
+export default function TeamKanbanBoard({ onTaskUpdate }: TeamKanbanBoardProps) {
   const { t, language } = useLanguage();
   const { user } = useCurrentUser();
   const { taskStatuses, loading: statusesLoading, getStatusLabel, getStatusColor } = useTaskStatusLookups();
@@ -137,7 +136,7 @@ export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanban
     if (!statusesLoading && taskStatuses.length > 0) {
       fetchTasks();
     }
-  }, [refreshKey, statusesLoading, taskStatuses]);
+  }, [statusesLoading, taskStatuses]);
 
   // Drag and drop handlers with role-based permissions
   const handleDragStart = (task: MemberTask, columnId: number) => {
@@ -176,14 +175,16 @@ export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanban
     }
 
     try {
-      // Update task status via API
-      const response = await membersTasksService.updateTaskStatus(
+      // Update task status via API using TasksController PATCH endpoint
+      // This creates a status history record and updates the task
+      const response = await tasksService.updateTaskStatus(
         parseInt(draggedTask.id),
-        targetColumnId.toString()
+        targetColumnId,
+        `Status changed from ${getStatusLabel(draggedFromColumn.toString())} to ${getStatusLabel(targetColumnId.toString())} via Kanban board`
       );
 
       if (response.success) {
-        // Update local state
+        // Update local state optimistically
         setColumns(prevColumns => {
           const newColumns = [...prevColumns];
           
@@ -193,7 +194,7 @@ export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanban
             sourceColumn.tasks = sourceColumn.tasks.filter(t => t.id !== draggedTask.id);
           }
           
-          // Add to target column
+          // Add to target column with updated status
           const targetColumn = newColumns.find(col => col.id === targetColumnId);
           if (targetColumn) {
             targetColumn.tasks.push({ ...draggedTask, statusId: targetColumnId });
@@ -209,6 +210,8 @@ export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanban
       }
     } catch (err) {
       console.error("Failed to update task status:", err);
+      // TODO: Show error toast notification to user
+      // TODO: Revert optimistic update on failure
     } finally {
       setDraggedTask(null);
       setDraggedFromColumn(null);
