@@ -278,8 +278,8 @@ export default function TeamKanbanBoard({ onTaskUpdate }: TeamKanbanBoardProps) 
   return (
     <Card className="w-full">
       <CardHeader className="flex items-center gap-3 pb-4">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-          <ListTodo className="w-5 h-5 text-primary" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-default-100">
+          <ListTodo className="w-5 h-5 text-foreground" />
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold">
@@ -305,28 +305,32 @@ export default function TeamKanbanBoard({ onTaskUpdate }: TeamKanbanBoardProps) 
                 onDrop={(e) => handleDrop(e, column.id)}
               >
                 {/* Column Header */}
-                <div className={`flex items-center justify-between p-3 rounded-lg bg-${column.color}/10 shadow-sm border border-${column.color}/20 backdrop-blur-sm ${!columnAccess.isDraggable && !columnAccess.isDroppable ? 'relative' : ''}`}>
-                  <div className="flex items-center gap-2">
-                    <div className={`text-${column.color}`}>
-                      {column.icon}
+                <Card className={`bg-${column.color}/10 backdrop-blur-sm ${!columnAccess.isDraggable && !columnAccess.isDroppable ? 'relative' : ''}`} shadow="sm">
+                  <CardBody className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`text-${column.color}`}>
+                          {column.icon}
+                        </div>
+                        <span className="font-semibold text-sm">
+                          {language === "ar" ? column.titleAr : column.title}
+                        </span>
+                        {!columnAccess.isDraggable && !columnAccess.isDroppable && (
+                          <Tooltip content={getRestrictionReason(columnAccess.reasonCode)}>
+                            <Lock className="w-3 h-3 text-default-400" />
+                          </Tooltip>
+                        )}
+                      </div>
+                      <Chip 
+                        size="sm" 
+                        variant="flat"
+                        color={column.color as any}
+                      >
+                        {column.tasks.length}
+                      </Chip>
                     </div>
-                    <span className="font-semibold text-sm">
-                      {language === "ar" ? column.titleAr : column.title}
-                    </span>
-                    {!columnAccess.isDraggable && !columnAccess.isDroppable && (
-                      <Tooltip content={getRestrictionReason(columnAccess.reasonCode)}>
-                        <Lock className="w-3 h-3 text-default-400" />
-                      </Tooltip>
-                    )}
-                  </div>
-                <Chip 
-                  size="sm" 
-                  variant="flat"
-                  color={column.color as any}
-                >
-                  {column.tasks.length}
-                </Chip>
-              </div>
+                  </CardBody>
+                </Card>
 
               {/* Column Tasks */}
               <ScrollShadow className="h-[500px]" hideScrollBar>
