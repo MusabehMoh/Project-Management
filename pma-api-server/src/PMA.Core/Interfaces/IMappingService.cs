@@ -42,4 +42,8 @@ public interface IMappingService
     PMA.Core.Entities.Task MapToTask(CreateTaskDto createTaskDto);
     PMA.Core.Entities.Task MapToAdHocTask(CreateAdHocTaskDto createAdHocTaskDto);
     void UpdateTaskFromDto(PMA.Core.Entities.Task task, UpdateTaskDto updateTaskDto);
+
+    // Design Request mapping methods
+    DesignRequestDto MapToDesignRequestDto(DesignRequest designRequest);
+    DesignRequest MapToDesignRequest(CreateDesignRequestDto createDesignRequestDto);
 }

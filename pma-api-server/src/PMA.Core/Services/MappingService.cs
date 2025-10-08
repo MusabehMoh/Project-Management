@@ -475,6 +475,28 @@ public class MappingService : IMappingService
     }
 
     /// <summary>
+    /// Maps a User entity to UserDto
+    /// </summary>
+    public UserDto MapToUserDto(User user)
+    {
+        return new UserDto
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            PrsId = user.PrsId,
+            IsVisible = user.IsVisible,
+            FullName = user.FullName,
+            MilitaryNumber = user.MilitaryNumber,
+            GradeName = user.GradeName,
+            DepartmentId = user.DepartmentId,
+            Email = user.Email,
+            Phone = user.Phone,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
+        };
+    }
+
+    /// <summary>
     /// Maps a Project entity to ProjectWithTimelinesDto with generated treeIds
     /// </summary>
     public ProjectWithTimelinesDto MapToProjectWithTimelinesDto(Project project)
@@ -611,5 +633,43 @@ public class MappingService : IMappingService
             task.Progress = updateTaskDto.Progress.Value;
 
         task.UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Maps a DesignRequest entity to DesignRequestDto
+    /// </summary>
+    public DesignRequestDto MapToDesignRequestDto(DesignRequest designRequest)
+    {
+        return new DesignRequestDto
+        {
+            Id = designRequest.Id,
+            TaskId = designRequest.TaskId,
+            Notes = designRequest.Notes,
+            AssignedToPrsId = designRequest.AssignedToPrsId,
+            Status = designRequest.Status,
+            DueDate = designRequest.DueDate,
+            CreatedAt = designRequest.CreatedAt,
+            UpdatedAt = designRequest.UpdatedAt,
+            AssignedToUserName = designRequest.AssignedToUser?.FullName,
+            Task = designRequest.Task != null ? MapToTaskDto(designRequest.Task) : null,
+            AssignedToUser = designRequest.AssignedToUser != null ? MapToUserDto(designRequest.AssignedToUser) : null
+        };
+    }
+
+    /// <summary>
+    /// Maps a CreateDesignRequestDto to DesignRequest entity
+    /// </summary>
+    public DesignRequest MapToDesignRequest(CreateDesignRequestDto createDesignRequestDto)
+    {
+        return new DesignRequest
+        {
+            TaskId = createDesignRequestDto.TaskId,
+            Notes = createDesignRequestDto.Notes,
+            AssignedToPrsId = createDesignRequestDto.AssignedToPrsId,
+            Status = createDesignRequestDto.Status ?? 1, // Default to pending status
+            DueDate = createDesignRequestDto.DueDate,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
     }
 }

@@ -271,3 +271,14 @@ public interface IMemberTaskService
     System.Threading.Tasks.Task<IEnumerable<TaskDto>> GetMemberTasksByProjectAsync(int projectId);
     System.Threading.Tasks.Task<IEnumerable<TaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId);
 }
+
+public interface IDesignRequestService
+{
+    System.Threading.Tasks.Task<(IEnumerable<DesignRequestDto> DesignRequests, int TotalCount)> GetDesignRequestsAsync(int page, int limit, int? taskId = null, int? assignedToPrsId = null, int? status = null);
+    System.Threading.Tasks.Task<DesignRequestDto?> GetDesignRequestByIdAsync(int id);
+    System.Threading.Tasks.Task<DesignRequestDto> CreateDesignRequestAsync(CreateDesignRequestDto designRequest);
+    System.Threading.Tasks.Task<DesignRequestDto> UpdateDesignRequestAsync(DesignRequestDto designRequest);
+    System.Threading.Tasks.Task<bool> DeleteDesignRequestAsync(int id);
+    System.Threading.Tasks.Task<bool> HasDesignRequestForTaskAsync(int taskId);
+    System.Threading.Tasks.Task<DesignRequestDto?> GetDesignRequestByTaskIdAsync(int taskId);
+}

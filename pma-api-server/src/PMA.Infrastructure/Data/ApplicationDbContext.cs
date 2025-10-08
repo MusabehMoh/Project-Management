@@ -45,6 +45,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<TaskAssignment> TaskAssignments { get; set; }
     public DbSet<TaskDependency> TaskDependencies { get; set; }
     public DbSet<TaskStatusHistory> TaskStatusHistory { get; set; }
+    public DbSet<DesignRequest> DesignRequests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

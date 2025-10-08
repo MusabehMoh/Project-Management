@@ -213,13 +213,23 @@ export class MembersTasksService {
 
   /*request design */
   async requestDesign(id: string, notes: string): Promise<ApiResponse<void>> {
-    // return {
-    //   success: true,
-    //   data: undefined,
-    //   message: "Design request submitted successfully",
-    //   timestamp: "15-08-2025",
-    // };
-    return apiClient.post<void>(`${this.baseUrl}/${id}/request-design`, notes);
+    // Import the design requests service dynamically to avoid circular imports
+    const { designRequestsService } = await import("./designRequestsService");
+
+    const designRequest = {
+      taskId: parseInt(id),
+      notes: notes,
+      status: 1, // Pending status
+    };
+
+    const response = await designRequestsService.createDesignRequest(designRequest);
+
+    return {
+      success: response.success,
+      message: response.message,
+      data: undefined,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   /**

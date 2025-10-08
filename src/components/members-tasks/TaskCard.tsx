@@ -2,7 +2,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Progress } from "@heroui/progress";
 import { Badge } from "@heroui/badge";
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@heroui/button";
 
 import { MemberTask } from "@/types/membersTasks";
@@ -240,7 +240,17 @@ export const TaskCard = ({
           ) : (
             /* actions for members */
             <div className="flex gap-3">
-              {
+              {task.hasDesignRequest ? (
+                <Chip
+                  className="flex-1"
+                  color="success"
+                  size="sm"
+                  startContent={<CheckCircle className="w-3 h-3" />}
+                  variant="flat"
+                >
+                  {t("requestedAlready")}
+                </Chip>
+              ) : (
                 <Button
                   className="flex-1"
                   color="default"
@@ -253,7 +263,7 @@ export const TaskCard = ({
                 >
                   {t("requestDesign")}
                 </Button>
-              }
+              )}
 
               <Button
                 className="flex-1"

@@ -855,47 +855,48 @@ export default function UsersPage() {
                 </ModalHeader>
                 <ModalBody>
                   <div className="space-y-4">
-                      {/* Employee Selection */}
-                      <div>
-                        <Autocomplete
-                          isClearable
-                          isRequired
-                          isLoading={employeeSearchLoading}
-                          items={employeeOptions}
-                          label={t("users.selectEmployee")}
-                          menuTrigger="input"
-                          placeholder={t("users.searchEmployees")}
-                          selectedKey={selectedEmployee?.id.toString()}
-                          onInputChange={searchEmployees}
-                          onSelectionChange={(key) => {
-                            if (key) {
-                              const employee = employeeOptions.find(
-                                (e) => e.id.toString() === key,
-                              );
+                    {/* Employee Selection */}
+                    <div>
+                      <Autocomplete
+                        isClearable
+                        isRequired
+                        isLoading={employeeSearchLoading}
+                        items={employeeOptions}
+                        label={t("users.selectEmployee")}
+                        menuTrigger="input"
+                        placeholder={t("users.searchEmployees")}
+                        selectedKey={selectedEmployee?.id.toString()}
+                        onInputChange={searchEmployees}
+                        onSelectionChange={(key) => {
+                          if (key) {
+                            const employee = employeeOptions.find(
+                              (e) => e.id.toString() === key,
+                            );
 
-                              if (employee) {
-                                handleEmployeeSelect(employee);
-                              }
+                            if (employee) {
+                              handleEmployeeSelect(employee);
                             }
-                          }}
-                        >
-                          {employeeOptions.map((employee) => (
-                            <AutocompleteItem
-                              key={employee.id.toString()}
-                              textValue={`${employee.fullName} (${employee.militaryNumber}) - ${employee.gradeName}`}
-                            >
-                              <div className="flex flex-col">
-                                <span className="font-medium">
-                                  {employee.fullName}
-                                </span>
-                                <span className="text-small text-default-500">
-                                  {employee.militaryNumber} • {employee.gradeName}
-                                </span>
-                              </div>
-                            </AutocompleteItem>
-                          ))}
-                        </Autocomplete>
-                      </div>                    {/* Selected Employee Details */}
+                          }
+                        }}
+                      >
+                        {employeeOptions.map((employee) => (
+                          <AutocompleteItem
+                            key={employee.id.toString()}
+                            textValue={`${employee.fullName} (${employee.militaryNumber}) - ${employee.gradeName}`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {employee.fullName}
+                              </span>
+                              <span className="text-small text-default-500">
+                                {employee.militaryNumber} • {employee.gradeName}
+                              </span>
+                            </div>
+                          </AutocompleteItem>
+                        ))}
+                      </Autocomplete>
+                    </div>{" "}
+                    {/* Selected Employee Details */}
                     {selectedEmployee && (
                       <Card>
                         <CardBody>
@@ -936,7 +937,6 @@ export default function UsersPage() {
                         </CardBody>
                       </Card>
                     )}
-
                     {/* User Status */}
                     <div className="flex items-center gap-3">
                       <Switch
@@ -947,7 +947,6 @@ export default function UsersPage() {
                         {t("users.isVisible")}
                       </Switch>
                     </div>
-
                     {/* Role Selection (Single Role) */}
                     <div>
                       <Select
@@ -988,7 +987,6 @@ export default function UsersPage() {
                         ))}
                       </Select>
                     </div>
-
                     {/* Selected Role Default Actions (Read-only) */}
                     {selectedRole && (
                       <div>
@@ -1052,7 +1050,6 @@ export default function UsersPage() {
                         </Card>
                       </div>
                     )}
-
                     {/* Additional Action Selection - Improved UX */}
                     {selectedRole &&
                       getAvailableAdditionalActions().length > 0 && (
@@ -1126,7 +1123,6 @@ export default function UsersPage() {
                           )}
                         </div>
                       )}
-
                     {/* Summary of All Permissions */}
                     {/*{selectedRole && (
                       <div>

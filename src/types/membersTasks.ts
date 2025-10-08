@@ -16,6 +16,7 @@ export interface MemberTask {
   project: { id: string; applicationName: string };
   requirement: { id: string; name: string };
   canRequestDesign: boolean;
+  hasDesignRequest: boolean; // Whether a design request already exists for this task
   //canChangeStatus: boolean;
   timeSpent: number; // hours
   estimatedTime: number; // hours

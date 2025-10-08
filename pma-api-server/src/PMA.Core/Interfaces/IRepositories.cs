@@ -156,12 +156,13 @@ public interface ICalendarEventRepository : IRepository<CalendarEvent>
     System.Threading.Tasks.Task<IEnumerable<CalendarEvent>> GetCalendarEventsByCreatorAsync(int creatorId);
 }
 
-//public interface IMemberTaskRepository : IRepository<MemberTask>
-//{
-//    System.Threading.Tasks.Task<(IEnumerable<MemberTask> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, string? status = null, string? priority = null);
-//    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByProjectAsync(int projectId);
-//    System.Threading.Tasks.Task<IEnumerable<MemberTask>> GetMemberTasksByAssigneeAsync(int assigneeId);
-//}
+public interface IDesignRequestRepository : IRepository<DesignRequest>
+{
+    System.Threading.Tasks.Task<(IEnumerable<DesignRequest> DesignRequests, int TotalCount)> GetDesignRequestsAsync(int page, int limit, int? taskId = null, int? assignedToPrsId = null, int? status = null);
+    System.Threading.Tasks.Task<DesignRequest?> GetDesignRequestByTaskIdAsync(int taskId);
+    System.Threading.Tasks.Task<bool> HasDesignRequestForTaskAsync(int taskId);
+    System.Threading.Tasks.Task<IEnumerable<int>> GetTaskIdsWithDesignRequestsAsync(IEnumerable<int> taskIds);
+}
 
 
 

@@ -24,6 +24,7 @@ import {
   Paperclip,
   Eye,
   Download,
+  CheckCircle,
 } from "lucide-react";
 import {
   Autocomplete,
@@ -37,6 +38,7 @@ import {
   DrawerHeader,
   Input,
   Modal,
+  ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
@@ -260,6 +262,7 @@ export default function MembersTasksPage() {
     if (success) {
       setIsRequestDesignModalOpend(false);
       setNotes("");
+      // Refresh the task list to get updated hasDesignRequest status
       handleRefresh();
     } else {
       setModalError(true);
@@ -1100,15 +1103,27 @@ export default function MembersTasksPage() {
                     ) : (
                       /* Member */
                       <div className="flex gap-3">
-                        <Button
-                          className="flex-1"
-                          color="primary"
-                          size="sm"
-                          variant="flat"
-                          onPress={() => handleRequestDesign(selectedTask)}
-                        >
-                          {t("requestDesign")}
-                        </Button>
+                        {selectedTask.hasDesignRequest ? (
+                          <Chip
+                            className="flex-1"
+                            color="success"
+                            size="md"
+                            startContent={<CheckCircle className="w-4 h-4" />}
+                            variant="flat"
+                          >
+                            {t("requestedAlready")}
+                          </Chip>
+                        ) : (
+                          <Button
+                            className="flex-1"
+                            color="primary"
+                            size="sm"
+                            variant="flat"
+                            onPress={() => handleRequestDesign(selectedTask)}
+                          >
+                            {t("requestDesign")}
+                          </Button>
+                        )}
 
                         <Button
                           className="flex-1"
@@ -1143,285 +1158,308 @@ export default function MembersTasksPage() {
         {/* Change Assignees Modal */}
         <Modal
           isOpen={isChangeAssigneesModalOpened}
+          scrollBehavior="inside"
           size="2xl"
           onOpenChange={setIsChangeAssigneesModalOpened}
         >
-          <ModalContent className="p-6 rounded-lg max-w-3xl h-[420px]">
-            <ModalHeader className="flex flex-col items-center">
-              {modalError && (
-                <h4 className="font-medium" style={{ color: "#ef4444" }}>
-                  {t("common.unexpectedError")}
-                </h4>
-              )}
-              <h2 className="text-lg font-semibold">{t("changeAssignees")}</h2>
-            </ModalHeader>
+          <ModalContent>
+            {(_onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  {t("changeAssignees")}
+                  {modalError && (
+                    <p className="text-sm text-danger font-normal">
+                      {t("common.unexpectedError")}
+                    </p>
+                  )}
+                </ModalHeader>
 
-            {/* Body */}
-            <div className="space-y-4">
-              <Input readOnly value={selectedTask?.name ?? ""} />
+                <ModalBody>
+                  <div className="space-y-4">
+                    <Input readOnly value={selectedTask?.name ?? ""} />
 
-              {/* Tags Display */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                {selectedMembers.map((employee, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      background: "#e0e0e0",
-                      padding: "5px 10px",
-                      borderRadius: "20px",
+                    {/* Tags Display */}
+                    {selectedMembers.length > 0 && (
+                      <div className="space-y-2">
+                        <span className="text-sm text-default-600">
+                          {t("users.selectedEmployees")}:
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedMembers.map((employee) => (
+                            <Chip
+                              key={employee.id}
+                              color="primary"
+                              variant="flat"
+                              onClose={() => {
+                                setSelectedMembers(
+                                  selectedMembers.filter(
+                                    (user) => user.id !== employee.id,
+                                  ),
+                                );
+                              }}
+                            >
+                              {employee.gradeName}{" "}
+                              {employee.fullName || "Unknown User"}
+                            </Chip>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <Autocomplete
+                      isClearable
+                      defaultFilter={(textValue, input) => true}
+                      errorMessage={
+                        assigneeModalError ? t("users.selectAtLeastOne") : ""
+                      }
+                      inputValue={employeeInputValue}
+                      isInvalid={assigneeModalError}
+                      isLoading={employeeSearchLoading}
+                      label={t("users.selectEmployee")}
+                      menuTrigger="input"
+                      placeholder={t("users.searchEmployees")}
+                      selectedKey={selectedEmployee?.id.toString()}
+                      onInputChange={(value) => {
+                        setEmployeeInputValue(value);
+                        if (
+                          selectedEmployee &&
+                          value !==
+                            `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
+                        ) {
+                          setSelectedEmployee(null);
+                        }
+                        searchEmployees(value);
+                        if (assigneeModalError) {
+                          setAssigneeModalError(false);
+                        }
+                      }}
+                      onSelectionChange={(key) => {
+                        if (key) {
+                          const selectedEmployee = employees.find(
+                            (e) => e.id.toString() === key,
+                          );
+
+                          if (selectedEmployee) {
+                            handleEmployeeSelect(selectedEmployee);
+                            setAssigneeModalError(false);
+                          }
+                        } else {
+                          setSelectedEmployee(null);
+                          setEmployeeInputValue("");
+                        }
+                      }}
+                    >
+                      {employees.map((employee) => (
+                        <AutocompleteItem
+                          key={employee.id.toString()}
+                          textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar
+                              name={employee.fullName || "Unknown"}
+                              size="sm"
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {employee.gradeName}{" "}
+                                {employee.fullName || "Unknown User"}
+                              </span>
+                              <span className="text-sm text-default-500">
+                                {employee.militaryNumber || "N/A"}
+                              </span>
+                              <span className="text-xs text-default-400">
+                                @{employee.userName || "unknown"}
+                              </span>
+                              <span className="text-xs text-default-400">
+                                @{employee.department || "unknown"}
+                              </span>
+                            </div>
+                          </div>
+                        </AutocompleteItem>
+                      ))}
+                    </Autocomplete>
+
+                    <Textarea
+                      label={t("timeline.treeView.notes")}
+                      placeholder={t("timeline.treeView.notes")}
+                      value={notes}
+                      onChange={(e: any) => setNotes(e.target.value)}
+                    />
+                  </div>
+                </ModalBody>
+
+                <ModalFooter>
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={() => {
+                      setIsChangeAssigneesModalOpened(false);
+                      setModalError(false);
+                      setAssigneeModalError(false);
                     }}
                   >
-                    <div className="flex items-center gap-3">
-                      <X
-                        color="red"
-                        size={24}
-                        style={{ cursor: "pointer" }}
-                        onClick={() => {
-                          setSelectedMembers(
-                            selectedMembers.filter(
-                              (user) => user.id !== employee.id,
-                            ),
-                          );
-                        }}
-                      />
-                      <div className="flex flex-col">
-                        <span className="text-xs">
-                          {employee.gradeName}{" "}
-                          {employee.fullName || "Unknown User"}
-                        </span>
-                        <span className="text-xs text-default-400">
-                          @{employee.department || "unknown"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <label>{t("users.selectEmployee")}</label>
-              <Autocomplete
-                isClearable
-                defaultFilter={(textValue, input) => true}
-                errorMessage="You must choose one at least"
-                inputValue={employeeInputValue}
-                isInvalid={assigneeModalError}
-                isLoading={employeeSearchLoading}
-                label={t("users.selectEmployee")}
-                menuTrigger="input"
-                placeholder={t("users.searchEmployees")}
-                selectedKey={selectedEmployee?.id.toString()}
-                onInputChange={(value) => {
-                  setEmployeeInputValue(value);
-                  if (
-                    selectedEmployee &&
-                    value !==
-                      `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
-                  ) {
-                    setSelectedEmployee(null);
-                  }
-                  searchEmployees(value);
-                  if (modalError) {
-                    setModalError(false); // clear error on typing
-                  }
-                }}
-                onSelectionChange={(key) => {
-                  if (key) {
-                    const selectedEmployee = employees.find(
-                      (e) => e.id.toString() === key,
-                    );
-
-                    if (selectedEmployee) {
-                      handleEmployeeSelect(selectedEmployee);
-                      setModalError(false); // clear error on selection
-                    }
-                  } else {
-                    setSelectedEmployee(null);
-                    setEmployeeInputValue("");
-                  }
-                }}
-              >
-                {employees.map((employee) => (
-                  <AutocompleteItem
-                    key={employee.id.toString()}
-                    textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
+                    {t("cancel")}
+                  </Button>
+                  <Button
+                    color="primary"
+                    isLoading={changeStatusLoading}
+                    onPress={handleChangeAssigneesSubmit}
                   >
-                    <div className="flex items-center gap-3">
-                      <Avatar name={employee.fullName || "Unknown"} size="sm" />
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {employee.gradeName}{" "}
-                          {employee.fullName || "Unknown User"}
-                        </span>
-                        <span className="text-sm text-default-500">
-                          {employee.militaryNumber || "N/A"}
-                        </span>
-                        <span className="text-xs text-default-400">
-                          @{employee.userName || "unknown"}
-                        </span>
-                        <span className="text-xs text-default-400">
-                          @{employee.department || "unknown"}
-                        </span>
-                      </div>
-                    </div>
-                  </AutocompleteItem>
-                ))}
-              </Autocomplete>
-
-              <Textarea
-                placeholder={t("timeline.treeView.notes")}
-                value={notes}
-                onChange={(e: any) => setNotes(e.target.value)}
-              />
-            </div>
-            {/* end Body */}
-
-            <ModalFooter>
-              <Button
-                color="default"
-                size="md"
-                variant="flat"
-                onPress={() => {
-                  setIsChangeAssigneesModalOpened(false);
-                  setModalError(false); // clear error here too
-                }}
-              >
-                {t("cancel")}
-              </Button>
-              <Button
-                color="primary"
-                size="md"
-                variant="flat"
-                onPress={handleChangeAssigneesSubmit}
-              >
-                {t("confirm")}
-              </Button>
-            </ModalFooter>
+                    {t("confirm")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
           </ModalContent>
         </Modal>
 
         {/* Request Design Modal */}
         <Modal
           isOpen={isRequestDesignModalOpend}
+          scrollBehavior="inside"
+          size="md"
           onOpenChange={setIsRequestDesignModalOpend}
         >
-          <ModalContent className="p-6 rounded-lg max-w-md">
-            <ModalHeader className="flex flex-col items-center">
-              {modalError && (
-                <h4 className="font-medium" style={{ color: "#ef4444" }}>
-                  {t("common.unexpectedError")}
-                </h4>
-              )}
-              <h2 className="text-lg font-semibold">{t("requestDesign")}</h2>
-            </ModalHeader>
-            <div className="space-y-4">
-              <Input readOnly value={selectedTask?.name ?? ""} />
-              <Textarea
-                placeholder={t("timeline.treeView.notes")}
-                value={notes}
-                onChange={(e: any) => setNotes(e.target.value)}
-              />
-            </div>
-            <ModalFooter>
-              <Button
-                color="default"
-                size="md"
-                variant="flat"
-                onPress={() => setIsRequestDesignModalOpend(false)} /// also clear erro here
-              >
-                {t("cancel")}
-              </Button>
-              <Button
-                color="primary"
-                size="md"
-                variant="flat"
-                onPress={handleRequestDesignSubmit}
-              >
-                {t("confirm")}
-              </Button>
-            </ModalFooter>
+          <ModalContent>
+            {(_onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  {t("requestDesign")}
+                  {modalError && (
+                    <p className="text-sm text-danger font-normal">
+                      {t("common.unexpectedError")}
+                    </p>
+                  )}
+                </ModalHeader>
+
+                <ModalBody>
+                  <div className="space-y-4">
+                    <Input readOnly value={selectedTask?.name ?? ""} />
+                    <Textarea
+                      label={t("timeline.treeView.notes")}
+                      placeholder={t("timeline.treeView.notes")}
+                      value={notes}
+                      onChange={(e: any) => setNotes(e.target.value)}
+                    />
+                  </div>
+                </ModalBody>
+
+                <ModalFooter>
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={() => {
+                      setIsRequestDesignModalOpend(false);
+                      setModalError(false);
+                    }}
+                  >
+                    {t("cancel")}
+                  </Button>
+                  <Button
+                    color="primary"
+                    disabled={selectedTask?.hasDesignRequest}
+                    isLoading={changeStatusLoading}
+                    onPress={handleRequestDesignSubmit}
+                  >
+                    {t("confirm")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
           </ModalContent>
         </Modal>
 
-        {/*change status modal */}
+        {/* Change Status Modal */}
         <Modal
           isOpen={isChangeStatusModalOpend}
+          scrollBehavior="inside"
+          size="md"
           onOpenChange={setIsChangeStatusModalOpend}
         >
-          <ModalContent className="p-6 rounded-lg max-w-md">
-            <ModalHeader className="flex flex-col items-center">
-              {modalError && (
-                <h4 className="font-medium" style={{ color: "#ef4444" }}>
-                  {t("common.unexpectedError")}
-                </h4>
-              )}
-              <h2 className="text-lg font-semibold">{t("changeStatus")}</h2>
-            </ModalHeader>
+          <ModalContent>
+            {(_onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  {t("changeStatus")}
+                  {modalError && (
+                    <p className="text-sm text-danger font-normal">
+                      {t("common.unexpectedError")}
+                    </p>
+                  )}
+                </ModalHeader>
 
-            <div className="space-y-4">
-              {/* Task Name */}
-              <Input readOnly value={selectedTask?.name ?? ""} />
+                <ModalBody>
+                  <div className="space-y-4">
+                    {/* Task Name */}
+                    <Input readOnly value={selectedTask?.name ?? ""} />
 
-              {/* Dropdown with TaskStatus */}
-              <Dropdown>
-                <DropdownTrigger>
+                    {/* Dropdown with TaskStatus */}
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <Button
+                          className="w-full justify-between"
+                          endContent={<ChevronDown className="w-4 h-4" />}
+                          variant="flat"
+                        >
+                          {selectedStatus
+                            ? selectedStatus.label
+                            : t("selectStatus")}
+                        </Button>
+                      </DropdownTrigger>
+                      <DropdownMenu
+                        aria-label="Select task status"
+                        onAction={(key) => {
+                          const status = statusOptions?.find(
+                            (s) => s.key === key,
+                          );
+
+                          if (status)
+                            setSelectedStatus({
+                              id: parseInt(status.key),
+                              label: status.label,
+                            });
+                        }}
+                      >
+                        {statusOptions?.map((status) => (
+                          <DropdownItem key={status.key}>
+                            {status.label}
+                          </DropdownItem>
+                        ))}
+                      </DropdownMenu>
+                    </Dropdown>
+
+                    {/* Notes */}
+                    <Textarea
+                      label={t("timeline.treeView.notes")}
+                      placeholder={t("timeline.treeView.notes")}
+                      value={notes}
+                      onChange={(e: any) => setNotes(e.target.value)}
+                    />
+                  </div>
+                </ModalBody>
+
+                <ModalFooter>
                   <Button
-                    className="w-full justify-between"
-                    endContent={<ChevronDown className="w-4 h-4" />}
-                    variant="flat"
+                    color="danger"
+                    variant="light"
+                    onPress={() => {
+                      setIsChangeStatusModalOpend(false);
+                      setModalError(false);
+                    }}
                   >
-                    {selectedStatus ? selectedStatus.label : t("selectStatus")}
+                    {t("cancel")}
                   </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label="Select task status"
-                  onAction={(key) => {
-                    const status = statusOptions?.find((s) => s.key === key);
-
-                    if (status)
-                      setSelectedStatus({
-                        id: parseInt(status.key),
-                        label: status.label,
-                      });
-                  }}
-                >
-                  {statusOptions?.map((status) => (
-                    <DropdownItem key={status.key}>{status.label}</DropdownItem>
-                  ))}
-                </DropdownMenu>
-              </Dropdown>
-
-              {/* Notes */}
-              <Textarea
-                placeholder={t("timeline.treeView.notes")}
-                value={notes}
-                onChange={(e: any) => setNotes(e.target.value)}
-              />
-            </div>
-
-            <ModalFooter>
-              <Button
-                color="default"
-                size="md"
-                variant="flat"
-                onPress={() => setIsChangeStatusModalOpend(false)} /// also clear erro here
-              >
-                {t("cancel")}
-              </Button>
-              <Button
-                color="primary"
-                isLoading={changeStatusLoading}
-                //isDisabled={!selectedStatus}
-                size="md"
-                variant="flat"
-                onPress={() => {
-                  handleChangeStatusSubmit();
-                }}
-              >
-                {t("confirm")}
-              </Button>
-            </ModalFooter>
+                  <Button
+                    color="primary"
+                    isLoading={changeStatusLoading}
+                    onPress={() => {
+                      handleChangeStatusSubmit();
+                    }}
+                  >
+                    {t("confirm")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
           </ModalContent>
         </Modal>
 

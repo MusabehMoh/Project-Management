@@ -14,17 +14,20 @@ public class MemberTaskService : IMemberTaskService
     private readonly IUserContextAccessor _userContextAccessor;
     private readonly IUserService _userService;
     private readonly IDepartmentService _departmentService;
+    private readonly IDesignRequestRepository _designRequestRepository;
 
     public MemberTaskService(
         ITaskRepository taskRepository, 
         IUserContextAccessor userContextAccessor, 
         IUserService userService, 
-        IDepartmentService departmentService)
+        IDepartmentService departmentService,
+        IDesignRequestRepository designRequestRepository)
     {
         _taskRepository = taskRepository;
         _userContextAccessor = userContextAccessor;
         _userService = userService;
         _departmentService = departmentService;
+        _designRequestRepository = designRequestRepository;
     }
 
     public async Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null)
@@ -80,7 +83,12 @@ public class MemberTaskService : IMemberTaskService
 
         var (tasks, totalCount) = await _taskRepository.GetTasksAsync(page, limit, null, projectId, assigneeId, statusId, priorityId, deptId);
 
-        var memberTasks = tasks.Select(MapTaskEntityToTaskDto);
+        // Get design request information for all tasks
+        var taskIds = tasks.Select(t => t.Id).ToList();
+        var designRequestTaskIds = await _designRequestRepository.GetTaskIdsWithDesignRequestsAsync(taskIds);
+        var designRequestTaskIdSet = new HashSet<int>(designRequestTaskIds);
+
+        var memberTasks = tasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet));
 
         return (memberTasks, totalCount);
     }
@@ -105,7 +113,7 @@ public class MemberTaskService : IMemberTaskService
                 parsedRole == RoleCodes.DesignerManager);
     }
 
-    private TaskDto MapTaskEntityToTaskDto(TaskEntity task)
+    private TaskDto MapTaskEntityToTaskDto(TaskEntity task, HashSet<int> designRequestTaskIds)
     {
         // Get all assigned members
         var assignedMembers = task.Assignments?.Select(a => new MemberSearchResultDto
@@ -173,6 +181,7 @@ public class MemberTaskService : IMemberTaskService
                 Id = task.ProjectRequirement.Id.ToString(),
                 Name = task.ProjectRequirement.Name
             } : null,
+            HasDesignRequest = designRequestTaskIds.Contains(task.Id)
             //PrimaryAssignee = primaryAssignee
         };
     }
@@ -182,7 +191,17 @@ public class MemberTaskService : IMemberTaskService
     public async Task<TaskDto?> GetMemberTaskByIdAsync(int id)
     {
         var task = await _taskRepository.GetByIdAsync(id);
-        return task == null ? null : MapTaskEntityToTaskDto(task);
+        if (task == null) return null;
+
+        // Check if this task has a design request
+        var hasDesignRequest = await _designRequestRepository.HasDesignRequestForTaskAsync(id);
+        var designRequestTaskIds = new HashSet<int>();
+        if (hasDesignRequest)
+        {
+            designRequestTaskIds.Add(id);
+        }
+
+        return MapTaskEntityToTaskDto(task, designRequestTaskIds);
     }
 
     public async Task<TaskDto> CreateMemberTaskAsync(TaskDto memberTask)
@@ -208,13 +227,25 @@ public class MemberTaskService : IMemberTaskService
     public async Task<IEnumerable<TaskDto>> GetMemberTasksByProjectAsync(int projectId)
     {
         var tasks = await _taskRepository.GetTasksByProjectAsync(projectId);
-        return tasks.Select(MapTaskEntityToTaskDto);
+        
+        // Get design request information for all tasks
+        var taskIds = tasks.Select(t => t.Id).ToList();
+        var designRequestTaskIds = await _designRequestRepository.GetTaskIdsWithDesignRequestsAsync(taskIds);
+        var designRequestTaskIdSet = new HashSet<int>(designRequestTaskIds);
+        
+        return tasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet));
     }
 
     public async Task<IEnumerable<TaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId)
     {
         var tasks = await _taskRepository.GetTasksByAssigneeAsync(assigneeId);
-        return tasks.Select(MapTaskEntityToTaskDto);
+        
+        // Get design request information for all tasks
+        var taskIds = tasks.Select(t => t.Id).ToList();
+        var designRequestTaskIds = await _designRequestRepository.GetTaskIdsWithDesignRequestsAsync(taskIds);
+        var designRequestTaskIdSet = new HashSet<int>(designRequestTaskIds);
+        
+        return tasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet));
     }
 }
 
