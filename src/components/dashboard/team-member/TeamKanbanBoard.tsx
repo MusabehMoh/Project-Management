@@ -305,7 +305,7 @@ export default function TeamKanbanBoard({ onTaskUpdate }: TeamKanbanBoardProps) 
                 onDrop={(e) => handleDrop(e, column.id)}
               >
                 {/* Column Header */}
-                <div className={`flex items-center justify-between p-3 rounded-lg bg-${column.color}/10 border-2 border-${column.color}/20 ${!columnAccess.isDraggable && !columnAccess.isDroppable ? 'relative' : ''}`}>
+                <div className={`flex items-center justify-between p-3 rounded-lg bg-${column.color}/10 shadow-sm border border-${column.color}/20 backdrop-blur-sm ${!columnAccess.isDraggable && !columnAccess.isDroppable ? 'relative' : ''}`}>
                   <div className="flex items-center gap-2">
                     <div className={`text-${column.color}`}>
                       {column.icon}
