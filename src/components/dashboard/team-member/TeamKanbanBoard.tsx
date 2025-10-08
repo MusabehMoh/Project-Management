@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Skeleton } from "@heroui/skeleton";
 import { ScrollShadow } from "@heroui/scroll-shadow";
+import { Tooltip } from "@heroui/tooltip";
 import { 
   ListTodo, 
   PlayCircle, 
@@ -11,14 +12,17 @@ import {
   CheckCircle,
   Clock,
   Flag,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Lock
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTaskStatusLookups } from "@/hooks/useTaskLookups";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { membersTasksService } from "@/services/api";
 import type { MemberTask } from "@/types/membersTasks";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
+import { getKanbanConfigForRoles, getColumnAccessibility, ColumnRestrictionReason } from "@/utils/kanbanRoleConfig";
 
 interface KanbanColumn {
   id: number;
@@ -36,12 +40,41 @@ interface TeamKanbanBoardProps {
 
 export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanbanBoardProps) {
   const { t, language } = useLanguage();
+  const { user } = useCurrentUser();
   const { taskStatuses, loading: statusesLoading, getStatusLabel, getStatusColor } = useTaskStatusLookups();
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [draggedTask, setDraggedTask] = useState<MemberTask | null>(null);
   const [draggedFromColumn, setDraggedFromColumn] = useState<number | null>(null);
+
+  // Get user's role IDs for permission checking
+  const userRoleIds = useMemo(() => {
+    return user?.roles?.map(role => role.id) || [];
+  }, [user]);
+
+  // Get Kanban configuration based on user's roles
+  const kanbanConfig = useMemo(() => {
+    return getKanbanConfigForRoles(userRoleIds);
+  }, [userRoleIds]);
+
+  // Get translated restriction reason
+  const getRestrictionReason = (reasonCode?: ColumnRestrictionReason): string => {
+    if (!reasonCode) return t("teamDashboard.kanban.restricted");
+    
+    switch (reasonCode) {
+      case ColumnRestrictionReason.NOT_ACCESSIBLE:
+        return t("teamDashboard.kanban.notAccessible");
+      case ColumnRestrictionReason.CANNOT_MODIFY:
+        return t("teamDashboard.kanban.cannotModify");
+      case ColumnRestrictionReason.CANNOT_DRAG_FROM:
+        return t("teamDashboard.kanban.cannotDragFrom");
+      case ColumnRestrictionReason.CANNOT_DROP_TO:
+        return t("teamDashboard.kanban.cannotDropTo");
+      default:
+        return t("teamDashboard.kanban.restricted");
+    }
+  };
 
   // Status icons mapping
   const statusIcons: Record<number, React.ReactNode> = {
@@ -106,20 +139,37 @@ export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanban
     }
   }, [refreshKey, statusesLoading, taskStatuses]);
 
-  // Drag and drop handlers
+  // Drag and drop handlers with role-based permissions
   const handleDragStart = (task: MemberTask, columnId: number) => {
+    // Check if user can drag from this status
+    if (!kanbanConfig.canDragFrom(columnId)) {
+      console.warn(`User does not have permission to drag from status ${columnId}`);
+      return;
+    }
+    
     setDraggedTask(task);
     setDraggedFromColumn(columnId);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleDragOver = (e: React.DragEvent, targetColumnId: number) => {
+    // Only allow drag over if transition is permitted
+    if (draggedFromColumn !== null && kanbanConfig.canDropTo(targetColumnId, draggedFromColumn)) {
+      e.preventDefault();
+    }
   };
 
   const handleDrop = async (e: React.DragEvent, targetColumnId: number) => {
     e.preventDefault();
     
-    if (!draggedTask || draggedFromColumn === targetColumnId) {
+    if (!draggedTask || draggedFromColumn === null || draggedFromColumn === targetColumnId) {
+      setDraggedTask(null);
+      setDraggedFromColumn(null);
+      return;
+    }
+
+    // Check if user can drop to this status
+    if (!kanbanConfig.canDropTo(targetColumnId, draggedFromColumn)) {
+      console.warn(`User does not have permission to move task from status ${draggedFromColumn} to ${targetColumnId}`);
       setDraggedTask(null);
       setDraggedFromColumn(null);
       return;
@@ -240,23 +290,32 @@ export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanban
 
       <CardBody className="p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {columns.map(column => (
-            <div
-              key={column.id}
-              className="flex flex-col gap-3"
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, column.id)}
-            >
-              {/* Column Header */}
-              <div className={`flex items-center justify-between p-3 rounded-lg bg-${column.color}/10 border-2 border-${column.color}/20`}>
-                <div className="flex items-center gap-2">
-                  <div className={`text-${column.color}`}>
-                    {column.icon}
+          {columns.map(column => {
+            const columnAccess = getColumnAccessibility(userRoleIds, column.id);
+            const isDroppable = draggedFromColumn !== null && kanbanConfig.canDropTo(column.id, draggedFromColumn);
+            
+            return (
+              <div
+                key={column.id}
+                className={`flex flex-col gap-3 ${!columnAccess.isDroppable && draggedFromColumn !== null ? 'opacity-50' : ''}`}
+                onDragOver={(e) => handleDragOver(e, column.id)}
+                onDrop={(e) => handleDrop(e, column.id)}
+              >
+                {/* Column Header */}
+                <div className={`flex items-center justify-between p-3 rounded-lg bg-${column.color}/10 border-2 border-${column.color}/20 ${!columnAccess.isDraggable && !columnAccess.isDroppable ? 'relative' : ''}`}>
+                  <div className="flex items-center gap-2">
+                    <div className={`text-${column.color}`}>
+                      {column.icon}
+                    </div>
+                    <span className="font-semibold text-sm">
+                      {language === "ar" ? column.titleAr : column.title}
+                    </span>
+                    {!columnAccess.isDraggable && !columnAccess.isDroppable && (
+                      <Tooltip content={getRestrictionReason(columnAccess.reasonCode)}>
+                        <Lock className="w-3 h-3 text-default-400" />
+                      </Tooltip>
+                    )}
                   </div>
-                  <span className="font-semibold text-sm">
-                    {language === "ar" ? column.titleAr : column.title}
-                  </span>
-                </div>
                 <Chip 
                   size="sm" 
                   variant="flat"
@@ -274,14 +333,17 @@ export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanban
                       {t("teamDashboard.kanban.noTasks")}
                     </div>
                   ) : (
-                    column.tasks.map(task => (
-                      <Card
-                        key={task.id}
-                        className="cursor-move hover:shadow-lg transition-shadow"
-                        draggable
-                        onDragStart={() => handleDragStart(task, column.id)}
-                        shadow="sm"
-                      >
+                    column.tasks.map(task => {
+                      const canDrag = columnAccess.isDraggable;
+                      
+                      return (
+                        <Card
+                          key={task.id}
+                          className={`${canDrag ? 'cursor-move hover:shadow-lg' : 'cursor-default'} transition-shadow`}
+                          draggable={canDrag}
+                          onDragStart={() => canDrag && handleDragStart(task, column.id)}
+                          shadow="sm"
+                        >
                         <CardBody className="p-3 space-y-2">
                           {/* Task Title */}
                           <h4 className="font-semibold text-sm line-clamp-2">
@@ -343,12 +405,14 @@ export default function TeamKanbanBoard({ refreshKey, onTaskUpdate }: TeamKanban
                           )}
                         </CardBody>
                       </Card>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </ScrollShadow>
             </div>
-          ))}
+            );
+          })}
         </div>
       </CardBody>
     </Card>

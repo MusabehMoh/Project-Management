@@ -307,7 +307,7 @@ const response = await fetch('/api/project-requirements/approved-requirements');
   - **Layout**: Small component under MyAssignedTasks to complement calendar height
 - **TeamKanbanBoard**: Drag-and-drop Kanban board for task management (Team Members)
   - **Design Pattern**: Full-width card with 5-column grid layout (responsive: 1/3/5 columns)
-  - **Features**: Native HTML5 drag-and-drop, real-time status updates via API
+  - **Features**: Native HTML5 drag-and-drop, real-time status updates via API, role-based permissions
   - **Columns**: Uses dynamic status lookup (statuses 1-5): To Do, In Progress, In Review, Rework, Completed
   - **Status Names**: Fetched from lookup service (not hardcoded)
     - Status 1: "To Do" / "جديد"
@@ -322,6 +322,7 @@ const response = await fetch('/api/project-requirements/approved-requirements');
   - **Drag Behavior**: Updates task status via `membersTasksService.updateTaskStatus()` on drop
   - **Loading States**: Waits for both status lookups and tasks to load before rendering
   - **Null Safety**: Handles null project/requirement references gracefully
+  - **Role-Based Permissions**: See detailed section below for role-specific workflows
 - Each component uses proper API services and follows consistent design patterns
 
 ### Role-Based Access
@@ -338,6 +339,51 @@ const response = await fetch('/api/project-requirements/approved-requirements');
   - Quality Control Team Member: 7
   - Designer Manager: 8
   - Designer Team Member: 9
+
+### Kanban Board Role-Based Permissions
+**CRITICAL**: The TeamKanbanBoard component uses role-based drag-and-drop restrictions. Each role has specific allowed status transitions.
+
+#### Configuration System (`src/utils/kanbanRoleConfig.ts`)
+- Centralized role permission management
+- Defines allowed statuses and transitions per role
+- Provides utility functions: `getKanbanConfigForRoles()`, `isTransitionAllowed()`, `isDragAllowed()`
+- Returns `ColumnRestrictionReason` enum for translation keys
+
+#### Role-Specific Workflows
+- **Software Developer (ID: 5)**:
+  - Allowed Statuses: To Do (1), In Progress (2), In Review (3)
+  - Can drag/drop between these three statuses only
+  - Cannot access: Rework (4), Completed (5)
+
+- **Quality Control Team Member (ID: 7)**:
+  - Allowed Statuses: In Review (3), Rework (4), Completed (5)
+  - From In Review → can move to Rework or Completed
+  - From Rework → can move to In Review or Completed
+  - Cannot access: To Do (1), In Progress (2)
+
+- **Analyst (ID: 3)** & **Designer Team Member (ID: 9)**:
+  - Same as Software Developer workflow
+  - Allowed Statuses: To Do (1), In Progress (2), In Review (3)
+
+- **Managers & Administrators (IDs: 1, 2, 4, 6, 8)**:
+  - Full access to all statuses (1-5)
+  - Can move tasks between any statuses
+
+#### Visual Indicators
+- 🔒 Lock icon on restricted columns with translated tooltip
+- Disabled cursor (`cursor-default`) on non-draggable tasks
+- 50% opacity on invalid drop zones during drag
+- Tooltips use translation keys: `teamDashboard.kanban.notAccessible`, `cannotModify`, `cannotDragFrom`, `cannotDropTo`
+
+#### API Integration
+- Each successful drop calls: `membersTasksService.updateTaskStatus(taskId, statusId)`
+- Permission checks happen before API call
+- Failed transitions are logged to console
+
+#### Multi-Role Support
+- Users with multiple roles get union of permissions
+- Admin/Manager role grants full access regardless of other roles
+- Example: Developer + QC role = access to all statuses 1-5
 
 ## Performance Considerations
 
