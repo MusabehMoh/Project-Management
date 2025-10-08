@@ -1637,6 +1637,8 @@ const translations = {
     "designRequests.errorTaskNotFound": "Task details not found",
     "designRequests.errorRequirementNotFound": "Requirement details not found",
     "designRequests.errorLoadingDetails": "Error loading details",
+    "designRequests.assignmentNotes": "Assignment Notes",
+    "designRequests.assignmentNotesPlaceholder": "Add notes for this assignment (optional)",
 
     // States
     noTasksFound: "No tasks found",
@@ -3263,6 +3265,8 @@ const translations = {
     "designRequests.errorTaskNotFound": "لم يتم العثور على تفاصيل المهمة",
     "designRequests.errorRequirementNotFound": "لم يتم العثور على تفاصيل المتطلبات",
     "designRequests.errorLoadingDetails": "خطأ في تحميل التفاصيل",
+    "designRequests.assignmentNotes": "ملاحظات التعيين",
+    "designRequests.assignmentNotesPlaceholder": "أضف ملاحظات لهذا التعيين (اختياري)",
 
     // States
     noTasksFound: "لم يتم العثور على مهام",

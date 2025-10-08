@@ -92,16 +92,16 @@ export default function MembersTasksPage() {
       setProjectsLoading(true);
       try {
         const result = await projectRequirementsService.getAllProjects({
-          limit: 100 // Get a reasonable number of projects
+          limit: 100, // Get a reasonable number of projects
         });
         setProjects(result.data || []);
       } catch (error) {
-        console.error('Failed to load projects', error);
+        console.error("Failed to load projects", error);
       } finally {
         setProjectsLoading(false);
       }
     };
-    
+
     loadProjects();
   }, []);
 
@@ -247,9 +247,10 @@ export default function MembersTasksPage() {
   const isTeamManager = hasAnyRoleById([
     RoleIds.ANALYST_DEPARTMENT_MANAGER,
     RoleIds.ADMINISTRATOR,
+    RoleIds.DESIGNER_MANAGER,
+    RoleIds.DEVELOPMENT_MANAGER,
   ]);
-
-  console.log("isTeamManager", isTeamManager);
+ 
 
   // Get user role IDs for kanban permissions
   const userRoleIds = user?.roles?.map((role) => role.id) || [];
@@ -500,50 +501,13 @@ export default function MembersTasksPage() {
                 RoleIds.ADMINISTRATOR,
               ]) && <AddAdhocTask />}
 
-              {/* Export Dropdown */}
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button
-                    startContent={<FileDown className="w-4 h-4" />}
-                    variant="flat"
-                  >
-                    {t("exportTasks")}
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu aria-label="Export options">
-                  <DropdownItem
-                    key="csv"
-                    startContent={<FileSpreadsheet className="w-4 h-4" />}
-                    onPress={() => handleExport("csv")}
-                  >
-                    {t("exportAsCSV")}
-                  </DropdownItem>
-                  <DropdownItem
-                    key="excel"
-                    startContent={<FileSpreadsheet className="w-4 h-4" />}
-                    onPress={() => handleExport("xlsx")}
-                  >
-                    {t("exportAsExcel")}
-                  </DropdownItem>
-                  <DropdownItem
-                    key="pdf"
-                    startContent={<FileText className="w-4 h-4" />}
-                    onPress={() => handleExport("pdf")}
-                  >
-                    {t("exportAsPDF")}
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-
               {/* Refresh Button */}
               <Button
                 isLoading={loading}
                 startContent={<RefreshCw className="w-4 h-4" />}
                 variant="flat"
                 onPress={handleRefresh}
-              >
-                {t("common.refresh")}
-              </Button>
+              />
             </div>
           </div>
         </div>

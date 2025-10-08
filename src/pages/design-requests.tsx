@@ -22,6 +22,8 @@ import {
 } from "@heroui/modal";
 import { Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
+import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import { Avatar } from "@heroui/avatar";
 import { addToast } from "@heroui/toast";
 import {
   CheckCircle,
@@ -34,6 +36,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatDateTime } from "@/utils/dateFormatter";
+import { MemberSearchResult } from "@/types";
 import {
   designRequestsService,
   projectRequirementsService,
@@ -47,7 +50,7 @@ import { useTeamSearch } from "@/hooks/useTeamSearch";
 
 export function DesignRequestsPage() {
   const { t, language } = useLanguage();
-  
+
   // We're importing usePermissions to maintain the hook call pattern
   usePermissions(); // Call hook without using its return value
 
@@ -76,18 +79,28 @@ export function DesignRequestsPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [assignLoading, setAssignLoading] = useState(false);
 
+  // Designer selection state for autocomplete
+  const [selectedDesigner, setSelectedDesigner] =
+    useState<MemberSearchResult | null>(null);
+  const [designerInputValue, setDesignerInputValue] = useState<string>("");
+
   // View type (grid or list)
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
-  
+
   // Requirement details drawer state
   const [isRequirementDrawerOpen, setIsRequirementDrawerOpen] = useState(false);
   // Requirement state
-  const [selectedRequirement, setSelectedRequirement] = useState<ProjectRequirement | null>(null);
-  
+  const [selectedRequirement, setSelectedRequirement] =
+    useState<ProjectRequirement | null>(null);
+
   const [requirementLoading, setRequirementLoading] = useState(false);
 
   // Team search for designer selection
-  const { employees: designers, loading: designersLoading } = useTeamSearch({
+  const {
+    employees: designers,
+    loading: designersLoading,
+    searchEmployees: searchDesigners,
+  } = useTeamSearch({
     minLength: 1,
     maxResults: 20,
     loadInitialResults: false, // Don't load users on page load
@@ -105,8 +118,8 @@ export function DesignRequestsPage() {
         undefined,
         undefined,
         statusFilter,
-        true,  // Include task details
-        true   // Include requirement details
+        true, // Include task details
+        true, // Include requirement details
       );
 
       if (response.success) {
@@ -122,6 +135,7 @@ export function DesignRequestsPage() {
             totalCount: number;
             totalPages: number;
           };
+
           setDesignRequests(data);
           setTotalCount(totalCount);
           setTotalPages(totalPages);
@@ -132,7 +146,7 @@ export function DesignRequestsPage() {
       } else {
         setError(response.message || t("designRequests.errorLoading"));
       }
-    } catch (err) {
+    } catch {
       setError(t("designRequests.errorLoading"));
     } finally {
       setLoading(false);
@@ -167,6 +181,8 @@ export function DesignRequestsPage() {
     setDesignerId(null);
     setNotes("");
     setModalError(null);
+    setSelectedDesigner(null);
+    setDesignerInputValue("");
     onOpen();
   };
 
@@ -174,6 +190,7 @@ export function DesignRequestsPage() {
   const handleAssignSubmit = async () => {
     if (!selectedRequest || !designerId) {
       setModalError(t("designRequests.designerRequired"));
+
       return;
     }
 
@@ -208,7 +225,7 @@ export function DesignRequestsPage() {
   // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
-    
+
     return formatDateTime(dateString, { language });
   };
 
@@ -241,59 +258,34 @@ export function DesignRequestsPage() {
         return "default";
     }
   };
-  
+
   // Handle view requirement details
   const handleViewDetails = async (request: DesignRequestDto) => {
     if (!request || !request.taskId) return;
-    
+
     setRequirementLoading(true);
-    
+
     try {
       // Check if the request already has requirement details
       if (request.requirementDetails) {
         // If we already have requirement details from the API, use them
         setSelectedRequirement(request.requirementDetails);
         setIsRequirementDrawerOpen(true);
-      } 
+      }
       // If we have task details with a requirement ID but no requirement details
-      else if (request.taskDetails?.requirementId || (request.taskDetails?.requirement?.id)) {
+      else if (request.task?.requirementId || request.task?.requirement?.id) {
         // Get the requirement ID either directly or from the nested requirement object
-        const requirementId = request.taskDetails.requirementId || 
-          (request.taskDetails.requirement?.id ? parseInt(request.taskDetails.requirement.id) : undefined);
-          
+        const requirementId =
+          request.task.requirementId ||
+          (request.task.requirement?.id
+            ? parseInt(request.task.requirement.id)
+            : undefined);
+
         if (requirementId) {
           // Get the requirement details using the task's requirement ID
-          const reqResponse = await projectRequirementsService.getRequirementById(
-            requirementId
-          );
-        
-          if (reqResponse.success && reqResponse.data) {
-            setSelectedRequirement(reqResponse.data);
-            setIsRequirementDrawerOpen(true);
-          } else {
-            addToast({
-              title: t("designRequests.errorRequirementNotFound"),
-              color: "danger",
-            });
-          }
-        } else {
-          addToast({
-            title: t("designRequests.errorTaskNotFound"),
-            color: "danger",
-          });
-        }
-      } 
-      // If we don't have any requirement info, fetch task details first
-      else {
-        // Get task details to find the requirement ID
-        const taskResponse = await membersTasksService.getTaskById(request.taskId.toString());
-        
-        if (taskResponse.success && taskResponse.data?.requirement?.id) {
-          // Now get the requirement details
-          const reqResponse = await projectRequirementsService.getRequirementById(
-            parseInt(taskResponse.data.requirement.id)
-          );
-          
+          const reqResponse =
+            await projectRequirementsService.getRequirementById(requirementId);
+
           if (reqResponse.success && reqResponse.data) {
             setSelectedRequirement(reqResponse.data);
             setIsRequirementDrawerOpen(true);
@@ -310,8 +302,37 @@ export function DesignRequestsPage() {
           });
         }
       }
-    } catch (error) {
-      console.error("Error fetching requirement details:", error);
+      // If we don't have any requirement info, fetch task details first
+      else {
+        // Get task details to find the requirement ID
+        const taskResponse = await membersTasksService.getTaskById(
+          request.taskId.toString(),
+        );
+
+        if (taskResponse.success && taskResponse.data?.requirement?.id) {
+          // Now get the requirement details
+          const reqResponse =
+            await projectRequirementsService.getRequirementById(
+              parseInt(taskResponse.data.requirement.id),
+            );
+
+          if (reqResponse.success && reqResponse.data) {
+            setSelectedRequirement(reqResponse.data);
+            setIsRequirementDrawerOpen(true);
+          } else {
+            addToast({
+              title: t("designRequests.errorRequirementNotFound"),
+              color: "danger",
+            });
+          }
+        } else {
+          addToast({
+            title: t("designRequests.errorTaskNotFound"),
+            color: "danger",
+          });
+        }
+      }
+    } catch {
       addToast({
         title: t("designRequests.errorLoadingDetails"),
         color: "danger",
@@ -320,7 +341,7 @@ export function DesignRequestsPage() {
       setRequirementLoading(false);
     }
   };
-  
+
   // Get requirement status text
   const getRequirementStatusText = (status: number) => {
     switch (status) {
@@ -382,7 +403,7 @@ export function DesignRequestsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, index) => (
             <Card key={index} className="h-64 animate-pulse">
-              <CardBody className="bg-default-100"></CardBody>
+              <CardBody className="bg-default-100" />
             </Card>
           ))}
         </div>
@@ -435,7 +456,9 @@ export function DesignRequestsPage() {
                 </div>
 
                 {request.notes && (
-                  <div className="mt-2">
+                  <div
+                    className={`mt-2 text ${language === "ar" ? "text-right" : "text-left"}`}
+                  >
                     <h4 className="text-sm font-semibold">
                       {t("designRequests.notes")}:
                     </h4>
@@ -457,20 +480,20 @@ export function DesignRequestsPage() {
             <CardFooter className="flex flex-col gap-2">
               <div className="flex gap-2 w-full">
                 <Button
-                  color="secondary"
-                  variant="flat"
                   className="flex-1"
-                  onClick={() => handleViewDetails(request)}
+                  color="secondary"
                   startContent={<FileText size={16} />}
+                  variant="flat"
+                  onClick={() => handleViewDetails(request)}
                 >
                   {t("designRequests.viewDetails")}
                 </Button>
-                
+
                 {request.status === 1 && (
                   <Button
+                    className="flex-1"
                     color="primary"
                     variant="flat"
-                    className="flex-1"
                     onClick={() => handleAssign(request)}
                   >
                     {t("designRequests.assign")}
@@ -503,7 +526,7 @@ export function DesignRequestsPage() {
         </Card>
       );
     }
-    
+
     return (
       <Table aria-label="Design Requests Table">
         <TableHeader>
@@ -518,48 +541,51 @@ export function DesignRequestsPage() {
           isLoading={loading}
           loadingContent={t("designRequests.loadingRequests")}
         >
-          {designRequests && designRequests.map((request) => (
-            <TableRow key={request.id}>
-              <TableCell>Task ID: {request.taskId}</TableCell>
-              <TableCell>{formatDate(request.createdAt)}</TableCell>
-              <TableCell>
-                <Chip
-                  color={getStatusColor(request.status)}
-                  size="sm"
-                  variant="flat"
-                >
-                  {getStatusText(request.status)}
-                </Chip>
-              </TableCell>
-              <TableCell>
-                <div className="max-w-xs truncate">{request.notes || "-"}</div>
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button
-                    color="secondary"
+          {designRequests &&
+            designRequests.map((request) => (
+              <TableRow key={request.id}>
+                <TableCell>Task ID: {request.taskId}</TableCell>
+                <TableCell>{formatDate(request.createdAt)}</TableCell>
+                <TableCell>
+                  <Chip
+                    color={getStatusColor(request.status)}
                     size="sm"
                     variant="flat"
-                    onClick={() => handleViewDetails(request)}
-                    startContent={<FileText size={16} />}
                   >
-                    {t("designRequests.viewDetails")}
-                  </Button>
-                
-                  {request.status === 1 && (
+                    {getStatusText(request.status)}
+                  </Chip>
+                </TableCell>
+                <TableCell>
+                  <div className="max-w-xs truncate">
+                    {request.notes || "-"}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
                     <Button
-                      color="primary"
+                      color="secondary"
                       size="sm"
+                      startContent={<FileText size={16} />}
                       variant="flat"
-                      onClick={() => handleAssign(request)}
+                      onClick={() => handleViewDetails(request)}
                     >
-                      {t("designRequests.assign")}
+                      {t("designRequests.viewDetails")}
                     </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+
+                    {request.status === 1 && (
+                      <Button
+                        color="primary"
+                        size="sm"
+                        variant="flat"
+                        onClick={() => handleAssign(request)}
+                      >
+                        {t("designRequests.assign")}
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
     );
@@ -578,10 +604,10 @@ export function DesignRequestsPage() {
             aria-label={t("filter")}
             className="w-40"
             label={t("filter")}
-            onChange={handleStatusFilterChange}
             selectedKeys={
               statusFilter !== undefined ? [statusFilter.toString()] : []
             }
+            onChange={handleStatusFilterChange}
           >
             <SelectItem key="" value="">
               {t("designRequests.filter.all")}
@@ -634,78 +660,227 @@ export function DesignRequestsPage() {
         <GlobalPagination
           currentPage={currentPage}
           pageSize={normalizePageSize(pageSize, 10)}
-          totalPages={totalPages}
           totalItems={totalCount}
+          totalPages={totalPages}
           onPageChange={handlePageChange}
         />
       </div>
 
       {/* Assign Modal */}
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalContent>
+      <Modal isOpen={isOpen} size="2xl" onClose={onClose}>
+        <ModalContent className="max-h-[90vh]">
           <ModalHeader className="text-center">
             {t("designRequests.assignTo")}
           </ModalHeader>
 
-          <ModalBody>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium mb-1">
-                  {t("designRequests.requestDetails")}
-                </h3>
-                <p className="text-sm">
-                  <strong>{t("designRequests.taskName")}:</strong> Task ID:{" "}
-                  {selectedRequest?.taskId}
-                </p>
-                <p className="text-sm">
-                  <strong>{t("designRequests.requestDate")}:</strong>{" "}
-                  {formatDate(selectedRequest?.createdAt)}
-                </p>
-                {selectedRequest?.notes && (
-                  <p className="text-sm">
-                    <strong>{t("designRequests.notes")}:</strong>{" "}
-                    {selectedRequest.notes}
-                  </p>
-                )}
-              </div>
+          <ModalBody className="overflow-y-auto">
+            <div className="space-y-6">
+              {/* Assignment Controls - Moved to top for better UX */}
+              <div className="space-y-4">
+                <div>
+                  <Autocomplete
+                    isClearable
+                    isLoading={designersLoading}
+                    label={t("designRequests.selectDesigner")}
+                    menuTrigger="input"
+                    placeholder={t("designRequests.selectDesigner")}
+                    selectedKey={selectedDesigner?.id.toString()}
+                    inputValue={designerInputValue}
+                    // Disable client-side filtering; we already filter on the server
+                    defaultFilter={(_textValue, _input) => true}
+                    onInputChange={(value) => {
+                      setDesignerInputValue(value);
+                      if (
+                        selectedDesigner &&
+                        value !==
+                          `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`
+                      ) {
+                        setSelectedDesigner(null);
+                        setDesignerId(null);
+                      }
+                      searchDesigners(value);
+                      if (modalError) {
+                        setModalError(null);
+                      }
+                    }}
+                    onSelectionChange={(key) => {
+                      if (key) {
+                        const selectedDesigner = designers.find(
+                          (d) => d.id.toString() === key,
+                        );
 
-              <div>
-                <Select
-                  items={designers}
-                  label={t("designRequests.selectDesigner")}
-                  placeholder={t("designRequests.selectDesigner")}
-                  isLoading={designersLoading}
-                  errorMessage={modalError}
-                  isInvalid={!!modalError}
-                  onChange={(e) => {
-                    setDesignerId(
-                      e.target.value ? parseInt(e.target.value) : null,
-                    );
-                    setModalError(null);
-                  }}
-                >
-                  {(designer) => (
-                    <SelectItem key={designer.id} textValue={designer.fullName}>
-                      <div className="flex gap-2 items-center">
-                        <div className="flex flex-col">
-                          <span>{designer.fullName}</span>
-                          <span className="text-tiny text-default-500">
-                            {designer.userName}
-                          </span>
+                        if (selectedDesigner) {
+                          setSelectedDesigner(selectedDesigner);
+                          setDesignerId(selectedDesigner.id);
+                          setDesignerInputValue(
+                            `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`,
+                          );
+                          setModalError(null);
+                        }
+                      } else {
+                        setSelectedDesigner(null);
+                        setDesignerId(null);
+                        setDesignerInputValue("");
+                      }
+                    }}
+                  >
+                    {designers.map((designer) => (
+                      <AutocompleteItem
+                        key={designer.id.toString()}
+                        // Include username, military number, and department to improve matching
+                        textValue={`${designer.gradeName} ${designer.fullName} ${designer.userName} ${designer.militaryNumber} ${designer.department}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            name={designer.fullName || "Unknown"}
+                            size="sm"
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {designer.gradeName}{" "}
+                              {designer.fullName || "Unknown User"}
+                            </span>
+                            <span className="text-sm text-default-500">
+                              {designer.militaryNumber || "N/A"}
+                            </span>
+                            <span className="text-xs text-default-400">
+                              @{designer.userName || "unknown"}
+                            </span>
+                            <span className="text-xs text-default-400">
+                              @{designer.department || "unknown"}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </SelectItem>
+                      </AutocompleteItem>
+                    ))}
+                  </Autocomplete>
+                  {modalError && (
+                    <div className="text-danger text-sm mt-1">{modalError}</div>
                   )}
-                </Select>
+                </div>
+
+                <div>
+                  <Textarea
+                    label={t("designRequests.assignmentNotes")}
+                    minRows={3}
+                    placeholder={t("designRequests.assignmentNotesPlaceholder")}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <div>
-                <Textarea
-                  label={t("designRequests.notes")}
-                  placeholder={t("designRequests.notes")}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
+              {/* Task Details Section - Moved below controls */}
+              <div className="border border-default-200 rounded-lg p-4 bg-default-50/50 dark:bg-default-100/50 max-h-80 overflow-y-auto">
+                <h3 className="text-lg font-semibold mb-4 text-default-900 dark:text-default-100">
+                  {t("taskDetails")}
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column - Task Info */}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-default-600 dark:text-default-400">
+                        {t("designRequests.taskName")}
+                      </label>
+                      <p className="text-sm text-default-900 dark:text-default-100 mt-1">
+                        {selectedRequest?.task?.name ||
+                          t("common.notAvailable")}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-default-600 dark:text-default-400">
+                        {t("designRequests.requestDate")}
+                      </label>
+                      <p className="text-sm text-default-900 dark:text-default-100 mt-1">
+                        {formatDate(selectedRequest?.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Status & Priority */}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-default-600 dark:text-default-400">
+                        {t("status")}
+                      </label>
+                      <div className="mt-1">
+                        {selectedRequest?.task?.statusId && (
+                          <Chip
+                            color={getStatusColor(
+                              selectedRequest.task.statusId,
+                            )}
+                            size="sm"
+                            variant="flat"
+                          >
+                            {getStatusText(selectedRequest.task.statusId)}
+                          </Chip>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-default-600 dark:text-default-400">
+                        {t("priority")}
+                      </label>
+                      <div className="mt-1">
+                        {selectedRequest?.task?.priorityId && (
+                          <Chip
+                            color={getRequirementPriorityColor(
+                              selectedRequest.task.priorityId,
+                            )}
+                            size="sm"
+                            variant="solid"
+                          >
+                            {getRequirementPriorityText(
+                              selectedRequest.task.priorityId,
+                            )}
+                          </Chip>
+                        )}
+                      </div>
+                    </div>
+
+                    {selectedRequest?.task?.dueDate && (
+                      <div>
+                        <label className="text-sm font-medium text-default-600 dark:text-default-400">
+                          {t("dashboard.dueDate")}
+                        </label>
+                        <p className="text-sm text-default-900 dark:text-default-100 mt-1">
+                          {formatDate(selectedRequest.task.dueDate)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Full Width Task Description */}
+                {selectedRequest?.task?.description && (
+                  <div className="mt-4">
+                    <label className="text-sm font-medium text-default-600 dark:text-default-400">
+                      {t("requirements.description")}
+                    </label>
+                    <div className="mt-1 p-2 bg-default-100/50 dark:bg-default-200/20 rounded-md">
+                      <p className="text-sm text-default-900 dark:text-default-100 leading-relaxed whitespace-pre-wrap">
+                        {selectedRequest.task.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Request Notes */}
+                {selectedRequest?.notes && (
+                  <div className="mt-4 pt-4 border-t border-default-200">
+                    <label className="text-sm font-medium text-default-600 dark:text-default-400">
+                      {t("designRequests.notes")}
+                    </label>
+                    <div className="mt-1 max-h-16 overflow-y-auto p-2 bg-default-100/50 dark:bg-default-200/20 rounded-md">
+                      <p className="text-sm text-default-900 dark:text-default-100 leading-relaxed whitespace-pre-wrap">
+                        {selectedRequest.notes}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </ModalBody>
@@ -724,16 +899,16 @@ export function DesignRequestsPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      
+
       {/* Requirement Details Drawer */}
       <RequirementDetailsDrawer
-        isOpen={isRequirementDrawerOpen}
-        onOpenChange={setIsRequirementDrawerOpen}
-        requirement={selectedRequirement}
-        getStatusColor={getRequirementPriorityColor}
-        getStatusText={getRequirementStatusText}
         getPriorityColor={getRequirementPriorityColor}
         getPriorityLabel={getRequirementPriorityText}
+        getStatusColor={getRequirementPriorityColor}
+        getStatusText={getRequirementStatusText}
+        isOpen={isRequirementDrawerOpen}
+        requirement={selectedRequirement}
+        onOpenChange={setIsRequirementDrawerOpen}
       />
     </div>
   );

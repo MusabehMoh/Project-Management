@@ -16,4 +16,10 @@ public class ProjectRequirementDto
     public int? AssignedAnalyst { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    // Navigation properties
+    public List<ProjectRequirementAttachmentDto> Attachments { get; set; } = new List<ProjectRequirementAttachmentDto>();
+    public ProjectBasicInfoDto? Project { get; set; }
+    public RequirementTaskDto? RequirementTask { get; set; }
+    public TimelineBasicInfoDto? Timeline { get; set; }
 }

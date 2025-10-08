@@ -364,7 +364,100 @@ public class MappingService : IMappingService
             CreatedBy = projectRequirement.CreatedBy,
             AssignedAnalyst = projectRequirement.AssignedAnalyst,
             CreatedAt = projectRequirement.CreatedAt,
-            UpdatedAt = projectRequirement.UpdatedAt
+            UpdatedAt = projectRequirement.UpdatedAt,
+            Attachments = projectRequirement.Attachments?.Select(MapToProjectRequirementAttachmentDto).ToList() ?? new List<ProjectRequirementAttachmentDto>(),
+            Project = projectRequirement.Project != null ? MapToProjectBasicInfoDto(projectRequirement.Project) : null,
+            RequirementTask = projectRequirement.RequirementTask != null ? MapToRequirementTaskDto(projectRequirement.RequirementTask) : null,
+            Timeline = projectRequirement.Timeline != null ? MapToTimelineBasicInfoDto(projectRequirement.Timeline) : null
+        };
+    }
+
+    /// <summary>
+    /// Maps a ProjectRequirementAttachment entity to a ProjectRequirementAttachmentDto
+    /// </summary>
+    public ProjectRequirementAttachmentDto MapToProjectRequirementAttachmentDto(ProjectRequirementAttachment attachment)
+    {
+        if (attachment == null)
+            return null!;
+            
+        return new ProjectRequirementAttachmentDto
+        {
+            Id = attachment.Id,
+            ProjectRequirementId = attachment.ProjectRequirementId,
+            FileName = attachment.FileName,
+            OriginalName = attachment.OriginalName,
+            FilePath = attachment.FilePath,
+            FileSize = attachment.FileSize,
+            ContentType = attachment.ContentType,
+            UploadedAt = attachment.UploadedAt
+        };
+    }
+
+    /// <summary>
+    /// Maps a Project entity to a ProjectBasicInfoDto
+    /// </summary>
+    public ProjectBasicInfoDto MapToProjectBasicInfoDto(Project project)
+    {
+        if (project == null)
+            return null!;
+            
+        return new ProjectBasicInfoDto
+        {
+            Id = project.Id,
+            ApplicationName = project.ApplicationName,
+            ProjectOwner = project.ProjectOwner,
+            OwningUnit = project.OwningUnit,
+            Analysts = project.Analysts,
+            AnalystIds = project.ProjectAnalysts?.Select(pa => pa.AnalystId).ToList() ?? new List<int>()
+        };
+    }
+
+    /// <summary>
+    /// Maps a RequirementTask entity to a RequirementTaskDto
+    /// </summary>
+    public RequirementTaskDto MapToRequirementTaskDto(RequirementTask requirementTask)
+    {
+        if (requirementTask == null)
+            return null!;
+            
+        return new RequirementTaskDto
+        {
+            Id = requirementTask.Id,
+            RequirementId = requirementTask.ProjectRequirementId,
+            DeveloperId = requirementTask.DeveloperId,
+            DeveloperName = requirementTask.Developer?.FullName,
+            QcId = requirementTask.QcId,
+            QcName = requirementTask.Qc?.FullName,
+            DesignerId = requirementTask.DesignerId,
+            DesignerName = requirementTask.Designer?.FullName,
+            ControllerId = null, // Not in entity
+            ControllerName = null, // Not in entity
+            Description = requirementTask.Description,
+            DeveloperStartDate = requirementTask.DeveloperStartDate,
+            DeveloperEndDate = requirementTask.DeveloperEndDate,
+            QcStartDate = requirementTask.QcStartDate,
+            QcEndDate = requirementTask.QcEndDate,
+            DesignerStartDate = requirementTask.DesignerStartDate,
+            DesignerEndDate = requirementTask.DesignerEndDate,
+            Status = requirementTask.Status,
+            CreatedAt = requirementTask.CreatedAt,
+            UpdatedAt = requirementTask.UpdatedAt,
+            CreatedBy = requirementTask.CreatedBy
+        };
+    }
+
+    /// <summary>
+    /// Maps a Timeline entity to a TimelineBasicInfoDto
+    /// </summary>
+    public TimelineBasicInfoDto MapToTimelineBasicInfoDto(Timeline timeline)
+    {
+        if (timeline == null)
+            return null!;
+            
+        return new TimelineBasicInfoDto
+        {
+            Id = timeline.Id,
+            Name = timeline.Name
         };
     }
 

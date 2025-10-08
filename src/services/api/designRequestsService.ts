@@ -22,7 +22,7 @@ export interface DesignRequestDto {
   assignedToUserName?: string;
   
   // Task details
-  taskDetails?: {
+  task?: {
     id: number;
     name: string;
     description?: string;

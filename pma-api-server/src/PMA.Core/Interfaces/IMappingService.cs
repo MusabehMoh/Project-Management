@@ -15,6 +15,10 @@ public interface IMappingService
     
     // Add new method for mapping ProjectRequirement to ProjectRequirementDto
     ProjectRequirementDto MapToProjectRequirementDto(ProjectRequirement projectRequirement);
+    ProjectRequirementAttachmentDto MapToProjectRequirementAttachmentDto(ProjectRequirementAttachment attachment);
+    ProjectBasicInfoDto MapToProjectBasicInfoDto(Project project);
+    RequirementTaskDto MapToRequirementTaskDto(RequirementTask requirementTask);
+    TimelineBasicInfoDto MapToTimelineBasicInfoDto(Timeline timeline);
     
     // Project mapping methods
     ProjectDto MapToProjectDto(Project project);
