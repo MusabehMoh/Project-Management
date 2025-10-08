@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
+import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/skeleton";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Tooltip } from "@heroui/tooltip";
@@ -331,6 +332,9 @@ export default function TeamKanbanBoard({ onTaskUpdate }: TeamKanbanBoardProps) 
                     </div>
                   </CardBody>
                 </Card>
+
+                {/* Divider */}
+                <Divider className={`bg-${column.color}/20`} />
 
               {/* Column Tasks */}
               <ScrollShadow className="h-[500px]" hideScrollBar>
