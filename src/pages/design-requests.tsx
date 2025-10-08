@@ -1,3 +1,5 @@
+import type { ProjectRequirement } from "@/types/projectRequirement";
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardBody, CardHeader, CardFooter } from "@heroui/card";
 import { Chip } from "@heroui/chip";
@@ -18,15 +20,15 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/modal";
-import { Input, Textarea } from "@heroui/input";
+import { Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { addToast } from "@heroui/toast";
 import {
   CheckCircle,
   Clock,
-  CalendarClock,
   LayoutGrid,
   LayoutList,
+  FileText,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -34,16 +36,20 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { formatDateTime } from "@/utils/dateFormatter";
 import {
   designRequestsService,
-  DesignRequestDto,
-} from "@/services/api/designRequestsService";
+  projectRequirementsService,
+  membersTasksService,
+} from "@/services/api";
+import { DesignRequestDto } from "@/services/api/designRequestsService";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { normalizePageSize } from "@/constants/pagination";
+import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
-import { RoleIds } from "@/constants/roles";
 
-export default function DesignRequestsPage() {
+export function DesignRequestsPage() {
   const { t, language } = useLanguage();
-  const { hasAnyRoleById } = usePermissions();
+  
+  // We're importing usePermissions to maintain the hook call pattern
+  usePermissions(); // Call hook without using its return value
 
   // State for design requests
   const [designRequests, setDesignRequests] = useState<DesignRequestDto[]>([]);
@@ -72,6 +78,13 @@ export default function DesignRequestsPage() {
 
   // View type (grid or list)
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
+  
+  // Requirement details drawer state
+  const [isRequirementDrawerOpen, setIsRequirementDrawerOpen] = useState(false);
+  // Requirement state
+  const [selectedRequirement, setSelectedRequirement] = useState<ProjectRequirement | null>(null);
+  
+  const [requirementLoading, setRequirementLoading] = useState(false);
 
   // Team search for designer selection
   const { employees: designers, loading: designersLoading } = useTeamSearch({
@@ -92,18 +105,35 @@ export default function DesignRequestsPage() {
         undefined,
         undefined,
         statusFilter,
+        true,  // Include task details
+        true   // Include requirement details
       );
 
       if (response.success) {
-        setDesignRequests(response.data.data);
-        setTotalCount(response.data.totalCount);
-        setTotalPages(response.data.totalPages);
+        if (Array.isArray(response.data)) {
+          // Handle case where data is directly an array
+          setDesignRequests(response.data);
+          setTotalCount(response.data.length);
+          setTotalPages(1);
+        } else if (response.data && response.data.data) {
+          // Handle case with pagination wrapper
+          const { data, totalCount, totalPages } = response.data as {
+            data: DesignRequestDto[];
+            totalCount: number;
+            totalPages: number;
+          };
+          setDesignRequests(data);
+          setTotalCount(totalCount);
+          setTotalPages(totalPages);
+        } else {
+          // No valid data structure found
+          setError("Invalid data structure received");
+        }
       } else {
         setError(response.message || t("designRequests.errorLoading"));
       }
     } catch (err) {
       setError(t("designRequests.errorLoading"));
-      console.error("Error fetching design requests:", err);
     } finally {
       setLoading(false);
     }
@@ -170,7 +200,6 @@ export default function DesignRequestsPage() {
       }
     } catch (err) {
       setModalError(t("designRequests.assignError"));
-      console.error("Error assigning design request:", err);
     } finally {
       setAssignLoading(false);
     }
@@ -179,6 +208,7 @@ export default function DesignRequestsPage() {
   // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
+    
     return formatDateTime(dateString, { language });
   };
 
@@ -207,6 +237,139 @@ export default function DesignRequestsPage() {
         return "primary";
       case 3:
         return "success";
+      default:
+        return "default";
+    }
+  };
+  
+  // Handle view requirement details
+  const handleViewDetails = async (request: DesignRequestDto) => {
+    if (!request || !request.taskId) return;
+    
+    setRequirementLoading(true);
+    
+    try {
+      // Check if the request already has requirement details
+      if (request.requirementDetails) {
+        // If we already have requirement details from the API, use them
+        setSelectedRequirement(request.requirementDetails);
+        setIsRequirementDrawerOpen(true);
+      } 
+      // If we have task details with a requirement ID but no requirement details
+      else if (request.taskDetails?.requirementId || (request.taskDetails?.requirement?.id)) {
+        // Get the requirement ID either directly or from the nested requirement object
+        const requirementId = request.taskDetails.requirementId || 
+          (request.taskDetails.requirement?.id ? parseInt(request.taskDetails.requirement.id) : undefined);
+          
+        if (requirementId) {
+          // Get the requirement details using the task's requirement ID
+          const reqResponse = await projectRequirementsService.getRequirementById(
+            requirementId
+          );
+        
+          if (reqResponse.success && reqResponse.data) {
+            setSelectedRequirement(reqResponse.data);
+            setIsRequirementDrawerOpen(true);
+          } else {
+            addToast({
+              title: t("designRequests.errorRequirementNotFound"),
+              color: "danger",
+            });
+          }
+        } else {
+          addToast({
+            title: t("designRequests.errorTaskNotFound"),
+            color: "danger",
+          });
+        }
+      } 
+      // If we don't have any requirement info, fetch task details first
+      else {
+        // Get task details to find the requirement ID
+        const taskResponse = await membersTasksService.getTaskById(request.taskId.toString());
+        
+        if (taskResponse.success && taskResponse.data?.requirement?.id) {
+          // Now get the requirement details
+          const reqResponse = await projectRequirementsService.getRequirementById(
+            parseInt(taskResponse.data.requirement.id)
+          );
+          
+          if (reqResponse.success && reqResponse.data) {
+            setSelectedRequirement(reqResponse.data);
+            setIsRequirementDrawerOpen(true);
+          } else {
+            addToast({
+              title: t("designRequests.errorRequirementNotFound"),
+              color: "danger",
+            });
+          }
+        } else {
+          addToast({
+            title: t("designRequests.errorTaskNotFound"),
+            color: "danger",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching requirement details:", error);
+      addToast({
+        title: t("designRequests.errorLoadingDetails"),
+        color: "danger",
+      });
+    } finally {
+      setRequirementLoading(false);
+    }
+  };
+  
+  // Get requirement status text
+  const getRequirementStatusText = (status: number) => {
+    switch (status) {
+      case 1:
+        return t("requirements.status.new");
+      case 2:
+        return t("requirements.status.underStudy");
+      case 3:
+        return t("requirements.status.underDevelopment");
+      case 4:
+        return t("requirements.status.underTesting");
+      case 5:
+        return t("requirements.status.completed");
+      case 6:
+        return t("requirements.status.approved");
+      default:
+        return t("requirements.status.unknown");
+    }
+  };
+
+  // Get requirement priority text
+  const getRequirementPriorityText = (priority: number) => {
+    switch (priority) {
+      case 1:
+        return t("priority.low");
+      case 2:
+        return t("priority.medium");
+      case 3:
+        return t("priority.high");
+      case 4:
+        return t("priority.critical");
+      default:
+        return t("priority.unknown");
+    }
+  };
+
+  // Get requirement priority color
+  const getRequirementPriorityColor = (
+    priority: number,
+  ): "warning" | "success" | "danger" | "primary" | "secondary" | "default" => {
+    switch (priority) {
+      case 1:
+        return "success";
+      case 2:
+        return "primary";
+      case 3:
+        return "warning";
+      case 4:
+        return "danger";
       default:
         return "default";
     }
@@ -291,17 +454,29 @@ export default function DesignRequestsPage() {
               </div>
             </CardBody>
 
-            <CardFooter>
-              {request.status === 1 && (
+            <CardFooter className="flex flex-col gap-2">
+              <div className="flex gap-2 w-full">
                 <Button
-                  color="primary"
+                  color="secondary"
                   variant="flat"
-                  fullWidth
-                  onClick={() => handleAssign(request)}
+                  className="flex-1"
+                  onClick={() => handleViewDetails(request)}
+                  startContent={<FileText size={16} />}
                 >
-                  {t("designRequests.assign")}
+                  {t("designRequests.viewDetails")}
                 </Button>
-              )}
+                
+                {request.status === 1 && (
+                  <Button
+                    color="primary"
+                    variant="flat"
+                    className="flex-1"
+                    onClick={() => handleAssign(request)}
+                  >
+                    {t("designRequests.assign")}
+                  </Button>
+                )}
+              </div>
             </CardFooter>
           </Card>
         ))}
@@ -360,16 +535,28 @@ export default function DesignRequestsPage() {
                 <div className="max-w-xs truncate">{request.notes || "-"}</div>
               </TableCell>
               <TableCell>
-                {request.status === 1 && (
+                <div className="flex gap-2">
                   <Button
-                    color="primary"
+                    color="secondary"
                     size="sm"
                     variant="flat"
-                    onClick={() => handleAssign(request)}
+                    onClick={() => handleViewDetails(request)}
+                    startContent={<FileText size={16} />}
                   >
-                    {t("designRequests.assign")}
+                    {t("designRequests.viewDetails")}
                   </Button>
-                )}
+                
+                  {request.status === 1 && (
+                    <Button
+                      color="primary"
+                      size="sm"
+                      variant="flat"
+                      onClick={() => handleAssign(request)}
+                    >
+                      {t("designRequests.assign")}
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -537,6 +724,20 @@ export default function DesignRequestsPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      
+      {/* Requirement Details Drawer */}
+      <RequirementDetailsDrawer
+        isOpen={isRequirementDrawerOpen}
+        onOpenChange={setIsRequirementDrawerOpen}
+        requirement={selectedRequirement}
+        getStatusColor={getRequirementPriorityColor}
+        getStatusText={getRequirementStatusText}
+        getPriorityColor={getRequirementPriorityColor}
+        getPriorityLabel={getRequirementPriorityText}
+      />
     </div>
   );
 }
+
+// Export DesignRequestsPage as the default export
+export default DesignRequestsPage;

@@ -11,21 +11,60 @@ public class DesignRequestService : IDesignRequestService
     private readonly IDesignRequestRepository _designRequestRepository;
     private readonly IMappingService _mappingService;
     private readonly IUserContextAccessor _userContextAccessor;
+    private readonly ITaskService _taskService;
+    private readonly IProjectRequirementService _requirementService;
 
     public DesignRequestService(
         IDesignRequestRepository designRequestRepository,
         IMappingService mappingService,
-        IUserContextAccessor userContextAccessor)
+        IUserContextAccessor userContextAccessor,
+        ITaskService taskService,
+        IProjectRequirementService requirementService)
     {
         _designRequestRepository = designRequestRepository;
         _mappingService = mappingService;
         _userContextAccessor = userContextAccessor;
+        _taskService = taskService;
+        _requirementService = requirementService;
     }
 
-    public async Task<(IEnumerable<DesignRequestDto> DesignRequests, int TotalCount)> GetDesignRequestsAsync(int page, int limit, int? taskId = null, int? assignedToPrsId = null, int? status = null)
+    public async Task<(IEnumerable<DesignRequestDto> DesignRequests, int TotalCount)> GetDesignRequestsAsync(int page, int limit, int? taskId = null, int? assignedToPrsId = null, int? status = null, bool includeTaskDetails = false, bool includeRequirementDetails = false)
     {
         var (designRequests, totalCount) = await _designRequestRepository.GetDesignRequestsAsync(page, limit, taskId, assignedToPrsId, status);
-        var designRequestDtos = designRequests.Select(_mappingService.MapToDesignRequestDto);
+        var designRequestDtos = new List<DesignRequestDto>();
+
+        foreach (var dr in designRequests)
+        {
+            var dto = _mappingService.MapToDesignRequestDto(dr);
+            
+            // Optionally load task and requirement details
+            if (includeTaskDetails && dr.TaskId.HasValue)
+            {
+                // Load task details if not already included
+                if (dto.Task == null)
+                {
+                    var taskEntity = await _taskService.GetTaskByIdAsync(dr.TaskId.Value);
+                    if (taskEntity != null)
+                    {
+                        // Convert Task entity to TaskDto
+                        dto.Task = _mappingService.MapToTaskDto(taskEntity);
+                    }
+                }
+            }
+            
+            // Load requirement details if requested and if we have a task with a requirement ID
+            if (includeRequirementDetails && dto.Task?.ProjectRequirementId.HasValue == true)
+            {
+                var requirement = await _requirementService.GetProjectRequirementByIdAsync(dto.Task.ProjectRequirementId.Value);
+                if (requirement != null)
+                {
+                    dto.RequirementDetails = _mappingService.MapToProjectRequirementDto(requirement);
+                }
+            }
+            
+            designRequestDtos.Add(dto);
+        }
+        
         return (designRequestDtos, totalCount);
     }
 

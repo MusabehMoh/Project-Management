@@ -1633,6 +1633,10 @@ const translations = {
     "designRequests.filter.all": "All Requests",
     "designRequests.filter.assigned": "Assigned",
     "designRequests.filter.unassigned": "Unassigned",
+    "designRequests.viewDetails": "View Details",
+    "designRequests.errorTaskNotFound": "Task details not found",
+    "designRequests.errorRequirementNotFound": "Requirement details not found",
+    "designRequests.errorLoadingDetails": "Error loading details",
 
     // States
     noTasksFound: "No tasks found",
@@ -3255,6 +3259,10 @@ const translations = {
     "designRequests.filter.all": "جميع الطلبات",
     "designRequests.filter.assigned": "المعينة",
     "designRequests.filter.unassigned": "غير المعينة",
+    "designRequests.viewDetails": "عرض التفاصيل",
+    "designRequests.errorTaskNotFound": "لم يتم العثور على تفاصيل المهمة",
+    "designRequests.errorRequirementNotFound": "لم يتم العثور على تفاصيل المتطلبات",
+    "designRequests.errorLoadingDetails": "خطأ في تحميل التفاصيل",
 
     // States
     noTasksFound: "لم يتم العثور على مهام",

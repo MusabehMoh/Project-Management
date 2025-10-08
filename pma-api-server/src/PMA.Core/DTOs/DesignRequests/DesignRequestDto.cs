@@ -15,4 +15,5 @@ public class DesignRequestDto
     // Navigation properties
     public TaskDto? Task { get; set; }
     public UserDto? AssignedToUser { get; set; }
+    public ProjectRequirementDto? RequirementDetails { get; set; }
 }

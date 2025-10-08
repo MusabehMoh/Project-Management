@@ -31,12 +31,14 @@ public class DesignRequestsController : ApiBaseController
         [FromQuery] int limit = 20,
         [FromQuery] int? taskId = null,
         [FromQuery] int? assignedToPrsId = null,
-        [FromQuery] int? status = null)
+        [FromQuery] int? status = null,
+        [FromQuery] bool includeTaskDetails = false,
+        [FromQuery] bool includeRequirementDetails = false)
     {
         try
         {
             var (designRequests, totalCount) = await _designRequestService.GetDesignRequestsAsync(
-                page, limit, taskId, assignedToPrsId, status);
+                page, limit, taskId, assignedToPrsId, status, includeTaskDetails, includeRequirementDetails);
 
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);

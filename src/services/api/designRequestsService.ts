@@ -20,6 +20,28 @@ export interface DesignRequestDto {
   createdAt?: string;
   updatedAt?: string;
   assignedToUserName?: string;
+  
+  // Task details
+  taskDetails?: {
+    id: number;
+    name: string;
+    description?: string;
+    statusId?: number;
+    priorityId?: number;
+    dueDate?: string;
+    requirementId?: number;
+  };
+  
+  // Requirement details
+  requirementDetails?: {
+    id: number;
+    name: string;
+    description?: string;
+    priority?: number;
+    status?: number;
+    projectId?: number;
+    projectName?: string;
+  };
 }
 
 /**
@@ -38,6 +60,8 @@ export class DesignRequestsService {
     taskId?: number,
     assignedToPrsId?: number,
     status?: number,
+    includeTaskDetails: boolean = false,
+    includeRequirementDetails: boolean = false,
   ): Promise<
     ApiResponse<{
       data: DesignRequestDto[];
@@ -48,6 +72,8 @@ export class DesignRequestsService {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
+      includeTaskDetails: includeTaskDetails.toString(),
+      includeRequirementDetails: includeRequirementDetails.toString(),
     });
 
     if (taskId) params.append("taskId", taskId.toString());

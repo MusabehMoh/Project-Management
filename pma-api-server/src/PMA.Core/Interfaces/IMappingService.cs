@@ -13,6 +13,9 @@ public interface IMappingService
     void UpdateRoleFromDto(Role role, RoleUpdateDto roleDto);
     ActionDto MapToActionDto(Permission permission);
     
+    // Add new method for mapping ProjectRequirement to ProjectRequirementDto
+    ProjectRequirementDto MapToProjectRequirementDto(ProjectRequirement projectRequirement);
+    
     // Project mapping methods
     ProjectDto MapToProjectDto(Project project);
     Project MapToProject(CreateProjectDto createDto);

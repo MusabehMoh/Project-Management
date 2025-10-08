@@ -338,8 +338,34 @@ public class MappingService : IMappingService
         {
             entity.Status = RequirementStatusEnum.New;
         }
+        
         entity.UpdatedAt = DateTime.UtcNow;
         return entity;
+    }
+    
+    /// <summary>
+    /// Maps a ProjectRequirement entity to a ProjectRequirementDto
+    /// </summary>
+    public ProjectRequirementDto MapToProjectRequirementDto(ProjectRequirement projectRequirement)
+    {
+        if (projectRequirement == null)
+            return null!;
+            
+        return new ProjectRequirementDto
+        {
+            Id = projectRequirement.Id,
+            ProjectId = projectRequirement.ProjectId,
+            Name = projectRequirement.Name,
+            Description = projectRequirement.Description,
+            Priority = projectRequirement.Priority,
+            Type = projectRequirement.Type,
+            ExpectedCompletionDate = projectRequirement.ExpectedCompletionDate,
+            Status = projectRequirement.Status,
+            CreatedBy = projectRequirement.CreatedBy,
+            AssignedAnalyst = projectRequirement.AssignedAnalyst,
+            CreatedAt = projectRequirement.CreatedAt,
+            UpdatedAt = projectRequirement.UpdatedAt
+        };
     }
 
     /// <summary>

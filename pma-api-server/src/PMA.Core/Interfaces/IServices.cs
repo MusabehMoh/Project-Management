@@ -274,7 +274,7 @@ public interface IMemberTaskService
 
 public interface IDesignRequestService
 {
-    System.Threading.Tasks.Task<(IEnumerable<DesignRequestDto> DesignRequests, int TotalCount)> GetDesignRequestsAsync(int page, int limit, int? taskId = null, int? assignedToPrsId = null, int? status = null);
+    System.Threading.Tasks.Task<(IEnumerable<DesignRequestDto> DesignRequests, int TotalCount)> GetDesignRequestsAsync(int page, int limit, int? taskId = null, int? assignedToPrsId = null, int? status = null, bool includeTaskDetails = false, bool includeRequirementDetails = false);
     System.Threading.Tasks.Task<DesignRequestDto?> GetDesignRequestByIdAsync(int id);
     System.Threading.Tasks.Task<DesignRequestDto> CreateDesignRequestAsync(CreateDesignRequestDto designRequest);
     System.Threading.Tasks.Task<DesignRequestDto> UpdateDesignRequestAsync(DesignRequestDto designRequest);
