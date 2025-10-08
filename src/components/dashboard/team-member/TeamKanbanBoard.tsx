@@ -195,10 +195,26 @@ export default function TeamKanbanBoard({ onTaskUpdate }: TeamKanbanBoardProps) 
             sourceColumn.tasks = sourceColumn.tasks.filter(t => t.id !== draggedTask.id);
           }
           
-          // Add to target column with updated status
+          // Add to target column with updated status and progress
           const targetColumn = newColumns.find(col => col.id === targetColumnId);
           if (targetColumn) {
-            targetColumn.tasks.push({ ...draggedTask, statusId: targetColumnId });
+            // Auto-update progress based on status
+            const updatedTask = { ...draggedTask, statusId: targetColumnId };
+            
+            // If moving to Completed (status 5), set progress to 100%
+            if (targetColumnId === 5) {
+              updatedTask.progress = 100;
+            }
+            // If moving from Completed back to another status, restore appropriate progress
+            else if (draggedFromColumn === 5) {
+              // When moving back from Completed, set progress based on target status
+              if (targetColumnId === 1) updatedTask.progress = 0;  // To Do
+              else if (targetColumnId === 2) updatedTask.progress = 25; // In Progress
+              else if (targetColumnId === 3) updatedTask.progress = 75; // In Review
+              else if (targetColumnId === 4) updatedTask.progress = 50; // Rework
+            }
+            
+            targetColumn.tasks.push(updatedTask);
           }
           
           return newColumns;
