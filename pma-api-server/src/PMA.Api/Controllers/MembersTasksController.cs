@@ -278,23 +278,41 @@ public class MembersTasksController : ApiBaseController
                 return Error<object>("Task not found");
             }
 
-            // Map status string to TaskStatus enum
-            TaskStatusEnum statusId = request.Status?.ToLower() switch
+            TaskStatusEnum statusId;
+
+            // Try to parse as integer first (for numeric status IDs 1-6)
+            if (int.TryParse(request.Status, out int statusIdInt))
             {
-                "pending" => TaskStatusEnum.ToDo,
-                "todo" => TaskStatusEnum.ToDo,
-                "in progress" => TaskStatusEnum.InProgress,
-                "inprogress" => TaskStatusEnum.InProgress,
-                "in review" => TaskStatusEnum.InReview,
-                "inreview" => TaskStatusEnum.InReview,
-                "rework" => TaskStatusEnum.Rework,
-                "blocked" => TaskStatusEnum.OnHold,
-                "on hold" => TaskStatusEnum.OnHold,
-                "onhold" => TaskStatusEnum.OnHold,
-                "completed" => TaskStatusEnum.Completed,
-                "done" => TaskStatusEnum.Completed,
-                _ => task.StatusId // Keep existing if invalid
-            };
+                // Validate the numeric status ID is within valid range
+                if (Enum.IsDefined(typeof(TaskStatusEnum), statusIdInt))
+                {
+                    statusId = (TaskStatusEnum)statusIdInt;
+                }
+                else
+                {
+                    return Error<object>($"Invalid status ID: {statusIdInt}. Valid values are 1-6.");
+                }
+            }
+            else
+            {
+                // Fall back to string mapping for backward compatibility
+                statusId = request.Status?.ToLower() switch
+                {
+                    "pending" => TaskStatusEnum.ToDo,
+                    "todo" => TaskStatusEnum.ToDo,
+                    "in progress" => TaskStatusEnum.InProgress,
+                    "inprogress" => TaskStatusEnum.InProgress,
+                    "in review" => TaskStatusEnum.InReview,
+                    "inreview" => TaskStatusEnum.InReview,
+                    "rework" => TaskStatusEnum.Rework,
+                    "blocked" => TaskStatusEnum.OnHold,
+                    "on hold" => TaskStatusEnum.OnHold,
+                    "onhold" => TaskStatusEnum.OnHold,
+                    "completed" => TaskStatusEnum.Completed,
+                    "done" => TaskStatusEnum.Completed,
+                    _ => task.StatusId // Keep existing if invalid
+                };
+            }
 
             // Update the status and progress
             task.StatusId = statusId;

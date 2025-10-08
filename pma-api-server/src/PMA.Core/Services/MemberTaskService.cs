@@ -214,8 +214,22 @@ public class MemberTaskService : IMemberTaskService
 
     public async Task<TaskDto> UpdateMemberTaskAsync(TaskDto memberTask)
     {
-        // Similar to create, this should probably be handled differently
-        throw new NotImplementedException("Updating member tasks should be done through TaskService");
+        // Get the existing task entity
+        var existingTask = await _taskRepository.GetByIdAsync(memberTask.Id);
+        if (existingTask == null)
+        {
+            throw new InvalidOperationException($"Task with ID {memberTask.Id} not found");
+        }
+
+        // Update only the fields that should be updated (status, progress, etc.)
+        existingTask.StatusId = memberTask.StatusId;
+        existingTask.Progress = memberTask.Progress;
+        existingTask.UpdatedAt = DateTime.UtcNow;
+
+        // Save the changes (UpdateAsync returns Task, not Task<T>)
+        await _taskRepository.UpdateAsync(existingTask);
+        
+        return MapTaskEntityToTaskDto(existingTask);
     }
 
     public async Task<bool> DeleteMemberTaskAsync(int id)

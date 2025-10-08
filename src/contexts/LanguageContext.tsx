@@ -645,6 +645,12 @@ const translations = {
     "teamDashboard.kanban.project": "Project",
     "teamDashboard.kanban.requirement": "Requirement",
     "teamDashboard.kanban.overdue": "Overdue",
+    "teamDashboard.kanban.restricted": "Restricted - You don't have permission to modify tasks in this status",
+    "teamDashboard.kanban.locked": "Locked",
+    "teamDashboard.kanban.notAccessible": "This status is not accessible with your current role",
+    "teamDashboard.kanban.cannotModify": "You don't have permission to modify tasks in this status",
+    "teamDashboard.kanban.cannotDragFrom": "You cannot move tasks from this status",
+    "teamDashboard.kanban.cannotDropTo": "You cannot move tasks to this status",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "Quick Actions",
@@ -2249,6 +2255,12 @@ const translations = {
     "teamDashboard.kanban.project": "المشروع",
     "teamDashboard.kanban.requirement": "المتطلب",
     "teamDashboard.kanban.overdue": "متأخر",
+    "teamDashboard.kanban.restricted": "محظور - ليس لديك صلاحية لتعديل المهام في هذه الحالة",
+    "teamDashboard.kanban.locked": "مقفل",
+    "teamDashboard.kanban.notAccessible": "هذه الحالة غير متاحة لدورك الحالي",
+    "teamDashboard.kanban.cannotModify": "ليس لديك صلاحية لتعديل المهام في هذه الحالة",
+    "teamDashboard.kanban.cannotDragFrom": "لا يمكنك نقل المهام من هذه الحالة",
+    "teamDashboard.kanban.cannotDropTo": "لا يمكنك نقل المهام إلى هذه الحالة",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "الإجراءات السريعة",
