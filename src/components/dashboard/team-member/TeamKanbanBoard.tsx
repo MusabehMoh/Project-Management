@@ -176,12 +176,34 @@ export default function TeamKanbanBoard({ onTaskUpdate }: TeamKanbanBoardProps) 
     }
 
     try {
+      // Calculate progress based on target status
+      let updatedProgress: number;
+      
+      // Set progress based on the target status
+      if (targetColumnId === 1) {
+        updatedProgress = 0;   // To Do
+      } else if (targetColumnId === 2) {
+        updatedProgress = 25;  // In Progress
+      } else if (targetColumnId === 3) {
+        updatedProgress = 75;  // In Review
+      } else if (targetColumnId === 4) {
+        updatedProgress = 50;  // Rework
+      } else if (targetColumnId === 5) {
+        updatedProgress = 100; // Completed
+      } else {
+        // Fallback: keep existing progress for unknown statuses
+        updatedProgress = draggedTask.progress;
+      }
+      
+      console.log(`Kanban: Moving task ${draggedTask.id} from status ${draggedFromColumn} to ${targetColumnId}, setting progress to ${updatedProgress}%`);
+      
       // Update task status via API using TasksController PATCH endpoint
-      // This creates a status history record and updates the task
+      // This creates a status history record and updates the task (including progress)
       const response = await tasksService.updateTaskStatus(
         parseInt(draggedTask.id),
         targetColumnId,
-        `Status changed from ${getStatusLabel(draggedFromColumn.toString())} to ${getStatusLabel(targetColumnId.toString())} via Kanban board`
+        `Status changed from ${getStatusLabel(draggedFromColumn.toString())} to ${getStatusLabel(targetColumnId.toString())} via Kanban board`,
+        updatedProgress
       );
 
       if (response.success) {
@@ -198,22 +220,14 @@ export default function TeamKanbanBoard({ onTaskUpdate }: TeamKanbanBoardProps) 
           // Add to target column with updated status and progress
           const targetColumn = newColumns.find(col => col.id === targetColumnId);
           if (targetColumn) {
-            // Auto-update progress based on status
-            const updatedTask = { ...draggedTask, statusId: targetColumnId };
+            // Create updated task with new status and progress
+            const updatedTask = { 
+              ...draggedTask, 
+              statusId: targetColumnId,
+              progress: updatedProgress
+            };
             
-            // If moving to Completed (status 5), set progress to 100%
-            if (targetColumnId === 5) {
-              updatedTask.progress = 100;
-            }
-            // If moving from Completed back to another status, restore appropriate progress
-            else if (draggedFromColumn === 5) {
-              // When moving back from Completed, set progress based on target status
-              if (targetColumnId === 1) updatedTask.progress = 0;  // To Do
-              else if (targetColumnId === 2) updatedTask.progress = 25; // In Progress
-              else if (targetColumnId === 3) updatedTask.progress = 75; // In Review
-              else if (targetColumnId === 4) updatedTask.progress = 50; // Rework
-            }
-            
+            console.log(`Kanban: Updated task in UI:`, updatedTask);
             targetColumn.tasks.push(updatedTask);
           }
           

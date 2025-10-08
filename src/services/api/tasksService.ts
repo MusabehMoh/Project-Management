@@ -14,15 +14,18 @@ export class TasksService {
    * @param taskId - The task ID
    * @param statusId - The new status ID (1-6)
    * @param comment - Optional comment for the status change
+   * @param progress - Optional progress percentage (0-100)
    */
   async updateTaskStatus(
     taskId: number,
     statusId: number,
-    comment?: string
+    comment?: string,
+    progress?: number
   ): Promise<ApiResponse<any>> {
     return apiClient.patch<any>(`${this.baseUrl}/${taskId}`, {
       statusId: statusId,
       comment: comment || undefined,
+      progress: progress !== undefined ? progress : undefined,
     });
   }
 }

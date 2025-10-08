@@ -10,4 +10,7 @@ public class UpdateTaskStatusDto
     public TaskStatusEnum StatusId { get; set; }
 
     public string? Comment { get; set; }
+
+    [Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
+    public int? Progress { get; set; }
 }

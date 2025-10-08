@@ -423,7 +423,18 @@ public class TasksController : ApiBaseController
             // Update the task status
             existingTask.StatusId = updateStatusDto.StatusId;
             existingTask.UpdatedAt = DateTime.UtcNow;
-            existingTask.Progress= updateStatusDto.StatusId == Core.Enums.TaskStatus.Completed ? 100 :0;
+            
+            // Update progress if provided, otherwise use automatic logic
+            if (updateStatusDto.Progress.HasValue)
+            {
+                existingTask.Progress = updateStatusDto.Progress.Value;
+            }
+            else
+            {
+                // Fallback: Set to 100 if Completed, otherwise 0
+                existingTask.Progress = updateStatusDto.StatusId == Core.Enums.TaskStatus.Completed ? 100 : 0;
+            }
+            
             // Update the task
             var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
 
