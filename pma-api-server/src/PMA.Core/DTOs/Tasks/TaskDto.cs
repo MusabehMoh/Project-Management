@@ -9,6 +9,7 @@ public class TaskDto
     public string TreeId { get; set; } = string.Empty;
     public int? SprintId { get; set; }
     public string Name { get; set; } = string.Empty;
+    public TaskTypes TypeId { get; set; }
     public string? Description { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }

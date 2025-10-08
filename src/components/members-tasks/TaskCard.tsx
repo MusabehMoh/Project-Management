@@ -8,6 +8,7 @@ import { Button } from "@heroui/button";
 import { MemberTask } from "@/types/membersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDateOnly } from "@/utils/dateFormatter";
+import { getTaskTypeText, getTaskTypeColor } from "@/constants/taskTypes";
 
 interface TaskCardProps {
   task: MemberTask;
@@ -105,13 +106,22 @@ export const TaskCard = ({
             >
               {getStatusText(task.statusId)}
             </Chip>
-            <Chip
-              color={getPriorityColor(task.priorityId)}
-              size="sm"
-              variant="solid"
-            >
-              {getPriorityLabel(task.priorityId)}
-            </Chip>
+            <div className="flex gap-1 items-center">
+              <Chip
+                color={getTaskTypeColor(task.typeId)}
+                size="sm"
+                variant="bordered"
+              >
+                {t(getTaskTypeText(task.typeId))}
+              </Chip>
+              <Chip
+                color={getPriorityColor(task.priorityId)}
+                size="sm"
+                variant="solid"
+              >
+                {getPriorityLabel(task.priorityId)}
+              </Chip>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -215,6 +225,10 @@ export const TaskCard = ({
             <div>
               <span className="font-medium">{t("requirementLabel")} </span>
               <span>{task.requirement?.name || "Unknown Requirement"}</span>
+            </div>
+            <div>
+              <span className="font-medium">{t("task.type")} </span>
+              <span>{t(getTaskTypeText(task.typeId))}</span>
             </div>
           </div>
         </div>

@@ -134,6 +134,7 @@ public class MemberTaskService : IMemberTaskService
         {
             Id = task.Id,
             Name = task.Name ?? "",
+            TypeId = task.TypeId,
             Description = task.Description ?? "",
             StartDate = task.StartDate,
             EndDate = task.EndDate,

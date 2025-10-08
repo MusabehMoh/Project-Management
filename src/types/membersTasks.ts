@@ -9,6 +9,7 @@ export interface MemberTask {
   progress: number; // 0-100
   statusId: number;
   priorityId: number;
+  typeId?: number; // 1=TimeLine, 2=ChangeRequest, 3=AdHoc
   department: Department;
   assignedMembers: MemberSearchResult[]; // Multiple assignees array
   primaryAssignee?: MemberSearchResult; // Main responsible person
