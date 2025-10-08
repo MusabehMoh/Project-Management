@@ -19,6 +19,7 @@ import DevelopmentRequirementsPage from "@/pages/development-requirements";
 import ApprovalRequestsPage from "@/pages/approval-requests";
 import TimelinePage from "@/pages/timeline";
 import MembersTasksPage from "@/pages/members-tasks";
+import DesignRequestsPage from "@/pages/design-requests";
 import ProfilePage from "@/pages/profile";
 import DefaultLayout from "@/layouts/default";
 function App() {
@@ -57,6 +58,7 @@ function App() {
         <Route element={<ProfilePage />} path="profile" />
         <Route element={<TimelinePage />} path="timeline" />
         <Route element={<MembersTasksPage />} path="tasks" />
+        <Route element={<DesignRequestsPage />} path="design-requests" />
         <Route element={<DocsPage />} path="docs" />
         <Route element={<PricingPage />} path="pricing" />
         <Route element={<BlogPage />} path="blog" />

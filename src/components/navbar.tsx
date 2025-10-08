@@ -289,6 +289,14 @@ const getProjectNavItems = (
     // Add timeline for Development Managers
     developmentItems.push({ label: t("nav.timeline"), href: "/timeline" });
   }
+  
+  // Designer Manager specific items - Design Requests
+  if (hasAnyRoleById([RoleIds.DESIGNER_MANAGER, RoleIds.ADMINISTRATOR])) {
+    developmentItems.push({
+      label: t("nav.designRequests"),
+      href: "/design-requests",
+    });
+  }
 
   // Requirements specific items
   const requirementsItems = [];

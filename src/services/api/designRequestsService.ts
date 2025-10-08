@@ -101,6 +101,21 @@ export class DesignRequestsService {
   ): Promise<ApiResponse<DesignRequestDto>> {
     return apiClient.put(`${this.baseUrl}/${id}`, designRequest);
   }
+  
+  /**
+   * Assign a design request to a designer
+   */
+  async assignDesignRequest(
+    id: number,
+    designerId: number,
+    notes?: string,
+  ): Promise<ApiResponse<DesignRequestDto>> {
+    return apiClient.patch(`${this.baseUrl}/${id}/assign`, {
+      assignedToPrsId: designerId,
+      notes: notes || "",
+      status: 2, // Assigned status
+    });
+  }
 
   /**
    * Delete a design request
