@@ -30,7 +30,7 @@ public class MemberTaskService : IMemberTaskService
         _designRequestRepository = designRequestRepository;
     }
 
-    public async Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null)
+    public async Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null, string? search = null)
     {
         // Get current user context for filtering logic (similar to ProjectRequirementService pattern)
         var userContext = await _userContextAccessor.GetUserContextAsync();
@@ -81,7 +81,7 @@ public class MemberTaskService : IMemberTaskService
         int? statusId = status;
         int? priorityId = priority;
 
-        var (tasks, totalCount) = await _taskRepository.GetTasksAsync(page, limit, null, projectId, assigneeId, statusId, priorityId, deptId);
+        var (tasks, totalCount) = await _taskRepository.GetTasksAsync(page, limit, null, projectId, assigneeId, statusId, priorityId, deptId, search);
 
         // Get design request information for all tasks
         var taskIds = tasks.Select(t => t.Id).ToList();
@@ -229,7 +229,15 @@ public class MemberTaskService : IMemberTaskService
         // Save the changes (UpdateAsync returns Task, not Task<T>)
         await _taskRepository.UpdateAsync(existingTask);
         
-        return MapTaskEntityToTaskDto(existingTask);
+        // Check if this task has a design request
+        var hasDesignRequest = await _designRequestRepository.HasDesignRequestForTaskAsync(existingTask.Id);
+        var designRequestTaskIds = new HashSet<int>();
+        if (hasDesignRequest)
+        {
+            designRequestTaskIds.Add(existingTask.Id);
+        }
+        
+        return MapTaskEntityToTaskDto(existingTask, designRequestTaskIds);
     }
 
     public async Task<bool> DeleteMemberTaskAsync(int id)

@@ -48,6 +48,11 @@ export class MembersTasksService {
       params.append("projectId", taskRequest.projectId.toString());
     }
 
+    // Add search filter if provided
+    if (taskRequest?.search) {
+      params.append("search", taskRequest.search);
+    }
+
     // Handle status filter - prefer single statusId but support array too
     if (taskRequest?.statusId) {
       params.append("status", taskRequest.statusId.toString());

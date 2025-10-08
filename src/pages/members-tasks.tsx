@@ -53,7 +53,6 @@ import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { useTaskStatusLookups } from "@/hooks/useTaskLookups";
-import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { MemberTask, TaskStatus } from "@/types/membersTasks";
 import { ProjectRequirement } from "@/types/projectRequirement";
 import GlobalPagination from "@/components/GlobalPagination";
@@ -67,6 +66,10 @@ import { useFilePreview } from "@/hooks/useFilePreview";
 import { FilePreview } from "@/components/FilePreview";
 import { projectRequirementsService } from "@/services/api";
 import { RoleIds } from "@/constants/roles";
+import {
+  getKanbanConfigForRoles,
+  isTransitionAllowed,
+} from "@/utils/kanbanRoleConfig";
 
 export default function MembersTasksPage() {
   const { t, language } = useLanguage();
@@ -79,20 +82,33 @@ export default function MembersTasksPage() {
   const { statusOptions, getStatusColor, getStatusLabel } =
     useTaskStatusLookups();
 
-  // Projects (for project filter dropdown)
-  const { assignedProjects: projects, loadAssignedProjects } =
-    useProjectRequirements();
+  // Get all projects directly for the dropdown
+  const [projects, setProjects] = useState<any[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
-  // Load projects when component initializes (for dropdown)
+  // Load all projects when component initializes
   useEffect(() => {
-    // Best-effort load; the underlying hook handles its own loading guard
-    loadAssignedProjects();
-  }, [loadAssignedProjects]);
+    const loadProjects = async () => {
+      setProjectsLoading(true);
+      try {
+        const result = await projectRequirementsService.getAllProjects({
+          limit: 100 // Get a reasonable number of projects
+        });
+        setProjects(result.data || []);
+      } catch (error) {
+        console.error('Failed to load projects', error);
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+    
+    loadProjects();
+  }, []);
 
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
   const [viewType, setViewType] = useState<"grid" | "list" | "gantt">("grid");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { hasAnyRoleById, loading: userLoading } = usePermissions();
+  const { hasAnyRoleById, loading: userLoading, user } = usePermissions();
 
   // Add state for full requirement details
   const [fullRequirement, setFullRequirement] =
@@ -223,12 +239,37 @@ export default function MembersTasksPage() {
     taskParametersRequest?.search ?? "",
   );
 
+  // Update search when searchTerm changes
+  useEffect(() => {
+    handleSearchChange(searchTerm);
+  }, [searchTerm, handleSearchChange]);
+
   const isTeamManager = hasAnyRoleById([
     RoleIds.ANALYST_DEPARTMENT_MANAGER,
     RoleIds.ADMINISTRATOR,
   ]);
 
   console.log("isTeamManager", isTeamManager);
+
+  // Get user role IDs for kanban permissions
+  const userRoleIds = user?.roles?.map((role) => role.id) || [];
+
+  // Filter status options based on role permissions for the current task
+  const filteredStatusOptions = React.useMemo(() => {
+    if (!selectedTask || !statusOptions) return statusOptions || [];
+
+    const currentStatusId = selectedTask.statusId;
+
+    return statusOptions.filter((status) => {
+      const targetStatusId = parseInt(status.key);
+
+      // Allow the current status to always be shown
+      if (targetStatusId === currentStatusId) return true;
+
+      // Check if transition is allowed based on user roles
+      return isTransitionAllowed(userRoleIds, currentStatusId, targetStatusId);
+    });
+  }, [selectedTask, statusOptions, userRoleIds]);
 
   const handleChangeAssigneesSubmit = async () => {
     if (typeof changeAssignees === "function") {
@@ -521,6 +562,7 @@ export default function MembersTasksPage() {
 
               <Select
                 className="md:w-90"
+                isLoading={projectsLoading}
                 placeholder={t("taskPlan.filterByProject")}
                 selectedKeys={
                   taskParametersRequest.projectId
@@ -1408,7 +1450,7 @@ export default function MembersTasksPage() {
                       <DropdownMenu
                         aria-label="Select task status"
                         onAction={(key) => {
-                          const status = statusOptions?.find(
+                          const status = filteredStatusOptions?.find(
                             (s) => s.key === key,
                           );
 
@@ -1419,7 +1461,7 @@ export default function MembersTasksPage() {
                             });
                         }}
                       >
-                        {statusOptions?.map((status) => (
+                        {filteredStatusOptions?.map((status) => (
                           <DropdownItem key={status.key}>
                             {status.label}
                           </DropdownItem>

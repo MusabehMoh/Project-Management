@@ -263,7 +263,7 @@ public class CreateRequirementTaskDto
 
 public interface IMemberTaskService
 {
-    System.Threading.Tasks.Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null);
+    System.Threading.Tasks.Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null, string? search = null);
     System.Threading.Tasks.Task<TaskDto?> GetMemberTaskByIdAsync(int id);
     System.Threading.Tasks.Task<TaskDto> CreateMemberTaskAsync(TaskDto memberTask);
     System.Threading.Tasks.Task<TaskDto> UpdateMemberTaskAsync(TaskDto memberTask);

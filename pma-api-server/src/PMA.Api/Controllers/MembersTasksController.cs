@@ -27,7 +27,6 @@ public class MembersTasksController : ApiBaseController
     /// Service layer handles user context and role-based filtering
     /// </summary>
     [HttpGet]
-    [AllowAnonymous] // Temporary for testing - remove in production
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetMemberTasks(
         [FromQuery] int page = 1,
@@ -35,13 +34,14 @@ public class MembersTasksController : ApiBaseController
         [FromQuery] int? projectId = null,
         [FromQuery] int? primaryAssigneeId = null,
         [FromQuery] int? status = null,
-        [FromQuery] int? priority = null)
+        [FromQuery] int? priority = null,
+        [FromQuery] string? search = null)
     {
         try
         {
             // Service layer handles user context and role-based filtering
             var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(
-                page, limit, projectId, primaryAssigneeId, status, priority, departmentId: null);
+                page, limit, projectId, primaryAssigneeId, status, priority, departmentId: null, search: search);
             
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
@@ -332,7 +332,6 @@ public class MembersTasksController : ApiBaseController
     /// Get the next upcoming task deadline for the current user
     /// </summary>
     [HttpGet("next-deadline")]
-    [AllowAnonymous] // Temporary for testing - remove in production
     [ProducesResponseType(200)]
     public async Task<IActionResult> GetNextDeadline()
     {

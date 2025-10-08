@@ -14,6 +14,7 @@ import { apiClient, API_CONFIG } from "./client";
 
 const ENDPOINTS = {
   ASSIGNED_PROJECTS: "/project-requirements/assigned-projects",
+  ALL_PROJECTS: "/project-requirements/all-projects",
   PROJECT_REQUIREMENTS: () => `/project-requirements`,
   PROJECT_REQUIREMENTS_BY_PROJECT: (projectId: number) =>
     `/project-requirements/projects/${projectId}/requirements`,
@@ -84,6 +85,52 @@ class ProjectRequirementsService {
     }
 
     const endpoint = `${ENDPOINTS.ASSIGNED_PROJECTS}${params.toString() ? "?" + params.toString() : ""}`;
+    // ApiResponse<AssignedProject[]> shape: { success, data, pagination? }
+    const result = await apiClient.get<AssignedProject[]>(endpoint);
+
+    return {
+      data: result.data ?? [],
+      pagination: result.pagination ?? {
+        page: options?.page ?? 1,
+        limit: options?.limit ?? 20,
+        total: (result.data ?? []).length,
+        totalPages: 1,
+      },
+    };
+  }
+  
+  /**
+   * Get all projects (not filtered by assignment)
+   */
+  async getAllProjects(
+    options?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+    },
+  ): Promise<{
+    data: AssignedProject[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const params = new URLSearchParams();
+
+    if (options?.page) {
+      params.append("page", options.page.toString());
+    }
+
+    if (options?.limit) {
+      params.append("limit", options.limit.toString());
+    }
+    if (options?.search) {
+      params.append("search", options.search);
+    }
+
+    const endpoint = `${ENDPOINTS.ALL_PROJECTS}${params.toString() ? "?" + params.toString() : ""}`;
     // ApiResponse<AssignedProject[]> shape: { success, data, pagination? }
     const result = await apiClient.get<AssignedProject[]>(endpoint);
 

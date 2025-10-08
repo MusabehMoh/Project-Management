@@ -34,7 +34,10 @@ const SOFTWARE_DEVELOPER_CONFIG: KanbanRoleConfig = {
   canDropTo: (statusId: number, fromStatusId: number) => {
     // Can move between To Do, In Progress, and In Review
     const allowedStatuses = [1, 2, 3];
-    return allowedStatuses.includes(statusId) && allowedStatuses.includes(fromStatusId);
+    return (
+      allowedStatuses.includes(statusId) &&
+      allowedStatuses.includes(fromStatusId)
+    );
   },
 };
 
@@ -83,7 +86,10 @@ const ANALYST_CONFIG: KanbanRoleConfig = {
   },
   canDropTo: (statusId: number, fromStatusId: number) => {
     const allowedStatuses = [1, 2, 3];
-    return allowedStatuses.includes(statusId) && allowedStatuses.includes(fromStatusId);
+    return (
+      allowedStatuses.includes(statusId) &&
+      allowedStatuses.includes(fromStatusId)
+    );
   },
 };
 
@@ -104,7 +110,10 @@ const DESIGNER_TEAM_MEMBER_CONFIG: KanbanRoleConfig = {
   },
   canDropTo: (statusId: number, fromStatusId: number) => {
     const allowedStatuses = [1, 2, 3];
-    return allowedStatuses.includes(statusId) && allowedStatuses.includes(fromStatusId);
+    return (
+      allowedStatuses.includes(statusId) &&
+      allowedStatuses.includes(fromStatusId)
+    );
   },
 };
 
@@ -123,7 +132,10 @@ const ADMINISTRATOR_CONFIG: KanbanRoleConfig = {
     return [1, 2, 3, 4, 5].includes(statusId);
   },
   canDropTo: (statusId: number, fromStatusId: number) => {
-    return [1, 2, 3, 4, 5].includes(statusId) && [1, 2, 3, 4, 5].includes(fromStatusId);
+    return (
+      [1, 2, 3, 4, 5].includes(statusId) &&
+      [1, 2, 3, 4, 5].includes(fromStatusId)
+    );
   },
 };
 
@@ -142,7 +154,10 @@ const MANAGER_CONFIG: KanbanRoleConfig = {
     return [1, 2, 3, 4, 5].includes(statusId);
   },
   canDropTo: (statusId: number, fromStatusId: number) => {
-    return [1, 2, 3, 4, 5].includes(statusId) && [1, 2, 3, 4, 5].includes(fromStatusId);
+    return (
+      [1, 2, 3, 4, 5].includes(statusId) &&
+      [1, 2, 3, 4, 5].includes(fromStatusId)
+    );
   },
 };
 
@@ -164,7 +179,9 @@ const ROLE_CONFIGS: Record<number, KanbanRoleConfig> = {
 /**
  * Get Kanban configuration for a specific role
  */
-export const getKanbanConfigForRole = (roleId: number): KanbanRoleConfig | null => {
+export const getKanbanConfigForRole = (
+  roleId: number,
+): KanbanRoleConfig | null => {
   return ROLE_CONFIGS[roleId] || null;
 };
 
@@ -172,16 +189,18 @@ export const getKanbanConfigForRole = (roleId: number): KanbanRoleConfig | null 
  * Get Kanban configuration for multiple roles
  * Returns the most permissive configuration (union of allowed statuses)
  */
-export const getKanbanConfigForRoles = (roleIds: number[]): KanbanRoleConfig => {
+export const getKanbanConfigForRoles = (
+  roleIds: number[],
+): KanbanRoleConfig => {
   // If user has admin or any manager role, return full access
-  const hasAdminOrManager = roleIds.some(id => 
+  const hasAdminOrManager = roleIds.some((id) =>
     [
       RoleIds.ADMINISTRATOR,
       RoleIds.DEVELOPMENT_MANAGER,
       RoleIds.QUALITY_CONTROL_MANAGER,
       RoleIds.DESIGNER_MANAGER,
-      RoleIds.ANALYST_DEPARTMENT_MANAGER
-    ].includes(id)
+      RoleIds.ANALYST_DEPARTMENT_MANAGER,
+    ].includes(id),
   );
 
   if (hasAdminOrManager) {
@@ -189,8 +208,8 @@ export const getKanbanConfigForRoles = (roleIds: number[]): KanbanRoleConfig => 
   }
 
   // Combine permissions from all roles
-  const configs = roleIds.map(id => ROLE_CONFIGS[id]).filter(Boolean);
-  
+  const configs = roleIds.map((id) => ROLE_CONFIGS[id]).filter(Boolean);
+
   if (configs.length === 0) {
     // Default: read-only access (no drag and drop)
     return {
@@ -204,15 +223,15 @@ export const getKanbanConfigForRoles = (roleIds: number[]): KanbanRoleConfig => 
 
   // Merge all allowed statuses and transitions
   const allowedStatuses = Array.from(
-    new Set(configs.flatMap(c => c.allowedStatuses))
+    new Set(configs.flatMap((c) => c.allowedStatuses)),
   ).sort();
 
   const allowedFromStatuses = Array.from(
-    new Set(configs.flatMap(c => c.allowedTransitions.from))
+    new Set(configs.flatMap((c) => c.allowedTransitions.from)),
   ).sort();
 
   const allowedToStatuses = Array.from(
-    new Set(configs.flatMap(c => c.allowedTransitions.to))
+    new Set(configs.flatMap((c) => c.allowedTransitions.to)),
   ).sort();
 
   return {
@@ -223,10 +242,10 @@ export const getKanbanConfigForRoles = (roleIds: number[]): KanbanRoleConfig => 
       to: allowedToStatuses,
     },
     canDragFrom: (statusId: number) => {
-      return configs.some(config => config.canDragFrom(statusId));
+      return configs.some((config) => config.canDragFrom(statusId));
     },
     canDropTo: (statusId: number, fromStatusId: number) => {
-      return configs.some(config => config.canDropTo(statusId, fromStatusId));
+      return configs.some((config) => config.canDropTo(statusId, fromStatusId));
     },
   };
 };
@@ -237,7 +256,7 @@ export const getKanbanConfigForRoles = (roleIds: number[]): KanbanRoleConfig => 
 export const isTransitionAllowed = (
   roleIds: number[],
   fromStatusId: number,
-  toStatusId: number
+  toStatusId: number,
 ): boolean => {
   const config = getKanbanConfigForRoles(roleIds);
   return config.canDropTo(toStatusId, fromStatusId);
@@ -246,10 +265,7 @@ export const isTransitionAllowed = (
 /**
  * Check if dragging is allowed from a status for given roles
  */
-export const isDragAllowed = (
-  roleIds: number[],
-  statusId: number
-): boolean => {
+export const isDragAllowed = (roleIds: number[], statusId: number): boolean => {
   const config = getKanbanConfigForRoles(roleIds);
   return config.canDragFrom(statusId);
 };
@@ -269,7 +285,7 @@ export enum ColumnRestrictionReason {
  */
 export const getColumnAccessibility = (
   roleIds: number[],
-  statusId: number
+  statusId: number,
 ): {
   isVisible: boolean;
   isDraggable: boolean;

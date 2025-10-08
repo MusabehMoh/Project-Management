@@ -23,7 +23,7 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
-    public async Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null, int? priorityId = null, int? departmentId = null)
+    public async Task<(IEnumerable<TaskEntity> Tasks, int TotalCount)> GetTasksAsync(int page, int limit, int? sprintId = null, int? projectId = null, int? assigneeId = null, int? statusId = null, int? priorityId = null, int? departmentId = null, string? search = null)
     {
         var query = _context.Tasks
             .Include(t => t.Sprint)
@@ -43,7 +43,7 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
 
         if (projectId.HasValue)
         {
-            query = query.Where(t => t.Sprint != null && t.Sprint.ProjectId == projectId.Value);
+            query = query.Where(t => t.ProjectRequirement != null && t.ProjectRequirement.ProjectId == projectId.Value);
         }
 
         if (assigneeId.HasValue)
@@ -64,6 +64,11 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
         if (departmentId.HasValue)
         {
             query = query.Where(t => t.DepartmentId == departmentId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(t => t.Name.Contains(search) || t.Description.Contains(search));
         }
 
         var totalCount = await query.CountAsync();

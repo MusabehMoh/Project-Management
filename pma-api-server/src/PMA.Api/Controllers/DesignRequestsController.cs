@@ -12,10 +12,12 @@ namespace PMA.Api.Controllers;
 public class DesignRequestsController : ApiBaseController
 {
     private readonly IDesignRequestService _designRequestService;
+    private readonly IUserContextAccessor _userContextAccessor;
 
-    public DesignRequestsController(IDesignRequestService designRequestService)
+    public DesignRequestsController(IDesignRequestService designRequestService, IUserContextAccessor userContextAccessor)
     {
         _designRequestService = designRequestService;
+        _userContextAccessor = userContextAccessor;
     }
 
     /// <summary>
@@ -168,12 +170,24 @@ public class DesignRequestsController : ApiBaseController
                 return BadRequest(validationResponse);
             }
 
+            // Get current user context
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.PrsId))
+            {
+                var errorResponse = new ApiResponse<DesignRequestDto>
+                {
+                    Success = false,
+                    Message = "Unable to retrieve current user information"
+                };
+                return Unauthorized(errorResponse);
+            }
+
+            designRequest.CreateBy = userContext.UserName;
             var createdDesignRequest = await _designRequestService.CreateDesignRequestAsync(designRequest);
             var response = new ApiResponse<DesignRequestDto>
             {
                 Success = true,
-                Data = createdDesignRequest,
-                Message = "Design request created successfully"
+                Data = createdDesignRequest
             };
 
             return CreatedAtAction(nameof(GetDesignRequestById), new { id = createdDesignRequest.Id }, response);

@@ -1,0 +1,2 @@
+ALTER TABLE DesignRequests
+ADD CreateBy NVARCHAR(150) NULL;

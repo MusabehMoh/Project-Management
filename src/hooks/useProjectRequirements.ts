@@ -119,6 +119,49 @@ export function useProjectRequirements({
   );
 
   /**
+   * Load all projects (not filtered by user assignments)
+   */
+  const loadAllProjects = useCallback(async () => {
+    const key = `all-projects|${assignedProjectsCurrentPage}|${assignedProjectsPageSize}|${assignedProjectsSearch}`;
+
+    if (assignedInFlightKeyRef.current === key) {
+      return; // prevent duplicate identical request
+    }
+    assignedInFlightKeyRef.current = key;
+    setAssignedProjectsLoading(true);
+    setError(null);
+
+    try {
+      const result = await projectRequirementsService.getAllProjects({
+        page: assignedProjectsCurrentPage,
+        limit: assignedProjectsPageSize,
+        search: assignedProjectsSearch || undefined,
+      });
+
+      setAssignedProjects(result.data);
+      setAssignedProjectsTotalPages(result.pagination.totalPages);
+      setTotalAssignedProjects(result.pagination.total);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load all projects";
+
+      setError(errorMessage);
+      addToast({
+        title: "Error",
+        description: errorMessage,
+        color: "danger",
+      });
+    } finally {
+      setAssignedProjectsLoading(false);
+      assignedInFlightKeyRef.current = null;
+    }
+  }, [
+    assignedProjectsCurrentPage,
+    assignedProjectsPageSize,
+    assignedProjectsSearch,
+  ]);
+
+  /**
    * Load requirements for a specific project
    */
   const loadRequirements = useCallback(async () => {
@@ -611,6 +654,7 @@ export function useProjectRequirements({
 
     // Actions
     loadAssignedProjects,
+    loadAllProjects,
     loadRequirements,
     createRequirement,
     updateRequirement,

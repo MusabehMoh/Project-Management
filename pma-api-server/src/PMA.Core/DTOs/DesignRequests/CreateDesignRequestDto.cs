@@ -8,6 +8,7 @@ public class CreateDesignRequestDto
     public int TaskId { get; set; }
 
     public string? Notes { get; set; }
+    public string? CreateBy { get; set; }
 
     public int? AssignedToPrsId { get; set; }
 

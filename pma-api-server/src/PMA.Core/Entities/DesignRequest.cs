@@ -15,6 +15,7 @@ public class DesignRequest
     public int? AssignedToPrsId { get; set; }
 
     public int? Status { get; set; }
+    public string? CreateBy { get; set; }
 
     public DateTime? DueDate { get; set; }
 

@@ -669,7 +669,8 @@ public class MappingService : IMappingService
             Status = createDesignRequestDto.Status ?? 1, // Default to pending status
             DueDate = createDesignRequestDto.DueDate,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            CreateBy= createDesignRequestDto.CreateBy
         };
     }
 }

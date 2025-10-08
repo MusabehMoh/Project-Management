@@ -20,14 +20,15 @@ public class ProjectRequirementsController : ApiBaseController
     private readonly AttachmentSettings _attachmentSettings;
     private readonly IMappingService _mappingService; 
     private readonly IRequirementTaskManagementService _requirementTaskManagementService;
-
+    private readonly IProjectService _projectService;
     public ProjectRequirementsController(
         IProjectRequirementService projectRequirementService, 
         ICurrentUserService currentUser,
         ILogger<ProjectRequirementsController> logger,
         IOptions<AttachmentSettings> attachmentSettings,
         IMappingService mappingService,
-        IRequirementTaskManagementService requirementTaskManagementService)
+        IRequirementTaskManagementService requirementTaskManagementService,
+        IProjectService projectService)
     {
         _projectRequirementService = projectRequirementService;
         _currentUser = currentUser;
@@ -35,6 +36,7 @@ public class ProjectRequirementsController : ApiBaseController
         _attachmentSettings = attachmentSettings.Value;
         _mappingService = mappingService;
         _requirementTaskManagementService = requirementTaskManagementService;
+        _projectService = projectService;
     }
 
     #region Private Helpers
@@ -175,7 +177,36 @@ public class ProjectRequirementsController : ApiBaseController
             return Error<IEnumerable<AssignedProjectDto>>("An error occurred while retrieving assigned projects", ex.Message);
         }
     }
+    /// <summary>
+    /// Get all projects
+    /// </summary>
+    [HttpGet("all-projects")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetAllProjects(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        [FromQuery] string? search = null)
+    {
+        try
+        {
+            var (projects, totalCount) = await _projectService
+                .GetProjectsAsync(page, limit, search, null, null);
+            var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
 
+            // Convert Project entities to a simple format for the frontend
+            var projectDtos = projects.Select(p => new
+            {
+                id = p.Id,
+                applicationName = p.ApplicationName
+            });
+
+            return Success(projectDtos, pagination);
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<object>>("An error occurred while retrieving all projects", ex.Message);
+        }
+    }
     /// <summary>
     /// Get project requirements by project
     /// </summary>
