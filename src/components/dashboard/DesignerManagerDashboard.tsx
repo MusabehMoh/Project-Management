@@ -1,6 +1,8 @@
 import React from "react";
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Palette } from "lucide-react";
+
+import DesignerQuickActions from "./designer/DesignerQuickActions";
+import DesignerWorkloadPerformance from "./designer/DesignerWorkloadPerformance";
+import Calendar from "./calendar";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -19,22 +21,17 @@ export default function DesignerManagerDashboard() {
         </p>
       </div>
 
-      {/* Coming Soon Card */}
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader className="flex flex-col items-center pb-2">
-          <div className="p-4 rounded-full bg-primary-50 dark:bg-primary-900/20 mb-4">
-            <Palette className="text-primary" size={48} />
-          </div>
-          <h2 className="text-2xl font-semibold">
-            {t("designerDashboard.comingSoon")}
-          </h2>
-        </CardHeader>
-        <CardBody className="text-center">
-          <p className="text-default-600">
-            {t("designerDashboard.comingSoonDescription")}
-          </p>
-        </CardBody>
-      </Card>
+      {/* Quick Actions and Calendar Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quick Actions */}
+        <DesignerQuickActions />
+        
+        {/* Calendar */}
+        <Calendar showSidebar={false} />
+      </div>
+
+      {/* Workload Performance - Full Width */}
+      <DesignerWorkloadPerformance />
     </div>
   );
 }

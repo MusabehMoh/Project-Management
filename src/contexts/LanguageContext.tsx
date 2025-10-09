@@ -696,6 +696,14 @@ const translations = {
     "designerDashboard.comingSoon": "Coming Soon",
     "designerDashboard.comingSoonDescription":
       "The Designer Manager Dashboard is currently under development. Stay tuned for updates!",
+    "designerDashboard.quickActions": "Quick Actions",
+    "designerDashboard.teamPerformance": "Design Team Performance",
+    "designerDashboard.searchDesigners": "Search designers...",
+    "designerDashboard.designer": "Designer",
+    "designerDashboard.projects": "Projects",
+    "designerDashboard.designsCompleted": "Designs Completed",
+    "designerDashboard.avgDesignTime": "Avg Design Time",
+    "designerDashboard.prototypesCreated": "Prototypes Created",
 
     // Common translations for filters
     "common.allStatus": "All Status",
@@ -2365,6 +2373,14 @@ const translations = {
     "designerDashboard.comingSoon": "قريباً",
     "designerDashboard.comingSoonDescription":
       "لوحة مدير التصميم قيد التطوير حالياً. ترقبوا التحديثات!",
+    "designerDashboard.quickActions": "الإجراءات السريعة",
+    "designerDashboard.teamPerformance": "أداء فريق التصميم",
+    "designerDashboard.searchDesigners": "البحث عن المصممين...",
+    "designerDashboard.designer": "المصمم",
+    "designerDashboard.projects": "المشاريع",
+    "designerDashboard.designsCompleted": "التصاميم المكتملة",
+    "designerDashboard.avgDesignTime": "متوسط وقت التصميم",
+    "designerDashboard.prototypesCreated": "النماذج المنشأة",
 
     // Common translations for filters
     "common.allStatus": "جميع الحالات",
