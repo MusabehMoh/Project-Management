@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { quickActionsService } from "@/services/api";
-import { usePermissions } from "@/hooks/usePermissions";
+// import { usePermissions } from "@/hooks/usePermissions";
 import {
   QuickAction,
   QuickActionData,
@@ -22,7 +22,9 @@ export interface UseQuickActionsReturn {
   actions: QuickAction[];
   unassignedProjects: any[]; // Add unassigned projects list
   projectsWithoutRequirements: any[]; // Add projects without requirements list
-  availableMembers: any[]; // Add available members list
+  availableMembers: any[]; // Add available members list with workload info
+  teamWorkload: any[]; // Add team workload data
+  departmentWorkload: any[]; // Add department workload data
 
   // Loading states
   loading: boolean;
@@ -48,7 +50,7 @@ export const useQuickActions = (
   } = options;
 
   const navigate = useNavigate();
-  const { can } = usePermissions();
+  // const { can } = usePermissions(); // Temporarily unused
 
   // State
   const [quickActionsData, setQuickActionsData] =
@@ -58,6 +60,8 @@ export const useQuickActions = (
   const [projectsWithoutRequirements, setProjectsWithoutRequirements] =
     useState<any[]>([]);
   const [availableMembers, setAvailableMembers] = useState<any[]>([]);
+  const [teamWorkload, setTeamWorkload] = useState<any[]>([]);
+  const [departmentWorkload, setDepartmentWorkload] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,7 +172,7 @@ export const useQuickActions = (
         quickActionsService.getQuickActionStats(),
         quickActionsService.getUnassignedProjects(),
         quickActionsService.getProjectsWithoutRequirements(),
-        [quickActionsService.getAvailableMembers()],
+        quickActionsService.getAvailableMembers(),
       ]);
 
       if (actionsResponse.success && actionsResponse.data) {
@@ -194,17 +198,37 @@ export const useQuickActions = (
         setProjectsWithoutRequirements([]);
       }
 
+      // Handle the new available members response structure
       if (availableMembersResponse.success && availableMembersResponse.data) {
-        setAvailableMembers(availableMembersResponse.data);
+        // Check if the response has the new structure with availableMembers and teamWorkload
+        if (
+          typeof availableMembersResponse.data === "object" &&
+          "availableMembers" in availableMembersResponse.data
+        ) {
+          const responseData = availableMembersResponse.data as any;
+
+          setAvailableMembers(responseData.availableMembers || []);
+          setTeamWorkload(responseData.teamWorkload || []);
+        } else {
+          // Fallback for old API structure
+          setAvailableMembers(availableMembersResponse.data);
+          setTeamWorkload([]);
+        }
       } else {
         setAvailableMembers([]);
+        setTeamWorkload([]);
       }
-    } catch (err) {
+
+      // For now, we'll use empty department workload until the API is updated
+      setDepartmentWorkload([]);
+    } catch {
       setError("Failed to load quick actions data");
       setStats(null);
       setUnassignedProjects([]);
       setProjectsWithoutRequirements([]);
       setAvailableMembers([]);
+      setTeamWorkload([]);
+      setDepartmentWorkload([]);
     }
   }, []);
 
@@ -299,6 +323,8 @@ export const useQuickActions = (
     unassignedProjects,
     projectsWithoutRequirements,
     availableMembers,
+    teamWorkload,
+    departmentWorkload,
 
     // Loading states
     loading,

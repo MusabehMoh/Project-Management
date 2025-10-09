@@ -68,7 +68,19 @@ const AnimatedCounter = ({
 };
 
 // Custom Alert Component with dynamic color styling
-const CustomAlert = React.forwardRef(
+const CustomAlert = React.forwardRef<
+  HTMLDivElement,
+  {
+    title: string;
+    children: React.ReactNode;
+    variant?: string;
+    color?: string;
+    className?: string;
+    classNames?: Record<string, string>;
+    direction?: string;
+    [key: string]: any;
+  }
+>(
   (
     {
       title,
@@ -140,10 +152,10 @@ const CustomAlert = React.forwardRef(
             .filter(Boolean)
             .join(" "),
         }}
-        color={color}
+        color={color as any}
         dir={direction}
         title={title}
-        variant={variant}
+        variant={variant as any}
         {...props}
       >
         {children}
@@ -188,6 +200,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
     unassignedProjects,
     projectsWithoutRequirements,
     availableMembers,
+    // teamWorkload, // Available for future use
     loading,
     refreshing,
     error,
@@ -270,108 +283,16 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   }
 
   if (!hasActionsAvailable) {
-    return (
-      <>
-        {null}
-        <Modal
-          dir={direction}
-          isOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-        >
-          <ModalContent>
-            <ModalHeader>
-              {t("quickActions.assignAnalyst") || "Assign Analyst"}
-            </ModalHeader>
-            <ModalBody>
-              <p className="text-sm text-default-600 mb-4">
-                {t("quickActions.assignAnalystTo") || "Assign an analyst to"}:{" "}
-                {selectedProject?.applicationName}
-              </p>
-              <Autocomplete
-                isClearable
-                inputValue={analystInputValue}
-                isLoading={analystSearchLoading}
-                items={analystEmployees}
-                label={t("quickActions.selectAnalyst") || "Select Analyst"}
-                menuTrigger="input"
-                placeholder={
-                  t("quickActions.chooseAnalyst") || "Choose an analyst"
-                }
-                selectedKey={selectedAnalyst?.id?.toString() || ""}
-                onInputChange={(value) => {
-                  setAnalystInputValue(value);
-                  // Clear selection if input doesn't match selected analyst
-                  if (selectedAnalyst && value !== selectedAnalyst.fullName) {
-                    setSelectedAnalyst(null);
-                  }
-                  // Search for analysts
-                  searchAnalystEmployees(value);
-                }}
-                onSelectionChange={(key) => {
-                  if (key) {
-                    const analyst = analystEmployees.find(
-                      (a) => a.id.toString() === key,
-                    );
-
-                    if (analyst) {
-                      setSelectedAnalyst(analyst);
-                      setAnalystInputValue(analyst.fullName);
-                    }
-                  } else {
-                    // Clear selection
-                    setSelectedAnalyst(null);
-                    setAnalystInputValue("");
-                  }
-                }}
-              >
-                {(analyst) => (
-                  <AutocompleteItem
-                    key={analyst.id}
-                    textValue={`${analyst.fullName} - ${analyst.militaryNumber}`}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{analyst.fullName}</span>
-                      <span className="text-sm text-default-500">
-                        {analyst.militaryNumber} - {analyst.gradeName}
-                      </span>
-                    </div>
-                  </AutocompleteItem>
-                )}
-              </Autocomplete>
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="flat" onPress={handleCancel}>
-                {t("common.cancel") || "Cancel"}
-              </Button>
-              <Button
-                color="primary"
-                disabled={!selectedAnalyst}
-                onPress={handleAssign}
-              >
-                {t("quickActions.assign") || "Assign"}
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      </>
-    );
+    return null;
   }
 
   const handleAssign = async () => {
     if (selectedProject && selectedAnalysts.length > 0 && onAssignAnalyst) {
       try {
-        console.log("QuickActions: Starting assignment...", {
-          projectId: selectedProject.id,
-          analystIds: selectedAnalysts.map((a) => a.id.toString()),
-          projectName: selectedProject.applicationName,
-        });
-
         // Assign each analyst to the project
         for (const analyst of selectedAnalysts) {
           await onAssignAnalyst(selectedProject, analyst.id.toString());
         }
-
-        console.log("QuickActions: Assignment completed, refreshing data...");
 
         // Show success toast
         addToast({
@@ -392,11 +313,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
 
         // Refresh the unassigned projects list
         await refresh();
-
-        console.log("QuickActions: Data refreshed successfully");
-      } catch (error) {
-        console.error("QuickActions: Failed to assign analyst:", error);
-
+      } catch {
         // Show error toast
         addToast({
           title: t("quickActions.assignmentError") || "Assignment Failed",
@@ -630,13 +547,28 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                       <div className="space-y-3 pr-2">
                         {availableMembers.map((member) => (
                           <CustomAlert
-                            key={member.userId}
+                            key={member.employeeId}
                             color="success"
-                            description={`${member.department} • ${member.gradeName} • ${member.totalRequirements} requirements`}
+                            description={`${member.currentDepartment || "No Department"} • ${member.gradeName || "No Grade"} • ${member.totalActiveTasks || 0} active tasks • ${member.currentlyRunningTasks || 0} current`}
                             direction={direction}
-                            title={member.fullName}
+                            title={member.fullName || member.userName}
                             variant="faded"
                           >
+                            <div className="mt-2 text-xs text-default-500">
+                              <div className="grid grid-cols-2 gap-2">
+                                <span>Status: {member.availabilityStatus}</span>
+                                <span>
+                                  Task Days: {member.totalTaskDurationDays || 0}
+                                </span>
+                                <span>
+                                  Projects: {member.assignedProjectsCount || 0}
+                                </span>
+                                <span>
+                                  Requirements:{" "}
+                                  {member.activeRequirementsCount || 0}
+                                </span>
+                              </div>
+                            </div>
                             <Divider className="bg-default-200 my-3" />
                             <div
                               className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
@@ -650,7 +582,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                                   window.location.href = `/team-workload`;
                                 }}
                               >
-                                {t("common.viewDetails") || "View Details"}
+                                {t("common.viewWorkload") || "View Workload"}
                               </Button>
                             </div>
                           </CustomAlert>

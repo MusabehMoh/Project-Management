@@ -386,6 +386,221 @@ public class DeveloperQuickActionsController : ApiBaseController
                 error = ex.Message
             });
         }
+    } 
+    [HttpGet("available-members")] // Alias for frontend compatibility
+    public async Task<IActionResult> GetAvailableDevelopers()
+    {
+        try
+        {
+            var currentDate = DateTime.UtcNow;
+
+            // Get team members with detailed workload information
+            var teamMembersWorkload = await _context.Teams
+                .Where(tm => tm.IsActive)
+                .Include(tm => tm.Department)
+                .Include(tm => tm.Employee)
+                .GroupJoin(
+                    _context.TaskAssignments.Include(ta => ta.Task),
+                    tm => tm.PrsId,
+                    ta => ta.PrsId,
+                    (tm, taskAssignments) => new { tm, taskAssignments }
+                )
+                .Select(x => new
+                {
+                    DepartmentId = x.tm.DepartmentId,
+                    DepartmentName = x.tm.Department != null ? x.tm.Department.Name : "",
+                    EmployeeId = x.tm.PrsId,
+                    EmployeeName = x.tm.Employee != null ? x.tm.Employee.FullName : "",
+                    GradeName = x.tm.Employee != null ? x.tm.Employee.GradeName : "",
+                    UserName = x.tm.Employee != null ? x.tm.Employee.UserName : "",
+                    MilitaryNumber = x.tm.Employee != null ? x.tm.Employee.MilitaryNumber : "",
+
+                    // Total assigned tasks
+                    TotalAssignedTasks = x.taskAssignments.Count(),
+
+                    // Active tasks (status 1 or 2)
+                    ActiveTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null &&
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo ||
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress)),
+
+                    // Currently running tasks (within date range)
+                    CurrentlyActiveTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null &&
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo ||
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.StartDate <= currentDate &&
+                               ta.Task.EndDate >= currentDate),
+
+                    // Critical tasks (high priority active tasks)
+                    CriticalTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null &&
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo ||
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.PriorityId == Priority.High),
+
+                    // Overdue tasks
+                    OverdueTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null &&
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo ||
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.EndDate < currentDate),
+
+                    // Upcoming tasks (not started yet)
+                    UpcomingTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null &&
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo ||
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.StartDate > currentDate),
+
+                    // Nearest deadline for active tasks
+                    NearestDeadline = x.taskAssignments
+                        .Where(ta => ta.Task != null &&
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo ||
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.EndDate >= currentDate)
+                        .Min(ta => ta.Task != null ? (DateTime?)ta.Task.EndDate : null),
+
+                    // Total task days (duration) for active tasks
+                    TotalTaskDays = x.taskAssignments
+                        .Where(ta => ta.Task != null &&
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo ||
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress))
+                        .Sum(ta => ta.Task != null ? EF.Functions.DateDiffDay(ta.Task.StartDate, ta.Task.EndDate) : 0),
+
+                    JoinDate = x.tm.JoinDate,
+                    IsActiveInTeam = x.tm.IsActive
+                })
+                .ToListAsync();
+
+            // Get available members (employees who are in teams with low workload)
+            // First, get employees who are in active teams with their team and department info
+            var employeesWithTeams = await _context.Teams
+                .Where(tm => tm.IsActive)
+                .Include(tm => tm.Employee)
+                .Include(tm => tm.Department)
+                .Where(tm => tm.Employee != null && tm.Employee.StatusId == 1) // Only active employees
+                .Select(tm => new
+                {
+                    Employee = tm.Employee,
+                    Team = tm
+                })
+                .ToListAsync();
+
+            // Then get task assignments for active tasks
+            var employeeTaskCounts = await _context.TaskAssignments
+                .Where(ta => ta.Task != null &&
+                           (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo ||
+                            ta.Task.StatusId == Core.Enums.TaskStatus.InProgress))
+                .Include(ta => ta.Task)
+                .GroupBy(ta => ta.PrsId)
+                .Select(g => new
+                {
+                    EmployeeId = g.Key,
+                    TotalActiveTasks = g.Count(),
+                    CurrentlyRunningTasks = g.Count(ta => ta.Task != null && ta.Task.StartDate <= currentDate && ta.Task.EndDate >= currentDate),
+                    TotalTaskDurationDays = g.Sum(ta => ta.Task != null ? EF.Functions.DateDiffDay(ta.Task.StartDate, ta.Task.EndDate) : 0)
+                })
+                .ToListAsync();
+
+            // Get legacy counts for backward compatibility
+            var projectAnalystCounts = await _context.ProjectAnalysts
+                .Where(pa => pa.Project != null &&
+                           (pa.Project.Status == ProjectStatus.New ||
+                            pa.Project.Status == ProjectStatus.UnderStudy ||
+                            pa.Project.Status == ProjectStatus.UnderDevelopment ||
+                            pa.Project.Status == ProjectStatus.UnderTesting))
+                .GroupBy(pa => pa.AnalystId)
+                .Select(g => new { EmployeeId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var requirementCounts = await _context.ProjectRequirements
+                .Where(pr => pr.Status != RequirementStatusEnum.Completed && pr.AssignedAnalyst != null)
+                .GroupBy(pr => pr.AssignedAnalyst)
+                .Select(g => new { EmployeeId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            // Combine all data in memory
+            var availableMembers = employeesWithTeams
+                .Where(et => et.Employee != null) // Extra safety check
+                .Select(et =>
+                {
+                    var taskData = employeeTaskCounts.FirstOrDefault(tc => tc.EmployeeId == et.Employee!.Id);
+                    var projectCount = projectAnalystCounts.FirstOrDefault(pc => pc.EmployeeId == et.Employee!.Id)?.Count ?? 0;
+                    var requirementCount = requirementCounts.FirstOrDefault(rc => rc.EmployeeId == et.Employee!.Id)?.Count ?? 0;
+
+                    var totalActiveTasks = taskData?.TotalActiveTasks ?? 0;
+                    var currentlyRunningTasks = taskData?.CurrentlyRunningTasks ?? 0;
+                    var totalTaskDurationDays = taskData?.TotalTaskDurationDays ?? 0;
+
+                    return new
+                    {
+                        EmployeeId = et.Employee!.Id,
+                        UserName = et.Employee.UserName,
+                        FullName = et.Employee.FullName,
+                        GradeName = et.Employee.GradeName,
+                        MilitaryNumber = et.Employee.MilitaryNumber,
+
+                        // Availability status calculation
+                        AvailabilityStatus = totalActiveTasks == 0 ? "No active tasks" :
+                                           currentlyRunningTasks == 0 ? "No current tasks (all future/past)" :
+                                           "Low workload",
+
+                        // Task counts
+                        TotalActiveTasks = totalActiveTasks,
+                        CurrentlyRunningTasks = currentlyRunningTasks,
+                        TotalTaskDurationDays = totalTaskDurationDays,
+
+                        // Department information
+                        DepartmentId = et.Team?.DepartmentId,
+                        CurrentDepartment = et.Team?.Department?.Name ?? "",
+
+                        // Legacy fields for backward compatibility
+                        assignedProjectsCount = projectCount,
+                        activeRequirementsCount = requirementCount
+                    };
+                })
+                .Where(x =>
+                    x.TotalActiveTasks == 0 || // No active tasks
+                    x.CurrentlyRunningTasks == 0 || // No currently running tasks
+                    x.TotalActiveTasks < 3 || // Low workload (less than 3 active tasks)
+                    x.TotalTaskDurationDays < 30 // Less than 30 days of total work
+                )
+                .OrderBy(x => x.CurrentlyRunningTasks)
+                .ThenBy(x => x.TotalActiveTasks)
+                .ThenBy(x => x.TotalTaskDurationDays)
+                .ThenBy(x => x.FullName)
+                .ToList();
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    availableMembers,
+                    teamWorkload = teamMembersWorkload,
+                    summary = new
+                    {
+                        totalAvailableMembers = availableMembers.Count,
+                        totalTeamMembers = teamMembersWorkload.Count,
+                        membersWithNoTasks = availableMembers.Count(m => m.TotalActiveTasks == 0),
+                        membersWithLowWorkload = availableMembers.Count(m => m.TotalActiveTasks > 0 && m.TotalActiveTasks < 3),
+                        membersInTeams = availableMembers.Count // All are in teams now
+                    }
+                },
+                count = availableMembers.Count,
+                message = "Available members with workload information retrieved successfully"
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = "An error occurred while retrieving available members",
+                error = ex.Message
+            });
+        }
     }
 
     public class ExtendTaskRequest

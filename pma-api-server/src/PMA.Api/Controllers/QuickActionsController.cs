@@ -224,7 +224,7 @@ public class QuickActionsController : ApiBaseController
     }
 
     /// <summary>
-    /// Get available analysts who can be assigned to projects
+    /// Get available team members with comprehensive workload information
     /// </summary>
     [HttpGet("available-analysts")]
     [HttpGet("available-members")] // Alias for frontend compatibility
@@ -232,37 +232,244 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
-            var availableAnalysts = await _context.Users
-                .Where(u => _context.UserRoles.Any(ur => ur.UserId == u.Id && 
-                           ur.Role != null && ur.Role.Name.Contains("Analyst")))
-                .Select(u => new
+            var currentDate = DateTime.UtcNow;
+
+            // Get team members with detailed workload information
+            var teamMembersWorkload = await _context.Teams
+                .Where(tm => tm.IsActive)
+                .Include(tm => tm.Department)
+                .Include(tm => tm.Employee)
+                .GroupJoin(
+                    _context.TaskAssignments.Include(ta => ta.Task),
+                    tm => tm.PrsId,
+                    ta => ta.PrsId,
+                    (tm, taskAssignments) => new { tm, taskAssignments }
+                )
+                .Select(x => new
                 {
-                    id = u.Id,
-                    fullName = u.FullName,
-                    email = u.Email,
-                    department = u.Department != null ? u.Department.Name : "",
-             
-                    assignedProjectsCount = _context.ProjectAnalysts
-                        .Count(pa => pa.AnalystId == u.Id && 
-                              pa.Project != null &&
-                              (pa.Project.Status == ProjectStatus.New ||
-                               pa.Project.Status == ProjectStatus.UnderStudy ||
-                               pa.Project.Status == ProjectStatus.UnderDevelopment ||
-                               pa.Project.Status == ProjectStatus.UnderTesting)),
-                    activeRequirementsCount = _context.Requirements
-                        .Count(r => r.AssignedToId == u.Id &&
-                               r.Status != RequirementStatus.Completed )
+                    DepartmentId = x.tm.DepartmentId,
+                    DepartmentName = x.tm.Department != null ? x.tm.Department.Name : "",
+                    EmployeeId = x.tm.PrsId,
+                    EmployeeName = x.tm.Employee != null ? x.tm.Employee.FullName : "",
+                    GradeName = x.tm.Employee != null ? x.tm.Employee.GradeName : "",
+                    UserName = x.tm.Employee != null ? x.tm.Employee.UserName : "",
+                    MilitaryNumber = x.tm.Employee != null ? x.tm.Employee.MilitaryNumber : "",
+                    
+                    // Total assigned tasks
+                    TotalAssignedTasks = x.taskAssignments.Count(),
+                    
+                    // Active tasks (status 1 or 2)
+                    ActiveTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null && 
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress)),
+                    
+                    // Currently running tasks (within date range)
+                    CurrentlyActiveTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null && 
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.StartDate <= currentDate && 
+                               ta.Task.EndDate >= currentDate),
+                    
+                    // Critical tasks (high priority active tasks)
+                    CriticalTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null && 
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.PriorityId == Priority.High),
+                    
+                    // Overdue tasks
+                    OverdueTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null && 
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.EndDate < currentDate),
+                    
+                    // Upcoming tasks (not started yet)
+                    UpcomingTasks = x.taskAssignments
+                        .Count(ta => ta.Task != null && 
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.StartDate > currentDate),
+                    
+                    // Nearest deadline for active tasks
+                    NearestDeadline = x.taskAssignments
+                        .Where(ta => ta.Task != null && 
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                               ta.Task.EndDate >= currentDate)
+                        .Min(ta => ta.Task != null ? (DateTime?)ta.Task.EndDate : null),
+                    
+                    // Total task days (duration) for active tasks
+                    TotalTaskDays = x.taskAssignments
+                        .Where(ta => ta.Task != null && 
+                               (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                                ta.Task.StatusId == Core.Enums.TaskStatus.InProgress))
+                        .Sum(ta => ta.Task != null ? EF.Functions.DateDiffDay(ta.Task.StartDate, ta.Task.EndDate) : 0),
+                    
+                    JoinDate = x.tm.JoinDate,
+                    IsActiveInTeam = x.tm.IsActive
                 })
-                .OrderBy(u => u.assignedProjectsCount)
-                .ThenBy(u => u.fullName)
                 .ToListAsync();
+
+            // Get available members (employees who are in teams with low workload)
+            // First, get employees who are in active teams with their team and department info
+            var employeesWithTeams = await _context.Teams
+                .Where(tm => tm.IsActive)
+                .Include(tm => tm.Employee)
+                .Include(tm => tm.Department)
+                .Where(tm => tm.Employee != null && tm.Employee.StatusId == 1) // Only active employees
+                .Select(tm => new
+                {
+                    Employee = tm.Employee,
+                    Team = tm
+                })
+                .ToListAsync();
+
+            // Then get task assignments for active tasks
+            var employeeTaskCounts = await _context.TaskAssignments
+                .Where(ta => ta.Task != null && 
+                           (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                            ta.Task.StatusId == Core.Enums.TaskStatus.InProgress))
+                .Include(ta => ta.Task)
+                .GroupBy(ta => ta.PrsId)
+                .Select(g => new
+                {
+                    EmployeeId = g.Key,
+                    TotalActiveTasks = g.Count(),
+                    CurrentlyRunningTasks = g.Count(ta => ta.Task != null && ta.Task.StartDate <= currentDate && ta.Task.EndDate >= currentDate),
+                    TotalTaskDurationDays = g.Sum(ta => ta.Task != null ? EF.Functions.DateDiffDay(ta.Task.StartDate, ta.Task.EndDate) : 0)
+                })
+                .ToListAsync();
+
+            // Get ProjectAnalyst assignments for projects with active requirements
+            var employeeProjectAnalystCounts = await _context.ProjectAnalysts
+                .Where(pa => pa.Project != null && 
+                           _context.ProjectRequirements.Any(pr => pr.ProjectId == pa.ProjectId &&
+                                                                 pr.Status != RequirementStatusEnum.Completed &&
+                                                                 pr.Status != RequirementStatusEnum.Cancelled))
+                .Include(pa => pa.Project)
+                .GroupBy(pa => pa.AnalystId)
+                .Select(g => new
+                {
+                    EmployeeId = g.Key,
+                    ActiveProjectAssignments = g.Count(),
+                    ActiveRequirementsCount = _context.ProjectRequirements
+                        .Where(pr => g.Any(pa => pa.ProjectId == pr.ProjectId) &&
+                                   pr.Status != RequirementStatusEnum.Completed &&
+                                   pr.Status != RequirementStatusEnum.Cancelled)
+                        .Count()
+                })
+                .ToListAsync();
+
+            // Get legacy counts for backward compatibility
+            var projectAnalystCounts = await _context.ProjectAnalysts
+                .Where(pa => pa.Project != null &&
+                           (pa.Project.Status == ProjectStatus.New ||
+                            pa.Project.Status == ProjectStatus.UnderStudy ||
+                            pa.Project.Status == ProjectStatus.UnderDevelopment ||
+                            pa.Project.Status == ProjectStatus.UnderTesting))
+                .GroupBy(pa => pa.AnalystId)
+                .Select(g => new { EmployeeId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var requirementCounts = await _context.ProjectRequirements
+                .Where(pr => pr.Status != RequirementStatusEnum.Completed && pr.AssignedAnalyst != null)
+                .GroupBy(pr => pr.AssignedAnalyst)
+                .Select(g => new { EmployeeId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            // Combine all data in memory
+            var availableMembers = employeesWithTeams
+                .Where(et => et.Employee != null) // Extra safety check
+                .Select(et =>
+                {
+                    var taskData = employeeTaskCounts.FirstOrDefault(tc => tc.EmployeeId == et.Employee!.Id);
+                    var projectAnalystData = employeeProjectAnalystCounts.FirstOrDefault(pac => pac.EmployeeId == et.Employee!.Id);
+                    var projectCount = projectAnalystCounts.FirstOrDefault(pc => pc.EmployeeId == et.Employee!.Id)?.Count ?? 0;
+                    var requirementCount = requirementCounts.FirstOrDefault(rc => rc.EmployeeId == et.Employee!.Id)?.Count ?? 0;
+
+                    var totalActiveTasks = taskData?.TotalActiveTasks ?? 0;
+                    var currentlyRunningTasks = taskData?.CurrentlyRunningTasks ?? 0;
+                    var totalTaskDurationDays = taskData?.TotalTaskDurationDays ?? 0;
+                    
+                    // Include ProjectAnalyst assignments with active requirements in workload calculation
+                    var activeProjectAssignments = projectAnalystData?.ActiveProjectAssignments ?? 0;
+                    var activeRequirementsFromProjects = projectAnalystData?.ActiveRequirementsCount ?? 0;
+                    
+                    // Calculate total workload including both tasks and project analyst assignments
+                    var totalWorkload = totalActiveTasks + activeProjectAssignments;
+                    var totalActiveWork = currentlyRunningTasks + activeProjectAssignments; // Project assignments are always "current"
+
+                    return new
+                    {
+                        EmployeeId = et.Employee!.Id,
+                        UserName = et.Employee.UserName,
+                        FullName = et.Employee.FullName,
+                        GradeName = et.Employee.GradeName,
+                        MilitaryNumber = et.Employee.MilitaryNumber,
+                        
+                        // Availability status calculation including project assignments
+                        AvailabilityStatus = totalWorkload == 0 ? "No active work" :
+                                           totalActiveWork == 0 ? "No current work (all future/past)" :
+                                           activeProjectAssignments > 0 ? $"Managing {activeProjectAssignments} project(s) with {activeRequirementsFromProjects} active requirements" :
+                                           "Low workload",
+                        
+                        // Task counts
+                        TotalActiveTasks = totalActiveTasks,
+                        CurrentlyRunningTasks = currentlyRunningTasks,
+                        TotalTaskDurationDays = totalTaskDurationDays,
+                        
+                        // Project analyst assignment counts
+                        ActiveProjectAssignments = activeProjectAssignments,
+                        ActiveRequirementsFromProjects = activeRequirementsFromProjects,
+                        TotalWorkload = totalWorkload,
+                        
+                        // Department information
+                        DepartmentId = et.Team?.DepartmentId,
+                        CurrentDepartment = et.Team?.Department?.Name ?? "",
+                        
+                        // Legacy fields for backward compatibility
+                        assignedProjectsCount = projectCount,
+                        activeRequirementsCount = requirementCount
+                    };
+                })
+                .Where(x => 
+                    x.TotalWorkload == 0 || // No active work (tasks + projects)
+                    x.TotalActiveTasks == 0 && x.ActiveProjectAssignments < 2 || // No tasks and less than 2 projects
+                    x.TotalActiveTasks < 3 && x.ActiveProjectAssignments == 0 || // Low task load and no projects
+                    x.TotalTaskDurationDays < 30 && x.ActiveRequirementsFromProjects < 5 // Low duration and few requirements
+                )
+                .OrderBy(x => x.TotalWorkload)
+                .ThenBy(x => x.ActiveProjectAssignments)
+                .ThenBy(x => x.CurrentlyRunningTasks)
+                .ThenBy(x => x.TotalTaskDurationDays)
+                .ThenBy(x => x.FullName)
+                .ToList();
 
             return Ok(new
             {
                 success = true,
-                data = availableAnalysts,
-                count = availableAnalysts.Count,
-                message = "Available analysts retrieved successfully"
+                data = new
+                {
+                    availableMembers,
+                    teamWorkload = teamMembersWorkload,
+                    summary = new
+                    {
+                        totalAvailableMembers = availableMembers.Count,
+                        totalTeamMembers = teamMembersWorkload.Count,
+                        membersWithNoWork = availableMembers.Count(m => m.TotalWorkload == 0),
+                        membersWithNoTasks = availableMembers.Count(m => m.TotalActiveTasks == 0),
+                        membersWithNoProjects = availableMembers.Count(m => m.ActiveProjectAssignments == 0),
+                        membersWithLowWorkload = availableMembers.Count(m => m.TotalWorkload > 0 && m.TotalWorkload < 3),
+                        membersInTeams = availableMembers.Count, // All are in teams now
+                        totalActiveProjectAssignments = availableMembers.Sum(m => m.ActiveProjectAssignments),
+                        totalActiveRequirementsFromProjects = availableMembers.Sum(m => m.ActiveRequirementsFromProjects)
+                    }
+                },
+                count = availableMembers.Count,
+                message = "Available members with comprehensive workload information retrieved successfully"
             });
         }
         catch (Exception ex)
@@ -270,7 +477,88 @@ public class QuickActionsController : ApiBaseController
             return StatusCode(500, new
             {
                 success = false,
-                message = "An error occurred while retrieving available analysts",
+                message = "An error occurred while retrieving available members",
+                error = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Get department workload summary
+    /// </summary>
+    [HttpGet("department-workload")]
+    public async Task<IActionResult> GetDepartmentWorkload()
+    {
+        try
+        {
+            var currentDate = DateTime.UtcNow;
+
+            // Get all active departments with their teams
+            var departmentsWithTeams = await _context.Departments
+                .Where(d => d.IsActive)
+                .Select(d => new
+                {
+                    Department = d,
+                    Teams = _context.Teams.Where(tm => tm.DepartmentId == d.Id && tm.IsActive).ToList()
+                })
+                .ToListAsync();
+
+            // Get task assignments grouped by employee
+            var taskAssignmentsByEmployee = await _context.TaskAssignments
+                .Where(ta => ta.Task != null && 
+                           (ta.Task.StatusId == Core.Enums.TaskStatus.ToDo || 
+                            ta.Task.StatusId == Core.Enums.TaskStatus.InProgress))
+                .Include(ta => ta.Task)
+                .GroupBy(ta => ta.PrsId)
+                .Select(g => new
+                {
+                    EmployeeId = g.Key,
+                    TotalTasks = g.Count(),
+                    TotalTaskDays = g.Sum(ta => ta.Task != null ? EF.Functions.DateDiffDay(ta.Task.StartDate, ta.Task.EndDate) : 0)
+                })
+                .ToListAsync();
+
+            // Combine data in memory
+            var departmentWorkload = departmentsWithTeams
+                .Select(dt =>
+                {
+                    var teamMemberIds = dt.Teams.Select(t => t.PrsId).ToList();
+                    var teamTaskData = taskAssignmentsByEmployee.Where(ta => teamMemberIds.Contains(ta.EmployeeId)).ToList();
+
+                    var totalTasks = teamTaskData.Sum(ta => ta.TotalTasks);
+                    var totalTaskDays = teamTaskData.Sum(ta => ta.TotalTaskDays);
+                    var teamMemberCount = dt.Teams.Count;
+
+                    return new
+                    {
+                        DepartmentId = dt.Department.Id,
+                        DepartmentName = dt.Department.Name,
+                        Description = dt.Department.Description,
+                        TotalTeamMembers = teamMemberCount,
+                        TotalAssignedTasks = totalTasks,
+                        ActiveTasks = totalTasks, // All tasks we queried are active
+                        TotalEstimatedDays = totalTaskDays,
+                        AvgTasksPerMember = teamMemberCount > 0 ? (decimal)totalTasks / teamMemberCount : 0,
+                        AvgDaysPerMember = teamMemberCount > 0 ? (decimal)totalTaskDays / teamMemberCount : 0
+                    };
+                })
+                .OrderByDescending(d => d.ActiveTasks)
+                .ToList();
+
+            return Ok(new
+            {
+                success = true,
+                data = departmentWorkload,
+                count = departmentWorkload.Count,
+                message = "Department workload summary retrieved successfully"
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = "An error occurred while retrieving department workload",
                 error = ex.Message
             });
         }
@@ -1106,6 +1394,93 @@ public class QuickActionsController : ApiBaseController
         }
     }
 
+    /// <summary>
+    /// Assign an analyst to a project
+    /// </summary>
+    [HttpPost("assign-analyst")]
+    public async Task<IActionResult> AssignAnalyst([FromBody] AssignAnalystRequest request)
+    {
+        try
+        {
+            // Validate the request
+            if (request.ProjectId <= 0 || string.IsNullOrWhiteSpace(request.AnalystId))
+            {
+                return BadRequest(new { success = false, message = "Invalid project ID or analyst ID provided" });
+            }
+
+            // Check if the project exists
+            var project = await _context.Projects.FindAsync(request.ProjectId);
+            if (project == null)
+            {
+                return NotFound(new { success = false, message = "Project not found" });
+            }
+
+            // Parse analyst ID to integer (assuming it's a PrsId from Teams table)
+            if (!int.TryParse(request.AnalystId, out var analystPrsId))
+            {
+                return BadRequest(new { success = false, message = "Invalid analyst ID format" });
+            }
+
+            // Find the Employee that corresponds to this PrsId
+            // First check if the PrsId exists in Teams table
+            var teamMember = await _context.Teams
+                .Include(t => t.Employee)
+                .FirstOrDefaultAsync(t => t.PrsId == analystPrsId && t.IsActive);
+
+            if (teamMember?.Employee == null)
+            {
+                return NotFound(new { success = false, message = "Analyst not found in active team members" });
+            }
+
+            var employee = teamMember.Employee;
+            var employeeId = employee.Id; // This is the Employee.Id we need for ProjectAnalysts
+
+            // Check if there's already an assignment for this project
+            var existingAssignment = await _context.ProjectAnalysts
+                .FirstOrDefaultAsync(pa => pa.ProjectId == request.ProjectId);
+
+            if (existingAssignment != null)
+            {
+                // Update existing assignment
+                existingAssignment.AnalystId = employeeId;
+                _context.ProjectAnalysts.Update(existingAssignment);
+            }
+            else
+            {
+                // Create new assignment
+                var newAssignment = new ProjectAnalyst
+                {
+                    ProjectId = request.ProjectId,
+                    AnalystId = employeeId
+                };
+                _context.ProjectAnalysts.Add(newAssignment);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new 
+            { 
+                success = true, 
+                message = "Analyst assigned successfully",
+                data = new
+                {
+                    projectId = request.ProjectId,
+                    analystId = analystPrsId,
+                    analystName = employee.FullName
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = "An error occurred while assigning analyst",
+                error = ex.Message
+            });
+        }
+    }
+
     public class ApproveStatusRequest
     {
         public bool Approved { get; set; }
@@ -1116,5 +1491,11 @@ public class QuickActionsController : ApiBaseController
     {
         public int AssigneeId { get; set; }
         public string? Priority { get; set; }
+    }
+
+    public class AssignAnalystRequest
+    {
+        public int ProjectId { get; set; }
+        public string AnalystId { get; set; } = string.Empty;
     }
 }
