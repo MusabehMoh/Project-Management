@@ -995,6 +995,10 @@ const translations = {
     "requirements.validation.typeRequired": "Requirement type is required",
     "requirements.validation.expectedDateRequired":
       "Expected completion date is required",
+    "requirements.validation.fileEmptyError":
+      "Empty File Rejected",
+    "requirements.validation.filesEmptyError":
+      "files are empty",
     "requirements.emptyState.title": "No Requirements Yet",
     "requirements.emptyState.description":
       "Start by adding your first requirement for this project",
@@ -2635,6 +2639,10 @@ const translations = {
     "requirements.validation.typeRequired": "نوع المتطلب مطلوب",
     "requirements.validation.expectedDateRequired":
       "تاريخ الإنجاز المتوقع مطلوب",
+    "requirements.validation.fileEmptyError":
+      "تم رفض ملف فارغ",
+    "requirements.validation.filesEmptyError":
+      "ملفات فارغة",
     "requirements.emptyState.title": "لا توجد متطلبات بعد",
     "requirements.emptyState.description": "ابدأ بإضافة أول متطلب لهذا المشروع",
     "requirements.emptyState.action": "إضافة أول متطلب",
