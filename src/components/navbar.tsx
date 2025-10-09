@@ -168,7 +168,7 @@ const ManagementDropdown = ({
   const hasDepartmentsAccess =
     isAdmin() ||
     hasPermission({
-      actions: ["Department Management", "Manage Departments"],
+      actions: ["departments.read"],
     });
 
   // Don't render if user has no access to either
@@ -289,7 +289,7 @@ const getProjectNavItems = (
     // Add timeline for Development Managers
     developmentItems.push({ label: t("nav.timeline"), href: "/timeline" });
   }
-  
+
   // Designer Manager specific items - Design Requests
   if (hasAnyRoleById([RoleIds.DESIGNER_MANAGER, RoleIds.ADMINISTRATOR])) {
     developmentItems.push({
@@ -987,7 +987,7 @@ export const Navbar = () => {
 
           {(isAdmin() ||
             hasPermission({
-              actions: ["Department Management", "Manage Departments"],
+              actions: ["departments.read"],
             })) && (
             <NavbarMenuItem
               className="animate-in slide-in-from-left duration-500"

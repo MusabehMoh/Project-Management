@@ -27,13 +27,19 @@ export type QuickActionType =
   | "ASSIGN_AVAILABLE_MEMBERS";
 
 export interface QuickActionStats {
+  // New stats for ModernQuickStats
+  activeProjects: number;
+  totalTasks: number;
+  activeProjectRequirements: number;
+  teamMembers: number;
+  
+  // Legacy stats for backward compatibility
   pendingRequirements: number;
   unassignedTasks: number;
   unassignedProjects: number;
   pendingApprovals: number;
   overdueItems: number;
   newNotifications: number;
-  activeProjects: number;
   projectsWithoutRequirements: number;
   availableMembers: number;
 }
