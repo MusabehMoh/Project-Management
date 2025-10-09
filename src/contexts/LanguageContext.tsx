@@ -689,6 +689,14 @@ const translations = {
     "teamDashboard.status.blocked": "On Hold",
     "teamDashboard.status.unknown": "Unknown",
 
+    // Designer Manager Dashboard
+    "designerDashboard.title": "Designer Manager Dashboard",
+    "designerDashboard.subtitle":
+      "Manage design tasks, review submissions, and coordinate with the design team",
+    "designerDashboard.comingSoon": "Coming Soon",
+    "designerDashboard.comingSoonDescription":
+      "The Designer Manager Dashboard is currently under development. Stay tuned for updates!",
+
     // Common translations for filters
     "common.allStatus": "All Status",
     "common.sortBy": "Sort by",
@@ -2349,6 +2357,14 @@ const translations = {
     "teamDashboard.status.completed": "مكتمل",
     "teamDashboard.status.blocked": "معلق",
     "teamDashboard.status.unknown": "غير معروف",
+
+    // Designer Manager Dashboard
+    "designerDashboard.title": "لوحة مدير التصميم",
+    "designerDashboard.subtitle":
+      "إدارة مهام التصميم، مراجعة التسليمات، والتنسيق مع فريق التصميم",
+    "designerDashboard.comingSoon": "قريباً",
+    "designerDashboard.comingSoonDescription":
+      "لوحة مدير التصميم قيد التطوير حالياً. ترقبوا التحديثات!",
 
     // Common translations for filters
     "common.allStatus": "جميع الحالات",
