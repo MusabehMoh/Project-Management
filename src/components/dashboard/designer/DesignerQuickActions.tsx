@@ -398,10 +398,14 @@ export default function DesignerQuickActions() {
           <div className="space-y-4 overflow-hidden">
             {/* Unassigned Design Requests Accordion */}
             {designRequests.length > 0 && (
-              <Accordion selectionMode="single" variant="splitted">
-                <AccordionItem
-                  key="unassigned-requests"
-                  className="border border-default-200 rounded-lg"
+              <div className="space-y-4">
+                <Accordion selectionMode="single" variant="splitted">
+                  <AccordionItem
+                    key="unassigned-requests"
+                    className="border border-default-200 rounded-lg"
+                    classNames={{
+                      trigger: "cursor-pointer hover:bg-default-50 dark:hover:bg-default-100/50 transition-colors",
+                    }}
                   title={
                     <div className="flex items-center justify-between w-full">
                       <h3 className="text-lg font-semibold text-foreground">
@@ -497,6 +501,7 @@ export default function DesignerQuickActions() {
                   </ScrollShadow>
                 </AccordionItem>
               </Accordion>
+              </div>
             )}
           </div>
         </CardBody>
