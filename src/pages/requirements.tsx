@@ -29,7 +29,7 @@ import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import { showWarningToast } from "@/utils/toast";
 
 export default function RequirementsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
 
   // Set page title
@@ -388,9 +388,14 @@ export default function RequirementsPage() {
                             <span>{project.projectOwner}</span>
                           </div>
                         </Tooltip>
-                        <div className="text-sm text-default-500">
-                          {project.owningUnit}
-                        </div>
+                        <Tooltip content={t("requirements.owningUnit")}>
+                          <div 
+                            className="text-sm text-default-500 w-fit cursor-help"
+                            dir={language === "ar" ? "rtl" : "ltr"}
+                          >
+                            {project.owningUnit}
+                          </div>
+                        </Tooltip>
                       </div>
 
                       {/* Requirements Stats */}
