@@ -133,13 +133,12 @@ export class DesignRequestsService {
    */
   async assignDesignRequest(
     id: number,
-    designerId: number,
-    notes?: string,
+    assignedToPrsId: number,
+    comment?: string,
   ): Promise<ApiResponse<DesignRequestDto>> {
     return apiClient.patch(`${this.baseUrl}/${id}/assign`, {
-      assignedToPrsId: designerId,
-      notes: notes || "",
-      status: 2, // Assigned status
+      assignedToPrsId,
+      comment,
     });
   }
 

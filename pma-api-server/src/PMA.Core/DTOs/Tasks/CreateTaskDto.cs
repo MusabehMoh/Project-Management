@@ -7,7 +7,7 @@ namespace PMA.Core.DTOs;
 public class CreateTaskDto
 {
      
-    public int SprintId { get; set; }
+    public int? SprintId { get; set; }
 
     [Required(ErrorMessage = "Name is required")]
     [MaxLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
