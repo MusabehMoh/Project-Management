@@ -34,6 +34,10 @@ const translations = {
     "toast.assigneesChangedSuccess": "Assignees changed successfully",
     "toast.assigneesChangeFailed": "Assignees couldn't be changed",
     "toast.designRequestedSuccess": "Design requested successfully",
+    "toast.designerAssignedSuccess": "Designer assigned successfully",
+    "toast.designerAssignmentFailed": "Failed to assign designer",
+    "toast.designTaskCreatedSuccess": "Design task created successfully",
+    "toast.designTaskCreationFailed": "Failed to create design task",
 
     // Navbar
     "nav.dashboard": "Dashboard",
@@ -1617,6 +1621,8 @@ const translations = {
     "designRequests.assign": "Assign Request",
     "designRequests.assignTo": "Assign to Designer",
     "designRequests.assigned": "Request Assigned",
+    "designRequests.assignedDesigner": "Assigned Designer",
+    "designRequests.currentlyAssigned": "Currently Assigned To",
     "designRequests.unassigned": "Unassigned",
     "designRequests.assignSuccess": "Design request assigned successfully",
     "designRequests.assignError": "Failed to assign design request",
@@ -1639,6 +1645,11 @@ const translations = {
     "designRequests.errorLoadingDetails": "Error loading details",
     "designRequests.assignmentNotes": "Assignment Notes",
     "designRequests.assignmentNotesPlaceholder": "Add notes for this assignment (optional)",
+    "designRequests.selectDesignerForAssignment": "Select Designer for Assignment",
+    "designRequests.assignAndCreateTask": "Assign & Create Task",
+    "designRequests.assigningInProgress": "Assigning...",
+    "designRequests.taskCreatedForDesigner": "Task created for designer",
+    "designRequests.assignmentComment": "Assignment Comment",
 
     // States
     noTasksFound: "No tasks found",
@@ -1687,6 +1698,10 @@ const translations = {
     "toast.assigneesChangedSuccess": "تم تغيير المسؤولين بنجاح",
     "toast.assigneesChangeFailed": "لم يتم تغيير المسؤولين",
     "toast.designRequestedSuccess": "تم طلب التصميم بنجاح",
+    "toast.designerAssignedSuccess": "تم تعيين المصمم بنجاح",
+    "toast.designerAssignmentFailed": "فشل في تعيين المصمم",
+    "toast.designTaskCreatedSuccess": "تم إنشاء مهمة التصميم بنجاح",
+    "toast.designTaskCreationFailed": "فشل في إنشاء مهمة التصميم",
 
     // Navbar
     "nav.dashboard": "لوحة التحكم",
@@ -3242,9 +3257,11 @@ const translations = {
     "nav.designRequests": "طلبات التصميم",
     "designRequests.title": "طلبات التصميم",
     "designRequests.subtitle": "إدارة طلبات التصميم من أعضاء الفريق",
-    "designRequests.assign": "تعيين طلب",
+    "designRequests.assign": "تعيين مصمم",
     "designRequests.assignTo": "تعيين إلى مصمم",
-    "designRequests.assigned": "تم تعيين الطلب",
+    "designRequests.assigned": "تم تعيين مصمم",
+    "designRequests.assignedDesigner": "المصمم المعين",
+    "designRequests.currentlyAssigned": "معين حالياً إلى",
     "designRequests.unassigned": "غير معين",
     "designRequests.assignSuccess": "تم تعيين طلب التصميم بنجاح",
     "designRequests.assignError": "فشل في تعيين طلب التصميم",
@@ -3267,6 +3284,11 @@ const translations = {
     "designRequests.errorLoadingDetails": "خطأ في تحميل التفاصيل",
     "designRequests.assignmentNotes": "ملاحظات التعيين",
     "designRequests.assignmentNotesPlaceholder": "أضف ملاحظات لهذا التعيين (اختياري)",
+    "designRequests.selectDesignerForAssignment": "اختر المصمم ",
+    "designRequests.assignAndCreateTask": "تعيين وإنشاء مهمة",
+    "designRequests.assigningInProgress": "جاري التعيين...",
+    "designRequests.taskCreatedForDesigner": "تم إنشاء مهمة للمصمم",
+    "designRequests.assignmentComment": "تعليق التعيين",
 
     // States
     noTasksFound: "لم يتم العثور على مهام",

@@ -281,4 +281,5 @@ public interface IDesignRequestService
     System.Threading.Tasks.Task<bool> DeleteDesignRequestAsync(int id);
     System.Threading.Tasks.Task<bool> HasDesignRequestForTaskAsync(int taskId);
     System.Threading.Tasks.Task<DesignRequestDto?> GetDesignRequestByTaskIdAsync(int taskId);
+    System.Threading.Tasks.Task<DesignRequestDto?> AssignDesignRequestAsync(int designRequestId, int assignedToPrsId, string? comment);
 }

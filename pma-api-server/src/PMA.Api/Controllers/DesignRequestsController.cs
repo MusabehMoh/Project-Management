@@ -4,6 +4,7 @@ using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
 using PMA.Core.DTOs.Tasks;
+using PMA.Core.DTOs.DesignRequests;
 
 namespace PMA.Api.Controllers;
 
@@ -311,6 +312,36 @@ public class DesignRequestsController : ApiBaseController
                 Error = ex.Message
             };
             return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Assign design request to a designer
+    /// </summary>
+    [HttpPatch("{id}/assign")]
+    [ProducesResponseType(typeof(ApiResponse<DesignRequestDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> AssignDesignRequest(int id, [FromBody] AssignDesignRequestDto assignDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
+            }
+
+            var designRequest = await _designRequestService.AssignDesignRequestAsync(id, assignDto.AssignedToPrsId, assignDto.Comment);
+            if (designRequest == null)
+            {
+                return Error<object>("Design request not found", status: 404);
+            }
+
+            return Success(designRequest, message: "Design request assigned successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<DesignRequestDto>("An error occurred while assigning the design request", ex.Message);
         }
     }
 }

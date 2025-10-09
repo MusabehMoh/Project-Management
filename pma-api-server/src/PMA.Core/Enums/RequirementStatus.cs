@@ -9,3 +9,9 @@ public enum RequirementStatus
     Completed = 5,
     Rejected = 6
 }
+
+public enum DesignRequestsStatus
+{
+    UnAssigned = 1,
+    Assigned = 2 
+}
