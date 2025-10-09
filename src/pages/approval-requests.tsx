@@ -35,6 +35,7 @@ import { FilePreview } from "@/components/FilePreview";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import { projectRequirementsService } from "@/services/api";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 // Format date helper
 const formatDate = (dateString: string) => {
@@ -371,13 +372,22 @@ export default function ApprovalRequestsPage() {
         requirementToApprove.id,
       );
 
+      // Show success toast
+      showSuccessToast(
+        t("requirements.approveSuccess")
+      );
+
       onApprovalModalOpenChange();
       setRequirementToApprove(null);
 
       // Refresh requirements data
       refreshData();
-    } catch {
-      // Handle error appropriately - could show toast notification
+    } catch (error) {
+      // Show error toast
+      showErrorToast(
+        t("requirements.approveError")
+      );
+      console.error("Error approving requirement:", error);
     } finally {
       setIsApproving(false);
     }

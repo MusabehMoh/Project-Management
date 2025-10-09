@@ -267,6 +267,29 @@ const response = await fetch('/api/project-requirements/approved-requirements');
      }
      ```
 
+5. **Toast Notifications for User Feedback**:
+   - **CRITICAL**: Always provide toast notifications for user actions (create, update, delete, approve, etc.)
+   - Use `showSuccessToast`, `showErrorToast`, `showWarningToast` from `@/utils/toast`
+   - Import translations from LanguageContext using `t()` for bilingual support
+   - Pattern for API operations:
+     ```tsx
+     try {
+       await apiService.performAction(data);
+       showSuccessToast(t("action.success"));
+       // Refresh data or update UI
+     } catch (error) {
+       showErrorToast(t("action.error"));
+       console.error("Error performing action:", error);
+     }
+     ```
+   - Examples:
+     - **Approval workflows**: `showSuccessToast(t("requirements.approveSuccess"))`
+     - **Create operations**: `showSuccessToast(t("entity.createSuccess"))`
+     - **Update operations**: `showSuccessToast(t("entity.updateSuccess"))`
+     - **Validation errors**: `showWarningToast(t("validation.errorTitle"), t("validation.errorMessage"))`
+   - Always check if translation keys exist in LanguageContext before use
+   - Toast notifications auto-dismiss after 4 seconds by default
+
 ### Theming
 - Uses custom theme configuration in `tailwind.config.js`
 - Supports automatic dark/light mode switching
