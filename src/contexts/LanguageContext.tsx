@@ -2510,7 +2510,7 @@ const translations = {
     "requirements.projectDetails": "تفاصيل المشروع",
     "requirements.projectId": "رقم المشروع",
     "requirements.projectDescription": "وصف المشروع",
-    "requirements.projectOwner": "مالك المشروع",
+    "requirements.projectOwner": "مدير المشروع",
     "requirements.owningUnit": "الوحدة المالكة",
     "requirements.projectStatus": "حالة المشروع",
     "requirements.startDate": "تاريخ البداية",

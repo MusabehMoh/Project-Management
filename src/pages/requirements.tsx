@@ -17,6 +17,7 @@ import {
   DrawerFooter,
 } from "@heroui/drawer";
 import { Input } from "@heroui/input";
+import { Tooltip } from "@heroui/tooltip";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import LoadingLogo from "@/components/LoadingLogo";
@@ -381,10 +382,12 @@ export default function RequirementsPage() {
                     <CardBody className="space-y-4">
                       {/* Project Info */}
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-default-600">
-                          <Users className="w-4 h-4" />
-                          <span>{project.projectOwner}</span>
-                        </div>
+                        <Tooltip content={t("requirements.projectOwner")}>
+                          <div className="flex items-center gap-2 text-sm text-default-600 w-fit cursor-help">
+                            <Users className="w-4 h-4" />
+                            <span>{project.projectOwner}</span>
+                          </div>
+                        </Tooltip>
                         <div className="text-sm text-default-500">
                           {project.owningUnit}
                         </div>
@@ -463,16 +466,17 @@ export default function RequirementsPage() {
                         >
                           {t("requirements.viewRequirements")}
                         </Button>
-                        <Button
-                          className="flex-1"
-                          color="default"
-                          size="sm"
-                          startContent={<Info className="w-4 h-4" />}
-                          variant="solid"
-                          onPress={() => handleViewDetails(project)}
-                        >
-                          {t("requirements.viewDetails")}
-                        </Button>
+                        <Tooltip content={t("requirements.viewDetails")}>
+                          <Button
+                            color="default"
+                            isIconOnly
+                            size="sm"
+                            variant="solid"
+                            onPress={() => handleViewDetails(project)}
+                          >
+                            <Info className="w-4 h-4" />
+                          </Button>
+                        </Tooltip>
                       </div>
                     </CardBody>
                   </Card>

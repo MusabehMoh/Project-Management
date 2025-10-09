@@ -290,6 +290,39 @@ const response = await fetch('/api/project-requirements/approved-requirements');
    - Always check if translation keys exist in LanguageContext before use
    - Toast notifications auto-dismiss after 4 seconds by default
 
+6. **Tooltip Usage for Icon Buttons and UI Elements**:
+   - **CRITICAL**: Always add tooltips to icon-only buttons and ambiguous UI elements
+   - Use `Tooltip` component from `@heroui/tooltip`
+   - Import translations from LanguageContext using `t()` for bilingual support
+   - Pattern for icon buttons:
+     ```tsx
+     import { Tooltip } from "@heroui/tooltip";
+     
+     <Tooltip content={t("action.description")}>
+       <Button isIconOnly onPress={handleAction}>
+         <Icon className="w-4 h-4" />
+       </Button>
+     </Tooltip>
+     ```
+   - Pattern for informational elements:
+     ```tsx
+     <Tooltip content={t("field.label")}>
+       <div className="flex items-center gap-2 w-fit cursor-help">
+         <Icon className="w-4 h-4" />
+         <span>{data.value}</span>
+       </div>
+     </Tooltip>
+     ```
+   - Best practices:
+     - Use `cursor-help` class for informational tooltips
+     - Use `w-fit` to constrain tooltip wrapper to content width
+     - Always provide meaningful, translated tooltip text
+     - Ensure tooltips enhance accessibility for all users
+   - Examples:
+     - **Icon-only buttons**: Info, Edit, Delete, View Details buttons
+     - **Data labels**: Project Owner, Status indicators, Role badges
+     - **Complex icons**: Charts, graphs, specialized action buttons
+
 ### Theming
 - Uses custom theme configuration in `tailwind.config.js`
 - Supports automatic dark/light mode switching
