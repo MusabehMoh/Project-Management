@@ -688,6 +688,24 @@ const translations = {
     "teamDashboard.status.blocked": "On Hold",
     "teamDashboard.status.unknown": "Unknown",
 
+    // Designer Manager Dashboard
+    "designerDashboard.title": "Designer Manager Dashboard",
+    "designerDashboard.subtitle":
+      "Manage design tasks, review submissions, and coordinate with the design team",
+    "designerDashboard.comingSoon": "Coming Soon",
+    "designerDashboard.comingSoonDescription":
+      "The Designer Manager Dashboard is currently under development. Stay tuned for updates!",
+    "designerDashboard.quickActions": "Quick Actions",
+    "designerDashboard.quickActionsSubtitle":
+      "Design tasks that need your attention",
+    "designerDashboard.teamPerformance": "Design Team Performance",
+    "designerDashboard.searchDesigners": "Search designers...",
+    "designerDashboard.designer": "Designer",
+    "designerDashboard.projects": "Projects",
+    "designerDashboard.designsCompleted": "Designs Completed",
+    "designerDashboard.avgDesignTime": "Avg Design Time",
+    "designerDashboard.prototypesCreated": "Prototypes Created",
+
     // Common translations for filters
     "common.allStatus": "All Status",
     "common.sortBy": "Sort by",
@@ -2347,6 +2365,24 @@ const translations = {
     "teamDashboard.status.completed": "مكتمل",
     "teamDashboard.status.blocked": "معلق",
     "teamDashboard.status.unknown": "غير معروف",
+
+    // Designer Manager Dashboard
+    "designerDashboard.title": "لوحة مدير التصميم",
+    "designerDashboard.subtitle":
+      "إدارة مهام التصميم، مراجعة التسليمات، والتنسيق مع فريق التصميم",
+    "designerDashboard.comingSoon": "قريباً",
+    "designerDashboard.comingSoonDescription":
+      "لوحة مدير التصميم قيد التطوير حالياً. ترقبوا التحديثات!",
+    "designerDashboard.quickActions": "الإجراءات السريعة",
+    "designerDashboard.quickActionsSubtitle":
+      "مهام التصميم التي تحتاج اهتمامك",
+    "designerDashboard.teamPerformance": "أداء فريق التصميم",
+    "designerDashboard.searchDesigners": "البحث عن المصممين...",
+    "designerDashboard.designer": "المصمم",
+    "designerDashboard.projects": "المشاريع",
+    "designerDashboard.designsCompleted": "التصاميم المكتملة",
+    "designerDashboard.avgDesignTime": "متوسط وقت التصميم",
+    "designerDashboard.prototypesCreated": "النماذج المنشأة",
 
     // Common translations for filters
     "common.allStatus": "جميع الحالات",
