@@ -697,6 +697,8 @@ const translations = {
     "designerDashboard.comingSoonDescription":
       "The Designer Manager Dashboard is currently under development. Stay tuned for updates!",
     "designerDashboard.quickActions": "Quick Actions",
+    "designerDashboard.quickActionsSubtitle":
+      "Design tasks that need your attention",
     "designerDashboard.teamPerformance": "Design Team Performance",
     "designerDashboard.searchDesigners": "Search designers...",
     "designerDashboard.designer": "Designer",
@@ -2374,6 +2376,8 @@ const translations = {
     "designerDashboard.comingSoonDescription":
       "لوحة مدير التصميم قيد التطوير حالياً. ترقبوا التحديثات!",
     "designerDashboard.quickActions": "الإجراءات السريعة",
+    "designerDashboard.quickActionsSubtitle":
+      "مهام التصميم التي تحتاج اهتمامك",
     "designerDashboard.teamPerformance": "أداء فريق التصميم",
     "designerDashboard.searchDesigners": "البحث عن المصممين...",
     "designerDashboard.designer": "المصمم",
