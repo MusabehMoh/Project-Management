@@ -73,8 +73,8 @@ import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { useRequirementStatus } from "@/hooks/useRequirementStatus";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
+import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
-import { projectsApi } from "@/services/api/projects";
 import { showWarningToast } from "@/utils/toast";
 
 // Form data type for creating/editing requirements
@@ -95,8 +95,8 @@ export default function ProjectRequirementsPage() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
 
-  // Project name state
-  const [projectName, setProjectName] = useState<string>("");
+  // Fetch project details
+  const { projectName } = useProjectDetails({ projectId });
 
   // Set page title
   usePageTitle("requirements.projectRequirements");
@@ -230,25 +230,6 @@ export default function ProjectRequirementsPage() {
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string>("");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  // Fetch project name
-  useEffect(() => {
-    const fetchProjectName = async () => {
-      if (projectId) {
-        try {
-          const response = await projectsApi.getProjectById(parseInt(projectId));
-          
-          if (response.data) {
-            setProjectName(response.data.applicationName);
-          }
-        } catch (error) {
-          console.error("Error fetching project details:", error);
-        }
-      }
-    };
-
-    fetchProjectName();
-  }, [projectId]);
 
   // Update filters when search/filter states change (with debouncing)
   useEffect(() => {

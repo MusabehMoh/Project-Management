@@ -370,47 +370,112 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - Follow RESTful conventions
 - Handle loading states and error states
 
-### Dynamic Page Titles with Entity Names
-**CRITICAL**: When displaying detail pages (project requirements, task details, etc.), always fetch and display the actual entity name instead of IDs.
+### Custom Hooks for Data Fetching
+**CRITICAL**: Always create custom hooks for data fetching operations. Never fetch data directly in components with useEffect.
 
-**Pattern for Detail Pages**:
+**Hook Creation Pattern**:
 ```tsx
-// 1. Add state for entity name
-const [entityName, setEntityName] = useState<string>("");
+// src/hooks/useEntityDetails.ts
+import { useState, useEffect } from "react";
+import { entityApi } from "@/services/api/entity";
+import type { Entity } from "@/types/entity";
 
-// 2. Fetch entity details in useEffect
-useEffect(() => {
-  const fetchEntityName = async () => {
-    if (entityId) {
-      try {
-        const response = await apiService.getEntityById(parseInt(entityId));
-        if (response.data) {
-          setEntityName(response.data.name); // or applicationName, title, etc.
-        }
-      } catch (error) {
-        console.error("Error fetching entity details:", error);
+interface UseEntityDetailsOptions {
+  entityId: number | string | undefined;
+  enabled?: boolean; // Allow conditional fetching
+}
+
+interface UseEntityDetailsResult {
+  entity: Entity | null;
+  entityName: string;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useEntityDetails(
+  options: UseEntityDetailsOptions,
+): UseEntityDetailsResult {
+  const { entityId, enabled = true } = options;
+  const [entity, setEntity] = useState<Entity | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEntityDetails = async () => {
+    if (!entityId || !enabled) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const id = typeof entityId === "string" ? parseInt(entityId) : entityId;
+      const response = await entityApi.getEntityById(id);
+      
+      if (response.data) {
+        setEntity(response.data);
+      } else {
+        setError("Entity not found");
       }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch entity details";
+      setError(errorMessage);
+      console.error("Error fetching entity details:", err);
+    } finally {
+      setLoading(false);
     }
   };
-  fetchEntityName();
-}, [entityId]);
 
-// 3. Display entity name with fallback
-<h1 className="text-2xl font-bold">
-  {entityName || `${t("fallback.text")} ${entityId}`}
-</h1>
+  useEffect(() => {
+    fetchEntityDetails();
+  }, [entityId, enabled]);
+
+  return {
+    entity,
+    entityName: entity?.name || "",
+    loading,
+    error,
+    refetch: fetchEntityDetails,
+  };
+}
 ```
 
-**Examples**:
-- **Project Requirements Page**: Fetch project name using `projectsApi.getProjectById()` → Display "Project Name" instead of "Requirements for 6"
-- **Task Details Page**: Fetch task name → Display actual task title
-- **User Profile Page**: Fetch user name → Display user's full name
+**Component Usage**:
+```tsx
+// Component using the hook
+export default function EntityDetailsPage() {
+  const { entityId } = useParams<{ entityId: string }>();
+  const { entityName, loading, error } = useEntityDetails({ entityId });
+
+  return (
+    <h1 className="text-2xl font-bold">
+      {entityName || `${t("fallback.text")} ${entityId}`}
+    </h1>
+  );
+}
+```
+
+**Hook Export Pattern**:
+```tsx
+// src/hooks/index.ts - Always export new hooks here
+export { useEntityDetails } from "./useEntityDetails";
+```
+
+**Examples of Custom Hooks**:
+- **`useProjectDetails`**: Fetches project details by ID (used in project-requirements.tsx)
+- **`useTaskDetails`**: Fetches task details by ID
+- **`useUserProfile`**: Fetches user profile data
+- **`useRequirementStatus`**: Fetches requirement status lookups
+- **`usePriorityLookups`**: Fetches priority options
 
 **Best Practices**:
-- Always provide a fallback to ID while loading
-- Use proper TypeScript types for entity data
-- Handle errors gracefully (log to console, show fallback)
-- Cache entity name in component state to avoid refetching
+- ✅ **DO**: Create custom hooks for all data fetching
+- ✅ **DO**: Return loading, error, and refetch capabilities
+- ✅ **DO**: Support conditional fetching with `enabled` option
+- ✅ **DO**: Export hooks from `src/hooks/index.ts`
+- ✅ **DO**: Use proper TypeScript types for all hook parameters and returns
+- ❌ **DON'T**: Fetch data directly in components with useEffect
+- ❌ **DON'T**: Import API services directly into components (use hooks instead)
+- ❌ **DON'T**: Create inline useEffect for API calls (extract to hook)
 
 ### API Servers
 - **Mock API Server**: Located in `mock-api-server/`, provides realistic data structures for development
