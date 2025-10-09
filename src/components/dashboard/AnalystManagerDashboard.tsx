@@ -12,7 +12,7 @@ import RequirementCompletionTracker from "./RequirementCompletionTracker";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { quickActionsService } from "@/services/api";
-import ModernQuickStats from "@/components/ModernQuickStats";
+import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
 import QuickActions from "@/components/QuickActions";
 
 export default function AnalystManagerDashboard() {

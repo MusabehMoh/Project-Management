@@ -10,7 +10,7 @@ import DeveloperCalendar from "./calendar";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { developerQuickActionsService } from "@/services/api/developerQuickActionsService";
-import ModernQuickStats from "@/components/ModernQuickStats";
+import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
 
 export default function DeveloperManagerDashboard() {
   const { t, language } = useLanguage();

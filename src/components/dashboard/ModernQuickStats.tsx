@@ -24,7 +24,7 @@ const stats: StatItem[] = [
   },
   {
     key: "dashboard.totalTasks",
-    value: 8,
+    value: 22,
     icon: ListChecks,
   },
   {

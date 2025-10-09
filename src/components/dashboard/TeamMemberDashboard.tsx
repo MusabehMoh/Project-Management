@@ -9,7 +9,7 @@ import MyNextDeadline from "./team-member/MyNextDeadline";
 import TeamKanbanBoard from "./team-member/TeamKanbanBoard";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import ModernQuickStats from "@/components/ModernQuickStats";
+import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
 
 export default function TeamMemberDashboard() {
   const { t, language } = useLanguage();
