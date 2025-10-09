@@ -21,6 +21,7 @@ import {
   ModalFooter,
   useDisclosure,
   Tooltip,
+  ScrollShadow,
 } from "@heroui/react";
 import { Search, Filter, X, Eye, Check } from "lucide-react";
 
@@ -190,14 +191,20 @@ const RequirementCard = ({
       </CardHeader>
 
       <CardBody className="pt-0 flex-1 flex flex-col">
-        <div className="space-y-4 flex-1">
-          <p
-            dangerouslySetInnerHTML={{
-              __html:
-                requirement.description || t("requirements.noDescription"),
-            }}
-            className="text-sm text-default-600 line-clamp-3"
-          />
+        <div className="space-y-2 flex-1">
+          <ScrollShadow 
+            hideScrollBar 
+            className="h-[4.5rem]"
+            isEnabled={false}
+          >
+            <p
+              dangerouslySetInnerHTML={{
+                __html:
+                  requirement.description || t("requirements.noDescription"),
+              }}
+              className="text-sm text-default-600 leading-relaxed mb-0"
+            />
+          </ScrollShadow>
 
           <div className="flex items-center gap-2 text-xs text-default-500">
             <span>

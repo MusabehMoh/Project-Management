@@ -450,7 +450,15 @@ export default function RequirementsPage() {
                         </div>
                         <div className="w-full bg-default-200 rounded-full h-2">
                           <div
-                            className="bg-primary h-2 rounded-full transition-all duration-300"
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              project.requirementsCount > 0
+                                ? (project.completedRequirements / project.requirementsCount) * 100 >= 70
+                                  ? "bg-success"
+                                  : (project.completedRequirements / project.requirementsCount) * 100 >= 40
+                                    ? "bg-warning"
+                                    : "bg-danger"
+                                : "bg-default-300"
+                            }`}
                             style={{
                               width: `${
                                 project.requirementsCount > 0
@@ -630,7 +638,15 @@ export default function RequirementsPage() {
                       </div>
                       <div className="w-full bg-default-200 rounded-full h-2">
                         <div
-                          className="bg-primary h-2 rounded-full transition-all duration-300"
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            selectedProject.requirementsCount > 0
+                              ? (selectedProject.completedRequirements / selectedProject.requirementsCount) * 100 >= 70
+                                ? "bg-success"
+                                : (selectedProject.completedRequirements / selectedProject.requirementsCount) * 100 >= 40
+                                  ? "bg-warning"
+                                  : "bg-danger"
+                              : "bg-default-300"
+                          }`}
                           style={{
                             width: `${
                               selectedProject.requirementsCount > 0

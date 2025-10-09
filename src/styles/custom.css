@@ -256,6 +256,32 @@ html, body {
 */
 
 /* ===================================
+   ANIMATIONS
+   =================================== */
+
+/* Slow auto-scroll animation for long content */
+@keyframes scroll-slow {
+  0%, 15% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-40%);
+  }
+  85%, 100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-scroll-slow {
+  animation: scroll-slow 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.pause-animation:hover {
+  animation-play-state: paused;
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 
