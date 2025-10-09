@@ -461,7 +461,7 @@ export default function RequirementsPage() {
                           className="flex-1"
                           color="default"
                           size="sm"
-                          variant="faded"
+                          variant="bordered"
                           onPress={() => handleViewRequirements(project)}
                         >
                           {t("requirements.viewRequirements")}
@@ -471,7 +471,7 @@ export default function RequirementsPage() {
                             color="default"
                             isIconOnly
                             size="sm"
-                            variant="solid"
+                            variant="bordered"
                             onPress={() => handleViewDetails(project)}
                           >
                             <Info className="w-4 h-4" />
