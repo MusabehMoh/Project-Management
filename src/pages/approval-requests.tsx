@@ -20,6 +20,7 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Tooltip,
 } from "@heroui/react";
 import { Search, Filter, X, Eye, Check } from "lucide-react";
 
@@ -207,25 +208,25 @@ const RequirementCard = ({
 
         {/* Action buttons */}
         <div className="flex items-center justify-between pt-2 gap-2 mt-auto">
-          <Button
-            color="primary"
-            size="sm"
-            variant="flat"
-            onPress={() => onViewDetails(requirement)}
-          >
-            <Eye size={16} />
-            {t("common.viewDetails")}
-          </Button>
+          <Tooltip content={t("common.viewDetails")}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="bordered"
+              onPress={() => onViewDetails(requirement)}
+            >
+              <Eye size={16} />
+            </Button>
+          </Tooltip>
 
           {/* Approve button - only for users with permission */}
           {
             <Button
-              color="success"
               size="sm"
-              variant="flat"
+              variant="bordered"
               onPress={() => onApprove(requirement)}
             >
-              <Check size={16} />
+              <Check size={16} className="text-success" />
               {t("requirements.approve")}
             </Button>
           }
