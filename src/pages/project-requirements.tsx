@@ -1218,7 +1218,7 @@ export default function ProjectRequirementsPage() {
                     </label>
                     <div className="min-h-[240px]">
                       <ReactQuill
-                        className="rtl-editor"
+                        className={language === "ar" ? "rtl-editor" : ""}
                         modules={{
                           toolbar: [
                             ["bold", "italic", "underline"],
