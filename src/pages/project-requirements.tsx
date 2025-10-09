@@ -74,6 +74,7 @@ import { useRequirementStatus } from "@/hooks/useRequirementStatus";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
+import { projectsApi } from "@/services/api/projects";
 import { showWarningToast } from "@/utils/toast";
 
 // Form data type for creating/editing requirements
@@ -93,6 +94,9 @@ export default function ProjectRequirementsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+
+  // Project name state
+  const [projectName, setProjectName] = useState<string>("");
 
   // Set page title
   usePageTitle("requirements.projectRequirements");
@@ -226,6 +230,25 @@ export default function ProjectRequirementsPage() {
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string>("");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Fetch project name
+  useEffect(() => {
+    const fetchProjectName = async () => {
+      if (projectId) {
+        try {
+          const response = await projectsApi.getProjectById(parseInt(projectId));
+          
+          if (response.data) {
+            setProjectName(response.data.applicationName);
+          }
+        } catch (error) {
+          console.error("Error fetching project details:", error);
+        }
+      }
+    };
+
+    fetchProjectName();
+  }, [projectId]);
 
   // Update filters when search/filter states change (with debouncing)
   useEffect(() => {
@@ -617,7 +640,7 @@ export default function ProjectRequirementsPage() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold">
-                  {t("requirements.managementForProject")} {projectId}
+                  {projectName || `${t("requirements.managementForProject")} ${projectId}`}
                 </h1>
                 <p className="text-default-500">{t("requirements.subtitle")}</p>
               </div>
