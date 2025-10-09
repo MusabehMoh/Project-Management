@@ -182,6 +182,11 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - Ensure RTL support for Arabic language
 - Use responsive design principles
 - Maintain consistent spacing using Tailwind's spacing scale
+- **Color Usage**: Use subtle, strategic color accents
+  - Avoid excessive colors (no "rainbow" or "salad" effects)
+  - Primary color for section headers and key action icons only
+  - Neutral bordered buttons (`variant="bordered"`) for cleaner appearance
+  - Icon-only buttons for space efficiency with tooltips for accessibility
 
 ### Import Organization
 - External libraries first
@@ -360,6 +365,49 @@ const response = await fetch('/api/project-requirements/approved-requirements');
       </div>
     </div>
     ```
+- **Button Patterns**: Use consistent button styles across similar pages
+  - Icon-only buttons: Always wrap with `Tooltip` component for accessibility
+  - Action buttons: Use `variant="bordered"` for neutral, clean appearance
+  - Colored icons: Apply color classes to icons (e.g., `className="text-success"`) rather than button backgrounds
+- **Progress Bars**: Use dynamic color coding based on completion percentage
+  - **Color Ranges**:
+    - 🔴 Red (danger): 0-39% completion
+    - 🟡 Yellow (warning): 40-69% completion
+    - 🟢 Green (success): 70-100% completion
+    - Gray (default): Empty state (0 requirements)
+  - **Pattern**:
+    ```tsx
+    <div className="w-full bg-default-200 rounded-full h-2">
+      <div
+        className={`h-2 rounded-full transition-all duration-300 ${
+          count > 0
+            ? (completed / count) * 100 >= 70
+              ? "bg-success"
+              : (completed / count) * 100 >= 40
+                ? "bg-warning"
+                : "bg-danger"
+            : "bg-default-300"
+        }`}
+        style={{ width: `${count > 0 ? (completed / count) * 100 : 0}%` }}
+      />
+    </div>
+    ```
+- **ScrollShadow for Content Overflow**: Use HeroUI ScrollShadow component for scrollable content areas
+  - **When to Use**: Card descriptions, long text content that needs scrolling
+  - **Configuration**: `hideScrollBar` for clean appearance, `isEnabled={false}` to disable shadow effect if not needed
+  - **Pattern**:
+    ```tsx
+    <ScrollShadow 
+      hideScrollBar 
+      className="h-[4.5rem]"
+      isEnabled={false}
+    >
+      <p className="text-sm text-default-600 leading-relaxed mb-0">
+        {content}
+      </p>
+    </ScrollShadow>
+    ```
+  - **Spacing**: Use `space-y-2` for compact layouts, `leading-relaxed` for readable line height, `mb-0` to remove bottom margin
 
 ## API Integration
 
@@ -534,6 +582,49 @@ export { useEntityDetails } from "./useEntityDetails";
     - Other components (TeamQuickActions, MyAssignedTasks, MyNextDeadline): Refresh only when updates come from TeamQuickActions
     - Separate handlers: `handleKanbanUpdate()` (no refresh) vs `handleQuickActionsUpdate()` (triggers refresh)
 - Each dashboard has specialized components in respective subdirectories
+
+### Key Pages
+
+#### Requirements Page (`requirements.tsx`)
+- **Purpose**: Lists assigned projects for requirements management
+- **Design Features**:
+  - Modern minimalist stat counters (horizontal pills)
+  - Icon-only "View Details" button with tooltip
+  - Tooltips on project owner and owning unit fields
+  - Dynamic progress bars with color coding (red/yellow/green based on completion %)
+  - Neutral bordered buttons for clean appearance
+- **Progress Bar Color Scheme**:
+  - Red (danger): 0-39% completion
+  - Yellow (warning): 40-69% completion
+  - Green (success): 70-100% completion
+  - Gray (default): Empty state
+- **Data Fetching**: Uses `useProjectDetails` hook for dynamic project names
+
+#### Approval Requests Page (`approval-requests.tsx`)
+- **Purpose**: Review and approve pending requirements
+- **Design Features**:
+  - Icon-only "View Details" button with tooltip (matches requirements page)
+  - Green checkmark icon for approve button
+  - ScrollShadow component for long descriptions
+  - Scrollable content on hover (no auto-scroll)
+  - Compact spacing with `space-y-2` for card content
+- **ScrollShadow Configuration**:
+  - `hideScrollBar`: Hides scrollbar for clean look
+  - `isEnabled={false}`: Disables shadow effect
+  - `className="h-[4.5rem]"`: Fixed height container
+  - `leading-relaxed mb-0`: Readable line height, no bottom margin
+- **Toast Notifications**: Success/error toasts for approval actions
+
+#### Profile Page (`profile.tsx`)
+- **Purpose**: User profile display and management
+- **Design Philosophy**: Subtle, elegant color accents only
+- **Color Usage**:
+  - Primary color on section header icons only (User, Shield)
+  - Primary color chips for roles
+  - All other icons are gray (`text-default-400`)
+  - No colored backgrounds or gradients
+  - Clean, professional appearance
+- **Layout**: Three-column layout with profile card, personal info, and user actions
 
 ### Dashboard Components
 - **ApprovedRequirements**: Shows approved requirements ready for development (Developer Manager)
