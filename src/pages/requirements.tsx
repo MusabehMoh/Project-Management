@@ -394,21 +394,25 @@ export default function RequirementsPage() {
                       </div>
 
                       {/* Requirements Stats */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-primary">
-                            {project.requirementsCount}
-                          </div>
-                          <div className="text-xs text-default-500">
-                            {t("requirements.requirementsCount")}
+                      <div className="flex gap-3">
+                        <div className="flex-1 bg-default-50 dark:bg-default-100/10 rounded-lg px-3 py-2">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-semibold text-default-700">
+                              {project.requirementsCount}
+                            </span>
+                            <span className="text-xs text-default-500">
+                              {t("requirements.total")}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-success">
-                            {project.completedRequirements}
-                          </div>
-                          <div className="text-xs text-default-500">
-                            {t("requirements.completedRequirements")}
+                        <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-semibold text-success-600 dark:text-success-500">
+                              {project.completedRequirements}
+                            </span>
+                            <span className="text-xs text-success-600/70 dark:text-success-500/70">
+                              {t("requirements.done")}
+                            </span>
                           </div>
                         </div>
                       </div>

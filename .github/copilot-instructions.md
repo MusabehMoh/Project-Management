@@ -337,6 +337,29 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - **Task Lists**: Use consistent status/priority color coding
 - **Modal Patterns**: Follow existing modal structures for updates
 - **Loading States**: Use Skeleton components consistently
+- **Stat Counters (Modern Minimalist)**: Use horizontal pill-style layout for statistics
+  - **Layout**: Horizontal flex with inline numbers and labels
+  - **Style**: Rounded backgrounds (`rounded-lg`), subtle colors, compact padding (`px-3 py-2`)
+  - **Typography**: `text-2xl font-semibold` for numbers, `text-xs` for labels
+  - **Colors**: Neutral backgrounds for general stats, colored backgrounds for status-specific stats
+  - **Dark Mode**: Use opacity adjustments (`dark:bg-default-100/10`, `dark:bg-success-100/10`)
+  - **Pattern**:
+    ```tsx
+    <div className="flex gap-3">
+      <div className="flex-1 bg-default-50 dark:bg-default-100/10 rounded-lg px-3 py-2">
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-semibold text-default-700">{count}</span>
+          <span className="text-xs text-default-500">{label}</span>
+        </div>
+      </div>
+      <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-semibold text-success-600 dark:text-success-500">{completedCount}</span>
+          <span className="text-xs text-success-600/70 dark:text-success-500/70">{completedLabel}</span>
+        </div>
+      </div>
+    </div>
+    ```
 
 ## API Integration
 
