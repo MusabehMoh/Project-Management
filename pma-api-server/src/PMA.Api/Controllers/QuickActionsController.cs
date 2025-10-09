@@ -3,18 +3,23 @@ using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
 using PMA.Core.Enums;
 using PMA.Infrastructure.Data;
+using PMA.Core.Interfaces;
 
 namespace PMA.Api.Controllers;
 
 [ApiController]
-[Route("api/quick-actions1")]
+[Route("api/quick-actions")]
 public class QuickActionsController : ApiBaseController
 {
     private readonly ApplicationDbContext _context;
+    private readonly IUserContextAccessor _userContextAccessor;
+    private readonly IUserService _userService;
 
-    public QuickActionsController(ApplicationDbContext context)
+    public QuickActionsController(ApplicationDbContext context, IUserContextAccessor userContextAccessor, IUserService userService)
     {
         _context = context;
+        _userContextAccessor = userContextAccessor;
+        _userService = userService;
     }
 
     /// <summary>
@@ -281,6 +286,27 @@ public class QuickActionsController : ApiBaseController
         {
             var stats = new
             {
+                // Active projects (all projects except Production and Delayed)
+                activeProjects = await _context.Projects
+                    .Where(p => p.Status != ProjectStatus.Production && 
+                               p.Status != ProjectStatus.Delayed)
+                    .CountAsync(),
+                
+                // Total tasks (all tasks except Completed and OnHold)
+                totalTasks = await _context.Tasks
+                    .Where(t => t.StatusId != Core.Enums.TaskStatus.Completed && 
+                               t.StatusId != Core.Enums.TaskStatus.OnHold)
+                    .CountAsync(),
+                
+                // Active project requirements (all project requirements except Completed)
+                activeProjectRequirements = await _context.ProjectRequirements
+                    .Where(pr => pr.Status != RequirementStatusEnum.Completed)
+                    .CountAsync(),
+                
+                // Team members count - get from current user's department
+                teamMembers = await GetTeamMembersCountByDepartmentAsync(),
+                
+                // Keep some existing stats for backward compatibility
                 unassignedProjects = await _context.Projects
                     .Where(p => !_context.ProjectAnalysts.Any(pa => pa.ProjectId == p.Id) &&
                                (p.Status == ProjectStatus.New ||
@@ -1029,6 +1055,54 @@ public class QuickActionsController : ApiBaseController
                 message = "An error occurred while dismissing the action",
                 error = ex.Message
             });
+        }
+    }
+
+    /// <summary>
+    /// Get team members count by current user's department
+    /// </summary>
+    private async Task<int> GetTeamMembersCountByDepartmentAsync()
+    {
+        try
+        {
+            // Get current user with roles and department information (same pattern as MemberTaskService)
+            var currentUser = await _userService.GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                // If no current user, return total active team members from Teams table
+                return await _context.Teams
+                    .Where(t => t.IsActive)
+                    .CountAsync();
+            }
+
+            if (currentUser.Roles == null || !currentUser.Roles.Any())
+            {
+                // If user has no roles, return total active team members
+                return await _context.Teams
+                    .Where(t => t.IsActive)
+                    .CountAsync();
+            }
+
+            var currentUserDepartmentId = currentUser.Roles[0].Department?.Id;
+            if (currentUserDepartmentId == null)
+            {
+                // If user's role has no department, return total active team members
+                return await _context.Teams
+                    .Where(t => t.IsActive)
+                    .CountAsync();
+            }
+
+            // Get active team members from the same department
+            return await _context.Teams
+                .Where(t => t.DepartmentId == currentUserDepartmentId && t.IsActive)
+                .CountAsync();
+        }
+        catch
+        {
+            // Fallback to total active team members count if anything fails
+            return await _context.Teams
+                .Where(t => t.IsActive)
+                .CountAsync();
         }
     }
 

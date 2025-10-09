@@ -13,7 +13,7 @@ import RequirementCompletionTracker from "./RequirementCompletionTracker";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { quickActionsService } from "@/services/api";
 import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
-import QuickActions from "@/components/QuickActions";
+import QuickActions from "@/components/dashboard/QuickActions";
 
 export default function AnalystManagerDashboard() {
   const { t, language } = useLanguage();
@@ -67,9 +67,6 @@ export default function AnalystManagerDashboard() {
         <div className="flex gap-4 justify-center">
           <Button color="primary" size="lg">
             {t("dashboard.newProject")}
-          </Button>
-          <Button size="lg" variant="bordered">
-            {t("dashboard.importData")}
           </Button>
         </div>
       </div>

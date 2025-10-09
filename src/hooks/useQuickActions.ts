@@ -168,7 +168,7 @@ export const useQuickActions = (
         quickActionsService.getQuickActionStats(),
         quickActionsService.getUnassignedProjects(),
         quickActionsService.getProjectsWithoutRequirements(),
-        quickActionsService.getAvailableMembers(),
+        [quickActionsService.getAvailableMembers()],
       ]);
 
       if (actionsResponse.success && actionsResponse.data) {
