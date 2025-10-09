@@ -335,10 +335,15 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 
 ### Design Consistency Patterns
 **CRITICAL**: Maintain consistent design patterns across similar components
-- **Quick Actions Components**: Always use Accordion + CustomAlert pattern
+- **Quick Actions Components**: Always use "My Actions" title with Accordion + CustomAlert pattern
   - `QuickActions.tsx` (Analyst Manager) - Original design pattern
+  - `DesignerQuickActions.tsx` (Designer Manager) - Matches QuickActions design
   - `TeamQuickActions.tsx` (Team Member) - Matches QuickActions design
-  - **Required Elements**: AnimatedCounter, CustomAlert with colored borders, ScrollShadow, bordered buttons
+  - **Title**: "My Actions" (dashboard.myActions) with animated pulse counter chip
+  - **Structure**: Single Accordion with business rule categories as parent items (e.g., "Unassigned")
+  - **Content**: Multiple CustomAlert components inside each accordion item
+  - **Required Elements**: AnimatedCounter with fadeInOut animation, CustomAlert with colored borders, ScrollShadow, bordered buttons
+  - **Future-Ready**: Structure allows multiple accordion items for different action types
 - **Task Lists**: Use consistent status/priority color coding
 - **Modal Patterns**: Follow existing modal structures for updates
 - **Loading States**: Use Skeleton components consistently
@@ -514,6 +519,7 @@ export { useEntityDetails } from "./useEntityDetails";
 - **`useUserProfile`**: Fetches user profile data
 - **`useRequirementStatus`**: Fetches requirement status lookups
 - **`usePriorityLookups`**: Fetches priority options
+- **`useDesignRequests`**: Fetches and manages design requests with filtering and assignment capabilities
 
 **Best Practices**:
 - ✅ **DO**: Create custom hooks for all data fetching
@@ -571,6 +577,24 @@ export { useEntityDetails } from "./useEntityDetails";
 ### Dashboard Types
 - **AnalystManagerDashboard**: Requirements management, team performance (Role ID: 2)
 - **DeveloperManagerDashboard**: Development team management, approved requirements, deployments (Role ID: 4)
+- **DesignerManagerDashboard**: Design request management, team workload monitoring (Role ID: 8)
+  - **Layout**: ModernQuickStats → 50/50 split (DesignerQuickActions + Calendar) → DesignerWorkloadPerformance
+  - **Left Column (50%)**: DesignerQuickActions - "My Actions" accordion with unassigned design requests
+  - **Right Column (50%)**: Calendar without sidebar (showSidebar={false})
+  - **Bottom**: DesignerWorkloadPerformance - Full-width table with designer metrics
+  - **Quick Actions Structure**:
+    - Title: "My Actions" with animated pulse counter
+    - Single Accordion: "Unassigned" (غير معين) parent item
+    - Inside: Multiple CustomAlert cards for each unassigned request
+    - Future-ready for additional action types
+  - **Key Features**:
+    - Real-time unassigned design request tracking (status = 1)
+    - Designer assignment modal with team member autocomplete search
+    - Priority-based request display (Critical/High/Medium/Low)
+    - Task details: name, description (truncated), priority, dates, notes
+    - Assignment notes and comments
+    - Toast notifications for user feedback
+  - **API Integration**: Uses `useDesignRequests` hook with `designRequestsService`
 - **TeamMemberDashboard**: Task management for QC, Developers, Designers (Role IDs: 5, 7, 9)
   - **Layout**: Vertical stack - ModernQuickStats → TeamKanbanBoard (full-width) → Grid layout (70/30 split)
   - **Left Column (70%)**: TeamQuickActions stacked with Calendar
@@ -630,6 +654,27 @@ export { useEntityDetails } from "./useEntityDetails";
 - **ApprovedRequirements**: Shows approved requirements ready for development (Developer Manager)
 - **PendingRequirements**: Shows draft requirements awaiting approval (Analyst Manager)
 - **DeveloperQuickActions**: Task assignment and management tools (Developer Manager)
+- **DesignerQuickActions**: Unassigned design request management (Designer Manager)
+  - **Title**: "My Actions" with animated counter chip (matches QuickActions component pattern)
+  - **Design Pattern**: Single Accordion structure with one parent item containing all unassigned requests
+  - **Structure**: 
+    - Card Header: "My Actions" title with pulsing counter chip
+    - Accordion Item: "Unassigned" (غير معين) as parent with count badge
+    - ScrollShadow: Contains multiple CustomAlert components (one per request)
+  - **Business Rule**: Reminds manager about unassigned design requests (status = 1)
+  - **Features**: 
+    - AnimatedCounter with fadeInOut pulse animation
+    - Task details: name, description (truncated), priority, request date, due date, notes
+    - Assignment modal with designer search autocomplete
+    - Real-time refresh after assignment
+  - **API Integration**: Uses `useDesignRequests` hook with `designRequestsService`
+  - **Modal Features**: 
+    - Team member autocomplete search (grade name + full name display)
+    - Task information display with priority chips
+    - Assignment notes textarea
+    - Toast notifications for success/error feedback
+  - **Styling**: Warning-colored CustomAlert borders for unassigned status, bordered buttons with shadow-small
+  - **Future-Ready**: Structure allows adding more accordion items for other action types
 - **MyAssignedTasks**: Shows tasks assigned to current user (Team Members)
   - **Design Pattern**: Uses compact list design matching PendingRequirements component
   - **Features**: Compact card layout with divide-y separators, hover effects, ListTodo icon

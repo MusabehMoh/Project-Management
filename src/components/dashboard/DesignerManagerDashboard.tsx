@@ -27,11 +27,11 @@ export default function DesignerManagerDashboard() {
 
       {/* Quick Actions and Calendar Section */}
       <div className="flex flex-col lg:flex-row gap-6 mb-6">
-        <div className="lg:w-[70%] space-y-4">
+        <div className="lg:w-[50%] space-y-4">
           <DesignerQuickActions />
         </div>
 
-        <div className="lg:w-[30%] space-y-4">
+        <div className="lg:w-[50%] space-y-4">
           <Calendar showSidebar={false} />
         </div>
       </div>

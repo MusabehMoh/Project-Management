@@ -7,37 +7,27 @@ import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Alert } from "@heroui/alert";
 import { Divider } from "@heroui/divider";
-import { RefreshCw, Palette, CheckCircle, Clock } from "lucide-react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
+import { Textarea } from "@heroui/input";
+import { Avatar } from "@heroui/avatar";
+import { addToast } from "@heroui/toast";
+import { RefreshCw, Palette, CheckCircle, Clock, AlertCircle } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useDesignRequests } from "@/hooks/useDesignRequests";
+import { useTeamSearch } from "@/hooks/useTeamSearch";
+import { formatDateTime } from "@/utils/dateFormatter";
+import { DesignRequestDto } from "@/services/api/designRequestsService";
+import { MemberSearchResult } from "@/types";
 
-// Mock data for Designer Quick Actions
-const mockDesignTasks = [
-  {
-    id: "1",
-    name: "Landing Page Redesign",
-    project: "E-Commerce Platform",
-    priority: "high",
-    status: "in-progress",
-    dueDate: "2025-10-15",
-  },
-  {
-    id: "2",
-    name: "Mobile App UI Kit",
-    project: "Admin Panel",
-    priority: "medium",
-    status: "review",
-    dueDate: "2025-10-20",
-  },
-  {
-    id: "3",
-    name: "Brand Guidelines Document",
-    project: "Marketing Website",
-    priority: "low",
-    status: "pending",
-    dueDate: "2025-10-25",
-  },
-];
+
 
 // Animated Counter Component
 const AnimatedCounter = ({
@@ -172,38 +162,140 @@ CustomAlert.displayName = "CustomAlert";
 
 export default function DesignerQuickActions() {
   const { t, language, direction } = useLanguage();
-  const [loading, setLoading] = useState(false);
+
+  // Fetch unassigned design requests (status = 1)
+  const {
+    designRequests,
+    loading,
+    error,
+    refetch,
+    assignDesignRequest,
+  } = useDesignRequests({
+    status: 1, // Only unassigned requests
+    limit: 10,
+    includeTaskDetails: true,
+    includeRequirementDetails: false,
+  });
+
   const [refreshing, setRefreshing] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<DesignRequestDto | null>(null);
+  const [notes, setNotes] = useState("");
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [assignLoading, setAssignLoading] = useState(false);
 
-  const handleRefresh = () => {
+  // Designer selection state
+  const [selectedDesigner, setSelectedDesigner] = useState<MemberSearchResult | null>(null);
+  const [designerInputValue, setDesignerInputValue] = useState<string>("");
+
+  // Team search for designer selection
+  const {
+    employees: designers,
+    loading: designersLoading,
+    searchEmployees: searchDesigners,
+  } = useTeamSearch({
+    minLength: 1,
+    maxResults: 20,
+    loadInitialResults: false,
+  });
+
+  const handleRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    await refetch();
+    setRefreshing(false);
   };
 
-  const getPriorityColor = (priority: string) => {
+  const handleAssign = (request: DesignRequestDto) => {
+    setSelectedRequest(request);
+    setNotes("");
+    setModalError(null);
+    setSelectedDesigner(null);
+    setDesignerInputValue("");
+    setIsModalOpen(true);
+  };
+
+  const handleAssignSubmit = async () => {
+    if (!selectedRequest || !selectedDesigner?.id) {
+      setModalError(t("designRequests.designerRequired"));
+
+      return;
+    }
+
+    setAssignLoading(true);
+    setModalError(null);
+
+    try {
+      const success = await assignDesignRequest(
+        selectedRequest.id,
+        selectedDesigner.id,
+        notes,
+      );
+
+      if (success) {
+        addToast({
+          title: t("designRequests.assignSuccess"),
+          color: "success",
+          timeout: 4000,
+        });
+
+        setIsModalOpen(false);
+        setSelectedRequest(null);
+        setSelectedDesigner(null);
+        setDesignerInputValue("");
+        setNotes("");
+      } else {
+        setModalError(t("designRequests.assignError"));
+      }
+    } catch {
+      setModalError(t("designRequests.assignError"));
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedRequest(null);
+    setSelectedDesigner(null);
+    setDesignerInputValue("");
+    setNotes("");
+    setModalError(null);
+  };
+
+  const getPriorityColor = (priority?: number) => {
     switch (priority) {
-      case "high":
+      case 4:
         return "danger";
-      case "medium":
+      case 3:
         return "warning";
-      case "low":
+      case 2:
         return "primary";
+      case 1:
+        return "success";
       default:
         return "default";
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "success";
-      case "in-progress":
-        return "primary";
-      case "review":
-        return "warning";
+  const getPriorityText = (priority?: number) => {
+    switch (priority) {
+      case 4:
+        return t("priority.critical");
+      case 3:
+        return t("priority.high");
+      case 2:
+        return t("priority.medium");
+      case 1:
+        return t("priority.low");
       default:
-        return "default";
+        return t("priority.unknown");
     }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+
+    return formatDateTime(dateString, { language });
   };
 
   if (loading) {
@@ -221,119 +313,323 @@ export default function DesignerQuickActions() {
     );
   }
 
-  return (
-    <Card className="border-default-200" dir={direction} shadow="sm">
-      <CardHeader className="flex items-center justify-between pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-xl font-semibold text-foreground">
-              {t("designerDashboard.quickActions") || "Quick Actions"}
-            </h3>
-            {mockDesignTasks.length > 0 && (
-              <Chip
-                className="bg-danger-50 text-danger-600 border border-danger-200"
-                size="sm"
-                variant="flat"
-              >
-                <AnimatedCounter duration={600} value={mockDesignTasks.length} />
-              </Chip>
-            )}
+  if (loading) {
+    return (
+      <Card className="border-default-200" dir={direction} shadow="sm">
+        <CardBody className="space-y-6 py-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-1/3 rounded-lg" />
+            <Skeleton className="h-10 w-24 rounded-lg" />
           </div>
-          <p className="text-sm text-default-500 mt-1">
-            {t("designerDashboard.quickActionsSubtitle") ||
-              "Design tasks that need your attention"}
-          </p>
-        </div>
-        <Button
-          isIconOnly
-          className="text-default-400 hover:text-default-600"
-          disabled={refreshing}
-          size="sm"
-          variant="light"
-          onPress={handleRefresh}
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-          />
-        </Button>
-      </CardHeader>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-lg" />
+            ))}
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
 
-      <Divider className="bg-default-200" />
+  if (error) {
+    return (
+      <Card className="border-default-200" dir={direction} shadow="sm">
+        <CardBody className="p-6">
+          <div className="flex items-center gap-2 text-danger">
+            <AlertCircle size={20} />
+            <span>{error}</span>
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
 
-      <CardBody className="p-6 overflow-hidden">
-        <div className="space-y-4 overflow-hidden">
-          <ScrollShadow className="max-h-[500px]" hideScrollBar>
-            <Accordion
-              className="px-0"
-              selectionMode="single"
-              variant="splitted"
-            >
-              {mockDesignTasks.map((task) => (
+  return (
+    <>
+      <style>
+        {`
+          @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+          }
+        `}
+      </style>
+      <Card className="border-default-200" dir={direction} shadow="sm">
+        <CardHeader className="flex items-center justify-between pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-foreground">
+                {t("dashboard.myActions")}
+              </h3>
+              {designRequests.length > 0 && (
+                <Chip
+                  className="bg-danger-50 text-danger-600 border border-danger-200 animate-pulse"
+                  size="sm"
+                  style={{
+                    animation: "fadeInOut 2s ease-in-out infinite",
+                  }}
+                  variant="flat"
+                >
+                  <AnimatedCounter duration={600} value={designRequests.length} />
+                </Chip>
+              )}
+            </div>
+            <p className="text-sm text-default-500 mt-1">
+              {t("designerDashboard.quickActionsSubtitle")}
+            </p>
+          </div>
+          <Button
+            isIconOnly
+            className="text-default-400 hover:text-default-600"
+            disabled={refreshing}
+            size="sm"
+            variant="light"
+            onPress={handleRefresh}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </CardHeader>
+
+        <Divider className="bg-default-200" />
+
+        <CardBody className="p-6 overflow-hidden">
+          <div className="space-y-4 overflow-hidden">
+            {/* Unassigned Design Requests Accordion */}
+            {designRequests.length > 0 && (
+              <Accordion selectionMode="single" variant="splitted">
                 <AccordionItem
-                  key={task.id}
-                  className="border border-default-200 rounded-lg mb-2"
+                  key="unassigned-requests"
+                  className="border border-default-200 rounded-lg"
                   title={
-                    <div className="flex items-center justify-between w-full pr-2">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="font-medium text-sm truncate">
-                          {task.name}
-                        </span>
-                        <Chip
-                          color={getPriorityColor(task.priority)}
-                          size="sm"
-                          variant="flat"
-                        >
-                          {task.priority}
-                        </Chip>
-                      </div>
+                    <div className="flex items-center justify-between w-full">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {t("designRequests.unassigned")}
+                      </h3>
                       <Chip
-                        color={getStatusColor(task.status)}
+                        className="bg-danger-50 text-danger-600"
                         size="sm"
-                        variant="dot"
+                        variant="flat"
                       >
-                        {task.status}
+                        {designRequests.length}
                       </Chip>
                     </div>
                   }
                 >
-                  <CustomAlert color="primary" direction={direction}>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm text-default-600">
-                        <Palette size={16} />
-                        <span>{task.project}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-default-600">
-                        <Clock size={16} />
-                        <span>
-                          {t("common.dueDate") || "Due Date"}: {task.dueDate}
-                        </span>
-                      </div>
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          className="shadow-small"
-                          color="primary"
-                          size="sm"
-                          variant="bordered"
-                        >
-                          <CheckCircle size={16} />
-                          {t("common.markComplete") || "Mark Complete"}
-                        </Button>
-                        <Button
-                          className="shadow-small"
-                          size="sm"
-                          variant="bordered"
-                        >
-                          {t("common.viewDetails") || "View Details"}
-                        </Button>
-                      </div>
+                  <ScrollShadow className="max-h-[400px]" hideScrollBar>
+                    <div className="space-y-3 pt-2">
+                      {designRequests.map((request) => (
+                        <CustomAlert key={request.id} color="warning" direction={direction}>
+                          <div className="space-y-3">
+                            {/* Task Name and Priority */}
+                            <div className="flex items-center justify-between w-full pr-2">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className="font-medium text-sm truncate">
+                                  {request.task?.name || `Task #${request.taskId}`}
+                                </span>
+                                {request.task?.priorityId && (
+                                  <Chip
+                                    color={getPriorityColor(request.task.priorityId)}
+                                    size="sm"
+                                    variant="flat"
+                                  >
+                                    {getPriorityText(request.task.priorityId)}
+                                  </Chip>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Task Description */}
+                            {request.task?.description && (
+                              <div className="text-sm text-default-600">
+                                <div
+                                  dangerouslySetInnerHTML={{
+                                    __html: request.task.description.substring(0, 150) + (request.task.description.length > 150 ? "..." : ""),
+                                  }}
+                                />
+                              </div>
+                            )}
+
+                            {/* Request Date */}
+                            <div className="flex items-center gap-2 text-sm text-default-600">
+                              <Clock size={16} />
+                              <span>
+                                {t("designRequests.requestDate")}: {formatDate(request.createdAt)}
+                              </span>
+                            </div>
+
+                            {/* Due Date */}
+                            {request.task?.dueDate && (
+                              <div className="flex items-center gap-2 text-sm text-default-600">
+                                <Clock size={16} />
+                                <span>
+                                  {t("common.dueDate")}: {formatDate(request.task.dueDate)}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Notes */}
+                            {request.notes && (
+                              <div className="text-sm text-default-600 pt-2 border-t border-default-200">
+                                <strong>{t("designRequests.notes")}:</strong>
+                                <p className="mt-1">{request.notes}</p>
+                              </div>
+                            )}
+
+                            {/* Assign Button */}
+                            <div className="flex gap-2 pt-2">
+                              <Button
+                                className="shadow-small"
+                                color="primary"
+                                size="sm"
+                                variant="bordered"
+                                onPress={() => handleAssign(request)}
+                              >
+                                <CheckCircle size={16} />
+                                {t("designRequests.assign")}
+                              </Button>
+                            </div>
+                          </div>
+                        </CustomAlert>
+                      ))}
                     </div>
-                  </CustomAlert>
+                  </ScrollShadow>
                 </AccordionItem>
-              ))}
-            </Accordion>
-          </ScrollShadow>
-        </div>
-      </CardBody>
-    </Card>
+              </Accordion>
+            )}
+          </div>
+        </CardBody>
+      </Card>
+
+      {/* Assign Modal */}
+      <Modal isOpen={isModalOpen} size="2xl" onOpenChange={handleModalClose}>
+        <ModalContent>
+          <ModalHeader className="text-center">
+            {t("designRequests.assignTo")}
+          </ModalHeader>
+
+          <ModalBody>
+            <div className="space-y-4">
+              {/* Task Info */}
+              <div className="border border-default-200 rounded-lg p-4 bg-default-50/50 dark:bg-default-100/50">
+                <h3 className="text-sm font-semibold text-default-700 mb-2">
+                  {t("designRequests.taskName")}
+                </h3>
+                <p className="text-sm text-default-900">
+                  {selectedRequest?.task?.name || `Task #${selectedRequest?.taskId}`}
+                </p>
+                {selectedRequest?.task?.priorityId && (
+                  <div className="mt-2">
+                    <Chip
+                      color={getPriorityColor(selectedRequest.task.priorityId)}
+                      size="sm"
+                      variant="flat"
+                    >
+                      {getPriorityText(selectedRequest.task.priorityId)}
+                    </Chip>
+                  </div>
+                )}
+              </div>
+
+              {/* Designer Selection */}
+              <div>
+                <label className="text-sm font-medium text-default-700 mb-2 block">
+                  {t("designRequests.selectDesigner")} *
+                </label>
+                <Autocomplete
+                  defaultFilter={() => true}
+                  inputValue={designerInputValue}
+                  isLoading={designersLoading}
+                  menuTrigger="input"
+                  placeholder={t("designRequests.selectDesigner")}
+                  selectedKey={selectedDesigner?.id?.toString() || ""}
+                  value={
+                    selectedDesigner
+                      ? `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`
+                      : designerInputValue
+                  }
+                  onInputChange={(value) => {
+                    setDesignerInputValue(value);
+                    if (selectedDesigner) {
+                      const expectedValue = `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`;
+
+                      if (value !== expectedValue) {
+                        setSelectedDesigner(null);
+                      }
+                    }
+                    searchDesigners(value);
+                  }}
+                  onSelectionChange={(key) => {
+                    const designer = designers.find(
+                      (member) => member.id.toString() === String(key),
+                    );
+
+                    setSelectedDesigner(designer || null);
+                    if (designer) {
+                      setDesignerInputValue(
+                        `${designer.gradeName} ${designer.fullName}`,
+                      );
+                    }
+                  }}
+                >
+                  {designers.map((designer) => (
+                    <AutocompleteItem
+                      key={designer.id.toString()}
+                      textValue={`${designer.gradeName} ${designer.fullName} ${designer.userName} ${designer.militaryNumber}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          alt={designer.fullName}
+                          className="flex-shrink-0"
+                          name={designer.fullName}
+                          size="sm"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">
+                            {designer.fullName}
+                          </span>
+                          <span className="text-xs text-default-500">
+                            {designer.militaryNumber} - {designer.gradeName}
+                          </span>
+                        </div>
+                      </div>
+                    </AutocompleteItem>
+                  ))}
+                </Autocomplete>
+                {modalError && (
+                  <p className="text-danger text-sm mt-1">{modalError}</p>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <Textarea
+                  label={t("designRequests.notes")}
+                  minRows={3}
+                  placeholder={t("designRequests.notes")}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            </div>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button color="default" variant="flat" onPress={handleModalClose}>
+              {t("cancel")}
+            </Button>
+            <Button
+              color="primary"
+              isDisabled={!selectedDesigner}
+              isLoading={assignLoading}
+              onPress={handleAssignSubmit}
+            >
+              {t("designRequests.assign")}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
   );
 }
