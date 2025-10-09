@@ -1151,16 +1151,17 @@ export default function ProjectRequirementsPage() {
                       }
                     />
                     <Select
-                      isRequired
                       label={t("requirements.priority")}
-                      placeholder={t("requirements.selectPriority")}
                       selectedKeys={[formData.priority.toString()]}
-                      onSelectionChange={(keys) =>
-                        setFormData({
-                          ...formData,
-                          priority: parseInt(Array.from(keys)[0] as string),
-                        })
-                      }
+                      onSelectionChange={(keys) => {
+                        const selectedKey = Array.from(keys)[0] as string;
+                        if (selectedKey) {
+                          setFormData({
+                            ...formData,
+                            priority: parseInt(selectedKey),
+                          });
+                        }
+                      }}
                     >
                       {priorityOptions.map((priority) => (
                         <SelectItem key={priority.value.toString()}>
@@ -1174,16 +1175,17 @@ export default function ProjectRequirementsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
                     <Select
-                      isRequired
                       label={t("requirements.type")}
-                      placeholder={t("requirements.selectType")}
                       selectedKeys={[formData.type.toString()]}
-                      onSelectionChange={(keys) =>
-                        setFormData({
-                          ...formData,
-                          type: parseInt(Array.from(keys)[0] as string),
-                        })
-                      }
+                      onSelectionChange={(keys) => {
+                        const selectedKey = Array.from(keys)[0] as string;
+                        if (selectedKey) {
+                          setFormData({
+                            ...formData,
+                            type: parseInt(selectedKey),
+                          });
+                        }
+                      }}
                     >
                       <SelectItem key={REQUIREMENT_TYPE.NEW.toString()}>
                         {t("requirements.new")}
