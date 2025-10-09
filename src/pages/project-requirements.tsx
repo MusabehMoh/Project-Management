@@ -73,7 +73,9 @@ import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { useRequirementStatus } from "@/hooks/useRequirementStatus";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
+import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
+import { showWarningToast } from "@/utils/toast";
 
 // Form data type for creating/editing requirements
 // Uses string values for UI components - will be converted to integers before API calls
@@ -92,6 +94,9 @@ export default function ProjectRequirementsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+
+  // Fetch project details
+  const { projectName } = useProjectDetails({ projectId });
 
   // Set page title
   usePageTitle("requirements.projectRequirements");
@@ -218,6 +223,7 @@ export default function ProjectRequirementsPage() {
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
+  const [hasFileUploadError, setHasFileUploadError] = useState<boolean>(false);
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -327,6 +333,7 @@ export default function ProjectRequirementsPage() {
       existingAttachments: [],
     });
     setValidationErrors({});
+    setHasFileUploadError(false);
     setSelectedRequirement(null);
   };
 
@@ -481,7 +488,45 @@ export default function ProjectRequirementsPage() {
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
 
-    const newFiles = Array.from(files);
+    // Clear previous error state
+    setHasFileUploadError(false);
+
+    // Filter out files with no size (0 bytes) and collect their names
+    const emptyFiles: string[] = [];
+    const newFiles = Array.from(files).filter((file) => {
+      if (file.size === 0) {
+        emptyFiles.push(file.name);
+        console.warn(`File "${file.name}" has no size (0 bytes) and will be skipped`);
+        return false;
+      }
+      return true;
+    });
+
+    // Show toast notification and set error state if any files were rejected
+    if (emptyFiles.length > 0) {
+      setHasFileUploadError(true);
+      const fileList = emptyFiles.join(", ");
+      const message =
+        emptyFiles.length === 1
+          ? `${fileList}`
+          : `${emptyFiles.length} ${t("requirements.validation.filesEmptyError")}: ${fileList}`;
+      
+      showWarningToast(
+        t("requirements.validation.fileEmptyError"),
+        message
+      );
+
+      // Clear error state after 4 seconds (matching toast duration)
+      setTimeout(() => {
+        setHasFileUploadError(false);
+      }, 4000);
+    }
+
+    // If all files were empty, don't add anything
+    if (newFiles.length === 0) {
+      console.warn("All selected files were empty or had no size");
+      return;
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -576,7 +621,7 @@ export default function ProjectRequirementsPage() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold">
-                  {t("requirements.managementForProject")} {projectId}
+                  {projectName || `${t("requirements.managementForProject")} ${projectId}`}
                 </h1>
                 <p className="text-default-500">{t("requirements.subtitle")}</p>
               </div>
@@ -1110,16 +1155,17 @@ export default function ProjectRequirementsPage() {
                       }
                     />
                     <Select
-                      isRequired
                       label={t("requirements.priority")}
-                      placeholder={t("requirements.selectPriority")}
                       selectedKeys={[formData.priority.toString()]}
-                      onSelectionChange={(keys) =>
-                        setFormData({
-                          ...formData,
-                          priority: parseInt(Array.from(keys)[0] as string),
-                        })
-                      }
+                      onSelectionChange={(keys) => {
+                        const selectedKey = Array.from(keys)[0] as string;
+                        if (selectedKey) {
+                          setFormData({
+                            ...formData,
+                            priority: parseInt(selectedKey),
+                          });
+                        }
+                      }}
                     >
                       {priorityOptions.map((priority) => (
                         <SelectItem key={priority.value.toString()}>
@@ -1133,16 +1179,17 @@ export default function ProjectRequirementsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
                     <Select
-                      isRequired
                       label={t("requirements.type")}
-                      placeholder={t("requirements.selectType")}
                       selectedKeys={[formData.type.toString()]}
-                      onSelectionChange={(keys) =>
-                        setFormData({
-                          ...formData,
-                          type: parseInt(Array.from(keys)[0] as string),
-                        })
-                      }
+                      onSelectionChange={(keys) => {
+                        const selectedKey = Array.from(keys)[0] as string;
+                        if (selectedKey) {
+                          setFormData({
+                            ...formData,
+                            type: parseInt(selectedKey),
+                          });
+                        }
+                      }}
                     >
                       <SelectItem key={REQUIREMENT_TYPE.NEW.toString()}>
                         {t("requirements.new")}
@@ -1175,7 +1222,7 @@ export default function ProjectRequirementsPage() {
                     </label>
                     <div className="min-h-[240px]">
                       <ReactQuill
-                        className="rtl-editor"
+                        className={language === "ar" ? "rtl-editor" : ""}
                         modules={{
                           toolbar: [
                             ["bold", "italic", "underline"],
@@ -1215,7 +1262,9 @@ export default function ProjectRequirementsPage() {
                       </label>
 
                       {/* File Upload Input */}
-                      <div className="border-2 border-dashed border-default-300 rounded-lg p-3 hover:border-default-400 transition-colors">
+                      <div className={`border-2 border-dashed rounded-lg p-3 hover:border-default-400 transition-colors ${
+                        hasFileUploadError ? "border-danger" : "border-default-300"
+                      }`}>
                         <input
                           multiple
                           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.rar"

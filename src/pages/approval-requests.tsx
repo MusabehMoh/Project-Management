@@ -20,6 +20,8 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Tooltip,
+  ScrollShadow,
 } from "@heroui/react";
 import { Search, Filter, X, Eye, Check } from "lucide-react";
 
@@ -35,6 +37,7 @@ import { FilePreview } from "@/components/FilePreview";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import { projectRequirementsService } from "@/services/api";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 // Format date helper
 const formatDate = (dateString: string) => {
@@ -188,14 +191,20 @@ const RequirementCard = ({
       </CardHeader>
 
       <CardBody className="pt-0 flex-1 flex flex-col">
-        <div className="space-y-4 flex-1">
-          <p
-            dangerouslySetInnerHTML={{
-              __html:
-                requirement.description || t("requirements.noDescription"),
-            }}
-            className="text-sm text-default-600 line-clamp-3"
-          />
+        <div className="space-y-2 flex-1">
+          <ScrollShadow 
+            hideScrollBar 
+            className="h-[4.5rem]"
+            isEnabled={false}
+          >
+            <p
+              dangerouslySetInnerHTML={{
+                __html:
+                  requirement.description || t("requirements.noDescription"),
+              }}
+              className="text-sm text-default-600 leading-relaxed mb-0"
+            />
+          </ScrollShadow>
 
           <div className="flex items-center gap-2 text-xs text-default-500">
             <span>
@@ -206,25 +215,25 @@ const RequirementCard = ({
 
         {/* Action buttons */}
         <div className="flex items-center justify-between pt-2 gap-2 mt-auto">
-          <Button
-            color="primary"
-            size="sm"
-            variant="flat"
-            onPress={() => onViewDetails(requirement)}
-          >
-            <Eye size={16} />
-            {t("common.viewDetails")}
-          </Button>
+          <Tooltip content={t("common.viewDetails")}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="bordered"
+              onPress={() => onViewDetails(requirement)}
+            >
+              <Eye size={16} />
+            </Button>
+          </Tooltip>
 
           {/* Approve button - only for users with permission */}
           {
             <Button
-              color="success"
               size="sm"
-              variant="flat"
+              variant="bordered"
               onPress={() => onApprove(requirement)}
             >
-              <Check size={16} />
+              <Check size={16} className="text-success" />
               {t("requirements.approve")}
             </Button>
           }
@@ -371,13 +380,22 @@ export default function ApprovalRequestsPage() {
         requirementToApprove.id,
       );
 
+      // Show success toast
+      showSuccessToast(
+        t("requirements.approveSuccess")
+      );
+
       onApprovalModalOpenChange();
       setRequirementToApprove(null);
 
       // Refresh requirements data
       refreshData();
-    } catch {
-      // Handle error appropriately - could show toast notification
+    } catch (error) {
+      // Show error toast
+      showErrorToast(
+        t("requirements.approveError")
+      );
+      console.error("Error approving requirement:", error);
     } finally {
       setIsApproving(false);
     }

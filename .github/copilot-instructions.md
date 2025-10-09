@@ -222,6 +222,107 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - `Progress` for loading states
 - `Avatar`, `AvatarGroup` for user representation
 
+### Select Component Best Practices
+**CRITICAL**: When using HeroUI Select components, follow these patterns to avoid validation and dropdown issues:
+
+1. **Basic Select Configuration**:
+   ```tsx
+   <Select
+     label={t("fieldLabel")}
+     selectedKeys={[formData.value.toString()]}
+     onSelectionChange={(keys) => {
+       const selectedKey = Array.from(keys)[0] as string;
+       if (selectedKey) {
+         setFormData({ ...formData, value: parseInt(selectedKey) });
+       }
+     }}
+   >
+     <SelectItem key="1">Option 1</SelectItem>
+     <SelectItem key="2">Option 2</SelectItem>
+   </Select>
+   ```
+
+2. **Avoid These Props** (they cause dropdown close issues):
+   - ❌ `isRequired` - Triggers HTML5 validation that conflicts with custom validation
+   - ❌ `disallowEmptySelection` - Prevents dropdown from closing when clicking selected item
+   - ❌ `validationBehavior="aria"` - Not needed for basic functionality
+   - ❌ `selectionMode="single"` - Redundant, single is default
+
+3. **Use Custom Validation**:
+   - Implement validation in a `validateForm()` function
+   - Don't rely on HeroUI's built-in validation props
+   - Use `validationErrors` state to show error messages
+
+4. **File Upload Validation**:
+   - Always filter out empty files (0 bytes) before adding to state
+   - Show toast notifications for rejected files using `showWarningToast`
+   - Add visual indicators (red border) with auto-clear timers
+   - Example:
+     ```tsx
+     const emptyFiles = Array.from(files).filter(f => f.size === 0);
+     if (emptyFiles.length > 0) {
+       setHasFileUploadError(true);
+       showWarningToast(title, message);
+       setTimeout(() => setHasFileUploadError(false), 4000);
+     }
+     ```
+
+5. **Toast Notifications for User Feedback**:
+   - **CRITICAL**: Always provide toast notifications for user actions (create, update, delete, approve, etc.)
+   - Use `showSuccessToast`, `showErrorToast`, `showWarningToast` from `@/utils/toast`
+   - Import translations from LanguageContext using `t()` for bilingual support
+   - Pattern for API operations:
+     ```tsx
+     try {
+       await apiService.performAction(data);
+       showSuccessToast(t("action.success"));
+       // Refresh data or update UI
+     } catch (error) {
+       showErrorToast(t("action.error"));
+       console.error("Error performing action:", error);
+     }
+     ```
+   - Examples:
+     - **Approval workflows**: `showSuccessToast(t("requirements.approveSuccess"))`
+     - **Create operations**: `showSuccessToast(t("entity.createSuccess"))`
+     - **Update operations**: `showSuccessToast(t("entity.updateSuccess"))`
+     - **Validation errors**: `showWarningToast(t("validation.errorTitle"), t("validation.errorMessage"))`
+   - Always check if translation keys exist in LanguageContext before use
+   - Toast notifications auto-dismiss after 4 seconds by default
+
+6. **Tooltip Usage for Icon Buttons and UI Elements**:
+   - **CRITICAL**: Always add tooltips to icon-only buttons and ambiguous UI elements
+   - Use `Tooltip` component from `@heroui/tooltip`
+   - Import translations from LanguageContext using `t()` for bilingual support
+   - Pattern for icon buttons:
+     ```tsx
+     import { Tooltip } from "@heroui/tooltip";
+     
+     <Tooltip content={t("action.description")}>
+       <Button isIconOnly onPress={handleAction}>
+         <Icon className="w-4 h-4" />
+       </Button>
+     </Tooltip>
+     ```
+   - Pattern for informational elements:
+     ```tsx
+     <Tooltip content={t("field.label")}>
+       <div className="flex items-center gap-2 w-fit cursor-help">
+         <Icon className="w-4 h-4" />
+         <span>{data.value}</span>
+       </div>
+     </Tooltip>
+     ```
+   - Best practices:
+     - Use `cursor-help` class for informational tooltips
+     - Use `w-fit` to constrain tooltip wrapper to content width
+     - Always provide meaningful, translated tooltip text
+     - Ensure tooltips enhance accessibility for all users
+   - Examples:
+     - **Icon-only buttons**: Info, Edit, Delete, View Details buttons
+     - **Data labels**: Project Owner, Status indicators, Role badges
+     - **Complex icons**: Charts, graphs, specialized action buttons
+
 ### Theming
 - Uses custom theme configuration in `tailwind.config.js`
 - Supports automatic dark/light mode switching
@@ -236,6 +337,29 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - **Task Lists**: Use consistent status/priority color coding
 - **Modal Patterns**: Follow existing modal structures for updates
 - **Loading States**: Use Skeleton components consistently
+- **Stat Counters (Modern Minimalist)**: Use horizontal pill-style layout for statistics
+  - **Layout**: Horizontal flex with inline numbers and labels
+  - **Style**: Rounded backgrounds (`rounded-lg`), subtle colors, compact padding (`px-3 py-2`)
+  - **Typography**: `text-2xl font-semibold` for numbers, `text-xs` for labels
+  - **Colors**: Neutral backgrounds for general stats, colored backgrounds for status-specific stats
+  - **Dark Mode**: Use opacity adjustments (`dark:bg-default-100/10`, `dark:bg-success-100/10`)
+  - **Pattern**:
+    ```tsx
+    <div className="flex gap-3">
+      <div className="flex-1 bg-default-50 dark:bg-default-100/10 rounded-lg px-3 py-2">
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-semibold text-default-700">{count}</span>
+          <span className="text-xs text-default-500">{label}</span>
+        </div>
+      </div>
+      <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-semibold text-success-600 dark:text-success-500">{completedCount}</span>
+          <span className="text-xs text-success-600/70 dark:text-success-500/70">{completedLabel}</span>
+        </div>
+      </div>
+    </div>
+    ```
 
 ## API Integration
 
@@ -245,6 +369,113 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - Implement proper error handling and TypeScript types
 - Follow RESTful conventions
 - Handle loading states and error states
+
+### Custom Hooks for Data Fetching
+**CRITICAL**: Always create custom hooks for data fetching operations. Never fetch data directly in components with useEffect.
+
+**Hook Creation Pattern**:
+```tsx
+// src/hooks/useEntityDetails.ts
+import { useState, useEffect } from "react";
+import { entityApi } from "@/services/api/entity";
+import type { Entity } from "@/types/entity";
+
+interface UseEntityDetailsOptions {
+  entityId: number | string | undefined;
+  enabled?: boolean; // Allow conditional fetching
+}
+
+interface UseEntityDetailsResult {
+  entity: Entity | null;
+  entityName: string;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useEntityDetails(
+  options: UseEntityDetailsOptions,
+): UseEntityDetailsResult {
+  const { entityId, enabled = true } = options;
+  const [entity, setEntity] = useState<Entity | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEntityDetails = async () => {
+    if (!entityId || !enabled) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const id = typeof entityId === "string" ? parseInt(entityId) : entityId;
+      const response = await entityApi.getEntityById(id);
+      
+      if (response.data) {
+        setEntity(response.data);
+      } else {
+        setError("Entity not found");
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch entity details";
+      setError(errorMessage);
+      console.error("Error fetching entity details:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEntityDetails();
+  }, [entityId, enabled]);
+
+  return {
+    entity,
+    entityName: entity?.name || "",
+    loading,
+    error,
+    refetch: fetchEntityDetails,
+  };
+}
+```
+
+**Component Usage**:
+```tsx
+// Component using the hook
+export default function EntityDetailsPage() {
+  const { entityId } = useParams<{ entityId: string }>();
+  const { entityName, loading, error } = useEntityDetails({ entityId });
+
+  return (
+    <h1 className="text-2xl font-bold">
+      {entityName || `${t("fallback.text")} ${entityId}`}
+    </h1>
+  );
+}
+```
+
+**Hook Export Pattern**:
+```tsx
+// src/hooks/index.ts - Always export new hooks here
+export { useEntityDetails } from "./useEntityDetails";
+```
+
+**Examples of Custom Hooks**:
+- **`useProjectDetails`**: Fetches project details by ID (used in project-requirements.tsx)
+- **`useTaskDetails`**: Fetches task details by ID
+- **`useUserProfile`**: Fetches user profile data
+- **`useRequirementStatus`**: Fetches requirement status lookups
+- **`usePriorityLookups`**: Fetches priority options
+
+**Best Practices**:
+- ✅ **DO**: Create custom hooks for all data fetching
+- ✅ **DO**: Return loading, error, and refetch capabilities
+- ✅ **DO**: Support conditional fetching with `enabled` option
+- ✅ **DO**: Export hooks from `src/hooks/index.ts`
+- ✅ **DO**: Use proper TypeScript types for all hook parameters and returns
+- ❌ **DON'T**: Fetch data directly in components with useEffect
+- ❌ **DON'T**: Import API services directly into components (use hooks instead)
+- ❌ **DON'T**: Create inline useEffect for API calls (extract to hook)
 
 ### API Servers
 - **Mock API Server**: Located in `mock-api-server/`, provides realistic data structures for development

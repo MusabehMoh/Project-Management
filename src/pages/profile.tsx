@@ -141,7 +141,11 @@ export default function ProfilePage() {
         {/* Profile Card */}
         <Card className="lg:col-span-1">
           <CardHeader className="flex flex-col items-center pb-2">
-            <Avatar className="w-24 h-24 mb-4" name={user.fullName} size="lg" />
+            <Avatar 
+              className="w-24 h-24 mb-4" 
+              name={user.fullName} 
+              size="lg" 
+            />
             <div className="text-center">
               <h2 className="text-xl font-semibold">{user.fullName}</h2>
               <p className="text-default-600">{user.gradeName}</p>
@@ -153,12 +157,12 @@ export default function ProfilePage() {
           <Divider />
           <CardBody className="pt-4">
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Building2 className="text-default-500" size={16} />
+              <div className="flex items-center gap-3">
+                <Building2 className="text-default-400" size={18} />
                 <span className="text-small">{user.department}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="text-default-500" size={16} />
+              <div className="flex items-center gap-3">
+                <Calendar className="text-default-400" size={18} />
                 <span className="text-small">
                   {t("profile.joinedDate")}:{" "}
                   {user.createdAt
@@ -193,8 +197,8 @@ export default function ProfilePage() {
         {/* Profile Information */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <User size={20} />
+            <div className="flex items-center gap-3">
+              <User className="text-primary" size={20} />
               <h3 className="text-lg font-semibold">
                 {t("profile.personalInfo")}
               </h3>
@@ -207,7 +211,7 @@ export default function ProfilePage() {
                 isReadOnly={!isEditing}
                 label={t("user.fullName")}
                 labelPlacement="outside"
-                startContent={<User className="text-default-500" size={16} />}
+                startContent={<User className="text-default-400" size={16} />}
                 value={isEditing ? formData.fullName : user.fullName}
                 variant={isEditing ? "bordered" : "flat"}
                 onChange={(e) =>
@@ -218,7 +222,7 @@ export default function ProfilePage() {
                 isReadOnly
                 label={t("user.militaryNumber")}
                 labelPlacement="outside"
-                startContent={<Shield className="text-default-500" size={16} />}
+                startContent={<Shield className="text-default-400" size={16} />}
                 value={user.militaryNumber}
                 variant="flat"
               />
@@ -226,7 +230,7 @@ export default function ProfilePage() {
                 isReadOnly
                 label={t("user.grade")}
                 labelPlacement="outside"
-                startContent={<Shield className="text-default-500" size={16} />}
+                startContent={<Shield className="text-default-400" size={16} />}
                 value={user.gradeName}
                 variant="flat"
               />
@@ -235,7 +239,7 @@ export default function ProfilePage() {
                 label={t("user.department")}
                 labelPlacement="outside"
                 startContent={
-                  <Building2 className="text-default-500" size={16} />
+                  <Building2 className="text-default-400" size={16} />
                 }
                 value={user.department}
                 variant="flat"
@@ -267,8 +271,8 @@ export default function ProfilePage() {
       {user?.actions && user.actions.length > 0 && (
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield size={20} />
+            <div className="flex items-center gap-3">
+              <Shield className="text-primary" size={20} />
               <h3 className="text-lg font-semibold">
                 {t("profile.userActions")}
               </h3>
@@ -308,7 +312,7 @@ export default function ProfilePage() {
                       {actions?.map((action) => (
                         <Card
                           key={action.id}
-                          className="bg-default-50 border border-default-200"
+                          className="bg-default-50 dark:bg-default-100/10 border border-default-200"
                         >
                           <CardBody className="p-3">
                             <div

@@ -17,6 +17,7 @@ import {
   DrawerFooter,
 } from "@heroui/drawer";
 import { Input } from "@heroui/input";
+import { Tooltip } from "@heroui/tooltip";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import LoadingLogo from "@/components/LoadingLogo";
@@ -25,9 +26,10 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import { usePageTitle } from "@/hooks";
 import { useProjectStatus } from "@/hooks/useProjectStatus";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
+import { showWarningToast } from "@/utils/toast";
 
 export default function RequirementsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
 
   // Set page title
@@ -380,31 +382,42 @@ export default function RequirementsPage() {
                     <CardBody className="space-y-4">
                       {/* Project Info */}
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-default-600">
-                          <Users className="w-4 h-4" />
-                          <span>{project.projectOwner}</span>
-                        </div>
-                        <div className="text-sm text-default-500">
-                          {project.owningUnit}
-                        </div>
+                        <Tooltip content={t("requirements.projectOwner")}>
+                          <div className="flex items-center gap-2 text-sm text-default-600 w-fit cursor-help">
+                            <Users className="w-4 h-4" />
+                            <span>{project.projectOwner}</span>
+                          </div>
+                        </Tooltip>
+                        <Tooltip content={t("requirements.owningUnit")}>
+                          <div 
+                            className="text-sm text-default-500 w-fit cursor-help"
+                            dir={language === "ar" ? "rtl" : "ltr"}
+                          >
+                            {project.owningUnit}
+                          </div>
+                        </Tooltip>
                       </div>
 
                       {/* Requirements Stats */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-primary">
-                            {project.requirementsCount}
-                          </div>
-                          <div className="text-xs text-default-500">
-                            {t("requirements.requirementsCount")}
+                      <div className="flex gap-3">
+                        <div className="flex-1 bg-default-50 dark:bg-default-100/10 rounded-lg px-3 py-2">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-semibold text-default-700">
+                              {project.requirementsCount}
+                            </span>
+                            <span className="text-xs text-default-500">
+                              {t("requirements.total")}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-success">
-                            {project.completedRequirements}
-                          </div>
-                          <div className="text-xs text-default-500">
-                            {t("requirements.completedRequirements")}
+                        <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-semibold text-success-600 dark:text-success-500">
+                              {project.completedRequirements}
+                            </span>
+                            <span className="text-xs text-success-600/70 dark:text-success-500/70">
+                              {t("requirements.done")}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -437,7 +450,15 @@ export default function RequirementsPage() {
                         </div>
                         <div className="w-full bg-default-200 rounded-full h-2">
                           <div
-                            className="bg-primary h-2 rounded-full transition-all duration-300"
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              project.requirementsCount > 0
+                                ? (project.completedRequirements / project.requirementsCount) * 100 >= 70
+                                  ? "bg-success"
+                                  : (project.completedRequirements / project.requirementsCount) * 100 >= 40
+                                    ? "bg-warning"
+                                    : "bg-danger"
+                                : "bg-default-300"
+                            }`}
                             style={{
                               width: `${
                                 project.requirementsCount > 0
@@ -457,21 +478,22 @@ export default function RequirementsPage() {
                           className="flex-1"
                           color="default"
                           size="sm"
-                          variant="faded"
+                          variant="bordered"
                           onPress={() => handleViewRequirements(project)}
                         >
                           {t("requirements.viewRequirements")}
                         </Button>
-                        <Button
-                          className="flex-1"
-                          color="default"
-                          size="sm"
-                          startContent={<Info className="w-4 h-4" />}
-                          variant="solid"
-                          onPress={() => handleViewDetails(project)}
-                        >
-                          {t("requirements.viewDetails")}
-                        </Button>
+                        <Tooltip content={t("requirements.viewDetails")}>
+                          <Button
+                            color="default"
+                            isIconOnly
+                            size="sm"
+                            variant="bordered"
+                            onPress={() => handleViewDetails(project)}
+                          >
+                            <Info className="w-4 h-4" />
+                          </Button>
+                        </Tooltip>
                       </div>
                     </CardBody>
                   </Card>
@@ -616,7 +638,15 @@ export default function RequirementsPage() {
                       </div>
                       <div className="w-full bg-default-200 rounded-full h-2">
                         <div
-                          className="bg-primary h-2 rounded-full transition-all duration-300"
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            selectedProject.requirementsCount > 0
+                              ? (selectedProject.completedRequirements / selectedProject.requirementsCount) * 100 >= 70
+                                ? "bg-success"
+                                : (selectedProject.completedRequirements / selectedProject.requirementsCount) * 100 >= 40
+                                  ? "bg-warning"
+                                  : "bg-danger"
+                              : "bg-default-300"
+                          }`}
                           style={{
                             width: `${
                               selectedProject.requirementsCount > 0
