@@ -222,6 +222,51 @@ const response = await fetch('/api/project-requirements/approved-requirements');
 - `Progress` for loading states
 - `Avatar`, `AvatarGroup` for user representation
 
+### Select Component Best Practices
+**CRITICAL**: When using HeroUI Select components, follow these patterns to avoid validation and dropdown issues:
+
+1. **Basic Select Configuration**:
+   ```tsx
+   <Select
+     label={t("fieldLabel")}
+     selectedKeys={[formData.value.toString()]}
+     onSelectionChange={(keys) => {
+       const selectedKey = Array.from(keys)[0] as string;
+       if (selectedKey) {
+         setFormData({ ...formData, value: parseInt(selectedKey) });
+       }
+     }}
+   >
+     <SelectItem key="1">Option 1</SelectItem>
+     <SelectItem key="2">Option 2</SelectItem>
+   </Select>
+   ```
+
+2. **Avoid These Props** (they cause dropdown close issues):
+   - ❌ `isRequired` - Triggers HTML5 validation that conflicts with custom validation
+   - ❌ `disallowEmptySelection` - Prevents dropdown from closing when clicking selected item
+   - ❌ `validationBehavior="aria"` - Not needed for basic functionality
+   - ❌ `selectionMode="single"` - Redundant, single is default
+
+3. **Use Custom Validation**:
+   - Implement validation in a `validateForm()` function
+   - Don't rely on HeroUI's built-in validation props
+   - Use `validationErrors` state to show error messages
+
+4. **File Upload Validation**:
+   - Always filter out empty files (0 bytes) before adding to state
+   - Show toast notifications for rejected files using `showWarningToast`
+   - Add visual indicators (red border) with auto-clear timers
+   - Example:
+     ```tsx
+     const emptyFiles = Array.from(files).filter(f => f.size === 0);
+     if (emptyFiles.length > 0) {
+       setHasFileUploadError(true);
+       showWarningToast(title, message);
+       setTimeout(() => setHasFileUploadError(false), 4000);
+     }
+     ```
+
 ### Theming
 - Uses custom theme configuration in `tailwind.config.js`
 - Supports automatic dark/light mode switching
