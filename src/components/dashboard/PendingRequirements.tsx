@@ -62,12 +62,12 @@ export default function PendingRequirements({
 
   const handleViewRequirement = (projectId: number, requirementId: number) => {
     navigate(
-      `/requirements/${projectId}?highlightRequirement=${requirementId}&scrollTo=${requirementId}`,
+      `/approval-requests?highlightRequirement=${requirementId}&scrollTo=${requirementId}`,
     );
   };
 
   const handleViewAllRequirements = () => {
-    navigate("/requirements");
+    navigate("/approval-requests");
   };
 
   if (loading) {
@@ -224,9 +224,12 @@ export default function PendingRequirements({
                       </Chip>
                     </div>
 
-                    <p className="text-xs text-default-500 mb-2 line-clamp-2">
-                      {requirement.description}
-                    </p>
+                    <p
+                      dangerouslySetInnerHTML={{
+                        __html: requirement.description,
+                      }}
+                      className="text-xs text-default-500 mb-2 line-clamp-2"
+                    />
 
                     <div className="flex items-center gap-4 text-xs text-default-400">
                       <div className="flex items-center gap-1">

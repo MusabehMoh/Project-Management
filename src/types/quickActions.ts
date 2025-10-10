@@ -71,14 +71,21 @@ export interface PendingApproval {
   priority: "high" | "medium" | "low";
 }
 
-export interface TeamMember {
-  id: number;
-  name: string;
-  role: string;
-  department: string;
-  currentTasks: number;
-  workload: "low" | "medium" | "high";
-  availability: "available" | "busy" | "unavailable";
+export interface AvailableMember {
+  EmployeeId: number;
+  FullName: string;
+  MilitaryNumber: string;
+  GradeName: string;
+  Department: string;
+  JoinDate: string;
+  Status: string;
+}
+
+export interface AvailableMembersResponse {
+  availableMembers: AvailableMember[];
+  summary: {
+    totalAvailableMembers: number;
+  };
 }
 
 export interface QuickActionApiResponse<T = any> {

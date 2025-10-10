@@ -8,7 +8,6 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/table";
-import { Progress } from "@heroui/progress";
 import { Skeleton } from "@heroui/skeleton";
 import { Tooltip } from "@heroui/tooltip";
 import { Select, SelectItem } from "@heroui/select";
@@ -24,38 +23,6 @@ import {
   type TeamMemberMetrics,
 } from "@/services/api/teamWorkloadService";
 import { GlobalPagination } from "@/components/GlobalPagination";
-
-// Get performance color based on score
-const getPerformanceColor = (score: number) => {
-  if (score >= 80) return "success";
-  if (score >= 60) return "warning";
-
-  return "danger";
-};
-
-// Format busy until date for tooltip
-const formatBusyUntil = (
-  busyUntil: string | undefined,
-  t: (key: string) => string,
-) => {
-  if (!busyUntil) return "";
-
-  const busyDate = new Date(busyUntil);
-  const now = new Date();
-  const diffTime = busyDate.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return t("team.busyUntilToday");
-  if (diffDays === 1) return t("team.busyUntilTomorrow");
-  if (diffDays <= 7) {
-    return t("team.busyUntilDays").replace("{days}", diffDays.toString());
-  }
-
-  return t("team.busyUntilDate").replace(
-    "{date}",
-    busyDate.toLocaleDateString(),
-  );
-};
 
 const TeamWorkloadPerformance: React.FC = () => {
   const { t, language } = useLanguage();
@@ -256,15 +223,15 @@ const TeamWorkloadPerformance: React.FC = () => {
                   selectedKeys={filters.department ? [filters.department] : []}
                   size="sm"
                   onSelectionChange={(keys) => {
-                    const value = (Array.from(keys)[0] as string) || "";
+                    setTimeout(() => {
+                      const value = (Array.from(keys)[0] as string) || "";
 
-                    setFilters({ ...filters, department: value });
+                      setFilters({ ...filters, department: value });
+                    }, 0);
                   }}
                 >
                   {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
+                    <SelectItem key={dept}>{dept}</SelectItem>
                   ))}
                 </Select>
 
@@ -275,9 +242,11 @@ const TeamWorkloadPerformance: React.FC = () => {
                   selectedKeys={filters.busyStatus ? [filters.busyStatus] : []}
                   size="sm"
                   onSelectionChange={(keys) => {
-                    const value = (Array.from(keys)[0] as string) || "";
+                    setTimeout(() => {
+                      const value = (Array.from(keys)[0] as string) || "";
 
-                    setFilters({ ...filters, busyStatus: value });
+                      setFilters({ ...filters, busyStatus: value });
+                    }, 0);
                   }}
                 >
                   <SelectItem key="busy">{t("team.busy")}</SelectItem>
@@ -293,9 +262,11 @@ const TeamWorkloadPerformance: React.FC = () => {
                   }
                   size="sm"
                   onSelectionChange={(keys) => {
-                    const value = (Array.from(keys)[0] as string) || "";
+                    setTimeout(() => {
+                      const value = (Array.from(keys)[0] as string) || "";
 
-                    setFilters({ ...filters, performanceRange: value });
+                      setFilters({ ...filters, performanceRange: value });
+                    }, 0);
                   }}
                 >
                   <SelectItem key="excellent">
@@ -368,22 +339,26 @@ const TeamWorkloadPerformance: React.FC = () => {
               </div>
             </div>
           ) : error ? (
-            <ErrorWithRetry 
+            <ErrorWithRetry
               error={error}
               onRetry={() => {
                 setLoading(true);
                 setError(null);
-                teamWorkloadService.getTeamWorkloadPerformance().then(response => {
-                  if (response.success) {
-                    setTeamData(response.data);
-                  } else {
+                teamWorkloadService
+                  .getTeamWorkloadPerformance()
+                  .then((response) => {
+                    if (response.success) {
+                      setTeamData(response.data);
+                    } else {
+                      setError(t("error.failedToFetch"));
+                    }
+                  })
+                  .catch(() => {
                     setError(t("error.failedToFetch"));
-                  }
-                }).catch(() => {
-                  setError(t("error.failedToFetch"));
-                }).finally(() => {
-                  setLoading(false);
-                });
+                  })
+                  .finally(() => {
+                    setLoading(false);
+                  });
               }}
             />
           ) : filteredTeamData.length === 0 ? (
@@ -436,16 +411,15 @@ const TeamWorkloadPerformance: React.FC = () => {
                   <TableColumn>{t("team.member")}</TableColumn>
                   <TableColumn>{t("team.department")}</TableColumn>
                   <TableColumn className="text-center">
-                    {t("team.total")}
+                    {t("team.activeTasks")}
                   </TableColumn>
                   <TableColumn className="text-center">
-                    {t("team.inProgress")}
+                    {t("team.activeRequirements")}
                   </TableColumn>
                   <TableColumn className="text-center">
-                    {t("team.completed")}
+                    {t("team.overdue")}
                   </TableColumn>
-                  <TableColumn>{t("team.performance")}</TableColumn>
-                  <TableColumn>{t("team.busy")}</TableColumn>
+                  <TableColumn>{t("team.status")}</TableColumn>
                 </TableHeader>
                 <TableBody>
                   {paginatedData.map((member) => (
@@ -462,44 +436,42 @@ const TeamWorkloadPerformance: React.FC = () => {
                         {member.department}
                       </TableCell>
                       <TableCell className="text-center font-medium">
-                        {member.metrics.totalRequirements}
+                        {member.metrics.activeTasks}
                       </TableCell>
                       <TableCell className="text-center">
-                        {member.metrics.inProgress}
+                        {member.metrics.activeRequirements}
                       </TableCell>
                       <TableCell className="text-center">
-                        {member.metrics.completed}
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip
-                          showArrow
-                          content={`${t("team.performance")}: ${member.metrics.performance}%`}
+                        <Chip
+                          color={
+                            member.metrics.overdueTasks > 0
+                              ? "danger"
+                              : "default"
+                          }
+                          size="sm"
+                          variant="flat"
                         >
-                          <Progress
-                            className="w-full cursor-help"
-                            color={getPerformanceColor(
-                              member.metrics.performance,
-                            )}
-                            showValueLabel={false}
-                            size="sm"
-                            value={member.metrics.performance}
-                          />
-                        </Tooltip>
+                          {member.metrics.overdueTasks}
+                        </Chip>
                       </TableCell>
                       <TableCell>
                         {member.busyStatus === "busy" ? (
                           <Tooltip
                             showArrow
-                            content={formatBusyUntil(member.busyUntil, t)}
+                            content={
+                              member.busyUntil
+                                ? `${t("team.busyUntil")}: ${new Date(member.busyUntil).toLocaleDateString()}`
+                                : t("team.busy")
+                            }
                           >
-                            <span className="text-danger font-semibold cursor-help">
+                            <Chip color="danger" size="sm" variant="flat">
                               {t("team.busy")}
-                            </span>
+                            </Chip>
                           </Tooltip>
                         ) : (
-                          <span className="text-success font-semibold">
+                          <Chip color="success" size="sm" variant="flat">
                             {t("team.available")}
-                          </span>
+                          </Chip>
                         )}
                       </TableCell>
                     </TableRow>

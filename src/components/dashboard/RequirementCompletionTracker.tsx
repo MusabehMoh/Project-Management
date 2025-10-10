@@ -13,7 +13,13 @@ import {
   TableCell,
 } from "@heroui/table";
 import { Tooltip } from "@heroui/tooltip";
-import { RefreshCw, Clock, CheckCircle, Calendar, AlertCircle } from "lucide-react";
+import {
+  RefreshCw,
+  Clock,
+  CheckCircle,
+  Calendar,
+  AlertCircle,
+} from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRequirementCompletion } from "@/hooks/useRequirementCompletion";
@@ -159,10 +165,7 @@ export default function RequirementCompletionTracker({
     return (
       <Card className={`${className} border-default-200`} shadow="md">
         <CardBody className="min-h-[200px]">
-          <ErrorWithRetry
-            error={error}
-            onRetry={refresh}
-          />
+          <ErrorWithRetry error={error} onRetry={refresh} />
         </CardBody>
       </Card>
     );
@@ -196,9 +199,7 @@ export default function RequirementCompletionTracker({
       <Card className="w-full shadow-md border border-default-200">
         <CardHeader className="pb-0">
           <div className="flex justify-between items-center w-full">
-            <h3 className="text-lg font-medium">
-              {t("completion.title")}
-            </h3>
+            <h3 className="text-lg font-medium">{t("completion.title")}</h3>
             <div className="flex items-center gap-2">
               {allItems.length > 0 && (
                 <Chip
@@ -208,8 +209,7 @@ export default function RequirementCompletionTracker({
                   size="sm"
                   variant="flat"
                 >
-                  {allItems.length}{" "}
-                  {t("completion.needsAttention")}
+                  {allItems.length} {t("completion.needsAttention")}
                 </Chip>
               )}
               <Button
@@ -246,13 +246,11 @@ export default function RequirementCompletionTracker({
             />
             <div className="flex justify-between text-xs text-default-500">
               <span>
-                {analytics.summary.onTimeRate}%{" "}
-                {t("completion.onTime")}
+                {analytics.summary.onTimeRate}% {t("completion.onTime")}
               </span>
               {analytics.summary.avgDelayDays > 0 && (
                 <span>
-                  {t("completion.avgDelay")}:{" "}
-                  {analytics.summary.avgDelayDays}{" "}
+                  {t("completion.avgDelay")}: {analytics.summary.avgDelayDays}{" "}
                   {t("completion.days")}
                 </span>
               )}
@@ -268,22 +266,16 @@ export default function RequirementCompletionTracker({
                 className="w-full"
               >
                 <TableHeader>
-                  <TableColumn>
-                    {t("completion.requirement")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("completion.priority")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("completion.status")}
-                  </TableColumn>
-                  <TableColumn>
-                    {t("completion.dueDate")}
-                  </TableColumn>
+                  <TableColumn>{t("completion.requirement")}</TableColumn>
+                  <TableColumn>{t("completion.priority")}</TableColumn>
+                  <TableColumn>{t("completion.status")}</TableColumn>
+                  <TableColumn>{t("completion.dueDate")}</TableColumn>
                 </TableHeader>
                 <TableBody>
-                  {paginatedItems.map((item) => (
-                    <TableRow key={`${item.type}-${item.id}`}>
+                  {paginatedItems.map((item, index) => (
+                    <TableRow
+                      key={`${item.type}-${item.id || `fallback-${index}`}`}
+                    >
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">
