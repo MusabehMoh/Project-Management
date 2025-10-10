@@ -193,6 +193,7 @@ export default function DesignerQuickActions() {
   const [selectedRequest, setSelectedRequest] = useState<DesignRequestDto | null>(null);
   const [assignmentNotes, setAssignmentNotes] = useState("");
   const [selectedDesigner, setSelectedDesigner] = useState<MemberSearchResult | null>(null);
+  const [fieldInputValue, setFieldInputValue] = useState("");
   const [assigning, setAssigning] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
@@ -221,6 +222,7 @@ export default function DesignerQuickActions() {
   const handleAssign = (request: DesignRequestDto) => {
     setSelectedRequest(request);
     setSelectedDesigner(null);
+    setFieldInputValue("");
     setAssignmentNotes("");
     setModalError(null);
     setIsModalOpen(true);
@@ -254,6 +256,7 @@ export default function DesignerQuickActions() {
         setIsModalOpen(false);
         setSelectedRequest(null);
         setSelectedDesigner(null);
+        setFieldInputValue("");
         setAssignmentNotes("");
         
         // Refresh the list
@@ -499,25 +502,48 @@ export default function DesignerQuickActions() {
                       <Autocomplete
                         label={t("designRequests.selectDesignerForAssignment") || "Select Designer for Assignment"}
                         placeholder={t("tasks.selectDesigner") || "Search for designer..."}
-                        defaultSelectedKey={selectedDesigner?.id.toString()}
+                        inputValue={fieldInputValue}
                         isLoading={searchingDesigners}
                         defaultItems={designers}
+                        defaultFilter={(textValue, inputValue) => {
+                          // Custom filter: search across all fields
+                          const designer = designers.find(d => 
+                            `${d.gradeName} ${d.fullName}` === textValue
+                          );
+                          if (!designer) return false;
+                          
+                          const searchStr = inputValue.toLowerCase();
+                          const searchFields = [
+                            designer.gradeName,
+                            designer.fullName,
+                            designer.userName,
+                            designer.militaryNumber
+                          ].join(' ').toLowerCase();
+                          
+                          return searchFields.includes(searchStr);
+                        }}
+                        onInputChange={(value) => {
+                          setFieldInputValue(value);
+                        }}
                         onSelectionChange={(key) => {
                           if (key) {
                             const designer = designers.find((d) => d.id.toString() === key);
                             if (designer) {
                               setSelectedDesigner(designer);
+                              // Set only rank and full name in the input
+                              setFieldInputValue(`${designer.gradeName} ${designer.fullName}`);
                               setModalError(null);
                             }
                           } else {
                             setSelectedDesigner(null);
+                            setFieldInputValue("");
                           }
                         }}
                       >
                         {(designer: MemberSearchResult) => (
                           <AutocompleteItem
                             key={designer.id.toString()}
-                            textValue={`${designer.gradeName} ${designer.fullName} ${designer.userName} ${designer.militaryNumber}`}
+                            textValue={`${designer.gradeName} ${designer.fullName}`}
                             startContent={
                               <Avatar
                                 alt={designer.fullName}

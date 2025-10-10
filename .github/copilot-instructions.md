@@ -682,7 +682,8 @@ export { useEntityDetails } from "./useEntityDetails";
       - Loads all designers from Design Department (ID: 3) on mount
       - Display: Avatar + `{gradeName} {fullName}` with secondary `{militaryNumber}`
       - Avatar with `name` prop using designer's full name
-      - `textValue` for comprehensive search: `{gradeName} {fullName} {userName} {militaryNumber}`
+      - `textValue`: Only `{gradeName} {fullName}` - this is what appears in input after selection
+      - `defaultFilter`: Custom filter function searches across gradeName, fullName, userName, militaryNumber
     - **Department Filtering**: Uses `useTeamSearchByDepartment` hook
       - `departmentId: 3` - Design Department (hardcoded)
       - `loadInitialResults: true` - Preloads all designers for client-side filtering
@@ -691,9 +692,10 @@ export { useEntityDetails } from "./useEntityDetails";
       - Autocomplete uses built-in filtering based on `textValue` prop
     - **State Management**: 
       - `selectedDesigner: MemberSearchResult | null` - Selected designer object
+      - `fieldInputValue: string` - Controls what displays in the input field
       - `modalError: string | null` for inline error display
       - Uses `selectedDesigner.id` directly (already a number)
-      - Uncontrolled input: Uses `defaultSelectedKey` instead of controlled `selectedKey`/`inputValue`
+      - Semi-controlled input: Uses `inputValue` to show only rank + full name after selection
     - **Error Handling**: Shows inline error below Autocomplete (not toast)
     - **Label**: "Select Designer for Assignment" (designRequests.selectDesignerForAssignment)
     - **Placeholder**: Uses `tasks.selectDesigner` - "Search for designer..." / "البحث عن مصمم..."
