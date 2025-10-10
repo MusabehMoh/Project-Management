@@ -214,12 +214,7 @@ const ProjectPipeline: React.FC = () => {
   }
 
   if (error) {
-    return (
-      <ErrorWithRetry
-        error={error}
-        onRetry={refetch}
-      />
-    );
+    return <ErrorWithRetry error={error} onRetry={refetch} />;
   }
 
   return (

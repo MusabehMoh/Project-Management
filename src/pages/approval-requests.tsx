@@ -38,6 +38,7 @@ import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import { projectRequirementsService } from "@/services/api";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
+import "./approval-requests.css";
 
 // Format date helper
 const formatDate = (dateString: string) => {
@@ -454,10 +455,18 @@ export default function ApprovalRequestsPage() {
             behavior: "smooth",
             block: "center",
           });
+
+          // Flash effect
+          element.classList.add("highlight-flash");
+          // Let the CSS animation complete naturally, then clean up
+          setTimeout(() => {
+            setHighlightedRequirementId(null);
+            element.classList.remove("highlight-flash");
+          }, 4100); // Slightly after animation completes to ensure clean state
         }
       }, 500);
     }
-  }, [searchParams, requirements, setHighlightedRequirementId]);
+  }, [searchParams, requirements]);
 
   if (loading && requirements.length === 0) {
     return (

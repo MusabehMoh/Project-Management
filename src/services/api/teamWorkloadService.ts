@@ -18,6 +18,9 @@ export interface TeamMemberMetrics {
     inProgress: number;
     completed: number;
     performance: number;
+    activeTasks: number;
+    activeRequirements: number;
+    overdueTasks: number;
   };
 }
 

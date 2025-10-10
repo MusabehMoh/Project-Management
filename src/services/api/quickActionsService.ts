@@ -7,6 +7,7 @@ import {
   PendingApproval,
   TeamMember,
   QuickActionApiResponse,
+  AvailableMembersResponse,
 } from "@/types/quickActions";
 
 // Quick Actions API endpoints
@@ -127,10 +128,10 @@ export class QuickActionsService {
   }
 
   /**
-   * Get available team members
+   * Get available team members (RGIS business logic)
    */
-  async getAvailableMembers(): Promise<QuickActionApiResponse<any[]>> {
-    return apiClient.get<any[]>(`${ENDPOINTS.QUICK_ACTIONS}/available-members`);
+  async getAvailableMembers(): Promise<QuickActionApiResponse<AvailableMembersResponse>> {
+    return apiClient.get<AvailableMembersResponse>(`${ENDPOINTS.QUICK_ACTIONS}/available-members`);
   }
 
   /**

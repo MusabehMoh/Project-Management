@@ -1,0 +1,97 @@
+.rtl-editor .ql-editor {
+  /* Increase min height for the editor content area */
+  min-height: 120px; /* adjust as needed */
+  height: auto;
+  direction: rtl; /* set right-to-left text direction */
+  text-align: right; /* ensure text aligns to the right */
+}
+
+/* Optional: ensure placeholder text is right-aligned */
+.rtl-editor .ql-editor.ql-blank::before {
+  right: 0.75rem;
+  left: auto;
+  text-align: right;
+}
+
+/* Keep toolbar icons LTR for usability */
+.rtl-editor .ql-toolbar {
+  direction: ltr;
+}
+
+/* Fix list rendering for RTL */
+.rtl-editor .ql-editor ol,
+.rtl-editor .ql-editor ul {
+  padding-right: 1.5em;
+  padding-left: 0;
+}
+
+.rtl-editor .ql-editor li {
+  padding-right: 0.5em;
+  padding-left: 0;
+}
+
+/* Ensure list bullets/numbers appear on the right for RTL */
+.rtl-editor .ql-editor li::before {
+  margin-right: -1.5em;
+  margin-left: 0;
+  text-align: right;
+}
+
+/* Fix ordered list counter position for RTL */
+.rtl-editor .ql-editor ol > li {
+  counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9;
+  counter-increment: list-0;
+}
+
+.rtl-editor .ql-editor ol > li:before {
+  content: counter(list-0, decimal) '. ';
+}
+
+/* LTR support for non-RTL editor (English mode) */
+.ql-editor ol,
+.ql-editor ul {
+  padding-left: 1.5em;
+  padding-right: 0;
+}
+
+.ql-editor li {
+  padding-left: 0.5em;
+  padding-right: 0;
+}
+
+.ql-editor li::before {
+  margin-left: -1.5em;
+  margin-right: 0;
+  text-align: left;
+}
+
+/* Highlight flash animation for draft requirements */
+.highlight-flash {
+  animation: calmHighlight 4s ease-in-out forwards;
+  background: rgba(59, 130, 246, 0.15);
+  border-left: 3px solid rgba(59, 130, 246, 0.5);
+  transition: all 0.3s ease;
+}
+
+@keyframes calmHighlight {
+  0% {
+    background: rgba(59, 130, 246, 0.25);
+    border-left-color: rgba(59, 130, 246, 0.7);
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.3);
+  }
+  20% {
+    background: rgba(59, 130, 246, 0.2);
+    border-left-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+  }
+  80% {
+    background: rgba(59, 130, 246, 0.1);
+    border-left-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+  100% {
+    background: transparent;
+    border-left-color: transparent;
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+}

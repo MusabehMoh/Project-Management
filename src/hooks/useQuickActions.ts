@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { quickActionsService } from "@/services/api";
-// import { usePermissions } from "@/hooks/usePermissions";
 import {
   QuickAction,
   QuickActionData,
   QuickActionStats,
   QuickActionType,
+  AvailableMembersResponse,
 } from "@/types/quickActions";
 
 export interface UseQuickActionsOptions {
@@ -22,7 +22,7 @@ export interface UseQuickActionsReturn {
   actions: QuickAction[];
   unassignedProjects: any[]; // Add unassigned projects list
   projectsWithoutRequirements: any[]; // Add projects without requirements list
-  availableMembers: any[]; // Add available members list with workload info
+  availableMembers: any[]; // Add available members list with RGIS business logic
   teamWorkload: any[]; // Add team workload data
   departmentWorkload: any[]; // Add department workload data
 
@@ -198,22 +198,14 @@ export const useQuickActions = (
         setProjectsWithoutRequirements([]);
       }
 
-      // Handle the new available members response structure
+      // Handle the available members response structure (RGIS business logic)
       if (availableMembersResponse.success && availableMembersResponse.data) {
-        // Check if the response has the new structure with availableMembers and teamWorkload
-        if (
-          typeof availableMembersResponse.data === "object" &&
-          "availableMembers" in availableMembersResponse.data
-        ) {
-          const responseData = availableMembersResponse.data as any;
+        // New simplified structure with RGIS business logic
+        const responseData = availableMembersResponse.data as AvailableMembersResponse;
 
-          setAvailableMembers(responseData.availableMembers || []);
-          setTeamWorkload(responseData.teamWorkload || []);
-        } else {
-          // Fallback for old API structure
-          setAvailableMembers(availableMembersResponse.data);
-          setTeamWorkload([]);
-        }
+        setAvailableMembers(responseData.availableMembers || []);
+        // No more teamWorkload in the new RGIS structure
+        setTeamWorkload([]);
       } else {
         setAvailableMembers([]);
         setTeamWorkload([]);

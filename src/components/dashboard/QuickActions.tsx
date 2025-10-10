@@ -549,43 +549,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                           <CustomAlert
                             key={member.employeeId}
                             color="success"
-                            description={`${member.currentDepartment || "No Department"} • ${member.gradeName || "No Grade"} • ${member.totalActiveTasks || 0} active tasks • ${member.currentlyRunningTasks || 0} current`}
+                            description={`${member.department || "No Department"} • ${member.militaryNumber || "No MilitaryNumber"} `}
                             direction={direction}
-                            title={member.fullName || member.userName}
+                            title={`${member.gradeName} - ${member.fullName}`}
                             variant="faded"
-                          >
-                            <div className="mt-2 text-xs text-default-500">
-                              <div className="grid grid-cols-2 gap-2">
-                                <span>Status: {member.availabilityStatus}</span>
-                                <span>
-                                  Task Days: {member.totalTaskDurationDays || 0}
-                                </span>
-                                <span>
-                                  Projects: {member.assignedProjectsCount || 0}
-                                </span>
-                                <span>
-                                  Requirements:{" "}
-                                  {member.activeRequirementsCount || 0}
-                                </span>
-                              </div>
-                            </div>
-                            <Divider className="bg-default-200 my-3" />
-                            <div
-                              className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
-                            >
-                              <Button
-                                className="bg-background text-default-700 font-medium border-1 shadow-small"
-                                size="sm"
-                                variant="bordered"
-                                onPress={() => {
-                                  // Navigate to team workload page or project assignment
-                                  window.location.href = `/team-workload`;
-                                }}
-                              >
-                                {t("common.viewWorkload") || "View Workload"}
-                              </Button>
-                            </div>
-                          </CustomAlert>
+                          />
                         ))}
                       </div>
                     </ScrollShadow>
