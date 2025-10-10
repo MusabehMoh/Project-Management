@@ -439,6 +439,9 @@ const translations = {
     "common.noDataFound": "No data found",
     "common.unexpectedError": "An unexpected error occurred",
     "common.AddAdhocTask": "Add Adhoc Task",
+    "common.project": "Project",
+    "common.taskDetails": "Task Details",
+    "common.dueDate": "Due Date",
 
     // Toast Messages
     "toast.success": "Success",
@@ -856,6 +859,7 @@ const translations = {
     "requirements.editRequirement": "Edit Requirement",
     "requirements.deleteRequirement": "Delete Requirement",
     "requirements.requirementName": "Requirement Name",
+    "requirements.requirement": "Requirement",
     "requirements.requirementDescription": "Description",
     "requirements.priority": "Priority",
     "requirements.type": "Requirement Type",
@@ -2120,6 +2124,9 @@ const translations = {
     "common.noDataFound": "لا توجد بيانات",
     "common.unexpectedError": "حدث خطأ غير متوقع",
     "common.AddAdhocTask": "إضافة مهمة عاجلة",
+    "common.project": "المشروع",
+    "common.taskDetails": "تفاصيل المهمة",
+    "common.dueDate": "تاريخ الاستحقاق",
 
     // Toast Messages
     "toast.success": "نجح",
@@ -2531,6 +2538,7 @@ const translations = {
     "requirements.editRequirement": "تحرير المتطلب",
     "requirements.deleteRequirement": "حذف المتطلب",
     "requirements.requirementName": "اسم المتطلب",
+    "requirements.requirement": "المتطلب",
     "requirements.requirementDescription": "الوصف",
     "requirements.priority": "الأولوية",
     "requirements.type": "نوع المتطلب",

@@ -655,25 +655,40 @@ export { useEntityDetails } from "./useEntityDetails";
 - **PendingRequirements**: Shows draft requirements awaiting approval (Analyst Manager)
 - **DeveloperQuickActions**: Task assignment and management tools (Developer Manager)
 - **DesignerQuickActions**: Unassigned design request management (Designer Manager)
-  - **Title**: "My Actions" with animated counter chip (matches QuickActions component pattern)
+  - **Title**: "My Actions" with animated counter chip (no icon, matches QuickActions component pattern)
   - **Design Pattern**: Single Accordion structure with one parent item containing all unassigned requests
   - **Structure**: 
-    - Card Header: "My Actions" title with pulsing counter chip
+    - Card Header: "My Actions" title with pulsing counter chip, subtitle, and refresh button
+    - Divider separator
+    - CardBody with proper padding and overflow handling
     - Accordion Item: "Unassigned" (غير معين) as parent with count badge
-    - ScrollShadow: Contains multiple CustomAlert components (one per request)
+    - ScrollShadow: max-h-64, hideScrollBar={true}, size={20} - Contains multiple CustomAlert components (one per request)
   - **Business Rule**: Reminds manager about unassigned design requests (status = 1)
-  - **Features**: 
+  - **Accordion Configuration**: Uses HeroUI `itemClasses` prop with cursor-pointer on trigger (no hover background)
+  - **Detailed Information Display**: 
     - AnimatedCounter with fadeInOut pulse animation
-    - Task details: name, description (truncated), priority, request date, due date, notes
-    - Assignment modal with designer search autocomplete
-    - Real-time refresh after assignment
-  - **API Integration**: Uses `useDesignRequests` hook with `designRequestsService`
-  - **Modal Features**: 
-    - Team member autocomplete search (grade name + full name display)
-    - Task information display with priority chips
+    - **Project Name**: Shows which project the request belongs to (requirementDetails.projectName)
+    - **Requirement Name**: The requirement title (requirementDetails.name)
+    - **Requirement Description**: Brief description with line-clamp-2 (requirementDetails.description)
+    - **Task Details**: Task description separated with border-top (task.description)
+    - All fields conditionally rendered only if they exist
+  - **Assignment Modal**: 
+    - Team member autocomplete search with useTeamSearch hook (roleId: 9 - Designer Team Member)
+    - Task information display with task name
     - Assignment notes textarea
     - Toast notifications for success/error feedback
-  - **Styling**: Warning-colored CustomAlert borders for unassigned status, bordered buttons with shadow-small
+  - **API Integration**: 
+    - Uses `useDesignRequests` hook with `designRequestsService`
+    - Fetches design requests with status=1 (unassigned), limit=50
+    - Assignment via `assignDesignRequest(id, designerId, notes)`
+  - **Styling**: 
+    - Clean CustomAlert with title/description props (not children)
+    - Divider before buttons: className="bg-default-200 my-3"
+    - Buttons: className="bg-background text-default-700 font-medium border-1 shadow-small"
+    - Accordion trigger: cursor-pointer, no hover background highlight
+  - **Translations**: 
+    - Uses common.project, requirements.requirement, common.taskDetails
+    - All labels properly translated for English/Arabic
   - **Future-Ready**: Structure allows adding more accordion items for other action types
 - **MyAssignedTasks**: Shows tasks assigned to current user (Team Members)
   - **Design Pattern**: Uses compact list design matching PendingRequirements component
