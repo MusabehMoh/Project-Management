@@ -122,6 +122,34 @@ public class TeamRepository : Repository<Team>, ITeamRepository
 
         return employees;
     }
+
+    public async Task<IEnumerable<Employee>> SearchUsersInDepartmentAsync(string searchTerm, int departmentId)
+    {
+        // Build base query for department members
+        var query = _context.Teams
+            .Include(t => t.Employee)
+            .Where(t => t.IsActive && 
+                   t.DepartmentId == departmentId &&
+                   t.Employee != null);
+
+        // Apply search filter only if searchTerm is provided
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(t => 
+                t.Employee!.UserName.Contains(searchTerm) ||
+                t.Employee.FullName.Contains(searchTerm) ||
+                t.Employee.MilitaryNumber.Contains(searchTerm));
+        }
+
+        // Execute query and return distinct employees
+        var employees = await query
+            .Select(t => t.Employee!)
+            .Distinct()
+            .OrderBy(e => e.FullName)
+            .ToListAsync();
+
+        return employees;
+    }
 }
 
 

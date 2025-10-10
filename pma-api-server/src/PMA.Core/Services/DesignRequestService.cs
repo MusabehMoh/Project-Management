@@ -141,6 +141,7 @@ public class DesignRequestService : IDesignRequestService
         }
 
         designRequest.AssignedToPrsId = assignedToPrsId;
+        designRequest.Notes = comment;
         designRequest.UpdatedAt = DateTime.UtcNow;
         designRequest.Status = (int)DesignRequestsStatus.Assigned;
         await _designRequestRepository.UpdateAsync(designRequest);
