@@ -661,7 +661,7 @@ export { useEntityDetails } from "./useEntityDetails";
     - Card Header: "My Actions" title with pulsing counter chip, subtitle, and refresh button
     - Divider separator
     - CardBody with proper padding and overflow handling
-    - Accordion Item: "Unassigned" (غير معين) as parent with count badge
+    - Accordion Item: "Unassigned Designer" (مصمم غير معين) as parent with count badge
     - ScrollShadow: max-h-64, hideScrollBar={true}, size={20} - Contains multiple CustomAlert components (one per request)
   - **Business Rule**: Reminds manager about unassigned design requests (status = 1)
   - **Accordion Configuration**: Uses HeroUI `itemClasses` prop with cursor-pointer on trigger (no hover background)
@@ -672,23 +672,47 @@ export { useEntityDetails } from "./useEntityDetails";
     - **Requirement Description**: Brief description with line-clamp-2 (requirementDetails.description)
     - **Task Details**: Task description separated with border-top (task.description)
     - All fields conditionally rendered only if they exist
-  - **Assignment Modal**: 
-    - Team member autocomplete search with useTeamSearch hook (roleId: 9 - Designer Team Member)
-    - Task information display with task name
-    - Assignment notes textarea
-    - Toast notifications for success/error feedback
+  - **Button & Modal Pattern**: Matches exact pattern from design-requests.tsx page
+    - **Button Text**: "Assign Designer" (designRequests.assignTo) - "تعيين إلى مصمم"
+    - **Modal Header**: "Assign to Designer" (designRequests.assignTo)
+    - **Modal Footer**: "Cancel" (cancel) + "Assign Request" (designRequests.assign)
+  - **Assignment Modal Implementation**: 
+    - **Autocomplete Search Pattern**: Exact match with design-requests page
+      - `defaultFilter={() => true}` - No client-side filtering
+      - `menuTrigger="input"` - Opens dropdown on input
+      - `minLength: 1, maxResults: 20, loadInitialResults: false`
+      - Display: `{gradeName} {fullName}` with secondary `{militaryNumber} - {gradeName}`
+      - textValue includes: gradeName, fullName, userName, militaryNumber for comprehensive search
+      - Avatar with `name` prop (no avatarUrl in MemberSearchResult type)
+    - **State Management**: 
+      - `selectedDesigner: MemberSearchResult | null` (not string)
+      - `designerInputValue: string` for controlled input
+      - `modalError: string | null` for inline error display
+    - **Error Handling**: Shows inline error below Autocomplete (not toast)
+    - **Label**: "Select Designer for Assignment" (designRequests.selectDesignerForAssignment)
+    - **Placeholder**: Uses `tasks.selectDesigner` - "Search for designer..." / "البحث عن مصمم..."
+    - **Assignment Notes**: Textarea with minRows={3}, onChange={(e) => setAssignmentNotes(e.target.value)}
+    - **Toast Notifications**: Success/error toasts after assignment attempt
   - **API Integration**: 
     - Uses `useDesignRequests` hook with `designRequestsService`
     - Fetches design requests with status=1 (unassigned), limit=50
-    - Assignment via `assignDesignRequest(id, designerId, notes)`
+    - Assignment via `designRequestsService.assignDesignRequest(id, designerId, notes)`
+    - API Endpoint: `PATCH /api/DesignRequests/{id}/assign`
+    - Backend: `DesignRequestsController.AssignDesignRequest()` in .NET API
+    - Search: `timelineService.searchAllMembers()` → `/employees/searchUsers?q={query}`
   - **Styling**: 
     - Clean CustomAlert with title/description props (not children)
     - Divider before buttons: className="bg-default-200 my-3"
-    - Buttons: className="bg-background text-default-700 font-medium border-1 shadow-small"
-    - Accordion trigger: cursor-pointer, no hover background highlight
-  - **Translations**: 
-    - Uses common.project, requirements.requirement, common.taskDetails
-    - All labels properly translated for English/Arabic
+    - Button: "Assign Designer" with CheckCircle icon, bordered variant, shadow-small
+    - Accordion trigger: cursor-pointer via itemClasses, no hover background highlight
+  - **Key Translations**: 
+    - `designRequests.assignTo` - "Assign to Designer" / "تعيين إلى مصمم"
+    - `designRequests.selectDesignerForAssignment` - "Select Designer for Assignment"
+    - `tasks.selectDesigner` - "Search for designer..." / "البحث عن مصمم..."
+    - `designRequests.assignmentNotes` - "Assignment Notes" / "ملاحظات التعيين"
+    - `designRequests.designerRequired` - "Designer selection is required"
+    - `designRequests.assignSuccess/assignError` - Success/error messages
+    - Uses common.project, requirements.requirement, common.taskDetails for display
   - **Future-Ready**: Structure allows adding more accordion items for other action types
 - **MyAssignedTasks**: Shows tasks assigned to current user (Team Members)
   - **Design Pattern**: Uses compact list design matching PendingRequirements component

@@ -192,9 +192,11 @@ export default function DesignerQuickActions() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<DesignRequestDto | null>(null);
   const [assignmentNotes, setAssignmentNotes] = useState("");
-  const [selectedDesigner, setSelectedDesigner] = useState<string>("");
+  const [selectedDesigner, setSelectedDesigner] = useState<MemberSearchResult | null>(null);
+  const [designerInputValue, setDesignerInputValue] = useState<string>("");
   const [assigning, setAssigning] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   // Team search hook for designer autocomplete
   const {
@@ -206,8 +208,6 @@ export default function DesignerQuickActions() {
     maxResults: 20,
     loadInitialResults: false,
   });
-  
-  const [designerSearchTerm, setDesignerSearchTerm] = useState("");
 
   // Handle refresh
   const refresh = async () => {
@@ -219,63 +219,52 @@ export default function DesignerQuickActions() {
   // Handle assign button click
   const handleAssign = (request: DesignRequestDto) => {
     setSelectedRequest(request);
-    setSelectedDesigner("");
+    setSelectedDesigner(null);
+    setDesignerInputValue("");
     setAssignmentNotes("");
+    setModalError(null);
     setIsModalOpen(true);
   };
 
   // Handle assignment submission
   const handleAssignSubmit = async () => {
-    if (!selectedRequest || !selectedDesigner) {
-      addToast({
-        title: t("common.error") || "Error",
-        description: t("designRequests.selectDesigner") || "Please select a designer",
-        color: "danger",
-      });
+    if (!selectedRequest || !selectedDesigner?.id) {
+      setModalError(t("designRequests.designerRequired") || "Designer selection is required");
 
       return;
     }
 
     setAssigning(true);
+    setModalError(null);
 
     try {
-      const designerId = parseInt(selectedDesigner);
-      
-      // Find the selected designer's full name
-      const designer = designers.find((d) => d.id === designerId);
-      const designerName = designer ? designer.fullName : "";
-
       // Call the assign API
       const success = await assignDesignRequest(
         selectedRequest.id,
-        designerId,
+        selectedDesigner.id,
         assignmentNotes || undefined,
       );
 
       if (success) {
         addToast({
-          title: t("common.success") || "Success",
-          description: t("designRequests.assignSuccess") || `Design request assigned to ${designerName}`,
+          title: t("designRequests.assignSuccess"),
           color: "success",
         });
 
         setIsModalOpen(false);
         setSelectedRequest(null);
-        setSelectedDesigner("");
+        setSelectedDesigner(null);
+        setDesignerInputValue("");
         setAssignmentNotes("");
         
         // Refresh the list
         await refetch();
       } else {
-        throw new Error("Assignment failed");
+        setModalError(t("designRequests.assignError") || "Failed to assign design request");
       }
     } catch (err) {
       console.error("Error assigning design request:", err);
-      addToast({
-        title: t("common.error") || "Error",
-        description: t("designRequests.assignError") || "Failed to assign design request",
-        color: "danger",
-      });
+      setModalError(t("designRequests.assignError") || "Failed to assign design request");
     } finally {
       setAssigning(false);
     }
@@ -469,7 +458,7 @@ export default function DesignerQuickActions() {
                         onPress={() => handleAssign(request)}
                       >
                         <CheckCircle size={16} />
-                        {t("designRequests.assign") || "Assign"}
+                        {t("designRequests.assignTo") || "Assign Designer"}
                       </Button>
                     </div>
                   </CustomAlert>
@@ -500,81 +489,107 @@ export default function DesignerQuickActions() {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                {t("designRequests.assignDesigner") || "Assign Designer"}
+                {t("designRequests.assignTo") || "Assign to Designer"}
               </ModalHeader>
               <ModalBody>
                 {selectedRequest && (
                   <div className="space-y-4">
-                    {/* Task Information */}
-                    <div className="bg-default-100 p-4 rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold">
-                          {selectedRequest.task?.name || `Task #${selectedRequest.taskId}`}
-                        </h4>
-                      </div>
-                      {selectedRequest.task?.description && (
-                        <p className="text-sm text-default-600">
-                          {selectedRequest.task.description}
-                        </p>
+
+                    {/* Designer Selection */}
+                    <div>
+                      <label className="text-sm font-medium text-default-700 mb-2 block">
+                        {t("designRequests.selectDesignerForAssignment") || "Select Designer for Assignment"} *
+                      </label>
+                      <Autocomplete
+                        defaultFilter={() => true}
+                        inputValue={designerInputValue}
+                        isLoading={searchingDesigners}
+                        menuTrigger="input"
+                        placeholder={t("tasks.selectDesigner") || "Search for designer..."}
+                        selectedKey={selectedDesigner?.id?.toString() || ""}
+                        value={
+                          selectedDesigner
+                            ? `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`
+                            : designerInputValue
+                        }
+                        onInputChange={(value) => {
+                          setDesignerInputValue(value);
+                          // clear selection if input no longer matches selected
+                          if (selectedDesigner) {
+                            const expectedValue = `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`;
+
+                            if (value !== expectedValue) {
+                              setSelectedDesigner(null);
+                            }
+                          }
+                          searchDesigners(value);
+                        }}
+                        onSelectionChange={(key) => {
+                          const designer = designers.find(
+                            (member) => member.id.toString() === String(key),
+                          );
+
+                          setSelectedDesigner(designer || null);
+                          // Set the display value when a designer is selected
+                          if (designer) {
+                            setDesignerInputValue(
+                              `${designer.gradeName} ${designer.fullName}`,
+                            );
+                          }
+                        }}
+                      >
+                        {designers.map((designer) => (
+                          <AutocompleteItem
+                            key={designer.id.toString()}
+                            textValue={`${designer.gradeName} ${designer.fullName} ${designer.userName} ${designer.militaryNumber}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Avatar
+                                alt={designer.fullName}
+                                className="flex-shrink-0"
+                                name={designer.fullName}
+                                size="sm"
+                              />
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium">
+                                  {designer.fullName}
+                                </span>
+                                <span className="text-xs text-default-500">
+                                  {designer.militaryNumber} - {designer.gradeName}
+                                </span>
+                              </div>
+                            </div>
+                          </AutocompleteItem>
+                        ))}
+                      </Autocomplete>
+                      {modalError && (
+                        <p className="text-danger text-sm mt-1">{modalError}</p>
                       )}
                     </div>
 
-                    {/* Designer Selection */}
-                    <Autocomplete
-                      inputValue={designerSearchTerm}
-                      isLoading={searchingDesigners}
-                      label={t("designRequests.selectDesigner") || "Select Designer"}
-                      placeholder={t("designRequests.searchDesigner") || "Search for a designer..."}
-                      selectedKey={selectedDesigner}
-                      onInputChange={(value) => {
-                        setDesignerSearchTerm(value);
-                        if (value.length >= 1) {
-                          searchDesigners(value);
-                        }
-                      }}
-                      onSelectionChange={(key) => setSelectedDesigner(key as string)}
-                    >
-                      {designers.map((designer) => (
-                        <AutocompleteItem
-                          key={designer.id.toString()}
-                          startContent={
-                            <Avatar
-                              className="w-6 h-6"
-                              name={designer.fullName}
-                              size="sm"
-                            />
-                          }
-                          textValue={`${designer.gradeName} ${designer.fullName}`}
-                        >
-                          <div className="flex flex-col">
-                            <span className="text-sm">
-                              {designer.gradeName} {designer.fullName}
-                            </span>
-                          </div>
-                        </AutocompleteItem>
-                      ))}
-                    </Autocomplete>
-
                     {/* Assignment Notes */}
-                    <Textarea
-                      label={t("designRequests.assignmentNotes") || "Assignment Notes"}
-                      placeholder={t("designRequests.assignmentNotesPlaceholder") || "Add notes for the designer..."}
-                      value={assignmentNotes}
-                      onValueChange={setAssignmentNotes}
-                    />
+                    <div>
+                      <Textarea
+                        label={t("designRequests.assignmentNotes") || "Assignment Notes"}
+                        minRows={3}
+                        placeholder={t("designRequests.assignmentNotesPlaceholder") || "Add notes for this assignment (optional)"}
+                        value={assignmentNotes}
+                        onChange={(e) => setAssignmentNotes(e.target.value)}
+                      />
+                    </div>
                   </div>
                 )}
               </ModalBody>
               <ModalFooter>
-                <Button color="default" variant="light" onPress={onClose}>
-                  {t("common.cancel") || "Cancel"}
+                <Button color="default" variant="flat" onPress={onClose}>
+                  {t("cancel") || "Cancel"}
                 </Button>
                 <Button
                   color="primary"
                   isLoading={assigning}
                   onPress={handleAssignSubmit}
                 >
-                  {t("designRequests.assign") || "Assign"}
+                  {t("designRequests.assign") || "Assign Request"}
                 </Button>
               </ModalFooter>
             </>
