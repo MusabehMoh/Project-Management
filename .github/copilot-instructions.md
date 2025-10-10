@@ -684,18 +684,21 @@ export { useEntityDetails } from "./useEntityDetails";
       - Avatar with `name` prop using designer's full name
       - `textValue`: Only `{gradeName} {fullName}` - this is what appears in input after selection
       - `defaultFilter`: Custom filter function searches across gradeName, fullName, userName, militaryNumber
+      - **CRITICAL Autocomplete Pattern**: 
+        - Use `defaultItems={designers}` NOT `items={designers}` - enables automatic filtering
+        - Use `inputValue={fieldInputValue}` + `onInputChange` for controlled input display
+        - `textValue` determines what shows in input after selection
+        - `defaultFilter` allows comprehensive search while keeping display clean
     - **Department Filtering**: Uses `useTeamSearchByDepartment` hook
       - `departmentId: 3` - Design Department (hardcoded)
       - `loadInitialResults: true` - Preloads all designers for client-side filtering
       - `maxResults: 100, initialResultsLimit: 100` - Load full department list
-      - **CRITICAL**: Uses `defaultItems={designers}` NOT `items={designers}` - this enables automatic filtering
-      - Autocomplete uses built-in filtering based on `textValue` prop
     - **State Management**: 
       - `selectedDesigner: MemberSearchResult | null` - Selected designer object
-      - `fieldInputValue: string` - Controls what displays in the input field
+      - `fieldInputValue: string` - Controls what displays in the input field (rank + full name only)
       - `modalError: string | null` for inline error display
       - Uses `selectedDesigner.id` directly (already a number)
-      - Semi-controlled input: Uses `inputValue` to show only rank + full name after selection
+      - Semi-controlled input pattern: `inputValue` for display, `defaultFilter` for search
     - **Error Handling**: Shows inline error below Autocomplete (not toast)
     - **Label**: "Select Designer for Assignment" (designRequests.selectDesignerForAssignment)
     - **Placeholder**: Uses `tasks.selectDesigner` - "Search for designer..." / "البحث عن مصمم..."
@@ -714,6 +717,11 @@ export { useEntityDetails } from "./useEntityDetails";
     - Divider before buttons: className="bg-default-200 my-3"
     - Button: "Assign Designer" with CheckCircle icon, bordered variant, shadow-small
     - Accordion trigger: cursor-pointer via itemClasses, no hover background highlight
+  - **Empty State**: 
+    - Icon: CheckCircle with `text-success opacity-60` (positive green checkmark)
+    - Message: `designRequests.noUnassigned` - Generic "No actions require your attention" message
+    - Translation: "No actions require your attention at this time" / "لا توجد إجراءات تتطلب انتباهك في الوقت الحالي"
+    - Design: Centered, positive message with success color (future-proof for additional action types)
   - **Key Translations**: 
     - `designRequests.assignTo` - "Assign to Designer" / "تعيين إلى مصمم"
     - `designRequests.selectDesignerForAssignment` - "Select Designer for Assignment"
@@ -721,6 +729,7 @@ export { useEntityDetails } from "./useEntityDetails";
     - `designRequests.assignmentNotes` - "Assignment Notes" / "ملاحظات التعيين"
     - `designRequests.designerRequired` - "Designer selection is required"
     - `designRequests.assignSuccess/assignError` - Success/error messages
+    - `designRequests.noUnassigned` - Generic empty state message (not specific to designers)
     - Uses common.project, requirements.requirement, common.taskDetails for display
   - **Future-Ready**: Structure allows adding more accordion items for other action types
 - **MyAssignedTasks**: Shows tasks assigned to current user (Team Members)

@@ -474,10 +474,10 @@ export default function DesignerQuickActions() {
 
             {/* Empty State */}
             {designRequests.length === 0 && (
-              <div className="text-center py-8 text-default-400">
-                <Palette className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">
-                  {t("designRequests.noUnassigned") || "No unassigned design requests"}
+              <div className="text-center py-8">
+                <CheckCircle className="w-12 h-12 mx-auto mb-3 text-success opacity-60" />
+                <p className="text-sm text-default-500">
+                  {t("designRequests.noUnassigned")}
                 </p>
               </div>
             )}
