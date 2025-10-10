@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -17,55 +17,19 @@ import {
 import { Avatar } from "@heroui/avatar";
 import { Tooltip } from "@heroui/tooltip";
 import {
-  RefreshCw,
-  TrendingUp,
-  TrendingDown,
-  Clock,
   CheckCircle,
-  AlertCircle,
+  Clock,
+  RefreshCw,
   Search,
+  TrendingDown,
+  TrendingUp,
   X,
   Palette,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { GlobalPagination } from "@/components/GlobalPagination";
-
-interface DesignerWorkload {
-  designerId: string;
-  designerName: string;
-  currentProjects: number;
-  completedDesigns: number;
-  averageDesignTime: number;
-  efficiency: number;
-  workloadPercentage: number;
-  skills: string[];
-  currentTasks: string[];
-  availableHours: number;
-  status: string;
-}
-
-interface TeamPerformanceMetrics {
-  totalDesigners: number;
-  activeDesigners: number;
-  averageEfficiency: number;
-  totalDesignsCompleted: number;
-  totalDesignsInProgress: number;
-  averageDesignCompletionTime: number;
-  revisionsCompleted: number;
-  averageRevisionTime: number;
-  assetsDelivered: number;
-  prototypesCreated: number;
-}
-
-interface PaginationInfo {
-  currentPage: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
+import { useDesignerWorkload } from "@/hooks";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -84,207 +48,39 @@ const getStatusColor = (status: string) => {
 
 export default function DesignerWorkloadPerformance() {
   const { t, language } = useLanguage();
-  const [designers, setDesigners] = useState<DesignerWorkload[]>([]);
-  const [metrics, setMetrics] = useState<TeamPerformanceMetrics | null>(null);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    currentPage: 1,
-    pageSize: 5,
-    totalItems: 0,
-    totalPages: 0,
-    hasNextPage: false,
-    hasPreviousPage: false,
-  });
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState("efficiency");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Mock data for designers
-  const mockDesigners: DesignerWorkload[] = [
-    {
-      designerId: "1",
-      designerName: "Layla Ahmad",
-      currentProjects: 3,
-      completedDesigns: 45,
-      averageDesignTime: 8.5,
-      efficiency: 94,
-      workloadPercentage: 75,
-      skills: ["UI/UX", "Figma", "Adobe XD"],
-      currentTasks: ["Landing Page", "Mobile App", "Logo Design"],
-      availableHours: 10,
-      status: "available",
-    },
-    {
-      designerId: "2",
-      designerName: "Yusuf Ibrahim",
-      currentProjects: 5,
-      completedDesigns: 52,
-      averageDesignTime: 7.2,
-      efficiency: 88,
-      workloadPercentage: 90,
-      skills: ["Graphic Design", "Illustrator", "Photoshop"],
-      currentTasks: ["Brand Identity", "Marketing Materials"],
-      availableHours: 4,
-      status: "busy",
-    },
-    {
-      designerId: "3",
-      designerName: "Noor Saleh",
-      currentProjects: 2,
-      completedDesigns: 38,
-      averageDesignTime: 9.0,
-      efficiency: 82,
-      workloadPercentage: 55,
-      skills: ["Motion Graphics", "After Effects", "Premiere"],
-      currentTasks: ["Video Intro", "Animated Banner"],
-      availableHours: 18,
-      status: "available",
-    },
-    {
-      designerId: "4",
-      designerName: "Maha Khalid",
-      currentProjects: 4,
-      completedDesigns: 61,
-      averageDesignTime: 6.8,
-      efficiency: 92,
-      workloadPercentage: 80,
-      skills: ["Web Design", "UI/UX", "Prototyping"],
-      currentTasks: ["Dashboard Design", "E-commerce Site"],
-      availableHours: 8,
-      status: "available",
-    },
-  ];
-
-  const mockMetrics: TeamPerformanceMetrics = {
-    totalDesigners: 4,
-    activeDesigners: 4,
-    averageEfficiency: 89,
-    totalDesignsCompleted: 196,
-    totalDesignsInProgress: 14,
-    averageDesignCompletionTime: 7.9,
-    revisionsCompleted: 78,
-    averageRevisionTime: 2.1,
-    assetsDelivered: 142,
-    prototypesCreated: 35,
-  };
+  // Use the custom hook to fetch designer workload data
+  const {
+    designers,
+    metrics,
+    pagination,
+    loading,
+    error,
+    refetch,
+    fetchPage,
+  } = useDesignerWorkload({
+    page: 1,
+    pageSize: 5,
+    searchQuery,
+    statusFilter,
+    sortBy,
+    sortOrder,
+  });
 
   const clearSearch = () => {
     setSearchQuery("");
   };
 
-  const fetchData = async (page: number = 1) => {
-    try {
-      setLoading(true);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      let filteredDesigners = [...mockDesigners];
-
-      // Apply status filter
-      if (statusFilter) {
-        filteredDesigners = filteredDesigners.filter(
-          (designer) => designer.status === statusFilter,
-        );
-      }
-
-      // Apply search filter
-      if (searchQuery.trim()) {
-        const searchLower = searchQuery.toLowerCase();
-        filteredDesigners = filteredDesigners.filter(
-          (designer) =>
-            designer.designerName.toLowerCase().includes(searchLower) ||
-            designer.skills.some((skill) =>
-              skill.toLowerCase().includes(searchLower),
-            ) ||
-            designer.currentTasks.some((task) =>
-              task.toLowerCase().includes(searchLower),
-            ),
-        );
-      }
-
-      // Apply sorting
-      filteredDesigners.sort((a, b) => {
-        let aValue: any, bValue: any;
-
-        switch (sortBy) {
-          case "efficiency":
-            aValue = a.efficiency;
-            bValue = b.efficiency;
-            break;
-          case "workload":
-            aValue = a.workloadPercentage;
-            bValue = b.workloadPercentage;
-            break;
-          case "name":
-            aValue = a.designerName;
-            bValue = b.designerName;
-            break;
-          case "projects":
-            aValue = a.currentProjects;
-            bValue = b.currentProjects;
-            break;
-          case "completed":
-            aValue = a.completedDesigns;
-            bValue = b.completedDesigns;
-            break;
-          default:
-            aValue = a.efficiency;
-            bValue = b.efficiency;
-        }
-
-        if (typeof aValue === "string") {
-          aValue = aValue.toLowerCase();
-          bValue = bValue.toLowerCase();
-        }
-
-        if (sortOrder === "asc") {
-          return aValue > bValue ? 1 : -1;
-        } else {
-          return aValue < bValue ? 1 : -1;
-        }
-      });
-
-      // Apply pagination
-      const startIndex = (page - 1) * pagination.pageSize;
-      const endIndex = startIndex + pagination.pageSize;
-      const paginatedDesigners = filteredDesigners.slice(startIndex, endIndex);
-
-      setDesigners(paginatedDesigners);
-      setMetrics(mockMetrics);
-      setPagination({
-        currentPage: page,
-        pageSize: pagination.pageSize,
-        totalItems: filteredDesigners.length,
-        totalPages: Math.ceil(filteredDesigners.length / pagination.pageSize),
-        hasNextPage: endIndex < filteredDesigners.length,
-        hasPreviousPage: page > 1,
-      });
-    } catch (err) {
-      console.error("Error fetching designer data:", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   const refresh = async () => {
     setRefreshing(true);
-    await fetchData();
+    await refetch();
+    setRefreshing(false);
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchData(1);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, statusFilter, sortBy, sortOrder]);
 
   if (loading) {
     return (
@@ -428,41 +224,52 @@ export default function DesignerWorkloadPerformance() {
         </CardHeader>
         <CardBody>
           {metrics && (
-            <div className="mb-6 p-4 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-success">
+            <div className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Average Efficiency */}
+              <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold text-success-600 dark:text-success-500">
                     {metrics.averageEfficiency.toFixed(1)}%
-                  </div>
-                  <div className="text-xs text-default-500">
-                    {t("common.avgEfficiency") || "Avg Efficiency"}
-                  </div>
+                  </span>
+                  <span className="text-xs text-success-600/70 dark:text-success-500/70">
+                    {t("common.avgEfficiency")}
+                  </span>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {metrics.totalDesignsCompleted}
-                  </div>
-                  <div className="text-xs text-default-500">
-                    {t("designerDashboard.designsCompleted") ||
-                      "Designs Completed"}
-                  </div>
+              </div>
+
+              {/* Tasks Completed */}
+              <div className="flex-1 bg-primary-50 dark:bg-primary-100/10 rounded-lg px-3 py-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold text-primary-600 dark:text-primary-500">
+                    {metrics.totalTasksCompleted}
+                  </span>
+                  <span className="text-xs text-primary-600/70 dark:text-primary-500/70">
+                    {t("designerDashboard.designsCompleted")}
+                  </span>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-warning">
-                    {metrics.averageDesignCompletionTime.toFixed(1)}h
-                  </div>
-                  <div className="text-xs text-default-500">
-                    {t("designerDashboard.avgDesignTime") || "Avg Design Time"}
-                  </div>
+              </div>
+
+              {/* Average Task Time */}
+              <div className="flex-1 bg-warning-50 dark:bg-warning-100/10 rounded-lg px-3 py-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold text-warning-600 dark:text-warning-500">
+                    {metrics.averageTaskCompletionTime.toFixed(1)}h
+                  </span>
+                  <span className="text-xs text-warning-600/70 dark:text-warning-500/70">
+                    {t("designerDashboard.avgDesignTime")}
+                  </span>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-secondary">
-                    {metrics.prototypesCreated}
-                  </div>
-                  <div className="text-xs text-default-500">
-                    {t("designerDashboard.prototypesCreated") ||
-                      "Prototypes Created"}
-                  </div>
+              </div>
+
+              {/* Tasks In Progress */}
+              <div className="flex-1 bg-secondary-50 dark:bg-secondary-100/10 rounded-lg px-3 py-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold text-secondary-600 dark:text-secondary-500">
+                    {metrics.totalTasksInProgress}
+                  </span>
+                  <span className="text-xs text-secondary-600/70 dark:text-secondary-500/70">
+                    {t("common.inProgress")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -486,7 +293,7 @@ export default function DesignerWorkloadPerformance() {
             </TableHeader>
             <TableBody>
               {designers.map((designer) => (
-                <TableRow key={designer.designerId}>
+                <TableRow key={designer.prsId}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar
@@ -498,31 +305,9 @@ export default function DesignerWorkloadPerformance() {
                         <span className="font-medium text-sm">
                           {designer.designerName}
                         </span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {designer.skills.slice(0, 2).map((skill) => (
-                            <Chip
-                              key={skill}
-                              className="text-xs"
-                              size="sm"
-                              variant="flat"
-                            >
-                              {skill}
-                            </Chip>
-                          ))}
-                          {designer.skills.length > 2 && (
-                            <Tooltip
-                              content={designer.skills.slice(2).join(", ")}
-                            >
-                              <Chip
-                                className="text-xs"
-                                size="sm"
-                                variant="flat"
-                              >
-                                +{designer.skills.length - 2}
-                              </Chip>
-                            </Tooltip>
-                          )}
-                        </div>
+                        <span className="text-xs text-default-500">
+                          {designer.gradeName}
+                        </span>
                       </div>
                     </div>
                   </TableCell>
@@ -572,13 +357,13 @@ export default function DesignerWorkloadPerformance() {
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-default-400" />
                         <span className="text-sm">
-                          {designer.currentProjects}
+                          {designer.currentTasksCount}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <CheckCircle className="w-3 h-3 text-success" />
                         <span className="text-sm text-success">
-                          {designer.completedDesigns}
+                          {designer.completedTasksCount}
                         </span>
                       </div>
                     </div>
@@ -606,7 +391,7 @@ export default function DesignerWorkloadPerformance() {
               pageSize={pagination.pageSize}
               totalItems={pagination.totalItems}
               totalPages={pagination.totalPages}
-              onPageChange={(page) => fetchData(page)}
+              onPageChange={(page) => fetchPage(page)}
             />
           </div>
         )}

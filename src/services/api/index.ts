@@ -28,6 +28,7 @@ export { pipelineService } from "./pipelineService";
 export { quickActionsService } from "./quickActionsService";
 export { projectRequirementsService } from "./projectRequirementsService";
 export { designRequestsService } from "./designRequestsService";
+export { designerWorkloadService } from "./designerWorkloadService";
 
 // Export the service instances
 export const projectService = projectsApi;

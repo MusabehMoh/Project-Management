@@ -732,6 +732,47 @@ export { useEntityDetails } from "./useEntityDetails";
     - `designRequests.noUnassigned` - Generic empty state message (not specific to designers)
     - Uses common.project, requirements.requirement, common.taskDetails for display
   - **Future-Ready**: Structure allows adding more accordion items for other action types
+- **DesignerWorkloadPerformance**: Full-width designer workload and performance metrics table (Designer Manager)
+  - **Design Pattern**: Modern minimalist stats + searchable, filterable, sortable table with pagination
+  - **Modern Minimalist Stats**: Horizontal pill-style layout with 4 metrics
+    - Average Efficiency: success-50 background, displays team average efficiency percentage
+    - Tasks Completed: primary-50 background, shows total completed tasks count
+    - Average Task Time: warning-50 background, displays avg completion time in hours
+    - Tasks In Progress: secondary-50 background, shows currently active tasks count
+    - **Pattern**: `flex gap-3`, `flex-1`, `rounded-lg px-3 py-2`, `text-2xl font-semibold` for numbers, `text-xs` for labels
+  - **Table Columns**: Designer (avatar + name + grade), Workload (progress bar + %), Efficiency (with trend icon), Projects (current + completed with icons), Status (colored chip)
+  - **Filters & Search**:
+    - Search by designer name (debounced input)
+    - Status filter dropdown (All, Available, Busy, Blocked, On Leave)
+    - Sort by dropdown (Name, Workload, Efficiency)
+    - Clear search button (X icon)
+    - Refresh button with loading spinner
+  - **Data Display**:
+    - Designer Info: Avatar with `designerName`, secondary text shows `gradeName` (no skills array)
+    - Workload: Progress bar (green/yellow/red based on percentage), percentage text, available hours
+    - Efficiency: Trend icon (TrendingUp/TrendingDown), colored percentage (green ≥85%, yellow ≥70%, red <70%)
+    - Projects: Clock icon + `currentTasksCount`, CheckCircle icon + `completedTasksCount`
+    - Status: Colored chip with translated status text
+  - **API Integration**:
+    - Service: `designerWorkloadService` (src/services/api/designerWorkloadService.ts)
+    - Hook: `useDesignerWorkload` (src/hooks/useDesignerWorkload.ts) with pagination, search, filters, sorting
+    - Backend Endpoints:
+      - `GET /api/designers/workload` - Returns paginated designer workload data
+        - Query params: `page`, `pageSize`, `searchQuery`, `statusFilter`, `sortBy`, `sortOrder`
+        - Response: `{ designers: DesignerWorkloadDto[], pagination: { currentPage, pageSize, totalItems, totalPages } }`
+      - `GET /api/designers/metrics` - Returns team-wide metrics
+        - Response: `TeamMetricsDto` object
+    - DTOs:
+      - **DesignerWorkloadDto**: `prsId` (number), `designerName` (string), `gradeName` (string), `currentTasksCount` (number), `completedTasksCount` (number), `averageTaskCompletionTime` (number), `efficiency` (number), `workloadPercentage` (number), `availableHours` (number), `status` (string: "Available" | "Busy" | "Blocked" | "On Leave")
+      - **TeamMetricsDto**: `totalDesigners` (number), `activeDesigners` (number), `averageEfficiency` (number), `totalTasksCompleted` (number), `totalTasksInProgress` (number), `averageTaskCompletionTime` (number)
+  - **Key Translations**:
+    - `common.workload`, `common.efficiency`, `common.avgEfficiency`, `common.currentProjects`, `common.completed`, `common.filterByStatus`, `common.inProgress`
+    - `status.available`, `status.busy`, `status.blocked`, `status.onLeave`
+    - Uses existing: `designerDashboard.teamPerformance`, `designerDashboard.searchDesigners`, `designerDashboard.designer`, etc.
+  - **Pagination**: GlobalPagination component with 5 items per page, calls `fetchPage()` from hook
+  - **Loading States**: Skeleton rows while fetching data
+  - **Empty State**: "No data" message when no designers match filters
+  - **Department Filter**: Hardcoded to Department ID 3 (Design Department) for backend filtering
 - **MyAssignedTasks**: Shows tasks assigned to current user (Team Members)
   - **Design Pattern**: Uses compact list design matching PendingRequirements component
   - **Features**: Compact card layout with divide-y separators, hover effects, ListTodo icon

@@ -22,6 +22,9 @@ export { useDesignRequests } from "./useDesignRequests";
 // Export team search hooks
 export { useTeamSearchByDepartment } from "./useTeamSearchByDepartment";
 
+// Export designer workload hook
+export { useDesignerWorkload } from "./useDesignerWorkload";
+
 // Export timeline form helpers
 export { useTimelineFormHelpers } from "./useTimelineFormHelpers";
 export { useTimelineFormValidation } from "./useTimelineFormValidation";

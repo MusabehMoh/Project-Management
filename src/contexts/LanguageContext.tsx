@@ -715,6 +715,18 @@ const translations = {
     "common.name": "Name",
     "common.ascending": "Asc",
     "common.descending": "Desc",
+    "common.workload": "Workload",
+    "common.efficiency": "Efficiency",
+    "common.avgEfficiency": "Avg Efficiency",
+    "common.currentProjects": "Current Projects",
+    "common.completed": "Completed",
+    "common.filterByStatus": "Filter by status",
+
+    // Status translations
+    "status.available": "Available",
+    "status.busy": "Busy",
+    "status.blocked": "Blocked",
+    "status.onLeave": "On Leave",
 
     // Deployment Pipeline
     "deployment.status.pending": "Pending",
@@ -2399,6 +2411,18 @@ const translations = {
     "common.name": "الاسم",
     "common.ascending": "تصاعدي",
     "common.descending": "تنازلي",
+    "common.workload": "حمل العمل",
+    "common.efficiency": "الكفاءة",
+    "common.avgEfficiency": "متوسط الكفاءة",
+    "common.currentProjects": "المشاريع الحالية",
+    "common.completed": "المكتملة",
+    "common.filterByStatus": "تصفية حسب الحالة",
+
+    // Status translations
+    "status.available": "متاح",
+    "status.busy": "مشغول",
+    "status.blocked": "محظور",
+    "status.onLeave": "في إجازة",
 
     // Deployment Pipeline
     "deployment.status.pending": "في الانتظار",
