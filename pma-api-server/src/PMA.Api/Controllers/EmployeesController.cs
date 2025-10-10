@@ -172,21 +172,40 @@ public class EmployeesController : ApiBaseController
     }
 
     /// <summary>
-    /// Search users in teams
+    /// Search users in teams, optionally filtered by department
     /// </summary>
     [HttpGet("searchUsers")]
     [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), 200)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> SearchUsers([FromQuery] string q)
+    public async Task<IActionResult> SearchUsers([FromQuery] string q = "", [FromQuery] int? departmentId = null, [FromQuery] int? limit = null)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(q))
+            // Allow empty query when departmentId is provided (to get all department members)
+            if (string.IsNullOrWhiteSpace(q) && !departmentId.HasValue)
             {
-                return BadRequest(Error<IEnumerable<EmployeeDto>>("Search query is required", null, 400));
+                return BadRequest(Error<IEnumerable<EmployeeDto>>("Search query is required when departmentId is not provided", null, 400));
             }
 
-            var employees = await _departmentService.SearchUsersInTeamsAsync(q);
+            // If departmentId is provided, filter by department
+            IEnumerable<EmployeeDto> employees;
+            if (departmentId.HasValue)
+            {
+                // Use empty string as wildcard for department-filtered queries
+                var searchTerm = string.IsNullOrWhiteSpace(q) ? "" : q;
+                employees = await _departmentService.SearchUsersInDepartmentAsync(searchTerm, departmentId.Value);
+            }
+            else
+            {
+                employees = await _departmentService.SearchUsersInTeamsAsync(q);
+            }
+
+            // Apply limit if specified
+            if (limit.HasValue && limit.Value > 0)
+            {
+                employees = employees.Take(limit.Value);
+            }
+
             return Success(employees);
         }
         catch (Exception ex)

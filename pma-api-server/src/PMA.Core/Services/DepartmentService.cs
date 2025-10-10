@@ -187,6 +187,22 @@ public class DepartmentService : IDepartmentService
             StatusId = e.StatusId
         });
     }
+
+    public async Task<IEnumerable<EmployeeDto>> SearchUsersInDepartmentAsync(string searchTerm, int departmentId)
+    {
+        // Allow empty search term to get all department members
+        var employees = await _teamRepository.SearchUsersInDepartmentAsync(searchTerm ?? "", departmentId);
+
+        return employees.Select(e => new EmployeeDto
+        {
+            Id = e.Id,
+            UserName = e.UserName,
+            FullName = e.FullName,
+            MilitaryNumber = e.MilitaryNumber,
+            GradeName = e.GradeName,
+            StatusId = e.StatusId
+        });
+    }
 }
 
 

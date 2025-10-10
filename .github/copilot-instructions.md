@@ -677,17 +677,23 @@ export { useEntityDetails } from "./useEntityDetails";
     - **Modal Header**: "Assign to Designer" (designRequests.assignTo)
     - **Modal Footer**: "Cancel" (cancel) + "Assign Request" (designRequests.assign)
   - **Assignment Modal Implementation**: 
-    - **Autocomplete Search Pattern**: Exact match with design-requests page
-      - `defaultFilter={() => true}` - No client-side filtering
-      - `menuTrigger="input"` - Opens dropdown on input
-      - `minLength: 1, maxResults: 20, loadInitialResults: false`
-      - Display: `{gradeName} {fullName}` with secondary `{militaryNumber} - {gradeName}`
-      - textValue includes: gradeName, fullName, userName, militaryNumber for comprehensive search
-      - Avatar with `name` prop (no avatarUrl in MemberSearchResult type)
+    - **Autocomplete Component**: Searchable designer picker with visible search input
+      - Uses HeroUI `Autocomplete` component (NOT Select - Select's keyboard search wasn't intuitive)
+      - Loads all designers from Design Department (ID: 3) on mount
+      - Display: Avatar + `{gradeName} {fullName}` with secondary `{militaryNumber}`
+      - Avatar with `name` prop using designer's full name
+      - `textValue` for comprehensive search: `{gradeName} {fullName} {userName} {militaryNumber}`
+    - **Department Filtering**: Uses `useTeamSearchByDepartment` hook
+      - `departmentId: 3` - Design Department (hardcoded)
+      - `loadInitialResults: true` - Preloads all designers for client-side filtering
+      - `maxResults: 100, initialResultsLimit: 100` - Load full department list
+      - **CRITICAL**: Uses `defaultItems={designers}` NOT `items={designers}` - this enables automatic filtering
+      - Autocomplete uses built-in filtering based on `textValue` prop
     - **State Management**: 
-      - `selectedDesigner: MemberSearchResult | null` (not string)
-      - `designerInputValue: string` for controlled input
+      - `selectedDesigner: MemberSearchResult | null` - Selected designer object
       - `modalError: string | null` for inline error display
+      - Uses `selectedDesigner.id` directly (already a number)
+      - Uncontrolled input: Uses `defaultSelectedKey` instead of controlled `selectedKey`/`inputValue`
     - **Error Handling**: Shows inline error below Autocomplete (not toast)
     - **Label**: "Select Designer for Assignment" (designRequests.selectDesignerForAssignment)
     - **Placeholder**: Uses `tasks.selectDesigner` - "Search for designer..." / "البحث عن مصمم..."
@@ -695,11 +701,12 @@ export { useEntityDetails } from "./useEntityDetails";
     - **Toast Notifications**: Success/error toasts after assignment attempt
   - **API Integration**: 
     - Uses `useDesignRequests` hook with `designRequestsService`
+    - Uses `useTeamSearchByDepartment` hook for department-filtered designer list
     - Fetches design requests with status=1 (unassigned), limit=50
     - Assignment via `designRequestsService.assignDesignRequest(id, designerId, notes)`
     - API Endpoint: `PATCH /api/DesignRequests/{id}/assign`
     - Backend: `DesignRequestsController.AssignDesignRequest()` in .NET API
-    - Search: `timelineService.searchAllMembers()` → `/employees/searchUsers?q={query}`
+    - Department Search: `timelineService.searchMembersByDepartment()` → `/employees/searchUsers?q={query}&departmentId={id}`
   - **Styling**: 
     - Clean CustomAlert with title/description props (not children)
     - Divider before buttons: className="bg-default-200 my-3"

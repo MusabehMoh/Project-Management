@@ -22,7 +22,7 @@ import { RefreshCw, Palette, CheckCircle, Clock } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDesignRequests } from "@/hooks/useDesignRequests";
-import { useTeamSearch } from "@/hooks/useTeamSearch";
+import { useTeamSearchByDepartment } from "@/hooks/useTeamSearchByDepartment";
 import { formatDateTime } from "@/utils/dateFormatter";
 import { DesignRequestDto } from "@/services/api/designRequestsService";
 import { MemberSearchResult } from "@/types";
@@ -193,20 +193,21 @@ export default function DesignerQuickActions() {
   const [selectedRequest, setSelectedRequest] = useState<DesignRequestDto | null>(null);
   const [assignmentNotes, setAssignmentNotes] = useState("");
   const [selectedDesigner, setSelectedDesigner] = useState<MemberSearchResult | null>(null);
-  const [designerInputValue, setDesignerInputValue] = useState<string>("");
   const [assigning, setAssigning] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
-  // Team search hook for designer autocomplete
+  // Search designers from Design Department (ID: 3)
   const {
     employees: designers,
     loading: searchingDesigners,
     searchEmployees: searchDesigners,
-  } = useTeamSearch({
+  } = useTeamSearchByDepartment({
+    departmentId: 3, // Design Department
     minLength: 1,
-    maxResults: 20,
-    loadInitialResults: false,
+    maxResults: 100,
+    loadInitialResults: true, // Load all designers initially
+    initialResultsLimit: 100,
   });
 
   // Handle refresh
@@ -220,7 +221,6 @@ export default function DesignerQuickActions() {
   const handleAssign = (request: DesignRequestDto) => {
     setSelectedRequest(request);
     setSelectedDesigner(null);
-    setDesignerInputValue("");
     setAssignmentNotes("");
     setModalError(null);
     setIsModalOpen(true);
@@ -228,7 +228,7 @@ export default function DesignerQuickActions() {
 
   // Handle assignment submission
   const handleAssignSubmit = async () => {
-    if (!selectedRequest || !selectedDesigner?.id) {
+    if (!selectedRequest || !selectedDesigner) {
       setModalError(t("designRequests.designerRequired") || "Designer selection is required");
 
       return;
@@ -254,7 +254,6 @@ export default function DesignerQuickActions() {
         setIsModalOpen(false);
         setSelectedRequest(null);
         setSelectedDesigner(null);
-        setDesignerInputValue("");
         setAssignmentNotes("");
         
         // Refresh the list
@@ -497,70 +496,47 @@ export default function DesignerQuickActions() {
 
                     {/* Designer Selection */}
                     <div>
-                      <label className="text-sm font-medium text-default-700 mb-2 block">
-                        {t("designRequests.selectDesignerForAssignment") || "Select Designer for Assignment"} *
-                      </label>
                       <Autocomplete
-                        defaultFilter={() => true}
-                        inputValue={designerInputValue}
-                        isLoading={searchingDesigners}
-                        menuTrigger="input"
+                        label={t("designRequests.selectDesignerForAssignment") || "Select Designer for Assignment"}
                         placeholder={t("tasks.selectDesigner") || "Search for designer..."}
-                        selectedKey={selectedDesigner?.id?.toString() || ""}
-                        value={
-                          selectedDesigner
-                            ? `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`
-                            : designerInputValue
-                        }
-                        onInputChange={(value) => {
-                          setDesignerInputValue(value);
-                          // clear selection if input no longer matches selected
-                          if (selectedDesigner) {
-                            const expectedValue = `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`;
-
-                            if (value !== expectedValue) {
-                              setSelectedDesigner(null);
-                            }
-                          }
-                          searchDesigners(value);
-                        }}
+                        defaultSelectedKey={selectedDesigner?.id.toString()}
+                        isLoading={searchingDesigners}
+                        defaultItems={designers}
                         onSelectionChange={(key) => {
-                          const designer = designers.find(
-                            (member) => member.id.toString() === String(key),
-                          );
-
-                          setSelectedDesigner(designer || null);
-                          // Set the display value when a designer is selected
-                          if (designer) {
-                            setDesignerInputValue(
-                              `${designer.gradeName} ${designer.fullName}`,
-                            );
+                          if (key) {
+                            const designer = designers.find((d) => d.id.toString() === key);
+                            if (designer) {
+                              setSelectedDesigner(designer);
+                              setModalError(null);
+                            }
+                          } else {
+                            setSelectedDesigner(null);
                           }
                         }}
                       >
-                        {designers.map((designer) => (
+                        {(designer: MemberSearchResult) => (
                           <AutocompleteItem
                             key={designer.id.toString()}
                             textValue={`${designer.gradeName} ${designer.fullName} ${designer.userName} ${designer.militaryNumber}`}
-                          >
-                            <div className="flex items-center gap-3">
+                            startContent={
                               <Avatar
                                 alt={designer.fullName}
                                 className="flex-shrink-0"
                                 name={designer.fullName}
                                 size="sm"
                               />
-                              <div className="flex flex-col">
-                                <span className="text-sm font-medium">
-                                  {designer.fullName}
-                                </span>
-                                <span className="text-xs text-default-500">
-                                  {designer.militaryNumber} - {designer.gradeName}
-                                </span>
-                              </div>
+                            }
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {designer.gradeName} {designer.fullName}
+                              </span>
+                              <span className="text-xs text-default-500">
+                                {designer.militaryNumber}
+                              </span>
                             </div>
                           </AutocompleteItem>
-                        ))}
+                        )}
                       </Autocomplete>
                       {modalError && (
                         <p className="text-danger text-sm mt-1">{modalError}</p>

@@ -94,6 +94,7 @@ public interface ITeamRepository : IRepository<Team>
     System.Threading.Tasks.Task UpdateTeamMemberAsync(Team team);
     System.Threading.Tasks.Task<bool> RemoveTeamMemberAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<Employee>> SearchUsersInTeamsAsync(string searchTerm);
+    System.Threading.Tasks.Task<IEnumerable<Employee>> SearchUsersInDepartmentAsync(string searchTerm, int departmentId);
 }
 
 public interface IUnitRepository : IRepository<Unit>

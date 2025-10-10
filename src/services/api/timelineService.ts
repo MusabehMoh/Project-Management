@@ -75,6 +75,32 @@ export class TimelineApiService {
   }
 
   /**
+   * Search members by department
+   * @param query - Search query string
+   * @param departmentId - Department ID to filter by
+   * @param limit - Optional limit for results
+   */
+  async searchMembersByDepartment(
+    query: string,
+    departmentId: number,
+    limit?: number,
+  ): Promise<ApiResponse<MemberSearchResult[]>> {
+    console.log("----> Searching members by department:", departmentId);
+    const params = new URLSearchParams({ 
+      q: query, 
+      departmentId: departmentId.toString() 
+    });
+
+    if (limit) {
+      params.append("limit", limit.toString());
+    }
+
+    return apiClient.get<MemberSearchResult[]>(
+      `/employees/searchUsers?${params}`,
+    );
+  }
+
+  /**
    * Get all department employees (without requiring search query)
    */
   async getAllDepartmentEmployees(): Promise<

@@ -19,6 +19,9 @@ export { useProjectDetails } from "./useProjectDetails";
 // Export design requests hook
 export { useDesignRequests } from "./useDesignRequests";
 
+// Export team search hooks
+export { useTeamSearchByDepartment } from "./useTeamSearchByDepartment";
+
 // Export timeline form helpers
 export { useTimelineFormHelpers } from "./useTimelineFormHelpers";
 export { useTimelineFormValidation } from "./useTimelineFormValidation";
