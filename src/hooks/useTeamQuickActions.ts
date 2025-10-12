@@ -1,16 +1,15 @@
-import { useState, useEffect } from "react";
-import { membersTasksService } from "@/services/api";
 import type { MemberTask } from "@/types/membersTasks";
+
+import { useState, useEffect } from "react";
+
+import { membersTasksService } from "@/services/api";
 
 interface UseTeamQuickActionsResult {
   actions: MemberTask[];
   loading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
-  updateTaskStatus: (
-    taskId: number,
-    newStatus: string,
-  ) => Promise<void>;
+  updateTaskStatus: (taskId: number, newStatus: string) => Promise<void>;
 }
 
 /**
@@ -35,9 +34,7 @@ export function useTeamQuickActions(): UseTeamQuickActionsResult {
       if (response.success && response.data) {
         // Filter for tasks that need action (statusId !== 5 which is "Completed")
         const actionableTasks =
-          response.data.tasks?.filter(
-            (task) => task.statusId !== 5,
-          ) || [];
+          response.data.tasks?.filter((task) => task.statusId !== 5) || [];
 
         setActions(actionableTasks);
       } else {
@@ -57,7 +54,7 @@ export function useTeamQuickActions(): UseTeamQuickActionsResult {
     try {
       // Call the API to update task status
       await membersTasksService.updateTaskStatus(taskId, newStatus);
-      
+
       // Refresh the actions list
       await fetchActions();
     } catch (err) {

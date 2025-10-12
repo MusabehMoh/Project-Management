@@ -86,9 +86,9 @@ export class TimelineApiService {
     limit?: number,
   ): Promise<ApiResponse<MemberSearchResult[]>> {
     console.log("----> Searching members by department:", departmentId);
-    const params = new URLSearchParams({ 
-      q: query, 
-      departmentId: departmentId.toString() 
+    const params = new URLSearchParams({
+      q: query,
+      departmentId: departmentId.toString(),
     });
 
     if (limit) {

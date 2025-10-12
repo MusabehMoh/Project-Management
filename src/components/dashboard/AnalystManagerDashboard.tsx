@@ -119,7 +119,7 @@ export default function AnalystManagerDashboard() {
 
           {/* Requirement Completion Tracking */}
           <div className="space-y-4">
-            <RequirementCompletionTracker useMockData={true} />
+            <RequirementCompletionTracker />
           </div>
         </div>
 

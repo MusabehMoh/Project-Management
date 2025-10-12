@@ -23,38 +23,6 @@ interface PendingCodeReview {
   dueDate?: string;
 }
 
-interface AlmostCompletedTask {
-  id: number;
-  treeId: string;
-  name: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  duration: number;
-  projectName: string;
-  sprintName: string;
-  assigneeName?: string;
-  statusId: number;
-  priorityId: number;
-  progress?: number;
-  daysUntilDeadline: number;
-  isOverdue: boolean;
-  estimatedHours?: number;
-  actualHours?: number;
-  departmentName?: string;
-}
-
-interface AvailableDeveloper {
-  userId: string;
-  fullName: string;
-  department: string;
-  gradeName: string;
-  totalTasks: number;
-  currentWorkload: "low" | "medium" | "high";
-  skills: string[];
-  availability: "available" | "busy" | "away";
-}
-
 interface UseDeveloperQuickActionsResult {
   unassignedTasks: UnassignedTask[];
   almostCompletedTasks: AlmostCompletedTask[];
@@ -242,34 +210,40 @@ export function useDeveloperQuickActions(
   ];
   const mockAvailableDevelopers: AvailableDeveloper[] = [
     {
-      userId: "dev-3",
+      id: 3,
       fullName: "Omar Khalil",
-      department: "Frontend Development",
       gradeName: "Senior Developer",
-      totalTasks: 3,
-      currentWorkload: "medium",
-      skills: ["React", "TypeScript", "Next.js"],
-      availability: "available",
+      email: "omar.khalil@company.com",
+      department: "Frontend Development",
+      departmentId: 1,
+      militaryNumber: "12345",
+      currentTasksCount: 3,
+      totalCapacity: 5,
+      availableCapacity: 2,
     },
     {
-      userId: "dev-4",
+      id: 4,
       fullName: "Fatima Nasser",
-      department: "Backend Development",
       gradeName: "Lead Developer",
-      totalTasks: 2,
-      currentWorkload: "low",
-      skills: ["Node.js", "Python", "PostgreSQL"],
-      availability: "available",
+      email: "fatima.nasser@company.com",
+      department: "Backend Development",
+      departmentId: 2,
+      militaryNumber: "23456",
+      currentTasksCount: 2,
+      totalCapacity: 5,
+      availableCapacity: 3,
     },
     {
-      userId: "dev-5",
+      id: 5,
       fullName: "Hassan Ali",
-      department: "Full Stack Development",
       gradeName: "Developer",
-      totalTasks: 1,
-      currentWorkload: "low",
-      skills: ["Vue.js", "Express.js", "MongoDB"],
-      availability: "available",
+      email: "hassan.ali@company.com",
+      department: "Full Stack Development",
+      departmentId: 3,
+      militaryNumber: "34567",
+      currentTasksCount: 1,
+      totalCapacity: 5,
+      availableCapacity: 4,
     },
   ];
 
@@ -301,14 +275,10 @@ export function useDeveloperQuickActions(
   }, [fetchData]);
 
   const extendTask = useCallback(
-    async (taskId: number, newEndDate: string, reason: string) => {
+    async (taskId: number, newEndDate: string, _reason: string) => {
       try {
         // In real implementation, would call:
         // await developerQuickActionsService.extendTask(taskId, newEndDate, reason);
-
-        console.log(
-          `Extending task ${taskId} to ${newEndDate}. Reason: ${reason}`,
-        );
 
         // Update the local state to reflect the change
         setAlmostCompletedTasks((prev) =>

@@ -51,7 +51,8 @@ export const usePermissions = () => {
 
       // Action checkers by ID
       hasActionById: (actionId: number) => hasActionById(user, actionId),
-      hasAnyActionById: (actionIds: number[]) => hasAnyActionById(user, actionIds),
+      hasAnyActionById: (actionIds: number[]) =>
+        hasAnyActionById(user, actionIds),
       hasAllActionsById: (actionIds: number[]) =>
         hasAllActionsById(user, actionIds),
 

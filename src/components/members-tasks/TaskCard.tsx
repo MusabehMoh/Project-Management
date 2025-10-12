@@ -2,10 +2,11 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Progress } from "@heroui/progress";
 import { Badge } from "@heroui/badge";
-import { CalendarDays, Clock, CheckCircle } from "lucide-react";
+import { CalendarDays, CheckCircle } from "lucide-react";
 import { Button } from "@heroui/button";
 
 import { MemberTask } from "@/types/membersTasks";
+import { MemberSearchResult } from "@/types/timeline";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDateOnly } from "@/utils/dateFormatter";
 import { getTaskTypeText, getTaskTypeColor } from "@/constants/taskTypes";
@@ -54,8 +55,6 @@ export const TaskCard = ({
   };
 
   const handleCardClick = () => {
-    console.log("TaskCard clicked:", task.id, task.name);
-
     if (onClick) {
       // Pass the task to the parent component
       onClick(task);
@@ -130,7 +129,7 @@ export const TaskCard = ({
         {/* Department indicator */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm text-foreground-600">
-            {task.department?.name || "Unknown Department"}
+            {task.department?.name || ""}
           </span>
           {task.isOverdue && (
             <Badge color="danger" size="sm" variant="flat">
@@ -185,14 +184,27 @@ export const TaskCard = ({
           </div>
         </div>
 
-        {/* Dates */}
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-foreground-500" />
-          <p className="text-xs text-foreground-500">{t("estimatedTime")}</p>
-          <p className="text-sm font-medium text-foreground">
-            {task.estimatedTime}h
-          </p>
-        </div>
+        {/* Assignees */}
+        {task.assignedMembers && task.assignedMembers.length > 0 && (
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-foreground-500" />
+            <p className="text-xs text-foreground-500">{t("assignees")}</p>
+            <div className="flex flex-wrap gap-1">
+              {task.assignedMembers
+                .slice(0, 2)
+                .map((assignee: MemberSearchResult, index: number) => (
+                  <Chip key={index} color="primary" size="sm" variant="flat">
+                    {`${assignee.gradeName} ${assignee.fullName}`}
+                  </Chip>
+                ))}
+              {task.assignedMembers.length > 2 && (
+                <Chip size="sm" variant="flat">
+                  +{task.assignedMembers.length - 2}
+                </Chip>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Tags */}
         {/* {task.tags.length > 0 && (
@@ -224,7 +236,7 @@ export const TaskCard = ({
             </div>
             <div>
               <span className="font-medium">{t("requirementLabel")} </span>
-              <span>{task.requirement?.name || "Unknown Requirement"}</span>
+              <span>{task.requirement?.name || ""}</span>
             </div>
             <div>
               <span className="font-medium">{t("task.type")} </span>

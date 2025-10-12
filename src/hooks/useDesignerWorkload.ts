@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
-import { designerWorkloadService } from "@/services/api";
 import type {
   DesignerWorkloadDto,
   TeamMetricsDto,
   GetDesignerWorkloadParams,
 } from "@/services/api/designerWorkloadService";
+
+import { useState, useEffect } from "react";
+
+import { designerWorkloadService } from "@/services/api";
 
 interface PaginationInfo {
   currentPage: number;
@@ -55,20 +57,25 @@ export function useDesignerWorkload(
       setError(null);
 
       // Fetch workload data
-      const workloadResponse = await designerWorkloadService.getDesignerWorkload({
-        ...params,
-        page: page || params.page || 1,
-      });
+      const workloadResponse =
+        await designerWorkloadService.getDesignerWorkload({
+          ...params,
+          page: page || params.page || 1,
+        });
 
       setDesigners(workloadResponse.designers);
       setPagination(workloadResponse.pagination);
 
       // Fetch team metrics
       const metricsData = await designerWorkloadService.getTeamMetrics();
+
       setMetrics(metricsData);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch designer workload";
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch designer workload";
+
       setError(errorMessage);
       console.error("Error fetching designer workload:", err);
     } finally {

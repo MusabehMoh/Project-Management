@@ -38,14 +38,16 @@ export interface AlmostCompletedTask {
 }
 
 export interface AvailableDeveloper {
-  userId: string;
+  id: number;
   fullName: string;
-  department: string;
   gradeName: string;
-  totalTasks: number;
-  currentWorkload: "low" | "medium" | "high";
-  skills: string[];
-  availability: "available" | "busy" | "away";
+  email: string;
+  department: string;
+  departmentId: number;
+  militaryNumber: string;
+  currentTasksCount: number;
+  totalCapacity: number;
+  availableCapacity: number;
 }
 
 export interface DeveloperQuickActionsResponse {
@@ -56,9 +58,11 @@ export interface DeveloperQuickActionsResponse {
 
 class DeveloperQuickActionsServiceV2 {
   async getQuickActions(): Promise<DeveloperQuickActionsResponse> {
-    const response = await apiClient.get<DeveloperQuickActionsResponse>(
-      "/developer-quick-actions",
-    );
+    const response = await apiClient.get<{
+      success: boolean;
+      data: DeveloperQuickActionsResponse;
+      message: string;
+    }>("/developer-quick-actions");
 
     if (!response.success) {
       throw new Error(
@@ -66,7 +70,19 @@ class DeveloperQuickActionsServiceV2 {
       );
     }
 
-    return response.data;
+    // Add defensive check for response.data and provide defaults
+    const data = response.data || {
+      unassignedTasks: [],
+      almostCompletedTasks: [],
+      availableDevelopers: [],
+    };
+
+    // Ensure all required properties exist with defaults
+    return {
+      unassignedTasks: data.unassignedTasks || [],
+      almostCompletedTasks: data.almostCompletedTasks || [],
+      availableDevelopers: data.availableDevelopers || [],
+    };
   }
 
   async getUnassignedTasks(): Promise<UnassignedTask[]> {

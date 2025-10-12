@@ -24,6 +24,7 @@ export { useTeamSearchByDepartment } from "./useTeamSearchByDepartment";
 
 // Export designer workload hook
 export { useDesignerWorkload } from "./useDesignerWorkload";
+export { useTeamMembers } from "./useTeamMembers";
 
 // Export timeline form helpers
 export { useTimelineFormHelpers } from "./useTimelineFormHelpers";

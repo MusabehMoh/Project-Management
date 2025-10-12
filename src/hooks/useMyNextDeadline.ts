@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import { membersTasksService } from "@/services/api";
 import type { MemberTask } from "@/types/membersTasks";
+
+import { useState, useEffect } from "react";
+
+import { membersTasksService } from "@/services/api";
 
 interface UseMyNextDeadlineResult {
   task: MemberTask | null;

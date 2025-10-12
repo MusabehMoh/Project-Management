@@ -7,6 +7,7 @@ import type {
   AdhocTask,
 } from "@/types/membersTasks";
 import type { ApiResponse } from "@/types/project";
+import type { MemberSearchResult } from "@/types/timeline";
 
 import { apiClient, API_CONFIG } from "./client";
 
@@ -65,6 +66,11 @@ export class MembersTasksService {
       params.append("priority", taskRequest.priorityId.toString());
     } else if (taskRequest?.priorityIds?.length) {
       params.append("priority", taskRequest.priorityIds[0].toString());
+    }
+
+    // Handle assignee filter - use first member ID as primaryAssigneeId
+    if (taskRequest?.memberIds?.length) {
+      params.append("primaryAssigneeId", taskRequest.memberIds[0].toString());
     }
 
     const endpoint = `${this.baseUrl}?${params.toString()}`;
@@ -227,7 +233,8 @@ export class MembersTasksService {
       status: 1, // Pending status
     };
 
-    const response = await designRequestsService.createDesignRequest(designRequest);
+    const response =
+      await designRequestsService.createDesignRequest(designRequest);
 
     return {
       success: response.success,
@@ -248,10 +255,22 @@ export class MembersTasksService {
     memberIds: string[],
     notes: string,
   ): Promise<ApiResponse<void>> {
-    return apiClient.post<void>(`${this.baseUrl}/${taskId}/change-assignees`, {
-      memberIds,
-      notes,
-    });
+    try {
+      return await apiClient.post<void>(
+        `${this.baseUrl}/${taskId}/change-assignees`,
+        {
+          assigneeIds: memberIds,
+          notes: notes,
+        },
+      );
+    } catch {
+      return {
+        success: false,
+        data: undefined,
+        message: "Failed to change task assignees",
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 
   /*change Status */
@@ -372,6 +391,24 @@ export class MembersTasksService {
         success: false,
         data: null,
         message: "Failed to fetch next deadline",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get team members for assignee filtering
+   */
+  async getTeamMembers(): Promise<ApiResponse<MemberSearchResult[]>> {
+    try {
+      return await apiClient.get<MemberSearchResult[]>(
+        `${this.baseUrl}/team-members`,
+      );
+    } catch {
+      return {
+        success: false,
+        data: [],
+        message: "Failed to fetch team members",
         timestamp: new Date().toISOString(),
       };
     }

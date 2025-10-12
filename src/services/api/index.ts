@@ -30,6 +30,9 @@ export { projectRequirementsService } from "./projectRequirementsService";
 export { designRequestsService } from "./designRequestsService";
 export { designerWorkloadService } from "./designerWorkloadService";
 
+// Requirement completion service
+export { requirementCompletionService } from "../requirementCompletionService";
+
 // Export the service instances
 export const projectService = projectsApi;
 export const timelineService = timelineApi;

@@ -17,7 +17,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined
+  undefined,
 );
 
 // Translation dictionary
@@ -78,6 +78,9 @@ const translations = {
     "pipeline.planning": "Planning",
     "pipeline.inProgress": "In Progress",
     "pipeline.completed": "Completed",
+    "pipeline.underStudy": "Under Study",
+    "pipeline.underDevelopment": "Under Development",
+    "pipeline.underTesting": "Under Testing",
     "pipeline.initiatePlanning": "Initiate Planning",
     "pipeline.reviewRequirements": "Review Requirements",
     "pipeline.resourceAllocation": "Resource Allocation",
@@ -445,6 +448,7 @@ const translations = {
     "common.unexpectedError": "An unexpected error occurred",
     "common.AddAdhocTask": "Add Adhoc Task",
     "common.project": "Project",
+    "common.assignee": "Assignee",
     "common.taskDetails": "Task Details",
     "common.dueDate": "Due Date",
 
@@ -584,9 +588,12 @@ const translations = {
     "developerDashboard.currentTasks": "Tasks",
     "developerDashboard.status": "Status",
     "developerDashboard.status.available": "Available",
+    "developerDashboard.status.light": "Light",
     "developerDashboard.status.busy": "Busy",
     "developerDashboard.status.blocked": "Blocked",
     "developerDashboard.status.on-leave": "On Leave",
+    "developerDashboard.status.overloaded": "Overloaded",
+    "developerDashboard.busyUntil": "Busy until",
     "developerDashboard.currentSprint": "Current Sprint",
     "developerDashboard.pendingReviews": "Pending Code Reviews",
     "developerDashboard.noReviews": "No Pending Reviews",
@@ -651,26 +658,29 @@ const translations = {
 
     // Team Member - Kanban Board
     "teamDashboard.kanban.title": "Task Board",
-    "teamDashboard.kanban.subtitle": "Drag and drop tasks to update their status",
+    "teamDashboard.kanban.subtitle":
+      "Drag and drop tasks to update their status",
     "teamDashboard.kanban.noTasks": "No tasks",
     "teamDashboard.kanban.project": "Project",
     "teamDashboard.kanban.requirement": "Requirement",
     "teamDashboard.kanban.overdue": "Overdue",
-    "teamDashboard.kanban.restricted": "Restricted - You don't have permission to modify tasks in this status",
+    "teamDashboard.kanban.restricted":
+      "Restricted - You don't have permission to modify tasks in this status",
     "teamDashboard.kanban.locked": "Locked",
-    "teamDashboard.kanban.notAccessible": "This status is not accessible with your current role",
-    "teamDashboard.kanban.cannotModify": "You don't have permission to modify tasks in this status",
-    "teamDashboard.kanban.cannotDragFrom": "You cannot move tasks from this status",
+    "teamDashboard.kanban.notAccessible":
+      "This status is not accessible with your current role",
+    "teamDashboard.kanban.cannotModify":
+      "You don't have permission to modify tasks in this status",
+    "teamDashboard.kanban.cannotDragFrom":
+      "You cannot move tasks from this status",
     "teamDashboard.kanban.cannotDropTo": "You cannot move tasks to this status",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "Quick Actions",
-    "teamDashboard.quickActions.subtitle":
-      "Quickly update your task statuses",
+    "teamDashboard.quickActions.subtitle": "Quickly update your task statuses",
     "teamDashboard.quickActions.myActiveTasks": "My Active Tasks",
     "teamDashboard.quickActions.noActions": "No actions needed",
-    "teamDashboard.quickActions.noActionsDesc":
-      "All your tasks are up to date",
+    "teamDashboard.quickActions.noActionsDesc": "All your tasks are up to date",
     "teamDashboard.quickActions.untitled": "Untitled Task",
     "teamDashboard.quickActions.project": "Project",
     "teamDashboard.quickActions.start": "Start",
@@ -1022,7 +1032,9 @@ const translations = {
       "Start date must be before end date",
     "tasks.validation.bothDatesRequired":
       "Both start and end dates are required when a role is assigned",
-    "tasks.assignedOn": "Assigned On", // Additional requirements keys
+    "tasks.assignedOn": "Assigned On",
+    "tasks.filterByAssignees": "Filter by Assignees",
+    "tasks.tasksFound": "{count} tasks found",
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
     "requirements.taskInfo": "Task Information",
@@ -1039,10 +1051,8 @@ const translations = {
     "requirements.validation.typeRequired": "Requirement type is required",
     "requirements.validation.expectedDateRequired":
       "Expected completion date is required",
-    "requirements.validation.fileEmptyError":
-      "Empty File Rejected",
-    "requirements.validation.filesEmptyError":
-      "files are empty",
+    "requirements.validation.fileEmptyError": "Empty File Rejected",
+    "requirements.validation.filesEmptyError": "files are empty",
     "requirements.emptyState.title": "No Requirements Yet",
     "requirements.emptyState.description":
       "Start by adding your first requirement for this project",
@@ -1688,14 +1698,18 @@ const translations = {
     "designRequests.errorRequirementNotFound": "Requirement details not found",
     "designRequests.errorLoadingDetails": "Error loading details",
     "designRequests.assignmentNotes": "Assignment Notes",
-    "designRequests.assignmentNotesPlaceholder": "Add notes for this assignment (optional)",
-    "designRequests.selectDesignerForAssignment": "Select Designer for Assignment",
+    "designRequests.assignmentNotesPlaceholder":
+      "Add notes for this assignment (optional)",
+    "designRequests.selectDesignerForAssignment":
+      "Select Designer for Assignment",
     "designRequests.assignAndCreateTask": "Assign & Create Task",
     "designRequests.assigningInProgress": "Assigning...",
     "designRequests.taskCreatedForDesigner": "Task created for designer",
     "designRequests.assignmentComment": "Assignment Comment",
-    "designRequests.noUnassigned": "No actions require your attention at this time",
-    "designRequests.assignSuccessDescription": "The design request has been assigned to the designer",
+    "designRequests.noUnassigned":
+      "No actions require your attention at this time",
+    "designRequests.assignSuccessDescription":
+      "The design request has been assigned to the designer",
 
     // States
     noTasksFound: "No tasks found",
@@ -1741,8 +1755,8 @@ const translations = {
 
     // Toast messages
     "toast.statusChangedSuccess": "تم تغيير الحالة بنجاح",
-    "toast.assigneesChangedSuccess": "تم تغيير المسؤولين بنجاح",
-    "toast.assigneesChangeFailed": "لم يتم تغيير المسؤولين",
+    "toast.assigneesChangedSuccess": "تم تغيير المعينين بنجاح",
+    "toast.assigneesChangeFailed": "لم يتم تغيير المعينين",
     "toast.designRequestedSuccess": "تم طلب التصميم بنجاح",
     "toast.designerAssignedSuccess": "تم تعيين المصمم بنجاح",
     "toast.designerAssignmentFailed": "فشل في تعيين المصمم",
@@ -1753,7 +1767,7 @@ const translations = {
     "nav.dashboard": "لوحة التحكم",
     "nav.projects": "المشاريع",
     "nav.requirements": "قيد التحليل",
-    "nav.developmentRequirements": "قيد التطوير",
+    "nav.developmentRequirements": "قيد البرمجة",
     "nav.taskPlan": "خطة المهام",
     "nav.users": "المستخدمين",
     "nav.timeline": "المخطط الزمني",
@@ -1792,6 +1806,9 @@ const translations = {
     "pipeline.planning": "التخطيط",
     "pipeline.inProgress": "قيد التنفيذ",
     "pipeline.completed": "مكتمل",
+    "pipeline.underStudy": "قيد الدراسة",
+    "pipeline.underDevelopment": "قيد البرمجة",
+    "pipeline.underTesting": "قيد الاختبار",
     "pipeline.noProjects": "لا توجد مشاريع في هذه المرحلة",
 
     // Common
@@ -1808,7 +1825,7 @@ const translations = {
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",
     "pipeline.assignTeamMembers": "تعيين أعضاء الفريق",
-    "pipeline.activeDevelopment": "التطوير النشط",
+    "pipeline.activeDevelopment": "البرمجة النشط",
     "pipeline.codingPhase": "مرحلة البرمجة",
     "pipeline.testing": "الاختبار",
     "pipeline.qualityAssurance": "ضمان الجودة",
@@ -1992,7 +2009,7 @@ const translations = {
     "dashboard.viewCurrentSchedule": "عرض المخطط الزمني الحالي",
     "dashboard.underReview": "قيد المراجعة",
     "dashboard.analysisInProgress": "التحليل قيد التقدم",
-    "dashboard.awaitingDev": "في انتظار التطوير",
+    "dashboard.awaitingDev": "في انتظار البرمجة",
     "dashboard.teamWorkload": "عبء العمل للفريق",
     "dashboard.teamWorkloadPerformance": "عبء العمل والأداء للفريق",
     "dashboard.quickActions": "الإجراءات السريعة",
@@ -2150,6 +2167,7 @@ const translations = {
     "common.unexpectedError": "حدث خطأ غير متوقع",
     "common.AddAdhocTask": "إضافة مهمة عاجلة",
     "common.project": "المشروع",
+    "common.assignee": "المعين",
     "common.taskDetails": "تفاصيل المهمة",
     "common.dueDate": "تاريخ الاستحقاق",
 
@@ -2218,10 +2236,10 @@ const translations = {
 
     // Developer Dashboard
     "developerDashboard.title": "لوحة إدارة المطورين",
-    "developerDashboard.subtitle": "إدارة فرق التطوير ومراجعة الكود والنشر",
+    "developerDashboard.subtitle": "إدارة فرق البرمجة ومراجعة الكود والنشر",
     "developerDashboard.newSprint": "سبرنت جديد",
     "developerDashboard.createRelease": "إنشاء إصدار",
-    "developerDashboard.teamWorkload": "أعباء فريق التطوير",
+    "developerDashboard.teamWorkload": "أعباء فريق البرمجة",
     "developerDashboard.projectTimeline": "الجدول الزمني للمشروع",
     "developerDashboard.deploymentPipeline": "خط أنابيب النشر",
     "developerDashboard.sprintProgress": "تقدم السبرنت",
@@ -2234,7 +2252,7 @@ const translations = {
     "developerDashboard.assign": "تعيين",
     "developerDashboard.selectDeveloper": "اختر المطور",
     "developerDashboard.noActions": "لا توجد إجراءات معلقة",
-    "developerDashboard.allCaughtUp": "جميع مهام التطوير محدثة",
+    "developerDashboard.allCaughtUp": "جميع مهام البرمجة محدثة",
     "developerDashboard.loadingActions": "جاري تحميل إجراءات المطورين...",
     "developerDashboard.loadingWorkload": "جاري تحميل بيانات الأعباء...",
     "developerDashboard.loadingPipeline": "جاري تحميل خط أنابيب النشر...",
@@ -2286,9 +2304,12 @@ const translations = {
     "developerDashboard.currentTasks": "المهام",
     "developerDashboard.status": "الحالة",
     "developerDashboard.status.available": "متاح",
+    "developerDashboard.status.light": "عمل خفيف",
     "developerDashboard.status.busy": "مشغول",
     "developerDashboard.status.blocked": "محجوب",
     "developerDashboard.status.on-leave": "في إجازة",
+    "developerDashboard.status.overloaded": "عمل زائد",
+    "developerDashboard.busyUntil": "مشغول حتى",
     "developerDashboard.currentSprint": "السبرنت الحالي",
     "developerDashboard.pendingReviews": "مراجعات الكود المعلقة",
     "developerDashboard.noReviews": "لا توجد مراجعات معلقة",
@@ -2319,8 +2340,7 @@ const translations = {
 
     // Team Member Dashboard
     "teamDashboard.title": "لوحة أعضاء الفريق",
-    "teamDashboard.subtitle":
-      "إدارة مهامك، تتبع التقدم، والتعاون مع فريقك",
+    "teamDashboard.subtitle": "إدارة مهامك، تتبع التقدم، والتعاون مع فريقك",
     "teamDashboard.tasksCompleted": "المهام المكتملة",
     "teamDashboard.thisMonth": "هذا الشهر",
     "teamDashboard.averageCompletionTime": "متوسط وقت الإنجاز",
@@ -2358,21 +2378,21 @@ const translations = {
     "teamDashboard.kanban.project": "المشروع",
     "teamDashboard.kanban.requirement": "المتطلب",
     "teamDashboard.kanban.overdue": "متأخر",
-    "teamDashboard.kanban.restricted": "محظور - ليس لديك صلاحية لتعديل المهام في هذه الحالة",
+    "teamDashboard.kanban.restricted":
+      "محظور - ليس لديك صلاحية لتعديل المهام في هذه الحالة",
     "teamDashboard.kanban.locked": "مقفل",
     "teamDashboard.kanban.notAccessible": "هذه الحالة غير متاحة لدورك الحالي",
-    "teamDashboard.kanban.cannotModify": "ليس لديك صلاحية لتعديل المهام في هذه الحالة",
+    "teamDashboard.kanban.cannotModify":
+      "ليس لديك صلاحية لتعديل المهام في هذه الحالة",
     "teamDashboard.kanban.cannotDragFrom": "لا يمكنك نقل المهام من هذه الحالة",
     "teamDashboard.kanban.cannotDropTo": "لا يمكنك نقل المهام إلى هذه الحالة",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "الإجراءات السريعة",
-    "teamDashboard.quickActions.subtitle":
-      "تحديث حالة مهامك بسرعة",
+    "teamDashboard.quickActions.subtitle": "تحديث حالة مهامك بسرعة",
     "teamDashboard.quickActions.myActiveTasks": "مهامي النشطة",
     "teamDashboard.quickActions.noActions": "لا توجد إجراءات مطلوبة",
-    "teamDashboard.quickActions.noActionsDesc":
-      "جميع مهامك محدثة",
+    "teamDashboard.quickActions.noActionsDesc": "جميع مهامك محدثة",
     "teamDashboard.quickActions.untitled": "مهمة بدون عنوان",
     "teamDashboard.quickActions.project": "المشروع",
     "teamDashboard.quickActions.start": "بدء",
@@ -2404,10 +2424,9 @@ const translations = {
       "إدارة مهام التصميم، مراجعة التسليمات، والتنسيق مع فريق التصميم",
     "designerDashboard.comingSoon": "قريباً",
     "designerDashboard.comingSoonDescription":
-      "لوحة مدير التصميم قيد التطوير حالياً. ترقبوا التحديثات!",
+      "لوحة مدير التصميم قيد البرمجة حالياً. ترقبوا التحديثات!",
     "designerDashboard.quickActions": "الإجراءات السريعة",
-    "designerDashboard.quickActionsSubtitle":
-      "مهام التصميم التي تحتاج اهتمامك",
+    "designerDashboard.quickActionsSubtitle": "مهام التصميم التي تحتاج اهتمامك",
     "designerDashboard.teamPerformance": "أداء فريق التصميم",
     "designerDashboard.searchDesigners": "البحث عن المصممين...",
     "designerDashboard.designer": "المصمم",
@@ -2453,7 +2472,7 @@ const translations = {
     "projects.exportData": "تصدير البيانات",
     "projects.totalProjects": "إجمالي المشاريع",
     "projects.underStudy": "قيد الدراسة",
-    "projects.underDevelopment": "قيد التطوير",
+    "projects.underDevelopment": "قيد البرمجة",
     "projects.testing": "بيئة الفحص",
     "projects.operating": "بيئة التشغيل",
     "projects.production": "بيئة الانتاج",
@@ -2584,7 +2603,7 @@ const translations = {
     "requirements.status": "الحالة",
     "requirements.saveAsDraft": "حفظ كمسودة",
     "requirements.requestApproval": "طلب الموافقة",
-    "requirements.startDevelopment": "بدء التطوير",
+    "requirements.startDevelopment": "بدء البرمجة",
     "requirements.cancel": "إلغاء",
     "requirements.requirementNamePlaceholder": "مثال: إصدار فاتورة PDF",
     "requirements.requirementDescriptionPlaceholder": "اكتب تفاصيل المتطلب...",
@@ -2631,15 +2650,15 @@ const translations = {
     "requirements.draft": "مسودة",
     "requirements.pending": "قيد المراجعة",
     "requirements.approved": "موافق عليه",
-    "requirements.inDevelopment": "قيد التطوير",
-    "requirements.in_development": "قيد التطوير",
-    "requirements.indevelopment": "قيد التطوير",
-    "requirements.developmentRequirements": "متطلبات التطوير",
+    "requirements.inDevelopment": "قيد البرمجة",
+    "requirements.in_development": "قيد البرمجة",
+    "requirements.indevelopment": "قيد البرمجة",
+    "requirements.developmentRequirements": "متطلبات البرمجة",
     "requirements.developmentRequirementsSubtitle":
-      "عرض جميع المتطلبات التي هي قيد التطوير عبر المشاريع",
+      "عرض جميع المتطلبات التي هي قيد البرمجة عبر المشاريع",
     "requirements.approvedRequirements": "المتطلبات المعتمدة",
     "requirements.approvedRequirementsSubtitle":
-      "عرض جميع المتطلبات المعتمدة جاهزة للتطوير",
+      "عرض جميع المتطلبات المعتمدة جاهزة للبرمجة",
     "requirements.noApprovedRequirements": "لا توجد متطلبات معتمدة",
     "requirements.noApprovedRequirementsDesc":
       "لا توجد حالياً متطلبات معتمدة متاحة.",
@@ -2654,20 +2673,20 @@ const translations = {
     "requirements.approveConfirmMessage":
       'هل أنت متأكد من أنك تريد الموافقة على المتطلب "{name}"؟',
     "requirements.approveWarningMessage":
-      'سيؤدي هذا إلى تغيير الحالة إلى "معتمد" وجعله متاحاً لمرحلة التطوير.',
+      'سيؤدي هذا إلى تغيير الحالة إلى "معتمد" وجعله متاحاً لمرحلة البرمجة.',
     "requirements.approveSuccess": "تمت الموافقة على المتطلب بنجاح",
     "requirements.approveError": "فشل في الموافقة على المتطلب",
-    "requirements.noDevelopmentRequirements": "لا توجد متطلبات قيد التطوير",
+    "requirements.noDevelopmentRequirements": "لا توجد متطلبات قيد البرمجة",
     "requirements.noDevelopmentRequirementsDesc":
-      "لا توجد حالياً متطلبات موسومة بأنها قيد التطوير.",
-    "requirements.totalInDevelopment": "إجمالي المتطلبات قيد التطوير",
-    "keyrequirements.indevelopment": "قيد التطوير",
+      "لا توجد حالياً متطلبات موسومة بأنها قيد البرمجة.",
+    "requirements.totalInDevelopment": "إجمالي المتطلبات قيد البرمجة",
+    "keyrequirements.indevelopment": "قيد البرمجة",
     "requirements.project": "المشروع",
     "requirements.completed": "مكتمل",
     // Requirement Status Translations - Arabic
     "requirementStatus.1": "جديد",
     "requirementStatus.2": "قيد الدراسة",
-    "requirementStatus.3": "قيد التطوير",
+    "requirementStatus.3": "قيد البرمجة",
     "requirementStatus.4": "قيد الاختبار",
     "requirementStatus.5": "مكتمل",
     "requirements.high": "عالية",
@@ -2719,8 +2738,9 @@ const translations = {
     "tasks.validation.bothDatesRequired":
       "تاريخ البداية والنهاية مطلوبان عند تعيين دور",
     "tasks.assignedOn": "تم التعيين في",
+    "tasks.filterByAssignees": "تصفية حسب المعينين",
+    "tasks.tasksFound": "{count} مهام موجودة",
 
-    // Additional requirements keys (Arabic)
     "requirements.updated": "تاريخ التحديث",
     "requirements.uploadedOn": "تم الرفع في",
     "requirements.taskInfo": "معلومات المهمة",
@@ -2737,10 +2757,8 @@ const translations = {
     "requirements.validation.typeRequired": "نوع المتطلب مطلوب",
     "requirements.validation.expectedDateRequired":
       "تاريخ الإنجاز المتوقع مطلوب",
-    "requirements.validation.fileEmptyError":
-      "تم رفض ملف فارغ",
-    "requirements.validation.filesEmptyError":
-      "ملفات فارغة",
+    "requirements.validation.fileEmptyError": "تم رفض ملف فارغ",
+    "requirements.validation.filesEmptyError": "ملفات فارغة",
     "requirements.emptyState.title": "لا توجد متطلبات بعد",
     "requirements.emptyState.description": "ابدأ بإضافة أول متطلب لهذا المشروع",
     "requirements.emptyState.action": "إضافة أول متطلب",
@@ -2754,9 +2772,9 @@ const translations = {
 
     // Task Plan
     "taskPlan.title": "خطة المهام",
-    "taskPlan.subtitle": "عرض جميع المتطلبات في حالة التطوير",
+    "taskPlan.subtitle": "عرض جميع المتطلبات في حالة البرمجة",
     "taskPlan.allRequirements": "جميع المتطلبات",
-    "taskPlan.inDevelopment": "قيد التطوير",
+    "taskPlan.inDevelopment": "قيد البرمجة",
     "taskPlan.filterByProject": "تصفية حسب المشروع",
     "taskPlan.searchRequirements": "البحث في المتطلبات...",
     "taskPlan.noRequirements": "لم يتم العثور على متطلبات",
@@ -2964,7 +2982,7 @@ const translations = {
     // Project Status Options
     // Project Status/Phases
     "projectStatus.1": "قيد الدراسة",
-    "projectStatus.2": "قيد التطوير",
+    "projectStatus.2": "قيد البرمجة",
     "projectStatus.3": "بيئة الفحص",
     "projectStatus.4": "بيئة التشغيل",
     "projectStatus.5": "بيئة الانتاج",
@@ -3343,7 +3361,7 @@ const translations = {
     exportAsCSV: "تصدير كملف CSV",
     exportAsPDF: "تصدير كملف PDF",
     exportAsExcel: "تصدير كملف Excel",
-    
+
     // Design Requests
     "nav.designRequests": "طلبات التصميم",
     "designRequests.title": "طلبات التصميم",
@@ -3371,17 +3389,21 @@ const translations = {
     "designRequests.filter.unassigned": "غير المعينة",
     "designRequests.viewDetails": "عرض التفاصيل",
     "designRequests.errorTaskNotFound": "لم يتم العثور على تفاصيل المهمة",
-    "designRequests.errorRequirementNotFound": "لم يتم العثور على تفاصيل المتطلبات",
+    "designRequests.errorRequirementNotFound":
+      "لم يتم العثور على تفاصيل المتطلبات",
     "designRequests.errorLoadingDetails": "خطأ في تحميل التفاصيل",
     "designRequests.assignmentNotes": "ملاحظات التعيين",
-    "designRequests.assignmentNotesPlaceholder": "أضف ملاحظات لهذا التعيين (اختياري)",
+    "designRequests.assignmentNotesPlaceholder":
+      "أضف ملاحظات لهذا التعيين (اختياري)",
     "designRequests.selectDesignerForAssignment": "اختر المصمم ",
     "designRequests.assignAndCreateTask": "تعيين وإنشاء مهمة",
     "designRequests.assigningInProgress": "جاري التعيين...",
     "designRequests.taskCreatedForDesigner": "تم إنشاء مهمة للمصمم",
     "designRequests.assignmentComment": "تعليق التعيين",
-    "designRequests.noUnassigned": "لا توجد إجراءات تتطلب انتباهك في الوقت الحالي",
-    "designRequests.assignSuccessDescription": "تم تعيين طلب التصميم إلى المصمم",
+    "designRequests.noUnassigned":
+      "لا توجد إجراءات تتطلب انتباهك في الوقت الحالي",
+    "designRequests.assignSuccessDescription":
+      "تم تعيين طلب التصميم إلى المصمم",
 
     // States
     noTasksFound: "لم يتم العثور على مهام",

@@ -63,7 +63,14 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
 
         if (departmentId.HasValue)
         {
-            query = query.Where(t => t.DepartmentId == departmentId.Value);
+            // Get team member PRS IDs from the specified department
+            var departmentTeamPrsIds = await _context.Teams
+                .Where(t => t.DepartmentId == departmentId.Value && t.IsActive == true)
+                .Select(t => t.PrsId)
+                .ToListAsync();
+            
+            // Filter tasks that are assigned to team members from this department
+            query = query.Where(t => t.Assignments.Any(a => departmentTeamPrsIds.Contains(a.PrsId)));
         }
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -210,6 +217,73 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .Include(td => td.DependsOnTask)
             .Where(td => td.TaskId == taskId)
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<User>> GetTeamMembersAsync(bool isAdministrator, bool isManager, int? currentUserDepartmentId)
+    {
+        if (isAdministrator)
+        {
+            // Administrators can see all team members from Teams table
+            var allTeamMembers = await _context.Teams
+                .Include(t => t.Employee)
+                .Where(t => t.IsActive == true && t.Employee != null)
+                .Select(t => new User
+                {
+                    Id = t.Employee!.Id,
+                    PrsId = t.Employee.Id,
+                    UserName = t.Employee.UserName,
+                    FullName = t.Employee.FullName,
+                    MilitaryNumber = t.Employee.MilitaryNumber,
+                    GradeName = t.Employee.GradeName,
+                    IsVisible = true,
+                    Email = "",
+                    Phone = "",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    Employee = t.Employee,
+                    DepartmentId = t.DepartmentId
+                })
+                .OrderBy(u => u.GradeName)
+                .ThenBy(u => u.FullName)
+                .ToListAsync();
+            
+            return allTeamMembers;
+        }
+        else if (currentUserDepartmentId.HasValue)
+        {
+            // Managers and regular users can see members from their department only
+            var departmentTeamMembers = await _context.Teams
+                .Include(t => t.Employee)
+                .Where(t => t.DepartmentId == currentUserDepartmentId.Value && 
+                           t.IsActive == true && 
+                           t.Employee != null)
+                .Select(t => new User
+                {
+                    Id = t.Employee!.Id,
+                    PrsId = t.Employee.Id,
+                    UserName = t.Employee.UserName,
+                    FullName = t.Employee.FullName,
+                    MilitaryNumber = t.Employee.MilitaryNumber,
+                    GradeName = t.Employee.GradeName,
+                    IsVisible = true,
+                    Email = "",
+                    Phone = "",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    Employee = t.Employee,
+                    DepartmentId = t.DepartmentId
+                })
+                .OrderBy(u => u.GradeName)
+                .ThenBy(u => u.FullName)
+                .ToListAsync();
+            
+            return departmentTeamMembers;
+        }
+        else
+        {
+            // If no department context, return empty list
+            return new List<User>();
+        }
     }
 }
 

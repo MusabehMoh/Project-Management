@@ -5,54 +5,25 @@ export interface RequirementCompletionAnalytics {
     totalRequirements: number;
     completedRequirements: number;
     onTimeCompleted: number;
-    lateCompleted: number;
-    overdueRequirements: number;
-    atRiskRequirements: number;
     onTimeRate: number;
     avgDelayDays: number;
   };
-  byPriority: {
-    high: {
-      total: number;
-      onTime: number;
-      late: number;
-      overdue: number;
-    };
-    medium: {
-      total: number;
-      onTime: number;
-      late: number;
-      overdue: number;
-    };
-    low: {
-      total: number;
-      onTime: number;
-      late: number;
-      overdue: number;
-    };
-  };
-  monthlyTrend: Array<{
-    month: string;
-    total: number;
-    onTime: number;
-    onTimeRate: number;
-  }>;
   overdueItems: Array<{
     id: number;
-    name: string;
+    requirementTitle: string;
     priority: string;
-    expectedDate: string;
+    expectedCompletionDate: string;
     daysOverdue: number;
-    assignedAnalyst?: number;
+    assignedAnalyst?: string;
     projectName?: string;
   }>;
   atRiskItems: Array<{
     id: number;
-    name: string;
+    requirementTitle: string;
     priority: string;
-    expectedDate: string;
+    expectedCompletionDate: string;
     daysUntilDeadline: number;
-    assignedAnalyst?: number;
+    assignedAnalyst?: string;
     projectName?: string;
   }>;
 }

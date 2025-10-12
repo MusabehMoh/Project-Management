@@ -38,6 +38,7 @@ interface UseMembersTasksResult {
   handleSearchChange: (search: string) => void;
   handlePriorityChange: (priorityId: number) => void;
   handleStatusChange: (statusId: number) => void;
+  handleAssigneeChange: (memberIds: number[]) => void;
   handleResetFilters: () => void;
   taskParametersRequest: TaskSearchParams;
 }
@@ -142,6 +143,17 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     }));
   }, []);
 
+  /**
+   * Handle assignee change
+   */
+  const handleAssigneeChange = useCallback((memberIds: number[]) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      memberIds: memberIds.length > 0 ? memberIds : undefined,
+      memberFilterMode: "any", // Show tasks assigned to any of the selected members
+    }));
+  }, []);
+
   /// get tasks config
   const tasksConfig = async (): Promise<void> => {
     setHeaderLoading(true);
@@ -172,12 +184,12 @@ export const useMembersTasks = (): UseMembersTasksResult => {
 
       if (response.success) {
         addToast({
-          description: response.message ?? t("toast.assigneesChangedSuccess"),
+          description:  t("toast.assigneesChangedSuccess"),
           color: "success",
         });
       } else {
         addToast({
-          description: response.message ?? t("toast.assigneesChangeFailed"),
+          description:  t("toast.assigneesChangeFailed"),
           color: "warning",
         });
       }
@@ -443,6 +455,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     handleSearchChange,
     handleProjectChange,
     handleStatusChange,
+    handleAssigneeChange,
     handleResetFilters,
     taskParametersRequest,
     refreshTasks,

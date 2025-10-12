@@ -201,7 +201,8 @@ export const useQuickActions = (
       // Handle the available members response structure (RGIS business logic)
       if (availableMembersResponse.success && availableMembersResponse.data) {
         // New simplified structure with RGIS business logic
-        const responseData = availableMembersResponse.data as AvailableMembersResponse;
+        const responseData =
+          availableMembersResponse.data as AvailableMembersResponse;
 
         setAvailableMembers(responseData.availableMembers || []);
         // No more teamWorkload in the new RGIS structure

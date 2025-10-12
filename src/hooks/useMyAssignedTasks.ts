@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import { membersTasksService } from "@/services/api";
 import type { MemberTask } from "@/types/membersTasks";
+
+import { useState, useEffect } from "react";
+
+import { membersTasksService } from "@/services/api";
 
 interface UseMyAssignedTasksResult {
   tasks: MemberTask[];
@@ -38,9 +40,7 @@ export function useMyAssignedTasks(): UseMyAssignedTasksResult {
       }
     } catch (err) {
       console.error("Error fetching my assigned tasks:", err);
-      setError(
-        err instanceof Error ? err : new Error("Failed to fetch tasks"),
-      );
+      setError(err instanceof Error ? err : new Error("Failed to fetch tasks"));
     } finally {
       setLoading(false);
     }

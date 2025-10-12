@@ -26,7 +26,6 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import { usePageTitle } from "@/hooks";
 import { useProjectStatus } from "@/hooks/useProjectStatus";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
-import { showWarningToast } from "@/utils/toast";
 
 export default function RequirementsPage() {
   const { t, language } = useLanguage();
@@ -389,7 +388,7 @@ export default function RequirementsPage() {
                           </div>
                         </Tooltip>
                         <Tooltip content={t("requirements.owningUnit")}>
-                          <div 
+                          <div
                             className="text-sm text-default-500 w-fit cursor-help"
                             dir={language === "ar" ? "rtl" : "ltr"}
                           >
@@ -452,9 +451,15 @@ export default function RequirementsPage() {
                           <div
                             className={`h-2 rounded-full transition-all duration-300 ${
                               project.requirementsCount > 0
-                                ? (project.completedRequirements / project.requirementsCount) * 100 >= 70
+                                ? (project.completedRequirements /
+                                    project.requirementsCount) *
+                                    100 >=
+                                  70
                                   ? "bg-success"
-                                  : (project.completedRequirements / project.requirementsCount) * 100 >= 40
+                                  : (project.completedRequirements /
+                                        project.requirementsCount) *
+                                        100 >=
+                                      40
                                     ? "bg-warning"
                                     : "bg-danger"
                                 : "bg-default-300"
@@ -485,8 +490,8 @@ export default function RequirementsPage() {
                         </Button>
                         <Tooltip content={t("requirements.viewDetails")}>
                           <Button
-                            color="default"
                             isIconOnly
+                            color="default"
                             size="sm"
                             variant="bordered"
                             onPress={() => handleViewDetails(project)}
@@ -640,9 +645,15 @@ export default function RequirementsPage() {
                         <div
                           className={`h-2 rounded-full transition-all duration-300 ${
                             selectedProject.requirementsCount > 0
-                              ? (selectedProject.completedRequirements / selectedProject.requirementsCount) * 100 >= 70
+                              ? (selectedProject.completedRequirements /
+                                  selectedProject.requirementsCount) *
+                                  100 >=
+                                70
                                 ? "bg-success"
-                                : (selectedProject.completedRequirements / selectedProject.requirementsCount) * 100 >= 40
+                                : (selectedProject.completedRequirements /
+                                      selectedProject.requirementsCount) *
+                                      100 >=
+                                    40
                                   ? "bg-warning"
                                   : "bg-danger"
                               : "bg-default-300"

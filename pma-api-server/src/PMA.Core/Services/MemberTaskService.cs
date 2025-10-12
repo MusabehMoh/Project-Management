@@ -56,13 +56,14 @@ public class MemberTaskService : IMemberTaskService
         if (isAdministrator)
         {
             // Administrator sees all tasks - no filtering needed
-            assigneeId = null;
+            assigneeId = primaryAssigneeId; // Allow filtering by any assignee
             deptId = null;
         }
         else if (isManager)
         {
-            // Managers see all tasks for their department
-            assigneeId = null;
+            // Managers see all tasks for their department, but can filter by specific assignee
+            // The repository will ensure department-level security
+            assigneeId = primaryAssigneeId; // Allow assignee filtering for managers
             if (currentUser.Roles != null && currentUser.Roles.Count > 0 && currentUser.Roles[0]?.Department?.Id != null)
             {
                 deptId = currentUser.Roles[0].Department?.Id;
@@ -71,9 +72,22 @@ public class MemberTaskService : IMemberTaskService
         else
         {
             // Regular users see only their assigned tasks
-            if (!assigneeId.HasValue && int.TryParse(userContext.PrsId, out int currentUserId))
+            int currentUserId = 0;
+            if (int.TryParse(userContext.PrsId, out currentUserId))
             {
-                assigneeId = currentUserId;
+                if (!primaryAssigneeId.HasValue)
+                {
+                    assigneeId = currentUserId;
+                }
+                // If primaryAssigneeId is provided for regular users, only allow their own ID
+                else if (primaryAssigneeId.Value == currentUserId)
+                {
+                    assigneeId = primaryAssigneeId;
+                }
+                else
+                {
+                    assigneeId = currentUserId; // Fallback to their own tasks
+                }
             }
         }
 
@@ -144,6 +158,7 @@ public class MemberTaskService : IMemberTaskService
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
             AssignedMembers = assignedMembers,
+            MemberIds = assignedMembers.Select(a => a.Id).ToList(),
             DepartmentId = task.DepartmentId,
             DepartmentName = task.Department?.Name ?? "",
             Department = task.Department != null ? new DepartmentDto
@@ -269,6 +284,62 @@ public class MemberTaskService : IMemberTaskService
         var designRequestTaskIdSet = new HashSet<int>(designRequestTaskIds);
         
         return tasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet));
+    }
+
+    public async Task<IEnumerable<MemberSearchResultDto>> GetTeamMembersAsync()
+    {
+        // Get current user context
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.PrsId))
+        {
+            return Enumerable.Empty<MemberSearchResultDto>();
+        }
+
+        // Get current user with roles to determine access level
+        var currentUser = await _userService.GetCurrentUserAsync();
+        if (currentUser == null)
+        {
+            return Enumerable.Empty<MemberSearchResultDto>();
+        }
+
+        bool isAdministrator = currentUser.Roles?.Any(r => IsRoleCode(r.Code, RoleCodes.Administrator)) ?? false;
+        bool isManager = currentUser.Roles?.Any(r => IsManagerRole(r.Code)) ?? false;
+
+        // Get team members based on role
+        var teamMembers = await _taskRepository.GetTeamMembersAsync(
+            isAdministrator: isAdministrator,
+            isManager: isManager,
+            currentUserDepartmentId: currentUser.Roles?.FirstOrDefault()?.Department?.Id
+        );
+
+        return teamMembers.Select(member => new MemberSearchResultDto
+        {
+            Id = member.PrsId, // Use PrsId as the Id for member search
+            UserName = member.UserName ?? "",
+            MilitaryNumber = member.MilitaryNumber ?? "",
+            FullName = member.FullName ?? "",
+            GradeName = member.GradeName ?? "",
+            StatusId = member.Employee?.StatusId ?? 1, // Default to active if no employee record
+            Department = member.Department?.Name ?? ""
+        });
+    }
+
+    public async Task<bool> ChangeTaskAssigneesAsync(int taskId, IEnumerable<int> assigneeIds, string? notes = null)
+    { 
+        // Get the task to ensure it exists
+        var task = await _taskRepository.GetByIdAsync(taskId);
+        if (task == null)
+        {
+            throw new InvalidOperationException($"Task with ID {taskId} not found");
+        }
+
+        // Update task assignments directly using the repository
+        await _taskRepository.UpdateTaskAssignmentsAsync(taskId, assigneeIds);
+
+        // Note: Audit trail for assignee changes could be added here in the future
+        // if a TaskAssigneeHistory table is created
+
+        return true;
     }
 }
 

@@ -44,6 +44,7 @@ export default function MyNextDeadline({
     if (days < 0) return "danger"; // Overdue
     if (days <= 3) return "danger"; // 3 days or less
     if (days <= 7) return "warning"; // 1 week or less
+
     return "success"; // More than 1 week
   };
 
@@ -51,6 +52,7 @@ export default function MyNextDeadline({
     if (progress >= 75) return "success";
     if (progress >= 50) return "primary";
     if (progress >= 25) return "warning";
+
     return "danger";
   };
 

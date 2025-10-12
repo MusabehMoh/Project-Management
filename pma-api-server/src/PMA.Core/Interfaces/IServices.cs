@@ -271,6 +271,8 @@ public interface IMemberTaskService
     System.Threading.Tasks.Task<bool> DeleteMemberTaskAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<TaskDto>> GetMemberTasksByProjectAsync(int projectId);
     System.Threading.Tasks.Task<IEnumerable<TaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId);
+    System.Threading.Tasks.Task<IEnumerable<MemberSearchResultDto>> GetTeamMembersAsync();
+    System.Threading.Tasks.Task<bool> ChangeTaskAssigneesAsync(int taskId, IEnumerable<int> assigneeIds, string? notes = null);
 }
 
 public interface IDesignRequestService

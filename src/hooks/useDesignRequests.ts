@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 
-import { designRequestsService, DesignRequestDto } from "@/services/api/designRequestsService";
+import {
+  designRequestsService,
+  DesignRequestDto,
+} from "@/services/api/designRequestsService";
 
 interface UseDesignRequestsOptions {
   page?: number;
@@ -20,7 +23,11 @@ interface UseDesignRequestsResult {
   totalCount: number;
   totalPages: number;
   refetch: () => Promise<void>;
-  assignDesignRequest: (id: number, assignedToPrsId: number, notes?: string) => Promise<boolean>;
+  assignDesignRequest: (
+    id: number,
+    assignedToPrsId: number,
+    notes?: string,
+  ) => Promise<boolean>;
 }
 
 /**
@@ -85,17 +92,30 @@ export function useDesignRequests(
         setError(response.message || "Failed to fetch design requests");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch design requests";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch design requests";
 
       setError(errorMessage);
       console.error("Error fetching design requests:", err);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, taskId, assignedToPrsId, status, includeTaskDetails, includeRequirementDetails]);
+  }, [
+    page,
+    limit,
+    taskId,
+    assignedToPrsId,
+    status,
+    includeTaskDetails,
+    includeRequirementDetails,
+  ]);
 
   const assignDesignRequest = useCallback(
-    async (id: number, assignedToPrsId: number, notes?: string): Promise<boolean> => {
+    async (
+      id: number,
+      assignedToPrsId: number,
+      notes?: string,
+    ): Promise<boolean> => {
       try {
         const response = await designRequestsService.assignDesignRequest(
           id,

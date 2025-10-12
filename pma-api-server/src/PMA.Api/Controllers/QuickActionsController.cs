@@ -1285,6 +1285,114 @@ public class QuickActionsController : ApiBaseController
         }
     }
 
+    /// <summary>
+    /// Get pipeline projects organized by stages with status information
+    /// </summary>
+    [HttpGet("pipeline-projects")]
+    public async Task<IActionResult> GetPipelineProjects()
+    {
+        try
+        {
+            // Get projects with requirements count and completion data
+            var projectsQuery = from p in _context.Projects
+                               join pr in _context.ProjectRequirements on p.Id equals pr.ProjectId into prGroup
+                               from pr in prGroup.DefaultIfEmpty()
+                               group pr by p into g
+                               select new
+                               {
+                                   Project = g.Key,
+                                   RequirementsCount = g.Count(x => x != null),
+                                   CompletedRequirements = g.Count(x => x != null && 
+                                       (x.Status == RequirementStatusEnum.Approved || 
+                                        x.Status == RequirementStatusEnum.Completed))
+                               };
+
+            var projectsData = await projectsQuery.ToListAsync();
+
+            // Get project status lookup data
+            var statusLookups = new[]
+            {
+                new { Code = 2, Value = "UnderStudy", Name = "Under Study", NameAr = "قيد الدراسة" },
+                new { Code = 3, Value = "UnderDevelopment", Name = "Under Development", NameAr = "قيد التطوير" },
+                new { Code = 4, Value = "UnderTesting", Name = "Under Testing", NameAr = "قيد الاختبار" }
+            };
+
+            // Organize projects by pipeline stages
+            var planning = projectsData
+                .Where(p => p.Project.Status == ProjectStatus.UnderStudy)
+                .Select(p => new
+                {
+                    id = p.Project.Id,
+                    applicationName = p.Project.ApplicationName,
+                    projectOwner = p.Project.ProjectOwner,
+                    owningUnit = p.Project.OwningUnit,
+                    status = (int)p.Project.Status,
+                    statusName = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.Name ?? p.Project.Status.ToString(),
+                    statusNameAr = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.NameAr ?? p.Project.Status.ToString(),
+                    requirementsCount = p.RequirementsCount,
+                    completedRequirements = p.CompletedRequirements,
+                    lastActivity = p.Project.UpdatedAt
+                })
+                .ToList();
+
+            var inProgress = projectsData
+                .Where(p => p.Project.Status == ProjectStatus.UnderDevelopment)
+                .Select(p => new
+                {
+                    id = p.Project.Id,
+                    applicationName = p.Project.ApplicationName,
+                    projectOwner = p.Project.ProjectOwner,
+                    owningUnit = p.Project.OwningUnit,
+                    status = (int)p.Project.Status,
+                    statusName = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.Name ?? p.Project.Status.ToString(),
+                    statusNameAr = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.NameAr ?? p.Project.Status.ToString(),
+                    requirementsCount = p.RequirementsCount,
+                    completedRequirements = p.CompletedRequirements,
+                    lastActivity = p.Project.UpdatedAt
+                })
+                .ToList();
+
+            var completed = projectsData
+                .Where(p => p.Project.Status == ProjectStatus.UnderTesting)
+                .Select(p => new
+                {
+                    id = p.Project.Id,
+                    applicationName = p.Project.ApplicationName,
+                    projectOwner = p.Project.ProjectOwner,
+                    owningUnit = p.Project.OwningUnit,
+                    status = (int)p.Project.Status,
+                    statusName = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.Name ?? p.Project.Status.ToString(),
+                    statusNameAr = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.NameAr ?? p.Project.Status.ToString(),
+                    requirementsCount = p.RequirementsCount,
+                    completedRequirements = p.CompletedRequirements,
+                    lastActivity = p.Project.UpdatedAt
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    planning,
+                    inProgress,
+                    completed,
+                    statusLookups
+                },
+                message = "Pipeline projects retrieved successfully"
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = "An error occurred while retrieving pipeline projects",
+                error = ex.Message
+            });
+        }
+    }
+
     public class ApproveStatusRequest
     {
         public bool Approved { get; set; }

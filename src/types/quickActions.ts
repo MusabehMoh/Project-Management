@@ -32,7 +32,7 @@ export interface QuickActionStats {
   totalTasks: number;
   activeProjectRequirements: number;
   teamMembers: number;
-  
+
   // Legacy stats for backward compatibility
   pendingRequirements: number;
   unassignedTasks: number;

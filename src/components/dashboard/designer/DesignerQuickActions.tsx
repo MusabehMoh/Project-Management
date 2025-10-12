@@ -18,12 +18,11 @@ import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Textarea } from "@heroui/input";
 import { Avatar } from "@heroui/avatar";
 import { addToast } from "@heroui/toast";
-import { RefreshCw, Palette, CheckCircle, Clock } from "lucide-react";
+import { RefreshCw, Palette, CheckCircle } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDesignRequests } from "@/hooks/useDesignRequests";
 import { useTeamSearchByDepartment } from "@/hooks/useTeamSearchByDepartment";
-import { formatDateTime } from "@/utils/dateFormatter";
 import { DesignRequestDto } from "@/services/api/designRequestsService";
 import { MemberSearchResult } from "@/types";
 
@@ -79,7 +78,13 @@ const CustomAlert = React.forwardRef<
     description?: React.ReactNode;
     children?: React.ReactNode;
     variant?: "faded" | "flat" | "bordered" | "solid";
-    color?: "success" | "warning" | "danger" | "default" | "primary" | "secondary";
+    color?:
+      | "success"
+      | "warning"
+      | "danger"
+      | "default"
+      | "primary"
+      | "secondary";
     className?: string;
     classNames?: Record<string, string>;
     direction?: "ltr" | "rtl";
@@ -175,24 +180,21 @@ CustomAlert.displayName = "CustomAlert";
 export default function DesignerQuickActions() {
   const { t, language } = useLanguage();
   const direction = language === "ar" ? "rtl" : "ltr";
-  
+
   // Fetch unassigned design requests (status = 1)
-  const {
-    designRequests,
-    loading,
-    error,
-    refetch,
-    assignDesignRequest,
-  } = useDesignRequests({
-    status: 1, // Unassigned
-    limit: 50,
-  });
+  const { designRequests, loading, error, refetch, assignDesignRequest } =
+    useDesignRequests({
+      status: 1, // Unassigned
+      limit: 50,
+    });
 
   // Modal state for assignment
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<DesignRequestDto | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<DesignRequestDto | null>(null);
   const [assignmentNotes, setAssignmentNotes] = useState("");
-  const [selectedDesigner, setSelectedDesigner] = useState<MemberSearchResult | null>(null);
+  const [selectedDesigner, setSelectedDesigner] =
+    useState<MemberSearchResult | null>(null);
   const [fieldInputValue, setFieldInputValue] = useState("");
   const [assigning, setAssigning] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -231,7 +233,10 @@ export default function DesignerQuickActions() {
   // Handle assignment submission
   const handleAssignSubmit = async () => {
     if (!selectedRequest || !selectedDesigner) {
-      setModalError(t("designRequests.designerRequired") || "Designer selection is required");
+      setModalError(
+        t("designRequests.designerRequired") ||
+          "Designer selection is required",
+      );
 
       return;
     }
@@ -258,15 +263,19 @@ export default function DesignerQuickActions() {
         setSelectedDesigner(null);
         setFieldInputValue("");
         setAssignmentNotes("");
-        
+
         // Refresh the list
         await refetch();
       } else {
-        setModalError(t("designRequests.assignError") || "Failed to assign design request");
+        setModalError(
+          t("designRequests.assignError") || "Failed to assign design request",
+        );
       }
     } catch (err) {
       console.error("Error assigning design request:", err);
-      setModalError(t("designRequests.assignError") || "Failed to assign design request");
+      setModalError(
+        t("designRequests.assignError") || "Failed to assign design request",
+      );
     } finally {
       setAssigning(false);
     }
@@ -302,7 +311,9 @@ export default function DesignerQuickActions() {
       <Card className="w-full border-default-200" shadow="sm">
         <CardBody className="p-6">
           <div className="text-center text-danger">
-            <p>{t("common.error") || "Error"}: {error}</p>
+            <p>
+              {t("common.error") || "Error"}: {error}
+            </p>
           </div>
         </CardBody>
       </Card>
@@ -365,110 +376,119 @@ export default function DesignerQuickActions() {
             {/* Unassigned Design Requests Accordion */}
             {designRequests.length > 0 && (
               <div className="space-y-4">
-                <Accordion 
-                  selectionMode="single" 
-                  variant="splitted" 
+                <Accordion
                   fullWidth
                   itemClasses={itemClasses}
+                  selectionMode="single"
+                  variant="splitted"
                 >
                   <AccordionItem
                     key="unassigned-requests"
                     className="border border-default-200 rounded-lg"
-            title={
-              <div className="flex items-center justify-between w-full">
-                <h3 className="text-lg font-semibold text-foreground">
-                  {language === "ar" ? "مصمم غير معين" : "Unassigned Designer"}
-                </h3>
-                <Chip
-                  className="bg-danger-50 text-danger-600"
-                  size="sm"
-                  variant="flat"
-                >
-                  {designRequests.length}
-                </Chip>
-              </div>
-            }
-          >
-            <ScrollShadow
-              className="max-h-64"
-              hideScrollBar={true}
-              size={20}
-            >
-              <div className="space-y-3 pr-2">
-                {designRequests.map((request) => (
-                  <CustomAlert
-                    key={request.id}
-                    description={
-                      <div className="space-y-2">
-                        {/* Project Name */}
-                        {request.requirementDetails?.projectName && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="font-medium text-default-700">
-                              {t("common.project") || "Project"}:
-                            </span>
-                            <span className="text-default-600">
-                              {request.requirementDetails.projectName}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Requirement Name */}
-                        {request.requirementDetails?.name && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="font-medium text-default-700">
-                              {t("requirements.requirement") || "Requirement"}:
-                            </span>
-                            <span className="text-default-600">
-                              {request.requirementDetails.name}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Requirement Description */}
-                        {request.requirementDetails?.description && (
-                          <div className="text-sm text-default-600">
-                            <p className="line-clamp-2">
-                              {request.requirementDetails.description}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Task Description */}
-                        {request.task?.description && (
-                          <div className="text-sm text-default-600 pt-1 border-t border-default-200">
-                            <span className="font-medium text-default-700">
-                              {t("common.taskDetails") || "Task Details"}:
-                            </span>
-                            <p className="mt-1 line-clamp-2">
-                              {request.task.description}
-                            </p>
-                          </div>
-                        )}
+                    title={
+                      <div className="flex items-center justify-between w-full">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {language === "ar"
+                            ? "مصمم غير معين"
+                            : "Unassigned Designer"}
+                        </h3>
+                        <Chip
+                          className="bg-danger-50 text-danger-600"
+                          size="sm"
+                          variant="flat"
+                        >
+                          {designRequests.length}
+                        </Chip>
                       </div>
                     }
-                    direction={direction}
-                    title={request.task?.name || `Task #${request.taskId}`}
                   >
-                    <Divider className="bg-default-200 my-3" />
-                    <div
-                      className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
+                    <ScrollShadow
+                      className="max-h-64"
+                      hideScrollBar={true}
+                      size={20}
                     >
-                      <Button
-                        className="bg-background text-default-700 font-medium border-1 shadow-small"
-                        size="sm"
-                        variant="bordered"
-                        onPress={() => handleAssign(request)}
-                      >
-                        <CheckCircle size={16} />
-                        {t("designRequests.assignTo") || "Assign Designer"}
-                      </Button>
-                    </div>
-                  </CustomAlert>
-                ))}
-              </div>
-            </ScrollShadow>
-          </AccordionItem>
-        </Accordion>
+                      <div className="space-y-3 pr-2">
+                        {designRequests.map((request) => (
+                          <CustomAlert
+                            key={request.id}
+                            description={
+                              <div className="space-y-2">
+                                {/* Project Name */}
+                                {request.requirementDetails?.projectName && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="font-medium text-default-700">
+                                      {t("common.project") || "Project"}:
+                                    </span>
+                                    <span className="text-default-600">
+                                      {request.requirementDetails.projectName}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Requirement Name */}
+                                {request.requirementDetails?.name && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="font-medium text-default-700">
+                                      {t("requirements.requirement") ||
+                                        "Requirement"}
+                                      :
+                                    </span>
+                                    <span className="text-default-600">
+                                      {request.requirementDetails.name}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Requirement Description */}
+                                {request.requirementDetails?.description && (
+                                  <div className="text-sm text-default-600">
+                                    <p className="line-clamp-2">
+                                      {request.requirementDetails.description}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Task Description */}
+                                {request.task?.description && (
+                                  <div className="text-sm text-default-600 pt-1 border-t border-default-200">
+                                    <span className="font-medium text-default-700">
+                                      {t("common.taskDetails") ||
+                                        "Task Details"}
+                                      :
+                                    </span>
+                                    <p className="mt-1 line-clamp-2">
+                                      {request.task.description}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            }
+                            direction={direction}
+                            title={
+                              request.task?.name || `Task #${request.taskId}`
+                            }
+                          >
+                            <Divider className="bg-default-200 my-3" />
+                            <div
+                              className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
+                            >
+                              <Button
+                                className="bg-background text-default-700 font-medium border-1 shadow-small"
+                                size="sm"
+                                variant="bordered"
+                                onPress={() => handleAssign(request)}
+                              >
+                                <CheckCircle size={16} />
+                                {t("designRequests.assignTo") ||
+                                  "Assign Designer"}
+                              </Button>
+                            </div>
+                          </CustomAlert>
+                        ))}
+                      </div>
+                    </ScrollShadow>
+                  </AccordionItem>
+                </Accordion>
               </div>
             )}
 
@@ -496,42 +516,54 @@ export default function DesignerQuickActions() {
               <ModalBody>
                 {selectedRequest && (
                   <div className="space-y-4">
-
                     {/* Designer Selection */}
                     <div>
                       <Autocomplete
-                        label={t("designRequests.selectDesignerForAssignment") || "Select Designer for Assignment"}
-                        placeholder={t("tasks.selectDesigner") || "Search for designer..."}
-                        inputValue={fieldInputValue}
-                        isLoading={searchingDesigners}
-                        defaultItems={designers}
                         defaultFilter={(textValue, inputValue) => {
                           // Custom filter: search across all fields
-                          const designer = designers.find(d => 
-                            `${d.gradeName} ${d.fullName}` === textValue
+                          const designer = designers.find(
+                            (d) => `${d.gradeName} ${d.fullName}` === textValue,
                           );
+
                           if (!designer) return false;
-                          
+
                           const searchStr = inputValue.toLowerCase();
                           const searchFields = [
                             designer.gradeName,
                             designer.fullName,
                             designer.userName,
-                            designer.militaryNumber
-                          ].join(' ').toLowerCase();
-                          
+                            designer.militaryNumber,
+                          ]
+                            .join(" ")
+                            .toLowerCase();
+
                           return searchFields.includes(searchStr);
                         }}
+                        defaultItems={designers}
+                        inputValue={fieldInputValue}
+                        isLoading={searchingDesigners}
+                        label={
+                          t("designRequests.selectDesignerForAssignment") ||
+                          "Select Designer for Assignment"
+                        }
+                        placeholder={
+                          t("tasks.selectDesigner") || "Search for designer..."
+                        }
                         onInputChange={(value) => {
                           setFieldInputValue(value);
                         }}
                         onSelectionChange={(key) => {
                           if (key) {
-                            const designer = designers.find((d) => d.id.toString() === key);
+                            const designer = designers.find(
+                              (d) => d.id.toString() === key,
+                            );
+
                             if (designer) {
                               setSelectedDesigner(designer);
                               // Set only rank and full name in the input
-                              setFieldInputValue(`${designer.gradeName} ${designer.fullName}`);
+                              setFieldInputValue(
+                                `${designer.gradeName} ${designer.fullName}`,
+                              );
                               setModalError(null);
                             }
                           } else {
@@ -543,7 +575,6 @@ export default function DesignerQuickActions() {
                         {(designer: MemberSearchResult) => (
                           <AutocompleteItem
                             key={designer.id.toString()}
-                            textValue={`${designer.gradeName} ${designer.fullName}`}
                             startContent={
                               <Avatar
                                 alt={designer.fullName}
@@ -552,6 +583,7 @@ export default function DesignerQuickActions() {
                                 size="sm"
                               />
                             }
+                            textValue={`${designer.gradeName} ${designer.fullName}`}
                           >
                             <div className="flex flex-col">
                               <span className="text-sm font-medium">
@@ -572,9 +604,15 @@ export default function DesignerQuickActions() {
                     {/* Assignment Notes */}
                     <div>
                       <Textarea
-                        label={t("designRequests.assignmentNotes") || "Assignment Notes"}
+                        label={
+                          t("designRequests.assignmentNotes") ||
+                          "Assignment Notes"
+                        }
                         minRows={3}
-                        placeholder={t("designRequests.assignmentNotesPlaceholder") || "Add notes for this assignment (optional)"}
+                        placeholder={
+                          t("designRequests.assignmentNotesPlaceholder") ||
+                          "Add notes for this assignment (optional)"
+                        }
                         value={assignmentNotes}
                         onChange={(e) => setAssignmentNotes(e.target.value)}
                       />
@@ -598,7 +636,7 @@ export default function DesignerQuickActions() {
           )}
         </ModalContent>
       </Modal>
-      
+
       <style>
         {`
           @keyframes fadeInOut {

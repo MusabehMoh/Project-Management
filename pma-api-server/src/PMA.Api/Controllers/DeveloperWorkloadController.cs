@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
+using PMA.Core.Interfaces;
 using PMA.Infrastructure.Data;
 
 namespace PMA.Api.Controllers;
@@ -11,141 +12,298 @@ public class DeveloperWorkloadController : ApiBaseController
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<DeveloperWorkloadController> _logger;
+    private readonly IUserService _userService;
 
     public DeveloperWorkloadController(
         ApplicationDbContext context,
-        ILogger<DeveloperWorkloadController> logger)
+        ILogger<DeveloperWorkloadController> logger,
+        IUserService userService)
     {
         _context = context;
         _logger = logger;
+        _userService = userService;
     }
 
     /// <summary>
-    /// Get developer workload performance data with pagination and filtering
+    /// Get developer workload performance data with pagination and filtering using task assignments business logic
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetWorkloadData(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? sortBy = "developerName",
         [FromQuery] string? sortOrder = "asc",
         [FromQuery] string? status = null,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] int? departmentId = null)
     {
         try
         {
-            var query = _context.MawaredEmployees
-                .Include(e => e.User)
-                .AsQueryable();
+            // Get current user's department to filter team members
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+
+            // Apply department filter - prioritize current user's department, but allow departmentId parameter to override
+            var filterDepartmentId = departmentId ?? currentUserDepartmentId;
+
+            // Pre-aggregate task data with date-based calculations
+            var taskStats = await (
+                from ta in _context.TaskAssignments
+                join task in _context.Tasks on ta.TaskId equals task.Id
+                where filterDepartmentId.HasValue 
+                    ? _context.Teams.Any(t => t.PrsId == ta.PrsId && t.DepartmentId == filterDepartmentId.Value)
+                    : true
+                group new { ta, task } by ta.PrsId into g
+                select new
+                {
+                    PrsId = g.Key,
+                    
+                    // Active tasks count
+                    ActiveTasks = g.Count(x => new[] { 
+                        Core.Enums.TaskStatus.ToDo, 
+                        Core.Enums.TaskStatus.InProgress, 
+                        Core.Enums.TaskStatus.InReview, 
+                        Core.Enums.TaskStatus.Rework, 
+                        Core.Enums.TaskStatus.OnHold 
+                    }.Contains(x.task.StatusId)),
+                    
+                    // Completed tasks
+                    CompletedTasks = g.Count(x => x.task.StatusId == Core.Enums.TaskStatus.Completed),
+                    
+                    // Overdue tasks
+                    OverdueTasks = g.Count(x => 
+                        new[] { 
+                            Core.Enums.TaskStatus.ToDo, 
+                            Core.Enums.TaskStatus.InProgress, 
+                            Core.Enums.TaskStatus.InReview, 
+                            Core.Enums.TaskStatus.Rework 
+                        }.Contains(x.task.StatusId) && x.task.EndDate < DateTime.UtcNow),
+                    
+                    // Total days occupied by active tasks (sum of all task durations)
+                    TotalActiveDays = g
+                        .Where(x => new[] { 
+                            Core.Enums.TaskStatus.ToDo, 
+                            Core.Enums.TaskStatus.InProgress, 
+                            Core.Enums.TaskStatus.InReview, 
+                            Core.Enums.TaskStatus.Rework, 
+                            Core.Enums.TaskStatus.OnHold 
+                        }.Contains(x.task.StatusId) &&
+                        x.task.StartDate != default(DateTime) &&
+                        x.task.EndDate != default(DateTime))
+                        .Sum(x => (double?)EF.Functions.DateDiffDay(x.task.StartDate, x.task.EndDate))
+                        ?? 0,
+                    
+                    // Earliest start date of active tasks
+                    EarliestStartDate = g
+                        .Where(x => new[] { 
+                            Core.Enums.TaskStatus.ToDo, 
+                            Core.Enums.TaskStatus.InProgress, 
+                            Core.Enums.TaskStatus.InReview, 
+                            Core.Enums.TaskStatus.Rework, 
+                            Core.Enums.TaskStatus.OnHold 
+                        }.Contains(x.task.StatusId))
+                        .Min(x => (DateTime?)x.task.StartDate),
+                    
+                    // Latest end date of active tasks (busy until)
+                    MaxActiveTaskEndDate = g
+                        .Where(x => new[] { 
+                            Core.Enums.TaskStatus.ToDo, 
+                            Core.Enums.TaskStatus.InProgress, 
+                            Core.Enums.TaskStatus.InReview, 
+                            Core.Enums.TaskStatus.Rework, 
+                            Core.Enums.TaskStatus.OnHold 
+                        }.Contains(x.task.StatusId))
+                        .Max(x => (DateTime?)x.task.EndDate),
+                    
+                    // Average completion time for COMPLETED tasks
+                    AvgCompletionDays = g
+                        .Where(x => x.task.StatusId == Core.Enums.TaskStatus.Completed &&
+                                   x.task.StartDate != default(DateTime) && 
+                                   x.task.EndDate != default(DateTime))
+                        .Select(x => (double?)EF.Functions.DateDiffDay(x.task.StartDate, x.task.EndDate))
+                        .Average(),
+                    
+                    // Get all active tasks for timeline calculation
+                    ActiveTasksDetails = g
+                        .Where(x => new[] { 
+                            Core.Enums.TaskStatus.ToDo, 
+                            Core.Enums.TaskStatus.InProgress, 
+                            Core.Enums.TaskStatus.InReview, 
+                            Core.Enums.TaskStatus.Rework, 
+                            Core.Enums.TaskStatus.OnHold 
+                        }.Contains(x.task.StatusId))
+                        .Select(x => new { 
+                            StartDate = x.task.StartDate, 
+                            EndDate = x.task.EndDate,
+                            TaskName = x.task.Name
+                        })
+                        .ToList()
+                }).ToListAsync();
+
+            var taskStatsDict = taskStats.ToDictionary(x => x.PrsId);
+
+            // Helper function to calculate parallel workload (optional but more accurate)
+            double CalculateParallelWorkload(List<object> tasks)
+            {
+                if (tasks == null || !tasks.Any()) return 0;
+                
+                var taskList = tasks.Cast<dynamic>().ToList();
+                var now = DateTime.UtcNow.Date;
+                var maxDate = taskList.Max(t => (DateTime)t.EndDate);
+                var daysToCheck = (maxDate - now).Days;
+                
+                if (daysToCheck <= 0) return 0;
+                
+                // Count how many tasks overlap each day
+                var maxOverlap = 0;
+                for (int i = 0; i <= Math.Min(daysToCheck, 60); i++) // Check next 60 days max
+                {
+                    var checkDate = now.AddDays(i);
+                    var overlappingTasks = taskList.Count(t => 
+                        ((DateTime)t.StartDate).Date <= checkDate && 
+                        ((DateTime)t.EndDate).Date >= checkDate);
+                    
+                    maxOverlap = Math.Max(maxOverlap, overlappingTasks);
+                }
+                
+                // Each task assumes 100% capacity, so 2 parallel tasks = 200%
+                return maxOverlap * 100.0;
+            }
+
+            // Apply task assignments business logic: Get all team members with comprehensive workload metrics
+            var teamMembersQuery = from t in _context.Teams
+                                   join me in _context.MawaredEmployees on t.PrsId equals me.Id
+                                   join d in _context.Departments on t.DepartmentId equals d.Id
+                                   where t.IsActive && me.StatusId == 1
+                                   select new
+                                   {
+                                       EmployeeId = me.Id,
+                                       FullName = me.FullName,
+                                       GradeName = me.GradeName,
+                                       Department = d.Name,
+                                       DepartmentId = d.Id,
+                                       MilitaryNumber = me.MilitaryNumber
+                                   };
 
             // Apply search filter
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(e =>
-                    e.FullName.Contains(search) ||
-                    e.MilitaryNumber.Contains(search) ||
-                    e.GradeName.Contains(search));
+                teamMembersQuery = teamMembersQuery.Where(x =>
+                    x.FullName.Contains(search) ||
+                    x.MilitaryNumber.Contains(search) ||
+                    x.GradeName.Contains(search));
             }
+
+            // Apply department filter - prioritize current user's department, but allow departmentId parameter to override
+            if (filterDepartmentId.HasValue)
+            {
+                teamMembersQuery = teamMembersQuery.Where(x => x.DepartmentId == filterDepartmentId.Value);
+            }
+
+            // Execute query to get raw team member data (without task stats for SQL compatibility)
+            var rawTeamMembers = await teamMembersQuery.ToListAsync();
+
+            // Enrich developers with calculated metrics
+            var enrichedDevelopers = rawTeamMembers.Select(member =>
+            {
+                var stats = taskStatsDict.GetValueOrDefault(member.EmployeeId);
+                var activeTasks = stats?.ActiveTasks ?? 0;
+                var completedTasks = stats?.CompletedTasks ?? 0;
+                var totalTasks = activeTasks + completedTasks;
+                
+                // Calculate efficiency correctly (completed / total)
+                var efficiency = totalTasks > 0 ? (completedTasks * 100.0) / totalTasks : 0;
+                
+                // Calculate workload based on date ranges
+                double workloadPercentage = 0;
+                int activeDaysRemaining = 0;
+                
+                if (stats?.EarliestStartDate != null && stats?.MaxActiveTaskEndDate != null)
+                {
+                    // Calculate total timeline span
+                    var timelineStart = stats.EarliestStartDate.Value < DateTime.UtcNow 
+                        ? DateTime.UtcNow 
+                        : stats.EarliestStartDate.Value;
+                    var timelineEnd = stats.MaxActiveTaskEndDate.Value;
+                    
+                    // Days from now until all tasks complete
+                    activeDaysRemaining = Math.Max(0, (timelineEnd - DateTime.UtcNow).Days);
+                    
+                    // Calculate workload percentage
+                    // Assuming 5 working days per week, so ~22 working days per month
+                    var workingDaysInMonth = 22.0;
+                    
+                    // Method 1: Based on total task duration
+                    var totalTaskDays = stats.TotalActiveDays;
+                    workloadPercentage = (totalTaskDays / workingDaysInMonth) * 100;
+                    
+                    // Method 2: Based on how many tasks overlap (more accurate)
+                    // If you want to calculate parallel task execution
+                    var parallelWorkload = CalculateParallelWorkload(stats.ActiveTasksDetails.Cast<object>().ToList());
+                    workloadPercentage = Math.Max(workloadPercentage, parallelWorkload);
+                }
+                
+                // Cap at 200% (realistic maximum)
+                workloadPercentage = Math.Min(workloadPercentage, 200);
+                
+                // Determine status based on workload
+                string status;
+                if (activeTasks == 0)
+                    status = "available";
+                else if (workloadPercentage > 120)
+                    status = "overloaded";
+                else if (workloadPercentage > 80)
+                    status = "busy";
+                else
+                    status = "light";
+                
+                return new
+                {
+                    developerId = member.EmployeeId.ToString(),
+                    prsId = member.EmployeeId,
+                    developerName = member.FullName,
+                    gradeName = member.GradeName ?? "",
+                    department = member.Department,
+                    militaryNumber = member.MilitaryNumber,
+                    currentTasks = activeTasks,
+                    currentTasksCount = activeTasks,
+                    completedTasks = completedTasks,
+                    completedTasksCount = completedTasks,
+                    totalTasks = totalTasks,
+                    averageTaskTime = Math.Round(stats?.AvgCompletionDays ?? 0, 2),
+                    averageTaskCompletionTime = Math.Round(stats?.AvgCompletionDays ?? 0, 2),
+                    efficiency = Math.Round(efficiency, 2),
+                    workloadPercentage = Math.Round(workloadPercentage, 2),
+                    activeDaysRemaining = activeDaysRemaining,
+                    totalActiveDays = Math.Round(stats?.TotalActiveDays ?? 0, 2),
+                    status = status,
+                    busyUntil = stats?.MaxActiveTaskEndDate?.ToString("o"),
+                    overdueTasks = stats?.OverdueTasks ?? 0,
+                    skills = new string[] { },
+                    currentProjects = new string[] { }
+                };
+            }).ToList();
 
             // Apply status filter
-            if (!string.IsNullOrEmpty(status))
+            var filteredDevelopers = enrichedDevelopers.Where(x =>
             {
-                // For now, we'll map status to employee status
-                // This could be extended to include task-based status
-                query = query.Where(e => e.StatusId.ToString() == status);
-            }
+                if (string.IsNullOrEmpty(status)) return true;
+                return x.status.ToLower() == status.ToLower();
+            }).ToList();
+
+            var sortedDevelopers = filteredDevelopers
+                .OrderBy(x => x.status == "available" ? 0 : 1) // Available first
+                .ThenByDescending(x => x.currentTasks)
+                .ToList();
 
             // Get total count for pagination
-            var totalCount = await query.CountAsync();
-
-            // Apply sorting
-            query = sortBy?.ToLower() switch
-            {
-                "developername" => sortOrder == "desc"
-                    ? query.OrderByDescending(e => e.FullName)
-                    : query.OrderBy(e => e.FullName),
-                "militarynumber" => sortOrder == "desc"
-                    ? query.OrderByDescending(e => e.MilitaryNumber)
-                    : query.OrderBy(e => e.MilitaryNumber),
-                _ => sortOrder == "desc"
-                    ? query.OrderByDescending(e => e.FullName)
-                    : query.OrderBy(e => e.FullName)
-            };
+            var totalCount = sortedDevelopers.Count;
 
             // Apply pagination
-            var employees = await query
-                .Skip((page - 1) * pageSize)
+            var startIndex = (page - 1) * pageSize;
+            var paginatedDevelopers = sortedDevelopers
+                .Skip(startIndex)
                 .Take(pageSize)
-                .ToListAsync();
-
-            // Calculate workload data for each developer
-            var developers = new List<object>();
-            foreach (var employee in employees)
-            {
-                var taskAssignments = await _context.TaskAssignments
-                    .Include(ta => ta.Task)
-                    .Where(ta => ta.PrsId == employee.Id)
-                    .ToListAsync();
-
-                var currentTasks = taskAssignments.Count(ta =>
-                    ta.Task != null &&
-                    ta.Task.StatusId != Core.Enums.TaskStatus.Completed);
-
-                var completedTasks = taskAssignments.Count(ta =>
-                    ta.Task != null &&
-                    ta.Task.StatusId == Core.Enums.TaskStatus.Completed);
-
-                var averageTaskTime = taskAssignments
-                    .Where(ta => ta.Task != null && ta.Task.ActualHours.HasValue)
-                    .Average(ta => ta.Task!.ActualHours ?? 0);
-
-                var efficiency = currentTasks > 0 ? (completedTasks * 100.0) / (completedTasks + currentTasks) : 0;
-
-                var workloadPercentage = Math.Min(currentTasks * 20, 100); // Rough calculation
-
-                developers.Add(new
-                {
-                    developerId = employee.Id.ToString(),
-                    developerName = employee.FullName,
-                    currentTasks,
-                    completedTasks,
-                    averageTaskTime = Math.Round(averageTaskTime, 2),
-                    efficiency = Math.Round(efficiency, 2),
-                    workloadPercentage,
-                    skills = new string[] { }, // Placeholder - would need skills table
-                    currentProjects = new string[] { }, // Placeholder - would need project assignments
-                    availableHours = 40 - workloadPercentage, // Rough calculation
-                    status = currentTasks > 5 ? "busy" : currentTasks > 2 ? "available" : "available",
-                    department = "", // Placeholder
-                    militaryNumber = employee.MilitaryNumber,
-                    gradeName = employee.GradeName,
-                    email = employee.User?.Email ?? "",
-                    phone = "" // Placeholder
-                });
-            }
-
-            // Calculate team metrics
-            var allEmployees = await _context.MawaredEmployees.ToListAsync();
-            var allTaskAssignments = await _context.TaskAssignments
-                .Include(ta => ta.Task)
-                .ToListAsync();
-
-                var totalTasksCompleted = allTaskAssignments.Count(ta =>
-                    ta.Task != null && ta.Task.StatusId == Core.Enums.TaskStatus.Completed);
-                var totalTasksInProgress = allTaskAssignments.Count(ta =>
-                    ta.Task != null && ta.Task.StatusId == Core.Enums.TaskStatus.InProgress);            var metrics = new
-            {
-                totalDevelopers = allEmployees.Count,
-                activeDevelopers = allEmployees.Count(e => e.StatusId == 1), // Assuming 1 is active
-                averageEfficiency = developers.Any() ? developers.Average(d => (double?)d.GetType().GetProperty("efficiency")?.GetValue(d) ?? 0) : 0,
-                totalTasksCompleted,
-                totalTasksInProgress,
-                averageTaskCompletionTime = 0, // Placeholder
-                codeReviewsCompleted = 0, // Placeholder
-                averageReviewTime = 0, // Placeholder
-                bugsFixed = 0, // Placeholder
-                featuresDelivered = 0 // Placeholder
-            };
+                .ToList();
 
             var pagination = new
             {
@@ -161,8 +319,8 @@ public class DeveloperWorkloadController : ApiBaseController
             {
                 status,
                 search,
-                sortBy,
-                sortOrder
+                sortOrder,
+                departmentId
             };
 
             return Ok(new
@@ -170,8 +328,7 @@ public class DeveloperWorkloadController : ApiBaseController
                 success = true,
                 data = new
                 {
-                    developers,
-                    metrics,
+                    developers = paginatedDevelopers,
                     pagination,
                     filters
                 },
@@ -261,6 +418,13 @@ public class DeveloperWorkloadController : ApiBaseController
                 .Where(ta => ta.PrsId == id)
                 .ToListAsync();
 
+            var completedTasksWithDates = taskAssignments
+                .Where(ta => ta.Task != null && 
+                            ta.Task.StatusId == Core.Enums.TaskStatus.Completed &&
+                            ta.Task.StartDate != default(DateTime) && 
+                            ta.Task.EndDate != default(DateTime))
+                .ToList();
+
             var performance = new
             {
                 developerId = employee.Id.ToString(),
@@ -268,9 +432,9 @@ public class DeveloperWorkloadController : ApiBaseController
                 totalTasks = taskAssignments.Count,
                 completedTasks = taskAssignments.Count(ta => ta.Task?.StatusId == Core.Enums.TaskStatus.Completed),
                 inProgressTasks = taskAssignments.Count(ta => ta.Task?.StatusId == Core.Enums.TaskStatus.InProgress),
-                averageCompletionTime = taskAssignments
-                    .Where(ta => ta.Task?.ActualHours.HasValue == true)
-                    .Average(ta => ta.Task?.ActualHours ?? 0),
+                averageCompletionTime = completedTasksWithDates.Any() 
+                    ? completedTasksWithDates.Average(ta => (ta.Task!.EndDate - ta.Task.StartDate).TotalDays)
+                    : 0,
                 efficiency = taskAssignments.Any() ?
                     taskAssignments.Count(ta => ta.Task?.StatusId == Core.Enums.TaskStatus.Completed) * 100.0 / taskAssignments.Count : 0,
                 recentTasks = taskAssignments

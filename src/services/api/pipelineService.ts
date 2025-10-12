@@ -6,6 +6,8 @@ export interface PipelineProject {
   projectOwner: string;
   owningUnit: string;
   status: number;
+  statusName: string;
+  statusNameAr: string;
   requirementsCount: number;
   completedRequirements: number;
   lastActivity: string;
@@ -17,6 +19,12 @@ export interface PipelineResponse {
     planning: PipelineProject[];
     inProgress: PipelineProject[];
     completed: PipelineProject[];
+    statusLookups: Array<{
+      Code: number;
+      Value: string;
+      Name: string;
+      NameAr: string;
+    }>;
   };
   message: string;
 }
@@ -28,41 +36,28 @@ export class PipelineService {
    */
   async getPipelineProjects(): Promise<PipelineResponse> {
     try {
-      // Get assigned projects which already includes requirements count
-      const assignedProjectsResponse = await apiClient.get<PipelineProject[]>(
-        "/project-requirements/assigned-projects?limit=200",
+      // Use the new quick-actions endpoint
+      const response = await apiClient.get<PipelineResponse["data"]>(
+        "/quick-actions/pipeline-projects",
       );
 
-      if (assignedProjectsResponse.success) {
-        const projects = assignedProjectsResponse.data;
-
-        // Categorize projects by status
-        // Status mapping: 1=New(Planning), 2=Delayed(Planning), 3=Under Review(Planning), 4=Under Development(InProgress), 5=Production(Completed)
-        const planning = projects.filter((p) => [1, 2, 3].includes(p.status));
-        const inProgress = projects.filter((p) => p.status === 4);
-        const completed = projects.filter((p) => p.status === 5);
-
+      if (response.success) {
         return {
           success: true,
-          data: {
-            planning,
-            inProgress,
-            completed,
-          },
+          data: response.data,
           message: "Pipeline projects retrieved successfully",
         };
       }
 
       throw new Error("Failed to fetch pipeline data");
     } catch (error) {
-      console.error("Pipeline service error:", error);
-
       return {
         success: false,
         data: {
           planning: [],
           inProgress: [],
           completed: [],
+          statusLookups: [],
         },
         message: error instanceof Error ? error.message : "Unknown error",
       };

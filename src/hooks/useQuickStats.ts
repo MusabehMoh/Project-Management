@@ -32,7 +32,7 @@ export function useQuickStats(
 
     try {
       const response = await quickActionsService.getQuickActionStats();
-      
+
       if (response.success && response.data) {
         setStats(response.data);
       } else {

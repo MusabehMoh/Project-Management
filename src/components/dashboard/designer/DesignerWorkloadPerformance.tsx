@@ -15,7 +15,6 @@ import {
   TableCell,
 } from "@heroui/table";
 import { Avatar } from "@heroui/avatar";
-import { Tooltip } from "@heroui/tooltip";
 import {
   CheckCircle,
   Clock,
@@ -55,22 +54,15 @@ export default function DesignerWorkloadPerformance() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Use the custom hook to fetch designer workload data
-  const {
-    designers,
-    metrics,
-    pagination,
-    loading,
-    error,
-    refetch,
-    fetchPage,
-  } = useDesignerWorkload({
-    page: 1,
-    pageSize: 5,
-    searchQuery,
-    statusFilter,
-    sortBy,
-    sortOrder,
-  });
+  const { designers, metrics, pagination, loading, error, refetch, fetchPage } =
+    useDesignerWorkload({
+      page: 1,
+      pageSize: 5,
+      searchQuery,
+      statusFilter,
+      sortBy,
+      sortOrder,
+    });
 
   const clearSearch = () => {
     setSearchQuery("");
@@ -165,6 +157,7 @@ export default function DesignerWorkloadPerformance() {
                 selectedKeys={statusFilter ? [statusFilter] : []}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
+
                   setStatusFilter(selected || "");
                 }}
               >
@@ -190,6 +183,7 @@ export default function DesignerWorkloadPerformance() {
                 selectedKeys={[sortBy]}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
+
                   setSortBy(selected);
                 }}
               >
@@ -280,9 +274,7 @@ export default function DesignerWorkloadPerformance() {
               <TableColumn>
                 {t("designerDashboard.designer") || "Designer"}
               </TableColumn>
-              <TableColumn>
-                {t("common.workload") || "Workload"}
-              </TableColumn>
+              <TableColumn>{t("common.workload") || "Workload"}</TableColumn>
               <TableColumn>
                 {t("common.efficiency") || "Efficiency"}
               </TableColumn>

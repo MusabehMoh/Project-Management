@@ -174,7 +174,8 @@ const PipelineStage: React.FC<{
 // Main pipeline component
 const ProjectPipeline: React.FC = () => {
   const { t } = useLanguage();
-  const { planning, inProgress, completed, loading, error, refetch } = usePipeline();
+  const { planning, inProgress, completed, loading, error, refetch } =
+    usePipeline();
 
   if (loading) {
     return (
@@ -225,19 +226,19 @@ const ProjectPipeline: React.FC = () => {
           borderColor="border-t-primary"
           color="primary"
           projects={planning}
-          title={t("pipeline.planning")}
+          title={t("pipeline.underStudy")}
         />
         <PipelineStage
           borderColor="border-t-warning"
           color="warning"
           projects={inProgress}
-          title={t("pipeline.inProgress")}
+          title={t("pipeline.underDevelopment")}
         />
         <PipelineStage
           borderColor="border-t-success"
           color="success"
           projects={completed}
-          title={t("pipeline.completed")}
+          title={t("pipeline.underTesting")}
         />
       </div>
     </div>

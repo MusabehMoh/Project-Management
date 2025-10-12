@@ -297,3 +297,6 @@ html, body {
   }
 }
 */
+ [data-slot="trigger"] {
+  cursor: pointer !important;
+}

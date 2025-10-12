@@ -6,6 +6,7 @@ using PMA.Core.DTOs;
 using PMA.Core.DTOs.Tasks;
 using PMA.Core.Enums;
 using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
+using System;
 
 namespace PMA.Api.Controllers;
 
@@ -15,11 +16,33 @@ public class MembersTasksController : ApiBaseController
 {
     private readonly IMemberTaskService _memberTaskService;
     private readonly IUserContextAccessor _userContextAccessor;
+    private readonly IUserService _userService;
 
-    public MembersTasksController(IMemberTaskService memberTaskService, IUserContextAccessor userContextAccessor)
+    public MembersTasksController(IMemberTaskService memberTaskService, IUserContextAccessor userContextAccessor, IUserService userService)
     {
         _memberTaskService = memberTaskService;
         _userContextAccessor = userContextAccessor;
+        _userService = userService;
+    }
+
+    /// <summary>
+    /// Get team members for assignee filtering
+    /// Returns members from current user's department or all members for administrators
+    /// </summary>
+    [HttpGet("team-members")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetTeamMembers()
+    {
+        try
+        { 
+            var teamMembers = await _memberTaskService.GetTeamMembersAsync();
+            
+            return Success(teamMembers, message: "Team members retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<MemberSearchResultDto>>("An error occurred while retrieving team members", ex.Message);
+        }
     }
 
     /// <summary>
@@ -408,9 +431,122 @@ public class MembersTasksController : ApiBaseController
             return StatusCode(500, errorResponse);
         }
     }
+
+    /// <summary>
+    /// Change task assignees - removes old assignments and adds new ones
+    /// </summary>
+    [HttpPost("{id}/change-assignees")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ChangeTaskAssignees(int id, [FromBody] ChangeTaskAssigneesRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                var validationResponse = new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Error = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
+                };
+                return BadRequest(validationResponse);
+            }
+
+            // Validate that the task exists
+            var task = await _memberTaskService.GetMemberTaskByIdAsync(id);
+            if (task == null)
+            {
+                var notFoundResponse = new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Task not found"
+                };
+                return NotFound(notFoundResponse);
+            }
+
+            // Convert string IDs to integers with validation
+            var assigneeIds = new List<int>();
+            foreach (var idStr in request.AssigneeIds)
+            {
+                try
+                {
+                    int assigneeId = Convert.ToInt32(idStr);
+                    assigneeIds.Add(assigneeId);
+                }
+                catch (FormatException)
+                {
+                    var errorResponse = new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = $"Invalid assignee ID format: {idStr}"
+                    };
+                    return BadRequest(errorResponse);
+                }
+            }
+
+            // Change the assignees
+            var success = await _memberTaskService.ChangeTaskAssigneesAsync(id, assigneeIds, request.Notes);
+
+            if (!success)
+            {
+                var errorResponse = new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Failed to change task assignees"
+                };
+                return StatusCode(500, errorResponse);
+            }
+
+            var response = new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Task assignees changed successfully"
+            };
+
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            var errorResponse = new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Unauthorized access",
+                Error = ex.Message
+            };
+            return Unauthorized(errorResponse);
+        }
+        catch (InvalidOperationException ex)
+        {
+            var errorResponse = new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Invalid operation",
+                Error = ex.Message
+            };
+            return BadRequest(errorResponse);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<object>
+            {
+                Success = false,
+                Message = "An error occurred while changing task assignees",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
 }
 
 public class UpdateTaskStatusRequest
 {
     public string Status { get; set; } = string.Empty;
+}
+
+public class ChangeTaskAssigneesRequest
+{
+    public List<int> AssigneeIds { get; set; } = new List<int>();
+    public string Notes { get; set; } = string.Empty;
 }

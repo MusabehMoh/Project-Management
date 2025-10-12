@@ -11,7 +11,14 @@ export interface DeveloperWorkload {
   skills: string[];
   currentProjects: string[];
   availableHours: number;
-  status: "available" | "busy" | "blocked" | "on-leave";
+  status:
+    | "available"
+    | "light"
+    | "busy"
+    | "overloaded"
+    | "blocked"
+    | "on-leave";
+  busyUntil?: string; // ISO date string when developer will be available
   department?: string;
   militaryNumber?: string;
   gradeName?: string;

@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
 
 import Calendar from "./calendar";
 import MyAssignedTasks from "./team-member/MyAssignedTasks";
@@ -17,7 +15,10 @@ export default function TeamMemberDashboard() {
 
   // Handle task status update from TeamQuickActions only
   // Kanban board handles its own updates internally, no need to refresh
-  const handleQuickActionsUpdate = async (taskId: number, newStatus: string) => {
+  const handleQuickActionsUpdate = async (
+    taskId: number,
+    newStatus: string,
+  ) => {
     try {
       console.log("Quick Actions updating task:", {
         taskId,
@@ -64,7 +65,10 @@ export default function TeamMemberDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Quick Actions + Calendar (70%) */}
         <div className="lg:col-span-2 space-y-6">
-          <TeamQuickActions key={refreshKey} onTaskUpdate={handleQuickActionsUpdate} />
+          <TeamQuickActions
+            key={refreshKey}
+            onTaskUpdate={handleQuickActionsUpdate}
+          />
           <Calendar maxHeight="600px" showSidebar={false} />
         </div>
 

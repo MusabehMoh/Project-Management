@@ -32,31 +32,51 @@ public class DeveloperQuickActionsController : ApiBaseController
                            t.StatusId != TaskStatusEnum.Completed)
                 .Include(t => t.ProjectRequirement)
                 .ThenInclude(pr => pr!.Project)
+                .Include(t => t.Department)
                 .Select(t => new
                 {
-                    id = t.Id,
-                    treeId = t.Id.ToString(), // Using Id as treeId since TreeId doesn't exist
-                    name = t.Name,
+                    id = t.Id.ToString(),
+                    title = t.Name,
                     description = t.Description,
-                    startDate = t.StartDate,
-                    endDate = t.EndDate,
-                    duration = (t.EndDate - t.StartDate).Days, // Calculate duration
+                    priority = t.PriorityId == Priority.High ? "high" : 
+                              t.PriorityId == Priority.Medium ? "medium" : "low",
+                    status = t.StatusId == TaskStatusEnum.ToDo ? "todo" :
+                            t.StatusId == TaskStatusEnum.InProgress ? "in-progress" :
+                            t.StatusId == TaskStatusEnum.InReview ? "review" : "done",
+                    projectId = t.ProjectRequirement != null ? t.ProjectRequirement.ProjectId.ToString() : "",
                     projectName = t.ProjectRequirement != null && t.ProjectRequirement.Project != null ?
                         t.ProjectRequirement.Project.ApplicationName : "",
-                    sprintName = t.Sprint != null ? t.Sprint.Name : "",
-                    statusId = (int)t.StatusId,
-                    priorityId = (int)t.PriorityId,
-                    progress = t.Progress,
-                    estimatedHours = t.EstimatedHours,
-                    actualHours = t.ActualHours,
-                    departmentName = t.Department != null ? t.Department.Name : ""
+                    estimatedHours = (int)(t.EstimatedHours ?? 0),
+                    dueDate = t.EndDate, // Remove ToString to avoid EF translation issues
+                    type = "feature", // Default type since not available in current schema
+                    complexity = "medium", // Default complexity since not available in current schema
+                    tags = new string[] { }, // Empty array since not available in current schema
+                    owningUnit = t.Department != null ? t.Department.Name : ""
                 })
-                .OrderBy(t => t.endDate)
+                .OrderBy(t => t.dueDate) // Order by the DateTime directly
                 .ToListAsync();
+
+            // Format the dates after query execution
+            var formattedUnassignedTasks = unassignedTasks.Select(t => new
+            {
+                t.id,
+                t.title,
+                t.description,
+                t.priority,
+                t.status,
+                t.projectId,
+                t.projectName,
+                t.estimatedHours,
+                dueDate = t.dueDate.ToString("yyyy-MM-dd"), // Format date here
+                t.type,
+                t.complexity,
+                t.tags,
+                t.owningUnit
+            }).ToList();
 
             // Get almost completed tasks (tasks with progress > 80% and not completed)
             var almostCompletedTasks = await _context.Tasks
-                .Where(t => t.Progress > 80 && t.StatusId != TaskStatusEnum.Completed)
+                .Where(t => t.Progress >= 75 && t.StatusId != TaskStatusEnum.Completed)
                 .Include(t => t.ProjectRequirement)
                 .ThenInclude(pr => pr!.Project)
                 .Include(t => t.Assignments)
@@ -87,25 +107,37 @@ public class DeveloperQuickActionsController : ApiBaseController
                 .OrderBy(t => t.endDate)
                 .ToListAsync();
 
-            // Get available developers (users with developer role who have capacity)
-            var availableDevelopers = await _context.Users
-                .Where(u => _context.UserRoles.Any(ur => ur.UserId == u.Id &&
-                           ur.Role != null && ur.Role.Name.Contains("Developer")))
-                .Select(u => new
+            // Get available developers using the new team members query
+            var teamMembersQuery = from t in _context.Teams
+                                   join me in _context.MawaredEmployees on t.PrsId equals me.Id
+                                   join d in _context.Departments on t.DepartmentId equals d.Id
+                                   where t.IsActive && me.StatusId == 1
+                                   select new
+                                   {
+                                       EmployeeId = me.Id,
+                                       FullName = me.FullName,
+                                       GradeName = me.GradeName,
+                                       Department = d.Name,
+                                       DepartmentId = d.Id,
+                                       MilitaryNumber = me.MilitaryNumber,
+                                       ActiveTasks = _context.TaskAssignments.Count(ta => ta.PrsId == me.Id && 
+                                                    ta.Task != null && ta.Task.StatusId != TaskStatusEnum.Completed)
+                                   };
+
+            var availableDevelopers = await teamMembersQuery
+                .Where(tm => tm.ActiveTasks < 5) // Filter for developers with capacity
+                .Select(tm => new
                 {
-                    id = u.Id,
-                    fullName = u.FullName,
-                    email = u.Email,
-                    department = u.Department != null ? u.Department.Name : "",
-                    currentTasksCount = _context.TaskAssignments
-                        .Count(ta => ta.PrsId == u.Id &&
-                              ta.Task != null &&
-                              ta.Task.StatusId != TaskStatusEnum.Completed),
+                    id = tm.EmployeeId,
+                    fullName = tm.FullName,
+                    gradeName = tm.GradeName,
+                    email = "", // Not available in MawaredEmployees, set to empty
+                    department = tm.Department,
+                    departmentId = tm.DepartmentId,
+                    militaryNumber = tm.MilitaryNumber,
+                    currentTasksCount = tm.ActiveTasks,
                     totalCapacity = 5, // Assuming 5 tasks max capacity
-                    availableCapacity = 5 - _context.TaskAssignments
-                        .Count(ta => ta.PrsId == u.Id &&
-                              ta.Task != null &&
-                              ta.Task.StatusId != TaskStatusEnum.Completed)
+                    availableCapacity = 5 - tm.ActiveTasks
                 })
                 .Where(u => u.availableCapacity > 0)
                 .OrderBy(u => u.currentTasksCount)
@@ -116,7 +148,7 @@ public class DeveloperQuickActionsController : ApiBaseController
                 success = true,
                 data = new
                 {
-                    unassignedTasks,
+                    unassignedTasks = formattedUnassignedTasks,
                     almostCompletedTasks,
                     availableDevelopers
                 },

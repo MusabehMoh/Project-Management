@@ -3,8 +3,8 @@ import React from "react";
 import DesignerQuickActions from "./designer/DesignerQuickActions";
 import DesignerWorkloadPerformance from "./designer/DesignerWorkloadPerformance";
 import Calendar from "./calendar";
-import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
 
+import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function DesignerManagerDashboard() {

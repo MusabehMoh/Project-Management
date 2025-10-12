@@ -49,6 +49,9 @@ public interface ITaskRepository : IRepository<TaskEntity>
     System.Threading.Tasks.Task UpdateTaskDependenciesAsync(int taskId, IEnumerable<int> predecessorIds);
     System.Threading.Tasks.Task<IEnumerable<TaskAssignment>> GetTaskAssignmentsAsync(int taskId);
     System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId);
+    
+    // Team member access methods
+    System.Threading.Tasks.Task<IEnumerable<User>> GetTeamMembersAsync(bool isAdministrator, bool isManager, int? currentUserDepartmentId);
 }
 
 public interface ITaskStatusHistoryRepository : IRepository<TaskStatusHistory>

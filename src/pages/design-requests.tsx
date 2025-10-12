@@ -42,9 +42,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatDateTime } from "@/utils/dateFormatter";
 import { MemberSearchResult } from "@/types";
-import {
-  designRequestsService,
-} from "@/services/api";
+import { designRequestsService } from "@/services/api";
 import { DesignRequestDto } from "@/services/api/designRequestsService";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { normalizePageSize } from "@/constants/pagination";
@@ -328,7 +326,7 @@ export function DesignRequestsPage() {
           <Card key={request.id} className="overflow-hidden">
             <CardHeader className="flex justify-between items-center">
               <h3 className="text-lg font-semibold truncate flex-1">
-                {request.task?.name} -{" "} 
+                {request.task?.name} -{" "}
               </h3>
               <Chip
                 color={getStatusColor(request.status)}
@@ -582,8 +580,8 @@ export function DesignRequestsPage() {
                   <div className="flex items-center gap-3">
                     <Avatar
                       className="flex-shrink-0"
-                      size="md"
                       name={selectedRequest.assignedToUserName}
+                      size="md"
                     />
                     <div>
                       <p className="font-medium text-default-900 dark:text-default-100">
@@ -688,13 +686,15 @@ export function DesignRequestsPage() {
                   <div>
                     <Textarea
                       label={t("designRequests.assignmentNotes")}
-                    minRows={3}
-                    placeholder={t("designRequests.assignmentNotesPlaceholder")}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
+                      minRows={3}
+                      placeholder={t(
+                        "designRequests.assignmentNotesPlaceholder",
+                      )}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                    />
+                  </div>
                 </div>
-              </div>
               )}
 
               {/* Task Details Section - Moved below controls */}
@@ -878,11 +878,15 @@ export function DesignRequestsPage() {
                     </label>
                     {selectedRequest.task.priorityId && (
                       <Chip
-                        color={getRequirementPriorityColor(selectedRequest.task.priorityId)}
+                        color={getRequirementPriorityColor(
+                          selectedRequest.task.priorityId,
+                        )}
                         size="sm"
                         variant="solid"
                       >
-                        {getRequirementPriorityText(selectedRequest.task.priorityId)}
+                        {getRequirementPriorityText(
+                          selectedRequest.task.priorityId,
+                        )}
                       </Chip>
                     )}
                   </div>
@@ -939,8 +943,8 @@ export function DesignRequestsPage() {
                     <div className="flex items-center gap-3">
                       <Avatar
                         className="flex-shrink-0"
-                        size="md"
                         name={selectedRequest.assignedToUserName}
+                        size="md"
                       />
                       <div>
                         <p className="font-medium text-default-900 dark:text-default-100">
@@ -976,7 +980,11 @@ export function DesignRequestsPage() {
           </DrawerBody>
 
           <DrawerFooter>
-            <Button color="default" variant="flat" onPress={() => setIsRequirementDrawerOpen(false)}>
+            <Button
+              color="default"
+              variant="flat"
+              onPress={() => setIsRequirementDrawerOpen(false)}
+            >
               {t("common.close")}
             </Button>
           </DrawerFooter>

@@ -98,17 +98,15 @@ class ProjectRequirementsService {
       },
     };
   }
-  
+
   /**
    * Get all projects (not filtered by assignment)
    */
-  async getAllProjects(
-    options?: {
-      page?: number;
-      limit?: number;
-      search?: string;
-    },
-  ): Promise<{
+  async getAllProjects(options?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<{
     data: AssignedProject[];
     pagination: {
       page: number;

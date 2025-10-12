@@ -12,10 +12,7 @@ import {
 import { Select, SelectItem } from "@heroui/select";
 import { Badge } from "@heroui/badge";
 import {
-  FileDown,
   RefreshCw,
-  FileSpreadsheet,
-  FileText,
   Grid3X3,
   List,
   BarChart3,
@@ -45,9 +42,11 @@ import {
   Skeleton,
   Textarea,
 } from "@heroui/react";
+import { useLocation } from "react-router-dom";
 
 import { TaskCard } from "@/components/members-tasks/TaskCard";
 import { TaskListView } from "@/components/members-tasks/TaskListView";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -66,25 +65,25 @@ import { useFilePreview } from "@/hooks/useFilePreview";
 import { FilePreview } from "@/components/FilePreview";
 import { projectRequirementsService } from "@/services/api";
 import { RoleIds } from "@/constants/roles";
-import {
-  getKanbanConfigForRoles,
-  isTransitionAllowed,
-} from "@/utils/kanbanRoleConfig";
+import { isTransitionAllowed } from "@/utils/kanbanRoleConfig";
 
 export default function MembersTasksPage() {
   const { t, language } = useLanguage();
+  const location = useLocation();
 
   // Global priority lookups
   const { getPriorityColor, getPriorityLabel, priorityOptions } =
     usePriorityLookups();
 
   // TaskStatus hook for dynamic status management
-  const { statusOptions, getStatusColor, getStatusLabel } =
-    useTaskStatusLookups();
+  const { statusOptions, getStatusLabel } = useTaskStatusLookups();
 
   // Get all projects directly for the dropdown
   const [projects, setProjects] = useState<any[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
+
+  // Team members for assignee filtering
+  const { teamMembers, loading: teamMembersLoading } = useTeamMembers();
 
   // Load all projects when component initializes
   useEffect(() => {
@@ -94,6 +93,7 @@ export default function MembersTasksPage() {
         const result = await projectRequirementsService.getAllProjects({
           limit: 100, // Get a reasonable number of projects
         });
+
         setProjects(result.data || []);
       } catch (error) {
         console.error("Failed to load projects", error);
@@ -186,6 +186,7 @@ export default function MembersTasksPage() {
     handleSearchChange,
     handleProjectChange,
     handleStatusChange,
+    handleAssigneeChange,
     handleResetFilters,
     taskParametersRequest,
     refreshTasks,
@@ -194,6 +195,19 @@ export default function MembersTasksPage() {
     requestDesign,
     changeAssignees,
   } = useMembersTasks();
+
+  // Handle navigation state for assignee filtering (from developer dashboard)
+  useEffect(() => {
+    const state = location.state as {
+      assigneeId?: number;
+      assigneeName?: string;
+    };
+
+    if (state?.assigneeId) {
+      // Set the assignee filter to the developer that was clicked
+      handleAssigneeChange([state.assigneeId]);
+    }
+  }, [location.state, handleAssigneeChange]);
 
   const [isRequestDesignModalOpend, setIsRequestDesignModalOpend] =
     useState(false);
@@ -250,7 +264,6 @@ export default function MembersTasksPage() {
     RoleIds.DESIGNER_MANAGER,
     RoleIds.DEVELOPMENT_MANAGER,
   ]);
- 
 
   // Get user role IDs for kanban permissions
   const userRoleIds = user?.roles?.map((role) => role.id) || [];
@@ -442,7 +455,9 @@ export default function MembersTasksPage() {
     searchTerm ||
     taskParametersRequest.statusId !== undefined ||
     taskParametersRequest.priorityId !== undefined ||
-    taskParametersRequest.projectId !== undefined;
+    taskParametersRequest.projectId !== undefined ||
+    (taskParametersRequest.memberIds &&
+      taskParametersRequest.memberIds.length > 0);
 
   const handleRefresh = () => refreshTasks();
 
@@ -454,8 +469,25 @@ export default function MembersTasksPage() {
     });
 
   // Helper function to get status color using TaskStatus lookup
-  const getTaskStatusColor = (status: number) => {
-    return getStatusColor(status.toString());
+  const getTaskStatusColor = (
+    status: number,
+  ): "success" | "primary" | "warning" | "danger" | "default" | "secondary" => {
+    switch (status) {
+      case 1: // To Do
+        return "default";
+      case 2: // In Progress
+        return "primary";
+      case 3: // In Review
+        return "warning";
+      case 4: // Rework
+        return "danger";
+      case 5: // Completed
+        return "success";
+      case 6: // On Hold
+        return "secondary";
+      default:
+        return "default";
+    }
   };
 
   // Helper function to get status text using TaskStatus lookup
@@ -512,155 +544,278 @@ export default function MembersTasksPage() {
           </div>
         </div>
 
-        {/* Filters and Search */}
-        <Card>
-          <CardBody>
-            <div className="flex flex-col md:flex-row gap-4 items-end">
+        {/* Search and Filters */}
+        <div className="space-y-4">
+          {/* Primary Search Bar */}
+          <Card>
+            <CardBody className="py-4">
               <Input
-                className="md:w-120"
+                className="w-full"
                 placeholder={t("requirements.searchRequirements")}
-                startContent={<Search className="w-4 h-4" />}
+                startContent={<Search className="w-5 h-5" />}
                 value={searchTerm}
                 onValueChange={setSearchTerm}
               />
+            </CardBody>
+          </Card>
 
-              <Select
-                className="md:w-90"
-                isLoading={projectsLoading}
-                placeholder={t("taskPlan.filterByProject")}
-                selectedKeys={
-                  taskParametersRequest.projectId
-                    ? [String(taskParametersRequest.projectId)]
-                    : []
-                }
-                onSelectionChange={(keys) => {
-                  const val = Array.from(keys)[0] as string;
+          {/* Filters Section */}
+          <Card>
+            <CardBody>
+              <div className="space-y-4">
+                {/* Filter Controls */}
+                <div className="flex flex-col gap-4 w-full">
+                  <div className="flex flex-wrap justify-between w-full gap-4">
+                    <div className="flex-1 min-w-[200px]">
+                      <Select
+                        className="w-full"
+                        isLoading={projectsLoading}
+                        placeholder={t("taskPlan.filterByProject")}
+                        selectedKeys={
+                          taskParametersRequest.projectId
+                            ? [String(taskParametersRequest.projectId)]
+                            : []
+                        }
+                        onSelectionChange={(keys) => {
+                          const val = Array.from(keys)[0] as string;
 
-                  handleProjectChange(val ? Number(val) : 0);
-                }}
-              >
-                <SelectItem key="">{t("taskPlan.allProjects")}</SelectItem>
-                <>
-                  {projects?.map((p) => (
-                    <SelectItem key={String(p.id)}>
-                      {p.applicationName}
-                    </SelectItem>
-                  ))}
-                </>
-              </Select>
+                          handleProjectChange(val ? Number(val) : 0);
+                        }}
+                        items={[
+                          { value: "", label: t("taskPlan.allProjects") },
+                          ...(projects?.map((p) => ({
+                            value: String(p.id),
+                            label: p.applicationName,
+                          })) || []),
+                        ]}
+                      >
+                        {(item) => (
+                          <SelectItem key={item.value}>{item.label}</SelectItem>
+                        )}
+                      </Select>
+                    </div>
 
-              <Select
-                className="md:w-43"
-                items={[
-                  { value: "", label: t("requirements.allStatuses") },
-                  ...statusOptions.map((status) => ({
-                    value: status.key,
-                    label: status.label,
-                  })),
-                ]}
-                placeholder={t("requirements.filterByStatus")}
-                selectedKeys={
-                  taskParametersRequest.statusId
-                    ? [taskParametersRequest.statusId.toString()]
-                    : []
-                }
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-                  const newStatusFilter =
-                    selectedKey && selectedKey !== ""
-                      ? parseInt(selectedKey)
-                      : null;
+                    <div className="flex-1 min-w-[200px]">
+                      <Autocomplete
+                        className="w-full"
+                        defaultItems={teamMembers}
+                        isLoading={teamMembersLoading}
+                        placeholder={t("tasks.filterByAssignees")}
+                        selectedKey={
+                          taskParametersRequest.memberIds &&
+                          taskParametersRequest.memberIds.length > 0
+                            ? taskParametersRequest.memberIds[0].toString()
+                            : ""
+                        }
+                        onSelectionChange={(key) => {
+                          const selectedMemberId = key
+                            ? parseInt(key.toString())
+                            : null;
 
-                  if (newStatusFilter !== null) {
-                    handleStatusChange(newStatusFilter);
-                  } else {
-                    // If status filter is reset to null, we need to refresh with other filters
-                    const hasOtherFilters =
-                      searchTerm ||
-                      taskParametersRequest.priorityId ||
-                      taskParametersRequest.projectId;
+                          if (selectedMemberId) {
+                            handleAssigneeChange([selectedMemberId]);
+                          } else {
+                            handleAssigneeChange([]);
+                          }
+                        }}
+                      >
+                        {(member) => (
+                          <AutocompleteItem
+                            key={member.id.toString()}
+                            textValue={`${member.gradeName} ${member.fullName}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Avatar name={member.fullName} size="sm" />
+                              <div className="flex flex-col">
+                                <span className="text-small font-medium">
+                                  {member.gradeName} {member.fullName}
+                                </span>
+                                <span className="text-tiny text-default-400">
+                                  {member.militaryNumber}
+                                </span>
+                              </div>
+                            </div>
+                          </AutocompleteItem>
+                        )}
+                      </Autocomplete>
+                    </div>
 
-                    if (hasOtherFilters) {
-                      // Trigger a refresh that maintains other filters but clears status
-                      fetchTasks();
-                    } else {
-                      handleResetFilters();
-                    }
-                  }
-                }}
-              >
-                {(item) => (
-                  <SelectItem key={item.value}>{item.label}</SelectItem>
-                )}
-              </Select>
+                    <div className="flex-1 min-w-[200px]">
+                      <Select
+                        className="w-full"
+                        items={[
+                          { value: "", label: t("requirements.allStatuses") },
+                          ...statusOptions.map((status) => ({
+                            value: status.key,
+                            label: status.label,
+                          })),
+                        ]}
+                        placeholder={t("requirements.filterByStatus")}
+                        selectedKeys={
+                          taskParametersRequest.statusId
+                            ? [taskParametersRequest.statusId.toString()]
+                            : []
+                        }
+                        onSelectionChange={(keys) => {
+                          const selectedKey = Array.from(keys)[0] as string;
+                          const newStatusFilter =
+                            selectedKey && selectedKey !== ""
+                              ? parseInt(selectedKey)
+                              : null;
 
-              <Select
-                className="md:w-43"
-                items={[
-                  { value: "", label: t("requirements.allPriorities") },
-                  ...priorityOptions.map((p) => ({
-                    value: p.value.toString(),
-                    label: language === "ar" ? p.labelAr : p.label,
-                  })),
-                ]}
-                placeholder={t("requirements.filterByPriority")}
-                selectedKeys={
-                  taskParametersRequest.priorityId
-                    ? [taskParametersRequest.priorityId.toString()]
-                    : []
-                }
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-                  const newPriorityFilter =
-                    selectedKey && selectedKey !== ""
-                      ? parseInt(selectedKey)
-                      : null;
+                          if (newStatusFilter !== null) {
+                            handleStatusChange(newStatusFilter);
+                          } else {
+                            const hasOtherFilters =
+                              searchTerm ||
+                              taskParametersRequest.priorityId ||
+                              taskParametersRequest.projectId ||
+                              (taskParametersRequest.memberIds &&
+                                taskParametersRequest.memberIds.length > 0);
 
-                  if (newPriorityFilter !== null) {
-                    handlePriorityChange(newPriorityFilter);
-                  } else {
-                    // If priority filter is reset to null, refresh with other filters
-                    const hasOtherFilters =
-                      searchTerm ||
-                      taskParametersRequest.statusId ||
-                      taskParametersRequest.projectId;
+                            if (hasOtherFilters) {
+                              fetchTasks();
+                            } else {
+                              handleResetFilters();
+                            }
+                          }
+                        }}
+                      >
+                        {(item) => (
+                          <SelectItem key={item.value}>{item.label}</SelectItem>
+                        )}
+                      </Select>
+                    </div>
 
-                    if (hasOtherFilters) {
-                      fetchTasks();
-                    } else {
-                      handleResetFilters();
-                    }
-                  }
-                }}
-              >
-                {(item) => (
-                  <SelectItem key={item.value}>{item.label}</SelectItem>
-                )}
-              </Select>
-            </div>
+                    <div className="flex-1 min-w-[200px]">
+                      <Select
+                        className="w-full"
+                        items={[
+                          { value: "", label: t("requirements.allPriorities") },
+                          ...priorityOptions.map((p) => ({
+                            value: p.value.toString(),
+                            label: language === "ar" ? p.labelAr : p.label,
+                          })),
+                        ]}
+                        placeholder={t("requirements.filterByPriority")}
+                        selectedKeys={
+                          taskParametersRequest.priorityId
+                            ? [taskParametersRequest.priorityId.toString()]
+                            : []
+                        }
+                        onSelectionChange={(keys) => {
+                          const selectedKey = Array.from(keys)[0] as string;
+                          const newPriorityFilter =
+                            selectedKey && selectedKey !== ""
+                              ? parseInt(selectedKey)
+                              : null;
 
-            {/* Clear Filters - New Row */}
-            {hasActiveFilters && (
-              <div className="flex items-center gap-2 mt-2">
-                <Button
-                  color="secondary"
-                  size="sm"
-                  startContent={<X size={16} />}
-                  variant="flat"
-                  onPress={resetAllFilters}
-                >
-                  {t("requirements.clearFilters")}
-                </Button>
-                <span className="text-sm text-default-500">
-                  {t("requirements.requirementsFound").replace(
-                    "{count}",
-                    totalCount.toString(),
+                          if (newPriorityFilter !== null) {
+                            handlePriorityChange(newPriorityFilter);
+                          } else {
+                            const hasOtherFilters =
+                              searchTerm ||
+                              taskParametersRequest.statusId ||
+                              taskParametersRequest.projectId ||
+                              (taskParametersRequest.memberIds &&
+                                taskParametersRequest.memberIds.length > 0);
+
+                            if (hasOtherFilters) {
+                              fetchTasks();
+                            } else {
+                              handleResetFilters();
+                            }
+                          }
+                        }}
+                      >
+                        {(item) => (
+                          <SelectItem key={item.value}>{item.label}</SelectItem>
+                        )}
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Active Filters display row - Count, Clear button, and chips all on same line */}
+                  {hasActiveFilters && (
+                    <div className="flex items-center justify-between mt-4 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          className="bg-purple-100 text-purple-700 hover:bg-purple-200"
+                          endContent={<X className="ml-1" size={16} />}
+                          size="sm"
+                          onPress={resetAllFilters}
+                        >
+                          {t("requirements.clearFilters")}
+                        </Button>
+                        <span className="text-sm text-default-600">
+                          {t("tasks.tasksFound").replace(
+                            "{count}",
+                            totalCount.toString(),
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-default-600">
+                        {searchTerm && (
+                          <Chip color="primary" size="sm" variant="flat">
+                            {t("common.search")}: &quot;{searchTerm}&quot;
+                          </Chip>
+                        )}
+                        {taskParametersRequest.projectId && projects && (
+                          <Chip color="secondary" size="sm" variant="flat">
+                            {t("project")}:{" "}
+                            {
+                              projects.find(
+                                (p) => p.id === taskParametersRequest.projectId,
+                              )?.applicationName
+                            }
+                          </Chip>
+                        )}
+                        {taskParametersRequest.statusId && (
+                          <Chip color="warning" size="sm" variant="flat">
+                            {t("status")}:{" "}
+                            {
+                              statusOptions.find(
+                                (s) =>
+                                  s.key ===
+                                  taskParametersRequest.statusId!.toString(),
+                              )?.label
+                            }
+                          </Chip>
+                        )}
+                        {taskParametersRequest.priorityId && (
+                          <Chip color="danger" size="sm" variant="flat">
+                            {t("requirements.priority")}:{" "}
+                            {
+                              priorityOptions.find(
+                                (p) =>
+                                  p.value === taskParametersRequest.priorityId,
+                              )?.label
+                            }
+                          </Chip>
+                        )}
+                        {taskParametersRequest.memberIds &&
+                          taskParametersRequest.memberIds.length > 0 &&
+                          teamMembers && (
+                            <Chip color="success" size="sm" variant="flat">
+                              {t("common.assignee")}:{" "}
+                              {
+                                teamMembers.find(
+                                  (m) =>
+                                    m.id ===
+                                    taskParametersRequest.memberIds![0],
+                                )?.fullName
+                              }
+                            </Chip>
+                          )}
+                      </div>
+                    </div>
                   )}
-                </span>
+                </div>
               </div>
-            )}
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
+        </div>
 
         {/* Pagination Controls */}
         {!initialLoading && (tasks?.length || 0) > 0 && (
@@ -697,7 +852,7 @@ export default function MembersTasksPage() {
 
         {/* Controls */}
         {loading ? (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               {/* Skeleton for View Toggle */}
               <div className="flex items-center gap-2">
@@ -714,7 +869,7 @@ export default function MembersTasksPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               {/* View Toggle */}
               <div className="flex items-center bg-content2 rounded-full p-1">
@@ -861,7 +1016,6 @@ export default function MembersTasksPage() {
           placement={language === "en" ? "left" : "right"}
           size="lg"
           onOpenChange={(open) => {
-            console.log("Drawer onOpenChange called with:", open);
             setIsDrawerOpen(open);
           }}
         >
@@ -902,8 +1056,7 @@ export default function MembersTasksPage() {
                         size="sm"
                         variant="solid"
                       >
-                        {getPriorityLabel(selectedTask.priorityId) ||
-                          "Unknown Priority"}
+                        {getPriorityLabel(selectedTask.priorityId) || ""}
                       </Chip>
                     </div>
 
@@ -962,7 +1115,7 @@ export default function MembersTasksPage() {
                       <div className="flex flex-col gap-1">
                         <span className="font-md">{t("project")}</span>
                         <span className="font-md">
-                          {selectedTask.project.name}
+                          {selectedTask.project?.applicationName || ""}
                         </span>
                       </div>
 
@@ -970,7 +1123,7 @@ export default function MembersTasksPage() {
                       <div className="flex flex-col gap-1">
                         <span className="font-md">{t("requirement")}</span>
                         <span className="font-md">
-                          {selectedTask.requirement.name}
+                          {selectedTask.requirement?.name || ""}
                         </span>
                       </div>
                     </div>
@@ -1151,7 +1304,6 @@ export default function MembersTasksPage() {
                 color="danger"
                 variant="light"
                 onPress={() => {
-                  console.log("Closing drawer");
                   setIsDrawerOpen(false);
                 }}
               >
@@ -1204,8 +1356,7 @@ export default function MembersTasksPage() {
                                 );
                               }}
                             >
-                              {employee.gradeName}{" "}
-                              {employee.fullName || "Unknown User"}
+                              {employee.gradeName} {employee.fullName || ""}
                             </Chip>
                           ))}
                         </div>
@@ -1213,7 +1364,7 @@ export default function MembersTasksPage() {
                     )}
                     <Autocomplete
                       isClearable
-                      defaultFilter={(textValue, input) => true}
+                      defaultFilter={(_textValue, _input) => true}
                       errorMessage={
                         assigneeModalError ? t("users.selectAtLeastOne") : ""
                       }
@@ -1260,23 +1411,19 @@ export default function MembersTasksPage() {
                           textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
                         >
                           <div className="flex items-center gap-3">
-                            <Avatar
-                              name={employee.fullName || "Unknown"}
-                              size="sm"
-                            />
+                            <Avatar name={employee.fullName || ""} size="sm" />
                             <div className="flex flex-col">
                               <span className="font-medium">
-                                {employee.gradeName}{" "}
-                                {employee.fullName || "Unknown User"}
+                                {employee.gradeName} {employee.fullName || ""}
                               </span>
                               <span className="text-sm text-default-500">
-                                {employee.militaryNumber || "N/A"}
+                                {employee.militaryNumber || ""}
                               </span>
                               <span className="text-xs text-default-400">
-                                @{employee.userName || "unknown"}
+                                @{employee.userName || ""}
                               </span>
                               <span className="text-xs text-default-400">
-                                @{employee.department || "unknown"}
+                                @{employee.department || ""}
                               </span>
                             </div>
                           </div>

@@ -7,7 +7,6 @@ import { Skeleton } from "@heroui/skeleton";
 import { Select, SelectItem } from "@heroui/select";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
-import { Alert } from "@heroui/alert";
 import {
   Modal,
   ModalContent,
@@ -16,7 +15,13 @@ import {
   ModalFooter,
 } from "@heroui/modal";
 import { addToast } from "@heroui/toast";
-import { CheckCircle, RefreshCw, AlertTriangle, Play, Pause } from "lucide-react";
+import {
+  CheckCircle,
+  RefreshCw,
+  AlertTriangle,
+  Play,
+  Pause,
+} from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTeamQuickActions } from "@/hooks/useTeamQuickActions";
@@ -34,6 +39,7 @@ const AnimatedCounter = ({
   useEffect(() => {
     if (value === 0) {
       setDisplayValue(0);
+
       return;
     }
 
@@ -428,7 +434,10 @@ export default function TeamQuickActions({
                               : getStatusText(action.statusId)
                           }
                           direction={direction}
-                          title={action.name || t("teamDashboard.quickActions.untitled")}
+                          title={
+                            action.name ||
+                            t("teamDashboard.quickActions.untitled")
+                          }
                           variant="faded"
                         >
                           <div className="flex items-center gap-2 mt-3 mb-3">
@@ -477,7 +486,9 @@ export default function TeamQuickActions({
                                 <Button
                                   className="bg-background text-success-600 font-medium border-1 border-success-200 shadow-small"
                                   size="sm"
-                                  startContent={<CheckCircle className="w-4 h-4" />}
+                                  startContent={
+                                    <CheckCircle className="w-4 h-4" />
+                                  }
                                   variant="bordered"
                                   onPress={() => handleCompleteTask(action)}
                                 >
@@ -527,9 +538,7 @@ export default function TeamQuickActions({
                 }}
               >
                 {statusOptions.map((option) => (
-                  <SelectItem key={option.value}>
-                    {option.label}
-                  </SelectItem>
+                  <SelectItem key={option.value}>{option.label}</SelectItem>
                 ))}
               </Select>
             </div>

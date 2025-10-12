@@ -750,7 +750,7 @@ export const Navbar = () => {
                 className:
                   "transition-all duration-300 hover:ring-2 hover:ring-primary/50",
               }}
-              className="transition-all duration-300"
+              className="transition-all duration-300 cursor-pointer"
               description={
                 userRole
                   ? `${currentUser.gradeName} • ${userRole}`

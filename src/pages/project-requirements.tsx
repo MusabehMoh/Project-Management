@@ -496,9 +496,13 @@ export default function ProjectRequirementsPage() {
     const newFiles = Array.from(files).filter((file) => {
       if (file.size === 0) {
         emptyFiles.push(file.name);
-        console.warn(`File "${file.name}" has no size (0 bytes) and will be skipped`);
+        console.warn(
+          `File "${file.name}" has no size (0 bytes) and will be skipped`,
+        );
+
         return false;
       }
+
       return true;
     });
 
@@ -510,11 +514,8 @@ export default function ProjectRequirementsPage() {
         emptyFiles.length === 1
           ? `${fileList}`
           : `${emptyFiles.length} ${t("requirements.validation.filesEmptyError")}: ${fileList}`;
-      
-      showWarningToast(
-        t("requirements.validation.fileEmptyError"),
-        message
-      );
+
+      showWarningToast(t("requirements.validation.fileEmptyError"), message);
 
       // Clear error state after 4 seconds (matching toast duration)
       setTimeout(() => {
@@ -525,6 +526,7 @@ export default function ProjectRequirementsPage() {
     // If all files were empty, don't add anything
     if (newFiles.length === 0) {
       console.warn("All selected files were empty or had no size");
+
       return;
     }
 
@@ -621,7 +623,8 @@ export default function ProjectRequirementsPage() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold">
-                  {projectName || `${t("requirements.managementForProject")} ${projectId}`}
+                  {projectName ||
+                    `${t("requirements.managementForProject")} ${projectId}`}
                 </h1>
                 <p className="text-default-500">{t("requirements.subtitle")}</p>
               </div>
@@ -1159,6 +1162,7 @@ export default function ProjectRequirementsPage() {
                       selectedKeys={[formData.priority.toString()]}
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
+
                         if (selectedKey) {
                           setFormData({
                             ...formData,
@@ -1183,6 +1187,7 @@ export default function ProjectRequirementsPage() {
                       selectedKeys={[formData.type.toString()]}
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
+
                         if (selectedKey) {
                           setFormData({
                             ...formData,
@@ -1262,9 +1267,13 @@ export default function ProjectRequirementsPage() {
                       </label>
 
                       {/* File Upload Input */}
-                      <div className={`border-2 border-dashed rounded-lg p-3 hover:border-default-400 transition-colors ${
-                        hasFileUploadError ? "border-danger" : "border-default-300"
-                      }`}>
+                      <div
+                        className={`border-2 border-dashed rounded-lg p-3 hover:border-default-400 transition-colors ${
+                          hasFileUploadError
+                            ? "border-danger"
+                            : "border-default-300"
+                        }`}
+                      >
                         <input
                           multiple
                           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip,.rar"

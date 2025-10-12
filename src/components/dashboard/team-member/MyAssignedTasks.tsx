@@ -204,11 +204,7 @@ export default function MyAssignedTasks({
               {total}
             </Chip>
             {total > 0 && (
-              <Button
-                size="sm"
-                variant="light"
-                onPress={handleViewAllTasks}
-              >
+              <Button size="sm" variant="light" onPress={handleViewAllTasks}>
                 {t("common.viewAll")}
               </Button>
             )}

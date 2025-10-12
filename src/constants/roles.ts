@@ -41,5 +41,6 @@ export const getRoleName = (id: number): string | undefined => {
 export const getRoleId = (name: string): RoleIds | undefined => {
   const entries = Object.entries(RoleNames) as [string, string][];
   const entry = entries.find(([_, roleName]) => roleName === name);
+
   return entry ? (parseInt(entry[0]) as RoleIds) : undefined;
 };

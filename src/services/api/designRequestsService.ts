@@ -20,7 +20,7 @@ export interface DesignRequestDto {
   createdAt?: string;
   updatedAt?: string;
   assignedToUserName?: string;
-  
+
   // Task details
   task?: {
     id: number;
@@ -31,7 +31,7 @@ export interface DesignRequestDto {
     dueDate?: string;
     requirementId?: number;
   };
-  
+
   // Requirement details
   requirementDetails?: {
     id: number;
@@ -127,7 +127,7 @@ export class DesignRequestsService {
   ): Promise<ApiResponse<DesignRequestDto>> {
     return apiClient.put(`${this.baseUrl}/${id}`, designRequest);
   }
-  
+
   /**
    * Assign a design request to a designer
    */

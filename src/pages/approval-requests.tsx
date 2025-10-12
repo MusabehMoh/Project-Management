@@ -193,11 +193,7 @@ const RequirementCard = ({
 
       <CardBody className="pt-0 flex-1 flex flex-col">
         <div className="space-y-2 flex-1">
-          <ScrollShadow 
-            hideScrollBar 
-            className="h-[4.5rem]"
-            isEnabled={false}
-          >
+          <ScrollShadow hideScrollBar className="h-[4.5rem]" isEnabled={false}>
             <p
               dangerouslySetInnerHTML={{
                 __html:
@@ -234,7 +230,7 @@ const RequirementCard = ({
               variant="bordered"
               onPress={() => onApprove(requirement)}
             >
-              <Check size={16} className="text-success" />
+              <Check className="text-success" size={16} />
               {t("requirements.approve")}
             </Button>
           }
@@ -382,9 +378,7 @@ export default function ApprovalRequestsPage() {
       );
 
       // Show success toast
-      showSuccessToast(
-        t("requirements.approveSuccess")
-      );
+      showSuccessToast(t("requirements.approveSuccess"));
 
       onApprovalModalOpenChange();
       setRequirementToApprove(null);
@@ -393,9 +387,7 @@ export default function ApprovalRequestsPage() {
       refreshData();
     } catch (error) {
       // Show error toast
-      showErrorToast(
-        t("requirements.approveError")
-      );
+      showErrorToast(t("requirements.approveError"));
       console.error("Error approving requirement:", error);
     } finally {
       setIsApproving(false);
@@ -572,7 +564,7 @@ export default function ApprovalRequestsPage() {
                     {t("requirements.clearFilters")}
                   </Button>
                   <span className="text-sm text-default-500">
-                    {t("requirements.requirementsFound").replace(
+                    {t("tasks.tasksFound").replace(
                       "{count}",
                       totalRequirements.toString(),
                     )}

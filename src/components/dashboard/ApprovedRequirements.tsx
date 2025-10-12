@@ -137,10 +137,7 @@ export default function ApprovedRequirements({
         shadow="sm"
       >
         <CardBody className="min-h-[200px]">
-          <ErrorWithRetry
-            error={error}
-            onRetry={refresh}
-          />
+          <ErrorWithRetry error={error} onRetry={refresh} />
         </CardBody>
       </Card>
     );

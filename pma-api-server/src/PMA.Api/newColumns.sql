@@ -6,22 +6,15 @@ p.OwningUnit,
 p.ExpectedCompletionDate,
 p.Status,
 CASE p.Status
-WHEN 1 THEN 'New'
 WHEN 2 THEN 'Under Study'
 WHEN 3 THEN 'Under Development'
 WHEN 4 THEN 'Under Testing'
-WHEN 5 THEN 'Production Environment'
-WHEN 6 THEN 'Postponed'
 ELSE 'Unknown'
 END AS StatusName,
 CASE p.Status
-WHEN 1 THEN 'جديد'
 WHEN 2 THEN 'قيد الدراسة'
 WHEN 3 THEN 'قيد التطوير'
-WHEN 4 THEN 'قيد الاختبار'
-WHEN 5 THEN 'بيئة الانتاج'
-WHEN 6 THEN 'مؤجل'
-ELSE 'غير معروف'
+WHEN 4 THEN 'قيد الاختبار' 
 END AS StatusNameAr,
 p.Progress,
 COUNT(pr.Id) AS TotalRequirements,

@@ -3,17 +3,24 @@ import { ApiResponse } from "@/types/project";
 // Base API configuration
 export const API_CONFIG = {
   // Check runtime config first, then environment variables
-  BASE_URL: (window as any).PMA_CONFIG?.apiUrl || import.meta.env.VITE_API_URL || "http://localhost:3002/api",
-  WS_URL: (window as any).PMA_CONFIG?.wsUrl || import.meta.env.VITE_WS_URL || "ws://localhost:3002",
+  BASE_URL:
+    (window as any).PMA_CONFIG?.apiUrl ||
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:3002/api",
+  WS_URL:
+    (window as any).PMA_CONFIG?.wsUrl ||
+    import.meta.env.VITE_WS_URL ||
+    "ws://localhost:3002",
   TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || "20000"),
   HEADERS: {
     Accept: "application/json",
   },
   USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API === "true",
   ENABLE_LOGS: import.meta.env.VITE_ENABLE_CONSOLE_LOGS === "true",
-  ENABLE_SIGNALR: (window as any).PMA_CONFIG?.enableSignalR !== undefined 
-    ? (window as any).PMA_CONFIG.enableSignalR 
-    : import.meta.env.VITE_ENABLE_SIGNALR === "true",
+  ENABLE_SIGNALR:
+    (window as any).PMA_CONFIG?.enableSignalR !== undefined
+      ? (window as any).PMA_CONFIG.enableSignalR
+      : import.meta.env.VITE_ENABLE_SIGNALR === "true",
 };
 
 // HTTP methods enum

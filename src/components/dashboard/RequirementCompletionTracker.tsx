@@ -25,6 +25,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useRequirementCompletion } from "@/hooks/useRequirementCompletion";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
+import { formatDateTime } from "@/utils/dateFormatter";
+import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 
 interface RequirementCompletionTrackerProps {
   className?: string;
@@ -46,26 +48,15 @@ const getStatusColor = (type: "overdue" | "at-risk" | "completed") => {
   }
 };
 
-// Get priority color
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case "high":
-      return "danger";
-    case "medium":
-      return "warning";
-    case "low":
-      return "success";
-    default:
-      return "default";
-  }
-};
-
 export default function RequirementCompletionTracker({
   className = "",
   useMockData = false,
   analystId,
 }: RequirementCompletionTrackerProps) {
   const { t, language } = useLanguage();
+
+  // Global priority lookups
+  const { getPriorityColor, getPriorityLabel } = usePriorityLookups();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -175,13 +166,6 @@ export default function RequirementCompletionTracker({
     return null;
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   const getDaysText = (days: number, type: "overdue" | "remaining") => {
     if (days === 1) {
       return type === "overdue"
@@ -279,7 +263,7 @@ export default function RequirementCompletionTracker({
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">
-                            {item.name}
+                            {item.requirementTitle}
                           </span>
                           <span className="text-xs text-default-500">
                             {item.projectName}
@@ -288,12 +272,16 @@ export default function RequirementCompletionTracker({
                       </TableCell>
                       <TableCell>
                         <Chip
-                          color={getPriorityColor(item.priority)}
+                          color={getPriorityColor(
+                            parseInt(item.priority.toString()),
+                          )}
                           size="sm"
                           variant="flat"
                         >
-                          {t(`completion.priority.${item.priority}`) ||
-                            t(`priority.${item.priority}`) ||
+                          {getPriorityLabel(
+                            parseInt(item.priority.toString()),
+                          ) ||
+                            t(`completion.priority.${item.priority}`) ||
                             item.priority}
                         </Chip>
                       </TableCell>
@@ -326,7 +314,12 @@ export default function RequirementCompletionTracker({
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm text-default-600">
                           <Calendar className="w-3 h-3" />
-                          <span>{formatDate(item.expectedDate)}</span>
+                          <span>
+                            {formatDateTime(item.expectedCompletionDate, {
+                              showTime: false,
+                              language,
+                            })}
+                          </span>
                         </div>
                       </TableCell>
                     </TableRow>

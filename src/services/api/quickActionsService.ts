@@ -130,8 +130,12 @@ export class QuickActionsService {
   /**
    * Get available team members (RGIS business logic)
    */
-  async getAvailableMembers(): Promise<QuickActionApiResponse<AvailableMembersResponse>> {
-    return apiClient.get<AvailableMembersResponse>(`${ENDPOINTS.QUICK_ACTIONS}/available-members`);
+  async getAvailableMembers(): Promise<
+    QuickActionApiResponse<AvailableMembersResponse>
+  > {
+    return apiClient.get<AvailableMembersResponse>(
+      `${ENDPOINTS.QUICK_ACTIONS}/available-members`,
+    );
   }
 
   /**

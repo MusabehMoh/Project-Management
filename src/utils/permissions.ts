@@ -196,7 +196,6 @@ export const hasAllActionsById = (
   return actionIds.every((actionId) => hasActionById(user, actionId));
 };
 
-
 /**
  * Alias to check permissions using object-literal style at call-sites.
  * Example: asPermission(currentUser, { actions: ["projects.create"] })

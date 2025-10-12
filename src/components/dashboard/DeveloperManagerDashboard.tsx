@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Button } from "@heroui/button";
 
 import DeveloperQuickActions from "./developer/DeveloperQuickActions";
 import DeveloperWorkloadPerformance from "./developer/DeveloperWorkloadPerformance";
@@ -52,15 +51,6 @@ export default function DeveloperManagerDashboard() {
         <p className="text-lg text-default-600">
           {t("developerDashboard.subtitle")}
         </p>
-
-        <div className="flex gap-4 justify-center">
-          <Button color="primary" size="lg">
-            {t("developerDashboard.newSprint")}
-          </Button>
-          <Button size="lg" variant="bordered">
-            {t("developerDashboard.createRelease")}
-          </Button>
-        </div>
       </div>
 
       {/* Quick Stats */}

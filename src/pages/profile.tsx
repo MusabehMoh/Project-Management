@@ -53,9 +53,11 @@ export default function ProfilePage() {
 
     return (
       colors[category as keyof typeof colors] ||
-      (colors as any)[Object.keys(colors).find((key) =>
-        category.toLowerCase().includes(key.toLowerCase()),
-      ) as string] ||
+      (colors as any)[
+        Object.keys(colors).find((key) =>
+          category.toLowerCase().includes(key.toLowerCase()),
+        ) as string
+      ] ||
       "default"
     );
   };
@@ -141,11 +143,7 @@ export default function ProfilePage() {
         {/* Profile Card */}
         <Card className="lg:col-span-1">
           <CardHeader className="flex flex-col items-center pb-2">
-            <Avatar 
-              className="w-24 h-24 mb-4" 
-              name={user.fullName} 
-              size="lg" 
-            />
+            <Avatar className="w-24 h-24 mb-4" name={user.fullName} size="lg" />
             <div className="text-center">
               <h2 className="text-xl font-semibold">{user.fullName}</h2>
               <p className="text-default-600">{user.gradeName}</p>

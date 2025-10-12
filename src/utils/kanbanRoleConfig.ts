@@ -34,6 +34,7 @@ const SOFTWARE_DEVELOPER_CONFIG: KanbanRoleConfig = {
   canDropTo: (statusId: number, fromStatusId: number) => {
     // Can move between To Do, In Progress, and In Review
     const allowedStatuses = [1, 2, 3];
+
     return (
       allowedStatuses.includes(statusId) &&
       allowedStatuses.includes(fromStatusId)
@@ -65,6 +66,7 @@ const QC_TEAM_MEMBER_CONFIG: KanbanRoleConfig = {
     if (fromStatusId === 4) {
       return [3, 5].includes(statusId);
     }
+
     return false;
   },
 };
@@ -86,6 +88,7 @@ const ANALYST_CONFIG: KanbanRoleConfig = {
   },
   canDropTo: (statusId: number, fromStatusId: number) => {
     const allowedStatuses = [1, 2, 3];
+
     return (
       allowedStatuses.includes(statusId) &&
       allowedStatuses.includes(fromStatusId)
@@ -110,6 +113,7 @@ const DESIGNER_TEAM_MEMBER_CONFIG: KanbanRoleConfig = {
   },
   canDropTo: (statusId: number, fromStatusId: number) => {
     const allowedStatuses = [1, 2, 3];
+
     return (
       allowedStatuses.includes(statusId) &&
       allowedStatuses.includes(fromStatusId)
@@ -259,6 +263,7 @@ export const isTransitionAllowed = (
   toStatusId: number,
 ): boolean => {
   const config = getKanbanConfigForRoles(roleIds);
+
   return config.canDropTo(toStatusId, fromStatusId);
 };
 
@@ -267,6 +272,7 @@ export const isTransitionAllowed = (
  */
 export const isDragAllowed = (roleIds: number[], statusId: number): boolean => {
   const config = getKanbanConfigForRoles(roleIds);
+
   return config.canDragFrom(statusId);
 };
 
@@ -298,6 +304,7 @@ export const getColumnAccessibility = (
   const isDroppable = config.allowedTransitions.to.includes(statusId);
 
   let reasonCode: ColumnRestrictionReason | undefined;
+
   if (!isVisible) {
     reasonCode = ColumnRestrictionReason.NOT_ACCESSIBLE;
   } else if (!isDraggable && !isDroppable) {

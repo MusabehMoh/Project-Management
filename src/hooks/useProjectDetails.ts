@@ -1,8 +1,8 @@
+import type { Project } from "@/types/project";
+
 import { useState, useEffect } from "react";
 
 import { projectsApi } from "@/services/api/projects";
-
-import type { Project } from "@/types/project";
 
 interface UseProjectDetailsOptions {
   projectId: number | string | undefined;
@@ -38,7 +38,8 @@ export function useProjectDetails(
     setError(null);
 
     try {
-      const id = typeof projectId === "string" ? parseInt(projectId) : projectId;
+      const id =
+        typeof projectId === "string" ? parseInt(projectId) : projectId;
       const response = await projectsApi.getProjectById(id);
 
       if (response.data) {

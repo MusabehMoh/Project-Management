@@ -1,4 +1,5 @@
 import type { ApiResponse } from "@/types/project";
+
 import { apiClient } from "./client";
 
 /**
@@ -20,7 +21,7 @@ export class TasksService {
     taskId: number,
     statusId: number,
     comment?: string,
-    progress?: number
+    progress?: number,
   ): Promise<ApiResponse<any>> {
     return apiClient.patch<any>(`${this.baseUrl}/${taskId}`, {
       statusId: statusId,

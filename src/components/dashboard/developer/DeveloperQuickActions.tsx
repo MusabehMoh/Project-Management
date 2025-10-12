@@ -300,8 +300,8 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         <CardBody className="min-h-[200px]">
           <ErrorWithRetry
             error={error}
-            onRetry={refresh}
             icon={<AlertTriangle className="h-8 w-8 text-default-400" />}
+            onRetry={refresh}
           />
         </CardBody>
       </Card>
@@ -420,6 +420,246 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     setSelectedDevelopers([]);
     setDeveloperInputValue("");
     clearDeveloperResults();
+  };
+
+  // Modal Components (must be defined after handlers to avoid hoisting issues)
+  const TaskAssignmentModal = () => {
+    return (
+      <Modal
+        dir={direction}
+        isOpen={isTaskModalOpen}
+        onOpenChange={setIsTaskModalOpen}
+      >
+        <ModalContent>
+          <ModalHeader>
+            {t("developerQuickActions.assignDeveloper") || "Assign Developer"}
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-default-600 mb-4">
+              {t("developerQuickActions.assignDeveloperTo") ||
+                "Assign developers to"}
+              : {selectedTask?.title}
+            </p>
+
+            {/* Selected Developers Display */}
+            {selectedDevelopers.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm font-medium text-foreground mb-2">
+                  {t("developerQuickActions.selectedDevelopers") ||
+                    "Selected Developers"}
+                  :
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedDevelopers.map((developer) => (
+                    <Chip
+                      key={developer.id}
+                      color="primary"
+                      variant="flat"
+                      onClose={() => {
+                        setSelectedDevelopers((prev) =>
+                          prev.filter((d) => d.id !== developer.id),
+                        );
+                      }}
+                    >
+                      {developer.fullName}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Autocomplete
+              isClearable
+              inputValue={developerInputValue}
+              isLoading={developerSearchLoading}
+              items={developerEmployees.filter(
+                (emp) =>
+                  !selectedDevelopers.some(
+                    (selected) => selected.id === emp.id,
+                  ),
+              )}
+              label={
+                t("developerQuickActions.selectDeveloper") ||
+                "Select Developers"
+              }
+              menuTrigger="input"
+              placeholder={
+                t("developerQuickActions.chooseDeveloper") ||
+                "Search and select developers"
+              }
+              onInputChange={(value) => {
+                setDeveloperInputValue(value);
+                // Search for developers
+                searchDeveloperEmployees(value);
+              }}
+              onSelectionChange={(key) => {
+                if (key) {
+                  const developer = developerEmployees.find(
+                    (d) => d.id.toString() === key,
+                  );
+
+                  if (
+                    developer &&
+                    !selectedDevelopers.some(
+                      (selected) => selected.id === developer.id,
+                    )
+                  ) {
+                    setSelectedDevelopers((prev) => [...prev, developer]);
+                    setDeveloperInputValue("");
+                  }
+                }
+              }}
+            >
+              {(developer) => (
+                <AutocompleteItem
+                  key={developer.id}
+                  textValue={`${developer.fullName} - ${developer.militaryNumber}`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{developer.fullName}</span>
+                    <span className="text-sm text-default-500">
+                      {developer.militaryNumber} - {developer.gradeName}
+                    </span>
+                  </div>
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={handleTaskCancel}>
+              {t("common.cancel") || "Cancel"}
+            </Button>
+            <Button
+              color="primary"
+              disabled={selectedDevelopers.length === 0}
+              onPress={handleTaskAssign}
+            >
+              {t("developerQuickActions.assign") || "Assign"} (
+              {selectedDevelopers.length})
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  };
+
+  const CodeReviewAssignmentModal = () => {
+    return (
+      <Modal
+        dir={direction}
+        isOpen={isPRModalOpen}
+        onOpenChange={setIsPRModalOpen}
+      >
+        <ModalContent>
+          <ModalHeader>
+            {t("developerQuickActions.assignReviewer") || "Assign Reviewer"}
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-default-600 mb-4">
+              {t("developerQuickActions.assignReviewerTo") ||
+                "Assign reviewers to"}
+              : {selectedPR?.title}
+            </p>
+
+            {/* Selected Developers Display */}
+            {selectedDevelopers.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm font-medium text-foreground mb-2">
+                  {t("developerQuickActions.selectedReviewers") ||
+                    "Selected Reviewers"}
+                  :
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedDevelopers.map((developer) => (
+                    <Chip
+                      key={developer.id}
+                      color="primary"
+                      variant="flat"
+                      onClose={() => {
+                        setSelectedDevelopers((prev) =>
+                          prev.filter((d) => d.id !== developer.id),
+                        );
+                      }}
+                    >
+                      {developer.fullName}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Autocomplete
+              isClearable
+              inputValue={developerInputValue}
+              isLoading={developerSearchLoading}
+              items={developerEmployees.filter(
+                (emp) =>
+                  !selectedDevelopers.some(
+                    (selected) => selected.id === emp.id,
+                  ),
+              )}
+              label={
+                t("developerQuickActions.selectReviewer") || "Select Reviewers"
+              }
+              menuTrigger="input"
+              placeholder={
+                t("developerQuickActions.chooseReviewer") ||
+                "Search and select reviewers"
+              }
+              onInputChange={(value) => {
+                setDeveloperInputValue(value);
+                // Search for developers
+                searchDeveloperEmployees(value);
+              }}
+              onSelectionChange={(key) => {
+                if (key) {
+                  const developer = developerEmployees.find(
+                    (d) => d.id.toString() === key,
+                  );
+
+                  if (
+                    developer &&
+                    !selectedDevelopers.some(
+                      (selected) => selected.id === developer.id,
+                    )
+                  ) {
+                    setSelectedDevelopers((prev) => [...prev, developer]);
+                    setDeveloperInputValue("");
+                  }
+                }
+              }}
+            >
+              {(developer) => (
+                <AutocompleteItem
+                  key={developer.id}
+                  textValue={`${developer.fullName} - ${developer.militaryNumber}`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{developer.fullName}</span>
+                    <span className="text-sm text-default-500">
+                      {developer.militaryNumber} - {developer.gradeName}
+                    </span>
+                  </div>
+                </AutocompleteItem>
+              )}
+            </Autocomplete>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={handlePRCancel}>
+              {t("common.cancel") || "Cancel"}
+            </Button>
+            <Button
+              color="primary"
+              disabled={selectedDevelopers.length === 0}
+              onPress={handlePRAssign}
+            >
+              {t("developerQuickActions.assign") || "Assign"} (
+              {selectedDevelopers.length})
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
   };
 
   const TaskExtensionModal = () => {
@@ -549,246 +789,6 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       </Modal>
     );
   };
-
-  // Modal Components (declared as functions to avoid hoisting issues)
-  function TaskAssignmentModal() {
-    return (
-      <Modal
-        dir={direction}
-        isOpen={isTaskModalOpen}
-        onOpenChange={setIsTaskModalOpen}
-      >
-        <ModalContent>
-          <ModalHeader>
-            {t("developerQuickActions.assignDeveloper") || "Assign Developer"}
-          </ModalHeader>
-          <ModalBody>
-            <p className="text-sm text-default-600 mb-4">
-              {t("developerQuickActions.assignDeveloperTo") ||
-                "Assign developers to"}
-              : {selectedTask?.title}
-            </p>
-
-            {/* Selected Developers Display */}
-            {selectedDevelopers.length > 0 && (
-              <div className="mb-4">
-                <p className="text-sm font-medium text-foreground mb-2">
-                  {t("developerQuickActions.selectedDevelopers") ||
-                    "Selected Developers"}
-                  :
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedDevelopers.map((developer) => (
-                    <Chip
-                      key={developer.id}
-                      color="primary"
-                      variant="flat"
-                      onClose={() => {
-                        setSelectedDevelopers((prev) =>
-                          prev.filter((d) => d.id !== developer.id),
-                        );
-                      }}
-                    >
-                      {developer.fullName}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Autocomplete
-              isClearable
-              inputValue={developerInputValue}
-              isLoading={developerSearchLoading}
-              items={developerEmployees.filter(
-                (emp) =>
-                  !selectedDevelopers.some(
-                    (selected) => selected.id === emp.id,
-                  ),
-              )}
-              label={
-                t("developerQuickActions.selectDeveloper") ||
-                "Select Developers"
-              }
-              menuTrigger="input"
-              placeholder={
-                t("developerQuickActions.chooseDeveloper") ||
-                "Search and select developers"
-              }
-              onInputChange={(value) => {
-                setDeveloperInputValue(value);
-                // Search for developers
-                searchDeveloperEmployees(value);
-              }}
-              onSelectionChange={(key) => {
-                if (key) {
-                  const developer = developerEmployees.find(
-                    (d) => d.id.toString() === key,
-                  );
-
-                  if (
-                    developer &&
-                    !selectedDevelopers.some(
-                      (selected) => selected.id === developer.id,
-                    )
-                  ) {
-                    setSelectedDevelopers((prev) => [...prev, developer]);
-                    setDeveloperInputValue("");
-                  }
-                }
-              }}
-            >
-              {(developer) => (
-                <AutocompleteItem
-                  key={developer.id}
-                  textValue={`${developer.fullName} - ${developer.militaryNumber}`}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{developer.fullName}</span>
-                    <span className="text-sm text-default-500">
-                      {developer.militaryNumber} - {developer.gradeName}
-                    </span>
-                  </div>
-                </AutocompleteItem>
-              )}
-            </Autocomplete>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={handleTaskCancel}>
-              {t("common.cancel") || "Cancel"}
-            </Button>
-            <Button
-              color="primary"
-              disabled={selectedDevelopers.length === 0}
-              onPress={handleTaskAssign}
-            >
-              {t("developerQuickActions.assign") || "Assign"} (
-              {selectedDevelopers.length})
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    );
-  }
-
-  function CodeReviewAssignmentModal() {
-    return (
-      <Modal
-        dir={direction}
-        isOpen={isPRModalOpen}
-        onOpenChange={setIsPRModalOpen}
-      >
-        <ModalContent>
-          <ModalHeader>
-            {t("developerQuickActions.assignReviewer") || "Assign Reviewer"}
-          </ModalHeader>
-          <ModalBody>
-            <p className="text-sm text-default-600 mb-4">
-              {t("developerQuickActions.assignReviewerTo") ||
-                "Assign reviewers to"}
-              : {selectedPR?.title}
-            </p>
-
-            {/* Selected Developers Display */}
-            {selectedDevelopers.length > 0 && (
-              <div className="mb-4">
-                <p className="text-sm font-medium text-foreground mb-2">
-                  {t("developerQuickActions.selectedReviewers") ||
-                    "Selected Reviewers"}
-                  :
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedDevelopers.map((developer) => (
-                    <Chip
-                      key={developer.id}
-                      color="primary"
-                      variant="flat"
-                      onClose={() => {
-                        setSelectedDevelopers((prev) =>
-                          prev.filter((d) => d.id !== developer.id),
-                        );
-                      }}
-                    >
-                      {developer.fullName}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Autocomplete
-              isClearable
-              inputValue={developerInputValue}
-              isLoading={developerSearchLoading}
-              items={developerEmployees.filter(
-                (emp) =>
-                  !selectedDevelopers.some(
-                    (selected) => selected.id === emp.id,
-                  ),
-              )}
-              label={
-                t("developerQuickActions.selectReviewer") || "Select Reviewers"
-              }
-              menuTrigger="input"
-              placeholder={
-                t("developerQuickActions.chooseReviewer") ||
-                "Search and select reviewers"
-              }
-              onInputChange={(value) => {
-                setDeveloperInputValue(value);
-                // Search for developers
-                searchDeveloperEmployees(value);
-              }}
-              onSelectionChange={(key) => {
-                if (key) {
-                  const developer = developerEmployees.find(
-                    (d) => d.id.toString() === key,
-                  );
-
-                  if (
-                    developer &&
-                    !selectedDevelopers.some(
-                      (selected) => selected.id === developer.id,
-                    )
-                  ) {
-                    setSelectedDevelopers((prev) => [...prev, developer]);
-                    setDeveloperInputValue("");
-                  }
-                }
-              }}
-            >
-              {(developer) => (
-                <AutocompleteItem
-                  key={developer.id}
-                  textValue={`${developer.fullName} - ${developer.militaryNumber}`}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{developer.fullName}</span>
-                    <span className="text-sm text-default-500">
-                      {developer.militaryNumber} - {developer.gradeName}
-                    </span>
-                  </div>
-                </AutocompleteItem>
-              )}
-            </Autocomplete>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={handlePRCancel}>
-              {t("common.cancel") || "Cancel"}
-            </Button>
-            <Button
-              color="primary"
-              disabled={selectedDevelopers.length === 0}
-              onPress={handlePRAssign}
-            >
-              {t("developerQuickActions.assign") || "Assign"} (
-              {selectedDevelopers.length})
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    );
-  }
 
   const AddAdhocTaskModal = () => {
     const {
@@ -1364,9 +1364,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                       <div className="space-y-3 pr-2">
                         {availableDevelopers.map((developer) => (
                           <CustomAlert
-                            key={developer.userId}
+                            key={developer.id}
                             color="success"
-                            description={`${developer.department} • ${developer.gradeName} • ${developer.totalTasks} tasks • ${developer.skills.join(", ")}`}
+                            description={`${developer.department} • ${developer.gradeName} • ${developer.currentTasksCount} active tasks • ${developer.availableCapacity} slots available`}
                             direction={direction}
                             title={developer.fullName}
                             variant="faded"
