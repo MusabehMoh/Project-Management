@@ -734,12 +734,16 @@ export { useEntityDetails } from "./useEntityDetails";
   - **Future-Ready**: Structure allows adding more accordion items for other action types
 - **DesignerWorkloadPerformance**: Full-width designer workload and performance metrics table (Designer Manager)
   - **Design Pattern**: Modern minimalist stats + searchable, filterable, sortable table with pagination
-  - **Modern Minimalist Stats**: Horizontal pill-style layout with 4 metrics
-    - Average Efficiency: success-50 background, displays team average efficiency percentage
-    - Tasks Completed: primary-50 background, shows total completed tasks count
-    - Average Task Time: warning-50 background, displays avg completion time in hours
-    - Tasks In Progress: secondary-50 background, shows currently active tasks count
-    - **Pattern**: `flex gap-3`, `flex-1`, `rounded-lg px-3 py-2`, `text-2xl font-semibold` for numbers, `text-xs` for labels
+  - **Modern Minimalist Stats**: Horizontal pill-style layout with 4 metrics - **NEUTRAL MONOCHROMATIC DESIGN**
+    - All stats use: `bg-default-100 dark:bg-default-50/5` with `border border-default-200` for subtle, clean appearance
+    - Number styling: `text-2xl font-semibold text-default-700 dark:text-default-600`
+    - Label styling: `text-xs text-default-500`
+    - Average Efficiency: Displays team average efficiency percentage
+    - Tasks Completed: Shows total completed tasks count
+    - Average Task Time: Displays avg completion time in hours
+    - Tasks In Progress: Shows currently active tasks count
+    - **Pattern**: `flex gap-3`, `flex-1`, `rounded-lg px-3 py-2`, `border border-default-200`, neutral colors only, no colored backgrounds
+    - **Philosophy**: Minimal color usage - only neutral grays for professional, clean aesthetic
   - **Table Columns**: Designer (avatar + name + grade), Workload (progress bar + %), Efficiency (with trend icon), Projects (current + completed with icons), Status (colored chip)
   - **Filters & Search**:
     - Search by designer name (debounced input)
@@ -754,17 +758,47 @@ export { useEntityDetails } from "./useEntityDetails";
     - Projects: Clock icon + `currentTasksCount`, CheckCircle icon + `completedTasksCount`
     - Status: Colored chip with translated status text
   - **API Integration**:
-    - Service: `designerWorkloadService` (src/services/api/designerWorkloadService.ts)
-    - Hook: `useDesignerWorkload` (src/hooks/useDesignerWorkload.ts) with pagination, search, filters, sorting
-    - Backend Endpoints:
-      - `GET /api/designers/workload` - Returns paginated designer workload data
-        - Query params: `page`, `pageSize`, `searchQuery`, `statusFilter`, `sortBy`, `sortOrder`
-        - Response: `{ designers: DesignerWorkloadDto[], pagination: { currentPage, pageSize, totalItems, totalPages } }`
-      - `GET /api/designers/metrics` - Returns team-wide metrics
+    - **Service**: `designerWorkloadService` (src/services/api/designerWorkloadService.ts)
+      - Smart PascalCase/camelCase compatibility layer
+      - Handles both `.NET` PascalCase responses and future camelCase responses
+      - Methods: `getDesignerWorkload()`, `getTeamMetrics()`
+    - **Hook**: `useDesignerWorkload` (src/hooks/useDesignerWorkload.ts)
+      - State management: designers, metrics, pagination, loading, error
+      - Functions: refetch, fetchPage(pageNumber)
+      - Auto-refreshes on parameter changes (search, filter, sort)
+    - **Backend Endpoints** (.NET 8 Web API):
+      - `GET /api/designers/workload` - Paginated designer workload data
+        - Query params: `page` (default: 1), `pageSize` (default: 5), `searchQuery`, `statusFilter`, `sortBy` (Name/Workload/Efficiency), `sortOrder` (asc/desc)
+        - Response: `{ Designers: DesignerWorkloadDto[], Pagination: PaginationInfo }`
+        - **PascalCase JSON**: Returns capital-case properties (backend uses default .NET serialization)
+        - Database: Queries Users table filtered by DepartmentId = 3 (Design Department)
+        - Business Logic: Calculates workload % (estimated hours / 160), efficiency % (completed / total tasks), available hours, status
+      - `GET /api/designers/metrics` - Team-wide aggregate metrics
         - Response: `TeamMetricsDto` object
-    - DTOs:
-      - **DesignerWorkloadDto**: `prsId` (number), `designerName` (string), `gradeName` (string), `currentTasksCount` (number), `completedTasksCount` (number), `averageTaskCompletionTime` (number), `efficiency` (number), `workloadPercentage` (number), `availableHours` (number), `status` (string: "Available" | "Busy" | "Blocked" | "On Leave")
-      - **TeamMetricsDto**: `totalDesigners` (number), `activeDesigners` (number), `averageEfficiency` (number), `totalTasksCompleted` (number), `totalTasksInProgress` (number), `averageTaskCompletionTime` (number)
+        - Aggregates: Total designers, active designers, average efficiency, total completed/in-progress tasks, average task completion time
+    - **DTOs**:
+      - **DesignerWorkloadDto** (C# backend, PascalCase):
+        - `PrsId` (int): Personnel ID
+        - `DesignerName` (string): Full name from Users table
+        - `GradeName` (string): Military/organizational grade
+        - `CurrentTasksCount` (int): Active tasks from TaskAssignments
+        - `CompletedTasksCount` (int): Completed tasks count
+        - `AverageTaskCompletionTime` (decimal): Avg hours to complete tasks
+        - `Efficiency` (decimal): Percentage (completed / total * 100)
+        - `WorkloadPercentage` (decimal): Percentage (estimated hours / 160 * 100)
+        - `AvailableHours` (decimal): 160 - estimated hours
+        - `Status` (string): "Available" | "Busy" | "Blocked" | "On Leave"
+      - **TeamMetricsDto** (C# backend, PascalCase):
+        - `TotalDesigners` (int)
+        - `ActiveDesigners` (int)
+        - `AverageEfficiency` (decimal)
+        - `TotalTasksCompleted` (int)
+        - `TotalTasksInProgress` (int)
+        - `AverageTaskCompletionTime` (decimal)
+      - **TypeScript Interfaces** (frontend, camelCase):
+        - Service layer automatically maps PascalCase → camelCase
+        - Interfaces defined in designerWorkloadService.ts
+    - **JSON Serialization**: Backend uses .NET default (PascalCase), frontend service handles both cases for future-proofing
   - **Key Translations**:
     - `common.workload`, `common.efficiency`, `common.avgEfficiency`, `common.currentProjects`, `common.completed`, `common.filterByStatus`, `common.inProgress`
     - `status.available`, `status.busy`, `status.blocked`, `status.onLeave`

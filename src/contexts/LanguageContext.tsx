@@ -739,7 +739,10 @@ const translations = {
     "common.avgEfficiency": "Avg Efficiency",
     "common.currentProjects": "Current Projects",
     "common.completed": "Completed",
+    "common.filter": "Filter",
     "common.filterByStatus": "Filter by status",
+    "common.inProgress": "In Progress",
+    "common.status": "Status",
 
     // Status translations
     "status.available": "Available",
@@ -1689,6 +1692,7 @@ const translations = {
     "designRequests.status": "Status",
     "designRequests.notes": "Request Notes",
     "designRequests.noRequests": "No design requests found",
+    "designRequests.noRequestsDescription": "There are no design requests at this time",
     "designRequests.loadingRequests": "Loading design requests...",
     "designRequests.errorLoading": "Error loading design requests",
     "designRequests.selectDesigner": "Select Designer",
@@ -1714,6 +1718,7 @@ const translations = {
       "No actions require your attention at this time",
     "designRequests.assignSuccessDescription":
       "The design request has been assigned to the designer",
+    "designRequests.assignedTo": "Assigned To",
 
     // States
     noTasksFound: "No tasks found",
@@ -2454,7 +2459,10 @@ const translations = {
     "common.avgEfficiency": "متوسط الكفاءة",
     "common.currentProjects": "المشاريع الحالية",
     "common.completed": "المكتملة",
+    "common.filter": "تصفية",
     "common.filterByStatus": "تصفية حسب الحالة",
+    "common.inProgress": "قيد التنفيذ",
+    "common.status": "الحالة",
 
     // Status translations
     "status.available": "متاح",
@@ -3387,6 +3395,7 @@ const translations = {
     "designRequests.status": "الحالة",
     "designRequests.notes": "ملاحظات الطلب",
     "designRequests.noRequests": "لم يتم العثور على طلبات تصميم",
+    "designRequests.noRequestsDescription": "لا توجد طلبات تصميم في الوقت الحالي",
     "designRequests.loadingRequests": "جاري تحميل طلبات التصميم...",
     "designRequests.errorLoading": "خطأ في تحميل طلبات التصميم",
     "designRequests.selectDesigner": "اختر المصمم",
@@ -3412,6 +3421,7 @@ const translations = {
       "لا توجد إجراءات تتطلب انتباهك في الوقت الحالي",
     "designRequests.assignSuccessDescription":
       "تم تعيين طلب التصميم إلى المصمم",
+    "designRequests.assignedTo": "معين إلى",
 
     // States
     noTasksFound: "لم يتم العثور على مهام",

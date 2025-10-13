@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -48,17 +48,27 @@ const getStatusColor = (status: string) => {
 export default function DesignerWorkloadPerformance() {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState("efficiency");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [refreshing, setRefreshing] = useState(false);
+
+  // Debounce search query to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Use the custom hook to fetch designer workload data
   const { designers, metrics, pagination, loading, error, refetch, fetchPage } =
     useDesignerWorkload({
       page: 1,
       pageSize: 5,
-      searchQuery,
+      searchQuery: debouncedSearchQuery,
       statusFilter,
       sortBy,
       sortOrder,
@@ -154,10 +164,16 @@ export default function DesignerWorkloadPerformance() {
                 aria-label="Filter by status"
                 className="max-w-xs"
                 placeholder={t("common.filterByStatus") || "Filter by status"}
-                selectedKeys={statusFilter ? [statusFilter] : []}
+                selectedKeys={statusFilter ? new Set([statusFilter]) : new Set()}
+                disableAnimation
+                popoverProps={{
+                  placement: "bottom-start",
+                }}
+                scrollShadowProps={{
+                  isEnabled: false,
+                }}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
-
                   setStatusFilter(selected || "");
                 }}
               >
@@ -180,11 +196,19 @@ export default function DesignerWorkloadPerformance() {
                 aria-label="Sort by"
                 className="max-w-xs"
                 placeholder={t("common.sortBy") || "Sort by"}
-                selectedKeys={[sortBy]}
+                selectedKeys={new Set([sortBy])}
+                disableAnimation
+                popoverProps={{
+                  placement: "bottom-start",
+                }}
+                scrollShadowProps={{
+                  isEnabled: false,
+                }}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
-
-                  setSortBy(selected);
+                  if (selected) {
+                    setSortBy(selected);
+                  }
                 }}
               >
                 <SelectItem key="efficiency">
@@ -220,48 +244,48 @@ export default function DesignerWorkloadPerformance() {
           {metrics && (
             <div className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Average Efficiency */}
-              <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
+              <div className="flex-1 bg-default-100 dark:bg-default-50/5 rounded-lg px-3 py-2 border border-default-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-semibold text-success-600 dark:text-success-500">
+                  <span className="text-2xl font-semibold text-default-700 dark:text-default-600">
                     {metrics.averageEfficiency.toFixed(1)}%
                   </span>
-                  <span className="text-xs text-success-600/70 dark:text-success-500/70">
+                  <span className="text-xs text-default-500">
                     {t("common.avgEfficiency")}
                   </span>
                 </div>
               </div>
 
               {/* Tasks Completed */}
-              <div className="flex-1 bg-primary-50 dark:bg-primary-100/10 rounded-lg px-3 py-2">
+              <div className="flex-1 bg-default-100 dark:bg-default-50/5 rounded-lg px-3 py-2 border border-default-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-semibold text-primary-600 dark:text-primary-500">
+                  <span className="text-2xl font-semibold text-default-700 dark:text-default-600">
                     {metrics.totalTasksCompleted}
                   </span>
-                  <span className="text-xs text-primary-600/70 dark:text-primary-500/70">
+                  <span className="text-xs text-default-500">
                     {t("designerDashboard.designsCompleted")}
                   </span>
                 </div>
               </div>
 
               {/* Average Task Time */}
-              <div className="flex-1 bg-warning-50 dark:bg-warning-100/10 rounded-lg px-3 py-2">
+              <div className="flex-1 bg-default-100 dark:bg-default-50/5 rounded-lg px-3 py-2 border border-default-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-semibold text-warning-600 dark:text-warning-500">
+                  <span className="text-2xl font-semibold text-default-700 dark:text-default-600">
                     {metrics.averageTaskCompletionTime.toFixed(1)}h
                   </span>
-                  <span className="text-xs text-warning-600/70 dark:text-warning-500/70">
+                  <span className="text-xs text-default-500">
                     {t("designerDashboard.avgDesignTime")}
                   </span>
                 </div>
               </div>
 
               {/* Tasks In Progress */}
-              <div className="flex-1 bg-secondary-50 dark:bg-secondary-100/10 rounded-lg px-3 py-2">
+              <div className="flex-1 bg-default-100 dark:bg-default-50/5 rounded-lg px-3 py-2 border border-default-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-semibold text-secondary-600 dark:text-secondary-500">
+                  <span className="text-2xl font-semibold text-default-700 dark:text-default-600">
                     {metrics.totalTasksInProgress}
                   </span>
-                  <span className="text-xs text-secondary-600/70 dark:text-secondary-500/70">
+                  <span className="text-xs text-default-500">
                     {t("common.inProgress")}
                   </span>
                 </div>
@@ -362,11 +386,11 @@ export default function DesignerWorkloadPerformance() {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      color={getStatusColor(designer.status)}
+                      color={getStatusColor(designer.status.toLowerCase())}
                       size="sm"
                       variant="flat"
                     >
-                      {t(`status.${designer.status}`) ||
+                      {t(`status.${designer.status.toLowerCase()}`) ||
                         designer.status.replace("-", " ")}
                     </Chip>
                   </TableCell>
