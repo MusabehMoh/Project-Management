@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 
 import Calendar from "./calendar";
-import MyAssignedTasks from "./team-member/MyAssignedTasks";
 import TeamQuickActions from "./team-member/TeamQuickActions";
-import MyNextDeadline from "./team-member/MyNextDeadline";
 import TeamKanbanBoard from "./team-member/TeamKanbanBoard";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -61,22 +59,13 @@ export default function TeamMemberDashboard() {
       {/* Kanban Board - Full Width */}
       <TeamKanbanBoard onTaskUpdate={handleKanbanUpdate} />
 
-      {/* Grid Layout: Quick Actions with Calendar on left, My Tasks on right */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Quick Actions + Calendar (70%) */}
-        <div className="lg:col-span-2 space-y-6">
-          <TeamQuickActions
-            key={refreshKey}
-            onTaskUpdate={handleQuickActionsUpdate}
-          />
-          <Calendar maxHeight="600px" showSidebar={false} />
-        </div>
-
-        {/* Right Column: My Assigned Tasks + Next Deadline (30%) */}
-        <div className="lg:col-span-1 space-y-6">
-          <MyAssignedTasks key={refreshKey} />
-          <MyNextDeadline key={refreshKey} />
-        </div>
+      {/* Quick Actions (50%) and Calendar (50%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TeamQuickActions
+          key={refreshKey}
+          onTaskUpdate={handleQuickActionsUpdate}
+        />
+        <Calendar maxHeight="600px" showSidebar={false} />
       </div>
     </div>
   );
