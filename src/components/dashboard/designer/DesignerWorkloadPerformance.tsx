@@ -362,11 +362,11 @@ export default function DesignerWorkloadPerformance() {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      color={getStatusColor(designer.status)}
+                      color={getStatusColor(designer.status.toLowerCase())}
                       size="sm"
                       variant="flat"
                     >
-                      {t(`status.${designer.status}`) ||
+                      {t(`status.${designer.status.toLowerCase()}`) ||
                         designer.status.replace("-", " ")}
                     </Chip>
                   </TableCell>

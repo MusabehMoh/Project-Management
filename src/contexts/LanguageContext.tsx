@@ -736,6 +736,8 @@ const translations = {
     "common.currentProjects": "Current Projects",
     "common.completed": "Completed",
     "common.filterByStatus": "Filter by status",
+    "common.inProgress": "In Progress",
+    "common.status": "Status",
 
     // Status translations
     "status.available": "Available",
@@ -2447,6 +2449,8 @@ const translations = {
     "common.currentProjects": "المشاريع الحالية",
     "common.completed": "المكتملة",
     "common.filterByStatus": "تصفية حسب الحالة",
+    "common.inProgress": "قيد التنفيذ",
+    "common.status": "الحالة",
 
     // Status translations
     "status.available": "متاح",
