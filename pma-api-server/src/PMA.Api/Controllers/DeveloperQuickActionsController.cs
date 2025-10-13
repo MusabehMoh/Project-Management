@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
 using PMA.Core.Enums;
+using PMA.Core.Interfaces;
 using PMA.Infrastructure.Data;
+using PMA.Core.DTOs;
 using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 
 namespace PMA.Api.Controllers;
@@ -12,10 +14,11 @@ namespace PMA.Api.Controllers;
 public class DeveloperQuickActionsController : ApiBaseController
 {
     private readonly ApplicationDbContext _context;
-
-    public DeveloperQuickActionsController(ApplicationDbContext context)
+    private readonly IProjectRequirementService _projectRequirementService;
+    public DeveloperQuickActionsController(ApplicationDbContext context, IProjectRequirementService projectRequirementService)
     {
         _context = context;
+        _projectRequirementService= projectRequirementService;
     }
 
     /// <summary>
@@ -51,7 +54,7 @@ public class DeveloperQuickActionsController : ApiBaseController
                     type = "feature", // Default type since not available in current schema
                     complexity = "medium", // Default complexity since not available in current schema
                     tags = new string[] { }, // Empty array since not available in current schema
-                    owningUnit = t.Department != null ? t.Department.Name : ""
+                    requirementName = t.ProjectRequirement != null ? t.ProjectRequirement.Name : ""
                 })
                 .OrderBy(t => t.dueDate) // Order by the DateTime directly
                 .ToListAsync();
@@ -71,7 +74,7 @@ public class DeveloperQuickActionsController : ApiBaseController
                 t.type,
                 t.complexity,
                 t.tags,
-                t.owningUnit
+                t.requirementName
             }).ToList();
 
             // Get almost completed tasks (tasks with progress > 80% and not completed)
@@ -165,7 +168,7 @@ public class DeveloperQuickActionsController : ApiBaseController
             });
         }
     }
-
+  
     /// <summary>
     /// Get almost completed tasks
     /// </summary>

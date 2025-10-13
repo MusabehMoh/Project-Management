@@ -100,12 +100,19 @@ public class ProjectRequirementService : IProjectRequirementService
         return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, null, (int)RequirementStatusEnum.New, null);
     }
 
+    public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetRedyForDevelopmentRequirementsAsync(int page, int limit, int? projectId = null, int? status = null, string? priority = null, string? search = null)
+    {
+        // Get requirements with status NOT in "New" (1) or "ManagerReview" (2)
+        // This returns all requirements that are approved or further in the process
+        // Apply additional filters on top of the status filtering
+        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, status, priority, search, new[] { 1, 2 });
+    }
     public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetApprovedRequirementsAsync(int page, int limit, int? projectId = null, string? priority = null, string? search = null)
     {
         // Get requirements with status NOT in "New" (1) or "ManagerReview" (2)
         // This returns all requirements that are approved or further in the process
         // Apply additional filters on top of the status filtering
-        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, null, priority, search, new[] { 1, 2 });
+        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, (int)RequirementStatusEnum.Approved, priority, search,null);
     }
 
     public async Task<bool> SendRequirementAsync(int id)

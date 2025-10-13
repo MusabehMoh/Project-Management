@@ -10,6 +10,7 @@ import DeveloperCalendar from "./calendar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { developerQuickActionsService } from "@/services/api/developerQuickActionsService";
 import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 export default function DeveloperManagerDashboard() {
   const { t, language } = useLanguage();
@@ -20,10 +21,14 @@ export default function DeveloperManagerDashboard() {
     try {
       await developerQuickActionsService.assignDeveloper(task.id, developerId);
 
+      // Show success toast
+      showSuccessToast(t("developerDashboard.assignDeveloperSuccess"));
+
       // Refresh the quick actions to show updated data
       setRefreshKey((prev) => prev + 1);
     } catch {
-      // Handle error silently for now
+      // Show error toast
+      showErrorToast(t("developerDashboard.assignDeveloperError"));
     }
   };
 
@@ -35,9 +40,13 @@ export default function DeveloperManagerDashboard() {
         reviewerId,
       );
 
+      // Show success toast
+      showSuccessToast(t("developerDashboard.assignReviewerSuccess"));
+
       setRefreshKey((prev) => prev + 1);
     } catch {
-      // Handle error silently for now
+      // Show error toast
+      showErrorToast(t("developerDashboard.assignReviewerError"));
     }
   };
 

@@ -13,7 +13,7 @@ export interface UnassignedTask {
   type: "feature" | "bug" | "improvement" | "refactor";
   complexity: "simple" | "medium" | "complex";
   tags: string[];
-  owningUnit?: string;
+  requirementName?: string;
 }
 
 export interface AlmostCompletedTask {

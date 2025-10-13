@@ -1238,7 +1238,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                         {unassignedTasks.map((task) => (
                           <CustomAlert
                             key={task.id}
-                            description={`${task.projectName} • ${task.owningUnit} • ${task.estimatedHours}h • Due: ${new Date(task.dueDate).toLocaleDateString()}`}
+                            description={`${task.projectName} • ${task.requirementName}  • Due: ${new Date(task.dueDate).toLocaleDateString()}`}
                             direction={direction}
                             title={task.title}
                           >

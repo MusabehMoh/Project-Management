@@ -460,12 +460,13 @@ public class ProjectRequirementsController : ApiBaseController
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
         [FromQuery] int? projectId = null,
+        [FromQuery] int? status = null,
         [FromQuery] string? priority = null,
         [FromQuery] string? search = null)
     {
         try
         {
-            var (requirements, totalCount) = await _projectRequirementService.GetApprovedRequirementsAsync(page, limit, projectId, priority, search);
+            var (requirements, totalCount) = await _projectRequirementService.GetRedyForDevelopmentRequirementsAsync(page, limit, projectId, status, priority, search);
             var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
             return Success(requirements, pagination);
         }

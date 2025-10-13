@@ -1,4 +1,8 @@
 import { apiClient } from "@/services/api";
+import {
+  ProjectRequirement,
+  ProjectRequirementFilters,
+} from "@/types/projectRequirement";
 
 export interface DeveloperTask {
   id: string;
@@ -114,6 +118,47 @@ class DeveloperQuickActionsService {
     }
 
     return response.data;
+  }
+
+  async getApprovedRequirements(
+    filters?: ProjectRequirementFilters & {
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{
+    data: ProjectRequirement[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          params.append(key, String(value));
+        }
+      });
+    }
+
+    const endpoint = params.toString()
+      ? `${"/developer-quick-actions/approved-requirements"}?${params.toString()}`
+      : "/developer-quick-actions/approved-requirements";
+
+    const result = await apiClient.get<ProjectRequirement[]>(endpoint);
+
+    return {
+      data: result.data ?? [],
+      pagination: result.pagination ?? {
+        page: (filters as any)?.page ?? 1,
+        limit: (filters as any)?.limit ?? 20,
+        total: (result.data ?? []).length,
+        totalPages: 1,
+      },
+    };
   }
 
   async extendTask(

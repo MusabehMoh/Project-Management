@@ -12,7 +12,6 @@ import { CheckCircle, Clock, User } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
 import { useApprovedRequirements } from "@/hooks/useApprovedRequirements";
-
 interface ApprovedRequirementsProps {
   className?: string;
 }
@@ -23,9 +22,12 @@ export default function ApprovedRequirements({
   const { t, direction } = useLanguage();
   const navigate = useNavigate();
 
-  // Current hook usage
+  // Current hook usage - filter by status = 3 (Approved) only
   const { requirements, loading, error, refreshData, totalRequirements } =
-    useApprovedRequirements({ pageSize: 5 });
+    useApprovedRequirements({
+      pageSize: 5,
+      initialFilters: { status: "3" }, // Filter by Approved status only
+    });
   const totalCount = totalRequirements;
   const refresh = refreshData;
 
@@ -220,11 +222,6 @@ export default function ApprovedRequirements({
                           {getPriorityText(requirement.priority)}
                         </Chip>
                       </div>
-
-                      <p className="text-xs text-default-500 mb-2 line-clamp-2">
-                        {requirement.description}
-                      </p>
-
                       <div className="flex items-center gap-4 text-xs text-default-400">
                         <div className="flex items-center gap-1">
                           <User className="w-3 h-3" />
