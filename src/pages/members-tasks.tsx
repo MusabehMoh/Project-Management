@@ -1028,10 +1028,10 @@ export default function MembersTasksPage() {
           }}
         >
           <DrawerContent
-            className={`min-h-[400px] transition-all duration-200 hover:shadow-lg ${
+            className={`min-h-[400px] transition-all duration-200 hover:shadow-lg bg-content1 ${
               selectedTask?.isOverdue
-                ? "border-l-4 border-l-danger-500 bg-white dark:bg-danger-900/20"
-                : `border-l-4 border-l-${getTaskStatusColor(selectedTask?.statusId || 1)}-500 bg-white dark:bg-${getTaskStatusColor(selectedTask?.statusId || 1)}-900/20`
+                ? "border-l-4 border-l-danger-500"
+                : `border-l-4 border-l-${getTaskStatusColor(selectedTask?.statusId || 1)}-500`
             }`}
           >
             <DrawerHeader className="flex flex-col gap-1">

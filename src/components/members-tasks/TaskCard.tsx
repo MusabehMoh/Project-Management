@@ -82,10 +82,10 @@ export const TaskCard = ({
   return (
     <Card
       isPressable
-      className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg ${
+      className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg bg-content1 ${
         task.isOverdue
-          ? "border-l-4 border-l-danger-500 bg-danger-50/30 dark:bg-danger-900/20"
-          : `border-l-4 border-l-${getStatusColor(task.statusId)}-500 bg-${getStatusColor(task.statusId)}-50/30 dark:bg-${getStatusColor(task.statusId)}-900/20`
+          ? "border-l-4 border-l-danger-500"
+          : `border-l-4 border-l-${getStatusColor(task.statusId)}-500`
       } ${language === "ar" ? "text-right" : ""}`}
       dir={language === "ar" ? "rtl" : "ltr"}
       onPress={handleCardClick}
