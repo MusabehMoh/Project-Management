@@ -211,6 +211,8 @@ export default function MembersTasksPage() {
 
   const [isRequestDesignModalOpend, setIsRequestDesignModalOpend] =
     useState(false);
+  const [isRequestDesignConfirmModalOpen, setIsRequestDesignConfirmModalOpen] =
+    useState(false);
   const [isChangeAssigneesModalOpened, setIsChangeAssigneesModalOpened] =
     useState(false);
   const [isChangeStatusModalOpend, setIsChangeStatusModalOpend] =
@@ -311,11 +313,17 @@ export default function MembersTasksPage() {
     }
   };
 
-  const handleRequestDesignSubmit = async () => {
+  const handleRequestDesignSubmit = () => {
+    // Close the first modal and open the confirmation modal
+    setIsRequestDesignModalOpend(false);
+    setIsRequestDesignConfirmModalOpen(true);
+  };
+
+  const handleRequestDesignConfirm = async () => {
     const success = await requestDesign(selectedTask?.id ?? "0", notes ?? "");
 
     if (success) {
-      setIsRequestDesignModalOpend(false);
+      setIsRequestDesignConfirmModalOpen(false);
       setNotes("");
       // Refresh the task list to get updated hasDesignRequest status
       handleRefresh();
@@ -512,7 +520,7 @@ export default function MembersTasksPage() {
     <>
       <div className="w-full max-w-full">
         {/* Header */}
-        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 mb-6 border-b border-divider">
+        <div className="pb-4 mb-6 border-b border-divider">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
@@ -1020,10 +1028,10 @@ export default function MembersTasksPage() {
           }}
         >
           <DrawerContent
-            className={`min-h-[400px] transition-all duration-200 hover:shadow-lg ${
+            className={`min-h-[400px] transition-all duration-200 hover:shadow-lg bg-content1 ${
               selectedTask?.isOverdue
-                ? "border-l-4 border-l-danger-500 bg-white dark:bg-danger-900/20"
-                : `border-l-4 border-l-${getTaskStatusColor(selectedTask?.statusId || 1)}-500 bg-white dark:bg-${getTaskStatusColor(selectedTask?.statusId || 1)}-900/20`
+                ? "border-l-4 border-l-danger-500"
+                : `border-l-4 border-l-${getTaskStatusColor(selectedTask?.statusId || 1)}-500`
             }`}
           >
             <DrawerHeader className="flex flex-col gap-1">
@@ -1486,7 +1494,12 @@ export default function MembersTasksPage() {
 
                 <ModalBody>
                   <div className="space-y-4">
-                    <Input readOnly value={selectedTask?.name ?? ""} />
+                    <Input 
+                      label={t("tasks.taskName")}
+                      readOnly 
+                      value={selectedTask?.name ?? ""} 
+                    />
+
                     <Textarea
                       label={t("timeline.treeView.notes")}
                       placeholder={t("timeline.treeView.notes")}
@@ -1505,13 +1518,77 @@ export default function MembersTasksPage() {
                       setModalError(false);
                     }}
                   >
-                    {t("cancel")}
+                    {t("common.cancel")}
                   </Button>
                   <Button
                     color="primary"
                     disabled={selectedTask?.hasDesignRequest}
-                    isLoading={changeStatusLoading}
                     onPress={handleRequestDesignSubmit}
+                  >
+                    {t("confirm")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* Request Design Confirmation Modal */}
+        <Modal
+          isOpen={isRequestDesignConfirmModalOpen}
+          scrollBehavior="inside"
+          size="md"
+          onOpenChange={setIsRequestDesignConfirmModalOpen}
+        >
+          <ModalContent>
+            {(_onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  {t("requestDesign")} - {t("confirm")}
+                  {modalError && (
+                    <p className="text-sm text-danger font-normal">
+                      {t("common.unexpectedError")}
+                    </p>
+                  )}
+                </ModalHeader>
+
+                <ModalBody>
+                  <div className="space-y-4">
+                    <div className="p-3 bg-warning-50 dark:bg-warning-100/10 border border-warning-200 rounded-lg">
+                      <p className="text-sm text-warning-700 dark:text-warning-600">
+                        {t("requestDesignConfirmation")}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">{t("tasks.taskName")}:</p>
+                      <p className="text-sm text-default-600">{selectedTask?.name ?? ""}</p>
+                    </div>
+
+                    {notes && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">{t("timeline.treeView.notes")}:</p>
+                        <p className="text-sm text-default-600">{notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </ModalBody>
+
+                <ModalFooter>
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={() => {
+                      setIsRequestDesignConfirmModalOpen(false);
+                      setModalError(false);
+                    }}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    color="primary"
+                    isLoading={changeStatusLoading}
+                    onPress={handleRequestDesignConfirm}
                   >
                     {t("confirm")}
                   </Button>
