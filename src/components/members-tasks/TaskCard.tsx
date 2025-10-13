@@ -132,7 +132,12 @@ export const TaskCard = ({
             {task.department?.name || ""}
           </span>
           {task.isOverdue && (
-            <Badge color="danger" size="sm" variant="flat" className="flex-shrink-0">
+            <Badge
+              color="danger"
+              size="sm"
+              variant="flat"
+              className="flex-shrink-0"
+            >
               {t("overdueTask")}
             </Badge>
           )}
@@ -156,7 +161,9 @@ export const TaskCard = ({
         </div>
 
         {/* Time tracking */}
-        <div className="grid grid-cols-2 gap-6 mb-4">
+        <div
+          className={`grid grid-cols-2 gap-6 mb-4 ${language === "ar" ? " text-right" : ""}`}
+        >
           {/* Start Date */}
           <div className="flex gap-2">
             <CalendarDays className="w-4 h-4 text-foreground-500 mt-1" />
@@ -186,10 +193,16 @@ export const TaskCard = ({
 
         {/* Assignees */}
         {task.assignedMembers && task.assignedMembers.length > 0 && (
-          <div className="flex items-start gap-2">
+          <div
+            className={`flex items-start gap-2 ${language === "ar" ? " text-right" : ""}`}
+          >
             <CheckCircle className="w-4 h-4 text-foreground-500 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-foreground-500 mb-1">{t("assignees")}</p>
+            <div
+              className={`flex-1 min-w-0 ${language === "ar" ? "text-right" : ""}`}
+            >
+              <p className="text-xs text-foreground-500 mb-2">
+                {t("assignees")}
+              </p>
               <div className="flex flex-wrap gap-1">
                 {task.assignedMembers
                   .slice(0, 2)
@@ -234,15 +247,21 @@ export const TaskCard = ({
           >
             <div className="overflow-hidden">
               <span className="font-medium">{t("projectLabel")} </span>
-              <span className="break-words">{task.project?.applicationName || ""}</span>
+              <span className="break-words">
+                {task.project?.applicationName || ""}
+              </span>
             </div>
             <div className="overflow-hidden">
               <span className="font-medium">{t("requirementLabel")} </span>
-              <span className="break-words">{task.requirement?.name || ""}</span>
+              <span className="break-words">
+                {task.requirement?.name || ""}
+              </span>
             </div>
             <div className="overflow-hidden">
               <span className="font-medium">{t("task.type")} </span>
-              <span className="break-words">{t(getTaskTypeText(task.typeId))}</span>
+              <span className="break-words">
+                {t(getTaskTypeText(task.typeId))}
+              </span>
             </div>
           </div>
         </div>

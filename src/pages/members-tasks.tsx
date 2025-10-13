@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import React from "react";
 import { Button } from "@heroui/button";
 import { Search, ChevronDown, X } from "lucide-react";
@@ -196,7 +196,11 @@ export default function MembersTasksPage() {
     changeAssignees,
   } = useMembersTasks();
 
+  const topAnchorRef = useRef<HTMLDivElement | null>(null);
+
   // Handle navigation state for assignee filtering (from developer dashboard)
+  const [shouldScrollToTop, setShouldScrollToTop] = useState(false);
+
   useEffect(() => {
     const state = location.state as {
       assigneeId?: number;
@@ -206,8 +210,21 @@ export default function MembersTasksPage() {
     if (state?.assigneeId) {
       // Set the assignee filter to the developer that was clicked
       handleAssigneeChange([state.assigneeId]);
+      // Mark that we should scroll to top after tasks load
+      setShouldScrollToTop(true);
     }
   }, [location.state, handleAssigneeChange]);
+
+  // Scroll to top when tasks finish loading after assignee filter change
+  useEffect(() => {
+    if (shouldScrollToTop && !loading && !initialLoading) {
+      topAnchorRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      setShouldScrollToTop(false);
+    }
+  }, [shouldScrollToTop, loading, initialLoading]);
 
   const [isRequestDesignModalOpend, setIsRequestDesignModalOpend] =
     useState(false);
@@ -518,7 +535,7 @@ export default function MembersTasksPage() {
 
   return (
     <>
-      <div className="w-full max-w-full">
+      <div ref={topAnchorRef} className="w-full max-w-full">
         {/* Header */}
         <div className="pb-4 mb-6 border-b border-divider">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-2">

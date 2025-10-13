@@ -310,7 +310,6 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     );
   }
 
-
   // Move modal component declarations above usage
   // Move modal definitions above usage
   // Move full implementations of TaskAssignmentModal and CodeReviewAssignmentModal here
@@ -320,7 +319,6 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       <>
         {null}
         {TaskAssignmentModal()}
-        {CodeReviewAssignmentModal()}
       </>
     );
   }
@@ -553,134 +551,6 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               color="primary"
               disabled={selectedDevelopers.length === 0}
               onPress={handleTaskAssign}
-            >
-              {t("developerQuickActions.assign") || "Assign"} (
-              {selectedDevelopers.length})
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    );
-  };
-
-  const CodeReviewAssignmentModal = () => {
-    return (
-      <Modal
-        dir={direction}
-        isOpen={isPRModalOpen}
-        onOpenChange={setIsPRModalOpen}
-      >
-        <ModalContent>
-          <ModalHeader>
-            {t("developerQuickActions.assignReviewer") || "Assign Reviewer"}
-          </ModalHeader>
-          <ModalBody>
-            <p className="text-sm text-default-600 mb-4">
-              {t("developerQuickActions.assignReviewerTo") ||
-                "Assign reviewers to"}
-              : {selectedPR?.title}
-            </p>
-
-            {/* Selected Developers Display */}
-            {selectedDevelopers.length > 0 && (
-              <div className="mb-4">
-                <p className="text-sm font-medium text-foreground mb-2">
-                  {t("developerQuickActions.selectedReviewers") ||
-                    "Selected Reviewers"}
-                  :
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedDevelopers.map((developer) => (
-                    <Chip
-                      key={developer.id}
-                      color="primary"
-                      variant="flat"
-                      onClose={() => {
-                        setSelectedDevelopers((prev) =>
-                          prev.filter((d) => d.id !== developer.id),
-                        );
-                      }}
-                    >
-                      {developer.fullName}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <Autocomplete
-              isClearable
-              defaultFilter={(textValue, input) => {
-                const q = input.trim().toLowerCase();
-
-                if (!q) return true;
-
-                const v = textValue.toLowerCase();
-
-                return v.includes(q);
-              }}
-              defaultItems={developerEmployees.filter(
-                (emp) =>
-                  !selectedDevelopers.some(
-                    (selected) => selected.id === emp.id,
-                  ),
-              )}
-              inputValue={developerInputValue}
-              isLoading={developerSearchLoading}
-              label={
-                t("developerQuickActions.selectReviewer") || "Select Reviewers"
-              }
-              menuTrigger="input"
-              placeholder={
-                t("developerQuickActions.chooseReviewer") ||
-                "Search and select reviewers"
-              }
-              onInputChange={(value) => {
-                setDeveloperInputValue(value);
-                // Search for developers
-                searchDeveloperEmployees(value);
-              }}
-              onSelectionChange={(key) => {
-                if (key) {
-                  const developer = developerEmployees.find(
-                    (d) => d.id.toString() === key,
-                  );
-
-                  if (
-                    developer &&
-                    !selectedDevelopers.some(
-                      (selected) => selected.id === developer.id,
-                    )
-                  ) {
-                    setSelectedDevelopers((prev) => [...prev, developer]);
-                    setDeveloperInputValue("");
-                  }
-                }
-              }}
-            >
-              {(developer) => (
-                <AutocompleteItem
-                  key={developer.id}
-                  textValue={`${developer.fullName}`}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{developer.fullName}</span>
-                    <span className="text-sm text-default-500">
-                      {developer.militaryNumber} - {developer.gradeName}
-                    </span>
-                  </div>
-                </AutocompleteItem>
-              )}
-            </Autocomplete>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={handlePRCancel}>
-              {t("common.cancel") || "Cancel"}
-            </Button>
-            <Button
-              color="primary"
-              disabled={selectedDevelopers.length === 0}
-              onPress={handlePRAssign}
             >
               {t("developerQuickActions.assign") || "Assign"} (
               {selectedDevelopers.length})
@@ -1390,7 +1260,8 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                                   setIsExtendModalOpen(true);
                                 }}
                               >
-                                {t("common.extendDeadline") || "Extend Deadline"}
+                                {t("common.extendDeadline") ||
+                                  "Extend Deadline"}
                               </Button>
                             </div>
                           </CustomAlert>
@@ -1468,8 +1339,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         </CardBody>
       </Card>
       <TaskExtensionModal />
-  {TaskAssignmentModal()}
-  {CodeReviewAssignmentModal()}
+      {TaskAssignmentModal()}
       <AddAdhocTaskModal />
     </>
   );

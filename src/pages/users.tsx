@@ -1227,50 +1227,58 @@ export default function UsersPage() {
                       </Select>
                     </div>
 
-                    {/* Selection Summary */}
-                    <Card className="bg-primary-50 border border-primary-200">
-                      <CardBody className="py-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-tiny text-default-600">
-                              {getFilteredAdditionalActions().length}{" "}
-                              {t("actions.availableActions")}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="flat"
-                              onPress={() => setSelectedAdditionalActions([])}
-                            >
-                              {t("actions.clearAll")}
-                            </Button>
-                            <Button
-                              color="primary"
-                              size="sm"
-                              variant="flat"
-                              onPress={() => {
-                                const allAvailableIds =
-                                  getFilteredAdditionalActions().map(
-                                    (a) => a.id,
-                                  );
-                                const newSelections = allAvailableIds.filter(
-                                  (id) =>
-                                    !selectedAdditionalActions.includes(id),
-                                );
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        color={(() => {
+                          const allAvailableIds =
+                            getFilteredAdditionalActions().map((a) => a.id);
+                          const allSelected =
+                            selectedAdditionalActions.length ===
+                              allAvailableIds.length &&
+                            allAvailableIds.length > 0;
 
-                                setSelectedAdditionalActions([
-                                  ...selectedAdditionalActions,
-                                  ...newSelections,
-                                ]);
-                              }}
-                            >
-                              {t("actions.selectAll")}
-                            </Button>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
+                          return allSelected ? "danger" : "primary";
+                        })()}
+                        size="sm"
+                        variant="flat"
+                        onPress={() => {
+                          const allAvailableIds =
+                            getFilteredAdditionalActions().map((a) => a.id);
+                          const allSelected =
+                            selectedAdditionalActions.length ===
+                              allAvailableIds.length &&
+                            allAvailableIds.length > 0;
+
+                          if (allSelected) {
+                            // Clear all selections
+                            setSelectedAdditionalActions([]);
+                          } else {
+                            // Select all available actions
+                            const newSelections = allAvailableIds.filter(
+                              (id) => !selectedAdditionalActions.includes(id),
+                            );
+
+                            setSelectedAdditionalActions([
+                              ...selectedAdditionalActions,
+                              ...newSelections,
+                            ]);
+                          }
+                        }}
+                      >
+                        {(() => {
+                          const allAvailableIds =
+                            getFilteredAdditionalActions().map((a) => a.id);
+                          const allSelected =
+                            selectedAdditionalActions.length ===
+                              allAvailableIds.length &&
+                            allAvailableIds.length > 0;
+
+                          return allSelected
+                            ? t("actions.clearAll")
+                            : t("actions.selectAll");
+                        })()}
+                      </Button>
+                    </div>
 
                     {/* Actions List by Category */}
                     <div className="space-y-4 max-h-96 overflow-y-auto">
