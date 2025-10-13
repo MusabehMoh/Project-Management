@@ -204,6 +204,8 @@ const translations = {
     "common.medium": "Medium",
     "common.low": "Low",
     "common.scrollToTop": "Scroll to top",
+    "common.overdue": "Overdue",
+    "common.success": "Success",
 
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
@@ -556,6 +558,7 @@ const translations = {
     // Developer Quick Actions
     "developerQuickActions.unassignedTasks": "Unassigned Tasks",
     "developerQuickActions.almostCompletedTasks": "Almost Completed Tasks",
+    "developerQuickActions.overdueTasks": "Overdue Tasks",
     "developerQuickActions.availableDevelopers": "Available Team Developers",
     "developerQuickActions.assignTask": "Assign Programmer",
     "developerQuickActions.assignReviewer": "Assign Reviewer",
@@ -584,7 +587,14 @@ const translations = {
       "Please provide a reason for extending this task...",
     "common.extendDeadline": "Extend Deadline",
     "common.taskExtended": "Task deadline extended successfully",
-    "common.extend": "Extend Deadline",
+    "common.taskLabel": "Task:",
+    "common.currentDeadline": "Current Deadline:",
+    "common.na": "N/A",
+    "common.failedToExtend": "Failed to extend task",
+    
+    // Validation messages
+    "validation.dateRequired": "Date is required",
+    "validation.reasonRequired": "Reason is required",
     "developerDashboard.currentTasks": "Tasks",
     "developerDashboard.status": "Status",
     "developerDashboard.status.available": "Available",
@@ -1832,6 +1842,8 @@ const translations = {
     "common.medium": "متوسط",
     "common.low": "منخفض",
     "common.scrollToTop": "انتقل إلى الأعلى",
+    "common.overdue": "متأخر",
+    "common.success": "نجح",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",
@@ -2285,6 +2297,7 @@ const translations = {
     // Developer Quick Actions
     "developerQuickActions.unassignedTasks": "المهام غير المعينة",
     "developerQuickActions.almostCompletedTasks": "المهام شبه المكتملة",
+    "developerQuickActions.overdueTasks": "المهام المتأخرة",
     "developerQuickActions.availableDevelopers": "المطورون المتاحون في الفريق",
     "developerQuickActions.assignTask": "تعيين مبرمج",
     "developerQuickActions.assignReviewer": "تعيين مراجع",
@@ -2311,7 +2324,14 @@ const translations = {
     "common.reasonPlaceholder": "يرجى تقديم سبب لتمديد هذه المهمة...",
     "common.extendDeadline": "تمديد الموعد النهائي",
     "common.taskExtended": "تم تمديد موعد المهمة بنجاح",
-    "common.extend": "تمديد الموعد النهائي",
+    "common.taskLabel": "المهمة:",
+    "common.currentDeadline": "الموعد النهائي الحالي:",
+    "common.na": "غير متوفر",
+    "common.failedToExtend": "فشل في تمديد المهمة",
+    
+    // Validation messages
+    "validation.dateRequired": "التاريخ مطلوب",
+    "validation.reasonRequired": "السبب مطلوب",
     "developerDashboard.currentTasks": "المهام",
     "developerDashboard.status": "الحالة",
     "developerDashboard.status.available": "متاح",

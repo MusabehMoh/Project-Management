@@ -26,6 +26,7 @@ interface PendingCodeReview {
 interface UseDeveloperQuickActionsResult {
   unassignedTasks: UnassignedTask[];
   almostCompletedTasks: AlmostCompletedTask[];
+  overdueTasks: AlmostCompletedTask[];
   availableDevelopers: AvailableDeveloper[];
   loading: boolean;
   refreshing: boolean;
@@ -54,6 +55,9 @@ export function useDeveloperQuickActions(
     PendingCodeReview[]
   >([]);
   const [almostCompletedTasks, setAlmostCompletedTasks] = useState<
+    AlmostCompletedTask[]
+  >([]);
+  const [overdueTasks, setOverdueTasks] = useState<
     AlmostCompletedTask[]
   >([]);
   const [availableDevelopers, setAvailableDevelopers] = useState<
@@ -256,6 +260,7 @@ export function useDeveloperQuickActions(
 
       setUnassignedTasks(response.unassignedTasks);
       setAlmostCompletedTasks(response.almostCompletedTasks);
+      setOverdueTasks(response.overdueTasks);
       setAvailableDevelopers(response.availableDevelopers);
     } catch (err) {
       setError(
@@ -325,11 +330,13 @@ export function useDeveloperQuickActions(
   const hasActionsAvailable =
     unassignedTasks.length > 0 ||
     almostCompletedTasks.length > 0 ||
+    (overdueTasks?.length || 0) > 0 ||
     availableDevelopers.length > 0;
 
   return {
     unassignedTasks,
     almostCompletedTasks,
+    overdueTasks,
     availableDevelopers,
     loading,
     refreshing,

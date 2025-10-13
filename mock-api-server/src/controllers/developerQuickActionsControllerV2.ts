@@ -7,6 +7,8 @@ import {
   mockAlmostCompletedTasks,
   mockAvailableDevelopers,
   getAlmostCompletedTasks,
+  mockOverdueTasks,
+  getOverdueTasks,
   type UnassignedTask,
   type AlmostCompletedTask,
   type AvailableDeveloper,
@@ -15,6 +17,7 @@ import {
 export interface DeveloperQuickActionsResponse {
   unassignedTasks: UnassignedTask[];
   almostCompletedTasks: AlmostCompletedTask[];
+  overdueTasks: AlmostCompletedTask[];
   availableDevelopers: AvailableDeveloper[];
 }
 
@@ -36,12 +39,14 @@ export class DeveloperQuickActionsControllerV2 {
       const response: DeveloperQuickActionsResponse = {
         unassignedTasks: mockUnassignedTasks,
         almostCompletedTasks: getAlmostCompletedTasks(),
+        overdueTasks: getOverdueTasks(),
         availableDevelopers: mockAvailableDevelopers,
       };
 
       logger.info("Successfully fetched developer quick actions", {
         unassignedTasksCount: response.unassignedTasks.length,
         almostCompletedTasksCount: response.almostCompletedTasks.length,
+        overdueTasksCount: response.overdueTasks.length,
         availableDevelopersCount: response.availableDevelopers.length,
       });
 
@@ -170,6 +175,41 @@ export class DeveloperQuickActionsControllerV2 {
         success: false,
         error: {
           message: "Failed to fetch available developers",
+          code: "INTERNAL_ERROR",
+        },
+      });
+    }
+  }
+
+  /**
+   * Get overdue tasks only
+   */
+  async getOverdueTasks(req: Request, res: Response) {
+    await mockDelayHandler();
+
+    try {
+      const overdueTasks = getOverdueTasks();
+
+      logger.info(`Fetching ${overdueTasks.length} overdue tasks`);
+
+      return res.status(200).json({
+        success: true,
+        data: overdueTasks,
+        message: "Overdue tasks fetched successfully",
+        meta: {
+          total: overdueTasks.length,
+          critical: overdueTasks.filter((task) => task.priorityId === 3).length,
+          high: overdueTasks.filter((task) => task.priorityId === 2).length,
+          medium: overdueTasks.filter((task) => task.priorityId === 1).length,
+        },
+      });
+    } catch (error) {
+      logger.error("Error fetching overdue tasks:", error);
+
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: "Failed to fetch overdue tasks",
           code: "INTERNAL_ERROR",
         },
       });

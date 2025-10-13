@@ -1,4 +1,5 @@
 import { apiClient } from "@/services/api";
+import { MemberSearchResult } from "@/types/timeline";
 
 export interface UnassignedTask {
   id: string;
@@ -26,7 +27,7 @@ export interface AlmostCompletedTask {
   duration: number;
   projectName: string;
   sprintName: string;
-  assigneeName?: string;
+  assignee?: MemberSearchResult;
   statusId: number;
   priorityId: number;
   progress?: number;
@@ -53,15 +54,17 @@ export interface AvailableDeveloper {
 export interface DeveloperQuickActionsResponse {
   unassignedTasks: UnassignedTask[];
   almostCompletedTasks: AlmostCompletedTask[];
+  overdueTasks: AlmostCompletedTask[];
   availableDevelopers: AvailableDeveloper[];
 }
 
 class DeveloperQuickActionsServiceV2 {
   async getQuickActions(): Promise<DeveloperQuickActionsResponse> {
     const response = await apiClient.get<{
-      success: boolean;
-      data: DeveloperQuickActionsResponse;
-      message: string;
+      unassignedTasks: UnassignedTask[];
+      almostCompletedTasks: AlmostCompletedTask[];
+      overdueTasks: AlmostCompletedTask[];
+      availableDevelopers: AvailableDeveloper[];
     }>("/developer-quick-actions");
 
     if (!response.success) {
@@ -74,6 +77,7 @@ class DeveloperQuickActionsServiceV2 {
     const data = response.data || {
       unassignedTasks: [],
       almostCompletedTasks: [],
+      overdueTasks: [],
       availableDevelopers: [],
     };
 
@@ -81,6 +85,7 @@ class DeveloperQuickActionsServiceV2 {
     return {
       unassignedTasks: data.unassignedTasks || [],
       almostCompletedTasks: data.almostCompletedTasks || [],
+      overdueTasks: data.overdueTasks || [],
       availableDevelopers: data.availableDevelopers || [],
     };
   }

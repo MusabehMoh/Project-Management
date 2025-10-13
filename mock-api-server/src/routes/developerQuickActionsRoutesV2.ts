@@ -49,6 +49,17 @@ router.get(
 );
 
 /**
+ * @route GET /api/developer-quick-actions/overdue-tasks
+ * @description Get overdue tasks only
+ */
+router.get(
+  "/overdue-tasks",
+  developerQuickActionsControllerV2.getOverdueTasks.bind(
+    developerQuickActionsControllerV2,
+  ),
+);
+
+/**
  * @route POST /api/developer-quick-actions/extend-task
  * @description Extend task deadline
  * @body {taskId: number, newEndDate: string, extensionReason: string, additionalHours?: number}
