@@ -520,7 +520,7 @@ export default function MembersTasksPage() {
     <>
       <div className="w-full max-w-full">
         {/* Header */}
-        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 mb-6 border-b border-divider">
+        <div className="pb-4 mb-6 border-b border-divider">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-2">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
