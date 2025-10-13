@@ -33,6 +33,7 @@ import { addToast } from "@heroui/toast";
 import {
   CheckCircle,
   Clock,
+  Calendar,
   LayoutGrid,
   LayoutList,
   FileText,
@@ -321,61 +322,156 @@ export function DesignRequestsPage() {
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {designRequests.map((request) => (
-          <Card key={request.id} className="overflow-hidden">
-            <CardHeader className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold truncate flex-1">
-                {request.task?.name} -{" "}
-              </h3>
-              <Chip
-                color={getStatusColor(request.status)}
-                size="sm"
-                variant="flat"
-              >
-                {getStatusText(request.status)}
-              </Chip>
+          <Card
+            key={request.id}
+            className="border border-default-200"
+            shadow="sm"
+          >
+            <CardHeader className="flex flex-col items-start gap-3 pb-3">
+              <div className="flex justify-between items-start w-full gap-3">
+                <div className="flex-1">
+                  <p className="text-xs text-default-500 mb-1">
+                    {t("designRequests.taskName")}
+                  </p>
+                  <h3 className="text-base font-semibold text-default-700 line-clamp-2">
+                    {request.task?.name || `Task #${request.taskId}`}
+                  </h3>
+                </div>
+                <Chip
+                  color={getStatusColor(request.status)}
+                  size="sm"
+                  variant="flat"
+                  classNames={{
+                    content: "text-xs font-medium px-1",
+                  }}
+                >
+                  {getStatusText(request.status)}
+                </Chip>
+              </div>
             </CardHeader>
 
-            <CardBody>
+            <div className="px-4">
+              <div className="border-t border-default-200" />
+            </div>
+
+            <CardBody className="space-y-4 pt-3">
+              {/* Request Information */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm">
+                {/* Request Date */}
+                <div>
+                  <p className="text-xs text-default-500 mb-1">
+                    {t("designRequests.requestDate")}
+                  </p>
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    startContent={<Clock className="w-3 h-3" />}
+                    classNames={{
+                      base: "bg-default-100 border-none",
+                      content: "text-xs text-default-700",
+                    }}
+                  >
                     {formatDate(request.createdAt)}
-                  </span>
+                  </Chip>
                 </div>
 
-                {request.notes && (
-                  <div
-                    className={`mt-2 text ${language === "ar" ? "text-right" : "text-left"}`}
-                  >
-                    <h4 className="text-sm font-semibold">
-                      {t("designRequests.notes")}:
-                    </h4>
-                    <p className="text-sm mt-1">{request.notes}</p>
+                {/* Assigned Designer */}
+                {request.assignedToUserName && (
+                  <div>
+                    <p className="text-xs text-default-500 mb-1">
+                      {t("designRequests.assignedTo")}
+                    </p>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      startContent={<CheckCircle className="w-3 h-3" />}
+                      classNames={{
+                        base: "bg-success-50 dark:bg-success-100/10 border-none",
+                        content: "text-xs text-success-700 dark:text-success-600 font-medium",
+                      }}
+                    >
+                      {request.assignedToUserName}
+                    </Chip>
                   </div>
                 )}
 
-                {request.assignedToUserName && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" />
-                    <span className="text-sm">
-                      {request.assignedToUserName}
-                    </span>
-                  </div>
+                {/* Project & Requirement */}
+                {request.requirementDetails && (
+                  <>
+                    <div className="border-t border-default-100 pt-3" />
+                    <div>
+                      <p className="text-xs text-default-500 mb-1">
+                        {t("common.project")}
+                      </p>
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        classNames={{
+                          base: "bg-primary-50 dark:bg-primary-100/10 border-none",
+                          content: "text-xs text-primary-700 dark:text-primary-600 font-medium",
+                        }}
+                      >
+                        {request.requirementDetails.projectName ||
+                          t("common.unknownProject")}
+                      </Chip>
+                    </div>
+                    <div>
+                      <p className="text-xs text-default-500 mb-1">
+                        {t("requirements.requirement")}
+                      </p>
+                      <p className="text-sm text-default-700 line-clamp-2">
+                        {request.requirementDetails.name}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Task Description */}
+                {request.task?.description && (
+                  <>
+                    <div className="border-t border-default-100 pt-3" />
+                    <div>
+                      <p className="text-xs text-default-500 mb-1">
+                        {t("common.taskDetails")}
+                      </p>
+                      <p className="text-sm text-default-600 line-clamp-3">
+                        {request.task.description}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Notes */}
+                {request.notes && (
+                  <>
+                    <div className="border-t border-default-100 pt-3" />
+                    <div>
+                      <p className="text-xs text-default-500 mb-1">
+                        {t("designRequests.notes")}
+                      </p>
+                      <p className="text-sm text-default-600 line-clamp-2">
+                        {request.notes}
+                      </p>
+                    </div>
+                  </>
                 )}
               </div>
             </CardBody>
 
-            <CardFooter className="flex flex-col gap-2">
+            <div className="px-4">
+              <div className="border-t border-default-200" />
+            </div>
+
+            <CardFooter className="pt-3">
               <div className="flex gap-2 w-full">
                 <Button
                   className="flex-1"
-                  color="secondary"
+                  size="sm"
                   startContent={<FileText size={16} />}
-                  variant="flat"
-                  onClick={() => handleViewDetails(request)}
+                  variant="bordered"
+                  onPress={() => handleViewDetails(request)}
                 >
                   {t("designRequests.viewDetails")}
                 </Button>
@@ -384,8 +480,9 @@ export function DesignRequestsPage() {
                   <Button
                     className="flex-1"
                     color="primary"
+                    size="sm"
                     variant="flat"
-                    onClick={() => handleAssign(request)}
+                    onPress={() => handleAssign(request)}
                   >
                     {t("designRequests.assign")}
                   </Button>
@@ -848,10 +945,24 @@ export function DesignRequestsPage() {
                   <h2 className="text-xl font-bold text-default-900 dark:text-default-100 mb-2">
                     {selectedRequest.task.name}
                   </h2>
-                  <div className="flex items-center gap-4 text-sm text-default-600 dark:text-default-400">
-                    <span>Task ID: {selectedRequest.taskId}</span>
-                    <span>•</span>
-                    <span>{formatDate(selectedRequest.createdAt)}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      className="bg-default-100 dark:bg-default-100/10 border-none"
+                      startContent={<Clock className="w-3 h-3" />}
+                    >
+                      <span className="text-xs">
+                        {formatDate(selectedRequest.createdAt)}
+                      </span>
+                    </Chip>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      className="bg-default-100 dark:bg-default-100/10 border-none"
+                    >
+                      <span className="text-xs">Task ID: {selectedRequest.taskId}</span>
+                    </Chip>
                   </div>
                 </div>
 
@@ -898,7 +1009,7 @@ export function DesignRequestsPage() {
                     <label className="text-sm font-medium text-default-600 dark:text-default-400 mb-2 block">
                       {t("requirements.description")}
                     </label>
-                    <div className="p-3 bg-default-50 dark:bg-default-100/50 rounded-lg border">
+                    <div className="p-3 bg-default-50 dark:bg-default-100/50 rounded-lg">
                       <div
                         dangerouslySetInnerHTML={{
                           __html: selectedRequest.task.description,
@@ -910,26 +1021,39 @@ export function DesignRequestsPage() {
                 )}
 
                 {/* Task Metadata */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
                   {selectedRequest.task.dueDate && (
                     <div>
-                      <label className="text-sm font-medium text-default-600 dark:text-default-400 mb-1 block">
+                      <label className="text-xs text-default-500 mb-1.5 block">
                         {t("dashboard.dueDate")}
                       </label>
-                      <p className="text-sm text-default-900 dark:text-default-100">
-                        {formatDate(selectedRequest.task.dueDate)}
-                      </p>
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        className="bg-warning-50 dark:bg-warning-100/10 border-none"
+                        startContent={<Calendar className="w-3 h-3" />}
+                      >
+                        <span className="text-xs text-warning-700 dark:text-warning-600">
+                          {formatDate(selectedRequest.task.dueDate)}
+                        </span>
+                      </Chip>
                     </div>
                   )}
 
                   {selectedRequest.task.requirementId && (
                     <div>
-                      <label className="text-sm font-medium text-default-600 dark:text-default-400 mb-1 block">
+                      <label className="text-xs text-default-500 mb-1.5 block">
                         {t("requirements.requirementId")}
                       </label>
-                      <p className="text-sm text-default-900 dark:text-default-100">
-                        {selectedRequest.task.requirementId}
-                      </p>
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        className="bg-secondary-50 dark:bg-secondary-100/10 border-none"
+                      >
+                        <span className="text-xs text-secondary-700 dark:text-secondary-600">
+                          {selectedRequest.task.requirementId}
+                        </span>
+                      </Chip>
                     </div>
                   )}
                 </div>
@@ -937,26 +1061,25 @@ export function DesignRequestsPage() {
                 {/* Assignment Information */}
                 {selectedRequest.assignedToUserName && (
                   <div className="border-t border-default-200 pt-4">
-                    <label className="text-sm font-medium text-default-600 dark:text-default-400 mb-3 block">
-                      {t("designRequests.assignedDesigner")}
+                    <label className="text-xs text-default-500 mb-2 block">
+                      {t("designRequests.assignedTo")}
                     </label>
                     <div className="flex items-center gap-3">
                       <Avatar
                         className="flex-shrink-0"
                         name={selectedRequest.assignedToUserName}
-                        size="md"
+                        size="sm"
                       />
-                      <div>
-                        <p className="font-medium text-default-900 dark:text-default-100">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-medium text-default-900 dark:text-default-100">
                           {selectedRequest.assignedToUserName}
-                        </p>
-                        <p className="text-sm text-default-600 dark:text-default-400">
-                          {t("tasks.assignedOn")}:{" "}
+                        </span>
+                        <span className="text-xs text-default-500">
                           {formatDate(
                             (selectedRequest as any).assignedAt ||
                               selectedRequest.createdAt,
                           )}
-                        </p>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -968,7 +1091,7 @@ export function DesignRequestsPage() {
                     <label className="text-sm font-medium text-default-600 dark:text-default-400 mb-2 block">
                       {t("designRequests.notes")}
                     </label>
-                    <div className="p-3 bg-default-50 dark:bg-default-100/50 rounded-lg border">
+                    <div className="p-3 bg-default-50 dark:bg-default-100/50 rounded-lg">
                       <p className="text-sm text-default-900 dark:text-default-100 leading-relaxed whitespace-pre-wrap">
                         {selectedRequest.notes}
                       </p>

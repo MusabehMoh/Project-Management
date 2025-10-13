@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -48,17 +48,27 @@ const getStatusColor = (status: string) => {
 export default function DesignerWorkloadPerformance() {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState("efficiency");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [refreshing, setRefreshing] = useState(false);
+
+  // Debounce search query to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Use the custom hook to fetch designer workload data
   const { designers, metrics, pagination, loading, error, refetch, fetchPage } =
     useDesignerWorkload({
       page: 1,
       pageSize: 5,
-      searchQuery,
+      searchQuery: debouncedSearchQuery,
       statusFilter,
       sortBy,
       sortOrder,
@@ -154,10 +164,16 @@ export default function DesignerWorkloadPerformance() {
                 aria-label="Filter by status"
                 className="max-w-xs"
                 placeholder={t("common.filterByStatus") || "Filter by status"}
-                selectedKeys={statusFilter ? [statusFilter] : []}
+                selectedKeys={statusFilter ? new Set([statusFilter]) : new Set()}
+                disableAnimation
+                popoverProps={{
+                  placement: "bottom-start",
+                }}
+                scrollShadowProps={{
+                  isEnabled: false,
+                }}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
-
                   setStatusFilter(selected || "");
                 }}
               >
@@ -180,11 +196,19 @@ export default function DesignerWorkloadPerformance() {
                 aria-label="Sort by"
                 className="max-w-xs"
                 placeholder={t("common.sortBy") || "Sort by"}
-                selectedKeys={[sortBy]}
+                selectedKeys={new Set([sortBy])}
+                disableAnimation
+                popoverProps={{
+                  placement: "bottom-start",
+                }}
+                scrollShadowProps={{
+                  isEnabled: false,
+                }}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
-
-                  setSortBy(selected);
+                  if (selected) {
+                    setSortBy(selected);
+                  }
                 }}
               >
                 <SelectItem key="efficiency">

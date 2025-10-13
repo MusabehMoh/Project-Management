@@ -1712,6 +1712,7 @@ const translations = {
       "No actions require your attention at this time",
     "designRequests.assignSuccessDescription":
       "The design request has been assigned to the designer",
+    "designRequests.assignedTo": "Assigned To",
 
     // States
     noTasksFound: "No tasks found",
@@ -3408,6 +3409,7 @@ const translations = {
       "لا توجد إجراءات تتطلب انتباهك في الوقت الحالي",
     "designRequests.assignSuccessDescription":
       "تم تعيين طلب التصميم إلى المصمم",
+    "designRequests.assignedTo": "معين إلى",
 
     // States
     noTasksFound: "لم يتم العثور على مهام",
