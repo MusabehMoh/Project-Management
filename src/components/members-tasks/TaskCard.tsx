@@ -82,7 +82,7 @@ export const TaskCard = ({
   return (
     <Card
       isPressable
-      className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg bg-content1 ${
+      className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg bg-content1 overflow-hidden ${
         task.isOverdue
           ? "border-l-4 border-l-danger-500"
           : `border-l-4 border-l-${getStatusColor(task.statusId)}-500`
@@ -93,7 +93,7 @@ export const TaskCard = ({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-foreground truncate">
+            <h3 className="text-lg font-semibold text-foreground line-clamp-2 break-words">
               {task.name}
             </h3>
           </div>
@@ -125,14 +125,14 @@ export const TaskCard = ({
         </div>
       </CardHeader>
 
-      <CardBody className="pt-0">
+      <CardBody className="pt-0 overflow-hidden">
         {/* Department indicator */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm text-foreground-600">
+        <div className="flex items-center gap-2 mb-3 overflow-hidden">
+          <span className="text-sm text-foreground-600 truncate">
             {task.department?.name || ""}
           </span>
           {task.isOverdue && (
-            <Badge color="danger" size="sm" variant="flat">
+            <Badge color="danger" size="sm" variant="flat" className="flex-shrink-0">
               {t("overdueTask")}
             </Badge>
           )}
@@ -186,22 +186,24 @@ export const TaskCard = ({
 
         {/* Assignees */}
         {task.assignedMembers && task.assignedMembers.length > 0 && (
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-foreground-500" />
-            <p className="text-xs text-foreground-500">{t("assignees")}</p>
-            <div className="flex flex-wrap gap-1">
-              {task.assignedMembers
-                .slice(0, 2)
-                .map((assignee: MemberSearchResult, index: number) => (
-                  <Chip key={index} color="primary" size="sm" variant="flat">
-                    {`${assignee.gradeName} ${assignee.fullName}`}
+          <div className="flex items-start gap-2">
+            <CheckCircle className="w-4 h-4 text-foreground-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-foreground-500 mb-1">{t("assignees")}</p>
+              <div className="flex flex-wrap gap-1">
+                {task.assignedMembers
+                  .slice(0, 2)
+                  .map((assignee: MemberSearchResult, index: number) => (
+                    <Chip key={index} color="primary" size="sm" variant="flat">
+                      {`${assignee.gradeName} ${assignee.fullName}`}
+                    </Chip>
+                  ))}
+                {task.assignedMembers.length > 2 && (
+                  <Chip size="sm" variant="flat">
+                    +{task.assignedMembers.length - 2}
                   </Chip>
-                ))}
-              {task.assignedMembers.length > 2 && (
-                <Chip size="sm" variant="flat">
-                  +{task.assignedMembers.length - 2}
-                </Chip>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -224,32 +226,32 @@ export const TaskCard = ({
         )} */}
 
         {/* Project & Requirement info */}
-        <div className="mt-3 pt-3 border-t border-divider">
+        <div className="mt-3 pt-3 border-t border-divider overflow-hidden">
           <div
-            className={`text-xs text-foreground-500 space-y-1 ${
+            className={`text-xs text-foreground-500 space-y-1 overflow-hidden ${
               language === "ar" ? "text-right" : "text-left"
             }`}
           >
-            <div>
+            <div className="overflow-hidden">
               <span className="font-medium">{t("projectLabel")} </span>
-              <span>{task.project?.applicationName || ""}</span>
+              <span className="break-words">{task.project?.applicationName || ""}</span>
             </div>
-            <div>
+            <div className="overflow-hidden">
               <span className="font-medium">{t("requirementLabel")} </span>
-              <span>{task.requirement?.name || ""}</span>
+              <span className="break-words">{task.requirement?.name || ""}</span>
             </div>
-            <div>
+            <div className="overflow-hidden">
               <span className="font-medium">{t("task.type")} </span>
-              <span>{t(getTaskTypeText(task.typeId))}</span>
+              <span className="break-words">{t(getTaskTypeText(task.typeId))}</span>
             </div>
           </div>
         </div>
 
         {/* buttons */}
-        <div className="mt-3 pt-3 border-t border-divider flex flex-col gap-3">
+        <div className="mt-3 pt-3 border-t border-divider">
           {isTeamManager ? (
             /* actions for team managers */
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <Button
                 className="flex-1"
                 color="default"
@@ -265,17 +267,18 @@ export const TaskCard = ({
             </div>
           ) : (
             /* actions for members */
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               {task.hasDesignRequest ? (
-                <Chip
-                  className="flex-1"
-                  color="success"
-                  size="sm"
-                  startContent={<CheckCircle className="w-3 h-3" />}
-                  variant="flat"
-                >
-                  {t("requestedAlready")}
-                </Chip>
+                <div className="flex-1 flex items-center justify-center">
+                  <Chip
+                    color="success"
+                    size="sm"
+                    startContent={<CheckCircle className="w-3 h-3" />}
+                    variant="flat"
+                  >
+                    {t("requestedAlready")}
+                  </Chip>
+                </div>
               ) : (
                 <Button
                   className="flex-1"
