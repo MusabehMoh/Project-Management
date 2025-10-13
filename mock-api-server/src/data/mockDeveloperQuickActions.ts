@@ -294,6 +294,69 @@ export const mockAvailableDevelopers: AvailableDeveloper[] = [
   },
 ];
 
+export const mockOverdueTasks: AlmostCompletedTask[] = [
+  {
+    id: 201,
+    treeId: "task-201",
+    name: "Fix critical payment gateway bug",
+    description: "Resolve urgent payment processing failure affecting customers",
+    startDate: "2025-09-10",
+    endDate: "2025-09-20",
+    duration: 10,
+    projectName: "Payment Gateway",
+    sprintName: "Sprint 2",
+    assigneeName: "Ahmed Ali",
+    statusId: 2, // in-progress
+    priorityId: 3, // critical
+    progress: 70,
+    daysUntilDeadline: 5,
+    isOverdue: true,
+    estimatedHours: 20,
+    actualHours: 18,
+    departmentName: "Backend Team",
+  },
+  {
+    id: 202,
+    treeId: "task-202",
+    name: "Complete security audit report",
+    description: "Finalize and submit security vulnerability assessment report",
+    startDate: "2025-09-12",
+    endDate: "2025-09-22",
+    duration: 10,
+    projectName: "Security Enhancement",
+    sprintName: "Security Sprint",
+    assigneeName: "Sara Hassan",
+    statusId: 3, // review
+    priorityId: 3, // critical
+    progress: 85,
+    daysUntilDeadline: 3,
+    isOverdue: true,
+    estimatedHours: 32,
+    actualHours: 30,
+    departmentName: "Security Team",
+  },
+  {
+    id: 203,
+    treeId: "task-203",
+    name: "Deploy emergency hotfix",
+    description: "Deploy critical hotfix for production environment",
+    startDate: "2025-09-15",
+    endDate: "2025-09-21",
+    duration: 6,
+    projectName: "System Maintenance",
+    sprintName: "Hotfix Sprint",
+    assigneeName: "Omar Khalil",
+    statusId: 2, // in-progress
+    priorityId: 3, // critical
+    progress: 60,
+    daysUntilDeadline: 2,
+    isOverdue: true,
+    estimatedHours: 16,
+    actualHours: 12,
+    departmentName: "DevOps Team",
+  },
+];
+
 // Helper function to calculate days until deadline and overdue status
 export const calculateTaskUrgency = (endDate: string) => {
   const now = new Date();
@@ -341,5 +404,32 @@ export const getAlmostCompletedTasks = (): AlmostCompletedTask[] => {
       if (!a.isOverdue && b.isOverdue) return 1;
 
       return a.daysUntilDeadline - b.daysUntilDeadline;
+    });
+};
+
+// Function to get tasks that are overdue (past their due date and not completed)
+export const getOverdueTasks = (): AlmostCompletedTask[] => {
+  const now = new Date();
+
+  return mockOverdueTasks
+    .map((task) => {
+      const urgency = calculateTaskUrgency(task.endDate);
+
+      return {
+        ...task,
+        daysUntilDeadline: urgency.daysUntilDeadline,
+        isOverdue: urgency.isOverdue,
+      };
+    })
+    .filter((task) => {
+      const taskEndDate = new Date(task.endDate);
+      const isOverdue = taskEndDate < now;
+      const isNotCompleted = task.statusId !== 5; // Not completed status
+
+      return isOverdue && isNotCompleted;
+    })
+    .sort((a, b) => {
+      // Sort by days overdue (most overdue first)
+      return b.daysUntilDeadline - a.daysUntilDeadline;
     });
 };

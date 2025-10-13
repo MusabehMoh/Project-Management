@@ -224,6 +224,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   const {
     unassignedTasks,
     almostCompletedTasks,
+    overdueTasks,
     availableDevelopers,
     loading,
     refreshing,
@@ -241,6 +242,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   const totalActionsCount =
     unassignedTasks.length +
     almostCompletedTasks.length +
+    (overdueTasks?.length || 0) +
     availableDevelopers.length;
 
   if (loading) {
@@ -308,12 +310,17 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     );
   }
 
+
+  // Move modal component declarations above usage
+  // Move modal definitions above usage
+  // Move full implementations of TaskAssignmentModal and CodeReviewAssignmentModal here
+
   if (!hasActionsAvailable) {
     return (
       <>
         {null}
-        <TaskAssignmentModal />
-        <CodeReviewAssignmentModal />
+        {TaskAssignmentModal()}
+        {CodeReviewAssignmentModal()}
       </>
     );
   }
@@ -469,15 +476,26 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
             )}
 
             <Autocomplete
+              /* Provide a robust filter across multiple fields */
               isClearable
-              inputValue={developerInputValue}
-              isLoading={developerSearchLoading}
-              items={developerEmployees.filter(
+              defaultFilter={(textValue, input) => {
+                const q = input.trim().toLowerCase();
+
+                if (!q) return true;
+
+                const v = textValue.toLowerCase();
+
+                return v.includes(q);
+              }}
+              /* Use defaultItems for built-in filtering to avoid dropdown glitches inside modals */
+              defaultItems={developerEmployees.filter(
                 (emp) =>
                   !selectedDevelopers.some(
                     (selected) => selected.id === emp.id,
                   ),
               )}
+              inputValue={developerInputValue}
+              isLoading={developerSearchLoading}
               label={
                 t("developerQuickActions.selectDeveloper") ||
                 "Select Developers"
@@ -489,7 +507,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               }
               onInputChange={(value) => {
                 setDeveloperInputValue(value);
-                // Search for developers
+                // Search for developers (server-side), complementing client filter
                 searchDeveloperEmployees(value);
               }}
               onSelectionChange={(key) => {
@@ -505,6 +523,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                     )
                   ) {
                     setSelectedDevelopers((prev) => [...prev, developer]);
+                    // Keep input controlled; clear display text after selection
                     setDeveloperInputValue("");
                   }
                 }
@@ -513,7 +532,8 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               {(developer) => (
                 <AutocompleteItem
                   key={developer.id}
-                  textValue={`${developer.fullName} - ${developer.militaryNumber}`}
+                  /* textValue controls what appears in the input after selection */
+                  textValue={`${developer.fullName}`}
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{developer.fullName}</span>
@@ -590,14 +610,23 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
 
             <Autocomplete
               isClearable
-              inputValue={developerInputValue}
-              isLoading={developerSearchLoading}
-              items={developerEmployees.filter(
+              defaultFilter={(textValue, input) => {
+                const q = input.trim().toLowerCase();
+
+                if (!q) return true;
+
+                const v = textValue.toLowerCase();
+
+                return v.includes(q);
+              }}
+              defaultItems={developerEmployees.filter(
                 (emp) =>
                   !selectedDevelopers.some(
                     (selected) => selected.id === emp.id,
                   ),
               )}
+              inputValue={developerInputValue}
+              isLoading={developerSearchLoading}
               label={
                 t("developerQuickActions.selectReviewer") || "Select Reviewers"
               }
@@ -632,7 +661,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               {(developer) => (
                 <AutocompleteItem
                   key={developer.id}
-                  textValue={`${developer.fullName} - ${developer.militaryNumber}`}
+                  textValue={`${developer.fullName}`}
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{developer.fullName}</span>
@@ -666,11 +695,35 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     const [selectedDate, setSelectedDate] = useState<CalendarDate | null>(null);
     const [extensionReason, setExtensionReason] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<{
+      date?: string;
+      reason?: string;
+    }>({});
 
     // Get minimum date (today)
     const minDate = today(getLocalTimeZone());
 
+    const validateForm = () => {
+      const errors: { date?: string; reason?: string } = {};
+
+      if (!selectedDate) {
+        errors.date = t("validation.dateRequired") || "Date is required";
+      }
+
+      if (!extensionReason.trim()) {
+        errors.reason = t("validation.reasonRequired") || "Reason is required";
+      }
+
+      setValidationErrors(errors);
+
+      return Object.keys(errors).length === 0;
+    };
+
     const handleExtendTask = async () => {
+      if (!validateForm()) {
+        return;
+      }
+
       if (!selectedTask || !selectedDate || !extensionReason.trim()) {
         return;
       }
@@ -692,13 +745,14 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         // Reset form and close modal
         setSelectedDate(null);
         setExtensionReason("");
+        setValidationErrors({});
         setIsExtendModalOpen(false);
         setSelectedTask(null);
       } catch (error) {
         addToast({
           title: t("common.error") || "Error",
           description:
-            error instanceof Error ? error.message : "Failed to extend task",
+            error instanceof Error ? error.message : t("common.failedToExtend"),
           color: "danger",
           timeout: 5000,
         });
@@ -710,6 +764,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     const handleCancel = () => {
       setSelectedDate(null);
       setExtensionReason("");
+      setValidationErrors({});
       setIsExtendModalOpen(false);
       setSelectedTask(null);
     };
@@ -728,14 +783,14 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
           </ModalHeader>
           <ModalBody>
             <p className="text-sm text-default-600 mb-4">
-              Task: <strong>{selectedTask?.name}</strong>
+              {t("common.taskLabel")} <strong>{selectedTask?.name}</strong>
             </p>
             <p className="text-sm text-default-600 mb-4">
-              Current Deadline:{" "}
+              {t("common.currentDeadline")}{" "}
               <strong>
                 {selectedTask?.endDate
                   ? new Date(selectedTask.endDate).toLocaleDateString()
-                  : "N/A"}
+                  : t("common.na")}
               </strong>
             </p>
 
@@ -746,14 +801,26 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                 description={
                   t("common.selectNewDate") || "Select a new deadline date"
                 }
+                errorMessage={validationErrors.date}
+                isInvalid={!!validationErrors.date}
                 label={t("common.newDeadline") || "New Deadline"}
                 minValue={minDate}
                 value={selectedDate}
-                onChange={setSelectedDate}
+                onChange={(date) => {
+                  setSelectedDate(date);
+                  if (validationErrors.date) {
+                    setValidationErrors((prev) => ({
+                      ...prev,
+                      date: undefined,
+                    }));
+                  }
+                }}
               />
 
               <Textarea
                 isRequired
+                errorMessage={validationErrors.reason}
+                isInvalid={!!validationErrors.reason}
                 label={t("common.reason") || "Reason for Extension"}
                 maxRows={6}
                 minRows={3}
@@ -762,7 +829,15 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                   "Please provide a reason for extending this task..."
                 }
                 value={extensionReason}
-                onChange={(e) => setExtensionReason(e.target.value)}
+                onChange={(e) => {
+                  setExtensionReason(e.target.value);
+                  if (validationErrors.reason) {
+                    setValidationErrors((prev) => ({
+                      ...prev,
+                      reason: undefined,
+                    }));
+                  }
+                }}
               />
             </div>
           </ModalBody>
@@ -776,9 +851,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
             </Button>
             <Button
               color="primary"
-              disabled={
-                !selectedDate || !extensionReason.trim() || isSubmitting
-              }
+              disabled={isSubmitting}
               isLoading={isSubmitting}
               onPress={handleExtendTask}
             >
@@ -791,11 +864,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
   };
 
   const AddAdhocTaskModal = () => {
-    const {
-      addAdhocTask,
-      loading: isCreating,
-      error: _createError,
-    } = UseAdhocTasks();
+    const { addAdhocTask, loading: isCreating } = UseAdhocTasks();
     const [formData, setFormData] = useState({
       name: "",
       description: "",
@@ -1269,25 +1338,25 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               </div>
             )}
 
-            {/* Almost Completed Tasks Accordion */}
-            {almostCompletedTasks.length > 0 && (
+            {/* Overdue Tasks Accordion */}
+            {overdueTasks && overdueTasks.length > 0 && (
               <div className="space-y-4">
                 <Accordion selectionMode="single" variant="splitted">
                   <AccordionItem
-                    key="almost-completed-tasks"
+                    key="overdue-tasks"
                     className="border border-default-200 rounded-lg"
                     title={
                       <div className="flex items-center justify-between w-full">
                         <h3 className="text-lg font-semibold text-foreground">
-                          {t("developerQuickActions.almostCompletedTasks") ||
-                            "Almost Completed Tasks"}
+                          {t("developerQuickActions.overdueTasks") ||
+                            "Overdue Tasks"}
                         </h3>
                         <Chip
-                          className="bg-warning-50 text-warning-600"
+                          className="bg-danger-50 text-danger-600"
                           size="sm"
                           variant="flat"
                         >
-                          {almostCompletedTasks.length}
+                          {overdueTasks?.length || 0}
                         </Chip>
                       </div>
                     }
@@ -1298,11 +1367,11 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                       size={20}
                     >
                       <div className="space-y-3 pr-2">
-                        {almostCompletedTasks.map((task) => (
+                        {overdueTasks?.map((task) => (
                           <CustomAlert
                             key={task.id}
-                            color={task.isOverdue ? "danger" : "warning"}
-                            description={`${task.projectName} • ${task.sprintName} • ${task.assigneeName || "Unassigned"} • Progress: ${task.progress || 0}% • ${task.isOverdue ? "Overdue" : `Due in ${task.daysUntilDeadline} days`}`}
+                            color="danger"
+                            description={`${task.projectName} • ${task.assignee?.gradeName} ${task.assignee?.fullName} • ${t("common.progress")}: ${task.progress || 0}% • ${t("common.overdue")} by ${Math.abs(task.daysUntilDeadline)} ${t("completion.days")}`}
                             direction={direction}
                             title={task.name}
                             variant="faded"
@@ -1321,7 +1390,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                                   setIsExtendModalOpen(true);
                                 }}
                               >
-                                {t("common.extend") || "Extend Deadline"}
+                                {t("common.extendDeadline") || "Extend Deadline"}
                               </Button>
                             </div>
                           </CustomAlert>
@@ -1366,9 +1435,9 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                           <CustomAlert
                             key={developer.id}
                             color="success"
-                            description={`${developer.department} • ${developer.gradeName} • ${developer.currentTasksCount} active tasks • ${developer.availableCapacity} slots available`}
+                            description={`${developer.department}  `}
                             direction={direction}
-                            title={developer.fullName}
+                            title={`${developer.gradeName} ${developer.fullName}`}
                             variant="faded"
                           >
                             <Divider className="bg-default-200 my-3" />
@@ -1399,8 +1468,8 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
         </CardBody>
       </Card>
       <TaskExtensionModal />
-      <TaskAssignmentModal />
-      <CodeReviewAssignmentModal />
+  {TaskAssignmentModal()}
+  {CodeReviewAssignmentModal()}
       <AddAdhocTaskModal />
     </>
   );

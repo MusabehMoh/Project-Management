@@ -15,10 +15,16 @@ public class DeveloperQuickActionsController : ApiBaseController
 {
     private readonly ApplicationDbContext _context;
     private readonly IProjectRequirementService _projectRequirementService;
-    public DeveloperQuickActionsController(ApplicationDbContext context, IProjectRequirementService projectRequirementService)
+    private readonly IUserService _userService;
+
+    public DeveloperQuickActionsController(
+        ApplicationDbContext context, 
+        IProjectRequirementService projectRequirementService,
+        IUserService userService)
     {
         _context = context;
-        _projectRequirementService= projectRequirementService;
+        _projectRequirementService = projectRequirementService;
+        _userService = userService;
     }
 
     /// <summary>
@@ -29,6 +35,10 @@ public class DeveloperQuickActionsController : ApiBaseController
     {
         try
         {
+            // Get current user's department to filter team members (same as DeveloperWorkloadController)
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+
             // Get unassigned tasks (tasks with no assignee)
             var unassignedTasks = await _context.Tasks
                 .Where(t => !_context.TaskAssignments.Any(ta => ta.TaskId == t.Id) &&
@@ -78,7 +88,7 @@ public class DeveloperQuickActionsController : ApiBaseController
             }).ToList();
 
             // Get almost completed tasks (tasks with progress > 80% and not completed)
-            var almostCompletedTasks = await _context.Tasks
+            var almostCompletedTasks = await _context.Tasks 
                 .Where(t => t.Progress >= 75 && t.StatusId != TaskStatusEnum.Completed)
                 .Include(t => t.ProjectRequirement)
                 .ThenInclude(pr => pr!.Project)
@@ -110,7 +120,40 @@ public class DeveloperQuickActionsController : ApiBaseController
                 .OrderBy(t => t.endDate)
                 .ToListAsync();
 
-            // Get available developers using the new team members query
+            // Get overdue tasks (tasks past their due date and not completed)
+            var overdueTasks = await _context.Tasks
+                .Where(t => t.EndDate < DateTime.UtcNow && t.StatusId != TaskStatusEnum.Completed)
+                .Include(t => t.ProjectRequirement)
+                .ThenInclude(pr => pr!.Project)
+                .Include(t => t.Assignments)
+                .ThenInclude(ta => ta.Employee)
+                .Select(t => new
+                {
+                    id = t.Id,
+                    treeId = t.Id.ToString(), // Using Id as treeId since TreeId doesn't exist
+                    name = t.Name,
+                    description = t.Description,
+                    startDate = t.StartDate,
+                    endDate = t.EndDate,
+                    duration = (t.EndDate - t.StartDate).Days, // Calculate duration
+                    projectName = t.ProjectRequirement != null && t.ProjectRequirement.Project != null ?
+                        t.ProjectRequirement.Project.ApplicationName : "",
+                    sprintName = t.Sprint != null ? t.Sprint.Name : "",
+                    assignee = t.Assignments.FirstOrDefault() != null ?
+                        t.Assignments.FirstOrDefault()!.Employee : null,
+                    statusId = (int)t.StatusId,
+                    priorityId = (int)t.PriorityId,
+                    progress = t.Progress,
+                    daysUntilDeadline = EF.Functions.DateDiffDay(DateTime.UtcNow, t.EndDate),
+                    isOverdue = t.EndDate < DateTime.UtcNow,
+                    estimatedHours = t.EstimatedHours,
+                    actualHours = t.ActualHours,
+                    departmentName = t.Department != null ? t.Department.Name : ""
+                })
+                .OrderBy(t => t.endDate)
+                .ToListAsync();
+
+            // Get available developers using the same business logic as DeveloperWorkloadController
             var teamMembersQuery = from t in _context.Teams
                                    join me in _context.MawaredEmployees on t.PrsId equals me.Id
                                    join d in _context.Departments on t.DepartmentId equals d.Id
@@ -125,10 +168,17 @@ public class DeveloperQuickActionsController : ApiBaseController
                                        MilitaryNumber = me.MilitaryNumber,
                                        ActiveTasks = _context.TaskAssignments.Count(ta => ta.PrsId == me.Id && 
                                                     ta.Task != null && ta.Task.StatusId != TaskStatusEnum.Completed)
+
                                    };
 
+            // Apply department filter - prioritize current user's department (same as DeveloperWorkloadController)
+            if (currentUserDepartmentId.HasValue)
+            {
+                teamMembersQuery = teamMembersQuery.Where(x => x.DepartmentId == currentUserDepartmentId.Value);
+            }
+
             var availableDevelopers = await teamMembersQuery
-                .Where(tm => tm.ActiveTasks < 5) // Filter for developers with capacity
+                .Where(tm => tm.ActiveTasks == 0) // Filter for developers with no active tasks (completely free)
                 .Select(tm => new
                 {
                     id = tm.EmployeeId,
@@ -138,12 +188,9 @@ public class DeveloperQuickActionsController : ApiBaseController
                     department = tm.Department,
                     departmentId = tm.DepartmentId,
                     militaryNumber = tm.MilitaryNumber,
-                    currentTasksCount = tm.ActiveTasks,
-                    totalCapacity = 5, // Assuming 5 tasks max capacity
-                    availableCapacity = 5 - tm.ActiveTasks
+                    currentTasksCount = tm.ActiveTasks
                 })
-                .Where(u => u.availableCapacity > 0)
-                .OrderBy(u => u.currentTasksCount)
+                .OrderBy(u => u.fullName) // Order by name since all will have 0 tasks
                 .ToListAsync();
 
             return Ok(new
@@ -153,6 +200,7 @@ public class DeveloperQuickActionsController : ApiBaseController
                 {
                     unassignedTasks = formattedUnassignedTasks,
                     almostCompletedTasks,
+                    overdueTasks,
                     availableDevelopers
                 },
                 message = "Developer quick actions data retrieved successfully"
@@ -289,7 +337,7 @@ public class DeveloperQuickActionsController : ApiBaseController
     /// <summary>
     /// Assign developer to task
     /// </summary>
-    [HttpPost("assign")]
+    [HttpPost("assign-developer")]
     public async Task<IActionResult> AssignDeveloper([FromBody] AssignDeveloperRequest request)
     {
         try
@@ -333,15 +381,7 @@ public class DeveloperQuickActionsController : ApiBaseController
                 });
             }
 
-            var developer = await _context.Users.FindAsync(developerId);
-            if (developer == null)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    message = "Developer not found"
-                });
-            }
+      
 
             // Check if assignment already exists
             var existingAssignment = await _context.TaskAssignments
@@ -369,8 +409,7 @@ public class DeveloperQuickActionsController : ApiBaseController
 
             return Ok(new
             {
-                success = true,
-                message = "Developer assigned to task successfully"
+                success = true
             });
         }
         catch (Exception ex)

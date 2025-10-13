@@ -124,19 +124,7 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-bold">{t("user.profile")}</h1>
           <p className="text-default-600">{t("profile.subtitle")}</p>
         </div>
-        <Button
-          color={isEditing ? "danger" : "primary"}
-          variant={isEditing ? "bordered" : "solid"}
-          onPress={() => {
-            if (isEditing) {
-              handleCancel();
-            } else {
-              setIsEditing(true);
-            }
-          }}
-        >
-          {isEditing ? t("common.cancel") : t("common.edit")}
-        </Button>
+   
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
