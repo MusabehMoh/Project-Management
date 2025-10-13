@@ -118,22 +118,19 @@ export function DesignRequestsPage() {
       );
 
       if (response.success) {
+        // API returns: { success: true, data: DesignRequestDto[], pagination: { total, totalPages, ... } }
         if (Array.isArray(response.data)) {
-          // Handle case where data is directly an array
           setDesignRequests(response.data);
-          setTotalCount(response.data.length);
-          setTotalPages(1);
-        } else if (response.data && response.data.data) {
-          // Handle case with pagination wrapper
-          const { data, totalCount, totalPages } = response.data as {
-            data: DesignRequestDto[];
-            totalCount: number;
-            totalPages: number;
-          };
-
-          setDesignRequests(data);
-          setTotalCount(totalCount);
-          setTotalPages(totalPages);
+          
+          // Check if pagination info exists in response
+          if (response.pagination) {
+            setTotalCount(response.pagination.total || response.data.length);
+            setTotalPages(response.pagination.totalPages || 1);
+          } else {
+            // Fallback if no pagination
+            setTotalCount(response.data.length);
+            setTotalPages(1);
+          }
         } else {
           // No valid data structure found
           setError("Invalid data structure received");
@@ -534,7 +531,7 @@ export function DesignRequestsPage() {
           <TableColumn>{t("designRequests.requestDate")}</TableColumn>
           <TableColumn>{t("designRequests.status")}</TableColumn>
           <TableColumn>{t("designRequests.notes")}</TableColumn>
-          <TableColumn>{t("actions")}</TableColumn>
+          <TableColumn>{t("common.actions")}</TableColumn>
         </TableHeader>
         <TableBody
           emptyContent={t("designRequests.noRequests")}
@@ -544,7 +541,7 @@ export function DesignRequestsPage() {
           {designRequests &&
             designRequests.map((request) => (
               <TableRow key={request.id}>
-                <TableCell>Task ID: {request.taskId}</TableCell>
+                <TableCell>{request.task?.name || `Task ID: ${request.taskId}`}</TableCell>
                 <TableCell>{formatDate(request.createdAt)}</TableCell>
                 <TableCell>
                   <Chip
@@ -563,10 +560,9 @@ export function DesignRequestsPage() {
                 <TableCell>
                   <div className="flex gap-2">
                     <Button
-                      color="secondary"
                       size="sm"
                       startContent={<FileText size={16} />}
-                      variant="flat"
+                      variant="bordered"
                       onClick={() => handleViewDetails(request)}
                     >
                       {t("designRequests.viewDetails")}
@@ -600,6 +596,31 @@ export function DesignRequestsPage() {
         </div>
 
         <div className="flex gap-3 items-center">
+          {/* Items Per Page Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-default-600 whitespace-nowrap">
+              {t("pagination.itemsPerPage")}:
+            </span>
+            <Select
+              aria-label={t("pagination.itemsPerPage")}
+              className="w-20"
+              selectedKeys={new Set([pageSize.toString()])}
+              size="sm"
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0] as string;
+                if (selectedKey) {
+                  handlePageSizeChange(parseInt(selectedKey));
+                }
+              }}
+            >
+              <SelectItem key="5">5</SelectItem>
+              <SelectItem key="10">10</SelectItem>
+              <SelectItem key="20">20</SelectItem>
+              <SelectItem key="50">50</SelectItem>
+            </Select>
+          </div>
+
+          {/* Status Filter */}
           <Select
             aria-label={t("common.filter")}
             className="w-40"
@@ -623,6 +644,7 @@ export function DesignRequestsPage() {
             </SelectItem>
           </Select>
 
+          {/* View Type Buttons */}
           <Button
             isIconOnly
             aria-label="Grid View"
@@ -659,15 +681,19 @@ export function DesignRequestsPage() {
       )}
 
       {/* Pagination */}
-      <div className="mt-8 flex justify-center">
-        <GlobalPagination
-          currentPage={currentPage}
-          pageSize={normalizePageSize(pageSize, 10)}
-          totalItems={totalCount}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
-      </div>
+      {totalCount > 0 && totalPages > 1 && (
+        <div className="mt-8">
+          <div className="flex justify-center">
+            <GlobalPagination
+              currentPage={currentPage}
+              pageSize={normalizePageSize(pageSize, 10)}
+              totalItems={totalCount}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Assign Modal */}
       <Modal isOpen={isOpen} size="2xl" onClose={onClose}>
