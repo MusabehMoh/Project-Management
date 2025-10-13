@@ -696,54 +696,36 @@ export function DesignRequestsPage() {
       )}
 
       {/* Assign Modal */}
-      <Modal isOpen={isOpen} size="2xl" onClose={onClose}>
-        <ModalContent className="max-h-[90vh]">
-          <ModalHeader className="text-center">
+      <Modal isOpen={isOpen} size="lg" onClose={onClose}>
+        <ModalContent>
+          <ModalHeader className="border-b border-default-200">
             {selectedRequest?.assignedToUserName
               ? t("designRequests.assignedDesigner")
               : t("designRequests.assignTo")}
           </ModalHeader>
 
-          <ModalBody className="overflow-y-auto">
-            <div className="space-y-6">
+          <ModalBody className="py-6">
+            <div className="space-y-5">
               {/* Show assigned designer info if there is one */}
               {selectedRequest?.assignedToUserName && (
-                <div className="border border-success-200 rounded-lg p-4 bg-success-50/50 dark:bg-success-100/10">
-                  <div className="flex items-center gap-3 mb-3">
-                    <CheckCircle className="w-5 h-5 text-success-600" />
-                    <h3 className="text-lg font-semibold text-success-700 dark:text-success-400">
-                      {t("designRequests.currentlyAssigned")}
-                    </h3>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-default-100/50 dark:bg-default-50/5">
+                  <Avatar
+                    className="flex-shrink-0"
+                    name={selectedRequest.assignedToUserName}
+                    size="sm"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-default-900 dark:text-default-100 truncate">
+                      {selectedRequest.assignedToUserName}
+                    </p>
+                    <p className="text-xs text-default-500">
+                      {formatDate(
+                        (selectedRequest as any).assignedAt ||
+                          selectedRequest.createdAt,
+                      )}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      className="flex-shrink-0"
-                      name={selectedRequest.assignedToUserName}
-                      size="md"
-                    />
-                    <div>
-                      <p className="font-medium text-default-900 dark:text-default-100">
-                        {selectedRequest.assignedToUserName}
-                      </p>
-                      <p className="text-sm text-default-600 dark:text-default-400">
-                        {t("tasks.assignedOn")}:{" "}
-                        {formatDate(
-                          (selectedRequest as any).assignedAt ||
-                            selectedRequest.createdAt,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  {selectedRequest.notes && (
-                    <div className="mt-3 pt-3 border-t border-success-200">
-                      <p className="text-sm font-medium text-default-700 dark:text-default-300 mb-1">
-                        {t("designRequests.assignmentNotes")}:
-                      </p>
-                      <p className="text-sm text-default-600 dark:text-default-400">
-                        {selectedRequest.notes}
-                      </p>
-                    </div>
-                  )}
+                  <CheckCircle className="w-4 h-4 text-success flex-shrink-0" />
                 </div>
               )}
 
@@ -751,10 +733,8 @@ export function DesignRequestsPage() {
               {!selectedRequest?.assignedToUserName && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-default-700 mb-2 block">
-                      {t("designRequests.selectDesignerForAssignment")} *
-                    </label>
                     <Autocomplete
+                      label={t("designRequests.selectDesignerForAssignment")}
                       defaultFilter={() => true}
                       inputValue={designerInputValue}
                       isLoading={designersLoading}
@@ -835,131 +815,68 @@ export function DesignRequestsPage() {
                 </div>
               )}
 
-              {/* Task Details Section - Moved below controls */}
-              <div className="border border-default-200 rounded-lg p-4 bg-default-50/50 dark:bg-default-100/50 max-h-80 overflow-y-auto">
-                <h3 className="text-lg font-semibold mb-4 text-default-900 dark:text-default-100">
-                  {t("taskDetails")}
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Left Column - Task Info */}
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-default-600 dark:text-default-400">
-                        {t("designRequests.taskName")}
-                      </label>
-                      <p className="text-sm text-default-900 dark:text-default-100 mt-1">
-                        {selectedRequest?.task?.name ||
-                          t("common.notAvailable")}
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-default-600 dark:text-default-400">
-                        {t("designRequests.requestDate")}
-                      </label>
-                      <p className="text-sm text-default-900 dark:text-default-100 mt-1">
-                        {formatDate(selectedRequest?.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right Column - Status & Priority */}
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-default-600 dark:text-default-400">
-                        {t("status")}
-                      </label>
-                      <div className="mt-1">
-                        {selectedRequest?.task?.statusId && (
-                          <Chip
-                            color={getStatusColor(
-                              selectedRequest.task.statusId,
-                            )}
-                            size="sm"
-                            variant="flat"
-                          >
-                            {getStatusText(selectedRequest.status)}
-                          </Chip>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-default-600 dark:text-default-400">
-                        {t("priority")}
-                      </label>
-                      <div className="mt-1">
-                        {selectedRequest?.task?.priorityId && (
-                          <Chip
-                            color={getRequirementPriorityColor(
-                              selectedRequest.task.priorityId,
-                            )}
-                            size="sm"
-                            variant="solid"
-                          >
-                            {getRequirementPriorityText(
-                              selectedRequest.task.priorityId,
-                            )}
-                          </Chip>
-                        )}
-                      </div>
-                    </div>
-
-                    {selectedRequest?.task?.dueDate && (
-                      <div>
-                        <label className="text-sm font-medium text-default-600 dark:text-default-400">
-                          {t("dashboard.dueDate")}
-                        </label>
-                        <p className="text-sm text-default-900 dark:text-default-100 mt-1">
-                          {formatDate(selectedRequest.task.dueDate)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+              {/* Task Details Section - Minimalist */}
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between py-2 border-b border-default-100">
+                  <span className="text-default-500">{t("designRequests.taskName")}</span>
+                  <span className="font-medium text-default-900 dark:text-default-100">
+                    {selectedRequest?.task?.name || t("common.notAvailable")}
+                  </span>
                 </div>
 
-                {/* Full Width Task Description */}
-                {selectedRequest?.task?.description && (
-                  <div className="mt-4">
-                    <label className="text-sm font-medium text-default-600 dark:text-default-400">
-                      {t("requirements.description")}
-                    </label>
-                    <div className="mt-1 p-2 bg-default-100/50 dark:bg-default-200/20 rounded-md">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: selectedRequest.task.description,
-                        }}
-                        className="text-sm text-default-900 dark:text-default-100 leading-relaxed"
-                      />
-                    </div>
+                <div className="flex items-center justify-between py-2 border-b border-default-100">
+                  <span className="text-default-500">{t("designRequests.requestDate")}</span>
+                  <span className="text-default-900 dark:text-default-100">
+                    {formatDate(selectedRequest?.createdAt)}
+                  </span>
+                </div>
+
+                {selectedRequest?.task?.statusId && (
+                  <div className="flex items-center justify-between py-2 border-b border-default-100">
+                    <span className="text-default-500">{t("status")}</span>
+                    <Chip
+                      color={getStatusColor(selectedRequest.task.statusId)}
+                      size="sm"
+                      variant="flat"
+                    >
+                      {getStatusText(selectedRequest.status)}
+                    </Chip>
                   </div>
                 )}
 
-                {/* Request Notes */}
-                {selectedRequest?.notes && (
-                  <div className="mt-4 pt-4 border-t border-default-200">
-                    <label className="text-sm font-medium text-default-600 dark:text-default-400">
-                      {t("designRequests.notes")}
-                    </label>
-                    <div className="mt-1 max-h-16 overflow-y-auto p-2 bg-default-100/50 dark:bg-default-200/20 rounded-md">
-                      <p className="text-sm text-default-900 dark:text-default-100 leading-relaxed whitespace-pre-wrap">
-                        {selectedRequest.notes}
-                      </p>
-                    </div>
+                {selectedRequest?.task?.priorityId && (
+                  <div className="flex items-center justify-between py-2 border-b border-default-100">
+                    <span className="text-default-500">{t("priority")}</span>
+                    <Chip
+                      color={getRequirementPriorityColor(selectedRequest.task.priorityId)}
+                      size="sm"
+                      variant="flat"
+                    >
+                      {getRequirementPriorityText(selectedRequest.task.priorityId)}
+                    </Chip>
+                  </div>
+                )}
+
+                {selectedRequest?.task?.dueDate && (
+                  <div className="flex items-center justify-between py-2 border-b border-default-100">
+                    <span className="text-default-500">{t("dashboard.dueDate")}</span>
+                    <span className="text-default-900 dark:text-default-100">
+                      {formatDate(selectedRequest.task.dueDate)}
+                    </span>
                   </div>
                 )}
               </div>
             </div>
           </ModalBody>
 
-          <ModalFooter>
-            <Button color="default" variant="flat" onPress={onClose}>
-              {t("cancel")}
+          <ModalFooter className="border-t border-default-200">
+            <Button variant="flat" onPress={onClose}>
+              {t("common.cancel")}
             </Button>
             <Button
               color="primary"
               isLoading={assignLoading}
+              variant="flat"
               onPress={handleAssignSubmit}
             >
               {t("designRequests.assign")}
