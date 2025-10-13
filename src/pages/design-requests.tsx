@@ -424,38 +424,8 @@ export function DesignRequestsPage() {
                       <p className="text-xs text-default-500 mb-1">
                         {t("requirements.requirement")}
                       </p>
-                      <p className="text-sm text-default-700 line-clamp-2">
+                      <p className="text-sm text-default-700 line-clamp-1">
                         {request.requirementDetails.name}
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                {/* Task Description */}
-                {request.task?.description && (
-                  <>
-                    <div className="border-t border-default-100 pt-3" />
-                    <div>
-                      <p className="text-xs text-default-500 mb-1">
-                        {t("common.taskDetails")}
-                      </p>
-                      <p className="text-sm text-default-600 line-clamp-3">
-                        {request.task.description}
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                {/* Notes */}
-                {request.notes && (
-                  <>
-                    <div className="border-t border-default-100 pt-3" />
-                    <div>
-                      <p className="text-xs text-default-500 mb-1">
-                        {t("designRequests.notes")}
-                      </p>
-                      <p className="text-sm text-default-600 line-clamp-2">
-                        {request.notes}
                       </p>
                     </div>
                   </>
