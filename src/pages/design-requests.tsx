@@ -313,11 +313,17 @@ export function DesignRequestsPage() {
 
     if (!designRequests || designRequests.length === 0) {
       return (
-        <Card className="w-full">
-          <CardBody className="text-center">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="rounded-full bg-default-100 dark:bg-default-50/10 p-6 mb-4">
+            <FileText className="w-12 h-12 text-default-400" />
+          </div>
+          <p className="text-lg font-medium text-default-600 dark:text-default-400">
             {t("designRequests.noRequests")}
-          </CardBody>
-        </Card>
+          </p>
+          <p className="text-sm text-default-400 mt-1">
+            {t("designRequests.noRequestsDescription")}
+          </p>
+        </div>
       );
     }
 
@@ -507,11 +513,17 @@ export function DesignRequestsPage() {
 
     if (!designRequests || designRequests.length === 0) {
       return (
-        <Card className="w-full">
-          <CardBody className="text-center">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="rounded-full bg-default-100 dark:bg-default-50/10 p-6 mb-4">
+            <FileText className="w-12 h-12 text-default-400" />
+          </div>
+          <p className="text-lg font-medium text-default-600 dark:text-default-400">
             {t("designRequests.noRequests")}
-          </CardBody>
-        </Card>
+          </p>
+          <p className="text-sm text-default-400 mt-1">
+            {t("designRequests.noRequestsDescription")}
+          </p>
+        </div>
       );
     }
 
@@ -589,21 +601,24 @@ export function DesignRequestsPage() {
 
         <div className="flex gap-3 items-center">
           <Select
-            aria-label={t("filter")}
+            aria-label={t("common.filter")}
             className="w-40"
-            label={t("filter")}
+            label={t("common.filter")}
             selectedKeys={
-              statusFilter !== undefined ? [statusFilter.toString()] : []
+              statusFilter !== undefined ? new Set([statusFilter.toString()]) : new Set()
             }
-            onChange={handleStatusFilterChange}
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
+              handleStatusFilterChange(selectedKey || null);
+            }}
           >
-            <SelectItem key="" value="">
+            <SelectItem key="">
               {t("designRequests.filter.all")}
             </SelectItem>
-            <SelectItem key="1" value="1">
+            <SelectItem key="1">
               {t("designRequests.filter.unassigned")}
             </SelectItem>
-            <SelectItem key="2" value="2">
+            <SelectItem key="2">
               {t("designRequests.filter.assigned")}
             </SelectItem>
           </Select>
