@@ -220,48 +220,48 @@ export default function DesignerWorkloadPerformance() {
           {metrics && (
             <div className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Average Efficiency */}
-              <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
+              <div className="flex-1 bg-default-100 dark:bg-default-50/5 rounded-lg px-3 py-2 border border-default-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-semibold text-success-600 dark:text-success-500">
+                  <span className="text-2xl font-semibold text-default-700 dark:text-default-600">
                     {metrics.averageEfficiency.toFixed(1)}%
                   </span>
-                  <span className="text-xs text-success-600/70 dark:text-success-500/70">
+                  <span className="text-xs text-default-500">
                     {t("common.avgEfficiency")}
                   </span>
                 </div>
               </div>
 
               {/* Tasks Completed */}
-              <div className="flex-1 bg-primary-50 dark:bg-primary-100/10 rounded-lg px-3 py-2">
+              <div className="flex-1 bg-default-100 dark:bg-default-50/5 rounded-lg px-3 py-2 border border-default-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-semibold text-primary-600 dark:text-primary-500">
+                  <span className="text-2xl font-semibold text-default-700 dark:text-default-600">
                     {metrics.totalTasksCompleted}
                   </span>
-                  <span className="text-xs text-primary-600/70 dark:text-primary-500/70">
+                  <span className="text-xs text-default-500">
                     {t("designerDashboard.designsCompleted")}
                   </span>
                 </div>
               </div>
 
               {/* Average Task Time */}
-              <div className="flex-1 bg-warning-50 dark:bg-warning-100/10 rounded-lg px-3 py-2">
+              <div className="flex-1 bg-default-100 dark:bg-default-50/5 rounded-lg px-3 py-2 border border-default-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-semibold text-warning-600 dark:text-warning-500">
+                  <span className="text-2xl font-semibold text-default-700 dark:text-default-600">
                     {metrics.averageTaskCompletionTime.toFixed(1)}h
                   </span>
-                  <span className="text-xs text-warning-600/70 dark:text-warning-500/70">
+                  <span className="text-xs text-default-500">
                     {t("designerDashboard.avgDesignTime")}
                   </span>
                 </div>
               </div>
 
               {/* Tasks In Progress */}
-              <div className="flex-1 bg-secondary-50 dark:bg-secondary-100/10 rounded-lg px-3 py-2">
+              <div className="flex-1 bg-default-100 dark:bg-default-50/5 rounded-lg px-3 py-2 border border-default-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-semibold text-secondary-600 dark:text-secondary-500">
+                  <span className="text-2xl font-semibold text-default-700 dark:text-default-600">
                     {metrics.totalTasksInProgress}
                   </span>
-                  <span className="text-xs text-secondary-600/70 dark:text-secondary-500/70">
+                  <span className="text-xs text-default-500">
                     {t("common.inProgress")}
                   </span>
                 </div>
