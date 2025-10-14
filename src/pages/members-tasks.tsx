@@ -997,6 +997,7 @@ export default function MembersTasksPage() {
                     onChangeStatus={handleChangeStatus}
                     onClick={handleTaskClick}
                     onRequestDesign={handleRequestDesign}
+                    onTaskComplete={handleRefresh}
                   />
                 ))}
               </div>

@@ -4,12 +4,17 @@ import { Progress } from "@heroui/progress";
 import { Badge } from "@heroui/badge";
 import { CalendarDays, CheckCircle } from "lucide-react";
 import { Button } from "@heroui/button";
+import { Switch } from "@heroui/switch";
+import { Tooltip } from "@heroui/tooltip";
+import { useState } from "react";
 
 import { MemberTask } from "@/types/membersTasks";
 import { MemberSearchResult } from "@/types/timeline";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDateOnly } from "@/utils/dateFormatter";
-import { getTaskTypeText, getTaskTypeColor } from "@/constants/taskTypes";
+import { getTaskTypeText, getTaskTypeColor, TASK_TYPES } from "@/constants/taskTypes";
+import { tasksService } from "@/services/api";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 interface TaskCardProps {
   task: MemberTask;
@@ -17,6 +22,7 @@ interface TaskCardProps {
   onRequestDesign?: (task: MemberTask) => void;
   onChangeStatus?: (task: MemberTask) => void;
   onChangeAssignees?: (task: MemberTask) => void;
+  onTaskComplete?: () => void; // Callback to refresh tasks after completion
   isTeamManager: boolean;
   getStatusColor: (
     statusId: number,
@@ -34,6 +40,7 @@ export const TaskCard = ({
   onRequestDesign,
   onChangeStatus,
   onChangeAssignees,
+  onTaskComplete,
   isTeamManager,
   getStatusColor,
   getStatusText,
@@ -41,6 +48,11 @@ export const TaskCard = ({
   getPriorityLabel,
 }: TaskCardProps) => {
   const { t, language } = useLanguage();
+  const [isHovered, setIsHovered] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const isAdhoc = task.typeId === TASK_TYPES.ADHOC;
+  const canComplete = isAdhoc && task.statusId !== 5; // Only if not already completed
 
   const getProgressColor = (progress: number) => {
     if (progress >= 80) return "success";
@@ -79,23 +91,85 @@ export const TaskCard = ({
     }
   };
 
+  const handleCompleteAdhocTask = async () => {
+    setIsCompleting(true);
+
+    try {
+      // Move task to completed status (5) with 100% progress
+      const response = await tasksService.updateTaskStatus(
+        parseInt(task.id),
+        5, // Completed status
+        `Adhoc task completed via quick action`,
+        100, // Set progress to 100%
+      );
+
+      if (response.success) {
+        showSuccessToast(t("teamDashboard.kanban.taskCompleted"));
+
+        // Notify parent to refresh tasks
+        if (onTaskComplete) {
+          onTaskComplete();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to complete adhoc task:", err);
+      showErrorToast(t("teamDashboard.kanban.taskCompleteFailed"));
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   return (
     <Card
       isPressable
-      className={`min-h-[400px] cursor-pointer transition-all duration-200 hover:shadow-lg bg-content1 overflow-hidden ${
+      className={`min-h-[400px] cursor-pointer transition-all duration-500 ease-in-out bg-content1 overflow-hidden ${
+        isAdhoc && isHovered 
+          ? "shadow-2xl border-2 border-success ring-2 ring-success/20" 
+          : "hover:shadow-lg border-2 border-transparent"
+      } ${
         task.isOverdue
           ? "border-l-4 border-l-danger-500"
           : `border-l-4 border-l-${getStatusColor(task.statusId)}-500`
       } ${language === "ar" ? "text-right" : ""}`}
       dir={language === "ar" ? "rtl" : "ltr"}
       onPress={handleCardClick}
+      onMouseEnter={() => isAdhoc && setIsHovered(true)}
+      onMouseLeave={() => isAdhoc && setIsHovered(false)}
     >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-foreground line-clamp-2 break-words">
-              {task.name}
-            </h3>
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-lg font-semibold text-foreground line-clamp-2 break-words flex-1">
+                {task.name}
+              </h3>
+              {isAdhoc && canComplete && isHovered && (
+                <Tooltip content={t("teamDashboard.kanban.markComplete")}>
+                  <div 
+                    className={`flex-shrink-0 ${language === "ar" ? "order-first" : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent card click
+                    }}
+                  >
+                    <Switch
+                      color="success"
+                      size="sm"
+                      isDisabled={isCompleting}
+                      thumbIcon={({ isSelected, className }) =>
+                        isSelected ? (
+                          <CheckCircle className={className} />
+                        ) : null
+                      }
+                      onValueChange={(isChecked) => {
+                        if (isChecked) {
+                          handleCompleteAdhocTask();
+                        }
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+              )}
+            </div>
           </div>
           <div className="flex flex-col gap-2 items-end flex-shrink-0">
             <Chip
