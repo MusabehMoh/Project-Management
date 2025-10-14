@@ -688,6 +688,9 @@ const translations = {
     "teamDashboard.kanban.cannotDragFrom":
       "You cannot move tasks from this status",
     "teamDashboard.kanban.cannotDropTo": "You cannot move tasks to this status",
+    "teamDashboard.kanban.markComplete": "Mark as Complete",
+    "teamDashboard.kanban.taskCompleted": "Task completed successfully!",
+    "teamDashboard.kanban.taskCompleteFailed": "Failed to complete task",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "Quick Actions",
@@ -2421,6 +2424,9 @@ const translations = {
       "ليس لديك صلاحية لتعديل المهام في هذه الحالة",
     "teamDashboard.kanban.cannotDragFrom": "لا يمكنك نقل المهام من هذه الحالة",
     "teamDashboard.kanban.cannotDropTo": "لا يمكنك نقل المهام إلى هذه الحالة",
+    "teamDashboard.kanban.markComplete": "تحديد كمكتمل",
+    "teamDashboard.kanban.taskCompleted": "تم إكمال المهمة بنجاح!",
+    "teamDashboard.kanban.taskCompleteFailed": "فشل إكمال المهمة",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "الإجراءات السريعة",

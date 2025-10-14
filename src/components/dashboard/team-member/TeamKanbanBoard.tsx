@@ -7,6 +7,7 @@ import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/skeleton";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Tooltip } from "@heroui/tooltip";
+import { Switch } from "@heroui/switch";
 import {
   ListTodo,
   PlayCircle,
@@ -29,7 +30,8 @@ import {
   getColumnAccessibility,
   ColumnRestrictionReason,
 } from "@/utils/kanbanRoleConfig";
-import { getTaskTypeText, getTaskTypeColor } from "@/constants/taskTypes";
+import { getTaskTypeText, getTaskTypeColor, TASK_TYPES } from "@/constants/taskTypes";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 interface KanbanColumn {
   id: number;
@@ -62,6 +64,8 @@ export default function TeamKanbanBoard({
   const [draggedFromColumn, setDraggedFromColumn] = useState<number | null>(
     null,
   );
+  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 
   // Get user's role IDs for permission checking
   const userRoleIds = useMemo(() => {
@@ -293,6 +297,67 @@ export default function TeamKanbanBoard({
     }
   };
 
+  // Handler for completing adhoc tasks
+  const handleCompleteAdhocTask = async (task: MemberTask) => {
+    if (task.typeId !== TASK_TYPES.ADHOC) return;
+    
+    setCompletingTaskId(task.id);
+    
+    try {
+      // Move task to completed status (5) with 100% progress
+      const response = await tasksService.updateTaskStatus(
+        parseInt(task.id),
+        5, // Completed status
+        `Adhoc task completed via Kanban board quick action`,
+        100, // Set progress to 100%
+      );
+
+      if (response.success) {
+        // Update local state
+        setColumns((prevColumns) => {
+          const newColumns = [...prevColumns];
+
+          // Remove from current column
+          const currentColumn = newColumns.find((col) => 
+            col.tasks.some((t) => t.id === task.id)
+          );
+          
+          if (currentColumn) {
+            currentColumn.tasks = currentColumn.tasks.filter(
+              (t) => t.id !== task.id
+            );
+          }
+
+          // Add to completed column (status 5)
+          const completedColumn = newColumns.find((col) => col.id === 5);
+          
+          if (completedColumn) {
+            const updatedTask = {
+              ...task,
+              statusId: 5,
+              progress: 100,
+            };
+            completedColumn.tasks.push(updatedTask);
+          }
+
+          return newColumns;
+        });
+
+        showSuccessToast(t("teamDashboard.kanban.taskCompleted"));
+
+        // Notify parent component
+        if (onTaskUpdate) {
+          onTaskUpdate(parseInt(task.id), "5");
+        }
+      }
+    } catch (err) {
+      console.error("Failed to complete adhoc task:", err);
+      showErrorToast(t("teamDashboard.kanban.taskCompleteFailed"));
+    } finally {
+      setCompletingTaskId(null);
+    }
+  };
+
   const getPriorityColor = (priorityId: number) => {
     switch (priorityId) {
       case 1:
@@ -439,22 +504,55 @@ export default function TeamKanbanBoard({
                     ) : (
                       column.tasks.map((task) => {
                         const canDrag = columnAccess.isDraggable;
+                        const isAdhoc = task.typeId === TASK_TYPES.ADHOC;
+                        const isHovered = hoveredTaskId === task.id;
+                        const isCompleting = completingTaskId === task.id;
+                        const canComplete = isAdhoc && task.statusId !== 5; // Only if not already completed
 
                         return (
                           <Card
                             key={task.id}
-                            className={`${canDrag ? "cursor-move hover:shadow-lg" : "cursor-default"} transition-shadow`}
+                            className={`${canDrag ? "cursor-move" : "cursor-default"} transition-all duration-500 ease-in-out ${
+                              isAdhoc && isHovered 
+                                ? "shadow-2xl border-2 border-success ring-2 ring-success/20" 
+                                : "hover:shadow-lg border-2 border-transparent"
+                            }`}
                             draggable={canDrag}
                             shadow="sm"
                             onDragStart={() =>
                               canDrag && handleDragStart(task, column.id)
                             }
+                            onMouseEnter={() => isAdhoc && setHoveredTaskId(task.id)}
+                            onMouseLeave={() => isAdhoc && setHoveredTaskId(null)}
                           >
                             <CardBody className="p-3 space-y-2">
-                              {/* Task Title */}
-                              <h4 className="font-semibold text-sm line-clamp-2">
-                                {task.name}
-                              </h4>
+                              {/* Task Title with Complete Switch for Adhoc */}
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="font-semibold text-sm line-clamp-2 flex-1">
+                                  {task.name}
+                                </h4>
+                                {isAdhoc && canComplete && isHovered && (
+                                  <Tooltip content={t("teamDashboard.kanban.markComplete")}>
+                                    <div className="flex-shrink-0">
+                                      <Switch
+                                        color="success"
+                                        size="sm"
+                                        isDisabled={isCompleting}
+                                        thumbIcon={({ isSelected, className }) =>
+                                          isSelected ? (
+                                            <CheckCircle className={className} />
+                                          ) : null
+                                        }
+                                        onValueChange={(isChecked) => {
+                                          if (isChecked) {
+                                            handleCompleteAdhocTask(task);
+                                          }
+                                        }}
+                                      />
+                                    </div>
+                                  </Tooltip>
+                                )}
+                              </div>
 
                               {/* Priority & Task Type */}
                               <div className="flex items-center gap-2 flex-wrap">
