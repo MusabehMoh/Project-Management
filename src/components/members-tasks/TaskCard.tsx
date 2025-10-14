@@ -139,14 +139,23 @@ export const TaskCard = ({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className="text-lg font-semibold text-foreground line-clamp-2 break-words flex-1">
-                {task.name}
-              </h3>
+            <h3 className={`text-lg font-semibold text-foreground line-clamp-2 break-words ${language === "ar" ? "text-right" : "text-left"}`}>
+              {task.name}
+            </h3>
+          </div>
+          <div className="flex flex-col gap-2 items-end flex-shrink-0">
+            <div className="flex gap-2 items-center">
+              <Chip
+                color={getStatusColor(task.statusId)}
+                size="sm"
+                variant="flat"
+              >
+                {getStatusText(task.statusId)}
+              </Chip>
               {isAdhoc && canComplete && isHovered && (
                 <Tooltip content={t("teamDashboard.kanban.markComplete")}>
                   <div 
-                    className={`flex-shrink-0 ${language === "ar" ? "order-first" : ""}`}
+                    className="flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent card click
                     }}
@@ -170,15 +179,6 @@ export const TaskCard = ({
                 </Tooltip>
               )}
             </div>
-          </div>
-          <div className="flex flex-col gap-2 items-end flex-shrink-0">
-            <Chip
-              color={getStatusColor(task.statusId)}
-              size="sm"
-              variant="flat"
-            >
-              {getStatusText(task.statusId)}
-            </Chip>
             <div className="flex gap-1 items-center">
               <Chip
                 color={getTaskTypeColor(task.typeId)}
