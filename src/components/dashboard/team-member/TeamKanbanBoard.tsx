@@ -510,8 +510,14 @@ export default function TeamKanbanBoard({
                                   <span
                                     className={
                                       task.progress === 100
-                                        ? "text-success"
-                                        : "text-default-600"
+                                        ? "text-success font-semibold"
+                                        : task.progress >= 70
+                                          ? "text-success"
+                                          : task.progress >= 40
+                                            ? "text-warning"
+                                            : task.progress > 0
+                                              ? "text-danger"
+                                              : "text-default-600"
                                     }
                                   >
                                     {task.progress}%
