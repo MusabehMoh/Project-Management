@@ -363,9 +363,30 @@ export const useUnitSearch = () => {
 
       const response = await unitService.searchUnits(term);
 
-      if (response.success) {
-        setSearchResults(response.data);
+      // Handle different response structures
+      let units: Unit[] = [];
+
+      if (Array.isArray(response.data)) {
+        units = response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        // Check common nested array patterns
+        if (Array.isArray((response.data as any).units)) {
+          units = (response.data as any).units;
+        } else if (Array.isArray((response.data as any).data)) {
+          units = (response.data as any).data;
+        } else if (Array.isArray((response.data as any).items)) {
+          units = (response.data as any).items;
+        }
+      }
+
+      console.log("🔍 Extracted units:", units);
+      console.log("🔍 Units count:", units.length);
+
+      if (response.success && units.length > 0) {
+        console.log("✅ Setting search results:", units.length, "units");
+        setSearchResults(units);
       } else {
+        console.log("❌ No valid data, response:", response);
         setError(response.message);
         setSearchResults([]);
       }

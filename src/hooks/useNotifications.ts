@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import { useState, useEffect, useCallback, useRef } from "react";
-import * as signalR from "@microsoft/signalr";
 
 import {
   notificationService,
@@ -33,7 +32,7 @@ export function useNotifications(): UseNotifications {
   const [unreadCountState, setUnreadCountState] = useState<number>(0);
   const [isConnected, setIsConnected] = useState(false);
   const [, setLoading] = useState(true);
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   // Load initial notifications from API
   const loadNotifications = useCallback(async () => {
@@ -132,14 +131,39 @@ export function useNotifications(): UseNotifications {
     }
   }, []);
 
+  // Send test push notification on page load
+  const sendTestNotification = useCallback(async () => {
+    try {
+      console.log("Sending test push notification...");
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/notifications/test-push`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (response.ok) {
+        console.log("Test push notification sent successfully");
+      } else {
+        console.error("Failed to send test push notification");
+      }
+    } catch (error) {
+      console.error("Error sending test push notification:", error);
+    }
+  }, []);
+
   useEffect(() => {
     loadNotifications();
+    sendTestNotification();
 
     if (!API_CONFIG.ENABLE_SIGNALR) {
-      console.log("SignalR disabled via VITE_ENABLE_SIGNALR flag");
+      console.log("WebSocket disabled via VITE_ENABLE_SIGNALR flag");
       setIsConnected(false);
 
-      return; // Skip websocket setup entirely
+      return;
     }
 
     const currentUser = localStorage.getItem("currentUser");
@@ -147,32 +171,27 @@ export function useNotifications(): UseNotifications {
     const username = user?.username || "anonymous";
     const userId = user?.id ?? null;
 
-    // Build SignalR connection
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_CONFIG.WS_URL}?username=${encodeURIComponent(username)}`)
-      .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: (ctx: signalR.RetryContext) => {
-          if (ctx.previousRetryCount < 5) {
-            return 1000 * (ctx.previousRetryCount + 1); // exponential-ish
-          }
+    // Create WebSocket connection
+    const ws = new WebSocket(
+      `${API_CONFIG.WS_URL}?username=${encodeURIComponent(username)}&userId=${
+        userId || ""
+      }`,
+    );
 
-          return null; // stop retrying
-        },
-      })
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
+    wsRef.current = ws;
 
-    connectionRef.current = connection;
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+      setIsConnected(true);
+    };
 
-    // Handlers
-    connection.on("Notification", (notificationData: any) => {
+    ws.onmessage = (event) => {
       try {
+        const notificationData = JSON.parse(event.data);
         const newNotification: Notification = {
           id: `${Date.now()}-${Math.random()}`,
-          // Fallbacks in case server's shape differs
-          type:
-            notificationData.type || notificationData.eventType || "UNKNOWN",
-          message: notificationData.message || notificationData.text || "",
+          type: notificationData.type || "UNKNOWN",
+          message: notificationData.message || "",
           timestamp: new Date(notificationData.timestamp || Date.now()),
           read: false,
           projectId: notificationData.projectId,
@@ -182,91 +201,33 @@ export function useNotifications(): UseNotifications {
         setNotifications((prev) => {
           const updated = [newNotification, ...prev.slice(0, 49)];
 
-          setUnreadCountState((c) => c + 1); // increment unread optimistically
+          setUnreadCountState((c) => c + 1);
 
           return updated;
         });
 
-        switch (newNotification.type) {
-          case "PROJECT_SENT_FOR_REVIEW":
-            console.log(
-              "Project notification received:",
-              newNotification.message,
-            );
-            break;
-          default:
-            console.log("Notification received:", newNotification.type);
-        }
+        console.log("Notification received:", newNotification.type);
       } catch (err) {
-        console.error("Error processing SignalR notification", err);
+        console.error("Error processing WebSocket notification", err);
       }
-    });
+    };
 
-    // Optional generic message handler if server uses SendAsync("ReceiveMessage", ...)
-    connection.on("ReceiveMessage", (type: string, payload: any) => {
-      console.log("ReceiveMessage raw:", type, payload);
-      const newNotification: Notification = {
-        id: `${Date.now()}-${Math.random()}`,
-        type,
-        message: payload?.message || payload?.text || "",
-        timestamp: new Date(),
-        read: false,
-        projectId: payload?.projectId,
-        targetUsernames: payload?.targetUsernames,
-      };
-
-      setNotifications((prev) => {
-        const updated = [newNotification, ...prev.slice(0, 49)];
-
-        setUnreadCountState((c) => c + 1);
-
-        return updated;
-      });
-    });
-
-    async function startConnection() {
-      try {
-        await connection.start();
-        console.log("SignalR connected");
-        setIsConnected(true);
-        // Send authenticate if server expects an invocation
-        try {
-          await connection.invoke("Authenticate", { username, userId });
-        } catch (authErr) {
-          console.warn(
-            "Authenticate invocation failed (may be fine if server doesn't require it)",
-            authErr,
-          );
-        }
-      } catch (startErr) {
-        console.error("Failed to start SignalR connection", startErr);
-        setIsConnected(false);
-      }
-    }
-
-    startConnection();
-
-    connection.onreconnecting((err: Error | undefined) => {
-      console.warn("SignalR reconnecting", err);
+    ws.onclose = (event) => {
+      console.log("WebSocket closed", event.code, event.reason);
       setIsConnected(false);
-    });
+    };
 
-    connection.onreconnected(() => {
-      console.log("SignalR reconnected");
-      setIsConnected(true);
-    });
-
-    connection.onclose((err: Error | undefined) => {
-      console.log("SignalR closed", err);
+    ws.onerror = (error) => {
+      console.error("WebSocket error", error);
       setIsConnected(false);
-    });
+    };
 
     return () => {
-      connection
-        .stop()
-        .catch((e: Error) => console.error("Error stopping SignalR", e));
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
     };
-  }, [loadNotifications]);
+  }, [loadNotifications, sendTestNotification]);
 
   const markAsRead = useCallback(async (id: string) => {
     setNotifications((prev) => {

@@ -73,20 +73,20 @@ public class Unit
 
     [Required]
     [MaxLength(100)]
-    public string Name { get; set; } = string.Empty; 
+    public string? Name { get; set; } = string.Empty; 
 
     [Required]
     [MaxLength(20)]
-    public string Code { get; set; } = string.Empty;
+    public string? Code { get; set; } = string.Empty;
 
-    public string? Description { get; set; }
+    public string? Description { get; set; } = string.Empty;
 
     public int? ParentId { get; set; }
 
     public int Level { get; set; } = 0;
 
     [MaxLength(500)]
-    public string Path { get; set; } = string.Empty;
+    public string? Path { get; set; } = string.Empty;
 
     [Required]
     public bool IsActive { get; set; }

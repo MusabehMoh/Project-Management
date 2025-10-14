@@ -14,5 +14,8 @@ window.PMA_CONFIG = {
   wsUrl: "ws://localhost:3002",
   
   // Enable/disable SignalR real-time updates
-  enableSignalR: false
+  enableSignalR: false,
+
+  // Application basename for routing (change this if deploying to a subdirectory)
+  basename: ""
 };

@@ -203,7 +203,8 @@ builder.Services.AddScoped<PMA.Core.Interfaces.IUserContextAccessor, PMA.Api.Ser
 
 // Register legacy current-user service for backward compatibility (optional - if still needed by API layer)
 builder.Services.AddScoped<PMA.Api.Services.ICurrentUserService, PMA.Api.Services.CurrentUserService>();
-
+// Add SignalR
+builder.Services.AddSignalR();
 // Allow anonymous access to Swagger UI in development
 builder.Services.AddAuthorization(options =>
 {

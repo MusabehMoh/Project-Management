@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace PMA.Api.Controllers;
 
@@ -10,10 +11,14 @@ namespace PMA.Api.Controllers;
 public class NotificationsController : ApiBaseController
 {
     private readonly INotificationService _notificationService;
+    private readonly IHubContext<PMA.Api.Hubs.NotificationHub> _hubContext;
 
-    public NotificationsController(INotificationService notificationService)
+    public NotificationsController(
+        INotificationService notificationService,
+        IHubContext<PMA.Api.Hubs.NotificationHub> hubContext)
     {
         _notificationService = notificationService;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -344,6 +349,49 @@ public class NotificationsController : ApiBaseController
             {
                 Success = false,
                 Message = "An error occurred while retrieving urgent notifications",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Send a test push notification via SignalR
+    /// </summary>
+    [HttpPost("test-push")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> SendTestPushNotification()
+    {
+        try
+        {
+            var testNotification = new
+            {
+                type = "TEST_NOTIFICATION",
+                message = "This is a test push notification sent on page load!",
+                timestamp = DateTime.UtcNow,
+                projectId = (int?)null,
+                targetUsernames = (string[]?)null,
+                targetUserIds = (int[]?)null
+            };
+
+            // Send to all connected clients
+            await _hubContext.Clients.All.SendAsync("Notification", testNotification);
+
+            var response = new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Test push notification sent successfully",
+                Data = new { sentAt = DateTime.UtcNow }
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<object>
+            {
+                Success = false,
+                Message = "An error occurred while sending test notification",
                 Error = ex.Message
             };
             return StatusCode(500, errorResponse);

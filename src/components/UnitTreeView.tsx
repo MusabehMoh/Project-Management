@@ -374,7 +374,7 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
           {/* Search Results */}
           {useSearchMode && !searchLoading && (
             <div className="space-y-1">
-              {searchResults.length === 0 ? (
+              {!Array.isArray(searchResults) || searchResults.length === 0 ? (
                 <div className="text-center text-default-500 p-4">
                   {t("units.noSearchResults")}
                 </div>
