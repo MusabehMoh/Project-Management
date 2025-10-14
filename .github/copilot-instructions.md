@@ -596,14 +596,15 @@ export { useEntityDetails } from "./useEntityDetails";
     - Toast notifications for user feedback
   - **API Integration**: Uses `useDesignRequests` hook with `designRequestsService`
 - **TeamMemberDashboard**: Task management for QC, Developers, Designers (Role IDs: 5, 7, 9)
-  - **Layout**: Vertical stack - ModernQuickStats → TeamKanbanBoard (full-width) → Grid layout (70/30 split)
-  - **Left Column (70%)**: TeamQuickActions stacked with Calendar
-  - **Right Column (30%)**: MyAssignedTasks stacked with MyNextDeadline
-  - **Simplified Design**: No additional stats cards, calendar without sidebar
-  - **Focus**: Task management, Kanban board, quick status updates, and deadline tracking
+  - **Layout**: Vertical stack - ModernQuickStats → TeamKanbanBoard (full-width) → 50/50 Grid layout (TeamQuickActions + Calendar)
+  - **Updated Layout (October 2025)**: 
+    - Removed MyAssignedTasks and MyNextDeadline components
+    - TeamQuickActions and Calendar now split 50/50 horizontally (`grid-cols-2`)
+    - Calendar displays without sidebar (`showSidebar={false}`)
+  - **Simplified Design**: Focus on Kanban board and quick actions
   - **Refresh Strategy**: 
     - Kanban board: No refresh on drag-and-drop (optimistic updates only)
-    - Other components (TeamQuickActions, MyAssignedTasks, MyNextDeadline): Refresh only when updates come from TeamQuickActions
+    - TeamQuickActions: Refresh only when updates come from TeamQuickActions
     - Separate handlers: `handleKanbanUpdate()` (no refresh) vs `handleQuickActionsUpdate()` (triggers refresh)
 - Each dashboard has specialized components in respective subdirectories
 
@@ -812,6 +813,21 @@ export { useEntityDetails } from "./useEntityDetails";
   - **Features**: Compact card layout with divide-y separators, hover effects, ListTodo icon
   - **Layout**: Card with header (icon + title + count chip), divider, compact item list
   - **Item Structure**: Title + priority chip, status text, project + date metadata, View button
+- **TaskCard (Members-Tasks Page)**: Individual task card for grid/list views
+  - **Adhoc Task Quick Completion** (October 2025): Same as TeamKanbanBoard
+    - **Hover Effect**: Smooth animation on hover (500ms ease-in-out)
+      - Enhanced shadow (`shadow-2xl`)
+      - Green border (`border-2 border-success`)
+      - Subtle green glow ring (`ring-2 ring-success/20`)
+    - **Completion Switch**: Green Switch appears next to status chip on hover
+      - Positioned in card header next to "To Do" / status chip
+      - Shows checkmark icon when toggled
+      - Click handler prevents card click propagation
+      - Calls `tasksService.updateTaskStatus(taskId, 5, comment, 100)`
+      - Shows success/error toast notifications
+      - Triggers page refresh via `onTaskComplete` callback
+    - **Layout**: Title (left-aligned) + Status chip & Switch (right column)
+    - **Only for adhoc tasks** (typeId === 3) that are not already completed
 - **TeamQuickActions**: Quick status updates for assigned tasks (Team Members)
   - **Design Pattern**: Uses Accordion layout with CustomAlert components (matches QuickActions design)
   - **Features**: AnimatedCounter for task count, ScrollShadow for scrollable content
@@ -827,23 +843,53 @@ export { useEntityDetails } from "./useEntityDetails";
   - **Layout**: Small component under MyAssignedTasks to complement calendar height
 - **TeamKanbanBoard**: Drag-and-drop Kanban board for task management (Team Members)
   - **Design Pattern**: Full-width card with 5-column grid layout (responsive: 1/3/5 columns)
-  - **Features**: Native HTML5 drag-and-drop, real-time status updates via API, role-based permissions, audit trail
+  - **Features**: Native HTML5 drag-and-drop, real-time status updates via API, role-based permissions, audit trail, adhoc task quick completion
   - **Columns**: Uses dynamic status lookup (statuses 1-5): To Do, In Progress, In Review, Rework, Completed
-  - **Status Names**: Fetched from lookup service (not hardcoded)
-    - Status 1: "To Do" / "جديد"
-    - Status 2: "In Progress" / "جاري"  
-    - Status 3: "In Review" / "تحت الإختبار"
-    - Status 4: "Rework" / "إعادة"
-    - Status 5: "Completed" / "مكتملة"
-  - **Task Cards**: Title, priority chip, project/requirement info, end date, progress %, overdue badge
-  - **Color Coding**: Column headers (default/primary/warning/danger/success), priority chips
+    - **Column Shading**: Each column has a subtle background color (`bg-{color}/5`) for visual distinction
+    - **Status Names**: Fetched from lookup service (not hardcoded)
+      - Status 1: "To Do" / "جديد" - Gray background
+      - Status 2: "In Progress" / "جاري" - Blue background
+      - Status 3: "In Review" / "تحت الإختبار" - Yellow background
+      - Status 4: "Rework" / "إعادة" - Red background
+      - Status 5: "Completed" / "مكتملة" - Green background
+  - **Task Cards**: 
+    - Title, task type chip (Timeline/Change Request/Adhoc), priority chip, project/requirement info, end date, progress %, overdue badge
+    - **Task Type Display**: Shows task type with colored bordered chip (`getTaskTypeColor()` and `getTaskTypeText()`)
+    - **Dark Mode**: Cards use `bg-content2` for better visibility in dark mode
+    - **Progress Color Coding**: 
+      - 100%: Green, bold
+      - 70-99%: Green
+      - 40-69%: Yellow
+      - 1-39%: Red
+      - 0%: Gray
+    - **RTL Support**: Project/requirement text aligns right for Arabic (`text-right`)
+  - **Adhoc Task Quick Completion** (October 2025):
+    - **Hover Effect**: Adhoc tasks show smooth animation on hover (500ms ease-in-out transition)
+      - Enhanced shadow (`shadow-2xl`)
+      - Green border (`border-2 border-success`)
+      - Subtle green glow ring (`ring-2 ring-success/20`)
+      - Border space always reserved (`border-2 border-transparent` for non-adhoc) to prevent layout shift
+    - **Completion Switch**: Green HeroUI Switch component appears on hover for adhoc tasks
+      - Positioned next to task title
+      - Shows checkmark icon when toggled
+      - RTL Support: Uses `order-first` class in Arabic to position switch correctly
+      - Click handler prevents card click propagation
+      - Disabled state while completing
+    - **One-Click Completion**: 
+      - Calls `tasksService.updateTaskStatus(taskId, 5, comment, 100)` to mark as completed
+      - Sets status to Completed (5) and progress to 100%
+      - Shows success/error toast notifications
+      - Only appears for adhoc tasks (typeId === 3) that are not already completed
+      - Toast translations: `teamDashboard.kanban.markComplete`, `taskCompleted`, `taskCompleteFailed`
+  - **Color Coding**: Column headers (default/primary/warning/danger/success), priority chips, task type chips
   - **Scrolling**: 500px height ScrollShadow for each column
   - **API Integration**: 
     - Data Fetching: Uses `useTaskStatusLookups()` hook and `membersTasksService.getTasks()`
     - Status Updates: Uses `tasksService.updateTaskStatus()` via TasksController PATCH endpoint
   - **Drag Behavior**: 
-    - Calls `PATCH /api/Tasks/{id}` endpoint with `{ statusId: number, comment: string }`
+    - Calls `PATCH /api/Tasks/{id}` endpoint with `{ statusId: number, comment: string, progress: number }`
     - Automatically creates TaskStatusHistory record with old/new status, user, and comment
+    - Progress auto-updated based on target status (To Do: 0%, In Progress: 25%, In Review: 75%, Rework: 50%, Completed: 100%)
     - Optimistic UI updates for seamless UX
     - No component remounting or refresh on drag-and-drop
   - **Audit Trail**: Every status change tracked in database with user attribution and timestamp
