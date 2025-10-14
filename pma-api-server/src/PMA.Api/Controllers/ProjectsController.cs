@@ -1,10 +1,11 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using PMA.Core.DTOs;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
-using PMA.Core.DTOs;
 using PMA.Core.Services;
-using AutoMapper;
 
 namespace PMA.Api.Controllers;
 
@@ -16,13 +17,14 @@ public class ProjectsController : ApiBaseController
     private readonly ILogger<ProjectsController> _logger;
     private readonly IMapper _mapper;
     private readonly IMappingService _mappingService;
-
-    public ProjectsController(IProjectService projectService, ILogger<ProjectsController> logger, IMapper mapper, IMappingService mappingService)
+    private readonly IHubContext<PMA.Api.Hubs.NotificationHub> _hubContext;
+    public ProjectsController(IProjectService projectService, ILogger<ProjectsController> logger, IMapper mapper, IMappingService mappingService, IHubContext<PMA.Api.Hubs.NotificationHub> hubContext)
     {
         _projectService = projectService;
         _logger = logger;
         _mapper = mapper;
         _mappingService = mappingService;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -44,6 +46,18 @@ public class ProjectsController : ApiBaseController
             var projectDtos = projects.Select(p => _mappingService.MapToProjectDto(p));
 
             var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
+            var testNotification = new
+            {
+                type = "TEST_NOTIFICATION",
+                message = "This is a test push notification sent on page load!",
+                timestamp = DateTime.UtcNow,
+                projectId = (int?)null,
+                targetUsernames = (string[]?)null,
+                targetUserIds = (int[]?)null
+            };
+
+            // Send to all connected clients
+            await _hubContext.Clients.All.SendAsync("Notification", testNotification);
             return Success(projectDtos, pagination, "Projects retrieved successfully");
         }
         catch (Exception ex)

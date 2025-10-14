@@ -3,6 +3,7 @@ using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PMA.Api.Controllers;
 
@@ -359,6 +360,7 @@ public class NotificationsController : ApiBaseController
     /// Send a test push notification via SignalR
     /// </summary>
     [HttpPost("test-push")]
+    [AllowAnonymous]
     [ProducesResponseType(200)]
     public async Task<IActionResult> SendTestPushNotification()
     {

@@ -242,6 +242,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Map SignalR hubs
+app.MapHub<PMA.Api.Hubs.NotificationHub>("/notificationHub");
+
 // Health check endpoint
 app.MapGet("/health", () => new
 {
