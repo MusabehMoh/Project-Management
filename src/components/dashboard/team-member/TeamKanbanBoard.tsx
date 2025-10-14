@@ -512,7 +512,7 @@ export default function TeamKanbanBoard({
                         return (
                           <Card
                             key={task.id}
-                            className={`${canDrag ? "cursor-move" : "cursor-default"} transition-all duration-500 ease-in-out ${
+                            className={`${canDrag ? "cursor-move" : "cursor-default"} transition-all duration-500 ease-in-out bg-content1 dark:bg-content2 ${
                               isAdhoc && isHovered 
                                 ? "shadow-2xl border-2 border-success ring-2 ring-success/20" 
                                 : "hover:shadow-lg border-2 border-transparent"
