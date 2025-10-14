@@ -467,9 +467,7 @@ export default function TeamKanbanBoard({
             return (
               <div
                 key={column.id}
-                className={`flex flex-col gap-3 p-3 rounded-lg ${getColumnBgClass(column.color)} ${!columnAccess.isDroppable && draggedFromColumn !== null ? "opacity-50" : ""}`}
-                onDragOver={(e) => handleDragOver(e, column.id)}
-                onDrop={(e) => handleDrop(e, column.id)}
+                className={`flex flex-col gap-3 ${!columnAccess.isDroppable && draggedFromColumn !== null ? "opacity-50" : ""}`}
               >
                 {/* Column Header */}
                 <Card
@@ -511,8 +509,13 @@ export default function TeamKanbanBoard({
                 <Divider className={`bg-${column.color}/20`} />
 
                 {/* Column Tasks */}
-                <ScrollShadow hideScrollBar className="h-[500px]">
-                  <div className="space-y-3 pr-2">
+                <div 
+                  className={`p-3 rounded-lg ${getColumnBgClass(column.color)}`}
+                  onDragOver={(e) => handleDragOver(e, column.id)}
+                  onDrop={(e) => handleDrop(e, column.id)}
+                >
+                  <ScrollShadow hideScrollBar className="h-[500px]">
+                    <div className="space-y-3 pr-2">
                     {column.tasks.length === 0 ? (
                       <div className="text-center text-sm text-default-400 py-8">
                         {t("teamDashboard.kanban.noTasks")}
@@ -657,6 +660,7 @@ export default function TeamKanbanBoard({
                     )}
                   </div>
                 </ScrollShadow>
+                </div>
               </div>
             );
           })}
