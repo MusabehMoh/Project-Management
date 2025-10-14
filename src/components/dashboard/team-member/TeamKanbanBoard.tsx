@@ -448,10 +448,26 @@ export default function TeamKanbanBoard({
               draggedFromColumn !== null &&
               kanbanConfig.canDropTo(column.id, draggedFromColumn);
 
+            // Get background color class for column
+            const getColumnBgClass = (color: string) => {
+              switch (color) {
+                case "primary":
+                  return "bg-primary/5";
+                case "warning":
+                  return "bg-warning/5";
+                case "danger":
+                  return "bg-danger/5";
+                case "success":
+                  return "bg-success/5";
+                default:
+                  return "bg-default/5";
+              }
+            };
+
             return (
               <div
                 key={column.id}
-                className={`flex flex-col gap-3 ${!columnAccess.isDroppable && draggedFromColumn !== null ? "opacity-50" : ""}`}
+                className={`flex flex-col gap-3 p-3 rounded-lg ${getColumnBgClass(column.color)} ${!columnAccess.isDroppable && draggedFromColumn !== null ? "opacity-50" : ""}`}
                 onDragOver={(e) => handleDragOver(e, column.id)}
                 onDrop={(e) => handleDrop(e, column.id)}
               >
