@@ -533,7 +533,7 @@ export default function TeamKanbanBoard({
                                 </h4>
                                 {isAdhoc && canComplete && isHovered && (
                                   <Tooltip content={t("teamDashboard.kanban.markComplete")}>
-                                    <div className="flex-shrink-0">
+                                    <div className={`flex-shrink-0 ${language === "ar" ? "order-first" : ""}`}>
                                       <Switch
                                         color="success"
                                         size="sm"
