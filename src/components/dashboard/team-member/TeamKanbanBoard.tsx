@@ -29,6 +29,7 @@ import {
   getColumnAccessibility,
   ColumnRestrictionReason,
 } from "@/utils/kanbanRoleConfig";
+import { getTaskTypeText, getTaskTypeColor } from "@/constants/taskTypes";
 
 interface KanbanColumn {
   id: number;
@@ -455,17 +456,26 @@ export default function TeamKanbanBoard({
                                 {task.name}
                               </h4>
 
-                              {/* Priority */}
-                              <div className="flex items-center gap-2">
-                                <Flag className="w-3 h-3" />
+                              {/* Priority & Task Type */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-1">
+                                  <Flag className="w-3 h-3" />
+                                  <Chip
+                                    color={
+                                      getPriorityColor(task.priorityId) as any
+                                    }
+                                    size="sm"
+                                    variant="flat"
+                                  >
+                                    {getPriorityLabel(task.priorityId)}
+                                  </Chip>
+                                </div>
                                 <Chip
-                                  color={
-                                    getPriorityColor(task.priorityId) as any
-                                  }
+                                  color={getTaskTypeColor(task.typeId) as any}
                                   size="sm"
-                                  variant="flat"
+                                  variant="bordered"
                                 >
-                                  {getPriorityLabel(task.priorityId)}
+                                  {t(getTaskTypeText(task.typeId))}
                                 </Chip>
                               </div>
 
