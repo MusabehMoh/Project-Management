@@ -480,7 +480,7 @@ export default function TeamKanbanBoard({
                               </div>
 
                               {/* Project & Requirement */}
-                              <div className="space-y-1 text-xs text-default-500">
+                              <div className={`space-y-1 text-xs text-default-500 ${language === "ar" ? "text-right" : "text-left"}`}>
                                 {task.project && (
                                   <div className="line-clamp-1">
                                     <strong>
