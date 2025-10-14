@@ -1,11 +1,13 @@
 /* eslint-disable no-console */
 import { useState, useEffect, useCallback, useRef } from "react";
+import * as signalR from "@microsoft/signalr";
 
 import {
   notificationService,
   Notification as ApiNotification,
 } from "@/services/notificationService";
 import { API_CONFIG } from "@/services/api/client";
+import { showInfoToast } from "@/utils/toast";
 
 export interface Notification {
   id: string;
@@ -32,7 +34,7 @@ export function useNotifications(): UseNotifications {
   const [unreadCountState, setUnreadCountState] = useState<number>(0);
   const [isConnected, setIsConnected] = useState(false);
   const [, setLoading] = useState(true);
-  const wsRef = useRef<WebSocket | null>(null);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   // Load initial notifications from API
   const loadNotifications = useCallback(async () => {
@@ -160,7 +162,7 @@ export function useNotifications(): UseNotifications {
     sendTestNotification();
 
     if (!API_CONFIG.ENABLE_SIGNALR) {
-      console.log("WebSocket disabled via VITE_ENABLE_SIGNALR flag");
+      console.log("SignalR disabled via VITE_ENABLE_SIGNALR flag");
       setIsConnected(false);
 
       return;
@@ -171,23 +173,17 @@ export function useNotifications(): UseNotifications {
     const username = user?.username || "anonymous";
     const userId = user?.id ?? null;
 
-    // Create WebSocket connection
-    const ws = new WebSocket(
-      `${API_CONFIG.WS_URL}?username=${encodeURIComponent(username)}&userId=${
-        userId || ""
-      }`,
-    );
+    // Create SignalR connection
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${API_CONFIG.WS_URL}?username=${encodeURIComponent(username)}&userId=${userId || ""}`)
+      .withAutomaticReconnect()
+      .build();
 
-    wsRef.current = ws;
+    connectionRef.current = connection;
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-      setIsConnected(true);
-    };
-
-    ws.onmessage = (event) => {
+    // Handle connection events
+    connection.on("Notification", (notificationData) => {
       try {
-        const notificationData = JSON.parse(event.data);
         const newNotification: Notification = {
           id: `${Date.now()}-${Math.random()}`,
           type: notificationData.type || "UNKNOWN",
@@ -197,6 +193,12 @@ export function useNotifications(): UseNotifications {
           projectId: notificationData.projectId,
           targetUsernames: notificationData.targetUsernames,
         };
+
+        // Show toast notification for received message
+        showInfoToast(
+          notificationData.type || "Notification",
+          notificationData.message || "You have a new notification"
+        );
 
         setNotifications((prev) => {
           const updated = [newNotification, ...prev.slice(0, 49)];
@@ -208,23 +210,41 @@ export function useNotifications(): UseNotifications {
 
         console.log("Notification received:", newNotification.type);
       } catch (err) {
-        console.error("Error processing WebSocket notification", err);
+        console.error("Error processing SignalR notification", err);
       }
-    };
+    });
 
-    ws.onclose = (event) => {
-      console.log("WebSocket closed", event.code, event.reason);
-      setIsConnected(false);
-    };
+    // Start the connection
+    connection
+      .start()
+      .then(() => {
+        console.log("SignalR connected");
+        setIsConnected(true);
+      })
+      .catch((err) => {
+        console.error("SignalR connection failed:", err);
+        setIsConnected(false);
+      });
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error", error);
+    // Handle reconnection
+    connection.onreconnected(() => {
+      console.log("SignalR reconnected");
+      setIsConnected(true);
+    });
+
+    connection.onreconnecting(() => {
+      console.log("SignalR reconnecting...");
       setIsConnected(false);
-    };
+    });
+
+    connection.onclose(() => {
+      console.log("SignalR connection closed");
+      setIsConnected(false);
+    });
 
     return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
+      if (connection.state === signalR.HubConnectionState.Connected) {
+        connection.stop();
       }
     };
   }, [loadNotifications, sendTestNotification]);

@@ -11,10 +11,10 @@ window.PMA_CONFIG = {
   apiUrl: "http://localhost:52246/api",
   
   // WebSocket URL for real-time features
-  wsUrl: "ws://localhost:3002",
+  wsUrl: "http://localhost:52246/notificationHub",
   
   // Enable/disable SignalR real-time updates
-  enableSignalR: false,
+  enableSignalR: true,
 
   // Application basename for routing (change this if deploying to a subdirectory)
   basename: ""
