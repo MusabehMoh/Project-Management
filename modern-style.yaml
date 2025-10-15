@@ -1,0 +1,37 @@
+---
+# Modern simplified styling for Pandoc PDF
+geometry: margin=0.75in
+fontsize: 9pt
+colorlinks: true
+linkcolor: RoyalBlue
+urlcolor: RoyalBlue
+toccolor: black
+mainfont: Arial
+monofont: Courier New
+header-includes: |
+  \usepackage{fancyhdr}
+  \usepackage{xcolor}
+  \usepackage{longtable}
+  \usepackage{booktabs}
+  \usepackage{array}
+  \usepackage{calc}
+  \usepackage{ragged2e}
+  \usepackage{tabularx}
+  \usepackage{fancyvrb}
+  \usepackage{listings}
+  \pagestyle{fancy}
+  \fancyhead[L]{\small\textbf{Project Management Application}}
+  \fancyhead[R]{\small\thepage}
+  \fancyfoot[C]{}
+  \renewcommand{\headrulewidth}{0.5pt}
+  \definecolor{sectioncolor}{RGB}{41, 128, 185}
+  \setlength{\parskip}{6pt}
+  \setlength{\parindent}{0pt}
+  \setlength{\LTpre}{0pt}
+  \setlength{\LTpost}{0pt}
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.2}
+  \setlength{\LTcapwidth}{\textwidth}
+  \RecustomVerbatimEnvironment{Verbatim}{Verbatim}{fontsize=\scriptsize}
+  \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\scriptsize,commandchars=\\\{\}}
+---

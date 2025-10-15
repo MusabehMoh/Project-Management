@@ -49,15 +49,15 @@ The Project Management Application (PMA) is a comprehensive, enterprise-grade pr
 
 | Role | ID | Description |
 |------|-----|------------|
-| Administrator | 1 | Full system access, configuration management |
-| Analyst Department Manager | 2 | Requirements oversight, team workload |
-| Analyst | 3 | Requirements analysis and documentation |
-| Development Manager | 4 | Development team coordination, code reviews |
-| Software Developer | 5 | Feature development, task completion |
-| Quality Control Manager | 6 | QC team oversight, testing coordination |
-| Quality Control Team Member | 7 | Testing and quality assurance |
-| Designer Manager | 8 | Design team management, request assignment |
-| Designer Team Member | 9 | UI/UX design task execution |
+| Administrator | 1 | System access, config |
+| Analyst Dept Manager | 2 | Requirements oversight |
+| Analyst | 3 | Requirements analysis |
+| Development Manager | 4 | Dev coordination |
+| Software Developer | 5 | Feature development |
+| QC Manager | 6 | QC oversight, testing |
+| QC Team Member | 7 | Testing, QA |
+| Designer Manager | 8 | Design team mgmt |
+| Designer Team Member | 9 | UI/UX design |
 
 ---
 
@@ -487,24 +487,24 @@ export default function IndexPage() {
 
 ### Custom Hooks Inventory (40+ hooks)
 
-| Hook Name | Purpose | Location |
-|-----------|---------|----------|
-| `useCurrentUser` | Get current authenticated user | `hooks/useCurrentUser.ts` |
-| `usePermissions` | Role-based permission checking | `hooks/usePermissions.ts` |
-| `useMyAssignedTasks` | Fetch user's assigned tasks | `hooks/useMyAssignedTasks.ts` |
-| `useTeamQuickActions` | Quick task status updates | `hooks/useTeamQuickActions.ts` |
-| `useTaskLookups` | Fetch task status/priority lookups | `hooks/useTaskLookups.ts` |
-| `useProjectDetails` | Fetch project details by ID | `hooks/useProjectDetails.ts` |
-| `useDesignerWorkload` | Designer workload metrics | `hooks/useDesignerWorkload.ts` |
-| `useDesignRequests` | Design request management | `hooks/useDesignRequests.ts` |
-| `useDeveloperQuickActions` | Developer quick actions data | `hooks/useDeveloperQuickActions.ts` |
-| `useQuickActions` | Analyst quick actions data | `hooks/useQuickActions.ts` |
-| `useTimeline` | Timeline/Gantt data | `hooks/useTimeline.ts` |
-| `useCalendar` | Calendar events | `hooks/useCalendar.ts` |
-| `useGlobalSearch` | Global search functionality | `hooks/useGlobalSearch.ts` |
-| `useNotifications` | Real-time notifications | `hooks/useNotifications.ts` |
-| `usePageTitle` | Dynamic page titles | `hooks/usePageTitle/` |
-| ... and 25+ more | Various data fetching and UI logic | `hooks/` |
+| Hook | What | File |
+|------|------|------|
+| `useCurrentUser` | Auth | `useCurrentUser.ts` |
+| `usePermissions` | Roles | `usePermissions.ts` |
+| `useMyAssignedTasks` | Tasks | `useMyAssignedTasks.ts` |
+| `useTeamQuickActions` | Quick | `useTeamQuickActions.ts` |
+| `useTaskLookups` | Lookups | `useTaskLookups.ts` |
+| `useProjectDetails` | Project | `useProjectDetails.ts` |
+| `useDesignerWorkload` | Designer | `useDesignerWorkload.ts` |
+| `useDesignRequests` | Design | `useDesignRequests.ts` |
+| `useDeveloperQuickActions` | DevActions | `useDeveloperQuickActions.ts` |
+| `useQuickActions` | Analyst | `useQuickActions.ts` |
+| `useTimeline` | Gantt | `useTimeline.ts` |
+| `useCalendar` | Events | `useCalendar.ts` |
+| `useGlobalSearch` | Search | `useGlobalSearch.ts` |
+| `useNotifications` | Notify | `useNotifications.ts` |
+| `usePageTitle` | Title | `usePageTitle/` |
+| ... +25 more | Various | `hooks/` |
 
 ### API Client Configuration
 
@@ -557,24 +557,24 @@ export const apiClient = new ApiClient();
 
 ### API Service Layer (20+ services)
 
-| Service | Endpoints | Purpose |
-|---------|-----------|---------|
-| `tasksService` | `/Tasks` | Task CRUD, status updates with audit trail |
-| `membersTasksService` | `/MembersTasks` | Current user's tasks, next deadline |
-| `projectRequirementsService` | `/ProjectRequirements` | Requirements CRUD, approval workflows |
-| `quickActionsService` | `/QuickActions` | Unassigned projects, analyst assignment |
-| `developerQuickActionsService` | `/DeveloperQuickActions` | Unassigned tasks, developer assignment |
-| `designRequestsService` | `/DesignRequests` | Design request management, assignment |
-| `designerWorkloadService` | `/Designers` | Workload metrics, team performance |
-| `timelineService` | `/Timeline` | Gantt chart data, task dependencies |
-| `calendarService` | `/Calendar` | Events, meetings, deadlines |
-| `userService` | `/Users` | User profile, roles, permissions |
-| `projectsService` | `/Projects` | Project CRUD operations |
-| `departmentService` | `/Departments` | Department hierarchy |
-| `lookupService` | `/Lookup` | Task statuses, priorities, types |
-| `pipelineService` | `/Pipeline` | Project pipeline stages |
-| `teamWorkloadService` | `/TeamWorkload` | Team performance metrics |
-| ... and 5+ more | Various endpoints | Specialized functionality |
+| Service | API | Purpose |
+|---------|-----|---------|
+| `tasksService` | `/Tasks` | CRUD,updates |
+| `membersTasksService` | `/MembersTasks` | User tasks |
+| `projectRequirementsService` | `/ProjectRequirements` | Req CRUD |
+| `quickActionsService` | `/QuickActions` | Analyst assign |
+| `developerQuickActionsService` | `/DeveloperQuickActions` | Dev assign |
+| `designRequestsService` | `/DesignRequests` | Design |
+| `designerWorkloadService` | `/Designers` | Workload |
+| `timelineService` | `/Timeline` | Gantt |
+| `calendarService` | `/Calendar` | Events |
+| `userService` | `/Users` | Profile |
+| `projectsService` | `/Projects` | Projects |
+| `departmentService` | `/Departments` | Depts |
+| `lookupService` | `/Lookup` | Lookups |
+| `pipelineService` | `/Pipeline` | Pipeline |
+| `teamWorkloadService` | `/TeamWorkload` | Metrics |
+| ... +5 more | Various | Other |
 
 ---
 
@@ -634,37 +634,38 @@ graph TB
 **Key Components:**
 
 **Controllers (29 controllers):**
-| Controller | Endpoints | Purpose |
-|------------|-----------|---------|
-| `TasksController` | `/api/Tasks` | Task CRUD, status updates with audit trail |
-| `MembersTasksController` | `/api/MembersTasks` | User-specific task queries, next deadline |
-| `ProjectsController` | `/api/Projects` | Project management CRUD operations |
-| `ProjectRequirementsController` | `/api/ProjectRequirements` | Requirements management, approval workflows |
-| `RequirementsController` | `/api/Requirements` | Generic requirements operations |
-| `DesignRequestsController` | `/api/DesignRequests` | Design request management, assignment |
-| `DesignersController` | `/api/Designers` | Designer workload metrics, team performance |
-| `DashboardStatsController` | `/api/DashboardStats` | Dashboard statistics and metrics |
-| `QuickActionsController` | `/api/QuickActions` | Analyst quick actions data |
-| `DeveloperQuickActionsController` | `/api/DeveloperQuickActions` | Developer quick actions data |
-| `TeamWorkloadController` | `/api/TeamWorkload` | Team workload performance metrics |
-| `PipelineController` | `/api/Pipeline` | Project pipeline stages |
-| `TimelineController` | `/api/Timeline` | Gantt chart data, task dependencies |
-| `CalendarController` | `/api/Calendar` | Events, meetings, deadlines |
-| `UsersController` | `/api/Users` | User management, current user profile |
-| `RolesController` | `/api/Roles` | Role and permission management |
-| `DepartmentsController` | `/api/Departments` | Department hierarchy |
-| `UnitsController` | `/api/Units` | Organizational unit management |
-| `LookupsController` | `/api/Lookups` | Lookup data (statuses, priorities, types) |
-| `NotificationsController` | `/api/Notifications` | Notification management |
-| `SprintsController` | `/api/Sprints` | Sprint/iteration management |
-| `SubtasksController` | `/api/Subtasks` | Subtask operations |
-| `EmployeesController` | `/api/Employees` | Employee search and management |
-| `DeveloperTeamController` | `/api/DeveloperTeam` | Developer team operations |
-| `DeveloperWorkloadController` | `/api/DeveloperWorkload` | Developer workload metrics |
-| `RequirementCompletionController` | `/api/RequirementCompletion` | Completion tracking analytics |
-| `RequirementOverviewController` | `/api/RequirementOverview` | Requirements overview data |
-| `ActionsController` | `/api/Actions` | Generic action operations |
-| `ApiBaseController` | - | Base controller with common functionality |
+
+| Controller | Endpoint | Purpose |
+|------------|----------|---------|
+| Tasks | `/api/Tasks` | CRUD, status updates with audit |
+| MembersTasks | `/api/MembersTasks` | User task queries, deadlines |
+| Projects | `/api/Projects` | Project CRUD operations |
+| ProjectRequirements | `/api/ProjectRequirements` | Requirements mgmt, approvals |
+| Requirements | `/api/Requirements` | Generic requirements ops |
+| DesignRequests | `/api/DesignRequests` | Design request mgmt |
+| Designers | `/api/Designers` | Workload metrics, performance |
+| DashboardStats | `/api/DashboardStats` | Dashboard stats |
+| QuickActions | `/api/QuickActions` | Analyst quick actions |
+| DeveloperQuickActions | `/api/DeveloperQuickActions` | Developer quick actions |
+| TeamWorkload | `/api/TeamWorkload` | Team performance metrics |
+| Pipeline | `/api/Pipeline` | Pipeline stages |
+| Timeline | `/api/Timeline` | Gantt chart, dependencies |
+| Calendar | `/api/Calendar` | Events, meetings |
+| Users | `/api/Users` | User mgmt, profile |
+| Roles | `/api/Roles` | Role & permission mgmt |
+| Departments | `/api/Departments` | Department hierarchy |
+| Units | `/api/Units` | Unit management |
+| Lookups | `/api/Lookups` | Statuses, priorities |
+| Notifications | `/api/Notifications` | Notification mgmt |
+| Sprints | `/api/Sprints` | Sprint/iteration mgmt |
+| Subtasks | `/api/Subtasks` | Subtask operations |
+| Employees | `/api/Employees` | Employee search |
+| DeveloperTeam | `/api/DeveloperTeam` | Dev team operations |
+| DeveloperWorkload | `/api/DeveloperWorkload` | Dev workload metrics |
+| RequirementCompletion | `/api/RequirementCompletion` | Completion analytics |
+| RequirementOverview | `/api/RequirementOverview` | Requirements overview |
+| Actions | `/api/Actions` | Generic actions |
+| ApiBase | - | Base controller |
 
 **Middleware:**
 - `UserContextMiddleware` - Extracts user information from JWT/headers
@@ -1151,17 +1152,17 @@ CREATE TABLE Units (
 
 The application implements a comprehensive 9-role system with hierarchical permissions:
 
-| Role ID | Role Name | Code | Description | Dashboard Type |
-|---------|-----------|------|-------------|----------------|
-| 1 | Administrator | ADMINISTRATOR | Full system access, configuration | All dashboards |
-| 2 | Analyst Department Manager | ANALYST_DEPARTMENT_MANAGER | Requirements oversight, team management | Analyst Manager Dashboard |
-| 3 | Analyst | ANALYST | Requirements analysis and documentation | Team Member Dashboard |
-| 4 | Development Manager | DEVELOPMENT_MANAGER | Development coordination, code reviews | Developer Manager Dashboard |
-| 5 | Software Developer | SOFTWARE_DEVELOPER | Feature development, task completion | Team Member Dashboard |
-| 6 | Quality Control Manager | QUALITY_CONTROL_MANAGER | QC team oversight, testing coordination | Manager Dashboard |
-| 7 | Quality Control Team Member | QUALITY_CONTROL_TEAM_MEMBER | Testing and quality assurance | Team Member Dashboard |
-| 8 | Designer Manager | DESIGNER_MANAGER | Design team management, request assignment | Designer Manager Dashboard |
-| 9 | Designer Team Member | DESIGNER_TEAM_MEMBER | UI/UX design task execution | Team Member Dashboard |
+| ID | Role | Code | Desc | Dashboard |
+|----|------|------|------|-----------|
+| 1 | Admin | ADMIN | System,config | All |
+| 2 | AnalystMgr | ANALYST_MGR | Req oversight | AnalystMgr |
+| 3 | Analyst | ANALYST | Req analysis | TeamMember |
+| 4 | DevMgr | DEV_MGR | Dev coord | DevMgr |
+| 5 | Developer | DEVELOPER | Features | TeamMember |
+| 6 | QCMgr | QC_MGR | QC,testing | Manager |
+| 7 | QCMember | QC_MEMBER | Testing,QA | TeamMember |
+| 8 | DesignMgr | DESIGN_MGR | Design mgmt | DesignMgr |
+| 9 | Designer | DESIGNER | UI/UX tasks | TeamMember |
 
 **Role Constants (Frontend):**
 ```typescript
@@ -2051,24 +2052,24 @@ View and manage approved requirements ready for development.
 
 #### Core Components Used
 
-| Component | Package | Usage Examples |
-|-----------|---------|----------------|
-| Button | @heroui/button | Actions, form submissions, navigation |
-| Card | @heroui/card | Content containers, dashboard widgets |
-| Modal | @heroui/modal | Forms, confirmations, detailed views |
-| Table | @heroui/table | Data tables, lists |
-| Input | @heroui/input | Text fields, search boxes |
-| Select | @heroui/select | Dropdowns, filters |
-| Autocomplete | @heroui/autocomplete | Search with suggestions (designer/developer search) |
-| Chip | @heroui/chip | Status indicators, tags, badges |
-| Badge | @heroui/badge | Notification counts, status markers |
-| Progress | @heroui/progress | Loading states, task completion |
-| Avatar | @heroui/avatar | User representation |
-| Tooltip | @heroui/tooltip | Contextual help, icon button labels |
-| Switch | @heroui/switch | Toggle controls (adhoc task completion) |
-| Accordion | @heroui/accordion | Collapsible sections (QuickActions) |
-| ScrollShadow | @heroui/scroll-shadow | Scrollable content with visual feedback |
-| Skeleton | @heroui/skeleton | Loading placeholders |
+| Component | Package | Usage |
+|-----------|---------|-------|
+| Button | @heroui/button | Actions, forms |
+| Card | @heroui/card | Containers |
+| Modal | @heroui/modal | Forms, dialogs |
+| Table | @heroui/table | Data lists |
+| Input | @heroui/input | Text fields |
+| Select | @heroui/select | Dropdowns |
+| Autocomplete | @heroui/autocomplete | Search |
+| Chip | @heroui/chip | Status tags |
+| Badge | @heroui/badge | Counts |
+| Progress | @heroui/progress | Loading |
+| Avatar | @heroui/avatar | Users |
+| Tooltip | @heroui/tooltip | Help text |
+| Switch | @heroui/switch | Toggles |
+| Accordion | @heroui/accordion | Collapsible |
+| ScrollShadow | @heroui/scroll-shadow | Scroll areas |
+| Skeleton | @heroui/skeleton | Placeholders |
 
 #### Select Component Best Practices
 
@@ -2381,13 +2382,7 @@ import LoadingLogo from "@/components/LoadingLogo";
 
 ### Initial Setup
 
-#### 1. Clone Repository
-```bash
-git clone https://github.com/MusabehMoh/Project-Management.git
-cd Project-Management
-```
-
-#### 2. Install Frontend Dependencies
+#### 1. Install Frontend Dependencies
 ```bash
 npm install
 ```
