@@ -26,6 +26,9 @@ export { useTeamSearchByDepartment } from "./useTeamSearchByDepartment";
 export { useDesignerWorkload } from "./useDesignerWorkload";
 export { useTeamMembers } from "./useTeamMembers";
 
+// Export form suggestion hook (AI-powered)
+export { useFormSuggestion } from "./useFormSuggestion";
+
 // Export timeline form helpers
 export { useTimelineFormHelpers } from "./useTimelineFormHelpers";
 export { useTimelineFormValidation } from "./useTimelineFormValidation";
