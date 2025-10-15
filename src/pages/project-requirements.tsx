@@ -38,6 +38,7 @@ import {
 } from "@heroui/modal";
 import { Skeleton } from "@heroui/skeleton";
 import { DatePicker } from "@heroui/date-picker";
+import { Tooltip } from "@heroui/tooltip";
 import {
   Plus,
   Search,
@@ -54,6 +55,7 @@ import {
   Download,
   Eye,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
@@ -204,6 +206,14 @@ export default function ProjectRequirementsPage() {
     onOpen: onDeleteOpen,
     onOpenChange: onDeleteOpenChange,
   } = useDisclosure();
+
+  // AI Prompt Modal state
+  const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
+  const [aiPromptText, setAIPromptText] = useState("");
+  const [aiGenerating, setAIGenerating] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<
+    Array<{ role: "user" | "assistant"; content: string; timestamp: number }>
+  >([]);
 
   // Form states
   const [selectedRequirement, setSelectedRequirement] =
@@ -481,6 +491,85 @@ export default function ProjectRequirementsPage() {
     } catch {
       // Error requesting approval
     }
+  };
+
+  // AI Generation handler with conversation history
+  const handleAIGenerate = async () => {
+    if (!aiPromptText.trim()) return;
+
+    setAIGenerating(true);
+
+    try {
+      const userMessage = {
+        role: "user" as const,
+        content: aiPromptText,
+        timestamp: Date.now(),
+      };
+
+      // Call n8n webhook with conversation history
+      const response = await fetch(
+        import.meta.env.VITE_LLM_N8N_WEBHOOK_URL ||
+          "http://localhost:5678/webhook/ai-suggest",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            context: aiPromptText,
+            field: t("requirements.requirementDescription"),
+            previousValues: {
+              [t("requirements.requirementName")]: formData.name,
+              [t("common.project")]: projectName || "",
+            },
+            maxTokens: 300, // Longer description
+            conversationHistory, // Send conversation history
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to generate AI suggestion");
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.data?.suggestion) {
+        const aiSuggestion = data.data.suggestion;
+
+        // Convert plain text to HTML for ReactQuill
+        const htmlDescription = `<p>${aiSuggestion}</p>`;
+
+        setFormData({
+          ...formData,
+          description: htmlDescription,
+        });
+
+        // Update conversation history
+        const assistantMessage = {
+          role: "assistant" as const,
+          content: aiSuggestion,
+          timestamp: Date.now(),
+        };
+
+        setConversationHistory([
+          ...conversationHistory,
+          userMessage,
+          assistantMessage,
+        ]);
+
+        setAIPromptText(""); // Clear input but keep modal open
+      }
+    } catch (error) {
+      console.error("AI generation error:", error);
+      // You can add toast notification here
+    } finally {
+      setAIGenerating(false);
+    }
+  };
+
+  // Clear conversation history
+  const handleClearConversation = () => {
+    setConversationHistory([]);
+    setAIPromptText("");
   };
 
   // ...start development removed
@@ -1220,11 +1309,24 @@ export default function ProjectRequirementsPage() {
                     />
                   </div>
 
-                  {/* Full Width Description Editor */}
+                  {/* Full Width Description Editor with AI Suggestion */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      {t("requirements.requirementDescription")} *
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-foreground">
+                        {t("requirements.requirementDescription")} *
+                      </label>
+                      <Tooltip content={t("requirements.aiSuggest")}>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="flat"
+                          color="secondary"
+                          onPress={() => setIsAIPromptOpen(true)}
+                        >
+                          <Sparkles className="w-4 h-4" />
+                        </Button>
+                      </Tooltip>
+                    </div>
                     <div className="min-h-[240px]">
                       <ReactQuill
                         className={language === "ar" ? "rtl-editor" : ""}
@@ -1491,6 +1593,148 @@ export default function ProjectRequirementsPage() {
         onClose={closePreview}
         onDownload={downloadCurrentFile}
       />
+
+      {/* AI Prompt Modal */}
+      <Modal
+        isOpen={isAIPromptOpen}
+        onOpenChange={(open) => {
+          setIsAIPromptOpen(open);
+          if (!open) {
+            // Don't clear history when closing modal
+            setAIPromptText("");
+          }
+        }}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex gap-2 items-center justify-between">
+                <div className="flex gap-2 items-center">
+                  <Sparkles className="w-5 h-5 text-secondary" />
+                  <span>{t("requirements.aiSuggest")}</span>
+                </div>
+                {conversationHistory.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    startContent={<Trash2 className="w-4 h-4" />}
+                    onPress={handleClearConversation}
+                  >
+                    {t("requirements.clearHistory")}
+                  </Button>
+                )}
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-4">
+                  {/* Conversation History */}
+                  {conversationHistory.length > 0 && (
+                    <div className="space-y-3 max-h-64 overflow-y-auto border border-default-200 rounded-lg p-3">
+                      <p className="text-xs text-default-500 font-medium mb-2">
+                        {t("requirements.conversationHistory")}
+                      </p>
+                      {conversationHistory.map((msg, index) => (
+                        <div
+                          key={index}
+                          className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                        >
+                          <div
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              msg.role === "user"
+                                ? "bg-secondary-50 dark:bg-secondary-100/10 text-secondary-900 dark:text-secondary-100"
+                                : "bg-default-100 dark:bg-default-50/10"
+                            }`}
+                            dir={language === "ar" ? "rtl" : "ltr"}
+                          >
+                            <p className="text-sm">{msg.content}</p>
+                            <p className="text-xs text-default-400 mt-1">
+                              {new Date(msg.timestamp).toLocaleTimeString(
+                                language === "ar" ? "ar-SA" : "en-US",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-sm text-default-600">
+                    {conversationHistory.length > 0
+                      ? t("requirements.aiContinuePrompt")
+                      : t("requirements.aiPromptDescription")}
+                  </p>
+
+                  <Input
+                    autoFocus
+                    label={t("requirements.aiPromptLabel")}
+                    placeholder={t("requirements.aiPromptPlaceholder")}
+                    value={aiPromptText}
+                    onValueChange={setAIPromptText}
+                    description={t("requirements.aiPromptExample")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey && aiPromptText.trim()) {
+                        e.preventDefault();
+                        handleAIGenerate();
+                      }
+                    }}
+                  />
+
+                  {/* Show context being used */}
+                  {conversationHistory.length === 0 && (
+                    <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
+                      <p className="text-xs text-default-500 mb-1">
+                        {t("requirements.aiContext")}
+                      </p>
+                      <div className="space-y-1">
+                        {formData.name && (
+                          <p className="text-sm">
+                            <span className="font-medium">
+                              {t("requirements.requirementName")}:
+                            </span>{" "}
+                            {formData.name}
+                          </p>
+                        )}
+                        {projectName && (
+                          <p className="text-sm">
+                            <span className="font-medium">
+                              {t("common.project")}:
+                            </span>{" "}
+                            {projectName}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {conversationHistory.length > 0
+                    ? t("common.close")
+                    : t("common.cancel")}
+                </Button>
+                <Button
+                  color="secondary"
+                  startContent={
+                    !aiGenerating && <Sparkles className="w-4 h-4" />
+                  }
+                  isLoading={aiGenerating}
+                  isDisabled={!aiPromptText.trim()}
+                  onPress={handleAIGenerate}
+                >
+                  {t("requirements.generate")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 }

@@ -73,25 +73,29 @@ const QC_TEAM_MEMBER_CONFIG: KanbanRoleConfig = {
 
 /**
  * Analyst Configuration
- * Can work with: To Do (1), In Progress (2), In Review (3)
- * Similar to developer workflow for requirements analysis
+ * Can work with: To Do (1), In Progress (2), Completed (5)
+ * ONLY for adhoc tasks (typeId = 3)
+ * Completed is auto-handled by hover switch for adhoc tasks
+ * Workflow: To Do → In Progress → Completed (via switch)
  */
 const ANALYST_CONFIG: KanbanRoleConfig = {
   roleId: RoleIds.ANALYST,
-  allowedStatuses: [1, 2, 3],
+  allowedStatuses: [1, 2, 5], // To Do, In Progress, Completed (no In Review or Rework)
   allowedTransitions: {
-    from: [1, 2, 3],
-    to: [1, 2, 3],
+    from: [1, 2],
+    to: [1, 2, 5],
   },
   canDragFrom: (statusId: number) => {
-    return [1, 2, 3].includes(statusId);
+    // Can drag from To Do and In Progress only
+    return [1, 2].includes(statusId);
   },
   canDropTo: (statusId: number, fromStatusId: number) => {
-    const allowedStatuses = [1, 2, 3];
+    // Can drop to To Do, In Progress, or Completed
+    const allowedStatuses = [1, 2, 5];
 
     return (
       allowedStatuses.includes(statusId) &&
-      allowedStatuses.includes(fromStatusId)
+      [1, 2].includes(fromStatusId) // Only from To Do or In Progress
     );
   },
 };

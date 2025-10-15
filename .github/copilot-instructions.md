@@ -934,7 +934,16 @@ export { useEntityDetails } from "./useEntityDetails";
   - From Rework → can move to In Review or Completed
   - Cannot access: To Do (1), In Progress (2)
 
-- **Analyst (ID: 3)** & **Designer Team Member (ID: 9)**:
+- **Analyst (ID: 3)**:
+  - **SPECIAL CASE**: Only sees and works with adhoc tasks (typeId = 3)
+  - Allowed Statuses: To Do (1), In Progress (2), Completed (5)
+  - Can drag/drop between To Do and In Progress
+  - Completed status handled via hover switch (adhoc quick completion)
+  - Cannot access: In Review (3), Rework (4)
+  - Task filtering: TeamKanbanBoard filters to show only adhoc tasks for Analysts
+  - Workflow: To Do → In Progress → Completed (via switch hover)
+
+- **Designer Team Member (ID: 9)**:
   - Same as Software Developer workflow
   - Allowed Statuses: To Do (1), In Progress (2), In Review (3)
 
@@ -1002,7 +1011,84 @@ export { useEntityDetails } from "./useEntityDetails";
 - **API Services**: Use existing service patterns, never direct fetch calls
 - **Hooks**: Follow existing naming conventions and patterns
 - **Test Files**: DO NOT create test files automatically - only when explicitly requested
-- **Documentation**: DO NOT create documentation files unless specifically asked
+- **Documentation**: DO NOT create markdown documentation files (.md) or guides unless specifically asked
+- **AI Integration**: Application uses n8n workflow + Ollama (Llama 3.1 8B) for AI-powered form suggestions
+
+## AI-Powered Features
+
+### Local LLM Integration
+- **Runtime**: Ollama (localhost:11434)
+- **Model**: Llama 3.1 8B (optimized for Arabic and technical writing)
+- **Orchestration**: n8n workflow (localhost:5678/webhook/ai-suggest)
+- **Hardware**: Runs on RTX 3090 (24GB VRAM, ~16GB usage)
+- **Performance**: ~700-900ms response time
+
+### AI Service Architecture
+- **Service**: `src/services/api/llmService.ts` - Handles n8n webhook calls with conversation history
+- **Conversation Service**: `src/services/conversationHistoryService.ts` - Manages conversation history in localStorage
+- **Hook**: `src/hooks/useFormSuggestion.ts` - React hook for AI suggestions with context
+- **Configuration**: 
+  - `VITE_LLM_ENABLED=true` - Enable/disable AI features
+  - `VITE_LLM_USE_N8N=true` - Use n8n workflow (vs direct Ollama)
+  - `VITE_LLM_N8N_WEBHOOK_URL=http://localhost:5678/webhook/ai-suggest`
+- **Workflow**: `n8n-workflows/ai-form-suggestion-workflow.json`
+
+### Conversation History System
+- **Storage**: localStorage with 7-day expiration
+- **Limits**: Last 10 exchanges (20 messages) per context
+- **Context ID**: Unique identifier per conversation (e.g., "requirement-123")
+- **Features**:
+  - Persistent across browser sessions
+  - Auto-cleanup of old conversations
+  - Clear history functionality
+  - Message timestamps
+  - Role tracking (user/assistant)
+
+### AI Implementation Pattern
+When adding AI suggestions to forms:
+1. Add Sparkles icon button with Tooltip
+2. Create modal for user prompt input with conversation history display
+3. Show context (form fields already filled)
+4. Call n8n webhook with context + conversation history array
+5. Display conversation in chat-like UI (user messages right, AI left)
+6. Store messages in conversationHistory state
+7. Support "Clear History" button
+8. Populate field with AI response
+9. Add translations for all AI-related UI text
+10. Support Enter key to send message (Shift+Enter for newline)
+
+### Example AI Integration (Requirements Page)
+- **Location**: `src/pages/project-requirements.tsx`
+- **Feature**: AI-powered requirement description generation with conversation memory
+- **UI**: Sparkles icon next to "Description" field
+- **Modal**: 
+  - 2xl size with scrollable content
+  - Conversation history display with chat bubbles
+  - Prompt input with Enter key support
+  - Clear history button in header
+  - Context display (only shown when no history)
+- **Handler**: `handleAIGenerate()` function:
+  - Sends conversationHistory array to n8n webhook
+  - Updates local conversation state with user + assistant messages
+  - Clears input but keeps modal open for continued conversation
+- **Response**: Inserts HTML-formatted text into ReactQuill editor
+- **State Management**:
+  - `conversationHistory`: Array of {role, content, timestamp} objects
+  - `handleClearConversation()`: Resets conversation history
+  - Modal doesn't clear history on close (only on explicit clear)
+
+### AI Prompt Engineering
+- **Role**: "Expert software requirements analyst"
+- **Output**: 3-5 sentence technical descriptions
+- **Language**: Auto-detects Arabic vs English
+- **Context**: Uses requirement name, project name, user input, AND conversation history
+- **Quality**: Technical terminology, standards (APIs, databases), performance criteria
+- **Conversation Context**: 
+  - n8n workflow receives `conversationHistory` array
+  - Prompts include previous exchanges for context continuity
+  - AI instructed to "use previous conversation as context but not repeat information"
+  - Arabic: "استخدم المحادثة السابقة كسياق لتحسين الإجابة الحالية، لكن لا تكرر نفس المعلومات"
+  - English: "Use the previous conversation as context to improve the current response, but do not repeat the same information"
 
 ## Common Issues & Solutions
 

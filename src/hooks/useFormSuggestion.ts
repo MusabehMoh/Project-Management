@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { llmService } from "@/services/api/llmService";
+import {
+  conversationHistoryService,
+  type ConversationMessage,
+} from "@/services/conversationHistoryService";
 
 interface UseFormSuggestionOptions {
   field: string;
@@ -7,6 +11,7 @@ interface UseFormSuggestionOptions {
   previousValues?: Record<string, string>;
   autoSuggest?: boolean;
   debounceMs?: number;
+  contextId?: string; // NEW: Unique ID for conversation context (e.g., "requirement-123")
 }
 
 interface UseFormSuggestionResult {
@@ -14,9 +19,11 @@ interface UseFormSuggestionResult {
   loading: boolean;
   error: string | null;
   isLLMAvailable: boolean;
-  getSuggestion: () => Promise<void>;
+  conversationHistory: ConversationMessage[]; // NEW: Current conversation history
+  getSuggestion: (userPrompt?: string) => Promise<void>;
   clearSuggestion: () => void;
   applySuggestion: () => string;
+  clearHistory: () => void; // NEW: Clear conversation history
 }
 
 /**
@@ -38,6 +45,17 @@ export function useFormSuggestion(
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isLLMAvailable, setIsLLMAvailable] = useState<boolean>(false);
+  const [conversationHistory, setConversationHistory] = useState<
+    ConversationMessage[]
+  >([]);
+
+  const contextId = options.contextId || "default";
+
+  // Load conversation history on mount
+  useEffect(() => {
+    const history = conversationHistoryService.getMessages(contextId);
+    setConversationHistory(history);
+  }, [contextId]);
 
   // Check LLM availability on mount
   useEffect(() => {
@@ -48,46 +66,71 @@ export function useFormSuggestion(
     checkAvailability();
   }, []);
 
-  const getSuggestion = useCallback(async () => {
-    if (!options.field || !options.context) {
-      setError("Field and context are required");
-      return;
-    }
+  const getSuggestion = useCallback(
+    async (userPrompt?: string) => {
+      const promptToUse = userPrompt || options.context;
 
-    if (!isLLMAvailable) {
-      setError("LLM service is not available");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await llmService.getSuggestion({
-        field: options.field,
-        context: options.context,
-        previousValues: options.previousValues,
-      });
-
-      if (result.success && result.data) {
-        setSuggestion(result.data.suggestion);
-      } else {
-        setError(result.message || "Failed to get suggestion");
+      if (!options.field || !promptToUse) {
+        setError("Field and context are required");
+        return;
       }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to get suggestion";
-      setError(errorMessage);
-      console.error("Error getting LLM suggestion:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    options.field,
-    options.context,
-    options.previousValues,
-    isLLMAvailable,
-  ]);
+
+      if (!isLLMAvailable) {
+        setError("LLM service is not available");
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Add user message to history
+        if (userPrompt) {
+          conversationHistoryService.addUserMessage(contextId, userPrompt);
+        }
+
+        // Get current conversation history
+        const currentHistory =
+          conversationHistoryService.getMessages(contextId);
+
+        const result = await llmService.getSuggestion({
+          field: options.field,
+          context: promptToUse,
+          previousValues: options.previousValues,
+          conversationHistory: currentHistory, // Send history to API
+        });
+
+        if (result.success && result.data) {
+          const aiResponse = result.data.suggestion;
+          setSuggestion(aiResponse);
+
+          // Add assistant message to history
+          conversationHistoryService.addAssistantMessage(contextId, aiResponse);
+
+          // Update local state
+          const updatedHistory =
+            conversationHistoryService.getMessages(contextId);
+          setConversationHistory(updatedHistory);
+        } else {
+          setError(result.message || "Failed to get suggestion");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to get suggestion";
+        setError(errorMessage);
+        console.error("Error getting LLM suggestion:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      options.field,
+      options.context,
+      options.previousValues,
+      isLLMAvailable,
+      contextId,
+    ],
+  );
 
   // Auto-suggest on mount if enabled
   useEffect(() => {
@@ -105,13 +148,20 @@ export function useFormSuggestion(
     return suggestion;
   }, [suggestion]);
 
+  const clearHistory = useCallback(() => {
+    conversationHistoryService.clearHistory(contextId);
+    setConversationHistory([]);
+  }, [contextId]);
+
   return {
     suggestion,
     loading,
     error,
     isLLMAvailable,
+    conversationHistory,
     getSuggestion,
     clearSuggestion,
     applySuggestion,
+    clearHistory,
   };
 }
