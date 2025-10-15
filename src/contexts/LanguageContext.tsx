@@ -1141,6 +1141,8 @@ const translations = {
     "users.actions": "Actions",
     "users.isVisible": "Active",
     "users.status": "Status",
+    "users.filterByRole": "Filter by Role",
+    "users.filterByStatus": "Filter by Status",
     "users.searchEmployees":
       "Search employees by name, military number, or username",
     "users.noEmployeesFound": "No employees found",
@@ -2886,6 +2888,8 @@ const translations = {
     "users.actions": "الصلاحيات",
     "users.isVisible": "نشط",
     "users.status": "الحالة",
+    "users.filterByRole": "تصفية حسب الدور",
+    "users.filterByStatus": "تصفية حسب الحالة",
     "users.searchEmployees":
       "البحث عن الموظفين بالاسم أو الرقم العسكري أو اسم المستخدم",
     "users.noEmployeesFound": "لم يتم العثور على موظفين",

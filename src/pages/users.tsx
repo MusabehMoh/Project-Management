@@ -472,8 +472,8 @@ export default function UsersPage() {
                 aria-label={t("users.roles")}
                 className="w-full sm:w-64"
                 disallowEmptySelection={false}
-                placeholder={t("users.roles")}
-                selectedKeys={filters.roleId ? [filters.roleId.toString()] : ["all"]}
+                placeholder={t("users.filterByRole")}
+                selectedKeys={filters.roleId ? [filters.roleId.toString()] : []}
                 onSelectionChange={(keys) => {
                   const keysArray = Array.from(keys);
                   // If no selection (user deselected), reset to "all"
@@ -499,10 +499,10 @@ export default function UsersPage() {
                 aria-label={t("users.status")}
                 className="w-full sm:w-52"
                 disallowEmptySelection={false}
-                placeholder={t("users.status")}
+                placeholder={t("users.filterByStatus")}
                 selectedKeys={
                   filters.isVisible === undefined
-                    ? ["all"]
+                    ? []
                     : filters.isVisible
                       ? ["active"]
                       : ["inactive"]

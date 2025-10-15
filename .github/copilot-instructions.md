@@ -247,15 +247,40 @@ const response = await fetch('/api/project-requirements/approved-requirements');
    </Select>
    ```
 
-2. **Avoid These Props** (they cause dropdown close issues):
+2. **Deselectable Filters with Placeholders**:
+   - For filter dropdowns that should allow deselection (e.g., role filter, status filter):
+   - Use `disallowEmptySelection={false}` to enable deselection by clicking the same item again
+   - Set `selectedKeys={[]}` when showing placeholder (not `["all"]`)
+   - Handle empty selection in `onSelectionChange`:
+     ```tsx
+     <Select
+       aria-label={t("users.filterByRole")}
+       placeholder={t("users.filterByRole")}
+       disallowEmptySelection={false}
+       selectedKeys={filterValue ? [filterValue.toString()] : []}
+       onSelectionChange={(keys) => {
+         const keysArray = Array.from(keys);
+         // If empty (deselected), reset to "all"
+         const value = keysArray.length === 0 ? "all" : keysArray[0];
+         handleFilter(value);
+       }}
+     >
+       <SelectItem key="all">{t("common.all")}</SelectItem>
+       <SelectItem key="1">Option 1</SelectItem>
+     </Select>
+     ```
+   - **Why this works**: Clicking selected item deselects it → empty selection → handler resets to "all" → placeholder shows
+   - **Accessibility**: Always add `aria-label` for screen readers when no visible label present
+
+3. **Avoid These Props** (in form contexts):
    - ❌ `isRequired` - Triggers HTML5 validation that conflicts with custom validation
-   - ❌ `disallowEmptySelection` - Prevents dropdown from closing when clicking selected item
    - ❌ `validationBehavior="aria"` - Not needed for basic functionality
    - ❌ `selectionMode="single"` - Redundant, single is default
+   - ✅ `disallowEmptySelection={false}` - USE for deselectable filters
 
-3. **Use Custom Validation**:
+4. **Use Custom Validation** (for forms):
    - Implement validation in a `validateForm()` function
-   - Don't rely on HeroUI's built-in validation props
+   - Don't rely on HeroUI's built-in validation props for forms
    - Use `validationErrors` state to show error messages
 
 4. **File Upload Validation**:
@@ -572,6 +597,134 @@ export { useEntityDetails } from "./useEntityDetails";
   - **Methods**: `getTasks()`, `getNextDeadline()`, `updateTaskStatus()` (string-based, legacy)
   - **Use Case**: Fetching current user's tasks, quick actions without detailed audit trail
 
+### Backend Search and Filter Implementation Pattern
+**CRITICAL**: When adding search/filter functionality to any entity, follow this full-stack pattern:
+
+**1. Update Interface** (`PMA.Core/Interfaces/IRepositories.cs`):
+```csharp
+System.Threading.Tasks.Task<(IEnumerable<Entity> Items, int TotalCount)> GetEntitiesAsync(
+    int page, 
+    int limit, 
+    string? search = null,           // Add search parameter
+    bool? isActive = null,           // Add filter parameters
+    int? categoryId = null,          // Add filter parameters
+    int? roleId = null);             // Add filter parameters
+```
+
+**2. Update Service Interface** (`PMA.Core/Interfaces/IServices.cs`):
+```csharp
+System.Threading.Tasks.Task<(IEnumerable<EntityDto> Items, int TotalCount)> GetEntitiesAsync(
+    int page, 
+    int limit, 
+    string? search = null,
+    bool? isActive = null,
+    int? categoryId = null,
+    int? roleId = null);
+```
+
+**3. Implement Repository** (`PMA.Infrastructure/Repositories/EntityRepository.cs`):
+```csharp
+public async Task<(IEnumerable<Entity> Items, int TotalCount)> GetEntitiesAsync(
+    int page, int limit, string? search = null, bool? isActive = null, 
+    int? categoryId = null, int? roleId = null)
+{
+    var query = _context.Entities
+        .Include(e => e.RelatedEntity)
+        .AsQueryable();
+
+    // Search filter - search across multiple fields
+    if (!string.IsNullOrWhiteSpace(search))
+    {
+        var searchLower = search.ToLower();
+        query = query.Where(e => 
+            e.Name.ToLower().Contains(searchLower) ||
+            (e.Description != null && e.Description.ToLower().Contains(searchLower)) ||
+            (e.Code != null && e.Code.ToLower().Contains(searchLower))
+        );
+    }
+
+    // Filter by category
+    if (categoryId.HasValue)
+    {
+        query = query.Where(e => e.CategoryId == categoryId.Value);
+    }
+
+    // Filter by role (with related entity)
+    if (roleId.HasValue)
+    {
+        query = query.Where(e => e.EntityRoles!.Any(er => er.RoleId == roleId.Value));
+    }
+
+    // Filter by boolean
+    if (isActive.HasValue)
+    {
+        query = query.Where(e => e.IsActive == isActive.Value);
+    }
+
+    var totalCount = await query.CountAsync();
+    var items = await query
+        .Skip((page - 1) * limit)
+        .Take(limit)
+        .ToListAsync();
+
+    return (items, totalCount);
+}
+```
+
+**4. Update Service** (`PMA.Core/Services/EntityService.cs`):
+```csharp
+public async Task<(IEnumerable<EntityDto> Items, int TotalCount)> GetEntitiesAsync(
+    int page, int limit, string? search = null, bool? isActive = null, 
+    int? categoryId = null, int? roleId = null)
+{
+    var (items, totalCount) = await _repository.GetEntitiesAsync(
+        page, limit, search, isActive, categoryId, roleId);
+    var dtos = items.Select(MapToDto);
+    return (dtos, totalCount);
+}
+```
+
+**5. Update Controller** (`PMA.Api/Controllers/EntitiesController.cs`):
+```csharp
+[HttpGet]
+[ProducesResponseType(200)]
+public async Task<IActionResult> GetEntities(
+    [FromQuery] int page = 1,
+    [FromQuery] int limit = 20,
+    [FromQuery] string? search = null,
+    [FromQuery] bool? isActive = null,
+    [FromQuery] int? categoryId = null,
+    [FromQuery] int? roleId = null)
+{
+    try
+    {
+        var (items, totalCount) = await _service.GetEntitiesAsync(
+            page, limit, search, isActive, categoryId, roleId);
+        var totalPages = (int)Math.Ceiling((double)totalCount / limit);
+        
+        var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+        return Success(items, pagination);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error retrieving entities. Page: {Page}, Limit: {Limit}, Search: {Search}", 
+            page, limit, search);
+        return Error<IEnumerable<EntityDto>>("An error occurred", ex.Message);
+    }
+}
+```
+
+**Best Practices**:
+- ✅ **Search**: Use `.ToLower().Contains()` for case-insensitive search
+- ✅ **Multiple Fields**: Search across name, description, code, related entity fields
+- ✅ **Related Entities**: Use `Any()` for filtering by related collections (e.g., roles, tags)
+- ✅ **Count After Filter**: Always call `CountAsync()` after applying filters
+- ✅ **Pagination**: Apply `.Skip()` and `.Take()` after all filters
+- ✅ **Logging**: Log all parameters in error messages for debugging
+- ✅ **Frontend**: Update service, hook, and component to pass filter parameters
+
+**Example Implementation**: See `UsersController.GetUsers()` method with search, roleId, isVisible, and departmentId filters.
+
 ## Dashboard System
 
 ### Dashboard Types
@@ -650,6 +803,23 @@ export { useEntityDetails } from "./useEntityDetails";
   - No colored backgrounds or gradients
   - Clean, professional appearance
 - **Layout**: Three-column layout with profile card, personal info, and user actions
+
+#### Users Page (`users.tsx`)
+- **Purpose**: User management with search and filtering
+- **Filter Implementation**:
+  - **Search**: Case-insensitive search across userName, fullName, militaryNumber, employee.fullName
+  - **Role Filter**: Dropdown with deselectable options using `disallowEmptySelection={false}`
+  - **Status Filter**: Active/Inactive filter with deselectable options
+  - **Placeholder Behavior**: Shows placeholder when no filter selected (selectedKeys={[]})
+  - **Toggle Behavior**: Clicking same option deselects it and returns to "All"
+  - **Backend**: Full-stack filtering implemented in UsersController, UserService, UserRepository
+- **Key Features**:
+  - Dynamic user list with pagination
+  - Create/Edit/Delete user functionality
+  - Role and permission assignment
+  - Real-time filter updates with debounced search
+  - Toast notifications for all user actions
+- **Translations**: `users.filterByRole`, `users.filterByStatus` for placeholders
 
 ### Dashboard Components
 - **ApprovedRequirements**: Shows approved requirements ready for development (Developer Manager)
