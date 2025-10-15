@@ -59,11 +59,6 @@ export default function DepartmentsPage() {
   usePageTitle("departments.title");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
-    isOpen: isDeleteOpen,
-    onOpen: onDeleteOpen,
-    onOpenChange: onDeleteOpenChange,
-  } = useDisclosure();
-  const {
     isOpen: isMembersOpen,
     onOpen: onMembersOpen,
     onOpenChange: onMembersOpenChange,
@@ -83,8 +78,6 @@ export default function DepartmentsPage() {
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(
     null,
   );
-  const [deletingDepartment, setDeletingDepartment] =
-    useState<Department | null>(null);
   const [selectedDepartment, setSelectedDepartment] =
     useState<Department | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -117,7 +110,7 @@ export default function DepartmentsPage() {
   const [memberForm, setMemberForm] = useState<
     Partial<AddDepartmentMemberRequest>
   >({
-    userId: undefined,
+    prsId: undefined,
     userName: "",
     fullName: "",
   });
@@ -128,14 +121,8 @@ export default function DepartmentsPage() {
     status: statusFilter === "all" ? undefined : statusFilter,
   };
 
-  const {
-    departments,
-    loading,
-    error,
-    totalPages,
-    updateDepartment,
-    deleteDepartment,
-  } = useDepartments(filters, currentPage, 10);
+  const { departments, loading, error, totalPages, updateDepartment } =
+    useDepartments(filters, currentPage, 10);
 
   const {
     members,
@@ -162,30 +149,12 @@ export default function DepartmentsPage() {
     loadInitialResults: false,
   });
 
-  const handleDeleteDepartment = (department: Department) => {
-    setDeletingDepartment(department);
-    onDeleteOpen();
-  };
-
   const handleViewMembers = (department: Department) => {
     setSelectedDepartment(department);
     setMemberCurrentPage(1);
     setSelectedEmployee(null);
     clearResults();
     onMembersOpen();
-  };
-
-  const confirmDeleteDepartment = async () => {
-    if (deletingDepartment) {
-      try {
-        await deleteDepartment(deletingDepartment.id);
-        onDeleteOpenChange();
-        setDeletingDepartment(null);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to delete department:", error);
-      }
-    }
   };
 
   const submitDepartmentForm = async () => {
@@ -208,7 +177,7 @@ export default function DepartmentsPage() {
   const handleAddMember = () => {
     setShowManualEntry(false);
     setMemberForm({
-      userId: undefined,
+      prsId: undefined,
       userName: "",
       fullName: "",
     });
@@ -241,7 +210,7 @@ export default function DepartmentsPage() {
     try {
       await addMember({
         departmentId: selectedDepartment.id,
-        userId: memberForm.userId,
+        prsId: memberForm.prsId,
         userName: memberForm.userName,
         fullName: memberForm.fullName,
         role: "member", // Default role for new members
@@ -260,7 +229,7 @@ export default function DepartmentsPage() {
     setSelectedEmployee(employee);
     setMemberForm({
       ...memberForm,
-      userId: employee.id,
+      prsId: employee.id,
       userName: employee.userName,
       fullName: employee.fullName,
     });
@@ -373,16 +342,6 @@ export default function DepartmentsPage() {
                           >
                             {t("departments.viewMembers")}
                           </DropdownItem>
-
-                          <DropdownItem
-                            key="delete"
-                            className="text-danger"
-                            color="danger"
-                            startContent={<DeleteIcon size={16} />}
-                            onPress={() => handleDeleteDepartment(department)}
-                          >
-                            {t("departments.deleteDepartment")}
-                          </DropdownItem>
                         </DropdownMenu>
                       </Dropdown>
                     </TableCell>
@@ -406,36 +365,6 @@ export default function DepartmentsPage() {
           />
         </div>
       )}
-
-      {/* Delete Department Confirmation Modal */}
-      <Modal isOpen={isDeleteOpen} onOpenChange={onDeleteOpenChange}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                {t("departments.confirmDelete")}
-              </ModalHeader>
-              <ModalBody>
-                <p>
-                  {t("departments.deleteConfirmMessage")}{" "}
-                  <strong>{deletingDepartment?.name}</strong>?
-                </p>
-                <p className="text-sm text-warning">
-                  {t("departments.deleteWarning")}
-                </p>
-              </ModalBody>
-              <ModalFooter>
-                <Button color="default" variant="light" onPress={onClose}>
-                  {t("common.cancel")}
-                </Button>
-                <Button color="danger" onPress={confirmDeleteDepartment}>
-                  {t("common.delete")}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
 
       {/* Department Members Modal */}
       <Modal
@@ -645,7 +574,7 @@ export default function DepartmentsPage() {
 
                       // Reset form and selection whenever mode changes to avoid stale validation/state
                       setMemberForm({
-                        userId: undefined,
+                        prsId: undefined,
                         userName: "",
                         fullName: "",
                       });

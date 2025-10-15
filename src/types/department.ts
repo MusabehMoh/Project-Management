@@ -48,7 +48,7 @@ export interface UpdateDepartmentRequest {
 
 export interface AddDepartmentMemberRequest {
   departmentId: number;
-  userId?: number;
+  prsId?: number;
   userName?: string;
   fullName?: string;
   role?: "manager" | "supervisor" | "member";
