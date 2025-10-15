@@ -81,6 +81,7 @@ public interface IProjectRequirementRepository : IRepository<ProjectRequirement>
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByAnalystAsync(int analystId);
     System.Threading.Tasks.Task<ProjectRequirement?> GetProjectRequirementWithDetailsAsync(int id);
     System.Threading.Tasks.Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId);
+    System.Threading.Tasks.Task<bool> DeleteAttachmentAsync(int requirementId, int attachmentId);
 }
 
 public interface IDepartmentRepository : IRepository<Department>
@@ -96,8 +97,8 @@ public interface ITeamRepository : IRepository<Team>
     System.Threading.Tasks.Task<Team> AddTeamMemberAsync(Team team);
     System.Threading.Tasks.Task UpdateTeamMemberAsync(Team team);
     System.Threading.Tasks.Task<bool> RemoveTeamMemberAsync(int id);
-    System.Threading.Tasks.Task<IEnumerable<Employee>> SearchUsersInTeamsAsync(string searchTerm);
-    System.Threading.Tasks.Task<IEnumerable<Employee>> SearchUsersInDepartmentAsync(string searchTerm, int departmentId);
+    System.Threading.Tasks.Task<IEnumerable<Employee>> SearchEmployeesInTeamsAsync(string searchTerm);
+    System.Threading.Tasks.Task<IEnumerable<Employee>> SearchEmployeesInDepartmentAsync(string searchTerm, int departmentId);
 }
 
 public interface IUnitRepository : IRepository<Unit>

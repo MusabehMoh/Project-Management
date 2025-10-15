@@ -56,13 +56,45 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<bool> DeleteProjectRequirementAsync(int id)
     {
-        var projectRequirement = await _projectRequirementRepository.GetByIdAsync(id);
-        if (projectRequirement != null)
+        try
         {
+            // Get the requirement with all its details including attachments
+            var projectRequirement = await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(id);
+            if (projectRequirement == null)
+                return false;
+
+            // Delete all associated attachments first (physical files and database records)
+            if (projectRequirement.Attachments != null && projectRequirement.Attachments.Any())
+            {
+                foreach (var attachment in projectRequirement.Attachments.ToList())
+                {
+                    try
+                    {
+                        // Delete physical file
+                        var physicalPath = ResolvePhysicalPath(attachment.FilePath);
+                        if (physicalPath != null && File.Exists(physicalPath))
+                        {
+                            File.Delete(physicalPath);
+                        }
+
+                        // Delete attachment from database
+                        await _projectRequirementRepository.DeleteAttachmentAsync(id, attachment.Id);
+                    }
+                    catch
+                    {
+                        // Continue with other attachments even if one fails
+                    }
+                }
+            }
+
+            // Delete the project requirement itself
             await _projectRequirementRepository.DeleteAsync(projectRequirement);
             return true;
         }
-        return false;
+        catch
+        {
+            return false;
+        }
     }
 
     public async Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByProjectAsync(int projectId)
@@ -360,11 +392,8 @@ public class ProjectRequirementService : IProjectRequirementService
                 File.Delete(deletePhysical);
             }
 
-            // Remove attachment from requirement
-            requirement.Attachments.Remove(attachment);
-            await _projectRequirementRepository.UpdateAsync(requirement);
-            
-            return true;
+            // Use repository method to properly delete the attachment from database
+            return await _projectRequirementRepository.DeleteAttachmentAsync(requirementId, attachmentId);
         }
         catch
         {
@@ -467,18 +496,28 @@ public class ProjectRequirementService : IProjectRequirementService
             {
                 try
                 {
+                    // Delete physical file
                     var physicalPath = ResolvePhysicalPath(att.FilePath);
                     if (physicalPath != null && File.Exists(physicalPath))
                     {
                         File.Delete(physicalPath);
                     }
+                    
+                    // Delete from database using repository method
+                    await _projectRequirementRepository.DeleteAttachmentAsync(requirementId, att.Id);
                 }
                 catch
                 {
                     // Swallow individual deletion errors to allow rest of sync to continue
                 }
-                requirement.Attachments.Remove(att);
             }
+            
+            // Refresh the requirement to get updated attachments list after deletions
+            requirement = await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(requirementId);
+            if (requirement == null)
+                return null;
+            
+            requirement.Attachments ??= new List<ProjectRequirementAttachment>();
         }
 
         // Add new files

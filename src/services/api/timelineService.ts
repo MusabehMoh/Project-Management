@@ -70,7 +70,7 @@ export class TimelineApiService {
     const params = new URLSearchParams({ q: query });
 
     return apiClient.get<MemberSearchResult[]>(
-      `/employees/searchUsers?${params}`,
+      `/employees/searchEmployee?${params}`,
     ); ///TODO change endpoit path
   }
 
@@ -96,7 +96,7 @@ export class TimelineApiService {
     }
 
     return apiClient.get<MemberSearchResult[]>(
-      `/employees/searchUsers?${params}`,
+      `/employees/searchEmployee?${params}`,
     );
   }
 

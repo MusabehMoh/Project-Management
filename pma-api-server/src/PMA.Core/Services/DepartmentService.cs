@@ -179,14 +179,14 @@ public class DepartmentService : IDepartmentService
         return await _teamRepository.RemoveTeamMemberAsync(memberId);
     }
 
-    public async Task<IEnumerable<EmployeeDto>> SearchUsersInTeamsAsync(string searchTerm)
+    public async Task<IEnumerable<EmployeeDto>> SearchEmployeesInTeamsAsync(string searchTerm)
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
             return Enumerable.Empty<EmployeeDto>();
         }
 
-        var employees = await _teamRepository.SearchUsersInTeamsAsync(searchTerm);
+        var employees = await _teamRepository.SearchEmployeesInTeamsAsync(searchTerm);
 
         return employees.Select(e => new EmployeeDto
         {
@@ -199,10 +199,10 @@ public class DepartmentService : IDepartmentService
         });
     }
 
-    public async Task<IEnumerable<EmployeeDto>> SearchUsersInDepartmentAsync(string searchTerm, int departmentId)
+    public async Task<IEnumerable<EmployeeDto>> SearchEmployeesInDepartmentAsync(string searchTerm, int departmentId)
     {
         // Allow empty search term to get all department members
-        var employees = await _teamRepository.SearchUsersInDepartmentAsync(searchTerm ?? "", departmentId);
+        var employees = await _teamRepository.SearchEmployeesInDepartmentAsync(searchTerm ?? "", departmentId);
 
         return employees.Select(e => new EmployeeDto
         {

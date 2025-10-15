@@ -94,8 +94,8 @@ public interface IDepartmentService
     System.Threading.Tasks.Task<TeamMemberDto> AddDepartmentMemberAsync(int departmentId, int? prsId, string userName,string fullName);
     //System.Threading.Tasks.Task<TeamMemberDto> UpdateDepartmentMemberAsync(int departmentId, int memberId, string? role, bool? isActive);
     System.Threading.Tasks.Task<bool> RemoveMemberByIdAsync(int memberId);
-    System.Threading.Tasks.Task<IEnumerable<EmployeeDto>> SearchUsersInTeamsAsync(string searchTerm);
-    System.Threading.Tasks.Task<IEnumerable<EmployeeDto>> SearchUsersInDepartmentAsync(string searchTerm, int departmentId);
+    System.Threading.Tasks.Task<IEnumerable<EmployeeDto>> SearchEmployeesInTeamsAsync(string searchTerm);
+    System.Threading.Tasks.Task<IEnumerable<EmployeeDto>> SearchEmployeesInDepartmentAsync(string searchTerm, int departmentId);
 }
 
 public interface IUnitService

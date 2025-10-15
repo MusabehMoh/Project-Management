@@ -172,4 +172,27 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             }
         };
     }
+
+    public async System.Threading.Tasks.Task<bool> DeleteAttachmentAsync(int requirementId, int attachmentId)
+    {
+        try
+        {
+            // Find the attachment directly in the database
+            var attachment = await _context.ProjectRequirementAttachments
+                .FirstOrDefaultAsync(a => a.Id == attachmentId && a.ProjectRequirementId == requirementId);
+
+            if (attachment == null)
+                return false;
+
+            // Remove the attachment entity from the database
+            _context.ProjectRequirementAttachments.Remove(attachment);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

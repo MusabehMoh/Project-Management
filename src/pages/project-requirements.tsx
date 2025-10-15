@@ -461,6 +461,10 @@ export default function ProjectRequirementsPage() {
       }
 
       resetForm();
+      
+      // Refresh the requirements list to get updated data with attachments
+      await refreshData();
+      
       if (selectedRequirement) {
         onEditOpenChange();
       } else {

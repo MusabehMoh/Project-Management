@@ -174,10 +174,10 @@ public class EmployeesController : ApiBaseController
     /// <summary>
     /// Search users in teams, optionally filtered by department
     /// </summary>
-    [HttpGet("searchUsers")]
+    [HttpGet("searchEmployee")]
     [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), 200)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> SearchUsers([FromQuery] string q = "", [FromQuery] int? departmentId = null, [FromQuery] int? limit = null)
+    public async Task<IActionResult> SearchEmployee([FromQuery] string q = "", [FromQuery] int? departmentId = null, [FromQuery] int? limit = null)
     {
         try
         {
@@ -193,11 +193,11 @@ public class EmployeesController : ApiBaseController
             {
                 // Use empty string as wildcard for department-filtered queries
                 var searchTerm = string.IsNullOrWhiteSpace(q) ? "" : q;
-                employees = await _departmentService.SearchUsersInDepartmentAsync(searchTerm, departmentId.Value);
+                employees = await _departmentService.SearchEmployeesInDepartmentAsync(searchTerm, departmentId.Value);
             }
             else
             {
-                employees = await _departmentService.SearchUsersInTeamsAsync(q);
+                employees = await _departmentService.SearchEmployeesInTeamsAsync(q);
             }
 
             // Apply limit if specified

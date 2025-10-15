@@ -103,19 +103,27 @@ public class TeamRepository : Repository<Team>, ITeamRepository
         return false;
     }
 
-    public async Task<IEnumerable<Employee>> SearchUsersInTeamsAsync(string searchTerm)
+    public async Task<IEnumerable<Employee>> SearchEmployeesInTeamsAsync(string searchTerm)
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
             return Enumerable.Empty<Employee>();
 
-        // Get all employees who are active team members and match the search criteria
+        // Get all team members who are active and match the search criteria
         var employees = await _context.Teams
             .Include(t => t.Employee)
-            .Where(t => t.IsActive && t.Employee != null &&
-                (t.Employee.UserName.Contains(searchTerm) ||
-                 t.Employee.FullName.Contains(searchTerm) ||
-                 t.Employee.MilitaryNumber.Contains(searchTerm)))
-            .Select(t => t.Employee!)
+            .Where(t => t.IsActive &&
+                ((t.Employee != null && t.Employee.UserName.Contains(searchTerm)) ||
+                 (t.Employee != null && t.Employee.FullName.Contains(searchTerm)) ||
+                 (t.Employee != null && t.Employee.MilitaryNumber.Contains(searchTerm)) ||
+                 (t.UserName != null && t.UserName.Contains(searchTerm)) ||
+                 (t.FullName != null && t.FullName.Contains(searchTerm))))
+            .Select(t => new Employee
+            {
+                Id = t.Employee != null ? t.Employee.Id : 0,
+                UserName = !string.IsNullOrEmpty(t.UserName) ? t.UserName : (t.Employee != null ? t.Employee.UserName : ""),
+                FullName = !string.IsNullOrEmpty(t.FullName) ? t.FullName : (t.Employee != null ? t.Employee.FullName : ""),
+                MilitaryNumber = t.Employee != null ? t.Employee.MilitaryNumber : ""
+            })
             .Distinct()
             .OrderBy(e => e.FullName)
             .ToListAsync();
@@ -123,7 +131,7 @@ public class TeamRepository : Repository<Team>, ITeamRepository
         return employees;
     }
 
-    public async Task<IEnumerable<Employee>> SearchUsersInDepartmentAsync(string searchTerm, int departmentId)
+    public async Task<IEnumerable<Employee>> SearchEmployeesInDepartmentAsync(string searchTerm, int departmentId)
     {
         // Build base query for department members
         var query = _context.Teams
@@ -135,10 +143,12 @@ public class TeamRepository : Repository<Team>, ITeamRepository
         // Apply search filter only if searchTerm is provided
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            query = query.Where(t => 
-                t.Employee!.UserName.Contains(searchTerm) ||
+            query = query.Where(t => t.IsActive &&
+               (t.Employee!.UserName.Contains(searchTerm) ||
                 t.Employee.FullName.Contains(searchTerm) ||
-                t.Employee.MilitaryNumber.Contains(searchTerm));
+               (t.UserName !=null && t.UserName.Contains(searchTerm))||
+               (t.FullName !=null && t.FullName.Contains(searchTerm))||
+                t.Employee.MilitaryNumber.Contains(searchTerm)));
         }
 
         // Execute query and return distinct employees
