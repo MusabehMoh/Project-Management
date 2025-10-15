@@ -53,9 +53,9 @@ public class UserService : IUserService
         return await _userRepository.AddAsync(user);
     }
 
-    public async Task<(IEnumerable<UserDto> Users, int TotalCount)> GetUsersAsync(int page, int limit, bool? isVisible = null, int? departmentId = null)
+    public async Task<(IEnumerable<UserDto> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isVisible = null, int? departmentId = null, int? roleId = null)
     {
-        var (users, totalCount) = await _userRepository.GetUsersAsync(page, limit, isVisible, departmentId);
+        var (users, totalCount) = await _userRepository.GetUsersAsync(page, limit, search, isVisible, departmentId, roleId);
         var userDtos = users.Select(MapToUserDto);
         return (userDtos, totalCount);
     }

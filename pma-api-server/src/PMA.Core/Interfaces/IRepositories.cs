@@ -29,7 +29,7 @@ public interface IProjectRepository : IRepository<Project>
 
 public interface IUserRepository : IRepository<User>
 {
-    System.Threading.Tasks.Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, bool? isVisible = null, int? departmentId = null);
+    System.Threading.Tasks.Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isVisible = null, int? departmentId = null, int? roleId = null);
     System.Threading.Tasks.Task<User?> GetByUserNameAsync(string userName);
     System.Threading.Tasks.Task<User?> GetUserWithRolesAndActionsAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId);

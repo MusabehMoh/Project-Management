@@ -32,12 +32,14 @@ public class UsersController : ApiBaseController
     public async Task<IActionResult> GetUsers(
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
+        [FromQuery] string? search = null,
         [FromQuery] bool? isVisible = null,
-        [FromQuery] int? departmentId = null)
+        [FromQuery] int? departmentId = null,
+        [FromQuery] int? roleId = null)
     {
         try
         {
-            var (users, totalCount) = await _userService.GetUsersAsync(page, limit, isVisible, departmentId);
+            var (users, totalCount) = await _userService.GetUsersAsync(page, limit, search, isVisible, departmentId, roleId);
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
@@ -45,8 +47,8 @@ public class UsersController : ApiBaseController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while retrieving users. Page: {Page}, Limit: {Limit}, IsVisible: {IsVisible}, DepartmentId: {DepartmentId}",
-                page, limit, isVisible, departmentId);
+            _logger.LogError(ex, "Error occurred while retrieving users. Page: {Page}, Limit: {Limit}, Search: {Search}, IsVisible: {IsVisible}, DepartmentId: {DepartmentId}, RoleId: {RoleId}",
+                page, limit, search, isVisible, departmentId, roleId);
 
             return Error<IEnumerable<UserDto>>("An error occurred while retrieving users", ex.Message);
         }
