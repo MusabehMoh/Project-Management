@@ -1,0 +1,175 @@
+{
+  "name": "AI Form Suggestion Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-suggest",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Form Suggestion Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "ai-suggest-form"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract request data\nconst body = $input.item.json.body;\nconst context = body.context || '';\nconst field = body.field || '';\nconst previousValues = body.previousValues || {};\nconst maxTokens = body.maxTokens || 150;\n\n// Detect if context is in Arabic\nconst arabicRegex = /[\\u0600-\\u06FF]/;\nconst isArabic = arabicRegex.test(context) || arabicRegex.test(field);\n\n// Build prompt for Ollama with language detection\nlet prompt = '';\n\nif (isArabic) {\n  // Arabic prompt - STRICT enforcement\n  prompt = `أنت مساعد ذكاء اصطناعي عربي. كل إجاباتك يجب أن تكون بالعربية فقط.\\n\\nمهمتك: اقترح وصفاً مختصراً ومهنياً للحقل المطلوب بناءً على السياق.\\n\\nالسياق: ${context}`;\n  \n  if (Object.keys(previousValues).length > 0) {\n    prompt += `\\n\\nمعلومات إضافية:`;\n    for (const [key, value] of Object.entries(previousValues)) {\n      prompt += `\\n- ${key}: ${value}`;\n    }\n  }\n  \n  prompt += `\\n\\nالحقل المطلوب: ${field}\\n\\nتعليمات صارمة:\\n1. أجب بالعربية فقط\\n2. لا تستخدم أي كلمات إنجليزية\\n3. لا تكتب \"وصف:\" أو \"Description:\"\\n4. فقط اكتب المحتوى مباشرة\\n5. اجعل الإجابة مختصرة ومهنية (2-3 جمل)\\n\\nمثال للإجابة الصحيحة:\\n\"تطوير نظام مصادقة آمن باستخدام بروتوكول OAuth 2.0 مع دعم تسجيل الدخول وإدارة الجلسات وإعادة تعيين كلمة المرور\"\\n\\nالآن اكتب الإجابة:`;\n} else {\n  // English prompt\n  prompt = `You are an AI assistant for project management. Suggest a concise, professional description for the requested field.\\n\\nContext: ${context}`;\n  \n  if (Object.keys(previousValues).length > 0) {\n    prompt += `\\n\\nAdditional Information:`;\n    for (const [key, value] of Object.entries(previousValues)) {\n      prompt += `\\n- ${key}: ${value}`;\n    }\n  }\n  \n  prompt += `\\n\\nField to suggest: ${field}\\n\\nStrict Rules:\\n1. Respond in English only\\n2. Do NOT write \"Description:\" or any prefix\\n3. Write content directly\\n4. Keep it brief and professional (2-3 sentences)\\n\\nExample of correct answer:\\n\"Develop secure OAuth 2.0 authentication system with login, session management, and password reset functionality\"\\n\\nNow write your answer:`;\n}\n\n// Return structured data for Ollama\nreturn {\n  json: {\n    model: 'mistral:7b-instruct',\n    prompt: prompt,\n    stream: false,\n    options: {\n      temperature: 0.3,\n      top_p: 0.9,\n      num_predict: maxTokens,\n      repeat_penalty: 1.2\n    },\n    originalRequest: {\n      context,\n      field,\n      previousValues,\n      detectedLanguage: isArabic ? 'ar' : 'en'\n    }\n  }\n};"
+      },
+      "id": "build-prompt",
+      "name": "Build Ollama Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{ $json.model }}"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "name": "stream",
+              "value": "={{ $json.stream }}"
+            },
+            {
+              "name": "options",
+              "value": "={{ $json.options }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "ollama-request",
+      "name": "Call Ollama API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Ollama response\nconst ollamaResponse = $input.item.json;\nlet suggestion = ollamaResponse.response?.trim() || '';\nconst originalRequest = $('Build Ollama Prompt').item.json.originalRequest;\n\n// Clean up common unwanted prefixes\nconst prefixesToRemove = [\n  'Description:',\n  'وصف:',\n  '\"',\n  \"'\",\n  'Task Description:',\n  'وصف المهمة:'\n];\n\nfor (const prefix of prefixesToRemove) {\n  if (suggestion.startsWith(prefix)) {\n    suggestion = suggestion.substring(prefix.length).trim();\n  }\n  if (suggestion.endsWith('\"') || suggestion.endsWith(\"'\")) {\n    suggestion = suggestion.slice(0, -1).trim();\n  }\n}\n\n// Format response for frontend\nreturn {\n  json: {\n    success: true,\n    data: {\n      suggestion: suggestion,\n      confidence: 0.85,\n      metadata: {\n        field: originalRequest.field,\n        context: originalRequest.context,\n        model: 'mistral:7b-instruct',\n        language: originalRequest.detectedLanguage,\n        totalDuration: ollamaResponse.total_duration,\n        evalCount: ollamaResponse.eval_count\n      }\n    },\n    message: 'Suggestion generated successfully'\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "webhook-response",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle errors gracefully\nconst error = $input.item.json.error || $input.item.json;\n\nreturn {\n  json: {\n    success: false,\n    data: null,\n    message: error.message || 'Failed to generate suggestion',\n    error: {\n      type: error.name || 'UnknownError',\n      details: error.stack || JSON.stringify(error)\n    }\n  }\n};"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "error-response",
+      "name": "Send Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 500]
+    }
+  ],
+  "connections": {
+    "Webhook - Form Suggestion Request": {
+      "main": [
+        [
+          {
+            "node": "Build Ollama Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Ollama Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call Ollama API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Ollama API": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Send Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-10-15T00:00:00.000Z",
+  "versionId": "2"
+}

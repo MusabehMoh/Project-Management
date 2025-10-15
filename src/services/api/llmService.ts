@@ -1,4 +1,9 @@
-import type { ApiResponse } from "./types";
+// ApiResponse type (generic response structure)
+interface ApiResponse<T> {
+  success: boolean;
+  data: T | null;
+  message?: string;
+}
 
 interface LLMSuggestionRequest {
   context: string;
@@ -35,11 +40,17 @@ interface OllamaGenerateResponse {
 }
 
 const LLM_CONFIG = {
+  // n8n webhook URL (use n8n if USE_N8N=true, else direct Ollama)
+  useN8N: import.meta.env.VITE_LLM_USE_N8N === "true",
+  n8nWebhookUrl:
+    import.meta.env.VITE_LLM_N8N_WEBHOOK_URL ||
+    "http://localhost:5678/webhook/ai-suggest",
+  // Direct Ollama config (fallback)
   baseUrl: import.meta.env.VITE_LLM_API_URL || "http://localhost:11434",
   model: import.meta.env.VITE_LLM_MODEL || "mistral:7b-instruct",
   temperature: 0.3, // Lower = more consistent/deterministic
   maxTokens: 150,
-  timeout: 10000, // 10 second timeout
+  timeout: 15000, // 15 second timeout (n8n + Ollama needs more time)
 };
 
 export const llmService = {
@@ -59,48 +70,12 @@ export const llmService = {
         };
       }
 
-      const prompt = this.buildPrompt(request);
-
-      const ollamaRequest: OllamaGenerateRequest = {
-        model: LLM_CONFIG.model,
-        prompt,
-        stream: false,
-        options: {
-          temperature: LLM_CONFIG.temperature,
-          top_p: 0.9,
-          max_tokens: request.maxTokens || LLM_CONFIG.maxTokens,
-        },
-      };
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(
-        () => controller.abort(),
-        LLM_CONFIG.timeout,
-      );
-
-      const response = await fetch(`${LLM_CONFIG.baseUrl}/api/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ollamaRequest),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`LLM API error: ${response.statusText}`);
+      // Use n8n workflow or direct Ollama based on config
+      if (LLM_CONFIG.useN8N) {
+        return await this.getSuggestionViaN8N(request);
+      } else {
+        return await this.getSuggestionViaOllama(request);
       }
-
-      const data: OllamaGenerateResponse = await response.json();
-
-      return {
-        success: true,
-        data: {
-          suggestion: data.response.trim(),
-          confidence: 0.85,
-        },
-        message: "Suggestion generated successfully",
-      };
     } catch (error) {
       console.error("Error getting LLM suggestion:", error);
 
@@ -120,6 +95,94 @@ export const llmService = {
             : "Failed to get LLM suggestion",
         data: null,
       };
+    }
+  },
+
+  /**
+   * Get suggestion via n8n workflow
+   */
+  async getSuggestionViaN8N(
+    request: LLMSuggestionRequest,
+  ): Promise<ApiResponse<LLMSuggestionResponse>> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), LLM_CONFIG.timeout);
+
+    try {
+      const response = await fetch(LLM_CONFIG.n8nWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: request.context,
+          field: request.field,
+          previousValues: request.previousValues,
+          maxTokens: request.maxTokens || LLM_CONFIG.maxTokens,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`n8n workflow error: ${response.statusText}`);
+      }
+
+      const data: ApiResponse<LLMSuggestionResponse> = await response.json();
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  },
+
+  /**
+   * Get suggestion directly from Ollama
+   */
+  async getSuggestionViaOllama(
+    request: LLMSuggestionRequest,
+  ): Promise<ApiResponse<LLMSuggestionResponse>> {
+    const prompt = this.buildPrompt(request);
+
+    const ollamaRequest: OllamaGenerateRequest = {
+      model: LLM_CONFIG.model,
+      prompt,
+      stream: false,
+      options: {
+        temperature: LLM_CONFIG.temperature,
+        top_p: 0.9,
+        max_tokens: request.maxTokens || LLM_CONFIG.maxTokens,
+      },
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), LLM_CONFIG.timeout);
+
+    try {
+      const response = await fetch(`${LLM_CONFIG.baseUrl}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ollamaRequest),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.statusText}`);
+      }
+
+      const data: OllamaGenerateResponse = await response.json();
+
+      return {
+        success: true,
+        data: {
+          suggestion: data.response.trim(),
+          confidence: 0.85,
+        },
+        message: "Suggestion generated successfully",
+      };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
     }
   },
 
