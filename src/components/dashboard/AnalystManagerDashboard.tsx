@@ -63,12 +63,6 @@ export default function AnalystManagerDashboard() {
           {t("dashboard.title")}
         </h1>
         <p className="text-lg text-default-600">{t("dashboard.subtitle")}</p>
-
-        <div className="flex gap-4 justify-center">
-          <Button color="primary" size="lg">
-            {t("dashboard.newProject")}
-          </Button>
-        </div>
       </div>
 
       {/* Quick Stats */}

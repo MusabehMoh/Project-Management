@@ -57,7 +57,7 @@ public class ProjectsController : ApiBaseController
             };
 
             // Send to all connected clients
-            await _hubContext.Clients.All.SendAsync("Notification", testNotification);
+            //await _hubContext.Clients.All.SendAsync("Notification", testNotification);
             return Success(projectDtos, pagination, "Projects retrieved successfully");
         }
         catch (Exception ex)

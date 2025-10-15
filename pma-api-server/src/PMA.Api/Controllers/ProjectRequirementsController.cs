@@ -721,22 +721,22 @@ public class ProjectRequirementsController : ApiBaseController
     /// Get team workload performance - Redirect to TeamWorkloadController
     /// This endpoint exists for backward compatibility with frontend services
     /// </summary>
-    [HttpGet("team-workload-performance")]
-    [ProducesResponseType(200)]
-    public IActionResult GetTeamWorkloadPerformance(
-        [FromQuery] int? departmentId = null,
-        [FromQuery] string? busyStatus = null,
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 10)
-    {
-        // Redirect to the proper TeamWorkloadController endpoint
-        var queryParams = new List<string>();
-        if (departmentId.HasValue) queryParams.Add($"departmentId={departmentId}");
-        if (!string.IsNullOrEmpty(busyStatus)) queryParams.Add($"busyStatus={busyStatus}");
-        queryParams.Add($"page={page}");
-        queryParams.Add($"limit={limit}");
+    //[HttpGet("team-workload-performance")]
+    //[ProducesResponseType(200)]
+    //public IActionResult GetTeamWorkloadPerformance(
+    //    [FromQuery] int? departmentId = null,
+    //    [FromQuery] string? busyStatus = null,
+    //    [FromQuery] int page = 1,
+    //    [FromQuery] int limit = 10)
+    //{
+    //    // Redirect to the proper TeamWorkloadController endpoint
+    //    var queryParams = new List<string>();
+    //    if (departmentId.HasValue) queryParams.Add($"departmentId={departmentId}");
+    //    if (!string.IsNullOrEmpty(busyStatus)) queryParams.Add($"busyStatus={busyStatus}");
+    //    queryParams.Add($"page={page}");
+    //    queryParams.Add($"limit={limit}");
         
-        var redirectUrl = $"/api/team-workload/performance?{string.Join("&", queryParams)}";
-        return Redirect(redirectUrl);
-    }
+    //    var redirectUrl = $"/api/team-workload/performance?{string.Join("&", queryParams)}";
+    //    return Redirect(redirectUrl);
+    //}
 }

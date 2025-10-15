@@ -2,7 +2,7 @@ import { apiClient } from "./client";
 
 // Team workload API endpoints
 const ENDPOINTS = {
-  TEAM_WORKLOAD_PERFORMANCE: "/project-requirements/team-workload-performance",
+  TEAM_WORKLOAD_PERFORMANCE: "/team-workload/performance",
 } as const;
 
 export interface TeamMemberMetrics {

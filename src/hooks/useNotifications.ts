@@ -159,7 +159,7 @@ export function useNotifications(): UseNotifications {
 
   useEffect(() => {
     loadNotifications();
-    sendTestNotification();
+    //sendTestNotification();
 
     if (!API_CONFIG.ENABLE_SIGNALR) {
       console.log("SignalR disabled via VITE_ENABLE_SIGNALR flag");
