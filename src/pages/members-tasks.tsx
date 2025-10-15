@@ -187,6 +187,7 @@ export default function MembersTasksPage() {
     handleProjectChange,
     handleStatusChange,
     handleAssigneeChange,
+    handleTypeChange,
     handleResetFilters,
     taskParametersRequest,
     refreshTasks,
@@ -481,6 +482,7 @@ export default function MembersTasksPage() {
     taskParametersRequest.statusId !== undefined ||
     taskParametersRequest.priorityId !== undefined ||
     taskParametersRequest.projectId !== undefined ||
+    taskParametersRequest.typeId !== undefined ||
     (taskParametersRequest.memberIds &&
       taskParametersRequest.memberIds.length > 0);
 
@@ -755,6 +757,54 @@ export default function MembersTasksPage() {
                 )}
               </Select>
             </div>
+
+            {/* Type Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <Select
+                className="w-full"
+                items={[
+                  { value: "", label: t("tasks.allTypes") },
+                  { value: "1", label: t("tasks.type.timeline") },
+                  { value: "2", label: t("tasks.type.changeRequest") },
+                  { value: "3", label: t("tasks.type.adhoc") },
+                ]}
+                placeholder={t("tasks.filterByType")}
+                selectedKeys={
+                  taskParametersRequest.typeId
+                    ? [taskParametersRequest.typeId.toString()]
+                    : []
+                }
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+                  const newTypeFilter =
+                    selectedKey && selectedKey !== ""
+                      ? parseInt(selectedKey)
+                      : null;
+
+                  if (newTypeFilter !== null) {
+                    handleTypeChange(newTypeFilter);
+                  } else {
+                    const hasOtherFilters =
+                      searchTerm ||
+                      taskParametersRequest.statusId ||
+                      taskParametersRequest.priorityId ||
+                      taskParametersRequest.projectId ||
+                      (taskParametersRequest.memberIds &&
+                        taskParametersRequest.memberIds.length > 0);
+
+                    if (hasOtherFilters) {
+                      fetchTasks();
+                    } else {
+                      handleResetFilters();
+                    }
+                  }
+                }}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
+            </div>
           </div>
 
           {/* Active Filters display row - Count, Clear button, and chips all on same line */}
@@ -830,6 +880,16 @@ export default function MembersTasksPage() {
                       }
                     </Chip>
                   )}
+                {taskParametersRequest.typeId && (
+                  <Chip color="default" size="sm" variant="flat">
+                    {t("common.type")}:{" "}
+                    {taskParametersRequest.typeId === 1
+                      ? t("tasks.type.timeline")
+                      : taskParametersRequest.typeId === 2
+                        ? t("tasks.type.changeRequest")
+                        : t("tasks.type.adhoc")}
+                  </Chip>
+                )}
               </div>
             </div>
           )}

@@ -73,6 +73,11 @@ export class MembersTasksService {
       params.append("primaryAssigneeId", taskRequest.memberIds[0].toString());
     }
 
+    // Handle task type filter
+    if (taskRequest?.typeId) {
+      params.append("typeId", taskRequest.typeId.toString());
+    }
+
     const endpoint = `${this.baseUrl}?${params.toString()}`;
     const res = await apiClient.get<any>(endpoint);
 

@@ -30,7 +30,7 @@ public class MemberTaskService : IMemberTaskService
         _designRequestRepository = designRequestRepository;
     }
 
-    public async Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null, string? search = null)
+    public async Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null, string? search = null, int? typeId = null)
     {
         // Get current user context for filtering logic (similar to ProjectRequirementService pattern)
         var userContext = await _userContextAccessor.GetUserContextAsync();
@@ -95,7 +95,7 @@ public class MemberTaskService : IMemberTaskService
         int? statusId = status;
         int? priorityId = priority;
 
-        var (tasks, totalCount) = await _taskRepository.GetTasksAsync(page, limit, null, projectId, assigneeId, statusId, priorityId, deptId, search);
+        var (tasks, totalCount) = await _taskRepository.GetTasksAsync(page, limit, null, projectId, assigneeId, statusId, priorityId, deptId, search, typeId);
 
         // Get design request information for all tasks
         var taskIds = tasks.Select(t => t.Id).ToList();

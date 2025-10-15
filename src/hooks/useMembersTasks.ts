@@ -39,6 +39,7 @@ interface UseMembersTasksResult {
   handlePriorityChange: (priorityId: number) => void;
   handleStatusChange: (statusId: number) => void;
   handleAssigneeChange: (memberIds: number[]) => void;
+  handleTypeChange: (typeId: number) => void;
   handleResetFilters: () => void;
   taskParametersRequest: TaskSearchParams;
 }
@@ -151,6 +152,16 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       ...prev,
       memberIds: memberIds.length > 0 ? memberIds : undefined,
       memberFilterMode: "any", // Show tasks assigned to any of the selected members
+    }));
+  }, []);
+
+  /**
+   * Handle task type change
+   */
+  const handleTypeChange = useCallback((typeId: number) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      typeId: typeId,
     }));
   }, []);
 
@@ -456,6 +467,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     handleProjectChange,
     handleStatusChange,
     handleAssigneeChange,
+    handleTypeChange,
     handleResetFilters,
     taskParametersRequest,
     refreshTasks,

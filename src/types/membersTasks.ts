@@ -39,6 +39,7 @@ export interface TaskSearchParams {
   statusId?: number; // Legacy single status filter
   priorityId?: number; // Legacy single priority filter
   projectId?: number;
+  typeId?: number; // Filter by task type (1=Timeline, 2=ChangeRequest, 3=Adhoc)
   isOverdue?: boolean; // Show only overdue tasks
   dateRange?: {
     start: string;

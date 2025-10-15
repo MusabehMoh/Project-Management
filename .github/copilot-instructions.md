@@ -821,6 +821,36 @@ public async Task<IActionResult> GetEntities(
   - Toast notifications for all user actions
 - **Translations**: `users.filterByRole`, `users.filterByStatus` for placeholders
 
+#### Members-Tasks Page (`members-tasks.tsx`)
+- **Purpose**: Task management page with comprehensive filtering and multiple view modes
+- **Filter Implementation** (October 2025):
+  - **Layout**: Clean, card-less design with all filters in responsive horizontal row
+  - **Search**: Task name and description search with debouncing
+  - **Project Filter**: Dropdown for filtering by project (all team projects)
+  - **Assignee Filter**: Autocomplete with avatar display for team member selection
+  - **Status Filter**: Dynamic status options from lookup service (To Do, In Progress, In Review, Rework, Completed)
+  - **Priority Filter**: Low/Medium/High priority filtering
+  - **Type Filter**: Task type filtering (Timeline/Change Request/Adhoc) - **Added October 2025**
+    - TypeId values: 1=Timeline, 2=ChangeRequest, 3=Adhoc
+    - Backend filtering through full-stack implementation
+    - Translation keys: 
+      - `tasks.filterByType` - "Filter by Type" / "تصفية حسب النوع"
+      - `tasks.allTypes` - "All Types" / "جميع الأنواع"
+      - `tasks.type.timeline` - "Timeline Task" / "مهمة جدول زمني"
+      - `tasks.type.changeRequest` - "Change Request" / "طلب تغيير"
+      - `tasks.type.adhoc` - "Adhoc Task" / "مهمة عاجلة"
+      - `common.type` - "Type" / "النوع" (used in active filter chip display)
+  - **Backend**: Full-stack filtering implemented in MembersTasksController → MemberTaskService → TaskRepository
+  - **Active Filter Display**: Shows active filters as chips with clear button (uses `common.type` translation)
+- **Key Features**:
+  - Three view modes: Grid, List, Gantt chart
+  - Pagination with customizable page size
+  - Export functionality (CSV, PDF, XLSX)
+  - Role-based task visibility (managers see department, users see own tasks)
+  - Real-time filter updates with proper state management
+- **UI Design**: Minimal background colors, clean alignment, responsive grid layout (lg breakpoint)
+- **Backend API**: GET `/api/MembersTasks` with query parameters: page, limit, projectId, primaryAssigneeId, status, priority, search, typeId
+
 ### Dashboard Components
 - **ApprovedRequirements**: Shows approved requirements ready for development (Developer Manager)
 - **PendingRequirements**: Shows draft requirements awaiting approval (Analyst Manager)
