@@ -65,16 +65,18 @@ public class DepartmentService : IDepartmentService
 
         foreach (var team in teams)
         {
-            var employee = await _employeeService.GetEmployeeByIdAsync(team.PrsId);
+            var employee = team.PrsId != null ? await _employeeService.GetEmployeeByIdAsync((int)team.PrsId) : new EmployeeDto() { FullName = team.FullName, UserName = team.UserName };
+        ;
             var memberDto = new TeamMemberDto
             {
                 Id = team.Id,
                 DepartmentId = team.DepartmentId,
-                UserId = team.PrsId,
-                Role = "Member", // Default role, could be extended
+                PrsId = team.PrsId, 
                 JoinDate = team.JoinDate,
                 IsActive = team.IsActive,
-                User = employee
+                FullName = team.FullName,
+                UserName = team.UserName,
+                User = employee 
             };
             memberDtos.Add(memberDto);
         }
@@ -82,34 +84,43 @@ public class DepartmentService : IDepartmentService
         return (memberDtos, totalCount);
     }
 
-    public async Task<TeamMemberDto> AddDepartmentMemberAsync(int departmentId, int userId, string role)
+    public async Task<TeamMemberDto> AddDepartmentMemberAsync(int departmentId, int? prsId, string userName, string fullName)
     {
-        // Check if employee exists
-        var employee = await _employeeService.GetEmployeeByIdAsync(userId);
-        if (employee == null)
-        {
-            throw new KeyNotFoundException("Employee not found");
-        }
 
         // Check if department exists
         var department = await _departmentRepository.GetByIdAsync(departmentId);
         if (department == null)
         {
             throw new KeyNotFoundException("Department not found");
+        } 
+        
+        if (prsId!=null && prsId >= 0)
+        {
+            // Check if employee exists
+            var employee = await _employeeService.GetEmployeeByIdAsync((int)prsId);
+            if (employee == null)
+            {
+                throw new KeyNotFoundException("Employee not found");
+            }
+            // Check if already a member
+            var existingTeams = await _teamRepository.GetTeamsByDepartmentAsync(departmentId);
+            if (existingTeams.Teams.Any(t => t.PrsId == (int)prsId && t.IsActive))
+            {
+                throw new InvalidOperationException("Employee is already a member of this department");
+            } 
         }
 
-        // Check if already a member
-        var existingTeams = await _teamRepository.GetTeamsByDepartmentAsync(departmentId);
-        if (existingTeams.Teams.Any(t => t.PrsId == userId && t.IsActive))
-        {
-            throw new InvalidOperationException("Employee is already a member of this department");
-        }
+
+
+
 
         var team = new Team
         {
-            PrsId = userId,
+            PrsId = prsId,
             DepartmentId = departmentId,
             JoinDate = DateTime.UtcNow,
+            UserName = userName,
+            FullName = fullName, 
             IsActive = true,
             CreatedBy = 1 // Default admin user, could be from current user context
         };
@@ -120,42 +131,42 @@ public class DepartmentService : IDepartmentService
         {
             Id = addedTeam.Id,
             DepartmentId = addedTeam.DepartmentId,
-            UserId = addedTeam.PrsId,
-            Role = role,
+            PrsId = addedTeam.PrsId,
+            UserName= addedTeam.UserName,
+            FullName= addedTeam.FullName,   
             JoinDate = addedTeam.JoinDate,
-            IsActive = addedTeam.IsActive,
-            User = employee
+            IsActive = addedTeam.IsActive
         };
     }
 
-    public async Task<TeamMemberDto> UpdateDepartmentMemberAsync(int departmentId, int memberId, string? role, bool? isActive)
-    {
-        var team = await _teamRepository.GetTeamByIdAsync(memberId);
-        if (team == null || team.DepartmentId != departmentId)
-        {
-            throw new KeyNotFoundException("Team member not found");
-        }
+    //public async Task<TeamMemberDto> UpdateDepartmentMemberAsync(int departmentId, int memberId, string? role, bool? isActive)
+    //{
+    //    var team = await _teamRepository.GetTeamByIdAsync(memberId);
+    //    if (team == null || team.DepartmentId != departmentId)
+    //    {
+    //        throw new KeyNotFoundException("Team member not found");
+    //    }
 
-        if (isActive.HasValue)
-        {
-            team.IsActive = isActive.Value;
-        }
+    //    if (isActive.HasValue)
+    //    {
+    //        team.IsActive = isActive.Value;
+    //    }
 
-        await _teamRepository.UpdateTeamMemberAsync(team);
+    //    await _teamRepository.UpdateTeamMemberAsync(team);
 
-        var employee = await _employeeService.GetEmployeeByIdAsync(team.PrsId);
+    //    var employee = await _employeeService.GetEmployeeByIdAsync(team.PrsId);
 
-        return new TeamMemberDto
-        {
-            Id = team.Id,
-            DepartmentId = team.DepartmentId,
-            UserId = team.PrsId,
-            Role = role ?? "Member",
-            JoinDate = team.JoinDate,
-            IsActive = team.IsActive,
-            User = employee
-        };
-    }
+    //    return new TeamMemberDto
+    //    {
+    //        Id = team.Id,
+    //        DepartmentId = team.DepartmentId,
+    //        UserId = team.PrsId,
+    //        Role = role ?? "Member",
+    //        JoinDate = team.JoinDate,
+    //        IsActive = team.IsActive,
+    //        User = employee
+    //    };
+    //}
 
     public async Task<bool> RemoveMemberByIdAsync(int memberId)
     {

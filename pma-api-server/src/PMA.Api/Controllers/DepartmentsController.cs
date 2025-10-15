@@ -194,7 +194,7 @@ public class DepartmentsController : ApiBaseController
     {
         try
         {
-            var member = await _departmentService.AddDepartmentMemberAsync(id, request.UserId, request.Role ?? "Member");
+            var member = await _departmentService.AddDepartmentMemberAsync(id, request.PrsId, request.UserName, request.FullName);
             return Success(member);
         }
         catch (KeyNotFoundException ex)
@@ -208,7 +208,7 @@ public class DepartmentsController : ApiBaseController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while adding department member. DepartmentId: {DepartmentId}, UserId: {UserId}",
-                id, request?.UserId);
+                id, request?.PrsId);
             return Error<TeamMemberDto>("An error occurred while adding the department member", ex.Message);
         }
     }
@@ -216,28 +216,28 @@ public class DepartmentsController : ApiBaseController
     /// <summary>
     /// Update department member
     /// </summary>
-    [HttpPut("{id}/members/{memberId}")]
-    [ProducesResponseType(typeof(TeamMemberDto), 200)]
-    [ProducesResponseType(400)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> UpdateDepartmentMember(int id, int memberId, [FromBody] UpdateMemberRequest request)
-    {
-        try
-        {
-            var member = await _departmentService.UpdateDepartmentMemberAsync(id, memberId, request?.Role, request?.IsActive);
-            return Success(member);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(Error<TeamMemberDto>(ex.Message, null, 404));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while updating department member. DepartmentId: {DepartmentId}, MemberId: {MemberId}",
-                id, memberId);
-            return Error<TeamMemberDto>("An error occurred while updating the department member", ex.Message);
-        }
-    }
+    //[HttpPut("{id}/members/{memberId}")]
+    //[ProducesResponseType(typeof(TeamMemberDto), 200)]
+    //[ProducesResponseType(400)]
+    //[ProducesResponseType(404)]
+    //public async Task<IActionResult> UpdateDepartmentMember(int id, int memberId, [FromBody] UpdateMemberRequest request)
+    //{
+    //    try
+    //    {
+    //        var member = await _departmentService.UpdateDepartmentMemberAsync(id, memberId, request?.Role, request?.IsActive);
+    //        return Success(member);
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(Error<TeamMemberDto>(ex.Message, null, 404));
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, "Error occurred while updating department member. DepartmentId: {DepartmentId}, MemberId: {MemberId}",
+    //            id, memberId);
+    //        return Error<TeamMemberDto>("An error occurred while updating the department member", ex.Message);
+    //    }
+    //}
 
     /// <summary>
     /// Remove member from department

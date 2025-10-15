@@ -35,8 +35,8 @@ public class Team
     [Key]
     public int Id { get; set; }
 
-    [Required]
-    public int PrsId { get; set; } // Employee ID
+  
+    public int? PrsId { get; set; } // Employee ID
 
     [Required]
     public int DepartmentId { get; set; }
@@ -44,9 +44,11 @@ public class Team
     [Required]
     public DateTime JoinDate { get; set; }
 
-    [Required]
-    public bool IsActive { get; set; }
+    public string? UserName { get; set; } = string.Empty;
+    public string? FullName { get; set; } = string.Empty;
 
+    [Required]
+    public bool IsActive { get; set; } 
     public int? CreatedBy { get; set; }
 
     [Required]
@@ -61,9 +63,7 @@ public class Team
 
     [ForeignKey("DepartmentId")]
     public Department? Department { get; set; }
-
-    [ForeignKey("CreatedBy")]
-    public User? Creator { get; set; }
+     
 }
 
 public class Unit

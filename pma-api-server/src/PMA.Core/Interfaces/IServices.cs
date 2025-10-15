@@ -91,8 +91,8 @@ public interface IDepartmentService
     System.Threading.Tasks.Task<Department> UpdateDepartmentAsync(Department department);
     System.Threading.Tasks.Task<bool> DeleteDepartmentAsync(int id);
     System.Threading.Tasks.Task<(IEnumerable<TeamMemberDto> Members, int TotalCount)> GetDepartmentMembersAsync(int departmentId, int page = 1, int limit = 10);
-    System.Threading.Tasks.Task<TeamMemberDto> AddDepartmentMemberAsync(int departmentId, int userId, string role);
-    System.Threading.Tasks.Task<TeamMemberDto> UpdateDepartmentMemberAsync(int departmentId, int memberId, string? role, bool? isActive);
+    System.Threading.Tasks.Task<TeamMemberDto> AddDepartmentMemberAsync(int departmentId, int? prsId, string userName,string fullName);
+    //System.Threading.Tasks.Task<TeamMemberDto> UpdateDepartmentMemberAsync(int departmentId, int memberId, string? role, bool? isActive);
     System.Threading.Tasks.Task<bool> RemoveMemberByIdAsync(int memberId);
     System.Threading.Tasks.Task<IEnumerable<EmployeeDto>> SearchUsersInTeamsAsync(string searchTerm);
     System.Threading.Tasks.Task<IEnumerable<EmployeeDto>> SearchUsersInDepartmentAsync(string searchTerm, int departmentId);
