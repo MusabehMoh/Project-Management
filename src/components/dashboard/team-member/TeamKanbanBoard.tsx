@@ -143,7 +143,19 @@ export default function TeamKanbanBoard({
       });
 
       if (response.success && response.data) {
-        const allColumns = initializeColumns(response.data.tasks);
+        let tasksToDisplay = response.data.tasks;
+
+        // Filter tasks for Analyst role: Only show adhoc tasks (typeId = 3)
+        const isAnalyst = userRoleIds.includes(3); // RoleIds.ANALYST = 3
+        const isOnlyAnalyst = userRoleIds.length === 1 && isAnalyst;
+
+        if (isAnalyst && isOnlyAnalyst) {
+          tasksToDisplay = tasksToDisplay.filter(
+            (task) => task.typeId === TASK_TYPES.ADHOC,
+          );
+        }
+
+        const allColumns = initializeColumns(tasksToDisplay);
 
         setColumns(allColumns);
       } else {

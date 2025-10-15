@@ -39,11 +39,15 @@ export const useUsers = (initialFilters?: UserFilters) => {
         setLoading(true);
         setError(null);
 
+        console.log("📥 useUsers: Calling API with filters:", filters, "page:", page, "limit:", limit);
         const response = await userService.getUsers(filters, page, limit);
+        console.log("📦 useUsers: API response:", response);
 
         if (response.success) {
+          console.log("✅ useUsers: Setting users. Count:", response.data.length);
           setUsers(response.data);
           if (response.pagination) {
+            console.log("📊 useUsers: Setting pagination:", response.pagination);
             setPagination(response.pagination);
           }
         } else {
@@ -54,7 +58,7 @@ export const useUsers = (initialFilters?: UserFilters) => {
           err instanceof Error ? err.message : "Failed to load users";
 
         setError(errorMessage);
-        console.error("Error loading users:", err);
+        console.error("❌ useUsers: Error loading users:", err);
       } finally {
         setLoading(false);
       }
@@ -181,12 +185,14 @@ export const useUsers = (initialFilters?: UserFilters) => {
   // Update filters
   const updateFilters = useCallback((newFilters: UserFilters) => {
     setFilters(newFilters);
+    // Reset to page 1 when filters change
+    setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
   // Load users when filters change
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    loadUsers(pagination.page, pagination.limit);
+  }, [filters]);
 
   return {
     users,

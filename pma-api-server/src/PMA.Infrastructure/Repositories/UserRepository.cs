@@ -12,7 +12,7 @@ public class UserRepository : Repository<User>, IUserRepository
     {
     }
 
-    public async Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, bool? isVisible = null, int? departmentId = null)
+    public async Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isVisible = null, int? departmentId = null, int? roleId = null)
     {
         var query = _context.Users
            .Include(u => u.Employee).AsQueryable();
@@ -22,6 +22,24 @@ public class UserRepository : Repository<User>, IUserRepository
            .ThenInclude(ur => ur.Role!)
            .Include(u => u.UserActions!)
            .ThenInclude(ua => ua.Permission!);
+
+        // Search filter - search across userName, fullName, militaryNumber
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(u => 
+                u.UserName.ToLower().Contains(searchLower) ||
+                (u.FullName != null && u.FullName.ToLower().Contains(searchLower)) ||
+                (u.MilitaryNumber != null && u.MilitaryNumber.ToLower().Contains(searchLower)) ||
+                (u.Employee != null && u.Employee.FullName != null && u.Employee.FullName.ToLower().Contains(searchLower))
+            );
+        }
+
+        // Role filter
+        if (roleId.HasValue)
+        {
+            query = query.Where(u => u.UserRoles!.Any(ur => ur.RoleId == roleId.Value));
+        }
 
         if (isVisible.HasValue)
         {

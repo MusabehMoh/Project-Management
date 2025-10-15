@@ -997,6 +997,21 @@ const translations = {
     "keyrequirements.indevelopment": "In Development",
     "requirements.project": "Project",
     "requirements.completed": "Completed",
+    // AI Suggestions
+    "requirements.aiSuggest": "AI Suggestion",
+    "requirements.aiPromptDescription":
+      "Describe what you need and AI will generate a detailed requirement description for you.",
+    "requirements.aiContinuePrompt":
+      "Continue the conversation or refine the requirement:",
+    "requirements.aiPromptLabel": "What should this requirement achieve?",
+    "requirements.aiPromptPlaceholder":
+      "e.g., Create a system to generate PDF invoices with QR codes and email delivery",
+    "requirements.aiPromptExample":
+      'Example: "Build authentication system with OAuth2 and password reset"',
+    "requirements.aiContext": "Context being used:",
+    "requirements.conversationHistory": "Previous Conversation",
+    "requirements.clearHistory": "Clear History",
+    "requirements.generate": "Generate",
     // Requirement Status Translations
     "requirementStatus.1": "New",
     "requirementStatus.2": "Under Study",
@@ -1126,6 +1141,8 @@ const translations = {
     "users.actions": "Actions",
     "users.isVisible": "Active",
     "users.status": "Status",
+    "users.filterByRole": "Filter by Role",
+    "users.filterByStatus": "Filter by Status",
     "users.searchEmployees":
       "Search employees by name, military number, or username",
     "users.noEmployeesFound": "No employees found",
@@ -2727,6 +2744,21 @@ const translations = {
     "keyrequirements.indevelopment": "قيد البرمجة",
     "requirements.project": "المشروع",
     "requirements.completed": "مكتمل",
+    // AI Suggestions - Arabic
+    "requirements.aiSuggest": "اقتراح بالذكاء الاصطناعي",
+    "requirements.aiPromptDescription":
+      "صِف ما تحتاجه وسيقوم الذكاء الاصطناعي بإنشاء وصف تفصيلي للمتطلب من أجلك.",
+    "requirements.aiContinuePrompt":
+      "استمر في المحادثة أو قم بتحسين المتطلب:",
+    "requirements.aiPromptLabel": "ماذا يجب أن يحقق هذا المتطلب؟",
+    "requirements.aiPromptPlaceholder":
+      "مثال: إنشاء نظام لإنتاج فواتير PDF مع رموز QR وإرسالها عبر البريد الإلكتروني",
+    "requirements.aiPromptExample":
+      'مثال: "بناء نظام مصادقة باستخدام OAuth2 مع إعادة تعيين كلمة المرور"',
+    "requirements.aiContext": "السياق المستخدم:",
+    "requirements.conversationHistory": "المحادثة السابقة",
+    "requirements.clearHistory": "مسح السجل",
+    "requirements.generate": "إنشاء",
     // Requirement Status Translations - Arabic
     "requirementStatus.1": "جديد",
     "requirementStatus.2": "قيد الدراسة",
@@ -2856,6 +2888,8 @@ const translations = {
     "users.actions": "الصلاحيات",
     "users.isVisible": "نشط",
     "users.status": "الحالة",
+    "users.filterByRole": "تصفية حسب الدور",
+    "users.filterByStatus": "تصفية حسب الحالة",
     "users.searchEmployees":
       "البحث عن الموظفين بالاسم أو الرقم العسكري أو اسم المستخدم",
     "users.noEmployeesFound": "لم يتم العثور على موظفين",

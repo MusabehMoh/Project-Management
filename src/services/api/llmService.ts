@@ -5,11 +5,18 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+interface ConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+}
+
 interface LLMSuggestionRequest {
   context: string;
   field: string;
   previousValues?: Record<string, string>;
   maxTokens?: number;
+  conversationHistory?: ConversationMessage[]; // NEW: Support conversation history
 }
 
 interface LLMSuggestionResponse {
@@ -116,6 +123,7 @@ export const llmService = {
           field: request.field,
           previousValues: request.previousValues,
           maxTokens: request.maxTokens || LLM_CONFIG.maxTokens,
+          conversationHistory: request.conversationHistory || [], // NEW: Send conversation history
         }),
         signal: controller.signal,
       });

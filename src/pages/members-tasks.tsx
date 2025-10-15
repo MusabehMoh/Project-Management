@@ -570,10 +570,11 @@ export default function MembersTasksPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="space-y-4">
-          {/* Primary Search Bar */}
-          <Card>
-            <CardBody className="py-4">
+        <div className="space-y-4 mb-6">
+          {/* Search and Filter Controls - All in one responsive row */}
+          <div className="flex flex-col lg:flex-row gap-3 w-full">
+            {/* Search Input */}
+            <div className="flex-1 min-w-[200px] max-w-full lg:max-w-md">
               <Input
                 className="w-full"
                 placeholder={t("requirements.searchRequirements")}
@@ -581,265 +582,257 @@ export default function MembersTasksPage() {
                 value={searchTerm}
                 onValueChange={setSearchTerm}
               />
-            </CardBody>
-          </Card>
+            </div>
 
-          {/* Filters Section */}
-          <Card>
-            <CardBody>
-              <div className="space-y-4">
-                {/* Filter Controls */}
-                <div className="flex flex-col gap-4 w-full">
-                  <div className="flex flex-wrap justify-between w-full gap-4">
-                    <div className="flex-1 min-w-[200px]">
-                      <Select
-                        className="w-full"
-                        isLoading={projectsLoading}
-                        placeholder={t("taskPlan.filterByProject")}
-                        selectedKeys={
-                          taskParametersRequest.projectId
-                            ? [String(taskParametersRequest.projectId)]
-                            : []
-                        }
-                        onSelectionChange={(keys) => {
-                          const val = Array.from(keys)[0] as string;
+            {/* Project Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <Select
+                className="w-full"
+                isLoading={projectsLoading}
+                placeholder={t("taskPlan.filterByProject")}
+                selectedKeys={
+                  taskParametersRequest.projectId
+                    ? [String(taskParametersRequest.projectId)]
+                    : []
+                }
+                onSelectionChange={(keys) => {
+                  const val = Array.from(keys)[0] as string;
 
-                          handleProjectChange(val ? Number(val) : 0);
-                        }}
-                        items={[
-                          { value: "", label: t("taskPlan.allProjects") },
-                          ...(projects?.map((p) => ({
-                            value: String(p.id),
-                            label: p.applicationName,
-                          })) || []),
-                        ]}
-                      >
-                        {(item) => (
-                          <SelectItem key={item.value}>{item.label}</SelectItem>
-                        )}
-                      </Select>
-                    </div>
+                  handleProjectChange(val ? Number(val) : 0);
+                }}
+                items={[
+                  { value: "", label: t("taskPlan.allProjects") },
+                  ...(projects?.map((p) => ({
+                    value: String(p.id),
+                    label: p.applicationName,
+                  })) || []),
+                ]}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
+            </div>
 
-                    <div className="flex-1 min-w-[200px]">
-                      <Autocomplete
-                        className="w-full"
-                        defaultItems={teamMembers}
-                        isLoading={teamMembersLoading}
-                        placeholder={t("tasks.filterByAssignees")}
-                        selectedKey={
-                          taskParametersRequest.memberIds &&
-                          taskParametersRequest.memberIds.length > 0
-                            ? taskParametersRequest.memberIds[0].toString()
-                            : ""
-                        }
-                        onSelectionChange={(key) => {
-                          const selectedMemberId = key
-                            ? parseInt(key.toString())
-                            : null;
+            {/* Assignee Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <Autocomplete
+                className="w-full"
+                defaultItems={teamMembers}
+                isLoading={teamMembersLoading}
+                placeholder={t("tasks.filterByAssignees")}
+                selectedKey={
+                  taskParametersRequest.memberIds &&
+                  taskParametersRequest.memberIds.length > 0
+                    ? taskParametersRequest.memberIds[0].toString()
+                    : ""
+                }
+                onSelectionChange={(key) => {
+                  const selectedMemberId = key
+                    ? parseInt(key.toString())
+                    : null;
 
-                          if (selectedMemberId) {
-                            handleAssigneeChange([selectedMemberId]);
-                          } else {
-                            handleAssigneeChange([]);
-                          }
-                        }}
-                      >
-                        {(member) => (
-                          <AutocompleteItem
-                            key={member.id.toString()}
-                            textValue={`${member.gradeName} ${member.fullName}`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Avatar name={member.fullName} size="sm" />
-                              <div className="flex flex-col">
-                                <span className="text-small font-medium">
-                                  {member.gradeName} {member.fullName}
-                                </span>
-                                <span className="text-tiny text-default-400">
-                                  {member.militaryNumber}
-                                </span>
-                              </div>
-                            </div>
-                          </AutocompleteItem>
-                        )}
-                      </Autocomplete>
-                    </div>
-
-                    <div className="flex-1 min-w-[200px]">
-                      <Select
-                        className="w-full"
-                        items={[
-                          { value: "", label: t("requirements.allStatuses") },
-                          ...statusOptions.map((status) => ({
-                            value: status.key,
-                            label: status.label,
-                          })),
-                        ]}
-                        placeholder={t("requirements.filterByStatus")}
-                        selectedKeys={
-                          taskParametersRequest.statusId
-                            ? [taskParametersRequest.statusId.toString()]
-                            : []
-                        }
-                        onSelectionChange={(keys) => {
-                          const selectedKey = Array.from(keys)[0] as string;
-                          const newStatusFilter =
-                            selectedKey && selectedKey !== ""
-                              ? parseInt(selectedKey)
-                              : null;
-
-                          if (newStatusFilter !== null) {
-                            handleStatusChange(newStatusFilter);
-                          } else {
-                            const hasOtherFilters =
-                              searchTerm ||
-                              taskParametersRequest.priorityId ||
-                              taskParametersRequest.projectId ||
-                              (taskParametersRequest.memberIds &&
-                                taskParametersRequest.memberIds.length > 0);
-
-                            if (hasOtherFilters) {
-                              fetchTasks();
-                            } else {
-                              handleResetFilters();
-                            }
-                          }
-                        }}
-                      >
-                        {(item) => (
-                          <SelectItem key={item.value}>{item.label}</SelectItem>
-                        )}
-                      </Select>
-                    </div>
-
-                    <div className="flex-1 min-w-[200px]">
-                      <Select
-                        className="w-full"
-                        items={[
-                          { value: "", label: t("requirements.allPriorities") },
-                          ...priorityOptions.map((p) => ({
-                            value: p.value.toString(),
-                            label: language === "ar" ? p.labelAr : p.label,
-                          })),
-                        ]}
-                        placeholder={t("requirements.filterByPriority")}
-                        selectedKeys={
-                          taskParametersRequest.priorityId
-                            ? [taskParametersRequest.priorityId.toString()]
-                            : []
-                        }
-                        onSelectionChange={(keys) => {
-                          const selectedKey = Array.from(keys)[0] as string;
-                          const newPriorityFilter =
-                            selectedKey && selectedKey !== ""
-                              ? parseInt(selectedKey)
-                              : null;
-
-                          if (newPriorityFilter !== null) {
-                            handlePriorityChange(newPriorityFilter);
-                          } else {
-                            const hasOtherFilters =
-                              searchTerm ||
-                              taskParametersRequest.statusId ||
-                              taskParametersRequest.projectId ||
-                              (taskParametersRequest.memberIds &&
-                                taskParametersRequest.memberIds.length > 0);
-
-                            if (hasOtherFilters) {
-                              fetchTasks();
-                            } else {
-                              handleResetFilters();
-                            }
-                          }
-                        }}
-                      >
-                        {(item) => (
-                          <SelectItem key={item.value}>{item.label}</SelectItem>
-                        )}
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Active Filters display row - Count, Clear button, and chips all on same line */}
-                  {hasActiveFilters && (
-                    <div className="flex items-center justify-between mt-4 gap-4">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          className="bg-purple-100 text-purple-700 hover:bg-purple-200"
-                          endContent={<X className="ml-1" size={16} />}
-                          size="sm"
-                          onPress={resetAllFilters}
-                        >
-                          {t("requirements.clearFilters")}
-                        </Button>
-                        <span className="text-sm text-default-600">
-                          {t("tasks.tasksFound").replace(
-                            "{count}",
-                            totalCount.toString(),
-                          )}
+                  if (selectedMemberId) {
+                    handleAssigneeChange([selectedMemberId]);
+                  } else {
+                    handleAssigneeChange([]);
+                  }
+                }}
+              >
+                {(member) => (
+                  <AutocompleteItem
+                    key={member.id.toString()}
+                    textValue={`${member.gradeName} ${member.fullName}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar name={member.fullName} size="sm" />
+                      <div className="flex flex-col">
+                        <span className="text-small font-medium">
+                          {member.gradeName} {member.fullName}
+                        </span>
+                        <span className="text-tiny text-default-400">
+                          {member.militaryNumber}
                         </span>
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-2 text-sm text-default-600">
-                        {searchTerm && (
-                          <Chip color="primary" size="sm" variant="flat">
-                            {t("common.search")}: &quot;{searchTerm}&quot;
-                          </Chip>
-                        )}
-                        {taskParametersRequest.projectId && projects && (
-                          <Chip color="secondary" size="sm" variant="flat">
-                            {t("project")}:{" "}
-                            {
-                              projects.find(
-                                (p) => p.id === taskParametersRequest.projectId,
-                              )?.applicationName
-                            }
-                          </Chip>
-                        )}
-                        {taskParametersRequest.statusId && (
-                          <Chip color="warning" size="sm" variant="flat">
-                            {t("status")}:{" "}
-                            {
-                              statusOptions.find(
-                                (s) =>
-                                  s.key ===
-                                  taskParametersRequest.statusId!.toString(),
-                              )?.label
-                            }
-                          </Chip>
-                        )}
-                        {taskParametersRequest.priorityId && (
-                          <Chip color="danger" size="sm" variant="flat">
-                            {t("requirements.priority")}:{" "}
-                            {
-                              priorityOptions.find(
-                                (p) =>
-                                  p.value === taskParametersRequest.priorityId,
-                              )?.label
-                            }
-                          </Chip>
-                        )}
-                        {taskParametersRequest.memberIds &&
-                          taskParametersRequest.memberIds.length > 0 &&
-                          teamMembers && (
-                            <Chip color="success" size="sm" variant="flat">
-                              {t("common.assignee")}:{" "}
-                              {
-                                teamMembers.find(
-                                  (m) =>
-                                    m.id ===
-                                    taskParametersRequest.memberIds![0],
-                                )?.fullName
-                              }
-                            </Chip>
-                          )}
-                      </div>
                     </div>
+                  </AutocompleteItem>
+                )}
+              </Autocomplete>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <Select
+                className="w-full"
+                items={[
+                  { value: "", label: t("requirements.allStatuses") },
+                  ...statusOptions.map((status) => ({
+                    value: status.key,
+                    label: status.label,
+                  })),
+                ]}
+                placeholder={t("requirements.filterByStatus")}
+                selectedKeys={
+                  taskParametersRequest.statusId
+                    ? [taskParametersRequest.statusId.toString()]
+                    : []
+                }
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+                  const newStatusFilter =
+                    selectedKey && selectedKey !== ""
+                      ? parseInt(selectedKey)
+                      : null;
+
+                  if (newStatusFilter !== null) {
+                    handleStatusChange(newStatusFilter);
+                  } else {
+                    const hasOtherFilters =
+                      searchTerm ||
+                      taskParametersRequest.priorityId ||
+                      taskParametersRequest.projectId ||
+                      (taskParametersRequest.memberIds &&
+                        taskParametersRequest.memberIds.length > 0);
+
+                    if (hasOtherFilters) {
+                      fetchTasks();
+                    } else {
+                      handleResetFilters();
+                    }
+                  }
+                }}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
+            </div>
+
+            {/* Priority Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <Select
+                className="w-full"
+                items={[
+                  { value: "", label: t("requirements.allPriorities") },
+                  ...priorityOptions.map((p) => ({
+                    value: p.value.toString(),
+                    label: language === "ar" ? p.labelAr : p.label,
+                  })),
+                ]}
+                placeholder={t("requirements.filterByPriority")}
+                selectedKeys={
+                  taskParametersRequest.priorityId
+                    ? [taskParametersRequest.priorityId.toString()]
+                    : []
+                }
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+                  const newPriorityFilter =
+                    selectedKey && selectedKey !== ""
+                      ? parseInt(selectedKey)
+                      : null;
+
+                  if (newPriorityFilter !== null) {
+                    handlePriorityChange(newPriorityFilter);
+                  } else {
+                    const hasOtherFilters =
+                      searchTerm ||
+                      taskParametersRequest.statusId ||
+                      taskParametersRequest.projectId ||
+                      (taskParametersRequest.memberIds &&
+                        taskParametersRequest.memberIds.length > 0);
+
+                    if (hasOtherFilters) {
+                      fetchTasks();
+                    } else {
+                      handleResetFilters();
+                    }
+                  }
+                }}
+              >
+                {(item) => (
+                  <SelectItem key={item.value}>{item.label}</SelectItem>
+                )}
+              </Select>
+            </div>
+          </div>
+
+          {/* Active Filters display row - Count, Clear button, and chips all on same line */}
+          {hasActiveFilters && (
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  className="bg-purple-100 text-purple-700 hover:bg-purple-200"
+                  endContent={<X className="ml-1" size={16} />}
+                  size="sm"
+                  onPress={resetAllFilters}
+                >
+                  {t("requirements.clearFilters")}
+                </Button>
+                <span className="text-sm text-default-600">
+                  {t("tasks.tasksFound").replace(
+                    "{count}",
+                    totalCount.toString(),
                   )}
-                </div>
+                </span>
               </div>
-            </CardBody>
-          </Card>
+
+              <div className="flex flex-wrap items-center gap-2 text-sm text-default-600">
+                {searchTerm && (
+                  <Chip color="primary" size="sm" variant="flat">
+                    {t("common.search")}: &quot;{searchTerm}&quot;
+                  </Chip>
+                )}
+                {taskParametersRequest.projectId && projects && (
+                  <Chip color="secondary" size="sm" variant="flat">
+                    {t("project")}:{" "}
+                    {
+                      projects.find(
+                        (p) => p.id === taskParametersRequest.projectId,
+                      )?.applicationName
+                    }
+                  </Chip>
+                )}
+                {taskParametersRequest.statusId && (
+                  <Chip color="warning" size="sm" variant="flat">
+                    {t("status")}:{" "}
+                    {
+                      statusOptions.find(
+                        (s) =>
+                          s.key ===
+                          taskParametersRequest.statusId!.toString(),
+                      )?.label
+                    }
+                  </Chip>
+                )}
+                {taskParametersRequest.priorityId && (
+                  <Chip color="danger" size="sm" variant="flat">
+                    {t("requirements.priority")}:{" "}
+                    {
+                      priorityOptions.find(
+                        (p) =>
+                          p.value === taskParametersRequest.priorityId,
+                      )?.label
+                    }
+                  </Chip>
+                )}
+                {taskParametersRequest.memberIds &&
+                  taskParametersRequest.memberIds.length > 0 &&
+                  teamMembers && (
+                    <Chip color="success" size="sm" variant="flat">
+                      {t("common.assignee")}:{" "}
+                      {
+                        teamMembers.find(
+                          (m) =>
+                            m.id ===
+                            taskParametersRequest.memberIds![0],
+                        )?.fullName
+                      }
+                    </Chip>
+                  )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Pagination Controls */}

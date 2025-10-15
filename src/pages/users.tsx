@@ -404,7 +404,7 @@ export default function UsersPage() {
   const handleRoleFilter = (roleId: string) => {
     updateFilters({
       ...filters,
-      roleId: roleId ? parseInt(roleId) : undefined,
+      roleId: roleId && roleId !== "all" ? parseInt(roleId) : undefined,
     });
   };
 
@@ -471,10 +471,13 @@ export default function UsersPage() {
               <Select
                 aria-label={t("users.roles")}
                 className="w-full sm:w-64"
-                placeholder={t("users.roles")}
+                disallowEmptySelection={false}
+                placeholder={t("users.filterByRole")}
                 selectedKeys={filters.roleId ? [filters.roleId.toString()] : []}
                 onSelectionChange={(keys) => {
-                  const roleId = Array.from(keys)[0] as string;
+                  const keysArray = Array.from(keys);
+                  // If no selection (user deselected), reset to "all"
+                  const roleId = keysArray.length === 0 ? "all" : (keysArray[0] as string);
 
                   handleRoleFilter(roleId);
                 }}
@@ -495,16 +498,19 @@ export default function UsersPage() {
               <Select
                 aria-label={t("users.status")}
                 className="w-full sm:w-52"
-                placeholder={t("users.status")}
+                disallowEmptySelection={false}
+                placeholder={t("users.filterByStatus")}
                 selectedKeys={
                   filters.isVisible === undefined
-                    ? ["all"]
+                    ? []
                     : filters.isVisible
                       ? ["active"]
                       : ["inactive"]
                 }
                 onSelectionChange={(keys) => {
-                  const status = Array.from(keys)[0] as string;
+                  const keysArray = Array.from(keys);
+                  // If no selection (user deselected), reset to "all"
+                  const status = keysArray.length === 0 ? "all" : (keysArray[0] as string);
 
                   handleStatusFilter(status);
                 }}
@@ -528,6 +534,7 @@ export default function UsersPage() {
                   {t("common.show")}:
                 </span>
                 <Select
+                  aria-label={t("pagination.perPage")}
                   className="w-24"
                   selectedKeys={[effectivePageSize.toString()]}
                   size="sm"
@@ -1207,6 +1214,7 @@ export default function UsersPage() {
                         onChange={(e) => setActionSearchQuery(e.target.value)}
                       />
                       <Select
+                        aria-label={t("actions.allCategories")}
                         className="w-full sm:w-48"
                         placeholder={t("actions.allCategories")}
                         selectedKeys={[selectedActionCategory]}
