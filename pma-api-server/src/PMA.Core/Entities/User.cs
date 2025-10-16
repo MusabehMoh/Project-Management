@@ -17,7 +17,7 @@ public class User
     public int PrsId { get; set; }
 
     [Required]
-    public bool IsVisible { get; set; }
+    public bool IsActive { get; set; }
 
     [Required]
     [MaxLength(100)]

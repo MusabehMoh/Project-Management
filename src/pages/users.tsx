@@ -116,7 +116,7 @@ export default function UsersPage() {
   const [selectedAdditionalActions, setSelectedAdditionalActions] = useState<
     number[]
   >([]); // Additional actions only
-  const [isVisible, setIsVisible] = useState(true);
+  const [isActive, setisActive] = useState(true);
   const [actionSearchQuery, setActionSearchQuery] = useState("");
   const [selectedActionCategory, setSelectedActionCategory] =
     useState<string>("all");
@@ -247,12 +247,12 @@ export default function UsersPage() {
   };
 
   // Status helpers
-  const getStatusText = (isVisible: boolean) => {
-    return isVisible ? t("users.isVisible") : t("common.inactive");
+  const getStatusText = (isActive: boolean) => {
+    return isActive ? t("users.isActive") : t("common.inactive");
   };
 
-  const getStatusColor = (isVisible: boolean) => {
-    return isVisible ? "success" : "default";
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? "success" : "default";
   };
 
   // Handle user operations
@@ -261,7 +261,7 @@ export default function UsersPage() {
     setSelectedEmployee(null);
     setSelectedRole(null);
     setSelectedAdditionalActions([]);
-    setIsVisible(true);
+    setisActive(true);
     setIsEditing(false);
 
     // Clear any previous search results
@@ -299,7 +299,7 @@ export default function UsersPage() {
 
     setSelectedAdditionalActions(additionalActions);
 
-    setIsVisible(user.isVisible);
+    setisActive(user.isActive);
     setIsEditing(true);
     onOpen();
   };
@@ -329,7 +329,7 @@ export default function UsersPage() {
       const userData = {
         userName: selectedEmployee.userName,
         prsId: selectedEmployee.id,
-        isVisible,
+        isActive,
         roleIds: [selectedRole], // Single role in array
         actionIds: allUserActions,
       };
@@ -379,7 +379,7 @@ export default function UsersPage() {
     setSelectedEmployee(null);
     setSelectedRole(null);
     setSelectedAdditionalActions([]);
-    setIsVisible(true);
+    setisActive(true);
     setActionSearchQuery("");
     setSelectedActionCategory("all");
     clearEmployeeResults(); // Clear any search results
@@ -396,7 +396,7 @@ export default function UsersPage() {
       militaryNumber: undefined,
       userName: undefined,
       roleId: filters.roleId, // Keep role filter
-      isVisible: filters.isVisible, // Keep visibility filter
+      isActive: filters.isActive, // Keep visibility filter
       statusId: filters.statusId, // Keep status filter
     });
   };
@@ -411,7 +411,7 @@ export default function UsersPage() {
   const handleStatusFilter = (status: string) => {
     updateFilters({
       ...filters,
-      isVisible: status === "all" ? undefined : status === "active",
+      isActive: status === "all" ? undefined : status === "active",
     });
   };
 
@@ -423,14 +423,14 @@ export default function UsersPage() {
       militaryNumber: undefined,
       userName: undefined,
       roleId: undefined,
-      isVisible: undefined,
+      isActive: undefined,
       statusId: undefined,
     });
   };
 
   // Check if any filters are active
   const hasActiveFilters =
-    filters.search || filters.roleId || filters.isVisible !== undefined;
+    filters.search || filters.roleId || filters.isActive !== undefined;
 
   // Pagination page size options
   const effectivePageSize = normalizePageSize(pagination.limit, 10);
@@ -477,7 +477,8 @@ export default function UsersPage() {
                 onSelectionChange={(keys) => {
                   const keysArray = Array.from(keys);
                   // If no selection (user deselected), reset to "all"
-                  const roleId = keysArray.length === 0 ? "all" : (keysArray[0] as string);
+                  const roleId =
+                    keysArray.length === 0 ? "all" : (keysArray[0] as string);
 
                   handleRoleFilter(roleId);
                 }}
@@ -501,16 +502,17 @@ export default function UsersPage() {
                 disallowEmptySelection={false}
                 placeholder={t("users.filterByStatus")}
                 selectedKeys={
-                  filters.isVisible === undefined
+                  filters.isActive === undefined
                     ? []
-                    : filters.isVisible
+                    : filters.isActive
                       ? ["active"]
                       : ["inactive"]
                 }
                 onSelectionChange={(keys) => {
                   const keysArray = Array.from(keys);
                   // If no selection (user deselected), reset to "all"
-                  const status = keysArray.length === 0 ? "all" : (keysArray[0] as string);
+                  const status =
+                    keysArray.length === 0 ? "all" : (keysArray[0] as string);
 
                   handleStatusFilter(status);
                 }}
@@ -763,11 +765,11 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          color={getStatusColor(user.isVisible)}
+                          color={getStatusColor(user.isActive)}
                           size="sm"
                           variant="flat"
                         >
-                          {getStatusText(user.isVisible)}
+                          {getStatusText(user.isActive)}
                         </Chip>
                       </TableCell>
                       <TableCell>
@@ -947,11 +949,11 @@ export default function UsersPage() {
                     {/* User Status */}
                     <div className="flex items-center gap-3">
                       <Switch
-                        isSelected={isVisible}
+                        isSelected={isActive}
                         size="sm"
-                        onValueChange={setIsVisible}
+                        onValueChange={setisActive}
                       >
-                        {t("users.isVisible")}
+                        {t("users.isActive")}
                       </Switch>
                     </div>
                     {/* Role Selection (Single Role) */}

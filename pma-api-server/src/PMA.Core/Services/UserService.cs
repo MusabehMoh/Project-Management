@@ -53,9 +53,9 @@ public class UserService : IUserService
         return await _userRepository.AddAsync(user);
     }
 
-    public async Task<(IEnumerable<UserDto> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isVisible = null, int? departmentId = null, int? roleId = null)
+    public async Task<(IEnumerable<UserDto> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isActive = null, int? departmentId = null, int? roleId = null)
     {
-        var (users, totalCount) = await _userRepository.GetUsersAsync(page, limit, search, isVisible, departmentId, roleId);
+        var (users, totalCount) = await _userRepository.GetUsersAsync(page, limit, search, isActive, departmentId, roleId);
         var userDtos = users.Select(MapToUserDto);
         return (userDtos, totalCount);
     }
@@ -72,7 +72,7 @@ public class UserService : IUserService
         // Copy fields from incoming DTO/entity onto the tracked instance
         existing.UserName = user.UserName;
         existing.PrsId = user.PrsId;
-        existing.IsVisible = user.IsVisible;
+        existing.IsActive = user.IsActive;
         existing.FullName = user.FullName;
         existing.MilitaryNumber = user.MilitaryNumber;
         existing.GradeName = user.GradeName;
@@ -149,7 +149,7 @@ public class UserService : IUserService
             Id = user.Id,
             UserName = user.UserName,
             PrsId = user.PrsId,
-            IsVisible = user.IsVisible,
+            IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
             Employee = user.Employee != null ? new EmployeeDto
@@ -212,7 +212,7 @@ public class UserService : IUserService
             Id = user.Id,
             UserName = user.UserName,
             PrsId = user.PrsId,
-            IsVisible = user.IsVisible,
+            IsActive = user.IsActive,
             DepartmentId = user.DepartmentId,
             Email = user.Email,
             Phone = user.Phone,

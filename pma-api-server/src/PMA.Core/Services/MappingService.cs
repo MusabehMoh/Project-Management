@@ -603,7 +603,7 @@ public class MappingService : IMappingService
             Id = user.Id,
             UserName = user.UserName,
             PrsId = user.PrsId,
-            IsVisible = user.IsVisible,
+            IsActive = user.IsActive,
             FullName = user.FullName,
             MilitaryNumber = user.MilitaryNumber,
             GradeName = user.GradeName,

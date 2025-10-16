@@ -3,7 +3,7 @@ export interface User {
   id: number;
   userName: string;
   prsId?: number;
-  isVisible: boolean;
+  isActive: boolean;
   // Employee information (flattened from Employee entity)
   fullName: string;
   militaryNumber: string;
@@ -76,7 +76,7 @@ export interface Employee {
 export interface CreateUserRequest {
   userName: string;
   prsId: number;
-  isVisible: boolean;
+  isActive: boolean;
   roleIds: number[];
   actionIds?: number[];
 }
@@ -85,7 +85,7 @@ export interface UpdateUserRequest {
   id: number;
   userName: string;
   prsId: number;
-  isVisible: boolean;
+  isActive: boolean;
   roleIds: number[];
   actionIds?: number[];
 }
@@ -96,7 +96,7 @@ export interface UserFilters {
   fullName?: string;
   search?: string; // Combined search for fullName and militaryNumber
   roleId?: number;
-  isVisible?: boolean;
+  isActive?: boolean;
   statusId?: number;
 }
 

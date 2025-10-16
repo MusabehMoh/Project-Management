@@ -12,7 +12,7 @@ public class UserRepository : Repository<User>, IUserRepository
     {
     }
 
-    public async Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isVisible = null, int? departmentId = null, int? roleId = null)
+    public async Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isActive = null, int? departmentId = null, int? roleId = null)
     {
         var query = _context.Users
            .Include(u => u.Employee).AsQueryable();
@@ -41,9 +41,9 @@ public class UserRepository : Repository<User>, IUserRepository
             query = query.Where(u => u.UserRoles!.Any(ur => ur.RoleId == roleId.Value));
         }
 
-        if (isVisible.HasValue)
+        if (isActive.HasValue)
         {
-            query = query.Where(u => u.IsVisible == isVisible.Value);
+            query = query.Where(u => u.IsActive == isActive.Value);
         }
 
         if (departmentId.HasValue)
@@ -69,7 +69,7 @@ public class UserRepository : Repository<User>, IUserRepository
            .Include("UserRoles.Role.Department")
            .Include("UserActions.Permission")
            .Include(u => u.Employee)
-           .FirstOrDefaultAsync(u => u.UserName == userName.ToLower());
+           .FirstOrDefaultAsync(u => u.UserName == userName.ToLower() && u.IsActive);
         }
         catch (Exception)
         {

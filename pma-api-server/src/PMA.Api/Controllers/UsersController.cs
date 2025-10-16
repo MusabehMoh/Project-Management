@@ -33,13 +33,13 @@ public class UsersController : ApiBaseController
         [FromQuery] int page = 1,
         [FromQuery] int limit = 20,
         [FromQuery] string? search = null,
-        [FromQuery] bool? isVisible = null,
+        [FromQuery] bool? isActive = null,
         [FromQuery] int? departmentId = null,
         [FromQuery] int? roleId = null)
     {
         try
         {
-            var (users, totalCount) = await _userService.GetUsersAsync(page, limit, search, isVisible, departmentId, roleId);
+            var (users, totalCount) = await _userService.GetUsersAsync(page, limit, search, isActive, departmentId, roleId);
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
@@ -47,8 +47,8 @@ public class UsersController : ApiBaseController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while retrieving users. Page: {Page}, Limit: {Limit}, Search: {Search}, IsVisible: {IsVisible}, DepartmentId: {DepartmentId}, RoleId: {RoleId}",
-                page, limit, search, isVisible, departmentId, roleId);
+            _logger.LogError(ex, "Error occurred while retrieving users. Page: {Page}, Limit: {Limit}, Search: {Search}, IsActive: {IsVisible}, DepartmentId: {DepartmentId}, RoleId: {RoleId}",
+                page, limit, search, isActive, departmentId, roleId);
 
             return Error<IEnumerable<UserDto>>("An error occurred while retrieving users", ex.Message);
         }
@@ -136,7 +136,7 @@ public class UsersController : ApiBaseController
                 Id = request.Id,
                 UserName = request.UserName,
                 PrsId = request.PrsId,
-                IsVisible = request.IsVisible,
+                IsActive = request.IsActive,
                 FullName = employee.FullName, // From employee
                 MilitaryNumber = employee.MilitaryNumber, // From employee
                 GradeName = employee.GradeName, // From employee
@@ -214,7 +214,7 @@ public class UsersController : ApiBaseController
                 Id = request.Id,
                 UserName = request.UserName,
                 PrsId = request.PrsId,
-                IsVisible = request.IsVisible,
+                IsActive = request.IsActive,
                 FullName = employee.FullName, // From employee
                 MilitaryNumber = employee.MilitaryNumber, // From employee
                 GradeName = employee.GradeName, // From employee

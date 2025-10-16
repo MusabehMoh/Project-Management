@@ -5,7 +5,7 @@ public class CurrentUserDto
     public int Id { get; set; }
     public string UserName { get; set; } = string.Empty;
     public int? PrsId { get; set; }
-    public bool IsVisible { get; set; }
+    public bool IsActive { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string MilitaryNumber { get; set; } = string.Empty;
     public string GradeName { get; set; } = string.Empty;

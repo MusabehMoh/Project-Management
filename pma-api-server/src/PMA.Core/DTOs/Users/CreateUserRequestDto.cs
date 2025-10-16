@@ -5,7 +5,7 @@ public class CreateUserRequestDto
     public int Id { get; set; }
     public string UserName { get; set; } = string.Empty;
     public int PrsId { get; set; }
-    public bool IsVisible { get; set; }
+    public bool IsActive { get; set; }
     // FullName, MilitaryNumber, GradeName will be populated from Employee
     public int? DepartmentId { get; set; }
     public string? Email { get; set; } // Optional override

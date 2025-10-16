@@ -43,7 +43,7 @@ public class DesignersController : ApiBaseController
 
             // Get designers from Design Department (ID: 3) using Users table
             var query = _context.Users
-                .Where(u => u.DepartmentId == DesignDepartmentId && u.IsVisible)
+                .Where(u => u.DepartmentId == DesignDepartmentId && u.IsActive)
                 .AsQueryable();
 
             // Apply search filter
@@ -201,7 +201,7 @@ public class DesignersController : ApiBaseController
 
             // Get all designers from Design Department using Users table
             var designers = await _context.Users
-                .Where(u => u.DepartmentId == DesignDepartmentId && u.IsVisible)
+                .Where(u => u.DepartmentId == DesignDepartmentId && u.IsActive)
                 .ToListAsync();
 
             var totalDesigners = designers.Count;

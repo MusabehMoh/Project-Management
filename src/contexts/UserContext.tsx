@@ -95,7 +95,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           department: "IT Department",
           email: "sarah.johnson@organization.mil",
           phone: "+1-555-0101",
-          isVisible: true,
+          isActive: true,
           roles: [
             {
               id: 1,

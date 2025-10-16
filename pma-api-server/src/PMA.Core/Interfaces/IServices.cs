@@ -23,7 +23,7 @@ public interface IProjectService
 
 public interface IUserService
 {
-    System.Threading.Tasks.Task<(IEnumerable<UserDto> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isVisible = null, int? departmentId = null, int? roleId = null);
+    System.Threading.Tasks.Task<(IEnumerable<UserDto> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isActive = null, int? departmentId = null, int? roleId = null);
     System.Threading.Tasks.Task<User?> GetUserByIdAsync(int id);
     System.Threading.Tasks.Task<User?> GetUserByUserNameAsync(string userName);
     System.Threading.Tasks.Task<User> CreateUserAsync(User user);
