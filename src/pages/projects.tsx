@@ -398,22 +398,7 @@ export default function ProjectsPage() {
     return users.find((u) => u.id === userId) || null;
   };
 
-  // Helper function to get unit name by ID
-  const getUnitNameById = (unitId: number): string => {
-    if (!unitId) return "Unknown Unit";
-    // TODO: This should use actual units data when available
-    // For now, return a placeholder based on the ID
-    const unitNames = {
-      1: "Information Technology Division",
-      2: "Finance and Budgeting",
-      3: "Operations and Strategic Planning",
-      4: "Research and Development",
-      5: "Human Resources Division",
-    };
-
-    return unitNames[unitId as keyof typeof unitNames] || `Unit #${unitId}`;
-  };
-
+   
   const getStatusColor = (status: number) => {
     return getProjectStatusColor(status);
   };
@@ -1414,6 +1399,7 @@ export default function ProjectsPage() {
               <ModalBody>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
+                    isRequired
                     errorMessage={validationErrors.applicationName}
                     isInvalid={!!validationErrors.applicationName}
                     label={t("projects.applicationName")}
@@ -1435,6 +1421,7 @@ export default function ProjectsPage() {
                   />
                   <Autocomplete
                     isClearable
+                    isRequired
                     errorMessage={validationErrors.projectOwner}
                     inputValue={ownerInputValue}
                     isInvalid={!!validationErrors.projectOwner}
@@ -1662,6 +1649,7 @@ export default function ProjectsPage() {
 
                   <UnitSelector
                     allowClear
+                    isRequired
                     errorMessage={validationErrors.owningUnit}
                     isInvalid={!!validationErrors.owningUnit}
                     label={t("projects.owningUnit")}
@@ -1761,6 +1749,7 @@ export default function ProjectsPage() {
                   </div>
 
                   <DatePicker
+                    isRequired
                     errorMessage={validationErrors.startDate}
                     isInvalid={!!validationErrors.startDate}
                     label={t("projects.startDate")}
@@ -1778,6 +1767,7 @@ export default function ProjectsPage() {
                   />
 
                   <DatePicker
+                    isRequired
                     errorMessage={validationErrors.expectedCompletionDate}
                     isInvalid={!!validationErrors.expectedCompletionDate}
                     label={t("projects.expectedCompletion")}
@@ -1798,6 +1788,7 @@ export default function ProjectsPage() {
                   />
                   <div className="md:col-span-2">
                     <Input
+                      isRequired
                       errorMessage={validationErrors.description}
                       isInvalid={!!validationErrors.description}
                       label={t("projects.description")}

@@ -21,10 +21,8 @@ public class UpdateProjectDto
     public string? Description { get; set; }
     public string? Remarks { get; set; }
 
-    public Priority? Priority { get; set; }
-
-    [Range(0, double.MaxValue, ErrorMessage = "Budget must be a positive value")]
-    public decimal? Budget { get; set; }
+    public string? UpdatedBy { get; set; }
+    public Priority? Priority { get; set; } 
 
     [Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
     public int? Progress { get; set; }

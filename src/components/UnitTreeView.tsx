@@ -266,10 +266,10 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    if (value.trim()) {
+    if (value.trim().length >= 3) {
       setUseSearchMode(true);
       searchUnits(value);
-    } else {
+    } else if (!value.trim()) {
       setUseSearchMode(false);
       clearSearch();
     }
@@ -346,7 +346,7 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
         )}
 
         {/* Controls */}
-        {showExpandControls && !useSearchMode && (
+        {/* {showExpandControls && !useSearchMode && (
           <div className="flex gap-2 mb-4">
             <Button
               isLoading={treeLoading}
@@ -360,7 +360,7 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
               {t("units.collapseAll")}
             </Button>
           </div>
-        )}
+        )} */}
 
         {/* Content */}
         <div className="overflow-auto" style={{ maxHeight }}>

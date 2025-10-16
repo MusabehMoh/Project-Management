@@ -398,7 +398,10 @@ export default function ProjectRequirementsPage() {
     onDeleteOpen();
   };
 
-  const handleSaveRequirement = async (saveAsDraft = true) => {
+  const handleSaveRequirement = async (
+    saveAsDraft = true,
+    preserveStatus = false,
+  ) => {
     if (!validateForm() || !projectId) return;
 
     try {
@@ -416,10 +419,10 @@ export default function ProjectRequirementsPage() {
       let savedRequirement: ProjectRequirement;
 
       if (selectedRequirement) {
-        // When editing, only send status if sending to development
-        const updateData = saveAsDraft
+        // When editing, only send status if not preserving current status and sending to development
+        const updateData = preserveStatus
           ? requestData
-          : { ...requestData, status: 2 };
+          : { ...requestData, status: saveAsDraft ? 1 : 2 };
 
         savedRequirement = await updateRequirement(selectedRequirement.id, {
           ...updateData,
@@ -461,10 +464,10 @@ export default function ProjectRequirementsPage() {
       }
 
       resetForm();
-      
+
       // Refresh the requirements list to get updated data with attachments
       await refreshData();
-      
+
       if (selectedRequirement) {
         onEditOpenChange();
       } else {
@@ -473,6 +476,10 @@ export default function ProjectRequirementsPage() {
     } catch {
       // Error saving requirement
     }
+  };
+
+  const handleUpdateApprovedRequirement = async () => {
+    await handleSaveRequirement(true, true);
   };
 
   const confirmDelete = async () => {
@@ -1028,16 +1035,6 @@ export default function ProjectRequirementsPage() {
                       </div>
                     )}
                   </div>
-                  {!searchTerm &&
-                  hasPermission({ actions: ["requirements.create"] }) ? (
-                    <Button
-                      color="primary"
-                      startContent={<Plus className="w-4 h-4" />}
-                      onPress={handleCreateRequirement}
-                    >
-                      {t("requirements.emptyState.action")}
-                    </Button>
-                  ) : null}
                 </div>
               </div>
             ) : (
@@ -1143,7 +1140,13 @@ export default function ProjectRequirementsPage() {
                               <DropdownMenu>
                                 {hasPermission({
                                   actions: ["requirements.update"],
-                                }) ? (
+                                }) &&
+                                requirement.status !==
+                                  REQUIREMENT_STATUS.UNDER_DEVELOPMENT &&
+                                requirement.status !==
+                                  REQUIREMENT_STATUS.UNDER_TESTING &&
+                                requirement.status !==
+                                  REQUIREMENT_STATUS.COMPLETED ? (
                                   <DropdownItem
                                     key="edit"
                                     startContent={<Edit className="w-4 h-4" />}
@@ -1274,7 +1277,7 @@ export default function ProjectRequirementsPage() {
                     </Select>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
+                  <div  className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
                     <Select
                       label={t("requirements.type")}
                       selectedKeys={[formData.type.toString()]}
@@ -1299,10 +1302,13 @@ export default function ProjectRequirementsPage() {
                       </SelectItem>
                     </Select>
                     <DatePicker
-                      isRequired
+                      isRequired 
                       errorMessage={validationErrors.expectedCompletionDate}
                       isInvalid={!!validationErrors.expectedCompletionDate}
                       label={t("requirements.expectedCompletion")}
+                      minValue={parseDate(
+                        new Date().toISOString().split("T")[0],
+                      )}
                       value={formData.expectedCompletionDate}
                       onChange={(date) =>
                         setFormData({
@@ -1519,11 +1525,18 @@ export default function ProjectRequirementsPage() {
                 <Button variant="light" onPress={onClose}>
                   {t("requirements.cancel")}
                 </Button>
-                {/* When editing an approved requirement, hide draft/send actions */}
-                {!(
-                  selectedRequirement &&
-                  selectedRequirement.status === REQUIREMENT_STATUS.APPROVED
-                ) && (
+                {/* When editing an approved requirement, show update button */}
+                {selectedRequirement &&
+                selectedRequirement.status === REQUIREMENT_STATUS.APPROVED ? (
+                  <Button
+                    color="primary"
+                    isLoading={loading}
+                    onPress={handleUpdateApprovedRequirement}
+                  >
+                    {t("common.update")}
+                  </Button>
+                ) : (
+                  /* When editing non-approved requirement, show draft/send actions */
                   <>
                     <Button
                       color="default"
@@ -1565,14 +1578,8 @@ export default function ProjectRequirementsPage() {
                     <div className="font-medium">
                       {requirementToDelete.name}
                     </div>
-                    <div className="text-sm text-default-500">
-                      {requirementToDelete.description}
-                    </div>
                   </div>
                 )}
-                <p className="text-sm text-default-500">
-                  {t("requirements.actionCannotBeUndone")}
-                </p>
               </ModalBody>
               <ModalFooter>
                 <Button variant="light" onPress={onClose}>

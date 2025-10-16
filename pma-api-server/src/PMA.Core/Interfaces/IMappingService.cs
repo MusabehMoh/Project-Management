@@ -22,7 +22,7 @@ public interface IMappingService
     
     // Project mapping methods
     ProjectDto MapToProjectDto(Project project);
-    Project MapToProject(CreateProjectDto createDto);
+    System.Threading.Tasks.Task<Project> MapToProjectAsync(CreateProjectDto createDto);
     System.Threading.Tasks.Task UpdateProjectFromDtoAsync(Project project, UpdateProjectDto updateDto);
     System.Threading.Tasks.Task PopulateProjectNavigationPropertiesAsync(Project project);
     void CreateProjectAnalysts(Project project, int[]? analystIds);

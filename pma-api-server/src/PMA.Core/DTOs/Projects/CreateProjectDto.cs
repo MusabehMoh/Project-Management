@@ -12,13 +12,12 @@ public class CreateProjectDto
 
     [Required(ErrorMessage = "Project owner is required")]
     public int ProjectOwner { get; set; }
-
+    public int[]? Analysts { get; set; }
     public int? AlternativeOwner { get; set; }
 
     [Required(ErrorMessage = "Owning unit is required")]
     public int OwningUnit { get; set; }
-
-    public int[]? Analysts { get; set; }
+     
 
     [Required(ErrorMessage = "Start date is required")]
     public DateTime StartDate { get; set; }
@@ -35,8 +34,7 @@ public class CreateProjectDto
     [Required(ErrorMessage = "Priority is required")]
     public Priority Priority { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "Budget must be a positive value")]
-    public decimal Budget { get; set; }
+    public string? CreatedBy { get; set; }
 
     [Range(0, 100, ErrorMessage = "Progress must be between 0 and 100")]
     public int Progress { get; set; } = 0;

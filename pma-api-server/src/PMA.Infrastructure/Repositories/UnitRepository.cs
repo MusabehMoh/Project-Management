@@ -124,9 +124,7 @@ public class UnitRepository : Repository<Unit>, IUnitRepository
         return await _context.Units
             .Where(u => 
                 u.Name.ToLower().Contains(search) ||
-                u.Code.ToLower().Contains(search) ||
-                (u.Description != null && u.Description.ToLower().Contains(search)) ||
-                u.Path.ToLower().Contains(search))
+                u.Code.ToLower().Contains(search)  )
             .OrderBy(u => u.Name)
             .ToListAsync();
     }

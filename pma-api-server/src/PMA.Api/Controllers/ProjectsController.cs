@@ -165,10 +165,9 @@ public class ProjectsController : ApiBaseController
             if (!ModelState.IsValid)
             {
                 return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
-            }
-
+            }       
             // Map DTO to entity using the mapping service
-            var project = _mappingService.MapToProject(createProjectDto);
+            var project = await _mappingService.MapToProjectAsync(createProjectDto);
             
             // Create ProjectAnalyst entities if analysts are specified
             if (createProjectDto.Analysts != null && createProjectDto.Analysts.Length > 0)

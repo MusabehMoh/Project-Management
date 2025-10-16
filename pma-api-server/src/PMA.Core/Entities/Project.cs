@@ -32,7 +32,7 @@ public class Project
     [Required]
     public int OwningUnitId { get; set; }
 
-    public string? Analysts { get; set; }
+
 
     [Required]
     public DateTime StartDate { get; set; }
@@ -55,12 +55,13 @@ public class Project
     [Required]
     public DateTime UpdatedAt { get; set; }
 
+    public string? CreatedBy { get; set; }
+    public string? UpdatedBy { get; set; }
+
     [Required]
     public Priority Priority { get; set; }
 
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal Budget { get; set; }
-
+  
     [Required]
     [Range(0, 100)]
     public int Progress { get; set; }

@@ -14,10 +14,13 @@ public class MappingService : IMappingService
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IUnitRepository _unitRepository;
 
-    public MappingService(IEmployeeRepository employeeRepository, IUnitRepository unitRepository)
+    private readonly IUserContextAccessor _userContextAccessor;
+
+    public MappingService(IEmployeeRepository employeeRepository, IUnitRepository unitRepository, IUserContextAccessor userContextAccessor)
     {
         _employeeRepository = employeeRepository;
         _unitRepository = unitRepository;
+        _userContextAccessor = userContextAccessor;
     }
     /// <summary>
     /// Maps a Role entity to a RoleDto
@@ -118,8 +121,7 @@ public class MappingService : IMappingService
             OwningUnit = project.OwningUnit,
             ProjectOwnerId = project.ProjectOwnerId,
             AlternativeOwnerId = project.AlternativeOwnerId,
-            OwningUnitId = project.OwningUnitId,
-            Analysts = project.Analysts,
+            OwningUnitId = project.OwningUnitId, 
             AnalystIds = project.ProjectAnalysts?.Select(pa => pa.AnalystId).ToList() ?? new List<int>(),
             StartDate = project.StartDate,
             ExpectedCompletionDate = project.ExpectedCompletionDate,
@@ -128,8 +130,7 @@ public class MappingService : IMappingService
             Status = project.Status,
             CreatedAt = project.CreatedAt,
             UpdatedAt = project.UpdatedAt,
-            Priority = project.Priority,
-            Budget = project.Budget,
+            Priority = project.Priority, 
             Progress = project.Progress
         };
     }
@@ -137,24 +138,28 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a CreateProjectDto to a Project entity
     /// </summary>
-    public Project MapToProject(CreateProjectDto createDto)
+    public async Task<Project> MapToProjectAsync(CreateProjectDto createDto)
     {
+
+      
         if (createDto == null)
             return null!;
+
+        // Get current user context to set CreatedBy
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        var createdBy = userContext?.UserName ?? createDto.CreatedBy ?? string.Empty;
 
         return new Project
         {
             ApplicationName = createDto.ApplicationName,
             ProjectOwnerId = createDto.ProjectOwner,
             AlternativeOwnerId = createDto.AlternativeOwner,
-            OwningUnitId = createDto.OwningUnit,
-            Analysts = null, // Will be populated later from ProjectAnalyst entities
+            OwningUnitId = createDto.OwningUnit, 
             StartDate = createDto.StartDate,
             ExpectedCompletionDate = createDto.ExpectedCompletionDate,
             Description = createDto.Description,
             Remarks = createDto.Remarks,
-            Priority = createDto.Priority,
-            Budget = createDto.Budget,
+            Priority = createDto.Priority, 
             Progress = createDto.Progress,
             Status = createDto.Status,
             CreatedAt = DateTime.UtcNow,
@@ -163,6 +168,8 @@ public class MappingService : IMappingService
             ProjectOwner = string.Empty, // Will be populated from database
             AlternativeOwner = string.Empty, // Will be populated from database
             OwningUnit = string.Empty, // Will be populated from database
+            CreatedBy = createdBy,
+
             ProjectAnalysts = new List<ProjectAnalyst>() // Initialize empty collection
         };
     }
@@ -174,6 +181,10 @@ public class MappingService : IMappingService
     {
         if (project == null || updateDto == null)
             return;
+
+        // Get current user context to set UpdatedBy
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        var updatedBy = userContext?.UserName ?? string.Empty;
 
         // Update only non-null properties
         if (!string.IsNullOrEmpty(updateDto.ApplicationName))
@@ -220,8 +231,7 @@ public class MappingService : IMappingService
                 });
             }
             
-            // Set Analysts to null, will be populated later from database lookups
-            project.Analysts = null;
+       
         }
 
         if (updateDto.StartDate.HasValue)
@@ -239,9 +249,7 @@ public class MappingService : IMappingService
         if (updateDto.Priority.HasValue)
             project.Priority = updateDto.Priority.Value;
 
-        if (updateDto.Budget.HasValue)
-            project.Budget = updateDto.Budget.Value;
-
+ 
         if (updateDto.Progress.HasValue)
             project.Progress = updateDto.Progress.Value;
 
@@ -249,6 +257,7 @@ public class MappingService : IMappingService
             project.Status = updateDto.Status.Value;
 
         project.UpdatedAt = DateTime.UtcNow;
+        project.UpdatedBy = updatedBy;
     }
 
     /// <summary>
@@ -287,8 +296,7 @@ public class MappingService : IMappingService
                     analystNames.Add(analyst.FullName);
                 }
             }
-            
-            project.Analysts = analystNames.Any() ? string.Join(", ", analystNames) : null;
+             
         }
     }
 
@@ -406,8 +414,7 @@ public class MappingService : IMappingService
             Id = project.Id,
             ApplicationName = project.ApplicationName,
             ProjectOwner = project.ProjectOwner,
-            OwningUnit = project.OwningUnit,
-            Analysts = project.Analysts,
+            OwningUnit = project.OwningUnit, 
             AnalystIds = project.ProjectAnalysts?.Select(pa => pa.AnalystId).ToList() ?? new List<int>()
         };
     }

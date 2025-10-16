@@ -178,8 +178,7 @@ public class MemberTaskService : IMemberTaskService
                 OwningUnit = task.ProjectRequirement.Project.OwningUnit,
                 ProjectOwnerId = task.ProjectRequirement.Project.ProjectOwnerId,
                 AlternativeOwnerId = task.ProjectRequirement.Project.AlternativeOwnerId,
-                OwningUnitId = task.ProjectRequirement.Project.OwningUnitId,
-                Analysts = task.ProjectRequirement.Project.Analysts,
+                OwningUnitId = task.ProjectRequirement.Project.OwningUnitId, 
                 AnalystIds = new List<int>(), // You might need to populate this
                 StartDate = task.ProjectRequirement.Project.StartDate,
                 ExpectedCompletionDate = task.ProjectRequirement.Project.ExpectedCompletionDate,
@@ -188,8 +187,7 @@ public class MemberTaskService : IMemberTaskService
                 Status = task.ProjectRequirement.Project.Status,
                 CreatedAt = task.ProjectRequirement.Project.CreatedAt,
                 UpdatedAt = task.ProjectRequirement.Project.UpdatedAt,
-                Priority = task.ProjectRequirement.Project.Priority,
-                Budget = task.ProjectRequirement.Project.Budget,
+                Priority = task.ProjectRequirement.Project.Priority, 
                 Progress = task.ProjectRequirement.Project.Progress
             } : null,
             Requirement = task.ProjectRequirement != null ? new RequirementBasicDto
