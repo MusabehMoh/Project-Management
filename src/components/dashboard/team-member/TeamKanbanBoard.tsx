@@ -449,7 +449,9 @@ export default function TeamKanbanBoard({
               : t("teamDashboard.kanban.title")}
           </h3>
           <p className="text-sm text-default-500">
-            {t("teamDashboard.kanban.subtitle")}
+            {userRoleIds.includes(3) // Analyst role ID
+              ? t("teamDashboard.kanban.subtitleAdhoc")
+              : t("teamDashboard.kanban.subtitle")}
           </p>
         </div>
       </CardHeader>

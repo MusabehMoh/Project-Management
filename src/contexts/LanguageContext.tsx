@@ -676,6 +676,8 @@ const translations = {
     "teamDashboard.kanban.titleAdhoc": "Adhoc Task Board",
     "teamDashboard.kanban.subtitle":
       "Drag and drop tasks to update their status",
+    "teamDashboard.kanban.subtitleAdhoc":
+      "Drag and drop adhoc tasks to update their status",
     "teamDashboard.kanban.noTasks": "No tasks",
     "teamDashboard.kanban.project": "Project",
     "teamDashboard.kanban.requirement": "Requirement",
@@ -2438,6 +2440,7 @@ const translations = {
     "teamDashboard.kanban.title": "لوحة المهام",
     "teamDashboard.kanban.titleAdhoc": "لوحة المهام العاجلة",
     "teamDashboard.kanban.subtitle": "اسحب وأفلت المهام لتحديث حالتها",
+    "teamDashboard.kanban.subtitleAdhoc": "اسحب وأفلت المهام العاجلة لتحديث حالتها",
     "teamDashboard.kanban.noTasks": "لا توجد مهام",
     "teamDashboard.kanban.project": "المشروع",
     "teamDashboard.kanban.requirement": "المتطلب",
