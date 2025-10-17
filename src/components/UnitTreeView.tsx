@@ -317,30 +317,39 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
 
         {/* Breadcrumb for selected unit */}
         {path.length > 0 && selectionMode && (
-          <div
-            className="mb-4 p-3 bg-primary-50 rounded-lg border border-primary-200"
-            dir={language === "ar" ? "rtl" : "ltr"}
-          >
-            <div className="text-xs text-primary-600 mb-2">
+          <div className="mb-4 p-3 bg-primary-50 rounded-lg border border-primary-200">
+            <div
+              className={`text-xs text-primary-600 mb-2 ${language === "ar" ? "text-right" : "text-left"}`}
+            >
               {t("units.selectedPath")}:
             </div>
-            <div className="flex items-center gap-1 flex-wrap">
-              {(language === "ar" ? [...path].reverse() : path).map(
-                (unit, index, array) => (
-                  <React.Fragment key={unit.id}>
+            <div
+              className={`flex items-center gap-1 flex-wrap`}
+              dir={language === "ar" ? "rtl" : "ltr"}
+            >
+              {path.map((unit, index, array) => (
+                <React.Fragment key={unit.id}>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="inline-block w-1.5 h-1.5 rounded-full"
+                      style={{
+                        backgroundColor: "#006FEE",
+                        opacity: 0.4 + unit.level * 0.15,
+                      }}
+                    />
                     <span className="text-sm text-primary-800 font-medium">
                       {unit.name}
                     </span>
-                    {index < array.length - 1 && (
-                      language === "ar" ? (
-                        <ChevronLeftIcon className="text-primary-400" size={14} />
-                      ) : (
-                        <ChevronRightIcon className="text-primary-400" size={14} />
-                      )
-                    )}
-                  </React.Fragment>
-                )
-              )}
+                  </div>
+                  {index < array.length - 1 && (
+                    language === "ar" ? (
+                      <ChevronLeftIcon className="text-primary-400" size={14} />
+                    ) : (
+                      <ChevronRightIcon className="text-primary-400" size={14} />
+                    )
+                  )}
+                </React.Fragment>
+              ))}
             </div>
           </div>
         )}
