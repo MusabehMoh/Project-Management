@@ -60,13 +60,16 @@ export default function TeamMemberDashboard() {
       <TeamKanbanBoard onTaskUpdate={handleKanbanUpdate} />
 
       {/* Quick Actions (50%) and Calendar (50%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TeamQuickActions
           key={refreshKey}
           onTaskUpdate={handleQuickActionsUpdate}
         />
         <Calendar maxHeight="600px" showSidebar={false} />
-      </div>
+      </div> */}
+
+      {/* Calendar - Full Width */}
+      <Calendar maxHeight="600px" showSidebar={false} />
     </div>
   );
 }
