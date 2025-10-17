@@ -673,6 +673,7 @@ const translations = {
 
     // Team Member - Kanban Board
     "teamDashboard.kanban.title": "Task Board",
+    "teamDashboard.kanban.titleAdhoc": "Adhoc Task Board",
     "teamDashboard.kanban.subtitle":
       "Drag and drop tasks to update their status",
     "teamDashboard.kanban.noTasks": "No tasks",
@@ -2435,6 +2436,7 @@ const translations = {
 
     // Team Member - Kanban Board
     "teamDashboard.kanban.title": "لوحة المهام",
+    "teamDashboard.kanban.titleAdhoc": "لوحة المهام العاجلة",
     "teamDashboard.kanban.subtitle": "اسحب وأفلت المهام لتحديث حالتها",
     "teamDashboard.kanban.noTasks": "لا توجد مهام",
     "teamDashboard.kanban.project": "المشروع",

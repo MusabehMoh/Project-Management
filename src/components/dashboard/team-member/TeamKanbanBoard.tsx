@@ -444,7 +444,9 @@ export default function TeamKanbanBoard({
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold">
-            {t("teamDashboard.kanban.title")}
+            {userRoleIds.includes(3) // Analyst role ID
+              ? t("teamDashboard.kanban.titleAdhoc")
+              : t("teamDashboard.kanban.title")}
           </h3>
           <p className="text-sm text-default-500">
             {t("teamDashboard.kanban.subtitle")}
