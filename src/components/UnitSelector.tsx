@@ -145,22 +145,20 @@ export const UnitSelector: React.FC<UnitSelectorProps> = ({
       {selectedUnit && path && path.length > 0 && (
         <div className="mt-2" dir={language === "ar" ? "rtl" : "ltr"}>
           <div className="flex items-center gap-1 flex-wrap">
-            {(language === "ar" ? [...path].reverse() : path).map(
-              (unit, index, array) => (
-                <React.Fragment key={unit.id}>
-                  <span className="text-sm text-default-700 font-medium">
-                    {unit.name}
-                  </span>
-                  {index < array.length - 1 && (
-                    language === "ar" ? (
-                      <ChevronLeftIcon className="text-default-400" size={14} />
-                    ) : (
-                      <ChevronRightIcon className="text-default-400" size={14} />
-                    )
-                  )}
-                </React.Fragment>
-              )
-            )}
+            {path.map((unit, index, array) => (
+              <React.Fragment key={unit.id}>
+                <span className="text-sm text-default-700 font-medium">
+                  {unit.name}
+                </span>
+                {index < array.length - 1 && (
+                  language === "ar" ? (
+                    <ChevronLeftIcon className="text-default-400" size={14} />
+                  ) : (
+                    <ChevronRightIcon className="text-default-400" size={14} />
+                  )
+                )}
+              </React.Fragment>
+            ))}
           </div>
         </div>
       )}
