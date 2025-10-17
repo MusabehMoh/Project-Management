@@ -317,9 +317,9 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
 
         {/* Breadcrumb for selected unit */}
         {path.length > 0 && selectionMode && (
-          <div className="mb-4 p-3 bg-primary-50 rounded-lg border border-primary-200">
+          <div className="mb-4 p-3 bg-default-50 dark:bg-default-100/10 rounded-lg border border-default-200">
             <div
-              className={`text-xs text-primary-600 mb-2 ${language === "ar" ? "text-right" : "text-left"}`}
+              className={`text-xs text-default-500 mb-2 ${language === "ar" ? "text-right" : "text-left"}`}
             >
               {t("units.selectedPath")}:
             </div>
@@ -327,29 +327,46 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
               className={`flex items-center gap-1 flex-wrap`}
               dir={language === "ar" ? "rtl" : "ltr"}
             >
-              {path.map((unit, index, array) => (
-                <React.Fragment key={unit.id}>
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="inline-block w-1.5 h-1.5 rounded-full"
-                      style={{
-                        backgroundColor: "#006FEE",
-                        opacity: 0.4 + unit.level * 0.15,
-                      }}
-                    />
-                    <span className="text-sm text-primary-800 font-medium">
-                      {unit.name}
-                    </span>
-                  </div>
-                  {index < array.length - 1 && (
-                    language === "ar" ? (
-                      <ChevronLeftIcon className="text-primary-400" size={14} />
-                    ) : (
-                      <ChevronRightIcon className="text-primary-400" size={14} />
-                    )
-                  )}
-                </React.Fragment>
-              ))}
+              {path.map((unit, index, array) => {
+                // Get level-based color matching UnitTreeView
+                const getLevelColorValue = (level: number) => {
+                  const colorMap: Record<number, string> = {
+                    0: "#71717A", // default/grey - Root (L0)
+                    1: "#006FEE", // primary - Ministry
+                    2: "#9353D3", // secondary - Commands
+                    3: "#17C964", // success - Regional
+                    4: "#F5A524", // warning - Brigades
+                    5: "#F31260", // danger - Battalions
+                  };
+                  return colorMap[level] || "#71717A";
+                };
+
+                return (
+                  <React.Fragment key={unit.id}>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="inline-block w-1.5 h-1.5 rounded-full"
+                        style={{
+                          backgroundColor: getLevelColorValue(unit.level),
+                        }}
+                      />
+                      <span className="text-sm text-default-700 font-medium">
+                        {unit.name}
+                      </span>
+                      <span className="text-xs text-default-400">
+                        L{unit.level}
+                      </span>
+                    </div>
+                    {index < array.length - 1 && (
+                      language === "ar" ? (
+                        <ChevronLeftIcon className="text-default-400" size={14} />
+                      ) : (
+                        <ChevronRightIcon className="text-default-400" size={14} />
+                      )
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </div>
           </div>
         )}
