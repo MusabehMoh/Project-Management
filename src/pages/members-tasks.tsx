@@ -558,7 +558,7 @@ export default function MembersTasksPage() {
                 RoleIds.QUALITY_CONTROL_MANAGER,
                 RoleIds.DESIGNER_MANAGER,
                 RoleIds.ADMINISTRATOR,
-              ]) && <AddAdhocTask />}
+              ]) && <AddAdhocTask onSuccess={handleRefresh} />}
 
               {/* Refresh Button */}
               <Button
