@@ -3520,7 +3520,7 @@ const translations = {
     taskName: "اسم المهمة",
     assignees: "المعينون",
     department: "القسم",
-    dates: "البداية - النهاية",
+    dates: "تاريخ البداية / النهاية ",
     tags: "الوسوم",
 
     // Actions

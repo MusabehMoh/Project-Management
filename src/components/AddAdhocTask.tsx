@@ -31,7 +31,11 @@ export interface AddAdhocTaskFormData {
   members: MemberSearchResult[];
 }
 
-const AddAdhocTask = () => {
+interface AddAdhocTaskProps {
+  onSuccess?: () => void;
+}
+
+const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<AddAdhocTaskFormData>({
@@ -407,6 +411,11 @@ const AddAdhocTask = () => {
                         });
                         setSelectedMembers([]);
                         onClose();
+                        
+                        // Call the onSuccess callback to refresh the parent component
+                        if (onSuccess) {
+                          onSuccess();
+                        }
                       }
                     }
                   }}

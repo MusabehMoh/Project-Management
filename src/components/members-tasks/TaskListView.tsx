@@ -6,11 +6,9 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/table";
-import { Avatar, AvatarGroup } from "@heroui/avatar";
 import { Chip } from "@heroui/chip";
 import { Progress } from "@heroui/progress";
-import { Badge } from "@heroui/badge";
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, Clock, CheckCircle } from "lucide-react";
 
 import { MemberTask } from "@/types/membersTasks";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -54,12 +52,10 @@ export const TaskListView = ({
   const columns = [
     { key: "name", label: t("taskName") },
     { key: "assignees", label: t("assignees") },
-    { key: "department", label: t("department") },
     { key: "status", label: t("status") },
     { key: "priority", label: t("priority") },
     { key: "progress", label: t("taskProgress") },
     { key: "dates", label: t("dates") },
-    { key: "tags", label: t("tags") },
   ];
 
   const renderCell = (task: MemberTask, columnKey: string) => {
@@ -83,35 +79,31 @@ export const TaskListView = ({
 
       case "assignees":
         return (
-          <div className="flex items-center gap-2">
+          <div className={`flex items-start gap-2 ${language === "ar" ? " text-right" : ""}`}>
             {task.assignedMembers && task.assignedMembers.length > 0 ? (
               <>
-                <AvatarGroup max={3} size="sm">
-                  {task.assignedMembers.map((assignee) => (
-                    <Avatar
-                      key={assignee.id}
-                      name={assignee.fullName}
-                      size="sm"
-                    />
-                  ))}
-                </AvatarGroup>
-                {task.assignedMembers.length > 3 && (
-                  <Badge color="primary" size="sm" variant="flat">
-                    +{task.assignedMembers.length - 3}
-                  </Badge>
-                )}
+                <CheckCircle className="w-4 h-4 text-foreground-500 flex-shrink-0 mt-0.5" />
+                <div className={`flex-1 min-w-0 ${language === "ar" ? "text-right" : ""}`}>
+                  <div className="flex flex-wrap gap-1">
+                    {task.assignedMembers
+                      .slice(0, 2)
+                      .map((assignee, index: number) => (
+                        <Chip key={index} color="primary" size="sm" variant="flat">
+                          {`${assignee.gradeName} ${assignee.fullName}`}
+                        </Chip>
+                      ))}
+                    {task.assignedMembers.length > 2 && (
+                      <Chip size="sm" variant="flat">
+                        +{task.assignedMembers.length - 2}
+                      </Chip>
+                    )}
+                  </div>
+                </div>
               </>
             ) : (
               <span className="text-default-400 text-sm">No assignees</span>
             )}
           </div>
-        );
-
-      case "department":
-        return (
-          <Chip size="sm" variant="flat">
-            {task.department?.name || ""}
-          </Chip>
         );
 
       case "status":
@@ -159,33 +151,6 @@ export const TaskListView = ({
               <Chip color="danger" size="sm" variant="flat">
                 Overdue
               </Chip>
-            )}
-          </div>
-        );
-
-      case "tags":
-        return (
-          <div className="flex flex-wrap gap-1 max-w-[150px]">
-            {task.tags && task.tags.length > 0 ? (
-              <>
-                {task.tags.slice(0, 2).map((tag, index) => (
-                  <Chip
-                    key={index}
-                    className="text-tiny"
-                    size="sm"
-                    variant="bordered"
-                  >
-                    {tag}
-                  </Chip>
-                ))}
-                {task.tags.length > 2 && (
-                  <Badge color="default" size="sm" variant="flat">
-                    +{task.tags.length - 2}
-                  </Badge>
-                )}
-              </>
-            ) : (
-              <span className="text-default-400 text-tiny">No tags</span>
             )}
           </div>
         );
