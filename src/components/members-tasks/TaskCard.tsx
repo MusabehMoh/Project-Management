@@ -322,13 +322,13 @@ export const TaskCard = ({
             <div className="overflow-hidden">
               <span className="font-medium">{t("projectLabel")} </span>
               <span className="break-words">
-                {task.project?.applicationName || ""}
+                {task.project?.applicationName || t("common.none")}
               </span>
             </div>
             <div className="overflow-hidden">
               <span className="font-medium">{t("requirementLabel")} </span>
               <span className="break-words">
-                {task.requirement?.name || ""}
+                {task.requirement?.name || t("common.none")}
               </span>
             </div>
             <div className="overflow-hidden">

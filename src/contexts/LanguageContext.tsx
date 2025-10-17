@@ -2198,6 +2198,7 @@ const translations = {
     "common.refresh": "تحديث",
     "common.editProject": "تحرير المشروع",
     "common.cancel": "إلغاء",
+    "common.none": "لا يوجد",
     "common.select": "اختيار",
     "common.clear": "مسح",
     "common.reset": "إعادة تعيين",
