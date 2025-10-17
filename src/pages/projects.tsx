@@ -1648,7 +1648,6 @@ export default function ProjectsPage() {
                   </div>
 
                   <UnitSelector
-                    allowClear
                     isRequired
                     errorMessage={validationErrors.owningUnit}
                     isInvalid={!!validationErrors.owningUnit}

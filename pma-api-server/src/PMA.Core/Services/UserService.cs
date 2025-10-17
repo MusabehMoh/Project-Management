@@ -107,6 +107,7 @@ public class UserService : IUserService
 
     public async System.Threading.Tasks.Task<CurrentUserDto?> GetCurrentUserAsync()
     {
+        
         // Use the new UserContext pattern
         var userContext = await _userContextAccessor.GetUserContextAsync();
 

@@ -17,8 +17,11 @@ DROP COLUMN Budget
 ADD CreatedBy NVARCHAR(300)
 
   ALTER TABLE [Projects]
-ADD CreatedBy NVARCHAR(300)
+ADD UpdatedBy NVARCHAR(300)
+
+
 ALTER TABLE [Projects]
+
 DROP COLUMN Analysts 
 
---EXEC sp_rename 'Users.IsVisible', 'IsActive', 'COLUMN';
+EXEC sp_rename 'Users.IsVisible', 'IsActive', 'COLUMN';

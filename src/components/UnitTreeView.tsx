@@ -318,29 +318,29 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
         {/* Breadcrumb for selected unit */}
         {path.length > 0 && selectionMode && (
           <div
-            className="mb-4 p-2 bg-primary-50 rounded-lg border border-primary-200"
-            style={{ direction: language === "ar" ? "rtl" : "ltr" }}
+            className="mb-4 p-3 bg-primary-50 rounded-lg border border-primary-200"
+            dir={language === "ar" ? "rtl" : "ltr"}
           >
-            <div className="text-xs text-primary-600 mb-1">
+            <div className="text-xs text-primary-600 mb-2">
               {t("units.selectedPath")}:
             </div>
             <div className="flex items-center gap-1 flex-wrap">
-              {path.map((unit, index) => (
-                <div key={unit.id} className="flex items-center gap-1">
-                  <span className="text-sm text-primary-800">
-                    {language === "ar" ? unit.name : unit.name}
-                  </span>
-                  {index < path.length - 1 &&
-                    (language === "ar" ? (
-                      <ChevronLeftIcon className="text-primary-400" size={12} />
-                    ) : (
-                      <ChevronRightIcon
-                        className="text-primary-400"
-                        size={12}
-                      />
-                    ))}
-                </div>
-              ))}
+              {(language === "ar" ? [...path].reverse() : path).map(
+                (unit, index, array) => (
+                  <React.Fragment key={unit.id}>
+                    <span className="text-sm text-primary-800 font-medium">
+                      {unit.name}
+                    </span>
+                    {index < array.length - 1 && (
+                      language === "ar" ? (
+                        <ChevronLeftIcon className="text-primary-400" size={14} />
+                      ) : (
+                        <ChevronRightIcon className="text-primary-400" size={14} />
+                      )
+                    )}
+                  </React.Fragment>
+                )
+              )}
             </div>
           </div>
         )}

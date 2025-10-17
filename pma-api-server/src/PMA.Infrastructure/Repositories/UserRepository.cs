@@ -71,7 +71,7 @@ public class UserRepository : Repository<User>, IUserRepository
            .Include(u => u.Employee)
            .FirstOrDefaultAsync(u => u.UserName == userName.ToLower() && u.IsActive);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             return null;
         }
