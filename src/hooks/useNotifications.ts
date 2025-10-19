@@ -8,6 +8,7 @@ import {
 } from "@/services/notificationService";
 import { API_CONFIG } from "@/services/api/client";
 import { showInfoToast } from "@/utils/toast";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export interface Notification {
   id: string;
@@ -35,6 +36,8 @@ export function useNotifications(): UseNotifications {
   const [isConnected, setIsConnected] = useState(false);
   const [, setLoading] = useState(true);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
+
+  const { user, loading } = useCurrentUser();
 
   // Load initial notifications from API
   const loadNotifications = useCallback(async () => {
@@ -168,14 +171,19 @@ export function useNotifications(): UseNotifications {
       return;
     }
 
-    const currentUser = localStorage.getItem("currentUser");
-    const user = currentUser ? JSON.parse(currentUser) : null;
-    const username = user?.username || "anonymous";
-    const userId = user?.id ?? null;
+    if (loading || !user) {
+      // Wait for user to load
+      return;
+    }
+
+    const username = user.userName || "anonymous";
+    const userId = user.id ?? null;
 
     // Create SignalR connection
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_CONFIG.WS_URL}?username=${encodeURIComponent(username)}&userId=${userId || ""}`)
+      .withUrl(
+        `${API_CONFIG.WS_URL}?username=${encodeURIComponent(username)}&userId=${userId || ""}`,
+      )
       .withAutomaticReconnect()
       .build();
 
@@ -197,7 +205,7 @@ export function useNotifications(): UseNotifications {
         // Show toast notification for received message
         showInfoToast(
           notificationData.type || "Notification",
-          notificationData.message || "You have a new notification"
+          notificationData.message || "You have a new notification",
         );
 
         setNotifications((prev) => {
@@ -247,7 +255,7 @@ export function useNotifications(): UseNotifications {
         connection.stop();
       }
     };
-  }, [loadNotifications, sendTestNotification]);
+  }, [loadNotifications, sendTestNotification, loading, user]);
 
   const markAsRead = useCallback(async (id: string) => {
     setNotifications((prev) => {

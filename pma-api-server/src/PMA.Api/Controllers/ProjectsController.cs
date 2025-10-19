@@ -47,6 +47,7 @@ public class ProjectsController : ApiBaseController
             var (projects, totalCount) = await _projectService.GetProjectsAsync(page, limit, search, status, priority);
 
             var projectDtos = projects.Select(p => _mappingService.MapToProjectDto(p));
+        
 
             var pagination = new PaginationInfo(page, limit, totalCount, (int)Math.Ceiling((double)totalCount / limit));
             

@@ -24,7 +24,7 @@ export function NotificationProvider({
     // Get current user info (you might want to get this from a user context)
     const currentUser = localStorage.getItem("currentUser");
     const username = currentUser
-      ? JSON.parse(currentUser).username
+      ? JSON.parse(currentUser).userName
       : "anonymous";
 
     // Create WebSocket connection with authentication

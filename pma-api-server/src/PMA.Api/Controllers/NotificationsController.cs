@@ -366,6 +366,15 @@ public class NotificationsController : ApiBaseController
     {
         try
         {
+            // Send notification to a specific username
+            //await _hubContext.Clients.Group($"user_hamdb").SendAsync("Notification",
+            //    new
+            //    {
+            //        type = "NOTIFICATION_TYPE",
+            //        message = "Your message here",
+            //        timestamp = DateTime.UtcNow,
+            //        projectId = 123
+            //    });
             var testNotification = new
             {
                 type = "TEST_NOTIFICATION",
