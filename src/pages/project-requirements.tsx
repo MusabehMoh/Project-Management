@@ -112,7 +112,7 @@ export default function ProjectRequirementsPage() {
   >(highlightRequirementId ? parseInt(highlightRequirementId) : null);
 
   // Page size state for dynamic pagination
-  const [currentPageSize, setCurrentPageSize] = useState(20);
+  const [currentPageSize, setCurrentPageSize] = useState(10);
 
   const {
     requirements,
@@ -140,7 +140,7 @@ export default function ProjectRequirementsPage() {
   });
 
   // Pagination page size options
-  const effectivePageSize = normalizePageSize(currentPageSize, 20);
+  const effectivePageSize = normalizePageSize(currentPageSize, 10);
 
   // Handler for page size change
   const handlePageSizeChange = (newSize: number) => {
@@ -360,20 +360,12 @@ export default function ProjectRequirementsPage() {
 
     if (requirement.expectedCompletionDate) {
       try {
-        // Handle different date formats that might come from the backend
-        const dateStr = requirement.expectedCompletionDate;
+        // Backend returns ISO format: YYYY-MM-DDTHH:MM:SS
+        // Extract date part without timezone conversion
+        const dateStr = requirement.expectedCompletionDate as string;
+        const datePart = dateStr.split("T")[0]; // Get YYYY-MM-DD
 
-        if (typeof dateStr === "string") {
-          // Try to create a Date object first to validate
-          const date = new Date(dateStr);
-
-          if (!isNaN(date.getTime())) {
-            // Convert to YYYY-MM-DD format for parseDate
-            const isoString = date.toISOString().split("T")[0];
-
-            parsedDate = parseDate(isoString);
-          }
-        }
+        parsedDate = parseDate(datePart);
       } catch {
         // Silently ignore date parsing errors
       }

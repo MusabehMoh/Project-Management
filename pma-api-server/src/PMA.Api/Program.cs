@@ -4,6 +4,7 @@ using PMA.Core.Interfaces;
 using PMA.Core.Services;
 using PMA.Infrastructure.Data;
 using PMA.Infrastructure.Repositories;
+using PMA.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -169,6 +170,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ILookupService, LookupService>(); 
 builder.Services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();
 builder.Services.AddScoped<PMA.Core.Interfaces.IAuthorizationService, PMA.Core.Services.AuthorizationService>();
+builder.Services.AddScoped<PMA.Infrastructure.Services.IAuditService, PMA.Infrastructure.Services.AuditService>();
 // Path provider abstraction
 builder.Services.AddSingleton<PMA.Core.Interfaces.IAppPathProvider, PMA.Api.Services.AppPathProvider>();
 
@@ -239,6 +241,7 @@ app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseAuditUser();
 
 app.MapControllers();
 
