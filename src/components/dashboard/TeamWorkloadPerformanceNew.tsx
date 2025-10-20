@@ -239,7 +239,7 @@ const TeamWorkloadPerformance: React.FC = () => {
               {hasActiveFilters && (
                 <div className="mt-3 flex justify-end">
                   <Button
-                    color="default"
+                    color="danger"
                     size="sm"
                     startContent={<X className="w-4 h-4" />}
                     variant="flat"
