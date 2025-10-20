@@ -322,7 +322,7 @@ export const TaskCard = ({
             <div className="overflow-hidden">
               <span className="font-medium">{t("projectLabel")} </span>
               <span className="break-words">
-                {task.project?.applicationName || t("common.none")}
+                {task.project?.applicationName || t("tasks.noAssociatedProject")}
               </span>
             </div>
             <div className="overflow-hidden">

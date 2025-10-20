@@ -1081,6 +1081,7 @@ const translations = {
     "tasks.type.timeline": "Timeline Task",
     "tasks.type.changeRequest": "Change Request",
     "tasks.type.adhoc": "Adhoc Task",
+    "tasks.noAssociatedProject": "Not associated with a project",
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
     "requirements.taskInfo": "Task Information",
@@ -2837,6 +2838,7 @@ const translations = {
     "tasks.type.timeline": "مهمة جدول زمني",
     "tasks.type.changeRequest": "طلب تغيير",
     "tasks.type.adhoc": "مهمة عاجلة",
+    "tasks.noAssociatedProject": "غير مرتبط بمشروع",
 
     "requirements.updated": "تاريخ التحديث",
     "requirements.uploadedOn": "تم الرفع في",

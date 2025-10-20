@@ -36,17 +36,20 @@ public class TeamWorkloadController : ApiBaseController
         try
         {
             // Apply RGIS business logic: Get all team members with comprehensive workload metrics
+            // Group by employee to avoid duplicates when employee belongs to multiple departments
             var teamMembersQuery = from t in _context.Teams
                                    join me in _context.MawaredEmployees on t.PrsId equals me.Id
                                    join d in _context.Departments on t.DepartmentId equals d.Id
                                    where t.IsActive && me.StatusId == 1
+                                   group new { t, me, d } by me.Id into g
                                    select new
                                    {
-                                       EmployeeId = me.Id,
-                                       FullName = me.FullName,
-                                       GradeName = me.GradeName,
-                                       Department = d.Name,
-                                       DepartmentId = d.Id,
+                                       EmployeeId = g.Key,
+                                       FullName = g.First().me.FullName,
+                                       GradeName = g.First().me.GradeName,
+                                       // Take first department alphabetically for employees in multiple departments
+                                       Department = g.OrderBy(x => x.d.Name).First().d.Name,
+                                       DepartmentId = g.OrderBy(x => x.d.Name).First().d.Id,
 
                                        // Availability Status - Available if no active tasks AND no active requirements
                                        AvailabilityStatus = (_context.TaskAssignments
@@ -54,12 +57,12 @@ public class TeamWorkloadController : ApiBaseController
                                                ta => ta.TaskId,
                                                task => task.Id,
                                                (ta, task) => new { ta, task })
-                                           .Any(x => x.ta.PrsId == me.Id && new[] { 
-                                               Core.Enums.TaskStatus.ToDo, 
-                                               Core.Enums.TaskStatus.InProgress, 
-                                               Core.Enums.TaskStatus.InReview, 
-                                               Core.Enums.TaskStatus.Rework, 
-                                               Core.Enums.TaskStatus.OnHold 
+                                           .Any(x => x.ta.PrsId == g.Key && new[] {
+                                               Core.Enums.TaskStatus.ToDo,
+                                               Core.Enums.TaskStatus.InProgress,
+                                               Core.Enums.TaskStatus.InReview,
+                                               Core.Enums.TaskStatus.Rework,
+                                               Core.Enums.TaskStatus.OnHold
                                            }.Contains(x.task.StatusId)) == false)
                                        &&
                                        (_context.ProjectAnalysts
@@ -67,7 +70,7 @@ public class TeamWorkloadController : ApiBaseController
                                                pa => pa.ProjectId,
                                                pr => pr.ProjectId,
                                                (pa, pr) => new { pa, pr })
-                                           .Any(x => x.pa.AnalystId == me.Id && new[] { 1, 2, 3, 4, 5 }.Contains((int)x.pr.Status)) == false)
+                                           .Any(x => x.pa.AnalystId == g.Key && new[] { 1, 2, 3, 4, 5 }.Contains((int)x.pr.Status)) == false)
                                        ? "Available" : "Busy",
 
                                        // Active Tasks Count
@@ -76,12 +79,12 @@ public class TeamWorkloadController : ApiBaseController
                                                ta => ta.TaskId,
                                                task => task.Id,
                                                (ta, task) => new { ta, task })
-                                           .Count(x => x.ta.PrsId == me.Id && new[] { 
-                                               Core.Enums.TaskStatus.ToDo, 
-                                               Core.Enums.TaskStatus.InProgress, 
-                                               Core.Enums.TaskStatus.InReview, 
-                                               Core.Enums.TaskStatus.Rework, 
-                                               Core.Enums.TaskStatus.OnHold 
+                                           .Count(x => x.ta.PrsId == g.Key && new[] {
+                                               Core.Enums.TaskStatus.ToDo,
+                                               Core.Enums.TaskStatus.InProgress,
+                                               Core.Enums.TaskStatus.InReview,
+                                               Core.Enums.TaskStatus.Rework,
+                                               Core.Enums.TaskStatus.OnHold
                                            }.Contains(x.task.StatusId)),
 
                                        // Active Requirements Count
@@ -90,7 +93,7 @@ public class TeamWorkloadController : ApiBaseController
                                                pa => pa.ProjectId,
                                                pr => pr.ProjectId,
                                                (pa, pr) => new { pa, pr })
-                                           .Count(x => x.pa.AnalystId == me.Id && new[] { 1, 2, 3, 4, 5 }.Contains((int)x.pr.Status)),
+                                           .Count(x => x.pa.AnalystId == g.Key && new[] { 1, 2, 3, 4, 5 }.Contains((int)x.pr.Status)),
 
                                        // Overdue Tasks
                                        OverdueTasks = _context.TaskAssignments
@@ -98,13 +101,13 @@ public class TeamWorkloadController : ApiBaseController
                                                ta => ta.TaskId,
                                                task => task.Id,
                                                (ta, task) => new { ta, task })
-                                           .Count(x => x.ta.PrsId == me.Id &&
-                                                     new[] { 
-                                                         Core.Enums.TaskStatus.ToDo, 
-                                                         Core.Enums.TaskStatus.InProgress, 
-                                                         Core.Enums.TaskStatus.InReview, 
-                                                         Core.Enums.TaskStatus.Rework, 
-                                                         Core.Enums.TaskStatus.OnHold 
+                                           .Count(x => x.ta.PrsId == g.Key &&
+                                                     new[] {
+                                                         Core.Enums.TaskStatus.ToDo,
+                                                         Core.Enums.TaskStatus.InProgress,
+                                                         Core.Enums.TaskStatus.InReview,
+                                                         Core.Enums.TaskStatus.Rework,
+                                                         Core.Enums.TaskStatus.OnHold
                                                      }.Contains(x.task.StatusId) &&
                                                      x.task.EndDate < DateTime.UtcNow)
                                    };

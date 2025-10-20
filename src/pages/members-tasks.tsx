@@ -1222,7 +1222,7 @@ export default function MembersTasksPage() {
                         <span className="font-md">{t("project")}</span>
                         <span className="font-md">
                           {selectedTask.project?.applicationName ||
-                            t("common.none")}
+                            t("tasks.noAssociatedProject")}
                         </span>
                       </div>
 

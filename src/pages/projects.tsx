@@ -1871,9 +1871,9 @@ export default function ProjectsPage() {
               </ModalHeader>
               <ModalBody>
                 <p>
-                  {t("projects.deleteConfirmMessage")}
+                  {t("projects.deleteConfirmMessage")} {" "}
                   <strong>{projectToDelete?.applicationName}</strong>?{" "}
-                  {t("projects.actionCannotBeUndone")}
+                  {t("projects.actionCannotBeUndone")} 
                 </p>
               </ModalBody>
               <ModalFooter>
