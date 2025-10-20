@@ -1,0 +1,204 @@
+{
+  "name": "AI Form Suggestion with Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-suggest-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Agent Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "ai-suggest-agent-form"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and prepare request data for agent\nconst body = $input.item.json.body;\nconst context = body.context || '';\nconst field = body.field || '';\nconst previousValues = body.previousValues || {};\nconst conversationHistory = body.conversationHistory || [];\n\n// Detect if context is in Arabic\nconst arabicRegex = /[\\u0600-\\u06FF]/;\nconst isArabic = arabicRegex.test(context) || arabicRegex.test(field);\n\n// Build conversation context\nlet historyText = '';\nif (conversationHistory.length > 0) {\n  historyText = '\\n\\nPrevious conversation:\\n';\n  conversationHistory.forEach(msg => {\n    historyText += `${msg.role}: ${msg.content}\\n`;\n  });\n}\n\n// Build context information\nlet contextInfo = context;\nif (Object.keys(previousValues).length > 0) {\n  contextInfo += '\\n\\nProject Information:\\n';\n  for (const [key, value] of Object.entries(previousValues)) {\n    contextInfo += `- ${key}: ${value}\\n`;\n  }\n}\n\n// Build user query based on language\nlet userQuery = '';\nif (isArabic) {\n  userQuery = `اكتب وصفاً تقنياً مفصلاً ومهنياً للمتطلب التالي:\\n\\nالسياق: ${contextInfo}${historyText}\\n\\nالحقل المطلوب: ${field}\\n\\nيجب أن يكون الوصف:\\n- بالعربية الفصحى\\n- تقني ومهني\\n- 3-5 جمل\\n- يتضمن معايير تقنية واضحة\\n- لا يحتوي على عناوين أو أرقام`;\n} else {\n  userQuery = `Write a detailed, professional technical description for the following requirement:\\n\\nContext: ${contextInfo}${historyText}\\n\\nField to generate: ${field}\\n\\nThe description should be:\\n- Professional English\\n- Technical and comprehensive\\n- 3-5 sentences\\n- Include clear technical standards\\n- No headings or numbering`;\n}\n\nreturn {\n  json: {\n    chatInput: userQuery,\n    detectedLanguage: isArabic ? 'ar' : 'en',\n    originalContext: context,\n    field: field,\n    previousValues: previousValues\n  }\n};"
+      },
+      "id": "prepare-input",
+      "name": "Prepare Agent Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an expert software requirements analyst specializing in writing professional, technical requirement descriptions. Your role is to:\n\n1. Analyze the user's context and project information\n2. Generate clear, comprehensive technical descriptions\n3. Use appropriate technical terminology\n4. Write in the language requested (Arabic or English)\n5. Focus on functionality, standards, and quality criteria\n6. Keep descriptions between 3-5 sentences\n7. Avoid using headings, numbers, or bullet points in the output\n8. Be specific about APIs, databases, frameworks when relevant\n\nFor Arabic responses:\n- Use Modern Standard Arabic (الفصحى)\n- Include precise technical terms\n- Maintain professional tone\n\nFor English responses:\n- Use clear, professional English\n- Include specific technical details\n- Maintain industry-standard terminology\n\nAlways provide actionable, implementation-ready descriptions."
+        },
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": true
+      },
+      "id": "ai-agent",
+      "name": "AI Agent - Requirements Analyst",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:8b",
+        "options": {
+          "baseUrl": "http://host.docker.internal:11434",
+          "temperature": 0.4,
+          "maxTokens": 300,
+          "topP": 0.92,
+          "topK": 50,
+          "repeatPenalty": 1.15,
+          "frequencyPenalty": 0.5,
+          "presencePenalty": 0.3
+        }
+      },
+      "id": "ollama-chat",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [650, 450]
+    },
+    {
+      "parameters": {},
+      "id": "output-parser",
+      "name": "Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1,
+      "position": [650, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract agent response\nconst agentOutput = $input.item.json;\nconst preparedInput = $('Prepare Agent Input').item.json;\n\n// Get the suggestion text from agent output\nlet suggestion = '';\nif (typeof agentOutput.output === 'string') {\n  suggestion = agentOutput.output.trim();\n} else if (agentOutput.text) {\n  suggestion = agentOutput.text.trim();\n} else {\n  suggestion = JSON.stringify(agentOutput);\n}\n\n// Clean up common unwanted prefixes and formatting\nconst prefixesToRemove = [\n  'Description:',\n  'وصف:',\n  '\"',\n  \"'\",\n  'Task Description:',\n  'وصف المهمة:',\n  'Here is',\n  'Here\\'s',\n  'إليك',\n  'الوصف:'\n];\n\nfor (const prefix of prefixesToRemove) {\n  if (suggestion.toLowerCase().startsWith(prefix.toLowerCase())) {\n    suggestion = suggestion.substring(prefix.length).trim();\n  }\n}\n\n// Remove trailing quotes\nif (suggestion.endsWith('\"') || suggestion.endsWith(\"'\")) {\n  suggestion = suggestion.slice(0, -1).trim();\n}\nif (suggestion.startsWith('\"') || suggestion.startsWith(\"'\")) {\n  suggestion = suggestion.substring(1).trim();\n}\n\n// Format response for frontend\nreturn {\n  json: {\n    success: true,\n    data: {\n      suggestion: suggestion,\n      confidence: 0.9,\n      metadata: {\n        field: preparedInput.field,\n        context: preparedInput.originalContext,\n        model: 'llama3.1:8b',\n        language: preparedInput.detectedLanguage,\n        agentType: 'langchain-agent',\n        timestamp: new Date().toISOString()\n      }\n    },\n    message: 'Suggestion generated successfully with AI Agent'\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Agent Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "webhook-response",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle errors gracefully\nconst error = $input.item.json.error || $input.item.json;\n\nreturn {\n  json: {\n    success: false,\n    data: null,\n    message: error.message || 'Failed to generate suggestion with agent',\n    error: {\n      type: error.name || 'AgentError',\n      details: error.stack || JSON.stringify(error)\n    }\n  }\n};"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "error-response",
+      "name": "Send Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 500]
+    }
+  ],
+  "connections": {
+    "Webhook - Agent Request": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Requirements Analyst": {
+      "main": [
+        [
+          {
+            "node": "Format Agent Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Agent Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Send Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["AI", "Agent", "LangChain", "Requirements"],
+  "triggerCount": 0,
+  "updatedAt": "2025-10-17T00:00:00.000Z",
+  "versionId": "1"
+}
