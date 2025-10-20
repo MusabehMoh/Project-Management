@@ -17,6 +17,7 @@ if (-not (Test-Path $packagesFolder)) {
 $packages = @(
     # PMA.Api packages
     @{ Name = "Microsoft.AspNetCore.OpenApi"; Version = "8.0.0" },
+    @{ Name = "Microsoft.AspNetCore.SignalR"; Version = "1.2.0" },
     @{ Name = "Serilog.Sinks.Seq"; Version = "9.0.0" },
     @{ Name = "Swashbuckle.AspNetCore"; Version = "6.4.0" },
     @{ Name = "Microsoft.EntityFrameworkCore"; Version = "8.0.0" },
