@@ -23,7 +23,7 @@ export const GlobalPagination = ({
   showInfo = true,
   className = "",
 }: GlobalPaginationProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   if (totalPages <= 1) return null;
 
@@ -34,23 +34,30 @@ export const GlobalPagination = ({
     <div className={`flex flex-col items-center gap-4 ${className}`}>
       {/* Pagination Info */}
       {showInfo && (
-        <div className="text-sm text-default-600 text-center">
+        <div
+          className="text-sm text-default-600 text-center"
+          dir={language === "ar" ? "rtl" : "ltr"}
+        >
           {t("pagination.showing")} {startItem} {t("pagination.to")} {endItem}{" "}
           {t("pagination.of")} {totalItems} {t("pagination.items")}
         </div>
       )}
 
-      {/* Simple Default Pagination */}
-      <Pagination
-        initialPage={1}
-        isDisabled={isLoading}
-        page={currentPage}
-        total={totalPages}
-        onChange={onPageChange}
-      />
+      {/* Simple Default Pagination - Force LTR for correct number order */}
+      <div dir="ltr">
+        <Pagination
+          isDisabled={isLoading}
+          page={currentPage}
+          total={totalPages}
+          onChange={onPageChange}
+        />
+      </div>
 
       {/* Simple Page Info */}
-      <div className="text-xs text-default-500 text-center">
+      <div
+        className="text-xs text-default-500 text-center"
+        dir={language === "ar" ? "rtl" : "ltr"}
+      >
         {isLoading
           ? t("pagination.loading")
           : `${t("pagination.page")} ${currentPage} ${t("pagination.of")} ${totalPages}`}
