@@ -259,14 +259,26 @@ export class MembersTasksService {
     taskId: string,
     memberIds: string[],
     notes: string,
+    startDate?: string,
+    endDate?: string,
   ): Promise<ApiResponse<void>> {
     try {
+      const requestBody: Record<string, unknown> = {
+        assigneeIds: memberIds,
+        notes: notes,
+      };
+
+      // Add dates if provided
+      if (startDate) {
+        requestBody.startDate = startDate;
+      }
+      if (endDate) {
+        requestBody.endDate = endDate;
+      }
+
       return await apiClient.post<void>(
         `${this.baseUrl}/${taskId}/change-assignees`,
-        {
-          assigneeIds: memberIds,
-          notes: notes,
-        },
+        requestBody,
       );
     } catch {
       return {

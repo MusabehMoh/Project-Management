@@ -122,7 +122,8 @@ public class TeamRepository : Repository<Team>, ITeamRepository
                 Id = t.Employee != null ? t.Employee.Id : 0,
                 UserName = !string.IsNullOrEmpty(t.UserName) ? t.UserName : (t.Employee != null ? t.Employee.UserName : ""),
                 FullName = !string.IsNullOrEmpty(t.FullName) ? t.FullName : (t.Employee != null ? t.Employee.FullName : ""),
-                MilitaryNumber = t.Employee != null ? t.Employee.MilitaryNumber : ""
+                MilitaryNumber = t.Employee != null ? t.Employee.MilitaryNumber : "",
+                GradeName= t.Employee != null ? t.Employee.GradeName : "",  
             })
             .Distinct()
             .OrderBy(e => e.FullName)

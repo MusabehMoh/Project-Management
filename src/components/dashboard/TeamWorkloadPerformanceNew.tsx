@@ -114,12 +114,12 @@ const TeamWorkloadPerformance: React.FC = () => {
 
   // Reset filters
   const resetFilters = () => {
-    setFilters({
+    setFilters(() => ({
       search: "",
       department: "",
       busyStatus: "",
       performanceRange: "",
-    });
+    }));
     setCurrentPage(1); // Reset to first page when filters change
   };
 
@@ -211,23 +211,24 @@ const TeamWorkloadPerformance: React.FC = () => {
                   size="sm"
                   value={filters.search}
                   onChange={(e) =>
-                    setFilters({ ...filters, search: e.target.value })
+                    setFilters((prev) => ({ ...prev, search: e.target.value }))
                   }
-                  onClear={() => setFilters({ ...filters, search: "" })}
+                  onClear={() =>
+                    setFilters((prev) => ({ ...prev, search: "" }))
+                  }
                 />
 
                 {/* Department Filter */}
                 <Select
                   label={t("team.department")}
+                  scrollShadowProps={{ isEnabled: false }}
                   placeholder={t("team.allDepartments")}
                   selectedKeys={filters.department ? [filters.department] : []}
                   size="sm"
                   onSelectionChange={(keys) => {
-                    setTimeout(() => {
-                      const value = (Array.from(keys)[0] as string) || "";
+                    const value = (Array.from(keys)[0] as string) || "";
 
-                      setFilters({ ...filters, department: value });
-                    }, 0);
+                    setFilters((prev) => ({ ...prev, department: value }));
                   }}
                 >
                   {departments.map((dept) => (
@@ -242,11 +243,9 @@ const TeamWorkloadPerformance: React.FC = () => {
                   selectedKeys={filters.busyStatus ? [filters.busyStatus] : []}
                   size="sm"
                   onSelectionChange={(keys) => {
-                    setTimeout(() => {
-                      const value = (Array.from(keys)[0] as string) || "";
+                    const value = (Array.from(keys)[0] as string) || "";
 
-                      setFilters({ ...filters, busyStatus: value });
-                    }, 0);
+                    setFilters((prev) => ({ ...prev, busyStatus: value }));
                   }}
                 >
                   <SelectItem key="busy">{t("team.busy")}</SelectItem>
@@ -262,11 +261,12 @@ const TeamWorkloadPerformance: React.FC = () => {
                   }
                   size="sm"
                   onSelectionChange={(keys) => {
-                    setTimeout(() => {
-                      const value = (Array.from(keys)[0] as string) || "";
+                    const value = (Array.from(keys)[0] as string) || "";
 
-                      setFilters({ ...filters, performanceRange: value });
-                    }, 0);
+                    setFilters((prev) => ({
+                      ...prev,
+                      performanceRange: value,
+                    }));
                   }}
                 >
                   <SelectItem key="excellent">

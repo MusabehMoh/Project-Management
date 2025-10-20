@@ -435,6 +435,7 @@ public class MembersTasksController : ApiBaseController
 
     /// <summary>
     /// Change task assignees - removes old assignments and adds new ones
+    /// Also updates start and end dates if provided
     /// </summary>
     [HttpPost("{id}/change-assignees")]
     [ProducesResponseType(200)]
@@ -487,6 +488,23 @@ public class MembersTasksController : ApiBaseController
                 }
             }
 
+            // Update start and end dates if provided
+            if (request.StartDate.HasValue)
+            {
+                task.StartDate = request.StartDate.Value;
+            }
+
+            if (request.EndDate.HasValue)
+            {
+                task.EndDate = request.EndDate.Value;
+            }
+
+            // Persist date changes to database if any dates were updated
+            if (request.StartDate.HasValue || request.EndDate.HasValue)
+            {
+                await _memberTaskService.UpdateMemberTaskAsync(task);
+            }
+
             // Change the assignees
             var success = await _memberTaskService.ChangeTaskAssigneesAsync(id, assigneeIds, request.Notes);
 
@@ -503,7 +521,7 @@ public class MembersTasksController : ApiBaseController
             var response = new ApiResponse<object>
             {
                 Success = true,
-                Message = "Task assignees changed successfully"
+                Message = "Task assignees and dates updated successfully"
             };
 
             return Ok(response);
@@ -550,4 +568,6 @@ public class ChangeTaskAssigneesRequest
 {
     public List<int> AssigneeIds { get; set; } = new List<int>();
     public string Notes { get; set; } = string.Empty;
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }

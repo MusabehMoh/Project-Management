@@ -50,81 +50,6 @@
 }
 */
 
-/* HeroUI Component Overrides */
-
-/* Fix layout shifts caused by Select dropdowns */
-.heroui-select {
-  /* Prevent layout shifts when dropdown opens */
-  overflow: visible !important;
-}
-
-/* Ensure dropdown container doesn't cause scrollbars */
-[data-slot="listbox-wrapper"] {
-  /* Prevent horizontal scrollbars */
-  overflow-x: hidden !important;
-  /* Allow vertical scrolling for long lists */
-  overflow-y: auto !important;
-  /* Prevent layout shifts */
-  position: absolute !important;
-  z-index: 1000 !important;
-}
-
-/* Fix for dropdown positioning to prevent content reflow */
-[data-slot="popover"] {
-  /* Ensure dropdown appears above content flow */
-  position: fixed !important;
-  z-index: 9999 !important;
-}
-
-/* Prevent body scroll when dropdown is open */
-body:has([data-slot="popover"][data-open="true"]) {
-  overflow: hidden !important;
-}
-
-/* Additional fix for Select component stability */
-.heroui-select [data-slot="trigger"] {
-  /* Maintain consistent width */
-  min-width: 0 !important;
-}
-
-/* Fix for filter section layout stability */
-.filters-section {
-  /* Prevent height changes when dropdowns open */
-  min-height: 60px !important;
-  /* Ensure consistent layout */
-  overflow: visible !important;
-}
-
-/* Specific fixes for Select dropdown behavior */
-.heroui-select [data-slot="listbox"] {
-  /* Prevent layout shifts */
-  position: absolute !important;
-  top: 100% !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 1000 !important;
-  /* Ensure dropdown doesn't affect parent layout */
-  margin-top: 4px !important;
-  /* Add max height with scroll for long lists */
-  max-height: 200px !important;
-  overflow-y: auto !important;
-}
-
-/* Prevent horizontal scrollbar appearance */
-html, body {
-  /* Prevent horizontal scrollbars from appearing */
-  overflow-x: hidden !important;
-}
-
-/* Ensure dropdown containers don't cause layout shifts */
-[data-slot="listbox-wrapper"] {
-  /* Absolute positioning to prevent layout impact */
-  position: absolute !important;
-  z-index: 1000 !important;
-  /* Prevent any overflow issues */
-  overflow: visible !important;
-}
-
 /* ===================================
    LAYOUT OVERRIDES
    =================================== */
@@ -297,6 +222,3 @@ html, body {
   }
 }
 */
- [data-slot="trigger"] {
-  cursor: pointer !important;
-}

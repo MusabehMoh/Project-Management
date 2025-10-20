@@ -30,6 +30,8 @@ interface UseMembersTasksResult {
     taskId: string,
     memberIds: string[],
     notes: string,
+    startDate?: string,
+    endDate?: string,
   ) => Promise<boolean>;
   tasksConfig: () => Promise<void>;
   handlePageChange: (page: number) => void;
@@ -185,12 +187,16 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     taskId: string,
     memberIds: string[],
     notes: string,
+    startDate?: string,
+    endDate?: string,
   ): Promise<boolean> => {
     try {
       const response = await membersTasksService.changeAssignees(
         taskId,
         memberIds,
         notes,
+        startDate,
+        endDate,
       );
 
       if (response.success) {

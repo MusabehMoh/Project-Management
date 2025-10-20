@@ -1,3 +1,5 @@
+import type { CalendarDate } from "@internationalized/date";
+import { parseDate } from "@internationalized/date";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 import { Button } from "@heroui/button";
@@ -10,6 +12,7 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 import { Select, SelectItem } from "@heroui/select";
+import { DatePicker } from "@heroui/date-picker";
 import { Badge } from "@heroui/badge";
 import {
   RefreshCw,
@@ -248,6 +251,11 @@ export default function MembersTasksPage() {
   // State for selected members
   const [selectedEmployee, setSelectedEmployee] =
     useState<MemberSearchResult | null>(null);
+
+  // State for task dates using CalendarDate
+  const [taskStartDate, setTaskStartDate] = useState<CalendarDate | null>(null);
+  const [taskEndDate, setTaskEndDate] = useState<CalendarDate | null>(null);
+
   // Employee search hooks for employees
   const {
     employees: employees,
@@ -312,10 +320,18 @@ export default function MembersTasksPage() {
 
         return;
       } else {
+        // Convert CalendarDate to ISO string format (YYYY-MM-DD)
+        const startDateString = taskStartDate
+          ? taskStartDate.toString()
+          : undefined;
+        const endDateString = taskEndDate ? taskEndDate.toString() : undefined;
+
         const success = await changeAssignees(
           selectedTask?.id ?? "0",
           selectedMembers.map((member) => member.id.toString()),
           notes ?? "",
+          startDateString,
+          endDateString,
         );
 
         if (success) {
@@ -406,6 +422,11 @@ export default function MembersTasksPage() {
     if (isDrawerOpen) setIsDrawerOpen(false);
     setSelectedTask(task);
     setIsChangeAssigneesModalOpened(true);
+    // Parse dates using parseDate from @internationalized/date
+    setTaskStartDate(
+      task.startDate ? parseDate(task.startDate.split("T")[0]) : null,
+    );
+    setTaskEndDate(task.endDate ? parseDate(task.endDate.split("T")[0]) : null);
     resetUserDropDown();
     setModalError(false);
     setAssigneeModalError(false);
@@ -442,11 +463,9 @@ export default function MembersTasksPage() {
 
   // Handle employee selection
   const handleEmployeeSelect = (employee: MemberSearchResult) => {
-    setSelectedEmployee(employee);
+    // Only allow one selection - replace any existing selection
+    setSelectedMembers([employee]);
     setEmployeeInputValue("");
-    if (!selectedMembers.some((user) => user.id === employee.id)) {
-      setSelectedMembers([...selectedMembers, employee]);
-    }
     setSelectedEmployee(null);
   };
 
@@ -591,6 +610,13 @@ export default function MembersTasksPage() {
               <Select
                 className="w-full"
                 isLoading={projectsLoading}
+                items={[
+                  { value: "", label: t("taskPlan.allProjects") },
+                  ...(projects?.map((p) => ({
+                    value: String(p.id),
+                    label: p.applicationName,
+                  })) || []),
+                ]}
                 placeholder={t("taskPlan.filterByProject")}
                 selectedKeys={
                   taskParametersRequest.projectId
@@ -602,13 +628,6 @@ export default function MembersTasksPage() {
 
                   handleProjectChange(val ? Number(val) : 0);
                 }}
-                items={[
-                  { value: "", label: t("taskPlan.allProjects") },
-                  ...(projects?.map((p) => ({
-                    value: String(p.id),
-                    label: p.applicationName,
-                  })) || []),
-                ]}
               >
                 {(item) => (
                   <SelectItem key={item.value}>{item.label}</SelectItem>
@@ -849,8 +868,7 @@ export default function MembersTasksPage() {
                     {
                       statusOptions.find(
                         (s) =>
-                          s.key ===
-                          taskParametersRequest.statusId!.toString(),
+                          s.key === taskParametersRequest.statusId!.toString(),
                       )?.label
                     }
                   </Chip>
@@ -860,8 +878,7 @@ export default function MembersTasksPage() {
                     {t("requirements.priority")}:{" "}
                     {
                       priorityOptions.find(
-                        (p) =>
-                          p.value === taskParametersRequest.priorityId,
+                        (p) => p.value === taskParametersRequest.priorityId,
                       )?.label
                     }
                   </Chip>
@@ -873,9 +890,7 @@ export default function MembersTasksPage() {
                       {t("common.assignee")}:{" "}
                       {
                         teamMembers.find(
-                          (m) =>
-                            m.id ===
-                            taskParametersRequest.memberIds![0],
+                          (m) => m.id === taskParametersRequest.memberIds![0],
                         )?.fullName
                       }
                     </Chip>
@@ -1152,6 +1167,27 @@ export default function MembersTasksPage() {
                     </div>
                   </div>
 
+                  {/* Assigned Members */}
+                  {selectedTask?.assignedMembers &&
+                    selectedTask.assignedMembers.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-md font-medium">
+                          {t("timeline.assignedMembers")}
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedTask.assignedMembers.map((assignee) => (
+                            <Chip
+                              key={assignee.id}
+                              color="primary"
+                              variant="flat"
+                            >
+                              {assignee.gradeName} {assignee.fullName}
+                            </Chip>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                   <div className="flex justify-between items-start">
                     {/* Start Date */}
                     <div>
@@ -1178,15 +1214,6 @@ export default function MembersTasksPage() {
                     </div>
                   </div>
 
-                  {/* Expected Completion Date */}
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-foreground-500" />
-                    <p className="text-lg ">{t("estimatedTime")}</p>
-                    <p className="text-md font-semibold text-foreground ">
-                      {selectedTask.estimatedTime}h
-                    </p>
-                  </div>
-
                   {/* project & requirement */}
                   <div className="mt-3 pt-3 pb-3 border-t border-b border-divider">
                     <div className="flex flex-col gap-4">
@@ -1194,7 +1221,8 @@ export default function MembersTasksPage() {
                       <div className="flex flex-col gap-1">
                         <span className="font-md">{t("project")}</span>
                         <span className="font-md">
-                          {selectedTask.project?.applicationName || ""}
+                          {selectedTask.project?.applicationName ||
+                            t("common.none")}
                         </span>
                       </div>
 
@@ -1202,7 +1230,7 @@ export default function MembersTasksPage() {
                       <div className="flex flex-col gap-1">
                         <span className="font-md">{t("requirement")}</span>
                         <span className="font-md">
-                          {selectedTask.requirement?.name || ""}
+                          {selectedTask.requirement?.name || t("common.none")}
                         </span>
                       </div>
                     </div>
@@ -1413,34 +1441,49 @@ export default function MembersTasksPage() {
 
                 <ModalBody>
                   <div className="space-y-4">
-                    <Input readOnly value={selectedTask?.name ?? ""} />
+                    {/* Task Name */}
+                    <Input
+                      readOnly
+                      label={t("tasks.taskName")}
+                      value={selectedTask?.name ?? ""}
+                    />
 
-                    {/* Tags Display */}
-                    {selectedMembers.length > 0 && (
-                      <div className="space-y-2">
-                        <span className="text-sm text-default-600">
-                          {t("users.selectedEmployees")}:
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedMembers.map((employee) => (
-                            <Chip
-                              key={employee.id}
-                              color="primary"
-                              variant="flat"
-                              onClose={() => {
-                                setSelectedMembers(
-                                  selectedMembers.filter(
-                                    (user) => user.id !== employee.id,
-                                  ),
-                                );
-                              }}
-                            >
-                              {employee.gradeName} {employee.fullName || ""}
-                            </Chip>
-                          ))}
+                    {/* Current Assignees Display */}
+                    {selectedTask?.assignedMembers &&
+                      selectedTask.assignedMembers.length > 0 && (
+                        <div className="space-y-2 p-3 bg-default-50 rounded-lg border border-default-200">
+                          <span className="text-sm font-medium text-default-700">
+                            {t("tasks.currentAssignees")}:
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedTask.assignedMembers.map((assignee) => (
+                              <Chip
+                                key={assignee.id}
+                                color="primary"
+                                variant="flat"
+                              >
+                                {assignee.gradeName} {assignee.fullName || ""}
+                              </Chip>
+                            ))}
+                          </div>
                         </div>
+                      )}
+
+                    {/* Selected New Assignee Display */}
+                    {selectedMembers.length > 0 && (
+                      <div className="space-y-2 p-3 bg-primary-50 dark:bg-primary-100/10 rounded-lg border border-primary-200">
+                        <Chip
+                          color="primary"
+                          variant="flat"
+                          onClose={() => setSelectedMembers([])}
+                        >
+                          {selectedMembers[0].gradeName}{" "}
+                          {selectedMembers[0].fullName || ""}
+                        </Chip>
                       </div>
                     )}
+
+                    {/* Add Assignee */}
                     <Autocomplete
                       isClearable
                       defaultFilter={(_textValue, _input) => true}
@@ -1510,6 +1553,22 @@ export default function MembersTasksPage() {
                       ))}
                     </Autocomplete>
 
+                    {/* Start Date and End Date in one row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <DatePicker
+                        label={t("tasks.startDate")}
+                        value={taskStartDate}
+                        onChange={(date) => setTaskStartDate(date)}
+                      />
+
+                      <DatePicker
+                        label={t("tasks.endDate")}
+                        value={taskEndDate}
+                        onChange={(date) => setTaskEndDate(date)}
+                      />
+                    </div>
+
+                    {/* Notes */}
                     <Textarea
                       label={t("timeline.treeView.notes")}
                       placeholder={t("timeline.treeView.notes")}
@@ -1565,10 +1624,10 @@ export default function MembersTasksPage() {
 
                 <ModalBody>
                   <div className="space-y-4">
-                    <Input 
+                    <Input
+                      readOnly
                       label={t("tasks.taskName")}
-                      readOnly 
-                      value={selectedTask?.name ?? ""} 
+                      value={selectedTask?.name ?? ""}
                     />
 
                     <Textarea
@@ -1632,13 +1691,19 @@ export default function MembersTasksPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">{t("tasks.taskName")}:</p>
-                      <p className="text-sm text-default-600">{selectedTask?.name ?? ""}</p>
+                      <p className="text-sm font-medium">
+                        {t("tasks.taskName")}:
+                      </p>
+                      <p className="text-sm text-default-600">
+                        {selectedTask?.name ?? ""}
+                      </p>
                     </div>
 
                     {notes && (
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">{t("timeline.treeView.notes")}:</p>
+                        <p className="text-sm font-medium">
+                          {t("timeline.treeView.notes")}:
+                        </p>
                         <p className="text-sm text-default-600">{notes}</p>
                       </div>
                     )}

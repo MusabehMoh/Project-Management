@@ -235,9 +235,11 @@ public class MemberTaskService : IMemberTaskService
             throw new InvalidOperationException($"Task with ID {memberTask.Id} not found");
         }
 
-        // Update only the fields that should be updated (status, progress, etc.)
+        // Update only the fields that should be updated (status, progress, dates, etc.)
         existingTask.StatusId = memberTask.StatusId;
         existingTask.Progress = memberTask.Progress;
+        existingTask.StartDate = memberTask.StartDate;
+        existingTask.EndDate = memberTask.EndDate;
         existingTask.UpdatedAt = DateTime.UtcNow;
 
         // Save the changes (UpdateAsync returns Task, not Task<T>)
