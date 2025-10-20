@@ -223,7 +223,7 @@ const ManagementDropdown = ({
         className="min-w-[200px]"
         variant="flat"
       >
-        {hasUsersAccess && (
+        {hasUsersAccess ? (
           <DropdownItem
             key="users"
             className={clsx(
@@ -236,8 +236,8 @@ const ManagementDropdown = ({
           >
             {t("nav.userManagement")}
           </DropdownItem>
-        )}
-        {hasDepartmentsAccess && (
+        ) : null}
+        {hasDepartmentsAccess ? (
           <DropdownItem
             key="departments"
             className={clsx(
@@ -250,7 +250,7 @@ const ManagementDropdown = ({
           >
             {t("nav.departmentManagement")}
           </DropdownItem>
-        )}
+        ) : null}
       </DropdownMenu>
     </Dropdown>
   );
@@ -277,7 +277,7 @@ const getProjectNavItems = (
     conditionalItems.push({ label: t("nav.projects"), href: "/projects" });
   }
 
-  const adminItems = [];
+  const adminItems: Array<{ label: string; href: string }> = [];
 
   // Development Manager specific items
   const developmentItems = [];

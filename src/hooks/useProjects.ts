@@ -154,7 +154,7 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
               id: employee.id,
               userName: employee.userName,
               prsId: employee.id, // Using id as prsId for compatibility
-              isVisible: true,
+              statusId: employee.statusId,
               fullName: employee.fullName,
               militaryNumber: employee.militaryNumber,
               gradeName: employee.gradeName,
@@ -357,13 +357,13 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
       const results = SearchService.universalSearch(
         users as any[],
         searchValue,
-      ) as User[];
+      ) as unknown as User[];
 
       // Sort by relevance for better user experience
       return SearchService.sortByRelevance(
         results as any[],
         searchValue,
-      ) as User[];
+      ) as unknown as User[];
     },
     [users],
   );
@@ -389,7 +389,8 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
       total: projects.length,
       new: projects.filter((p) => p.status === 1).length, // New (جديد)
       delayed: projects.filter((p) => p.status === 2).length, // Delayed (مؤجل)
-      underReview: projects.filter((p) => p.status === 3).length, // Under Review (قيد الدراسة)
+      underStudy: projects.filter((p) => p.status === 3).length, // Under Review (قيد الدراسة)
+      underTesting: projects.filter((p) => p.status === 4).length, // Under Testing (قيد الأختبار)
       underDevelopment: projects.filter((p) => p.status === 4).length, // Under Development (قيد التطوير)
       production: projects.filter((p) => p.status === 5).length, // Production Environment (بيئة الانتاج)
     };

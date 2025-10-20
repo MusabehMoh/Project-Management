@@ -388,7 +388,7 @@ export default function ProjectsPage() {
     if (!userId) return "Unknown";
     const user = users.find((u) => u.id === userId);
 
-    return user?.name || `User #${userId}`;
+    return user?.fullName || `User #${userId}`;
   };
 
   // Helper function to get user by ID
@@ -460,11 +460,9 @@ export default function ProjectsPage() {
 
     setSelectedUnit(mockUnit);
 
-    // Find the employees by their IDs and set them as selected
-    const ownerEmployee = users.find((u) => u.id === project.projectOwnerId);
-    const altOwnerEmployee = users.find(
-      (u) => u.id === project.alternativeOwnerId,
-    );
+    // Use the employee objects directly from the project
+    const ownerEmployee = project.projectOwnerEmployee;
+    const altOwnerEmployee = project.alternativeOwnerEmployee;
 
     // Convert User objects to EmployeeSearchResult objects
     const ownerResult = ownerEmployee
@@ -474,7 +472,7 @@ export default function ProjectsPage() {
           fullName: ownerEmployee.fullName,
           militaryNumber: ownerEmployee.militaryNumber,
           gradeName: ownerEmployee.gradeName,
-          statusId: ownerEmployee.isVisible ? 1 : 0,
+          statusId: ownerEmployee.statusId,
         }
       : null;
 
@@ -485,7 +483,7 @@ export default function ProjectsPage() {
           fullName: altOwnerEmployee.fullName,
           militaryNumber: altOwnerEmployee.militaryNumber,
           gradeName: altOwnerEmployee.gradeName,
-          statusId: altOwnerEmployee.isVisible ? 1 : 0,
+          statusId: altOwnerEmployee.statusId,
         }
       : null;
 
@@ -809,8 +807,8 @@ export default function ProjectsPage() {
       // Prepare the data for export
       const exportData = projects.map((project) => ({
         "Application Name": project.applicationName,
-        "Project Owner": project.projectOwner || "Unknown",
-        "Alternative Owner": project.alternativeOwner || "Unknown",
+        "Project Owner": project.projectOwnerEmployee?.fullName || "Unknown",
+        "Alternative Owner": project.alternativeOwnerEmployee?.fullName || "Unknown",
         "Owning Unit": project.owningUnit || "Unknown Unit",
         "Start Date": project.startDate,
         "Expected Completion Date": project.expectedCompletionDate,
@@ -1271,19 +1269,19 @@ export default function ProjectsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar
-                              name={project.projectOwner || "Unknown"}
+                              name={project.projectOwnerEmployee?.fullName || "Unknown"}
                               size="sm"
                             />
-                            <span>{project.projectOwner || "Unknown"}</span>
+                            <span>{project.projectOwnerEmployee?.fullName || "Unknown"}</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar
-                              name={project.alternativeOwner || "Unknown"}
+                              name={project.alternativeOwnerEmployee?.fullName || "Unknown"}
                               size="sm"
                             />
-                            <span>{project.alternativeOwner || "Unknown"}</span>
+                            <span>{project.alternativeOwnerEmployee?.fullName || "Unknown"}</span>
                           </div>
                         </TableCell>
                         <TableCell>

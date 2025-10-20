@@ -752,7 +752,6 @@ export function DesignRequestsPage() {
                               alt={designer.fullName}
                               className="flex-shrink-0"
                               size="sm"
-                              src={designer.avatarUrl}
                             />
                             <div className="flex flex-col">
                               <span className="text-sm font-medium">

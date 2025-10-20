@@ -173,8 +173,24 @@ public class MemberTaskService : IMemberTaskService
             {
                 Id = task.ProjectRequirement.Project.Id,
                 ApplicationName = task.ProjectRequirement.Project.ApplicationName,
-                ProjectOwner = task.ProjectRequirement.Project.ProjectOwner,
-                AlternativeOwner = task.ProjectRequirement.Project.AlternativeOwner,
+                ProjectOwnerEmployee = task.ProjectRequirement.Project.ProjectOwnerEmployee != null ? new EmployeeDto
+                {
+                    Id = task.ProjectRequirement.Project.ProjectOwnerEmployee.Id,
+                    UserName = task.ProjectRequirement.Project.ProjectOwnerEmployee.UserName,
+                    MilitaryNumber = task.ProjectRequirement.Project.ProjectOwnerEmployee.MilitaryNumber,
+                    GradeName = task.ProjectRequirement.Project.ProjectOwnerEmployee.GradeName,
+                    FullName = task.ProjectRequirement.Project.ProjectOwnerEmployee.FullName,
+                    StatusId = task.ProjectRequirement.Project.ProjectOwnerEmployee.StatusId
+                } : null,
+                AlternativeOwnerEmployee = task.ProjectRequirement.Project.AlternativeOwnerEmployee != null ? new EmployeeDto
+                {
+                    Id = task.ProjectRequirement.Project.AlternativeOwnerEmployee.Id,
+                    UserName = task.ProjectRequirement.Project.AlternativeOwnerEmployee.UserName,
+                    MilitaryNumber = task.ProjectRequirement.Project.AlternativeOwnerEmployee.MilitaryNumber,
+                    GradeName = task.ProjectRequirement.Project.AlternativeOwnerEmployee.GradeName,
+                    FullName = task.ProjectRequirement.Project.AlternativeOwnerEmployee.FullName,
+                    StatusId = task.ProjectRequirement.Project.AlternativeOwnerEmployee.StatusId
+                } : null,
                 OwningUnit = task.ProjectRequirement.Project.OwningUnit,
                 ProjectOwnerId = task.ProjectRequirement.Project.ProjectOwnerId,
                 AlternativeOwnerId = task.ProjectRequirement.Project.AlternativeOwnerId,

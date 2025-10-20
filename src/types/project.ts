@@ -1,9 +1,9 @@
 export interface Project {
   id: number;
   applicationName: string;
-  // Display names (strings) for table display - with fallbacks for undefined values
-  projectOwner: string; // Display name for project owner
-  alternativeOwner: string; // Display name for alternative owner
+  // Employee objects for project owners
+  projectOwnerEmployee?: Employee; // Full employee object for project owner
+  alternativeOwnerEmployee?: Employee; // Full employee object for alternative owner
   owningUnit: string; // Display name for owning unit
   // Numeric IDs for edit/create operations
   projectOwnerId: number; // Actual ID for project owner (prsId)
@@ -24,24 +24,28 @@ export interface Project {
   progress?: number;
 }
 
+export interface Employee {
+  id: number;
+  userName: string;
+  militaryNumber: string;
+  gradeName: string;
+  fullName: string;
+  statusId: number;
+  department?: string;
+}
+
 export interface User {
   id: number;
   userName: string;
-  prsId: number;
-  isVisible: boolean;
-  fullName: string;
+  prsId?: number;
   militaryNumber: string;
   gradeName: string;
-  department: string;
-  email?: string;
-  phone?: string;
+  fullName: string;
+  statusId: number;
+  department?: string;
+  isVisible?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  // Legacy properties for backward compatibility
-  name?: string;
-  username?: string;
-  rank?: string;
-  isActive?: boolean;
 }
 
 export interface OwningUnit {

@@ -8,8 +8,8 @@ public class ProjectDto
 {
     public int Id { get; set; }
     public string ApplicationName { get; set; } = string.Empty;
-    public string ProjectOwner { get; set; } = string.Empty;
-    public string? AlternativeOwner { get; set; }
+    public EmployeeDto? ProjectOwnerEmployee { get; set; }
+    public EmployeeDto? AlternativeOwnerEmployee { get; set; }
     public string OwningUnit { get; set; } = string.Empty;
     public int ProjectOwnerId { get; set; }
     public int? AlternativeOwnerId { get; set; }

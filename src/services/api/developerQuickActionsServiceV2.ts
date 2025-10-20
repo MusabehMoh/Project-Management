@@ -15,6 +15,7 @@ export interface UnassignedTask {
   complexity: "simple" | "medium" | "complex";
   tags: string[];
   requirementName?: string;
+  owningUnit?: string;
 }
 
 export interface AlmostCompletedTask {

@@ -181,7 +181,15 @@ export function useDeveloperQuickActions(
       duration: 6,
       projectName: "Payment Gateway",
       sprintName: "Sprint 2",
-      assigneeName: "Sara Hassan",
+      assignee: {
+        id: 2,
+        userName: "sara.hassan",
+        militaryNumber: "23456",
+        fullName: "Sara Hassan",
+        gradeName: "Lieutenant",
+        statusId: 1,
+        department: "Development"
+      },
       statusId: 3, // review
       priorityId: 3, // critical
       progress: 90,

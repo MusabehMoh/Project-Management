@@ -117,10 +117,10 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         var projectsQuery = baseQuery
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
-            .Include(p => p.AlternativeOwnerEmployee) // This will be LEFT JOIN due to nullable FK
+            .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN due to nullable FK
             .Include(p => p.ProjectAnalysts!)
-                .ThenInclude(pa => pa.Analyst);
-
+                .ThenInclude(pa => pa.Analyst).AsSplitQuery(); ;
+ 
         // Get paginated results
         var projects = await projectsQuery
             .OrderByDescending(p => p.CreatedAt)

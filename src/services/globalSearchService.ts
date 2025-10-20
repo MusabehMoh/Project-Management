@@ -139,8 +139,8 @@ export class GlobalSearchService {
   ): GlobalSearchResult[] {
     return this.projects
       .filter((project) => {
-        if (!includeInactive && project.status === "cancelled") return false;
-        if (filters?.status?.length && !filters.status.includes(project.status))
+        if (!includeInactive && project.status === 5) return false; // 5 = cancelled
+        if (filters?.status?.length && !filters.status.includes(project.status.toString()))
           return false;
 
         return this.matchesProjectQuery(project, query);
@@ -159,7 +159,7 @@ export class GlobalSearchService {
   ): GlobalSearchResult[] {
     return this.users
       .filter((user) => {
-        if (!includeInactive && !user.isVisible) return false;
+        if (!includeInactive && !user.isActive) return false;
         if (
           filters?.departments?.length &&
           !filters.departments.includes(user.department || "")
@@ -244,8 +244,8 @@ export class GlobalSearchService {
   private static matchesProjectQuery(project: Project, query: string): boolean {
     const searchableText = [
       project.applicationName,
-      project.projectOwner,
-      project.alternativeOwner,
+      project.projectOwnerEmployee?.fullName,
+      project.alternativeOwnerEmployee?.fullName,
       project.owningUnit,
       project.description,
       project.remarks,
@@ -320,7 +320,7 @@ export class GlobalSearchService {
     const searchableText = [
       task.name,
       task.description,
-      task.department,
+      task.departmentId?.toString(),
       task.notes,
       "task", // Add the word "task" to make task objects findable
       ...(task.resources || []),
@@ -339,7 +339,7 @@ export class GlobalSearchService {
     const searchableText = [
       subtask.name,
       subtask.description,
-      subtask.department,
+      subtask.departmentId?.toString(),
       subtask.notes,
       "subtask", // Add the word "subtask" to make subtask objects findable
       ...(subtask.resources || []),
@@ -361,7 +361,7 @@ export class GlobalSearchService {
     const matchedFields = this.getMatchedFields(
       {
         name: project.applicationName,
-        owner: project.projectOwner,
+        owner: project.projectOwnerEmployee?.fullName,
         unit: project.owningUnit,
         description: project.description,
       },
@@ -372,11 +372,11 @@ export class GlobalSearchService {
       id: `project-${project.id}`,
       type: "project",
       title: project.applicationName,
-      subtitle: `${project.projectOwner} • ${project.owningUnit}`,
+      subtitle: `${project.projectOwnerEmployee?.fullName || "Unknown"} • ${project.owningUnit}`,
       description: project.description,
       href: `/projects?id=${project.id}`,
       metadata: {
-        status: project.status,
+        status: project.status.toString(),
         progress: project.progress,
         startDate: project.startDate,
         endDate: project.expectedCompletionDate,
@@ -412,7 +412,7 @@ export class GlobalSearchService {
       href: `/users?id=${user.id}`,
       metadata: {
         department: user.department,
-        status: user.isVisible ? "active" : "inactive",
+        status: user.isActive ? "active" : "inactive",
       },
       matchedFields,
       score: this.calculateScore(matchedFields, query, user.fullName),
@@ -497,7 +497,7 @@ export class GlobalSearchService {
       {
         name: task.name,
         description: task.description,
-        department: task.department,
+        department: task.departmentId?.toString(),
       },
       query,
     );
@@ -510,10 +510,10 @@ export class GlobalSearchService {
       description: task.description,
       href: `/timeline?projectId=${timeline.projectId}&timelineId=${timeline.id}&sprintId=${sprint.id}&taskId=${task.id}`,
       metadata: {
-        status: task.status,
-        priority: task.priority,
+        status: task.statusId.toString(),
+        priority: task.priorityId.toString(),
         progress: task.progress,
-        department: task.department,
+        department: task.departmentId?.toString(),
         startDate: task.startDate,
         endDate: task.endDate,
       },
@@ -536,7 +536,7 @@ export class GlobalSearchService {
       {
         name: subtask.name,
         description: subtask.description,
-        department: subtask.department,
+        department: subtask.departmentId?.toString(),
       },
       query,
     );
@@ -549,10 +549,10 @@ export class GlobalSearchService {
       description: subtask.description,
       href: `/timeline?projectId=${timeline.projectId}&timelineId=${timeline.id}&sprintId=${sprint.id}&taskId=${task.id}&subtaskId=${subtask.id}`,
       metadata: {
-        status: subtask.status,
-        priority: subtask.priority,
+        status: subtask.statusId.toString(),
+        priority: subtask.priorityId.toString(),
         progress: subtask.progress,
-        department: subtask.department,
+        department: subtask.departmentId?.toString(),
         startDate: subtask.startDate,
         endDate: subtask.endDate,
       },
@@ -626,8 +626,8 @@ export class GlobalSearchService {
       if (project.applicationName.toLowerCase().includes(normalizedQuery)) {
         suggestions.add(project.applicationName);
       }
-      if (project.projectOwner.toLowerCase().includes(normalizedQuery)) {
-        suggestions.add(project.projectOwner);
+      if (project.projectOwnerEmployee?.fullName?.toLowerCase().includes(normalizedQuery)) {
+        suggestions.add(project.projectOwnerEmployee.fullName);
       }
       if (project.owningUnit.toLowerCase().includes(normalizedQuery)) {
         suggestions.add(project.owningUnit);

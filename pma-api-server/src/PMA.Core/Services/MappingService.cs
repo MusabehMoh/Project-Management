@@ -116,8 +116,8 @@ public class MappingService : IMappingService
         {
             Id = project.Id,
             ApplicationName = project.ApplicationName,
-            ProjectOwner = project.ProjectOwner,
-            AlternativeOwner = project.AlternativeOwner,
+            ProjectOwnerEmployee = project.ProjectOwnerEmployee != null ? MapToEmployeeDto(project.ProjectOwnerEmployee) : null,
+            AlternativeOwnerEmployee = project.AlternativeOwnerEmployee != null ? MapToEmployeeDto(project.AlternativeOwnerEmployee) : null,
             OwningUnit = project.OwningUnit,
             ProjectOwnerId = project.ProjectOwnerId,
             AlternativeOwnerId = project.AlternativeOwnerId,
@@ -193,17 +193,19 @@ public class MappingService : IMappingService
         if (updateDto.ProjectOwner.HasValue)
         {
             project.ProjectOwnerId = updateDto.ProjectOwner.Value;
-            // Populate ProjectOwner name from database
+            // Populate ProjectOwner name and navigation property from database
             var owner = await _employeeRepository.GetByIdAsync(updateDto.ProjectOwner.Value);
             project.ProjectOwner = owner?.FullName ?? string.Empty;
+            project.ProjectOwnerEmployee = owner;
         }
 
         if (updateDto.AlternativeOwner.HasValue)
         {
             project.AlternativeOwnerId = updateDto.AlternativeOwner.Value;
-            // Populate AlternativeOwner name from database
+            // Populate AlternativeOwner name and navigation property from database
             var altOwner = await _employeeRepository.GetByIdAsync(updateDto.AlternativeOwner.Value);
             project.AlternativeOwner = altOwner?.FullName ?? string.Empty;
+            project.AlternativeOwnerEmployee = altOwner;
         }
 
         if (updateDto.OwningUnit.HasValue)
@@ -268,15 +270,17 @@ public class MappingService : IMappingService
         if (project == null)
             return;
 
-        // Populate ProjectOwner name
+        // Populate ProjectOwner name and navigation property
         var owner = await _employeeRepository.GetByIdAsync(project.ProjectOwnerId);
         project.ProjectOwner = owner?.FullName ?? string.Empty;
+        project.ProjectOwnerEmployee = owner;
 
-        // Populate AlternativeOwner name
+        // Populate AlternativeOwner name and navigation property
         if (project.AlternativeOwnerId.HasValue)
         {
             var altOwner = await _employeeRepository.GetByIdAsync(project.AlternativeOwnerId.Value);
             project.AlternativeOwner = altOwner?.FullName;
+            project.AlternativeOwnerEmployee = altOwner;
         }
 
         // Populate OwningUnit name
@@ -619,6 +623,25 @@ public class MappingService : IMappingService
             Phone = user.Phone,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
+        };
+    }
+
+    /// <summary>
+    /// Maps an Employee entity to EmployeeDto
+    /// </summary>
+    public EmployeeDto MapToEmployeeDto(Employee employee)
+    {
+        if (employee == null)
+            return null!;
+
+        return new EmployeeDto
+        {
+            Id = employee.Id,
+            UserName = employee.UserName,
+            MilitaryNumber = employee.MilitaryNumber,
+            GradeName = employee.GradeName,
+            FullName = employee.FullName,
+            StatusId = employee.StatusId
         };
     }
 

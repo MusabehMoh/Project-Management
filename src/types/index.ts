@@ -9,6 +9,20 @@ export * from "./user";
 export * from "./timeline";
 export * from "./quickActions";
 
+// Project types
+export type {
+  Project,
+  Employee,
+  User,
+  OwningUnit,
+  ProjectFormData,
+  ProjectStats,
+  ApiResponse,
+  ProjectFilters,
+  CreateProjectRequest,
+  UpdateProjectRequest,
+} from "./project";
+
 // Unit types (excluding ApiResponse to avoid conflicts)
 export type {
   Unit,
