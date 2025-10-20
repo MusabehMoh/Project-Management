@@ -348,6 +348,25 @@ const response = await fetch('/api/project-requirements/approved-requirements');
      - Use `w-fit` to constrain tooltip wrapper to content width
      - Always provide meaningful, translated tooltip text
      - Ensure tooltips enhance accessibility for all users
+
+7. **Pagination Component (GlobalPagination)**:
+   - **CRITICAL**: HeroUI Pagination component has re-render issues that cause incorrect page number display
+   - **The Bug**: When changing page size or navigating, pagination may show "3 1 1" instead of "1 2 3"
+   - **Root Cause**: Controlled component doesn't re-render properly when `total` or `page` changes
+   - **Solution**: Always add a `key` prop to force re-mounting:
+     ```tsx
+     <Pagination
+       key={`pagination-${currentPage}-${totalPages}`}
+       isDisabled={isLoading}
+       page={currentPage}
+       total={totalPages}
+       onChange={onPageChange}
+     />
+     ```
+   - **Why it works**: Changing `key` forces React to unmount and remount the component with fresh state
+   - **When this happens**: Particularly noticeable when switching page sizes (e.g., 10→5 items per page)
+   - **Testing**: Bug appears in normal use but disappears when dev console is opened (forces repaint)
+   - **Never use**: `initialPage` prop conflicts with controlled `page` prop
    - Examples:
      - **Icon-only buttons**: Info, Edit, Delete, View Details buttons
      - **Data labels**: Project Owner, Status indicators, Role badges

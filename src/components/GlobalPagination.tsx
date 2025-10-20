@@ -45,6 +45,7 @@ export const GlobalPagination = ({
 
       {/* Pagination */}
       <Pagination
+        key={`pagination-${currentPage}-${totalPages}`}
         isDisabled={isLoading}
         page={currentPage}
         total={totalPages}
