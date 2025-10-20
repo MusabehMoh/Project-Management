@@ -97,6 +97,7 @@ const ThemeLogo = ({ className }: { className?: string }) => {
     <img
       alt="Company Logo"
       className={clsx(className, "transition-all duration-300 ease-in-out")}
+      loading="lazy"
       src={logoSrc}
     />
   );

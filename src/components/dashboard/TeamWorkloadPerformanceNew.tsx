@@ -202,7 +202,7 @@ const TeamWorkloadPerformance: React.FC = () => {
           {/* Filter Panel */}
           {showFilters && (
             <div className="mb-4 p-4 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
                 {/* Search Filter */}
                 <Input
                   isClearable
@@ -218,24 +218,6 @@ const TeamWorkloadPerformance: React.FC = () => {
                   }
                 />
 
-                {/* Department Filter */}
-                <Select
-                  label={t("team.department")}
-                  scrollShadowProps={{ isEnabled: false }}
-                  placeholder={t("team.allDepartments")}
-                  selectedKeys={filters.department ? [filters.department] : []}
-                  size="sm"
-                  onSelectionChange={(keys) => {
-                    const value = (Array.from(keys)[0] as string) || "";
-
-                    setFilters((prev) => ({ ...prev, department: value }));
-                  }}
-                >
-                  {departments.map((dept) => (
-                    <SelectItem key={dept}>{dept}</SelectItem>
-                  ))}
-                </Select>
-
                 {/* Busy Status Filter */}
                 <Select
                   label={t("team.busyStatus")}
@@ -250,33 +232,6 @@ const TeamWorkloadPerformance: React.FC = () => {
                 >
                   <SelectItem key="busy">{t("team.busy")}</SelectItem>
                   <SelectItem key="available">{t("team.available")}</SelectItem>
-                </Select>
-
-                {/* Performance Range Filter */}
-                <Select
-                  label={t("team.performanceRange")}
-                  placeholder={t("team.allPerformance")}
-                  selectedKeys={
-                    filters.performanceRange ? [filters.performanceRange] : []
-                  }
-                  size="sm"
-                  onSelectionChange={(keys) => {
-                    const value = (Array.from(keys)[0] as string) || "";
-
-                    setFilters((prev) => ({
-                      ...prev,
-                      performanceRange: value,
-                    }));
-                  }}
-                >
-                  <SelectItem key="excellent">
-                    {t("team.excellent")} (90%+)
-                  </SelectItem>
-                  <SelectItem key="good">{t("team.good")} (70-89%)</SelectItem>
-                  <SelectItem key="average">
-                    {t("team.average")} (50-69%)
-                  </SelectItem>
-                  <SelectItem key="poor">{t("team.poor")} (&lt;50%)</SelectItem>
                 </Select>
               </div>
 
