@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract and prepare request data for agent\nconst body = $input.item.json.body;\nconst context = body.context || '';\nconst field = body.field || '';\nconst previousValues = body.previousValues || {};\nconst conversationHistory = body.conversationHistory || [];\n\n// Detect if context is in Arabic\nconst arabicRegex = /[\\u0600-\\u06FF]/;\nconst isArabic = arabicRegex.test(context) || arabicRegex.test(field);\n\n// Build conversation context\nlet historyText = '';\nif (conversationHistory.length > 0) {\n  historyText = '\\n\\nPrevious conversation:\\n';\n  conversationHistory.forEach(msg => {\n    historyText += `${msg.role}: ${msg.content}\\n`;\n  });\n}\n\n// Build context information\nlet contextInfo = context;\nif (Object.keys(previousValues).length > 0) {\n  contextInfo += '\\n\\nProject Information:\\n';\n  for (const [key, value] of Object.entries(previousValues)) {\n    contextInfo += `- ${key}: ${value}\\n`;\n  }\n}\n\n// Build user query based on language\nlet userQuery = '';\nif (isArabic) {\n  userQuery = `اكتب وصفاً تقنياً مفصلاً ومهنياً للمتطلب التالي:\\n\\nالسياق: ${contextInfo}${historyText}\\n\\nالحقل المطلوب: ${field}\\n\\nيجب أن يكون الوصف:\\n- بالعربية الفصحى\\n- تقني ومهني\\n- 3-5 جمل\\n- يتضمن معايير تقنية واضحة\\n- لا يحتوي على عناوين أو أرقام`;\n} else {\n  userQuery = `Write a detailed, professional technical description for the following requirement:\\n\\nContext: ${contextInfo}${historyText}\\n\\nField to generate: ${field}\\n\\nThe description should be:\\n- Professional English\\n- Technical and comprehensive\\n- 3-5 sentences\\n- Include clear technical standards\\n- No headings or numbering`;\n}\n\nreturn {\n  json: {\n    chatInput: userQuery,\n    detectedLanguage: isArabic ? 'ar' : 'en',\n    originalContext: context,\n    field: field,\n    previousValues: previousValues\n  }\n};"
+        "jsCode": "// Extract and prepare request data for agent\nconst body = $input.item.json.body;\nconst context = body.context || '';\nconst field = body.field || '';\nconst previousValues = body.previousValues || {};\nconst conversationHistory = body.conversationHistory || [];\n\n// Simply pass the user's context as-is to allow natural conversation\n// The agent's system message will handle how to respond\nlet chatInput = context;\n\n// Add project information if available\nif (Object.keys(previousValues).length > 0) {\n  chatInput += '\\n\\nمعلومات المشروع:\\n';\n  for (const [key, value] of Object.entries(previousValues)) {\n    chatInput += `- ${key}: ${value}\\n`;\n  }\n}\n\nreturn {\n  json: {\n    chatInput: chatInput,\n    originalContext: context,\n    field: field,\n    previousValues: previousValues\n  }\n};"
       },
       "id": "prepare-input",
       "name": "Prepare Agent Input",
@@ -28,10 +28,10 @@
     {
       "parameters": {
         "options": {
-          "systemMessage": "You are an expert software requirements analyst specializing in writing professional, technical requirement descriptions. Your role is to:\n\n1. Analyze the user's context and project information\n2. Generate clear, comprehensive technical descriptions\n3. Use appropriate technical terminology\n4. Write in the language requested (Arabic or English)\n5. Focus on functionality, standards, and quality criteria\n6. Keep descriptions between 3-5 sentences\n7. Avoid using headings, numbers, or bullet points in the output\n8. Be specific about APIs, databases, frameworks when relevant\n\nFor Arabic responses:\n- Use Modern Standard Arabic (الفصحى)\n- Include precise technical terms\n- Maintain professional tone\n\nFor English responses:\n- Use clear, professional English\n- Include specific technical details\n- Maintain industry-standard terminology\n\nAlways provide actionable, implementation-ready descriptions."
+          "systemMessage": "أنت محلل متطلبات برمجية خبير متخصص في كتابة متطلبات تقنية احترافية. يمكنك التحدث مع المستخدم لفهم احتياجاته بشكل أفضل.\n\nقواعد الرد:\n1. إذا سألك المستخدم سؤالاً أو طلب توضيحاً، أجب بشكل مهذب ومفيد\n2. إذا طلب منك كتابة وصف تقني، اكتبه مباشرة دون مقدمات\n3. عند كتابة الوصف التقني:\n   - استخدم 3-5 جمل متماسكة\n   - ركز على: الهدف، الوظائف الأساسية، المعايير التقنية (APIs, قواعد البيانات، frameworks)، معايير الأداء\n   - استخدم مصطلحات تقنية دقيقة\n   - لا تكتب عناوين أو أرقام أو نقاط\n   - ابدأ مباشرة بالوصف دون كتابة \"الوصف:\" أو \"المتطلب:\"\n4. اكتب بالعربية الفصحى إذا كان السياق بالعربية، وبالإنجليزية إذا كان بالإنجليزية\n5. استخدم المعلومات من المحادثة السابقة لتحسين الوصف\n6. يمكنك طلب معلومات إضافية إذا كان السياق غير واضح\n\nمثال محادثة:\nمستخدم: \"مرحبا\"\nأنت: \"مرحباً! أنا هنا لمساعدتك في كتابة متطلبات برمجية تقنية احترافية. كيف يمكنني مساعدتك اليوم؟\"\n\nمستخدم: \"اكتب وصف لنظام مصادقة\"\nأنت: \"تطوير نظام مصادقة شامل يدعم OAuth2 وJWT tokens لضمان الوصول الآمن للموارد. يجب أن يتكامل النظام مع قاعدة بيانات PostgreSQL لتخزين بيانات المستخدمين والجلسات، ويوفر APIs RESTful للتسجيل وتسجيل الدخول وإعادة تعيين كلمة المرور. سيتضمن النظام آلية تشفير bcrypt للبيانات الحساسة، ونظام إدارة الأدوار والصلاحيات (RBAC)، مع تسجيل جميع محاولات الدخول للأغراض الأمنية.\"\n\nمستخدم: \"أضف ميزة إعادة تعيين كلمة المرور\"\nأنت: \"تطوير نظام مصادقة شامل يدعم OAuth2 وJWT tokens لضمان الوصول الآمن للموارد، مع آلية متقدمة لإعادة تعيين كلمة المرور عبر البريد الإلكتروني. يجب أن يتكامل النظام مع قاعدة بيانات PostgreSQL لتخزين بيانات المستخدمين والجلسات، ويوفر APIs RESTful للتسجيل وتسجيل الدخول وإدارة كلمات المرور. سيتضمن النظام آلية تشفير bcrypt للبيانات الحساسية، وإنشاء رموز مؤقتة (tokens) صالحة لمدة محدودة لإعادة التعيين، مع نظام إدارة الأدوار والصلاحيات (RBAC) وتسجيل جميع العمليات الأمنية.\""
         },
         "text": "={{ $json.chatInput }}",
-        "hasOutputParser": true
+        "hasOutputParser": false
       },
       "id": "ai-agent",
       "name": "AI Agent - Requirements Analyst",
@@ -43,14 +43,9 @@
       "parameters": {
         "model": "llama3.1:8b",
         "options": {
-          "baseUrl": "http://host.docker.internal:11434",
+          "baseUrl": "http://localhost:11434",
           "temperature": 0.4,
-          "maxTokens": 300,
-          "topP": 0.92,
-          "topK": 50,
-          "repeatPenalty": 1.15,
-          "frequencyPenalty": 0.5,
-          "presencePenalty": 0.3
+          "numPredict": 300
         }
       },
       "id": "ollama-chat",

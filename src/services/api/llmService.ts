@@ -51,7 +51,7 @@ const LLM_CONFIG = {
   useN8N: import.meta.env.VITE_LLM_USE_N8N === "true",
   n8nWebhookUrl:
     import.meta.env.VITE_LLM_N8N_WEBHOOK_URL ||
-    "http://localhost:5678/webhook/ai-suggest",
+    "http://localhost:5678/webhook/ai-suggest-agent",
   // Direct Ollama config (fallback)
   baseUrl: import.meta.env.VITE_LLM_API_URL || "http://localhost:11434",
   model: import.meta.env.VITE_LLM_MODEL || "mistral:7b-instruct",
