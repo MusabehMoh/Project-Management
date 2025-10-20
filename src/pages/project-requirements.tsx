@@ -57,6 +57,7 @@ import {
   Eye,
   RotateCcw,
   Sparkles,
+  Check,
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
@@ -78,7 +79,7 @@ import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
-import { showWarningToast } from "@/utils/toast";
+import { showWarningToast, showSuccessToast } from "@/utils/toast";
 
 // Form data type for creating/editing requirements
 // Uses string values for UI components - will be converted to integers before API calls
@@ -540,23 +541,6 @@ export default function ProjectRequirementsPage() {
       if (data.success && data.data?.suggestion) {
         const aiSuggestion = data.data.suggestion;
 
-        // Only update description field if user asks for technical description
-        // For general chat, just show in conversation
-        const isDescriptionRequest =
-          aiPromptText.match(
-            /اكتب|وصف|describe|write|create|generate|ساعدني|help/i,
-          ) && !aiPromptText.match(/مرحب|hello|hi|how are you|كيف حالك/i);
-
-        if (isDescriptionRequest) {
-          // Convert plain text to HTML for ReactQuill
-          const htmlDescription = `<p>${aiSuggestion}</p>`;
-
-          setFormData({
-            ...formData,
-            description: htmlDescription,
-          });
-        }
-
         // Update conversation history
         const assistantMessage = {
           role: "assistant" as const,
@@ -584,6 +568,25 @@ export default function ProjectRequirementsPage() {
   const handleClearConversation = () => {
     setConversationHistory([]);
     setAIPromptText("");
+  };
+
+  // Use AI suggestion in description field
+  const handleUseAISuggestion = (content: string) => {
+    const htmlDescription = `<p>${content}</p>`;
+    setFormData({
+      ...formData,
+      description: htmlDescription,
+    });
+    
+    // Show success feedback
+    showSuccessToast(
+      language === "ar" 
+        ? "تم إضافة الوصف بنجاح" 
+        : "Description added successfully"
+    );
+    
+    // Close the modal
+    setIsAIPromptOpen(false);
   };
 
   // ...start development removed
@@ -1672,31 +1675,49 @@ export default function ProjectRequirementsPage() {
                             </div>
                           )}
                           <div
-                            className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                            className={`max-w-[75%] ${
                               msg.role === "user"
                                 ? "bg-primary-500 text-white shadow-md"
                                 : "bg-default-100 dark:bg-default-50/10 border border-default-200"
-                            }`}
+                            } rounded-2xl`}
                             dir={language === "ar" ? "rtl" : "ltr"}
                           >
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                              {msg.content}
-                            </p>
-                            <p
-                              className={`text-xs mt-2 ${
-                                msg.role === "user"
-                                  ? "text-white/70"
-                                  : "text-default-400"
-                              }`}
-                            >
-                              {new Date(msg.timestamp).toLocaleTimeString(
-                                language === "ar" ? "ar-SA" : "en-US",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
-                            </p>
+                            <div className="px-4 py-3">
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                {msg.content}
+                              </p>
+                              <p
+                                className={`text-xs mt-2 ${
+                                  msg.role === "user"
+                                    ? "text-white/70"
+                                    : "text-default-400"
+                                }`}
+                              >
+                                {new Date(msg.timestamp).toLocaleTimeString(
+                                  language === "ar" ? "ar-SA" : "en-US",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )}
+                              </p>
+                            </div>
+                            {msg.role === "assistant" && (
+                              <div className="border-t border-default-200 px-4 py-2">
+                                <Button
+                                  size="sm"
+                                  color="secondary"
+                                  variant="flat"
+                                  startContent={<Check className="w-3.5 h-3.5" />}
+                                  onPress={() => handleUseAISuggestion(msg.content)}
+                                  className="text-xs"
+                                >
+                                  {language === "ar"
+                                    ? "استخدم هذا الوصف"
+                                    : "Use This Description"}
+                                </Button>
+                              </div>
+                            )}
                           </div>
                           {msg.role === "user" && (
                             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-100/20 flex items-center justify-center mt-1">
