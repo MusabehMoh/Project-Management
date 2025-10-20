@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract and prepare request data for agent\nconst body = $input.item.json.body;\nconst context = body.context || '';\nconst field = body.field || '';\nconst previousValues = body.previousValues || {};\nconst conversationHistory = body.conversationHistory || [];\n\n// Simply pass the user's context as-is to allow natural conversation\n// The agent's system message will handle how to respond\nlet chatInput = context;\n\n// Add project information if available\nif (Object.keys(previousValues).length > 0) {\n  chatInput += '\\n\\nمعلومات المشروع:\\n';\n  for (const [key, value] of Object.entries(previousValues)) {\n    chatInput += `- ${key}: ${value}\\n`;\n  }\n}\n\nreturn {\n  json: {\n    chatInput: chatInput,\n    originalContext: context,\n    field: field,\n    previousValues: previousValues\n  }\n};"
+        "jsCode": "// Extract and prepare request data for agent\nconst body = $input.item.json.body;\nconst context = body.context || '';\nconst field = body.field || '';\nconst previousValues = body.previousValues || {};\nconst sessionId = body.sessionId || 'default-session';\n\n// Simply pass the user's context as-is to allow natural conversation\nlet chatInput = context;\n\n// Add project information only on first message\nif (Object.keys(previousValues).length > 0) {\n  chatInput += '\\n\\nمعلومات المشروع:\\n';\n  for (const [key, value] of Object.entries(previousValues)) {\n    if (value) {\n      chatInput += `- ${key}: ${value}\\n`;\n    }\n  }\n}\n\nreturn {\n  json: {\n    chatInput: chatInput,\n    sessionId: sessionId,\n    originalContext: context,\n    field: field,\n    previousValues: previousValues\n  }\n};"
       },
       "id": "prepare-input",
       "name": "Prepare Agent Input",
@@ -28,7 +28,7 @@
     {
       "parameters": {
         "options": {
-          "systemMessage": "أنت محلل متطلبات برمجية خبير متخصص في كتابة متطلبات تقنية احترافية. يمكنك التحدث مع المستخدم لفهم احتياجاته بشكل أفضل.\n\nقواعد الرد:\n1. إذا سألك المستخدم سؤالاً أو طلب توضيحاً، أجب بشكل مهذب ومفيد\n2. إذا طلب منك كتابة وصف تقني، اكتبه مباشرة دون مقدمات\n3. عند كتابة الوصف التقني:\n   - استخدم 3-5 جمل متماسكة\n   - ركز على: الهدف، الوظائف الأساسية، المعايير التقنية (APIs, قواعد البيانات، frameworks)، معايير الأداء\n   - استخدم مصطلحات تقنية دقيقة\n   - لا تكتب عناوين أو أرقام أو نقاط\n   - ابدأ مباشرة بالوصف دون كتابة \"الوصف:\" أو \"المتطلب:\"\n4. اكتب بالعربية الفصحى إذا كان السياق بالعربية، وبالإنجليزية إذا كان بالإنجليزية\n5. استخدم المعلومات من المحادثة السابقة لتحسين الوصف\n6. يمكنك طلب معلومات إضافية إذا كان السياق غير واضح\n\nمثال محادثة:\nمستخدم: \"مرحبا\"\nأنت: \"مرحباً! أنا هنا لمساعدتك في كتابة متطلبات برمجية تقنية احترافية. كيف يمكنني مساعدتك اليوم؟\"\n\nمستخدم: \"اكتب وصف لنظام مصادقة\"\nأنت: \"تطوير نظام مصادقة شامل يدعم OAuth2 وJWT tokens لضمان الوصول الآمن للموارد. يجب أن يتكامل النظام مع قاعدة بيانات PostgreSQL لتخزين بيانات المستخدمين والجلسات، ويوفر APIs RESTful للتسجيل وتسجيل الدخول وإعادة تعيين كلمة المرور. سيتضمن النظام آلية تشفير bcrypt للبيانات الحساسة، ونظام إدارة الأدوار والصلاحيات (RBAC)، مع تسجيل جميع محاولات الدخول للأغراض الأمنية.\"\n\nمستخدم: \"أضف ميزة إعادة تعيين كلمة المرور\"\nأنت: \"تطوير نظام مصادقة شامل يدعم OAuth2 وJWT tokens لضمان الوصول الآمن للموارد، مع آلية متقدمة لإعادة تعيين كلمة المرور عبر البريد الإلكتروني. يجب أن يتكامل النظام مع قاعدة بيانات PostgreSQL لتخزين بيانات المستخدمين والجلسات، ويوفر APIs RESTful للتسجيل وتسجيل الدخول وإدارة كلمات المرور. سيتضمن النظام آلية تشفير bcrypt للبيانات الحساسية، وإنشاء رموز مؤقتة (tokens) صالحة لمدة محدودة لإعادة التعيين، مع نظام إدارة الأدوار والصلاحيات (RBAC) وتسجيل جميع العمليات الأمنية.\""
+          "systemMessage": "أنت محلل متطلبات برمجية خبير متخصص في كتابة متطلبات تقنية احترافية. يمكنك التحدث مع المستخدم لفهم احتياجاته بشكل أفضل.\n\nقواعد الرد:\n1. إذا سألك المستخدم سؤالاً أو طلب توضيحاً، أجب بشكل مهذب ومفيد دون تكرار الترحيب في كل مرة\n2. إذا طلب منك كتابة وصف تقني، اكتبه مباشرة دون مقدمات\n3. عند كتابة الوصف التقني:\n   - استخدم 3-5 جمل متماسكة\n   - ركز على: الهدف، الوظائف الأساسية، المعايير التقنية (APIs, قواعد البيانات، frameworks)، معايير الأداء\n   - استخدم مصطلحات تقنية دقيقة\n   - لا تكتب عناوين أو أرقام أو نقاط\n   - ابدأ مباشرة بالوصف دون كتابة \"الوصف:\" أو \"المتطلب:\"\n4. اكتب بالعربية الفصحى إذا كان السياق بالعربية، وبالإنجليزية إذا كان بالإنجليزية\n5. تذكر المحادثة السابقة واستخدمها لتحسين الوصف - لا تكرر نفس المعلومات\n6. يمكنك طلب معلومات إضافية إذا كان السياق غير واضح\n7. لا تكرر الترحيب في كل رد - فقط في الرسالة الأولى\n\nأمثلة:\nمستخدم: \"مرحبا\"\nأنت: \"مرحباً! أنا هنا لمساعدتك في كتابة متطلبات برمجية تقنية احترافية. كيف يمكنني مساعدتك اليوم؟\"\n\nمستخدم: \"كيف حالك\"\nأنت: \"أنا بخير، شكراً! كيف يمكنني مساعدتك في كتابة متطلباتك التقنية؟\"\n\nمستخدم: \"اكتب وصف لنظام مصادقة\"\nأنت: \"تطوير نظام مصادقة شامل يدعم OAuth2 وJWT tokens لضمان الوصول الآمن للموارد. يجب أن يتكامل النظام مع قاعدة بيانات PostgreSQL لتخزين بيانات المستخدمين والجلسات، ويوفر APIs RESTful للتسجيل وتسجيل الدخول وإعادة تعيين كلمة المرور. سيتضمن النظام آلية تشفير bcrypt للبيانات الحساسة، ونظام إدارة الأدوار والصلاحيات (RBAC)، مع تسجيل جميع محاولات الدخول للأغراض الأمنية.\"\n\nمستخدم: \"أضف ميزة إعادة تعيين كلمة المرور\"\nأنت: \"تطوير نظام مصادقة شامل يدعم OAuth2 وJWT tokens لضمان الوصول الآمن للموارد، مع آلية متقدمة لإعادة تعيين كلمة المرور عبر البريد الإلكتروني. يجب أن يتكامل النظام مع قاعدة بيانات PostgreSQL لتخزين بيانات المستخدمين والجلسات، ويوفر APIs RESTful للتسجيل وتسجيل الدخول وإدارة كلمات المرور. سيتضمن النظام آلية تشفير bcrypt للبيانات الحساسية، وإنشاء رموز مؤقتة (tokens) صالحة لمدة محدودة لإعادة التعيين، مع نظام إدارة الأدوار والصلاحيات (RBAC) وتسجيل جميع العمليات الأمنية.\""
         },
         "text": "={{ $json.chatInput }}",
         "hasOutputParser": false
@@ -44,8 +44,8 @@
         "model": "llama3.1:8b",
         "options": {
           "baseUrl": "http://localhost:11434",
-          "temperature": 0.4,
-          "numPredict": 300
+          "temperature": 0.5,
+          "numPredict": 400
         }
       },
       "id": "ollama-chat",
@@ -55,16 +55,30 @@
       "position": [650, 450]
     },
     {
-      "parameters": {},
-      "id": "output-parser",
-      "name": "Output Parser",
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1,
+      "parameters": {
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindowLength": 10
+      },
+      "id": "window-buffer-memory",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
       "position": [650, 600]
     },
     {
       "parameters": {
-        "jsCode": "// Extract agent response\nconst agentOutput = $input.item.json;\nconst preparedInput = $('Prepare Agent Input').item.json;\n\n// Get the suggestion text from agent output\nlet suggestion = '';\nif (typeof agentOutput.output === 'string') {\n  suggestion = agentOutput.output.trim();\n} else if (agentOutput.text) {\n  suggestion = agentOutput.text.trim();\n} else {\n  suggestion = JSON.stringify(agentOutput);\n}\n\n// Clean up common unwanted prefixes and formatting\nconst prefixesToRemove = [\n  'Description:',\n  'وصف:',\n  '\"',\n  \"'\",\n  'Task Description:',\n  'وصف المهمة:',\n  'Here is',\n  'Here\\'s',\n  'إليك',\n  'الوصف:'\n];\n\nfor (const prefix of prefixesToRemove) {\n  if (suggestion.toLowerCase().startsWith(prefix.toLowerCase())) {\n    suggestion = suggestion.substring(prefix.length).trim();\n  }\n}\n\n// Remove trailing quotes\nif (suggestion.endsWith('\"') || suggestion.endsWith(\"'\")) {\n  suggestion = suggestion.slice(0, -1).trim();\n}\nif (suggestion.startsWith('\"') || suggestion.startsWith(\"'\")) {\n  suggestion = suggestion.substring(1).trim();\n}\n\n// Format response for frontend\nreturn {\n  json: {\n    success: true,\n    data: {\n      suggestion: suggestion,\n      confidence: 0.9,\n      metadata: {\n        field: preparedInput.field,\n        context: preparedInput.originalContext,\n        model: 'llama3.1:8b',\n        language: preparedInput.detectedLanguage,\n        agentType: 'langchain-agent',\n        timestamp: new Date().toISOString()\n      }\n    },\n    message: 'Suggestion generated successfully with AI Agent'\n  }\n};"
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindowLength": 10
+      },
+      "id": "window-buffer-memory",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [650, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract agent response\nconst agentOutput = $input.item.json;\nconst preparedInput = $('Prepare Agent Input').item.json;\n\n// Get the suggestion text from agent output\nlet suggestion = '';\nif (typeof agentOutput.output === 'string') {\n  suggestion = agentOutput.output.trim();\n} else if (agentOutput.text) {\n  suggestion = agentOutput.text.trim();\n} else {\n  suggestion = JSON.stringify(agentOutput);\n}\n\n// Clean up common unwanted prefixes and formatting\nconst prefixesToRemove = [\n  'Description:',\n  'وصف:',\n  '\"',\n  \"'\",\n  'Task Description:',\n  'وصف المهمة:',\n  'Here is',\n  'Here\\'s',\n  'إليك',\n  'الوصف:'\n];\n\nfor (const prefix of prefixesToRemove) {\n  if (suggestion.toLowerCase().startsWith(prefix.toLowerCase())) {\n    suggestion = suggestion.substring(prefix.length).trim();\n  }\n}\n\n// Remove trailing quotes\nif (suggestion.endsWith('\"') || suggestion.endsWith(\"'\")) {\n  suggestion = suggestion.slice(0, -1).trim();\n}\nif (suggestion.startsWith('\"') || suggestion.startsWith(\"'\")) {\n  suggestion = suggestion.substring(1).trim();\n}\n\n// Format response for frontend\nreturn {\n  json: {\n    success: true,\n    data: {\n      suggestion: suggestion,\n      confidence: 0.9,\n      metadata: {\n        field: preparedInput.field,\n        context: preparedInput.originalContext,\n        model: 'llama3.1:8b',\n        agentType: 'langchain-agent-with-memory',\n        sessionId: preparedInput.sessionId,\n        timestamp: new Date().toISOString()\n      }\n    },\n    message: 'Suggestion generated successfully with AI Agent'\n  }\n};"
       },
       "id": "format-response",
       "name": "Format Agent Response",
@@ -153,12 +167,12 @@
         ]
       ]
     },
-    "Output Parser": {
-      "ai_outputParser": [
+    "Window Buffer Memory": {
+      "ai_memory": [
         [
           {
             "node": "AI Agent - Requirements Analyst",
-            "type": "ai_outputParser",
+            "type": "ai_memory",
             "index": 0
           }
         ]
