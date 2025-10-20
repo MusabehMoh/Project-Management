@@ -43,15 +43,13 @@ export const GlobalPagination = ({
         </div>
       )}
 
-      {/* Simple Default Pagination - Force LTR for correct number order */}
-      <div dir="ltr">
-        <Pagination
-          isDisabled={isLoading}
-          page={currentPage}
-          total={totalPages}
-          onChange={onPageChange}
-        />
-      </div>
+      {/* Pagination */}
+      <Pagination
+        isDisabled={isLoading}
+        page={currentPage}
+        total={totalPages}
+        onChange={onPageChange}
+      />
 
       {/* Simple Page Info */}
       <div
