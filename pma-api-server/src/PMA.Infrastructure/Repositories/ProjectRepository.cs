@@ -85,13 +85,22 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
     }
 
     public async Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsWithPaginationAndCountAsync(int page, int limit, string? search = null, int? status = null, string? priority = null)
-    {
-        var baseQuery = _context.Projects.AsQueryable();
+    { 
+
+        var query = _context.Projects.AsQueryable();
+
+        // Handle nullable collections by including them conditionally
+        query = query.Include(p => p.ProjectOwnerEmployee)
+            .Include(p => p.OwningUnitEntity)
+            .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN due to nullable FK
+            .Include(p => p.ProjectAnalysts!)
+                .ThenInclude(pa => pa.Analyst);
+
 
         // Apply filters first (without includes for count efficiency)
         if (!string.IsNullOrEmpty(search))
         {
-            baseQuery = baseQuery.Where(p =>
+            query = query.Where(p =>
                 p.ApplicationName.Contains(search) ||
                 p.Description.Contains(search) ||
                 p.ProjectOwner.Contains(search));
@@ -99,31 +108,19 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
 
         if (status.HasValue)
         {
-            baseQuery = baseQuery.Where(p => (int)p.Status == status.Value);
+            query = query.Where(p => (int)p.Status == status.Value);
         }
 
         if (!string.IsNullOrEmpty(priority))
         {
             if (Enum.TryParse<Priority>(priority, true, out var priorityEnum))
             {
-                baseQuery = baseQuery.Where(p => p.Priority == priorityEnum);
+                query = query.Where(p => p.Priority == priorityEnum);
             }
         }
 
-        // Get total count without includes (more efficient)
-        var totalCount = await baseQuery.CountAsync();
-
-        // Now add includes for the actual data retrieval
-        var projectsQuery = baseQuery
-            .Include(p => p.ProjectOwnerEmployee)
-            .Include(p => p.OwningUnitEntity)
-            .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN due to nullable FK
-            .Include(p => p.ProjectAnalysts!)
-                .ThenInclude(pa => pa.Analyst).AsSplitQuery(); ;
- 
-        // Get paginated results
-        var projects = await projectsQuery
-            .OrderByDescending(p => p.CreatedAt)
+        var totalCount = await query.CountAsync();
+        var projects = await query
             .Skip((page - 1) * limit)
             .Take(limit)
             .ToListAsync();
