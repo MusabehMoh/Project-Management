@@ -239,7 +239,7 @@ const TeamWorkloadPerformance: React.FC = () => {
               {hasActiveFilters && (
                 <div className="mt-3 flex justify-end">
                   <Button
-                    color="default"
+                    color="danger"
                     size="sm"
                     startContent={<X className="w-4 h-4" />}
                     variant="flat"
@@ -377,8 +377,8 @@ const TeamWorkloadPerformance: React.FC = () => {
                   <TableColumn>{t("team.status")}</TableColumn>
                 </TableHeader>
                 <TableBody>
-                  {paginatedData.map((member) => (
-                    <TableRow key={member.userId}>
+                  {paginatedData.map((member, index) => (
+                    <TableRow key={`member-${member.userId}-page${currentPage}-idx${index}`}>
                       <TableCell>
                         <div>
                           <div className="font-medium">{member.fullName}</div>

@@ -24,6 +24,7 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 import { Input } from "@heroui/input";
+import { Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -56,6 +57,7 @@ import {
   Eye,
   RotateCcw,
   Sparkles,
+  Check,
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
@@ -77,7 +79,7 @@ import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
-import { showWarningToast } from "@/utils/toast";
+import { showWarningToast, showSuccessToast } from "@/utils/toast";
 
 // Form data type for creating/editing requirements
 // Uses string values for UI components - will be converted to integers before API calls
@@ -211,6 +213,7 @@ export default function ProjectRequirementsPage() {
   const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
   const [aiPromptText, setAIPromptText] = useState("");
   const [aiGenerating, setAIGenerating] = useState(false);
+  const [aiSessionId] = useState(() => `req-${projectId}-${Date.now()}`); // Unique session per project
   const [conversationHistory, setConversationHistory] = useState<
     Array<{ role: "user" | "assistant"; content: string; timestamp: number }>
   >([]);
@@ -509,22 +512,22 @@ export default function ProjectRequirementsPage() {
         timestamp: Date.now(),
       };
 
-      // Call n8n webhook with conversation history
+      // Call n8n agent webhook with sessionId for memory
       const response = await fetch(
-        import.meta.env.VITE_LLM_N8N_WEBHOOK_URL ||
-          "http://localhost:5678/webhook/ai-suggest",
+        import.meta.env.VITE_LLM_N8N_AGENT_WEBHOOK_URL ||
+          "http://localhost:5678/webhook/ai-suggest-agent",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             context: aiPromptText,
             field: t("requirements.requirementDescription"),
+            sessionId: aiSessionId, // Send sessionId for memory tracking
             previousValues: {
               [t("requirements.requirementName")]: formData.name,
               [t("common.project")]: projectName || "",
             },
-            maxTokens: 300, // Longer description
-            conversationHistory, // Send conversation history
+            maxTokens: 400,
           }),
         },
       );
@@ -537,14 +540,6 @@ export default function ProjectRequirementsPage() {
 
       if (data.success && data.data?.suggestion) {
         const aiSuggestion = data.data.suggestion;
-
-        // Convert plain text to HTML for ReactQuill
-        const htmlDescription = `<p>${aiSuggestion}</p>`;
-
-        setFormData({
-          ...formData,
-          description: htmlDescription,
-        });
 
         // Update conversation history
         const assistantMessage = {
@@ -573,6 +568,25 @@ export default function ProjectRequirementsPage() {
   const handleClearConversation = () => {
     setConversationHistory([]);
     setAIPromptText("");
+  };
+
+  // Use AI suggestion in description field
+  const handleUseAISuggestion = (content: string) => {
+    const htmlDescription = `<p>${content}</p>`;
+    setFormData({
+      ...formData,
+      description: htmlDescription,
+    });
+    
+    // Show success feedback
+    showSuccessToast(
+      language === "ar" 
+        ? "تم إضافة الوصف بنجاح" 
+        : "Description added successfully"
+    );
+    
+    // Close the modal
+    setIsAIPromptOpen(false);
   };
 
   // ...start development removed
@@ -1607,131 +1621,217 @@ export default function ProjectRequirementsPage() {
             setAIPromptText("");
           }
         }}
-        size="2xl"
+        size="3xl"
         scrollBehavior="inside"
+        classNames={{
+          base: "max-h-[90vh]",
+          body: "p-0",
+        }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex gap-2 items-center justify-between">
+              <ModalHeader className="flex gap-2 items-center justify-between border-b border-default-200 px-6 py-4">
                 <div className="flex gap-2 items-center">
-                  <Sparkles className="w-5 h-5 text-secondary" />
-                  <span>{t("requirements.aiSuggest")}</span>
+                  <div className="p-2 bg-secondary-50 dark:bg-secondary-100/10 rounded-lg">
+                    <Sparkles className="w-5 h-5 text-secondary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {t("requirements.aiSuggest")}
+                    </h3>
+                    <p className="text-xs text-default-500 font-normal">
+                      {language === "ar"
+                        ? "محلل متطلبات برمجية ذكي"
+                        : "AI Requirements Analyst"}
+                    </p>
+                  </div>
                 </div>
                 {conversationHistory.length > 0 && (
                   <Button
                     size="sm"
-                    variant="light"
+                    variant="flat"
                     color="danger"
-                    startContent={<Trash2 className="w-4 h-4" />}
+                    startContent={<RotateCcw className="w-4 h-4" />}
                     onPress={handleClearConversation}
                   >
                     {t("requirements.clearHistory")}
                   </Button>
                 )}
               </ModalHeader>
-              <ModalBody>
+              <ModalBody className="px-6 py-4">
                 <div className="space-y-4">
                   {/* Conversation History */}
-                  {conversationHistory.length > 0 && (
-                    <div className="space-y-3 max-h-64 overflow-y-auto border border-default-200 rounded-lg p-3">
-                      <p className="text-xs text-default-500 font-medium mb-2">
-                        {t("requirements.conversationHistory")}
-                      </p>
+                  {conversationHistory.length > 0 ? (
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                       {conversationHistory.map((msg, index) => (
                         <div
                           key={index}
-                          className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                          className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                         >
+                          {msg.role === "assistant" && (
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary-100 dark:bg-secondary-100/20 flex items-center justify-center mt-1">
+                              <Sparkles className="w-4 h-4 text-secondary" />
+                            </div>
+                          )}
                           <div
-                            className={`max-w-[80%] rounded-lg p-3 ${
+                            className={`max-w-[75%] ${
                               msg.role === "user"
-                                ? "bg-secondary-50 dark:bg-secondary-100/10 text-secondary-900 dark:text-secondary-100"
-                                : "bg-default-100 dark:bg-default-50/10"
-                            }`}
+                                ? "bg-primary-500 text-white shadow-md"
+                                : "bg-default-100 dark:bg-default-50/10 border border-default-200"
+                            } rounded-2xl`}
                             dir={language === "ar" ? "rtl" : "ltr"}
                           >
-                            <p className="text-sm">{msg.content}</p>
-                            <p className="text-xs text-default-400 mt-1">
-                              {new Date(msg.timestamp).toLocaleTimeString(
-                                language === "ar" ? "ar-SA" : "en-US",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
-                            </p>
+                            <div className="px-4 py-3">
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                {msg.content}
+                              </p>
+                              <p
+                                className={`text-xs mt-2 ${
+                                  msg.role === "user"
+                                    ? "text-white/70"
+                                    : "text-default-400"
+                                }`}
+                              >
+                                {new Date(msg.timestamp).toLocaleTimeString(
+                                  language === "ar" ? "ar-SA" : "en-US",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )}
+                              </p>
+                            </div>
+                            {msg.role === "assistant" && (
+                              <div className="border-t border-default-200 px-4 py-2">
+                                <Button
+                                  size="sm"
+                                  color="secondary"
+                                  variant="flat"
+                                  startContent={<Check className="w-3.5 h-3.5" />}
+                                  onPress={() => handleUseAISuggestion(msg.content)}
+                                  className="text-xs"
+                                >
+                                  {language === "ar"
+                                    ? "استخدم هذا الوصف"
+                                    : "Use This Description"}
+                                </Button>
+                              </div>
+                            )}
                           </div>
+                          {msg.role === "user" && (
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-100/20 flex items-center justify-center mt-1">
+                              <span className="text-sm font-semibold text-primary">
+                                {language === "ar" ? "أ" : "U"}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
-                  )}
-
-                  <p className="text-sm text-default-600">
-                    {conversationHistory.length > 0
-                      ? t("requirements.aiContinuePrompt")
-                      : t("requirements.aiPromptDescription")}
-                  </p>
-
-                  <Input
-                    autoFocus
-                    label={t("requirements.aiPromptLabel")}
-                    placeholder={t("requirements.aiPromptPlaceholder")}
-                    value={aiPromptText}
-                    onValueChange={setAIPromptText}
-                    description={t("requirements.aiPromptExample")}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey && aiPromptText.trim()) {
-                        e.preventDefault();
-                        handleAIGenerate();
-                      }
-                    }}
-                  />
-
-                  {/* Show context being used */}
-                  {conversationHistory.length === 0 && (
-                    <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
-                      <p className="text-xs text-default-500 mb-1">
-                        {t("requirements.aiContext")}
-                      </p>
-                      <div className="space-y-1">
-                        {formData.name && (
-                          <p className="text-sm">
-                            <span className="font-medium">
-                              {t("requirements.requirementName")}:
-                            </span>{" "}
-                            {formData.name}
-                          </p>
-                        )}
-                        {projectName && (
-                          <p className="text-sm">
-                            <span className="font-medium">
-                              {t("common.project")}:
-                            </span>{" "}
-                            {projectName}
-                          </p>
-                        )}
+                  ) : (
+                    <div className="text-center py-8 space-y-3">
+                      <div className="w-16 h-16 mx-auto bg-secondary-50 dark:bg-secondary-100/10 rounded-full flex items-center justify-center">
+                        <Sparkles className="w-8 h-8 text-secondary" />
                       </div>
+                      <div>
+                        <p className="text-sm font-medium text-default-700">
+                          {language === "ar"
+                            ? "ابدأ محادثة مع المحلل الذكي"
+                            : "Start a conversation with AI Analyst"}
+                        </p>
+                        <p className="text-xs text-default-500 mt-1">
+                          {t("requirements.aiPromptDescription")}
+                        </p>
+                      </div>
+
+                      {/* Show context being used */}
+                      {(formData.name || projectName) && (
+                        <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg border border-default-200 max-w-md mx-auto">
+                          <p className="text-xs text-default-500 mb-2 font-medium text-center">
+                            {t("requirements.aiContext")}
+                          </p>
+                          <div className="space-y-1 text-center">
+                            {formData.name && (
+                              <p className="text-xs">
+                                <span className="font-medium text-default-600">
+                                  {t("requirements.requirementName")}:
+                                </span>{" "}
+                                <span className="text-default-500">
+                                  {formData.name}
+                                </span>
+                              </p>
+                            )}
+                            {projectName && (
+                              <p className="text-xs">
+                                <span className="font-medium text-default-600">
+                                  {t("common.project")}:
+                                </span>{" "}
+                                <span className="text-default-500">
+                                  {projectName}
+                                </span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  {/* Input Area */}
+                  <div className="border-t border-default-200 pt-4">
+                    <div className="flex gap-2 items-end">
+                      <Textarea
+                        autoFocus
+                        placeholder={
+                          conversationHistory.length > 0
+                            ? language === "ar"
+                              ? "أكمل المحادثة..."
+                              : "Continue conversation..."
+                            : t("requirements.aiPromptPlaceholder")
+                        }
+                        value={aiPromptText}
+                        onValueChange={setAIPromptText}
+                        onKeyDown={(e) => {
+                          if (
+                            e.key === "Enter" &&
+                            !e.shiftKey &&
+                            aiPromptText.trim()
+                          ) {
+                            e.preventDefault();
+                            handleAIGenerate();
+                          }
+                        }}
+                        minRows={1}
+                        maxRows={5}
+                        classNames={{
+                          input: "text-sm",
+                          inputWrapper: "min-h-[44px]",
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        color="secondary"
+                        isIconOnly
+                        isLoading={aiGenerating}
+                        isDisabled={!aiPromptText.trim()}
+                        onPress={handleAIGenerate}
+                        className="min-w-unit-10 w-10 h-10 flex-shrink-0"
+                      >
+                        {!aiGenerating && <Send className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-default-400 mt-2">
+                      {language === "ar"
+                        ? "اضغط Enter للإرسال • Shift+Enter للسطر الجديد"
+                        : "Press Enter to send • Shift+Enter for new line"}
+                    </p>
+                  </div>
                 </div>
               </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  {conversationHistory.length > 0
-                    ? t("common.close")
-                    : t("common.cancel")}
-                </Button>
-                <Button
-                  color="secondary"
-                  startContent={
-                    !aiGenerating && <Sparkles className="w-4 h-4" />
-                  }
-                  isLoading={aiGenerating}
-                  isDisabled={!aiPromptText.trim()}
-                  onPress={handleAIGenerate}
-                >
-                  {t("requirements.generate")}
+              <ModalFooter className="border-t border-default-200 px-6 py-4">
+                <Button variant="flat" onPress={onClose}>
+                  {t("common.close")}
                 </Button>
               </ModalFooter>
             </>
