@@ -24,6 +24,7 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 import { Input } from "@heroui/input";
+import { Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -1726,10 +1727,10 @@ export default function ProjectRequirementsPage() {
                       {/* Show context being used */}
                       {(formData.name || projectName) && (
                         <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg border border-default-200 max-w-md mx-auto">
-                          <p className="text-xs text-default-500 mb-2 font-medium">
+                          <p className="text-xs text-default-500 mb-2 font-medium text-center">
                             {t("requirements.aiContext")}
                           </p>
-                          <div className="space-y-1 text-left">
+                          <div className="space-y-1 text-center">
                             {formData.name && (
                               <p className="text-xs">
                                 <span className="font-medium text-default-600">
@@ -1758,8 +1759,8 @@ export default function ProjectRequirementsPage() {
 
                   {/* Input Area */}
                   <div className="border-t border-default-200 pt-4">
-                    <div className="flex gap-2">
-                      <Input
+                    <div className="flex gap-2 items-end">
+                      <Textarea
                         autoFocus
                         placeholder={
                           conversationHistory.length > 0
@@ -1780,24 +1781,24 @@ export default function ProjectRequirementsPage() {
                             handleAIGenerate();
                           }
                         }}
+                        minRows={1}
+                        maxRows={5}
                         classNames={{
                           input: "text-sm",
-                          inputWrapper: "h-11",
+                          inputWrapper: "min-h-[44px]",
                         }}
-                        endContent={
-                          <Button
-                            size="sm"
-                            color="secondary"
-                            isIconOnly
-                            isLoading={aiGenerating}
-                            isDisabled={!aiPromptText.trim()}
-                            onPress={handleAIGenerate}
-                            className="min-w-unit-8 w-8 h-8"
-                          >
-                            {!aiGenerating && <Send className="w-4 h-4" />}
-                          </Button>
-                        }
                       />
+                      <Button
+                        size="sm"
+                        color="secondary"
+                        isIconOnly
+                        isLoading={aiGenerating}
+                        isDisabled={!aiPromptText.trim()}
+                        onPress={handleAIGenerate}
+                        className="min-w-unit-10 w-10 h-10 flex-shrink-0"
+                      >
+                        {!aiGenerating && <Send className="w-4 h-4" />}
+                      </Button>
                     </div>
                     <p className="text-xs text-default-400 mt-2">
                       {language === "ar"
