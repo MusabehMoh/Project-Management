@@ -970,18 +970,6 @@ export default function DevelopmentRequirementsPage() {
                 {t("pagination.perPage")}
               </span>
             </div>
-
-            {totalPages > 1 && (
-              <GlobalPagination
-                currentPage={currentPage}
-                isLoading={loading}
-                pageSize={pageSize}
-                showInfo={false}
-                totalItems={totalRequirements}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
           </div>
         )}
 
