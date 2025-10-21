@@ -1,6 +1,6 @@
 import type { User } from "@/types/user";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { userService } from "@/services/api";
 
@@ -13,44 +13,37 @@ interface UseCurrentUserReturn {
 
 /**
  * Hook to manage current user data
- * Fetches user data from API and provides loading/error states
+ * Uses React Query for caching and automatic deduplication
+ * Backend already caches for 15 minutes, frontend caches for 5 minutes
  */
 export const useCurrentUser = (): UseCurrentUserReturn => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchCurrentUser = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
+  const {
+    data: user,
+    isLoading,
+    error,
+    refetch: queryRefetch,
+  } = useQuery({
+    queryKey: ["currentUser"], // Unique cache key for deduplication
+    queryFn: async () => {
       const response = await userService.getCurrentUser();
 
       if (response.success) {
-        setUser(response.data);
-      } else {
-        throw new Error(response.message || "Failed to fetch user data");
+        return response.data;
       }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch user data";
-
-      setError(errorMessage);
-      console.error("Error fetching current user:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
+      throw new Error(response.message || "Failed to fetch user data");
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
+    retry: 1, // Retry once on failure
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+  });
 
   return {
-    user,
-    loading,
-    error,
-    refetch: fetchCurrentUser,
+    user: user || null,
+    loading: isLoading,
+    error: error instanceof Error ? error.message : null,
+    refetch: async () => {
+      await queryRefetch();
+    },
   };
 };

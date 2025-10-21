@@ -14,6 +14,8 @@ import type {
 
 import { apiClient } from "./client";
 
+import { invalidateCurrentUser } from "@/utils/cacheInvalidation";
+
 /**
  * User Management Service
  * Handles all user-related API operations including CRUD, roles, and permissions
@@ -66,7 +68,17 @@ export class UserService {
    * Update user
    */
   async updateUser(userData: UpdateUserRequest): Promise<ApiResponse<User>> {
-    return apiClient.put<User>(`${this.baseUrl}/${userData.id}`, userData);
+    const response = await apiClient.put<User>(
+      `${this.baseUrl}/${userData.id}`,
+      userData,
+    );
+
+    // Invalidate cache if update was successful
+    if (response.success) {
+      invalidateCurrentUser();
+    }
+
+    return response;
   }
 
   /**
@@ -138,7 +150,17 @@ export class UserService {
     userId: number,
     roleIds: number[],
   ): Promise<ApiResponse<void>> {
-    return apiClient.post<void>(`${this.baseUrl}/${userId}/roles`, { roleIds });
+    const response = await apiClient.post<void>(
+      `${this.baseUrl}/${userId}/roles`,
+      { roleIds },
+    );
+
+    // Invalidate cache if assignment was successful
+    if (response.success) {
+      invalidateCurrentUser();
+    }
+
+    return response;
   }
 
   /**
