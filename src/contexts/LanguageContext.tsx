@@ -1361,7 +1361,7 @@ const translations = {
     "timeline.loadingProjects": "Loading projects...",
     "timeline.noProjectsAvailable": "No projects available",
     "timeline.loadingTimelines": "Loading timelines...",
-    "timeline.noTimelines": 'No timelines - Click "New Timeline" to create one',
+    "timeline.noTimelines": "No timelines available",
     "timeline.sprints": "Sprints",
     "timeline.sprint": "Sprint",
     "timeline.requirements": "Requirements",
@@ -3126,8 +3126,7 @@ const translations = {
     "timeline.loadingProjects": "جاري تحميل المشاريع...",
     "timeline.noProjectsAvailable": "لا توجد مشاريع متاحة",
     "timeline.loadingTimelines": "جاري تحميل الجداول الزمنية...",
-    "timeline.noTimelines":
-      'لا توجد جداول زمنية - انقر "جدول زمني جديد" لإنشاء واحد',
+    "timeline.noTimelines": "لا توجد جداول زمنية متاحة",
     "timeline.sprints": "السبرينتات",
     "timeline.sprint": "سبرينت",
     "timeline.requirements": "المتطلبات",
