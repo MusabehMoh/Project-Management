@@ -910,7 +910,12 @@ export default function UsersPage() {
                       <Card>
                         <CardBody>
                           <div className="grid grid-cols-2 gap-4">
-                            <div>
+                            <div
+                              dir={language === "ar" ? "rtl" : "ltr"}
+                              className={
+                                language === "ar" ? "text-right" : "text-left"
+                              }
+                            >
                               <p className="text-small text-default-500">
                                 {t("users.fullName")}
                               </p>
@@ -918,7 +923,12 @@ export default function UsersPage() {
                                 {selectedEmployee.fullName}
                               </p>
                             </div>
-                            <div>
+                            <div
+                              dir={language === "ar" ? "rtl" : "ltr"}
+                              className={
+                                language === "ar" ? "text-right" : "text-left"
+                              }
+                            >
                               <p className="text-small text-default-500">
                                 {t("users.userName")}
                               </p>
@@ -926,7 +936,12 @@ export default function UsersPage() {
                                 {selectedEmployee.userName}
                               </p>
                             </div>
-                            <div>
+                            <div
+                              dir={language === "ar" ? "rtl" : "ltr"}
+                              className={
+                                language === "ar" ? "text-right" : "text-left"
+                              }
+                            >
                               <p className="text-small text-default-500">
                                 {t("users.militaryNumber")}
                               </p>
@@ -934,7 +949,12 @@ export default function UsersPage() {
                                 {selectedEmployee.militaryNumber}
                               </p>
                             </div>
-                            <div>
+                            <div
+                              dir={language === "ar" ? "rtl" : "ltr"}
+                              className={
+                                language === "ar" ? "text-right" : "text-left"
+                              }
+                            >
                               <p className="text-small text-default-500">
                                 {t("users.gradeName")}
                               </p>
