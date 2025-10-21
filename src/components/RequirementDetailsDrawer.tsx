@@ -405,81 +405,81 @@ export default function RequirementDetailsDrawer({
                   )}
                 </div>
               </DrawerBody>
-              <DrawerFooter>
+              <DrawerFooter className="flex justify-between">
                 <Button color="default" variant="flat" onPress={onClose}>
                   {t("common.close")}
                 </Button>
 
-                {/* Approval Button for approval requests */}
-                {showApprovalButton &&
-                  hasPermission({ actions: ["requirements.approve"] }) &&
-                  onApprove && (
-                    <Button
-                      color="success"
-                      onPress={() => {
-                        onClose();
-                        onApprove(requirement);
-                      }}
-                    >
-                      <Check size={16} />
-                      {t("requirements.approve")}
-                    </Button>
+                <div className="flex gap-2">
+                  {/* Approval Button for approval requests */}
+                  {showApprovalButton &&
+                    hasPermission({ actions: ["requirements.approve"] }) &&
+                    onApprove && (
+                      <Button
+                        color="success"
+                        onPress={() => {
+                          onClose();
+                          onApprove(requirement);
+                        }}
+                      >
+                        <Check size={16} />
+                        {t("requirements.approve")}
+                      </Button>
+                    )}
+
+                  {/* Task/Timeline Buttons for development requirements */}
+                  {showTaskTimelineButtons && (
+                    <>
+                      {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
+                      {!requirement.timeline &&
+                        hasPermission({
+                          actions: ["requirements.tasks.create"],
+                        }) &&
+                        onCreateTask && (
+                          <Button
+                            color="default"
+                            startContent={
+                              requirement.task ? (
+                                <Eye size={16} />
+                              ) : (
+                                <Users size={16} />
+                              )
+                            }
+                            variant="flat"
+                            onPress={() => onCreateTask(requirement)}
+                          >
+                            {requirement.task
+                              ? t("common.view") + " Task"
+                              : t("common.create") + " Task"}
+                          </Button>
+                        )}
+
+                      {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
+                      {!requirement.task &&
+                        hasPermission({
+                          actions: ["requirements.timelines.create"],
+                        }) &&
+                        onCreateTimeline && (
+                          <Button
+                            color="default"
+                            startContent={
+                              requirement.timeline ? (
+                                <Eye size={16} />
+                              ) : (
+                                <Calendar size={16} />
+                              )
+                            }
+                            variant="flat"
+                            onPress={() => onCreateTimeline(requirement)}
+                          >
+                            {requirement.timeline
+                              ? t("common.view") + " Timeline"
+                              : t("common.create") + " Timeline"}
+                          </Button>
+                        )}
+                    </>
                   )}
-
-                {/* Task/Timeline Buttons for development requirements */}
-                {showTaskTimelineButtons && (
-                  <div className="flex gap-2">
-                    {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
-                    {!requirement.timeline &&
-                      hasPermission({
-                        actions: ["requirements.tasks.create"],
-                      }) &&
-                      onCreateTask && (
-                        <Button
-                          color="default"
-                          size="sm"
-                          startContent={
-                            requirement.task ? (
-                              <Eye size={16} />
-                            ) : (
-                              <Users size={16} />
-                            )
-                          }
-                          variant="flat"
-                          onPress={() => onCreateTask(requirement)}
-                        >
-                          {requirement.task
-                            ? t("common.view") + " Task"
-                            : t("common.create") + " Task"}
-                        </Button>
-                      )}
-
-                    {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
-                    {!requirement.task &&
-                      hasPermission({
-                        actions: ["requirements.timelines.create"],
-                      }) &&
-                      onCreateTimeline && (
-                        <Button
-                          color="default"
-                          size="sm"
-                          startContent={
-                            requirement.timeline ? (
-                              <Eye size={16} />
-                            ) : (
-                              <Calendar size={16} />
-                            )
-                          }
-                          variant="flat"
-                          onPress={() => onCreateTimeline(requirement)}
-                        >
-                          {requirement.timeline
-                            ? t("common.view") + " Timeline"
-                            : t("common.create") + " Timeline"}
-                        </Button>
-                      )}
-                  </div>
-                )}
+                </div>
               </DrawerFooter>
             </>
           )}
