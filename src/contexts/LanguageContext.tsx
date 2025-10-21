@@ -582,6 +582,14 @@ const translations = {
     "developerQuickActions.noActionsDescription":
       "No actions require your attention at this time. All tasks are assigned and up to date.",
 
+    // Developer Workload Performance - Empty States
+    "developerDashboard.noDevelopersFound": "No Developers Found",
+    "developerDashboard.noDevelopersFoundDescription":
+      "No developers match your current filters. Try adjusting your search or filters.",
+    "developerDashboard.noTeamMembers": "No Team Members",
+    "developerDashboard.noTeamMembersDescription":
+      "No team members found in the development department.",
+
     // Task Extension
     "common.extendTask": "Extend Task Deadline",
     "common.newDeadline": "New Deadline",
@@ -2358,6 +2366,14 @@ const translations = {
     "developerQuickActions.noActionsTitle": "كل شيء على ما يرام!",
     "developerQuickActions.noActionsDescription":
       "لا توجد إجراءات تتطلب انتباهك في الوقت الحالي. جميع المهام معينة ومحدثة.",
+
+    // Developer Workload Performance - Empty States
+    "developerDashboard.noDevelopersFound": "لم يتم العثور على مطورين",
+    "developerDashboard.noDevelopersFoundDescription":
+      "لا يوجد مطورون يطابقون الفلاتر الحالية. حاول تعديل البحث أو الفلاتر.",
+    "developerDashboard.noTeamMembers": "لا يوجد أعضاء فريق",
+    "developerDashboard.noTeamMembersDescription":
+      "لم يتم العثور على أعضاء فريق في قسم التطوير.",
 
     // Task Extension
     "common.extendTask": "تمديد موعد المهمة",

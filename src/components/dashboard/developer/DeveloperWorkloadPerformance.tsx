@@ -235,6 +235,149 @@ export default function DeveloperWorkloadPerformance({
     );
   }
 
+  // Empty state when no developers found
+  if (!loading && developers.length === 0) {
+    return (
+      <div dir={language === "ar" ? "rtl" : "ltr"}>
+        <Card className="w-full shadow-md border border-default-200">
+          <CardHeader className="pb-0">
+            <div className="flex flex-col gap-4 w-full">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">
+                  {t("developerDashboard.teamPerformance") ||
+                    "Team Performance"}
+                </h3>
+                <Button
+                  isIconOnly
+                  isLoading={refreshing}
+                  size="sm"
+                  variant="ghost"
+                  onPress={refresh}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+                  />
+                </Button>
+              </div>
+
+              {/* Search and Filter Controls */}
+              <div className="flex gap-3 items-center">
+                <div className="relative">
+                  <Input
+                    className="max-w-xs"
+                    endContent={
+                      searchQuery && (
+                        <Button
+                          isIconOnly
+                          className="min-w-unit-6 w-6 h-6"
+                          size="sm"
+                          variant="light"
+                          onPress={clearSearch}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )
+                    }
+                    placeholder={
+                      t("developerDashboard.searchDevelopers") ||
+                      "Search developers..."
+                    }
+                    startContent={
+                      <Search className="w-4 h-4 text-default-400" />
+                    }
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                <Select
+                  aria-label={
+                    t("developerDashboard.filterByStatus") ||
+                    "Filter by status"
+                  }
+                  className="max-w-xs"
+                  placeholder={
+                    t("developerDashboard.filterByStatus") ||
+                    "Filter by status"
+                  }
+                  selectedKeys={statusFilter ? [statusFilter] : []}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string;
+
+                    setStatusFilter(selected || "");
+                  }}
+                >
+                  <SelectItem key="">
+                    {t("common.allStatus") || "All Status"}
+                  </SelectItem>
+                  <SelectItem key="available">
+                    {t("developerDashboard.status.available") || "Available"}
+                  </SelectItem>
+                  <SelectItem key="light">
+                    {t("developerDashboard.status.light") || "Light"}
+                  </SelectItem>
+                  <SelectItem key="busy">
+                    {t("developerDashboard.status.busy") || "Busy"}
+                  </SelectItem>
+                  <SelectItem key="overloaded">
+                    {t("developerDashboard.status.overloaded") ||
+                      "Overloaded"}
+                  </SelectItem>
+                </Select>
+
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={() => {
+                    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                  }}
+                >
+                  {sortOrder === "asc"
+                    ? `↑ ${t("common.ascending") || "Asc"}`
+                    : `↓ ${t("common.descending") || "Desc"}`}
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardBody>
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-20 h-20 bg-default-100 dark:bg-default-50/10 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle className="w-10 h-10 text-default-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {searchQuery || statusFilter
+                  ? t("developerDashboard.noDevelopersFound") ||
+                    "No Developers Found"
+                  : t("developerDashboard.noTeamMembers") ||
+                    "No Team Members"}
+              </h3>
+              <p className="text-sm text-default-500 max-w-md mb-4">
+                {searchQuery || statusFilter
+                  ? t("developerDashboard.noDevelopersFoundDescription") ||
+                    "No developers match your current filters. Try adjusting your search or filters."
+                  : t("developerDashboard.noTeamMembersDescription") ||
+                    "No team members found in the development department."}
+              </p>
+              {(searchQuery || statusFilter) && (
+                <Button
+                  size="sm"
+                  startContent={<X className="w-4 h-4" />}
+                  variant="flat"
+                  onPress={() => {
+                    setSearchQuery("");
+                    setStatusFilter("");
+                  }}
+                >
+                  {t("common.clearFilters") || "Clear Filters"}
+                </Button>
+              )}
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div dir={language === "ar" ? "rtl" : "ltr"}>
       <Card className="w-full shadow-md border border-default-200">
