@@ -657,19 +657,29 @@ export default function ProjectRequirementsPage() {
 
   // Use AI suggestion in description field
   const handleUseAISuggestion = (content: string) => {
-    const htmlDescription = `<p>${content}</p>`;
+    // Split content by double line breaks (empty lines between paragraphs)
+    const paragraphs = content
+      .split(/\n\s*\n/) // Split by one or more empty lines
+      .map(para => para.trim())
+      .filter(para => para.length > 0);
+
+    // Wrap each paragraph in <p> tags
+    const htmlDescription = paragraphs
+      .map(para => `<p>${para}</p>`)
+      .join('');
+
     setFormData({
       ...formData,
-      description: htmlDescription,
+      description: htmlDescription || `<p>${content}</p>`,
     });
-    
+
     // Show success feedback
     showSuccessToast(
-      language === "ar" 
-        ? "تم إضافة الوصف بنجاح" 
-        : "Description added successfully"
+      language === "ar"
+        ? "تم إضافة الوصف بنجاح"
+        : "Description added successfully",
     );
-    
+
     // Close the modal
     setIsAIPromptOpen(false);
   };
