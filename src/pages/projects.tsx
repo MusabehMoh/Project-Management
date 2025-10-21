@@ -930,78 +930,91 @@ export default function ProjectsPage() {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-primary">
+        {/* Quick Stats - Modern Minimalist Design */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+          {/* Total Projects */}
+          <div className="bg-default-100 dark:bg-default-50/5 border border-default-200 rounded-lg px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-default-700 dark:text-default-600">
                 {stats?.total || 0}
               </p>
-              <p className="text-sm text-default-600">
+              <p className="text-sm text-default-500">
                 {t("projects.totalProjects")}
               </p>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-secondary">
+          </div>
+
+          {/* New */}
+          <div className="bg-default-100 dark:bg-default-50/5 border border-default-200 rounded-lg px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-default-700 dark:text-default-600">
                 {stats?.new || 0}
               </p>
-              <p className="text-sm text-default-600">
+              <p className="text-sm text-default-500">
                 {language === "ar" ? "جديد" : "New"}
               </p>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-secondary">
+          </div>
+
+          {/* Under Study */}
+          <div className="bg-default-100 dark:bg-default-50/5 border border-default-200 rounded-lg px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-default-700 dark:text-default-600">
                 {stats?.underStudy || 0}
               </p>
-              <p className="text-sm text-default-600">
+              <p className="text-sm text-default-500">
                 {language === "ar" ? "قيد الدراسة" : "Under Study"}
               </p>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-primary">
+          </div>
+
+          {/* Under Development */}
+          <div className="bg-default-100 dark:bg-default-50/5 border border-default-200 rounded-lg px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-default-700 dark:text-default-600">
                 {stats?.underDevelopment || 0}
               </p>
-              <p className="text-sm text-default-600">
+              <p className="text-sm text-default-500">
                 {language === "ar" ? "قيد التطوير" : "Under Development"}
               </p>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-secondary">
+          </div>
+
+          {/* Under Testing */}
+          <div className="bg-default-100 dark:bg-default-50/5 border border-default-200 rounded-lg px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-default-700 dark:text-default-600">
                 {stats?.underTesting || 0}
               </p>
-              <p className="text-sm text-default-600">
+              <p className="text-sm text-default-500">
                 {language === "ar" ? "قيد الأختبار" : "Under Testing"}
               </p>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-success">
+          </div>
+
+          {/* Production */}
+          <div className="bg-default-100 dark:bg-default-50/5 border border-default-200 rounded-lg px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-success-600 dark:text-success-500">
                 {stats?.production || 0}
               </p>
-              <p className="text-sm text-default-600">
-                {language === "ar" ? "بيئة الانتاج" : "Production Environment"}
+              <p className="text-sm text-default-500">
+                {language === "ar" ? "بيئة الانتاج" : "Production"}
               </p>
             </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold text-warning">
+          </div>
+
+          {/* Delayed */}
+          <div className="bg-default-100 dark:bg-default-50/5 border border-default-200 rounded-lg px-4 py-3">
+            <div className="space-y-1">
+              <p className="text-3xl font-semibold text-warning-600 dark:text-warning-500">
                 {stats?.delayed || 0}
               </p>
-              <p className="text-sm text-default-600">
+              <p className="text-sm text-default-500">
                 {language === "ar" ? "مؤجل" : "Delayed"}
               </p>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Projects Table */}
