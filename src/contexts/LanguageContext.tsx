@@ -578,6 +578,9 @@ const translations = {
     "developerQuickActions.reviewAssignmentSuccess":
       "Review Assignment Successful",
     "developerQuickActions.reviewAssignmentError": "Review Assignment Failed",
+    "developerQuickActions.noActionsTitle": "All Clear!",
+    "developerQuickActions.noActionsDescription":
+      "No actions require your attention at this time. All tasks are assigned and up to date.",
 
     // Task Extension
     "common.extendTask": "Extend Task Deadline",
@@ -2352,6 +2355,9 @@ const translations = {
     "developerQuickActions.assignmentError": "فشل في التعيين",
     "developerQuickActions.reviewAssignmentSuccess": "تم تعيين المراجعة بنجاح",
     "developerQuickActions.reviewAssignmentError": "فشل في تعيين المراجعة",
+    "developerQuickActions.noActionsTitle": "كل شيء على ما يرام!",
+    "developerQuickActions.noActionsDescription":
+      "لا توجد إجراءات تتطلب انتباهك في الوقت الحالي. جميع المهام معينة ومحدثة.",
 
     // Task Extension
     "common.extendTask": "تمديد موعد المهمة",
