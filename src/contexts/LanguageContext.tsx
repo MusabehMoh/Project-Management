@@ -578,6 +578,17 @@ const translations = {
     "developerQuickActions.reviewAssignmentSuccess":
       "Review Assignment Successful",
     "developerQuickActions.reviewAssignmentError": "Review Assignment Failed",
+    "developerQuickActions.noActionsTitle": "All Clear!",
+    "developerQuickActions.noActionsDescription":
+      "No actions require your attention at this time. All tasks are assigned and up to date.",
+
+    // Developer Workload Performance - Empty States
+    "developerDashboard.noDevelopersFound": "No Developers Found",
+    "developerDashboard.noDevelopersFoundDescription":
+      "No developers match your current filters. Try adjusting your search or filters.",
+    "developerDashboard.noTeamMembers": "No Team Members",
+    "developerDashboard.noTeamMembersDescription":
+      "No team members found in the development department.",
 
     // Task Extension
     "common.extendTask": "Extend Task Deadline",
@@ -1350,7 +1361,7 @@ const translations = {
     "timeline.loadingProjects": "Loading projects...",
     "timeline.noProjectsAvailable": "No projects available",
     "timeline.loadingTimelines": "Loading timelines...",
-    "timeline.noTimelines": 'No timelines - Click "New Timeline" to create one',
+    "timeline.noTimelines": "No timelines available",
     "timeline.sprints": "Sprints",
     "timeline.sprint": "Sprint",
     "timeline.requirements": "Requirements",
@@ -2352,6 +2363,17 @@ const translations = {
     "developerQuickActions.assignmentError": "فشل في التعيين",
     "developerQuickActions.reviewAssignmentSuccess": "تم تعيين المراجعة بنجاح",
     "developerQuickActions.reviewAssignmentError": "فشل في تعيين المراجعة",
+    "developerQuickActions.noActionsTitle": "كل شيء على ما يرام!",
+    "developerQuickActions.noActionsDescription":
+      "لا توجد إجراءات تتطلب انتباهك في الوقت الحالي. جميع المهام معينة ومحدثة.",
+
+    // Developer Workload Performance - Empty States
+    "developerDashboard.noDevelopersFound": "لم يتم العثور على مطورين",
+    "developerDashboard.noDevelopersFoundDescription":
+      "لا يوجد مطورون يطابقون الفلاتر الحالية. حاول تعديل البحث أو الفلاتر.",
+    "developerDashboard.noTeamMembers": "لا يوجد أعضاء فريق",
+    "developerDashboard.noTeamMembersDescription":
+      "لم يتم العثور على أعضاء فريق في قسم التطوير.",
 
     // Task Extension
     "common.extendTask": "تمديد موعد المهمة",
@@ -3104,8 +3126,7 @@ const translations = {
     "timeline.loadingProjects": "جاري تحميل المشاريع...",
     "timeline.noProjectsAvailable": "لا توجد مشاريع متاحة",
     "timeline.loadingTimelines": "جاري تحميل الجداول الزمنية...",
-    "timeline.noTimelines":
-      'لا توجد جداول زمنية - انقر "جدول زمني جديد" لإنشاء واحد',
+    "timeline.noTimelines": "لا توجد جداول زمنية متاحة",
     "timeline.sprints": "السبرينتات",
     "timeline.sprint": "سبرينت",
     "timeline.requirements": "المتطلبات",

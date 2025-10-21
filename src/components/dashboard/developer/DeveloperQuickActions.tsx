@@ -310,6 +310,71 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     );
   }
 
+  // Empty state when no actions are available
+  if (!loading && totalActionsCount === 0) {
+    return (
+      <Card
+        className={`${className} border-default-200`}
+        dir={direction}
+        shadow="sm"
+      >
+        <CardHeader className="flex items-center justify-between pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-foreground">
+                {t("dashboard.myActions") || "My Actions"}
+              </h3>
+            </div>
+            <p className="text-sm text-default-500 mt-1">
+              {t("developerDashboard.quickActionsSubtitle") ||
+                "Assign tasks and code reviews that need your attention"}
+            </p>
+          </div>
+          <Button
+            isIconOnly
+            className="text-default-400 hover:text-default-600"
+            disabled={refreshing}
+            size="sm"
+            variant="light"
+            onPress={refresh}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </CardHeader>
+        <Divider className="bg-default-200" />
+        <CardBody className="p-6">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-20 h-20 bg-success-50 dark:bg-success-100/10 rounded-full flex items-center justify-center mb-4">
+              <svg
+                className="w-10 h-10 text-success-500"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              {t("developerQuickActions.noActionsTitle") ||
+                "All Clear!"}
+            </h3>
+            <p className="text-sm text-default-500 max-w-md">
+              {t("developerQuickActions.noActionsDescription") ||
+                "No actions require your attention at this time. All tasks are assigned and up to date."}
+            </p>
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
+
   // Modal Components (must be defined before usage to avoid hoisting issues)
   const handleTaskAssign = async () => {
     if (selectedTask && selectedDevelopers.length > 0) {
