@@ -573,18 +573,19 @@ export default function ProjectRequirementsPage() {
   // Use AI suggestion in description field
   const handleUseAISuggestion = (content: string) => {
     const htmlDescription = `<p>${content}</p>`;
+
     setFormData({
       ...formData,
       description: htmlDescription,
     });
-    
+
     // Show success feedback
     showSuccessToast(
-      language === "ar" 
-        ? "تم إضافة الوصف بنجاح" 
-        : "Description added successfully"
+      language === "ar"
+        ? "تم إضافة الوصف بنجاح"
+        : "Description added successfully",
     );
-    
+
     // Close the modal
     setIsAIPromptOpen(false);
   };
@@ -1283,7 +1284,7 @@ export default function ProjectRequirementsPage() {
                     </Select>
                   </div>
 
-                  <div  className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
                     <Select
                       label={t("requirements.type")}
                       selectedKeys={[formData.type.toString()]}
@@ -1308,7 +1309,7 @@ export default function ProjectRequirementsPage() {
                       </SelectItem>
                     </Select>
                     <DatePicker
-                      isRequired 
+                      isRequired
                       errorMessage={validationErrors.expectedCompletionDate}
                       isInvalid={!!validationErrors.expectedCompletionDate}
                       label={t("requirements.expectedCompletion")}
@@ -1334,9 +1335,9 @@ export default function ProjectRequirementsPage() {
                       <Tooltip content={t("requirements.aiSuggest")}>
                         <Button
                           isIconOnly
+                          color="secondary"
                           size="sm"
                           variant="flat"
-                          color="secondary"
                           onPress={() => setIsAIPromptOpen(true)}
                         >
                           <Sparkles className="w-4 h-4" />
@@ -1613,19 +1614,19 @@ export default function ProjectRequirementsPage() {
 
       {/* AI Prompt Modal */}
       <Modal
+        classNames={{
+          base: "max-h-[90vh]",
+          body: "p-0",
+        }}
         isOpen={isAIPromptOpen}
+        scrollBehavior="inside"
+        size="3xl"
         onOpenChange={(open) => {
           setIsAIPromptOpen(open);
           if (!open) {
             // Don't clear history when closing modal
             setAIPromptText("");
           }
-        }}
-        size="3xl"
-        scrollBehavior="inside"
-        classNames={{
-          base: "max-h-[90vh]",
-          body: "p-0",
         }}
       >
         <ModalContent>
@@ -1649,10 +1650,10 @@ export default function ProjectRequirementsPage() {
                 </div>
                 {conversationHistory.length > 0 && (
                   <Button
-                    size="sm"
-                    variant="flat"
                     color="danger"
+                    size="sm"
                     startContent={<RotateCcw className="w-4 h-4" />}
+                    variant="flat"
                     onPress={handleClearConversation}
                   >
                     {t("requirements.clearHistory")}
@@ -1705,12 +1706,16 @@ export default function ProjectRequirementsPage() {
                             {msg.role === "assistant" && (
                               <div className="border-t border-default-200 px-4 py-2">
                                 <Button
-                                  size="sm"
-                                  color="secondary"
-                                  variant="flat"
-                                  startContent={<Check className="w-3.5 h-3.5" />}
-                                  onPress={() => handleUseAISuggestion(msg.content)}
                                   className="text-xs"
+                                  color="secondary"
+                                  size="sm"
+                                  startContent={
+                                    <Check className="w-3.5 h-3.5" />
+                                  }
+                                  variant="flat"
+                                  onPress={() =>
+                                    handleUseAISuggestion(msg.content)
+                                  }
                                 >
                                   {language === "ar"
                                     ? "استخدم هذا الوصف"
@@ -1783,6 +1788,12 @@ export default function ProjectRequirementsPage() {
                     <div className="flex gap-2 items-end">
                       <Textarea
                         autoFocus
+                        classNames={{
+                          input: "text-sm",
+                          inputWrapper: "min-h-[44px]",
+                        }}
+                        maxRows={5}
+                        minRows={1}
                         placeholder={
                           conversationHistory.length > 0
                             ? language === "ar"
@@ -1791,7 +1802,6 @@ export default function ProjectRequirementsPage() {
                             : t("requirements.aiPromptPlaceholder")
                         }
                         value={aiPromptText}
-                        onValueChange={setAIPromptText}
                         onKeyDown={(e) => {
                           if (
                             e.key === "Enter" &&
@@ -1802,21 +1812,16 @@ export default function ProjectRequirementsPage() {
                             handleAIGenerate();
                           }
                         }}
-                        minRows={1}
-                        maxRows={5}
-                        classNames={{
-                          input: "text-sm",
-                          inputWrapper: "min-h-[44px]",
-                        }}
+                        onValueChange={setAIPromptText}
                       />
                       <Button
-                        size="sm"
-                        color="secondary"
                         isIconOnly
-                        isLoading={aiGenerating}
-                        isDisabled={!aiPromptText.trim()}
-                        onPress={handleAIGenerate}
                         className="min-w-unit-10 w-10 h-10 flex-shrink-0"
+                        color="secondary"
+                        isDisabled={!aiPromptText.trim()}
+                        isLoading={aiGenerating}
+                        size="sm"
+                        onPress={handleAIGenerate}
                       >
                         {!aiGenerating && <Send className="w-4 h-4" />}
                       </Button>

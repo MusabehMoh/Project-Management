@@ -135,6 +135,7 @@ export const llmService = {
       }
 
       const data: ApiResponse<LLMSuggestionResponse> = await response.json();
+
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
@@ -225,9 +226,11 @@ Context: ${context}`;
         method: "GET",
         signal: AbortSignal.timeout(3000),
       });
+
       return response.ok;
     } catch (error) {
       console.error("LLM health check failed:", error);
+
       return false;
     }
   },
@@ -238,12 +241,15 @@ Context: ${context}`;
   async getAvailableModels(): Promise<string[]> {
     try {
       const response = await fetch(`${LLM_CONFIG.baseUrl}/api/tags`);
+
       if (!response.ok) return [];
 
       const data = await response.json();
+
       return data.models?.map((m: { name: string }) => m.name) || [];
     } catch (error) {
       console.error("Error fetching models:", error);
+
       return [];
     }
   },

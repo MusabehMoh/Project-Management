@@ -156,6 +156,7 @@ export const UnitSelector: React.FC<UnitSelectorProps> = ({
                   4: "#F5A524", // warning - Brigades
                   5: "#F31260", // danger - Battalions
                 };
+
                 return colorMap[level] || "#71717A";
               };
 
@@ -172,13 +173,15 @@ export const UnitSelector: React.FC<UnitSelectorProps> = ({
                       {unit.name}
                     </span>
                   </div>
-                  {index < array.length - 1 && (
-                    language === "ar" ? (
+                  {index < array.length - 1 &&
+                    (language === "ar" ? (
                       <ChevronLeftIcon className="text-default-400" size={14} />
                     ) : (
-                      <ChevronRightIcon className="text-default-400" size={14} />
-                    )
-                  )}
+                      <ChevronRightIcon
+                        className="text-default-400"
+                        size={14}
+                      />
+                    ))}
                 </React.Fragment>
               );
             })}

@@ -39,15 +39,29 @@ export const useUsers = (initialFilters?: UserFilters) => {
         setLoading(true);
         setError(null);
 
-        console.log("📥 useUsers: Calling API with filters:", filters, "page:", page, "limit:", limit);
+        console.log(
+          "📥 useUsers: Calling API with filters:",
+          filters,
+          "page:",
+          page,
+          "limit:",
+          limit,
+        );
         const response = await userService.getUsers(filters, page, limit);
+
         console.log("📦 useUsers: API response:", response);
 
         if (response.success) {
-          console.log("✅ useUsers: Setting users. Count:", response.data.length);
+          console.log(
+            "✅ useUsers: Setting users. Count:",
+            response.data.length,
+          );
           setUsers(response.data);
           if (response.pagination) {
-            console.log("📊 useUsers: Setting pagination:", response.pagination);
+            console.log(
+              "📊 useUsers: Setting pagination:",
+              response.pagination,
+            );
             setPagination(response.pagination);
           }
         } else {

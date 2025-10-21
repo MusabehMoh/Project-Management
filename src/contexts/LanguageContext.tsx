@@ -592,7 +592,7 @@ const translations = {
     "common.currentDeadline": "Current Deadline:",
     "common.na": "N/A",
     "common.failedToExtend": "Failed to extend task",
-    
+
     // Validation messages
     "validation.dateRequired": "Date is required",
     "validation.reasonRequired": "Reason is required",
@@ -623,9 +623,11 @@ const translations = {
     "developerDashboard.noOverdueTasks": "No overdue or at-risk tasks",
     "developerDashboard.completedOnTime": "completed on time",
     "developerDashboard.totalCompleted": "total completed",
-    "developerDashboard.assignDeveloperSuccess": "Developer assigned successfully",
+    "developerDashboard.assignDeveloperSuccess":
+      "Developer assigned successfully",
     "developerDashboard.assignDeveloperError": "Failed to assign developer",
-    "developerDashboard.assignReviewerSuccess": "Reviewer assigned successfully",
+    "developerDashboard.assignReviewerSuccess":
+      "Reviewer assigned successfully",
     "developerDashboard.assignReviewerError": "Failed to assign reviewer",
 
     // Developer Workload Performance
@@ -1707,7 +1709,8 @@ const translations = {
     changeStatus: "Change Status",
     requestDesign: "Request Design",
     requestedAlready: "Design Requested",
-    requestDesignConfirmation: "Are you sure you want to request a design for this task? This will notify the design team and cannot be undone.",
+    requestDesignConfirmation:
+      "Are you sure you want to request a design for this task? This will notify the design team and cannot be undone.",
     confirm: "Confirm",
     cancel: "Cancel",
     changeAssignees: "Change Assignees",
@@ -1735,7 +1738,8 @@ const translations = {
     "designRequests.status": "Status",
     "designRequests.notes": "Request Notes",
     "designRequests.noRequests": "No design requests found",
-    "designRequests.noRequestsDescription": "There are no design requests at this time",
+    "designRequests.noRequestsDescription":
+      "There are no design requests at this time",
     "designRequests.loadingRequests": "Loading design requests...",
     "designRequests.errorLoading": "Error loading design requests",
     "designRequests.selectDesigner": "Select Designer",
@@ -2361,7 +2365,7 @@ const translations = {
     "common.currentDeadline": "الموعد النهائي الحالي:",
     "common.na": "غير متوفر",
     "common.failedToExtend": "فشل في تمديد المهمة",
-    
+
     // Validation messages
     "validation.dateRequired": "التاريخ مطلوب",
     "validation.reasonRequired": "السبب مطلوب",
@@ -2443,7 +2447,8 @@ const translations = {
     "teamDashboard.kanban.title": "لوحة المهام",
     "teamDashboard.kanban.titleAdhoc": "لوحة المهام العاجلة",
     "teamDashboard.kanban.subtitle": "اسحب وأفلت المهام لتحديث حالتها",
-    "teamDashboard.kanban.subtitleAdhoc": "اسحب وأفلت المهام العاجلة لتحديث حالتها",
+    "teamDashboard.kanban.subtitleAdhoc":
+      "اسحب وأفلت المهام العاجلة لتحديث حالتها",
     "teamDashboard.kanban.noTasks": "لا توجد مهام",
     "teamDashboard.kanban.project": "المشروع",
     "teamDashboard.kanban.requirement": "المتطلب",
@@ -2763,8 +2768,7 @@ const translations = {
     "requirements.aiSuggest": "اقتراح بالذكاء الاصطناعي",
     "requirements.aiPromptDescription":
       "صِف ما تحتاجه وسيقوم الذكاء الاصطناعي بإنشاء وصف تفصيلي للمتطلب من أجلك.",
-    "requirements.aiContinuePrompt":
-      "استمر في المحادثة أو قم بتحسين المتطلب:",
+    "requirements.aiContinuePrompt": "استمر في المحادثة أو قم بتحسين المتطلب:",
     "requirements.aiPromptLabel": "ماذا يجب أن يحقق هذا المتطلب؟",
     "requirements.aiPromptPlaceholder":
       "مثال: إنشاء نظام لإنتاج فواتير PDF مع رموز QR وإرسالها عبر البريد الإلكتروني",
@@ -3453,7 +3457,8 @@ const translations = {
     changeStatus: "تغيير الحالة",
     requestDesign: "طلب تصميم",
     requestedAlready: "طُلب التصميم",
-    requestDesignConfirmation: "هل أنت متأكد من أنك تريد طلب تصميم لهذه المهمة؟ سيتم إشعار فريق التصميم ولا يمكن التراجع عن ذلك.",
+    requestDesignConfirmation:
+      "هل أنت متأكد من أنك تريد طلب تصميم لهذه المهمة؟ سيتم إشعار فريق التصميم ولا يمكن التراجع عن ذلك.",
     confirm: "تأكيد",
     cancel: "إلغاء",
     changeAssignees: "تغيير المعينين",
@@ -3481,7 +3486,8 @@ const translations = {
     "designRequests.status": "الحالة",
     "designRequests.notes": "ملاحظات الطلب",
     "designRequests.noRequests": "لم يتم العثور على طلبات تصميم",
-    "designRequests.noRequestsDescription": "لا توجد طلبات تصميم في الوقت الحالي",
+    "designRequests.noRequestsDescription":
+      "لا توجد طلبات تصميم في الوقت الحالي",
     "designRequests.loadingRequests": "جاري تحميل طلبات التصميم...",
     "designRequests.errorLoading": "خطأ في تحميل طلبات التصميم",
     "designRequests.selectDesigner": "اختر المصمم",

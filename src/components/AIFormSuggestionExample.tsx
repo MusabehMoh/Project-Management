@@ -14,6 +14,7 @@ import {
   Chip,
 } from "@heroui/react";
 import { Sparkles } from "lucide-react";
+
 import { useFormSuggestion } from "@/hooks";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -68,18 +69,13 @@ export default function AIFormSuggestionExample({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="2xl"
-      scrollBehavior="inside"
-    >
+    <Modal isOpen={isOpen} scrollBehavior="inside" size="2xl" onClose={onClose}>
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <span>AI-Powered Form Example</span>
             {isLLMAvailable && (
-              <Chip size="sm" color="success" variant="flat">
+              <Chip color="success" size="sm" variant="flat">
                 <div className="flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
                   <span>AI Ready</span>
@@ -111,6 +107,7 @@ export default function AIFormSuggestionExample({
               selectedKeys={formData.priority ? [formData.priority] : []}
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0] as string;
+
                 setFormData({ ...formData, priority: selectedKey });
               }}
             >
@@ -133,13 +130,13 @@ export default function AIFormSuggestionExample({
                   }
                 >
                   <Button
-                    size="sm"
-                    variant="flat"
                     color="secondary"
-                    startContent={<Sparkles className="w-4 h-4" />}
-                    onPress={getDescriptionSuggestion}
-                    isLoading={descriptionLoading}
                     isDisabled={!isLLMAvailable || !formData.taskTitle}
+                    isLoading={descriptionLoading}
+                    size="sm"
+                    startContent={<Sparkles className="w-4 h-4" />}
+                    variant="flat"
+                    onPress={getDescriptionSuggestion}
                   >
                     AI Suggest
                   </Button>
@@ -147,12 +144,12 @@ export default function AIFormSuggestionExample({
               </div>
 
               <Textarea
+                minRows={4}
                 placeholder="Enter task description"
                 value={formData.taskDescription}
                 onChange={(e) =>
                   setFormData({ ...formData, taskDescription: e.target.value })
                 }
-                minRows={4}
               />
 
               {/* AI Suggestion Display */}
@@ -173,9 +170,9 @@ export default function AIFormSuggestionExample({
                     <div className="flex gap-1">
                       <Tooltip content="Apply suggestion">
                         <Button
+                          color="secondary"
                           size="sm"
                           variant="flat"
-                          color="secondary"
                           onPress={handleApplySuggestion}
                         >
                           Apply
@@ -207,8 +204,8 @@ export default function AIFormSuggestionExample({
             {/* Estimated Hours */}
             <Input
               label="Estimated Hours"
-              type="number"
               placeholder="Enter estimated hours"
+              type="number"
               value={formData.estimatedHours}
               onChange={(e) =>
                 setFormData({ ...formData, estimatedHours: e.target.value })

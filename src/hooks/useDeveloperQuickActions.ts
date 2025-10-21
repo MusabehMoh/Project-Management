@@ -57,9 +57,7 @@ export function useDeveloperQuickActions(
   const [almostCompletedTasks, setAlmostCompletedTasks] = useState<
     AlmostCompletedTask[]
   >([]);
-  const [overdueTasks, setOverdueTasks] = useState<
-    AlmostCompletedTask[]
-  >([]);
+  const [overdueTasks, setOverdueTasks] = useState<AlmostCompletedTask[]>([]);
   const [availableDevelopers, setAvailableDevelopers] = useState<
     AvailableDeveloper[]
   >([]);
@@ -188,7 +186,7 @@ export function useDeveloperQuickActions(
         fullName: "Sara Hassan",
         gradeName: "Lieutenant",
         statusId: 1,
-        department: "Development"
+        department: "Development",
       },
       statusId: 3, // review
       priorityId: 3, // critical

@@ -83,7 +83,7 @@ const ANALYST_CONFIG: KanbanRoleConfig = {
   allowedStatuses: [1, 2, 5], // To Do, In Progress, Completed (no In Review or Rework)
   allowedTransitions: {
     from: [1, 2, 5], // Can drag from any of these statuses
-    to: [1, 2, 5],   // Can drop to any of these statuses
+    to: [1, 2, 5], // Can drop to any of these statuses
   },
   canDragFrom: (statusId: number) => {
     // Can drag from To Do, In Progress, AND Completed

@@ -140,7 +140,10 @@ export class GlobalSearchService {
     return this.projects
       .filter((project) => {
         if (!includeInactive && project.status === 5) return false; // 5 = cancelled
-        if (filters?.status?.length && !filters.status.includes(project.status.toString()))
+        if (
+          filters?.status?.length &&
+          !filters.status.includes(project.status.toString())
+        )
           return false;
 
         return this.matchesProjectQuery(project, query);
@@ -626,7 +629,11 @@ export class GlobalSearchService {
       if (project.applicationName.toLowerCase().includes(normalizedQuery)) {
         suggestions.add(project.applicationName);
       }
-      if (project.projectOwnerEmployee?.fullName?.toLowerCase().includes(normalizedQuery)) {
+      if (
+        project.projectOwnerEmployee?.fullName
+          ?.toLowerCase()
+          .includes(normalizedQuery)
+      ) {
         suggestions.add(project.projectOwnerEmployee.fullName);
       }
       if (project.owningUnit.toLowerCase().includes(normalizedQuery)) {

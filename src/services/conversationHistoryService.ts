@@ -28,28 +28,30 @@ class ConversationHistoryService {
   private getAllHistories(): Record<string, ConversationHistory> {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
+
       if (!stored) return {};
-      
+
       const histories: Record<string, ConversationHistory> = JSON.parse(stored);
-      
+
       // Clean up old histories
       const now = Date.now();
       const cleaned: Record<string, ConversationHistory> = {};
-      
+
       for (const [contextId, history] of Object.entries(histories)) {
         if (now - history.updatedAt < MAX_HISTORY_AGE_MS) {
           cleaned[contextId] = history;
         }
       }
-      
+
       // Save cleaned histories if anything was removed
       if (Object.keys(cleaned).length !== Object.keys(histories).length) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
       }
-      
+
       return cleaned;
     } catch (error) {
       console.error("Error loading conversation histories:", error);
+
       return {};
     }
   }
@@ -57,7 +59,9 @@ class ConversationHistoryService {
   /**
    * Save all conversation histories to localStorage
    */
-  private saveAllHistories(histories: Record<string, ConversationHistory>): void {
+  private saveAllHistories(
+    histories: Record<string, ConversationHistory>,
+  ): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(histories));
     } catch (error) {
@@ -70,6 +74,7 @@ class ConversationHistoryService {
    */
   getHistory(contextId: string): ConversationHistory | null {
     const histories = this.getAllHistories();
+
     return histories[contextId] || null;
   }
 
@@ -78,6 +83,7 @@ class ConversationHistoryService {
    */
   getMessages(contextId: string): ConversationMessage[] {
     const history = this.getHistory(contextId);
+
     return history?.messages || [];
   }
 
@@ -87,7 +93,7 @@ class ConversationHistoryService {
   addUserMessage(contextId: string, content: string): void {
     const histories = this.getAllHistories();
     const now = Date.now();
-    
+
     if (!histories[contextId]) {
       histories[contextId] = {
         contextId,
@@ -96,23 +102,23 @@ class ConversationHistoryService {
         updatedAt: now,
       };
     }
-    
+
     histories[contextId].messages.push({
       role: "user",
       content,
       timestamp: now,
     });
-    
+
     histories[contextId].updatedAt = now;
-    
+
     // Trim messages if exceeding max
     if (histories[contextId].messages.length > MAX_MESSAGES_PER_CONTEXT * 2) {
       // Keep last N exchanges (user + assistant pairs)
       histories[contextId].messages = histories[contextId].messages.slice(
-        -MAX_MESSAGES_PER_CONTEXT * 2
+        -MAX_MESSAGES_PER_CONTEXT * 2,
       );
     }
-    
+
     this.saveAllHistories(histories);
   }
 
@@ -122,7 +128,7 @@ class ConversationHistoryService {
   addAssistantMessage(contextId: string, content: string): void {
     const histories = this.getAllHistories();
     const now = Date.now();
-    
+
     if (!histories[contextId]) {
       // Create history if it doesn't exist (shouldn't happen in normal flow)
       histories[contextId] = {
@@ -132,15 +138,15 @@ class ConversationHistoryService {
         updatedAt: now,
       };
     }
-    
+
     histories[contextId].messages.push({
       role: "assistant",
       content,
       timestamp: now,
     });
-    
+
     histories[contextId].updatedAt = now;
-    
+
     this.saveAllHistories(histories);
   }
 
@@ -149,6 +155,7 @@ class ConversationHistoryService {
    */
   clearHistory(contextId: string): void {
     const histories = this.getAllHistories();
+
     delete histories[contextId];
     this.saveAllHistories(histories);
   }
@@ -170,18 +177,19 @@ class ConversationHistoryService {
    */
   formatHistoryForPrompt(contextId: string): string {
     const messages = this.getMessages(contextId);
-    
+
     if (messages.length === 0) {
       return "";
     }
-    
+
     const formatted = messages
       .map((msg) => {
         const role = msg.role === "user" ? "User" : "Assistant";
+
         return `${role}: ${msg.content}`;
       })
       .join("\n\n");
-    
+
     return `\n\nPrevious Conversation:\n${formatted}\n\n`;
   }
 

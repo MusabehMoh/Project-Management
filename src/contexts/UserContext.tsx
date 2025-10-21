@@ -35,18 +35,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Serve from memory if already available
     if (user) {
       setLoading(false);
+
       return;
     }
 
     if (inflight) {
       const u = await inflight;
+
       setUser(u);
       setLoading(false);
+
       return;
     }
 
     inflight = (async () => {
       const response = await userService.getCurrentUser();
+
       if (response.success) {
         return response.data;
       }
@@ -55,10 +59,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const u = await inflight;
+
       setUser(u);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch user data";
+
       setError(errorMessage);
 
       // Development fallback user (kept minimal and silent)
@@ -86,6 +92,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
+
         setUser(fallback);
         setError(null);
       }

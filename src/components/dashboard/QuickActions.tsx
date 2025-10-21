@@ -17,6 +17,7 @@ import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { addToast } from "@heroui/toast";
 import { RefreshCw, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuickActions } from "@/hooks/useQuickActions";
@@ -178,6 +179,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   onAssignAnalyst,
 }) => {
   const { t, direction } = useLanguage();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [selectedAnalysts, setSelectedAnalysts] = useState<
@@ -500,7 +502,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                                 variant="bordered"
                                 onPress={() => {
                                   // Navigate to project requirements page to add requirements
-                                  window.location.href = `/requirements/${project.id}`;
+                                  navigate(`/requirements/${project.id}`);
                                 }}
                               >
                                 {t("requirements.addRequirement") ||

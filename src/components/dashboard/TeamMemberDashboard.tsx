@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 import Calendar from "./calendar";
-import TeamQuickActions from "./team-member/TeamQuickActions";
 import TeamKanbanBoard from "./team-member/TeamKanbanBoard";
 
 import { useLanguage } from "@/contexts/LanguageContext";

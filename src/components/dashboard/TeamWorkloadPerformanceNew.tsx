@@ -378,7 +378,9 @@ const TeamWorkloadPerformance: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {paginatedData.map((member, index) => (
-                    <TableRow key={`member-${member.userId}-page${currentPage}-idx${index}`}>
+                    <TableRow
+                      key={`member-${member.userId}-page${currentPage}-idx${index}`}
+                    >
                       <TableCell>
                         <div>
                           <div className="font-medium">{member.fullName}</div>

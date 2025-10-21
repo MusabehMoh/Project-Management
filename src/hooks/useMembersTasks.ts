@@ -201,12 +201,12 @@ export const useMembersTasks = (): UseMembersTasksResult => {
 
       if (response.success) {
         addToast({
-          description:  t("toast.assigneesChangedSuccess"),
+          description: t("toast.assigneesChangedSuccess"),
           color: "success",
         });
       } else {
         addToast({
-          description:  t("toast.assigneesChangeFailed"),
+          description: t("toast.assigneesChangeFailed"),
           color: "warning",
         });
       }

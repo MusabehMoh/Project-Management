@@ -398,7 +398,6 @@ export default function ProjectsPage() {
     return users.find((u) => u.id === userId) || null;
   };
 
-   
   const getStatusColor = (status: number) => {
     return getProjectStatusColor(status);
   };
@@ -808,7 +807,8 @@ export default function ProjectsPage() {
       const exportData = projects.map((project) => ({
         "Application Name": project.applicationName,
         "Project Owner": project.projectOwnerEmployee?.fullName || "Unknown",
-        "Alternative Owner": project.alternativeOwnerEmployee?.fullName || "Unknown",
+        "Alternative Owner":
+          project.alternativeOwnerEmployee?.fullName || "Unknown",
         "Owning Unit": project.owningUnit || "Unknown Unit",
         "Start Date": project.startDate,
         "Expected Completion Date": project.expectedCompletionDate,
@@ -1269,19 +1269,31 @@ export default function ProjectsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar
-                              name={project.projectOwnerEmployee?.fullName || "Unknown"}
+                              name={
+                                project.projectOwnerEmployee?.fullName ||
+                                "Unknown"
+                              }
                               size="sm"
                             />
-                            <span>{project.projectOwnerEmployee?.fullName || "Unknown"}</span>
+                            <span>
+                              {project.projectOwnerEmployee?.fullName ||
+                                "Unknown"}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar
-                              name={project.alternativeOwnerEmployee?.fullName || "Unknown"}
+                              name={
+                                project.alternativeOwnerEmployee?.fullName ||
+                                "Unknown"
+                              }
                               size="sm"
                             />
-                            <span>{project.alternativeOwnerEmployee?.fullName || "Unknown"}</span>
+                            <span>
+                              {project.alternativeOwnerEmployee?.fullName ||
+                                "Unknown"}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -1869,9 +1881,9 @@ export default function ProjectsPage() {
               </ModalHeader>
               <ModalBody>
                 <p>
-                  {t("projects.deleteConfirmMessage")} {" "}
+                  {t("projects.deleteConfirmMessage")}{" "}
                   <strong>{projectToDelete?.applicationName}</strong>?{" "}
-                  {t("projects.actionCannotBeUndone")} 
+                  {t("projects.actionCannotBeUndone")}
                 </p>
               </ModalBody>
               <ModalFooter>

@@ -310,19 +310,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     );
   }
 
-  // Move modal component declarations above usage
-  // Move modal definitions above usage
-  // Move full implementations of TaskAssignmentModal and CodeReviewAssignmentModal here
-
-  if (!hasActionsAvailable) {
-    return (
-      <>
-        {null}
-        {TaskAssignmentModal()}
-      </>
-    );
-  }
-
+  // Modal Components (must be defined before usage to avoid hoisting issues)
   const handleTaskAssign = async () => {
     if (selectedTask && selectedDevelopers.length > 0) {
       try {
@@ -427,7 +415,6 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     clearDeveloperResults();
   };
 
-  // Modal Components (must be defined after handlers to avoid hoisting issues)
   const TaskAssignmentModal = () => {
     return (
       <Modal
@@ -1086,6 +1073,15 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       </Modal>
     );
   };
+
+  if (!hasActionsAvailable) {
+    return (
+      <>
+        {null}
+        {TaskAssignmentModal()}
+      </>
+    );
+  }
 
   return (
     <>

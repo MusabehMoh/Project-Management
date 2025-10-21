@@ -368,7 +368,7 @@ export const useUnitSearch = () => {
 
       if (Array.isArray(response.data)) {
         units = response.data;
-      } else if (response.data && typeof response.data === 'object') {
+      } else if (response.data && typeof response.data === "object") {
         // Check common nested array patterns
         if (Array.isArray((response.data as any).units)) {
           units = (response.data as any).units;

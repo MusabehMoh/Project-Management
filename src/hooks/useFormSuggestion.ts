@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+
 import { llmService } from "@/services/api/llmService";
 import {
   conversationHistoryService,
@@ -28,7 +29,7 @@ interface UseFormSuggestionResult {
 
 /**
  * Custom hook for AI-powered form field suggestions
- * 
+ *
  * @example
  * ```tsx
  * const { suggestion, loading, getSuggestion } = useFormSuggestion({
@@ -54,6 +55,7 @@ export function useFormSuggestion(
   // Load conversation history on mount
   useEffect(() => {
     const history = conversationHistoryService.getMessages(contextId);
+
     setConversationHistory(history);
   }, [contextId]);
 
@@ -61,8 +63,10 @@ export function useFormSuggestion(
   useEffect(() => {
     const checkAvailability = async () => {
       const available = await llmService.checkHealth();
+
       setIsLLMAvailable(available);
     };
+
     checkAvailability();
   }, []);
 
@@ -72,11 +76,13 @@ export function useFormSuggestion(
 
       if (!options.field || !promptToUse) {
         setError("Field and context are required");
+
         return;
       }
 
       if (!isLLMAvailable) {
         setError("LLM service is not available");
+
         return;
       }
 
@@ -102,6 +108,7 @@ export function useFormSuggestion(
 
         if (result.success && result.data) {
           const aiResponse = result.data.suggestion;
+
           setSuggestion(aiResponse);
 
           // Add assistant message to history
@@ -110,6 +117,7 @@ export function useFormSuggestion(
           // Update local state
           const updatedHistory =
             conversationHistoryService.getMessages(contextId);
+
           setConversationHistory(updatedHistory);
         } else {
           setError(result.message || "Failed to get suggestion");
@@ -117,6 +125,7 @@ export function useFormSuggestion(
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to get suggestion";
+
         setError(errorMessage);
         console.error("Error getting LLM suggestion:", err);
       } finally {

@@ -411,7 +411,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                         });
                         setSelectedMembers([]);
                         onClose();
-                        
+
                         // Call the onSuccess callback to refresh the parent component
                         if (onSuccess) {
                           onSuccess();

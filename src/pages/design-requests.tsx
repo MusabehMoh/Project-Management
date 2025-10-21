@@ -121,7 +121,7 @@ export function DesignRequestsPage() {
         // API returns: { success: true, data: DesignRequestDto[], pagination: { total, totalPages, ... } }
         if (Array.isArray(response.data)) {
           setDesignRequests(response.data);
-          
+
           // Check if pagination info exists in response
           if (response.pagination) {
             setTotalCount(response.pagination.total || response.data.length);
@@ -343,12 +343,12 @@ export function DesignRequestsPage() {
                   </h3>
                 </div>
                 <Chip
-                  color={getStatusColor(request.status)}
-                  size="sm"
-                  variant="flat"
                   classNames={{
                     content: "text-xs font-medium px-1",
                   }}
+                  color={getStatusColor(request.status)}
+                  size="sm"
+                  variant="flat"
                 >
                   {getStatusText(request.status)}
                 </Chip>
@@ -368,13 +368,13 @@ export function DesignRequestsPage() {
                     {t("designRequests.requestDate")}
                   </p>
                   <Chip
-                    size="sm"
-                    variant="flat"
-                    startContent={<Clock className="w-3 h-3" />}
                     classNames={{
                       base: "bg-default-100 border-none",
                       content: "text-xs text-default-700",
                     }}
+                    size="sm"
+                    startContent={<Clock className="w-3 h-3" />}
+                    variant="flat"
                   >
                     {formatDate(request.createdAt)}
                   </Chip>
@@ -387,13 +387,14 @@ export function DesignRequestsPage() {
                       {t("designRequests.assignedTo")}
                     </p>
                     <Chip
-                      size="sm"
-                      variant="flat"
-                      startContent={<CheckCircle className="w-3 h-3" />}
                       classNames={{
                         base: "bg-success-50 dark:bg-success-100/10 border-none",
-                        content: "text-xs text-success-700 dark:text-success-600 font-medium",
+                        content:
+                          "text-xs text-success-700 dark:text-success-600 font-medium",
                       }}
+                      size="sm"
+                      startContent={<CheckCircle className="w-3 h-3" />}
+                      variant="flat"
                     >
                       {request.assignedToUserName}
                     </Chip>
@@ -409,12 +410,13 @@ export function DesignRequestsPage() {
                         {t("common.project")}
                       </p>
                       <Chip
-                        size="sm"
-                        variant="flat"
                         classNames={{
                           base: "bg-primary-50 dark:bg-primary-100/10 border-none",
-                          content: "text-xs text-primary-700 dark:text-primary-600 font-medium",
+                          content:
+                            "text-xs text-primary-700 dark:text-primary-600 font-medium",
                         }}
+                        size="sm"
+                        variant="flat"
                       >
                         {request.requirementDetails.projectName ||
                           t("common.unknownProject")}
@@ -511,7 +513,9 @@ export function DesignRequestsPage() {
           {designRequests &&
             designRequests.map((request) => (
               <TableRow key={request.id}>
-                <TableCell>{request.task?.name || `Task ID: ${request.taskId}`}</TableCell>
+                <TableCell>
+                  {request.task?.name || `Task ID: ${request.taskId}`}
+                </TableCell>
                 <TableCell>{formatDate(request.createdAt)}</TableCell>
                 <TableCell>
                   <Chip
@@ -578,6 +582,7 @@ export function DesignRequestsPage() {
               size="sm"
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0] as string;
+
                 if (selectedKey) {
                   handlePageSizeChange(parseInt(selectedKey));
                 }
@@ -596,16 +601,17 @@ export function DesignRequestsPage() {
             className="w-40"
             label={t("common.filter")}
             selectedKeys={
-              statusFilter !== undefined ? new Set([statusFilter.toString()]) : new Set()
+              statusFilter !== undefined
+                ? new Set([statusFilter.toString()])
+                : new Set()
             }
             onSelectionChange={(keys) => {
               const selectedKey = Array.from(keys)[0] as string;
+
               handleStatusFilterChange(selectedKey || null);
             }}
           >
-            <SelectItem key="">
-              {t("designRequests.filter.all")}
-            </SelectItem>
+            <SelectItem key="">{t("designRequests.filter.all")}</SelectItem>
             <SelectItem key="1">
               {t("designRequests.filter.unassigned")}
             </SelectItem>
@@ -704,10 +710,10 @@ export function DesignRequestsPage() {
                 <div className="space-y-4">
                   <div>
                     <Autocomplete
-                      label={t("designRequests.selectDesignerForAssignment")}
                       defaultFilter={() => true}
                       inputValue={designerInputValue}
                       isLoading={designersLoading}
+                      label={t("designRequests.selectDesignerForAssignment")}
                       menuTrigger="input"
                       placeholder={t("tasks.selectDesigner")}
                       selectedKey={selectedDesigner?.id?.toString() || ""}
@@ -787,14 +793,18 @@ export function DesignRequestsPage() {
               {/* Task Details Section - Minimalist */}
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between py-2 border-b border-default-100">
-                  <span className="text-default-500">{t("designRequests.taskName")}</span>
+                  <span className="text-default-500">
+                    {t("designRequests.taskName")}
+                  </span>
                   <span className="font-medium text-default-900 dark:text-default-100">
                     {selectedRequest?.task?.name || t("common.notAvailable")}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between py-2 border-b border-default-100">
-                  <span className="text-default-500">{t("designRequests.requestDate")}</span>
+                  <span className="text-default-500">
+                    {t("designRequests.requestDate")}
+                  </span>
                   <span className="text-default-900 dark:text-default-100">
                     {formatDate(selectedRequest?.createdAt)}
                   </span>
@@ -817,18 +827,24 @@ export function DesignRequestsPage() {
                   <div className="flex items-center justify-between py-2 border-b border-default-100">
                     <span className="text-default-500">{t("priority")}</span>
                     <Chip
-                      color={getRequirementPriorityColor(selectedRequest.task.priorityId)}
+                      color={getRequirementPriorityColor(
+                        selectedRequest.task.priorityId,
+                      )}
                       size="sm"
                       variant="flat"
                     >
-                      {getRequirementPriorityText(selectedRequest.task.priorityId)}
+                      {getRequirementPriorityText(
+                        selectedRequest.task.priorityId,
+                      )}
                     </Chip>
                   </div>
                 )}
 
                 {selectedRequest?.task?.dueDate && (
                   <div className="flex items-center justify-between py-2 border-b border-default-100">
-                    <span className="text-default-500">{t("dashboard.dueDate")}</span>
+                    <span className="text-default-500">
+                      {t("dashboard.dueDate")}
+                    </span>
                     <span className="text-default-900 dark:text-default-100">
                       {formatDate(selectedRequest.task.dueDate)}
                     </span>
@@ -874,21 +890,23 @@ export function DesignRequestsPage() {
                   </h2>
                   <div className="flex flex-wrap items-center gap-2">
                     <Chip
-                      size="sm"
-                      variant="flat"
                       className="bg-default-100 dark:bg-default-100/10 border-none"
+                      size="sm"
                       startContent={<Clock className="w-3 h-3" />}
+                      variant="flat"
                     >
                       <span className="text-xs">
                         {formatDate(selectedRequest.createdAt)}
                       </span>
                     </Chip>
                     <Chip
+                      className="bg-default-100 dark:bg-default-100/10 border-none"
                       size="sm"
                       variant="flat"
-                      className="bg-default-100 dark:bg-default-100/10 border-none"
                     >
-                      <span className="text-xs">Task ID: {selectedRequest.taskId}</span>
+                      <span className="text-xs">
+                        Task ID: {selectedRequest.taskId}
+                      </span>
                     </Chip>
                   </div>
                 </div>
@@ -955,10 +973,10 @@ export function DesignRequestsPage() {
                         {t("dashboard.dueDate")}
                       </label>
                       <Chip
-                        size="sm"
-                        variant="flat"
                         className="bg-warning-50 dark:bg-warning-100/10 border-none"
+                        size="sm"
                         startContent={<Calendar className="w-3 h-3" />}
+                        variant="flat"
                       >
                         <span className="text-xs text-warning-700 dark:text-warning-600">
                           {formatDate(selectedRequest.task.dueDate)}
@@ -973,9 +991,9 @@ export function DesignRequestsPage() {
                         {t("requirements.requirementId")}
                       </label>
                       <Chip
+                        className="bg-secondary-50 dark:bg-secondary-100/10 border-none"
                         size="sm"
                         variant="flat"
-                        className="bg-secondary-50 dark:bg-secondary-100/10 border-none"
                       >
                         <span className="text-xs text-secondary-700 dark:text-secondary-600">
                           {selectedRequest.task.requirementId}

@@ -12,7 +12,11 @@ import { MemberTask } from "@/types/membersTasks";
 import { MemberSearchResult } from "@/types/timeline";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDateOnly } from "@/utils/dateFormatter";
-import { getTaskTypeText, getTaskTypeColor, TASK_TYPES } from "@/constants/taskTypes";
+import {
+  getTaskTypeText,
+  getTaskTypeColor,
+  TASK_TYPES,
+} from "@/constants/taskTypes";
 import { tasksService } from "@/services/api";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
@@ -123,8 +127,8 @@ export const TaskCard = ({
     <Card
       isPressable
       className={`min-h-[400px] cursor-pointer transition-all duration-500 ease-in-out bg-content1 overflow-hidden ${
-        isAdhoc && isHovered 
-          ? "shadow-2xl border-2 border-success ring-2 ring-success/20" 
+        isAdhoc && isHovered
+          ? "shadow-2xl border-2 border-success ring-2 ring-success/20"
           : "hover:shadow-lg border-2 border-transparent"
       } ${
         task.isOverdue
@@ -132,14 +136,16 @@ export const TaskCard = ({
           : `border-l-4 border-l-${getStatusColor(task.statusId)}-500`
       } ${language === "ar" ? "text-right" : ""}`}
       dir={language === "ar" ? "rtl" : "ltr"}
-      onPress={handleCardClick}
       onMouseEnter={() => isAdhoc && setIsHovered(true)}
       onMouseLeave={() => isAdhoc && setIsHovered(false)}
+      onPress={handleCardClick}
     >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className={`text-lg font-semibold text-foreground line-clamp-2 break-words ${language === "ar" ? "text-right" : "text-left"}`}>
+            <h3
+              className={`text-lg font-semibold text-foreground line-clamp-2 break-words ${language === "ar" ? "text-right" : "text-left"}`}
+            >
               {task.name}
             </h3>
           </div>
@@ -154,7 +160,7 @@ export const TaskCard = ({
               </Chip>
               {isAdhoc && canComplete && isHovered && (
                 <Tooltip content={t("teamDashboard.kanban.markComplete")}>
-                  <div 
+                  <div
                     className="flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent card click
@@ -162,8 +168,8 @@ export const TaskCard = ({
                   >
                     <Switch
                       color="success"
-                      size="sm"
                       isDisabled={isCompleting}
+                      size="sm"
                       thumbIcon={({ isSelected, className }) =>
                         isSelected ? (
                           <CheckCircle className={className} />
@@ -207,10 +213,10 @@ export const TaskCard = ({
           </span>
           {task.isOverdue && (
             <Badge
+              className="flex-shrink-0"
               color="danger"
               size="sm"
               variant="flat"
-              className="flex-shrink-0"
             >
               {t("overdueTask")}
             </Badge>
@@ -322,7 +328,8 @@ export const TaskCard = ({
             <div className="overflow-hidden">
               <span className="font-medium">{t("projectLabel")} </span>
               <span className="break-words">
-                {task.project?.applicationName || t("tasks.noAssociatedProject")}
+                {task.project?.applicationName ||
+                  t("tasks.noAssociatedProject")}
               </span>
             </div>
             <div className="overflow-hidden">

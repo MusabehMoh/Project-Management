@@ -161,19 +161,22 @@ export default function DesignerWorkloadPerformance() {
               />
 
               <Select
+                disableAnimation
                 aria-label="Filter by status"
                 className="max-w-xs"
                 placeholder={t("common.filterByStatus") || "Filter by status"}
-                selectedKeys={statusFilter ? new Set([statusFilter]) : new Set()}
-                disableAnimation
                 popoverProps={{
                   placement: "bottom-start",
                 }}
                 scrollShadowProps={{
                   isEnabled: false,
                 }}
+                selectedKeys={
+                  statusFilter ? new Set([statusFilter]) : new Set()
+                }
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
+
                   setStatusFilter(selected || "");
                 }}
               >
@@ -193,19 +196,20 @@ export default function DesignerWorkloadPerformance() {
               </Select>
 
               <Select
+                disableAnimation
                 aria-label="Sort by"
                 className="max-w-xs"
                 placeholder={t("common.sortBy") || "Sort by"}
-                selectedKeys={new Set([sortBy])}
-                disableAnimation
                 popoverProps={{
                   placement: "bottom-start",
                 }}
                 scrollShadowProps={{
                   isEnabled: false,
                 }}
+                selectedKeys={new Set([sortBy])}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
+
                   if (selected) {
                     setSortBy(selected);
                   }

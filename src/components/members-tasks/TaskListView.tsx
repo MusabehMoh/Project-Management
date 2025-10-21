@@ -79,16 +79,25 @@ export const TaskListView = ({
 
       case "assignees":
         return (
-          <div className={`flex items-start gap-2 ${language === "ar" ? " text-right" : ""}`}>
+          <div
+            className={`flex items-start gap-2 ${language === "ar" ? " text-right" : ""}`}
+          >
             {task.assignedMembers && task.assignedMembers.length > 0 ? (
               <>
                 <CheckCircle className="w-4 h-4 text-foreground-500 flex-shrink-0 mt-0.5" />
-                <div className={`flex-1 min-w-0 ${language === "ar" ? "text-right" : ""}`}>
+                <div
+                  className={`flex-1 min-w-0 ${language === "ar" ? "text-right" : ""}`}
+                >
                   <div className="flex flex-wrap gap-1">
                     {task.assignedMembers
                       .slice(0, 2)
                       .map((assignee, index: number) => (
-                        <Chip key={index} color="primary" size="sm" variant="flat">
+                        <Chip
+                          key={index}
+                          color="primary"
+                          size="sm"
+                          variant="flat"
+                        >
                           {`${assignee.gradeName} ${assignee.fullName}`}
                         </Chip>
                       ))}

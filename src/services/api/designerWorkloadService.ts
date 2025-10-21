@@ -77,7 +77,7 @@ class DesignerWorkloadService {
 
     // The API returns data directly (not wrapped in ApiResponse for this endpoint)
     const data: any = response.data || response;
-    
+
     // Handle both PascalCase (C#) and camelCase responses
     const designers = data.designers || data.Designers || [];
     const paginationData = data.pagination || data.Pagination || {};
@@ -85,16 +85,21 @@ class DesignerWorkloadService {
     return {
       designers,
       pagination: {
-        currentPage: paginationData.currentPage || paginationData.CurrentPage || 1,
+        currentPage:
+          paginationData.currentPage || paginationData.CurrentPage || 1,
         pageSize: paginationData.pageSize || paginationData.PageSize || 5,
         totalItems: paginationData.totalItems || paginationData.TotalItems || 0,
         totalPages: paginationData.totalPages || paginationData.TotalPages || 0,
-        hasNextPage: paginationData.hasNextPage !== undefined 
-          ? paginationData.hasNextPage 
-          : (paginationData.currentPage || paginationData.CurrentPage || 1) < (paginationData.totalPages || paginationData.TotalPages || 0),
-        hasPreviousPage: paginationData.hasPreviousPage !== undefined
-          ? paginationData.hasPreviousPage
-          : (paginationData.currentPage || paginationData.CurrentPage || 1) > 1,
+        hasNextPage:
+          paginationData.hasNextPage !== undefined
+            ? paginationData.hasNextPage
+            : (paginationData.currentPage || paginationData.CurrentPage || 1) <
+              (paginationData.totalPages || paginationData.TotalPages || 0),
+        hasPreviousPage:
+          paginationData.hasPreviousPage !== undefined
+            ? paginationData.hasPreviousPage
+            : (paginationData.currentPage || paginationData.CurrentPage || 1) >
+              1,
       },
     };
   }
@@ -103,9 +108,7 @@ class DesignerWorkloadService {
    * Get team-level metrics for design department
    */
   async getTeamMetrics(): Promise<TeamMetricsDto> {
-    const response = await apiClient.get<any>(
-      `${this.baseUrl}/metrics`,
-    );
+    const response = await apiClient.get<any>(`${this.baseUrl}/metrics`);
 
     // The API returns data directly
     const data: any = response.data || response;
@@ -115,9 +118,12 @@ class DesignerWorkloadService {
       totalDesigners: data.totalDesigners || data.TotalDesigners || 0,
       activeDesigners: data.activeDesigners || data.ActiveDesigners || 0,
       averageEfficiency: data.averageEfficiency || data.AverageEfficiency || 0,
-      totalTasksCompleted: data.totalTasksCompleted || data.TotalTasksCompleted || 0,
-      totalTasksInProgress: data.totalTasksInProgress || data.TotalTasksInProgress || 0,
-      averageTaskCompletionTime: data.averageTaskCompletionTime || data.AverageTaskCompletionTime || 0,
+      totalTasksCompleted:
+        data.totalTasksCompleted || data.TotalTasksCompleted || 0,
+      totalTasksInProgress:
+        data.totalTasksInProgress || data.TotalTasksInProgress || 0,
+      averageTaskCompletionTime:
+        data.averageTaskCompletionTime || data.AverageTaskCompletionTime || 0,
     };
   }
 }

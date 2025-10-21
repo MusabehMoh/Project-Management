@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Button } from "@heroui/button";
 import { useNavigate } from "react-router-dom";
 
 import UrgentNotifications from "./UrgentNotifications";

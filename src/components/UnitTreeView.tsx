@@ -338,6 +338,7 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
                     4: "#F5A524", // warning - Brigades
                     5: "#F31260", // danger - Battalions
                   };
+
                   return colorMap[level] || "#71717A";
                 };
 
@@ -357,13 +358,18 @@ export const UnitTreeView: React.FC<UnitTreeViewProps> = ({
                         L{unit.level}
                       </span>
                     </div>
-                    {index < array.length - 1 && (
-                      language === "ar" ? (
-                        <ChevronLeftIcon className="text-default-400" size={14} />
+                    {index < array.length - 1 &&
+                      (language === "ar" ? (
+                        <ChevronLeftIcon
+                          className="text-default-400"
+                          size={14}
+                        />
                       ) : (
-                        <ChevronRightIcon className="text-default-400" size={14} />
-                      )
-                    )}
+                        <ChevronRightIcon
+                          className="text-default-400"
+                          size={14}
+                        />
+                      ))}
                   </React.Fragment>
                 );
               })}
