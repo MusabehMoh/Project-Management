@@ -1,0 +1,223 @@
+{
+  "name": "AI Form Suggestion with Streaming Support",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-suggest-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Agent Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "ai-suggest-agent-form"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and prepare request data\nconst body = $input.item.json.body;\nconst context = body.context || '';\nconst response = body.response || '';\nconst field = body.field || '';\nconst previousValues = body.previousValues || {};\nconst sessionId = body.sessionId || 'default-session';\nconst saveToMemory = body.saveToMemory || false;\n\n// Check if this is a memory-only save (from streaming)\nif (saveToMemory && response) {\n  // This is a post-streaming memory save\n  return {\n    json: {\n      isMemoryOnly: true,\n      sessionId: sessionId,\n      userMessage: context,\n      assistantMessage: response,\n      field: field\n    }\n  };\n}\n\n// Normal flow - generate response\nlet chatInput = context;\n\n// Add project information only on first message\nif (Object.keys(previousValues).length > 0) {\n  chatInput += '\\n\\nمعلومات المشروع:\\n';\n  for (const [key, value] of Object.entries(previousValues)) {\n    if (value) {\n      chatInput += `- ${key}: ${value}\\n`;\n    }\n  }\n}\n\nreturn {\n  json: {\n    isMemoryOnly: false,\n    chatInput: chatInput,\n    sessionId: sessionId,\n    originalContext: context,\n    field: field,\n    previousValues: previousValues\n  }\n};"
+      },
+      "id": "prepare-input",
+      "name": "Check Request Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isMemoryOnly }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "route-request",
+      "name": "Route Request",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Save conversation to memory only\nconst data = $input.item.json;\n\nreturn {\n  json: {\n    success: true,\n    data: {\n      saved: true,\n      sessionId: data.sessionId\n    },\n    message: 'Conversation saved to memory'\n  }\n};"
+      },
+      "id": "memory-only-response",
+      "name": "Memory Only Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "أنت محلل متطلبات برمجية خبير متخصص في كتابة متطلبات تقنية احترافية. يمكنك التحدث مع المستخدم لفهم احتياجاته بشكل أفضل.\n\nقواعد الرد:\n1. إذا سألك المستخدم سؤالاً أو طلب توضيحاً، أجب بشكل مهذب ومفيد دون تكرار الترحيب في كل مرة\n2. إذا طلب منك كتابة وصف تقني، اكتبه مباشرة دون مقدمات\n3. عند كتابة الوصف التقني:\n   - استخدم 3-5 جمل متماسكة\n   - ركز على: الهدف، الوظائف الأساسية، المعايير التقنية (APIs, قواعد البيانات، frameworks)، معايير الأداء\n   - استخدم مصطلحات تقنية دقيقة\n   - لا تكتب عناوين أو أرقام أو نقاط\n   - ابدأ مباشرة بالوصف دون كتابة \"الوصف:\" أو \"المتطلب:\"\n4. اكتب بالعربية الفصحى إذا كان السياق بالعربية، وبالإنجليزية إذا كان بالإنجليزية\n5. تذكر المحادثة السابقة واستخدمها لتحسين الوصف - لا تكرر نفس المعلومات\n6. يمكنك طلب معلومات إضافية إذا كان السياق غير واضح\n7. لا تكرر الترحيب في كل رد - فقط في الرسالة الأولى"
+        },
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": false
+      },
+      "id": "ai-agent",
+      "name": "AI Agent - Requirements Analyst",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:8b",
+        "options": {
+          "baseUrl": "http://localhost:11434",
+          "temperature": 0.5,
+          "numPredict": 400
+        }
+      },
+      "id": "ollama-chat",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [850, 550]
+    },
+    {
+      "parameters": {
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindowLength": 10
+      },
+      "id": "window-buffer-memory",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [850, 700]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract agent response\nconst agentOutput = $input.item.json;\nconst preparedInput = $('Check Request Type').item.json;\n\n// Get the suggestion text from agent output\nlet suggestion = '';\nif (typeof agentOutput.output === 'string') {\n  suggestion = agentOutput.output.trim();\n} else if (agentOutput.text) {\n  suggestion = agentOutput.text.trim();\n} else {\n  suggestion = JSON.stringify(agentOutput);\n}\n\n// Clean up common unwanted prefixes\nconst prefixesToRemove = [\n  'Description:', 'وصف:', '\"', \"'\", 'Task Description:', 'وصف المهمة:',\n  'Here is', \"Here's\", 'إليك', 'الوصف:'\n];\n\nfor (const prefix of prefixesToRemove) {\n  if (suggestion.toLowerCase().startsWith(prefix.toLowerCase())) {\n    suggestion = suggestion.substring(prefix.length).trim();\n  }\n}\n\n// Remove trailing quotes\nif (suggestion.endsWith('\"') || suggestion.endsWith(\"'\")) {\n  suggestion = suggestion.slice(0, -1).trim();\n}\nif (suggestion.startsWith('\"') || suggestion.startsWith(\"'\")) {\n  suggestion = suggestion.substring(1).trim();\n}\n\n// Format response\nreturn {\n  json: {\n    success: true,\n    data: {\n      suggestion: suggestion,\n      confidence: 0.9,\n      metadata: {\n        field: preparedInput.field,\n        context: preparedInput.originalContext,\n        model: 'llama3.1:8b',\n        agentType: 'langchain-agent-with-memory',\n        sessionId: preparedInput.sessionId,\n        timestamp: new Date().toISOString()\n      }\n    },\n    message: 'Suggestion generated successfully'\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Agent Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "webhook-response",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Agent Request": {
+      "main": [
+        [
+          {
+            "node": "Check Request Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Request Type": {
+      "main": [
+        [
+          {
+            "node": "Route Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Request": {
+      "main": [
+        [
+          {
+            "node": "Memory Only Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory Only Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Requirements Analyst": {
+      "main": [
+        [
+          {
+            "node": "Format Agent Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Agent Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["AI", "Agent", "LangChain", "Streaming", "Requirements"],
+  "triggerCount": 0,
+  "updatedAt": "2025-10-21T00:00:00.000Z",
+  "versionId": "2"
+}

@@ -207,6 +207,23 @@
 }
 
 /* ===================================
+   AI MODAL CUSTOM STYLES
+   =================================== */
+
+/* Remove blue border from AI prompt textarea */
+[data-slot="input-wrapper"]:has(textarea):focus-within,
+[data-slot="input-wrapper"]:has(textarea):focus,
+[data-slot="input-wrapper"]:has(textarea):focus-visible {
+  border-color: hsl(var(--heroui-default-200)) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+[data-slot="input-wrapper"]:has(textarea):hover {
+  border-color: hsl(var(--heroui-default-300)) !important;
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 

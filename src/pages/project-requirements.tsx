@@ -499,7 +499,7 @@ export default function ProjectRequirementsPage() {
     }
   };
 
-  // AI Generation handler with conversation history
+  // AI Generation handler with streaming support
   const handleAIGenerate = async () => {
     if (!aiPromptText.trim()) return;
 
@@ -512,53 +512,138 @@ export default function ProjectRequirementsPage() {
         timestamp: Date.now(),
       };
 
-      // Call n8n agent webhook with sessionId for memory
-      const response = await fetch(
-        import.meta.env.VITE_LLM_N8N_AGENT_WEBHOOK_URL ||
-          "http://localhost:5678/webhook/ai-suggest-agent",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            context: aiPromptText,
-            field: t("requirements.requirementDescription"),
-            sessionId: aiSessionId, // Send sessionId for memory tracking
-            previousValues: {
-              [t("requirements.requirementName")]: formData.name,
-              [t("common.project")]: projectName || "",
-            },
-            maxTokens: 400,
-          }),
-        },
-      );
+      // Add user message to conversation immediately
+      const updatedHistory = [...conversationHistory, userMessage];
+      setConversationHistory(updatedHistory);
+
+      // Create a placeholder for streaming response
+      const streamingMessage = {
+        role: "assistant" as const,
+        content: "",
+        timestamp: Date.now(),
+      };
+      setConversationHistory([...updatedHistory, streamingMessage]);
+
+      // Clear input
+      setAIPromptText("");
+
+      // Build conversation history for Ollama
+      const messages = updatedHistory.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
+      // Add context information for the first message
+      let systemPrompt = `أنت محلل متطلبات برمجية خبير متخصص في كتابة متطلبات تقنية احترافية. يمكنك التحدث مع المستخدم لفهم احتياجاته بشكل أفضل.
+
+قواعد الرد:
+1. إذا سألك المستخدم سؤالاً أو طلب توضيحاً، أجب بشكل مهذب ومفيد دون تكرار الترحيب في كل مرة
+2. إذا طلب منك كتابة وصف تقني، اكتبه مباشرة دون مقدمات
+3. عند كتابة الوصف التقني:
+   - استخدم 3-5 جمل متماسكة
+   - ركز على: الهدف، الوظائف الأساسية، المعايير التقنية (APIs, قواعد البيانات، frameworks)، معايير الأداء
+   - استخدم مصطلحات تقنية دقيقة
+   - لا تكتب عناوين أو أرقام أو نقاط
+   - ابدأ مباشرة بالوصف دون كتابة "الوصف:" أو "المتطلب:"
+4. اكتب بالعربية الفصحى إذا كان السياق بالعربية، وبالإنجليزية إذا كان بالإنجليزية
+5. تذكر المحادثة السابقة واستخدمها لتحسين الوصف - لا تكرر نفس المعلومات
+6. يمكنك طلب معلومات إضافية إذا كان السياق غير واضح
+7. لا تكرر الترحيب في كل رد - فقط في الرسالة الأولى`;
+
+      // Add project context for first message
+      if (messages.length === 1 && (formData.name || projectName)) {
+        systemPrompt += `\n\nمعلومات المشروع:`;
+        if (projectName) systemPrompt += `\n- المشروع: ${projectName}`;
+        if (formData.name)
+          systemPrompt += `\n- ${t("requirements.requirementName")}: ${formData.name}`;
+      }
+
+      // Call Ollama streaming API directly
+      const response = await fetch("http://localhost:11434/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "llama3.1:8b",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages,
+          ],
+          stream: true,
+          options: {
+            temperature: 0.5,
+            num_predict: 400,
+          },
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to generate AI suggestion");
       }
 
-      const data = await response.json();
+      // Read streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = "";
 
-      if (data.success && data.data?.suggestion) {
-        const aiSuggestion = data.data.suggestion;
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        // Update conversation history
-        const assistantMessage = {
-          role: "assistant" as const,
-          content: aiSuggestion,
-          timestamp: Date.now(),
-        };
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n").filter((line) => line.trim());
 
-        setConversationHistory([
-          ...conversationHistory,
-          userMessage,
-          assistantMessage,
-        ]);
+          for (const line of lines) {
+            try {
+              const json = JSON.parse(line);
+              if (json.message?.content) {
+                fullResponse += json.message.content;
 
-        setAIPromptText(""); // Clear input but keep modal open
+                // Update streaming message in real-time
+                setConversationHistory([
+                  ...updatedHistory,
+                  {
+                    ...streamingMessage,
+                    content: fullResponse,
+                  },
+                ]);
+              }
+            } catch (e) {
+              // Skip invalid JSON lines
+            }
+          }
+        }
+      }
+
+      // After streaming completes, save to n8n for memory
+      try {
+        await fetch(
+          import.meta.env.VITE_LLM_N8N_AGENT_WEBHOOK_URL ||
+            "http://localhost:5678/webhook/ai-suggest-agent",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              context: userMessage.content,
+              response: fullResponse,
+              sessionId: aiSessionId,
+              saveToMemory: true, // Flag to indicate memory-only save
+              field: t("requirements.requirementDescription"),
+              previousValues: {
+                [t("requirements.requirementName")]: formData.name,
+                [t("common.project")]: projectName || "",
+              },
+            }),
+          },
+        );
+      } catch (memoryError) {
+        console.warn("Failed to save to n8n memory:", memoryError);
+        // Don't throw - streaming already succeeded
       }
     } catch (error) {
       console.error("AI generation error:", error);
-      // You can add toast notification here
+      // Remove failed message and show error
+      setConversationHistory(conversationHistory);
     } finally {
       setAIGenerating(false);
     }
@@ -1806,7 +1891,7 @@ export default function ProjectRequirementsPage() {
                         maxRows={5}
                         classNames={{
                           input: "text-sm",
-                          inputWrapper: "min-h-[44px]",
+                          inputWrapper: "min-h-[44px] !border-default-200 hover:!border-default-300 focus-within:!border-default-200 data-[focus=true]:!border-default-200 data-[hover=true]:!border-default-300",
                         }}
                       />
                       <Button
