@@ -208,19 +208,19 @@ export default function TimelineFilters({
               textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
             >
               <span className="flex items-center gap-3">
-                <Avatar name={employee.fullName || "Unknown"} size="sm" />
+                <Avatar name={employee.fullName || t("common.none")} size="sm" />
                 <span className="flex flex-col">
                   <span className="font-medium">
-                    {employee.gradeName} {employee.fullName || "Unknown User"}
+                    {employee.gradeName} {employee.fullName || t("common.none")}
                   </span>
                   <span className="text-xs text-default-500">
                     {employee.militaryNumber || "N/A"}
                   </span>
                   <span className="text-xs text-default-400">
-                    @{employee.userName || "unknown"}
+                    @{employee.userName || t("common.none")}
                   </span>
                   <span className="text-xs text-default-400">
-                    {employee.department || "unknown"}
+                    {employee.department || t("common.none")}
                   </span>
                 </span>
               </span>

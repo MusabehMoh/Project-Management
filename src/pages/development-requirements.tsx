@@ -375,7 +375,9 @@ export default function DevelopmentRequirementsPage() {
     useState<ProjectRequirement | null>(null);
 
   // Timeline hook for creating timelines
-  const { createTimeline, loading: timelineLoading } = useTimeline();
+  const { createTimeline, loading: timelineLoading } = useTimeline({
+    skipProjectsFetch: true, // Projects already loaded
+  });
 
   // Team search hooks for developers and QC
   const {

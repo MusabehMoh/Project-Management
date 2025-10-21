@@ -15,7 +15,11 @@ import {
 import { timelineApi } from "@/services/api/timelineService";
 import { useProjects } from "@/hooks/useProjects";
 
-export function useTimeline(projectId?: number) {
+export function useTimeline(options?: {
+  projectId?: number;
+  skipProjectsFetch?: boolean;
+}) {
+  const { projectId, skipProjectsFetch = false } = options || {};
   const [timelines, setTimelines] = useState<Timeline[]>([]);
   const [currentTimeline, setCurrentTimeline] = useState<Timeline | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -26,7 +30,7 @@ export function useTimeline(projectId?: number) {
     type: "timeline" | "sprint" | "task" | "subtask";
   } | null>(null);
 
-  const { projects } = useProjects();
+  const { projects } = useProjects({ skip: skipProjectsFetch });
 
   // Fetch timelines
   const fetchTimelines = useCallback(

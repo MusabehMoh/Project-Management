@@ -2,13 +2,13 @@ import type {
   ProjectRequirement,
   UpdateProjectRequirementRequest,
   ProjectRequirementFilters,
+  AssignedProject,
 } from "@/types/projectRequirement";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { addToast } from "@heroui/toast";
 
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
-import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 
 interface UseApprovedRequirementsProps {
   initialFilters?: ProjectRequirementFilters;
@@ -30,7 +30,6 @@ export function useApprovedRequirements({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRequirements, setTotalRequirements] = useState(0);
-  // Manage page size locally so UI can change it
   const [pageSizeState, setPageSizeState] = useState<number>(pageSize);
 
   // Filters
@@ -38,15 +37,49 @@ export function useApprovedRequirements({
     ...initialFilters,
   });
 
-  // Projects (for project filter dropdown)
-  const { assignedProjects: projects, loadAssignedProjects } =
-    useProjectRequirements();
+  // Projects state (for project filter dropdown)
+  const [projects, setProjects] = useState<AssignedProject[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
-  // Load projects when hook initializes (for dropdown)
+  // Track if projects have been loaded
+  const projectsLoadedRef = useRef(false);
+  const projectsLoadingRef = useRef(false);
+
+  /**
+   * Load ALL projects without pagination for dropdown
+   */
+  const loadAllProjects = useCallback(async () => {
+    // If already loading or already loaded, skip
+    if (projectsLoadingRef.current || projectsLoadedRef.current) return;
+
+    projectsLoadingRef.current = true;
+    setLoadingProjects(true);
+    try {
+      // Fetch with a very high limit to get all projects
+      // Or if your API supports it, add a parameter to fetch all
+      const result = await projectRequirementsService.getAllProjects({
+        page: 1,
+        limit: 1000, // High limit to get all projects
+      });
+
+      setProjects(result.data);
+      projectsLoadedRef.current = true;
+    } catch (err) {
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("Failed to load projects:", err);
+      }
+      // Don't show toast for projects loading failure as it's not critical
+    } finally {
+      projectsLoadingRef.current = false;
+      setLoadingProjects(false);
+    }
+  }, []);
+
+  // Load projects once when hook initializes
   useEffect(() => {
-    // Best-effort load; the underlying hook handles its own loading guard
-    loadAssignedProjects();
-  }, [loadAssignedProjects]);
+    loadAllProjects();
+  }, []); // Empty dependency array - load only once
 
   /**
    * Load approved requirements
@@ -89,6 +122,20 @@ export function useApprovedRequirements({
       inFlightKeyRef.current = null;
     }
   }, [filters, currentPage, pageSizeState]);
+
+  // Load requirements when filters or pagination changes
+  // Use a separate effect to avoid double-loading on mount
+  const requirementsKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const key = `${currentPage}|${pageSizeState}|${JSON.stringify(filters)}`;
+
+    // Only load if the key has changed
+    if (requirementsKeyRef.current !== key) {
+      requirementsKeyRef.current = key;
+      loadRequirements();
+    }
+  }, [filters, currentPage, pageSizeState, loadRequirements]);
 
   /**
    * Update an existing requirement
@@ -206,11 +253,6 @@ export function useApprovedRequirements({
     await loadRequirements();
   }, [loadRequirements]);
 
-  // Load requirements when filters or pagination changes
-  useEffect(() => {
-    loadRequirements();
-  }, [loadRequirements]);
-
   return {
     // Data
     requirements,
@@ -218,6 +260,7 @@ export function useApprovedRequirements({
     error,
     // Projects for dropdown
     projects,
+    loadingProjects,
 
     // Pagination
     currentPage,

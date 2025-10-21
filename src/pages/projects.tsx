@@ -385,7 +385,7 @@ export default function ProjectsPage() {
 
   // Helper function to get user name by ID
   const getUserNameById = (userId: number): string => {
-    if (!userId) return "Unknown";
+    if (!userId) return t("common.none");
     const user = users.find((u) => u.id === userId);
 
     return user?.fullName || `User #${userId}`;
@@ -806,10 +806,10 @@ export default function ProjectsPage() {
       // Prepare the data for export
       const exportData = projects.map((project) => ({
         "Application Name": project.applicationName,
-        "Project Owner": project.projectOwnerEmployee?.fullName || "Unknown",
+        "Project Owner": project.projectOwnerEmployee?.fullName || t("common.none"),
         "Alternative Owner":
-          project.alternativeOwnerEmployee?.fullName || "Unknown",
-        "Owning Unit": project.owningUnit || "Unknown Unit",
+          project.alternativeOwnerEmployee?.fullName || t("common.none"),
+        "Owning Unit": project.owningUnit || t("common.none"),
         "Start Date": project.startDate,
         "Expected Completion Date": project.expectedCompletionDate,
         Status: getStatusText(project.status),
@@ -1280,37 +1280,23 @@ export default function ProjectsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar
-                              name={
-                                project.projectOwnerEmployee?.fullName ||
-                                "Unknown"
-                              }
-                              size="sm"
-                            />
+                          <div className="flex items-center gap-2"> 
                             <span>
                               {project.projectOwnerEmployee?.fullName ||
-                                "Unknown"}
+                                t("common.none")}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Avatar
-                              name={
-                                project.alternativeOwnerEmployee?.fullName ||
-                                "Unknown"
-                              }
-                              size="sm"
-                            />
                             <span>
                               {project.alternativeOwnerEmployee?.fullName ||
-                                "Unknown"}
+                                t("common.none")}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          {project.owningUnit || "Unknown Unit"}
+                          {project.owningUnit || t("common.none")}
                         </TableCell>
                         <TableCell>
                           {project.startDate?.split("T")[0] || ""}
@@ -1506,19 +1492,19 @@ export default function ProjectsPage() {
                       >
                         <div className="flex items-center gap-3">
                           <Avatar
-                            name={employee.fullName || "Unknown"}
+                            name={employee.fullName || t("common.none")}
                             size="sm"
                           />
                           <div className="flex flex-col">
                             <span className="font-medium">
                               {employee.gradeName}{" "}
-                              {employee.fullName || "Unknown User"}
+                              {employee.fullName || t("common.none")}
                             </span>
                             <span className="text-sm text-default-500">
                               {employee.militaryNumber || "N/A"}
                             </span>
                             <span className="text-xs text-default-400">
-                              @{employee.userName || "unknown"}
+                              @{employee.userName || t("common.none")}
                             </span>
                           </div>
                         </div>
@@ -1572,19 +1558,19 @@ export default function ProjectsPage() {
                       >
                         <div className="flex items-center gap-3">
                           <Avatar
-                            name={employee.fullName || "Unknown"}
+                            name={employee.fullName || t("common.none")}
                             size="sm"
                           />
                           <div className="flex flex-col">
                             <span className="font-medium">
                               {employee.gradeName}{" "}
-                              {employee.fullName || "Unknown User"}
+                              {employee.fullName || t("common.none")}
                             </span>
                             <span className="text-sm text-default-500">
                               {employee.militaryNumber || "N/A"}
                             </span>
                             <span className="text-xs text-default-400">
-                              @{employee.userName || "unknown"}
+                              @{employee.userName || t("common.none")}
                             </span>
                           </div>
                         </div>
@@ -1628,19 +1614,19 @@ export default function ProjectsPage() {
                         >
                           <div className="flex items-center gap-3">
                             <Avatar
-                              name={employee.fullName || "Unknown"}
+                              name={employee.fullName || t("common.none")}
                               size="sm"
                             />
                             <div className="flex flex-col">
                               <span className="font-medium">
                                 {employee.gradeName}{" "}
-                                {employee.fullName || "Unknown User"}
+                                {employee.fullName || t("common.none")}
                               </span>
                               <span className="text-sm text-default-500">
                                 {employee.militaryNumber || "N/A"}
                               </span>
                               <span className="text-xs text-default-400">
-                                @{employee.userName || "unknown"}
+                                @{employee.userName || t("common.none")}
                               </span>
                             </div>
                           </div>
@@ -1726,19 +1712,19 @@ export default function ProjectsPage() {
                           >
                             <div className="flex items-center gap-3">
                               <Avatar
-                                name={employee.fullName || "Unknown"}
+                                name={employee.fullName || t("common.none")}
                                 size="sm"
                               />
                               <div className="flex flex-col">
                                 <span className="font-medium">
                                   {employee.gradeName}{" "}
-                                  {employee.fullName || "Unknown User"}
+                                  {employee.fullName || t("common.none")}
                                 </span>
                                 <span className="text-sm text-default-500">
                                   {employee.militaryNumber || "N/A"}
                                 </span>
                                 <span className="text-xs text-default-400">
-                                  @{employee.userName || "unknown"}
+                                  @{employee.userName || t("common.none")}
                                 </span>
                               </div>
                             </div>

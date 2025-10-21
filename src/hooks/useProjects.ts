@@ -14,7 +14,11 @@ import { MemberSearchResult } from "@/types/timeline";
 import SearchService from "@/services/searchService";
 
 // Custom hook for projects data management
-export const useProjects = (initialFilters?: ProjectFilters) => {
+export const useProjects = (options?: {
+  skip?: boolean;
+  initialFilters?: ProjectFilters;
+}) => {
+  const { skip = false, initialFilters } = options || {};
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [owningUnits, setOwningUnits] = useState<OwningUnit[]>([]);
@@ -405,8 +409,10 @@ export const useProjects = (initialFilters?: ProjectFilters) => {
   useEffect(() => {
     if (didInitRef.current) return;
     didInitRef.current = true;
-    refreshData(); // includes loadProjects
-  }, [refreshData]);
+    if (!skip) {
+      refreshData(); // includes loadProjects
+    }
+  }, [refreshData, skip]);
 
   // Reload projects when filters change (skip very first render because refreshData already did it)
   useEffect(() => {

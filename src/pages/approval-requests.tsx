@@ -63,10 +63,23 @@ const usePendingApprovalRequirements = ({
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [filters, setFilters] = useState<Record<string, string>>({});
 
-  const fetchRequirements = async () => {
-    try {
-      setLoading(true);
+  // Track in-flight requests to prevent duplicates
+  const inFlightRef = useRef<string | null>(null);
+  // Track the state key to know when to refetch
+  const stateKeyRef = useRef<string | null>(null);
 
+  const fetchRequirements = useCallback(async () => {
+    const key = JSON.stringify({ currentPage, pageSize, filters });
+
+    // If we're already fetching this exact state, return early
+    if (inFlightRef.current === key) {
+      return;
+    }
+
+    inFlightRef.current = key;
+    setLoading(true);
+
+    try {
       // Use the dedicated getPendingApprovalRequirements method
       const result =
         await projectRequirementsService.getPendingApprovalRequirements({
@@ -85,30 +98,38 @@ const usePendingApprovalRequirements = ({
       setRequirements([]);
     } finally {
       setLoading(false);
+      inFlightRef.current = null;
     }
-  };
+  }, [currentPage, pageSize, filters]);
 
   const updateFilters = useCallback((newFilters: Record<string, string>) => {
     setFilters(newFilters);
     setCurrentPage(1);
   }, []);
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
-  const handlePageSizeChange = (newPageSize: number) => {
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
     setPageSize(newPageSize);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const refreshData = () => {
+  const refreshData = useCallback(() => {
     fetchRequirements();
-  };
+  }, [fetchRequirements]);
 
+  // Use a key-based ref to track when state actually changes
   useEffect(() => {
-    fetchRequirements();
-  }, [currentPage, pageSize, filters]);
+    const key = JSON.stringify({ currentPage, pageSize, filters });
+
+    // Only fetch if the key has changed
+    if (stateKeyRef.current !== key) {
+      stateKeyRef.current = key;
+      fetchRequirements();
+    }
+  }, [currentPage, pageSize, filters, fetchRequirements]);
 
   return {
     requirements,

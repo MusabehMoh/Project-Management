@@ -300,7 +300,7 @@ export function ProjectDetailsModal({
       5: t("projects.production"),
     };
 
-    return statusMap[status] || "Unknown";
+    return statusMap[status] || t("common.none");
   };
 
   return (
