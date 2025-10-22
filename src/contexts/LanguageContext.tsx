@@ -2908,7 +2908,7 @@ const translations = {
     "common.preview": "معاينة",
     "common.download": "تحميل",
     "requirements.validation.nameRequired": "اسم المتطلب مطلوب",
-    "requirements.validation.descriptionRequired": "الوصف مطلوب",
+    "requirements.validation.descriptionRequired": "يرجى إدخال وصف الطلب",
     "requirements.validation.priorityRequired": "الأولوية مطلوبة",
     "requirements.validation.typeRequired": "نوع المتطلب مطلوب",
     "requirements.validation.expectedDateRequired":
