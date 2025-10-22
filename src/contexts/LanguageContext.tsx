@@ -2373,7 +2373,7 @@ const translations = {
       "لا يوجد مطورون يطابقون الفلاتر الحالية. حاول تعديل البحث أو الفلاتر.",
     "developerDashboard.noTeamMembers": "لا يوجد أعضاء فريق",
     "developerDashboard.noTeamMembersDescription":
-      "لم يتم العثور على أعضاء فريق في قسم التطوير.",
+      "لم يتم العثور على أعضاء فريق في قسم البرمجة.",
 
     // Task Extension
     "common.extendTask": "تمديد موعد المهمة",
