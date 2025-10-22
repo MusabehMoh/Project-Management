@@ -10,12 +10,15 @@ public class ProjectDto
     public string ApplicationName { get; set; } = string.Empty;
     public EmployeeDto? ProjectOwnerEmployee { get; set; }
     public EmployeeDto? AlternativeOwnerEmployee { get; set; }
+    public EmployeeDto? ResponsibleUnitManagerEmployee { get; set; }
     public string OwningUnit { get; set; } = string.Empty;
     public int ProjectOwnerId { get; set; }
     public int? AlternativeOwnerId { get; set; }
+    public int? ResponsibleUnitManagerId { get; set; }
     public int OwningUnitId { get; set; }
     public string? CreatebBy { get; set; }
     public List<int> AnalystIds { get; set; } = new List<int>();
+    public List<EmployeeDto> AnalystEmployees { get; set; } = new List<EmployeeDto>();
     public DateTime StartDate { get; set; }
     public DateTime ExpectedCompletionDate { get; set; }
     public string Description { get; set; } = string.Empty;

@@ -25,3 +25,6 @@ ALTER TABLE [Projects]
 DROP COLUMN Analysts 
 
 EXEC sp_rename 'Users.IsVisible', 'IsActive', 'COLUMN';
+
+ALTER TABLE Projects
+ADD ResponsibleUnitManagerId INT NULL;

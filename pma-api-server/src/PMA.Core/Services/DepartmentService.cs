@@ -181,10 +181,7 @@ public class DepartmentService : IDepartmentService
 
     public async Task<IEnumerable<EmployeeDto>> SearchEmployeesInTeamsAsync(string searchTerm)
     {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            return Enumerable.Empty<EmployeeDto>();
-        }
+       
 
         var employees = await _teamRepository.SearchEmployeesInTeamsAsync(searchTerm);
 

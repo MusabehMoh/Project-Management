@@ -118,11 +118,17 @@ public class MappingService : IMappingService
             ApplicationName = project.ApplicationName,
             ProjectOwnerEmployee = project.ProjectOwnerEmployee != null ? MapToEmployeeDto(project.ProjectOwnerEmployee) : null,
             AlternativeOwnerEmployee = project.AlternativeOwnerEmployee != null ? MapToEmployeeDto(project.AlternativeOwnerEmployee) : null,
+            ResponsibleUnitManagerEmployee = project.ResponsibleUnitManagerEmployee != null ? MapToEmployeeDto(project.ResponsibleUnitManagerEmployee) : null,
             OwningUnit = project.OwningUnit,
             ProjectOwnerId = project.ProjectOwnerId,
             AlternativeOwnerId = project.AlternativeOwnerId,
+            ResponsibleUnitManagerId = project.ResponsibleUnitManagerId,
             OwningUnitId = project.OwningUnitId, 
             AnalystIds = project.ProjectAnalysts?.Select(pa => pa.AnalystId).ToList() ?? new List<int>(),
+            AnalystEmployees = project.ProjectAnalysts?.Where(pa => pa.Analyst != null)
+                .Select(pa => MapToEmployeeDto(pa.Analyst!))
+                .ToList() ?? new List<EmployeeDto>(),
+             
             StartDate = project.StartDate,
             ExpectedCompletionDate = project.ExpectedCompletionDate,
             Description = project.Description,
@@ -154,6 +160,7 @@ public class MappingService : IMappingService
             ApplicationName = createDto.ApplicationName,
             ProjectOwnerId = createDto.ProjectOwner,
             AlternativeOwnerId = createDto.AlternativeOwner,
+            ResponsibleUnitManagerId = createDto.ResponsibleManagerId, // Take the first unit as responsible manager
             OwningUnitId = createDto.OwningUnit, 
             StartDate = createDto.StartDate,
             ExpectedCompletionDate = createDto.ExpectedCompletionDate,
@@ -166,7 +173,7 @@ public class MappingService : IMappingService
             UpdatedAt = DateTime.UtcNow,
             // Navigation properties will be populated by the service layer
             ProjectOwner = string.Empty, // Will be populated from database
-            AlternativeOwner = string.Empty, // Will be populated from database
+            AlternativeOwner = string.Empty, // Will be populated from database 
             OwningUnit = string.Empty, // Will be populated from database
             CreatedBy = createdBy,
 
@@ -214,6 +221,21 @@ public class MappingService : IMappingService
             // Populate OwningUnit name from database
             var unit = await _unitRepository.GetByIdAsync(updateDto.OwningUnit.Value);
             project.OwningUnit = unit?.Name ?? string.Empty;
+        }
+
+        // Handle responsible manager
+        if (updateDto.ResponsibleManagerId.HasValue)
+        {
+            project.ResponsibleUnitManagerId = updateDto.ResponsibleManagerId.Value;
+            // Populate ResponsibleUnitManagerEmployee name and navigation property from database
+            var manager = await _employeeRepository.GetByIdAsync(updateDto.ResponsibleManagerId.Value);
+    
+            project.ResponsibleUnitManagerEmployee = manager;
+        }
+        else
+        {
+            project.ResponsibleUnitManagerId = null; 
+            project.ResponsibleUnitManagerEmployee = null;
         }
 
         if (updateDto.Analysts != null)
@@ -281,6 +303,14 @@ public class MappingService : IMappingService
             var altOwner = await _employeeRepository.GetByIdAsync(project.AlternativeOwnerId.Value);
             project.AlternativeOwner = altOwner?.FullName;
             project.AlternativeOwnerEmployee = altOwner;
+        }
+
+        // Populate ResponsibleUnitManagerEmployee name and navigation property
+        if (project.ResponsibleUnitManagerId.HasValue)
+        {
+            var manager = await _employeeRepository.GetByIdAsync(project.ResponsibleUnitManagerId.Value);
+      
+            project.ResponsibleUnitManagerEmployee = manager;
         }
 
         // Populate OwningUnit name
@@ -731,8 +761,7 @@ public class MappingService : IMappingService
     public PMA.Core.Entities.Task MapToAdHocTask(CreateAdHocTaskDto createAdHocTaskDto)
     {
         return new PMA.Core.Entities.Task
-        {
-            SprintId = 1, // Default sprint for adhoc tasks
+        { 
             Name = createAdHocTaskDto.Name,
             Description = createAdHocTaskDto.Description,
             StartDate = createAdHocTaskDto.StartDate,

@@ -4,6 +4,7 @@ export interface Project {
   // Employee objects for project owners
   projectOwnerEmployee?: Employee; // Full employee object for project owner
   alternativeOwnerEmployee?: Employee; // Full employee object for alternative owner
+  responsibleUnitManagerEmployee?: Employee; // Full employee object for responsible manager
   owningUnit: string; // Display name for owning unit
   // Numeric IDs for edit/create operations
   projectOwnerId: number; // Actual ID for project owner (prsId)
@@ -11,7 +12,9 @@ export interface Project {
   owningUnitId: number; // Actual ID for owning unit
   analysts?: string; // Display names for analysts (comma-separated)
   analystIds?: number[]; // Actual IDs for analysts
+  analystEmployees?: Employee[]; // Full employee objects for analysts
   managerIds?: number[]; // Actual IDs for managers
+  managerEmployees?: Employee[]; // Full employee objects for managers
   startDate: string;
   expectedCompletionDate: string;
   description: string;
@@ -64,7 +67,7 @@ export interface ProjectFormData {
   alternativeOwner: number; // Numeric ID for alternative owner (prsId)
   owningUnit: number; // Numeric ID for owning unit
   analysts?: number[]; // Array of numeric IDs for analysts
-  managers?: number[]; // Array of numeric IDs for managers
+  responsibleManagerId?: number; // Single numeric ID for responsible manager
   startDate: any; // CalendarDate | null
   expectedCompletionDate: any; // CalendarDate | null
   description: string;
@@ -110,7 +113,7 @@ export interface CreateProjectRequest {
   alternativeOwner?: number; // Numeric ID for alternative owner (prsId)
   owningUnit: number; // Numeric ID for owning unit
   analysts?: number[]; // Array of numeric IDs for analysts
-  units: number[];
+  responsibleManagerId?: number | null; // Single responsible manager ID
   startDate: string;
   expectedCompletionDate: string;
   description: string;
@@ -122,4 +125,5 @@ export interface CreateProjectRequest {
 
 export interface UpdateProjectRequest extends Partial<CreateProjectRequest> {
   id: number;
+  responsibleManagerId?: number | null;
 }

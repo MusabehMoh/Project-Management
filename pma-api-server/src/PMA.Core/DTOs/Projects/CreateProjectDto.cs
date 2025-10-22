@@ -13,7 +13,9 @@ public class CreateProjectDto
     [Required(ErrorMessage = "Project owner is required")]
     public int ProjectOwner { get; set; }
     public int[]? Analysts { get; set; }
+    public int[]? Units { get; set; }
     public int? AlternativeOwner { get; set; }
+    public int? ResponsibleManagerId { get; set; }
 
     [Required(ErrorMessage = "Owning unit is required")]
     public int OwningUnit { get; set; }

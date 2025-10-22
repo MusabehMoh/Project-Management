@@ -11,9 +11,11 @@ public class UpdateProjectDto
 
     public int? ProjectOwner { get; set; }
     public int? AlternativeOwner { get; set; }
+    public int? ResponsibleManagerId { get; set; }
     public int? OwningUnit { get; set; }
 
     public int[]? Analysts { get; set; }
+    public int[]? Units { get; set; }
 
     public DateTime? StartDate { get; set; }
     public DateTime? ExpectedCompletionDate { get; set; }

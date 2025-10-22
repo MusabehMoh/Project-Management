@@ -93,6 +93,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         query = query.Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN due to nullable FK
+            .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!)
                 .ThenInclude(pa => pa.Analyst);
 
@@ -121,6 +122,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
 
         var totalCount = await query.CountAsync();
         var projects = await query
+            .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
             .ToListAsync();
@@ -136,6 +138,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.Tasks)
             .Include(p => p.ProjectRequirements)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN for optional alternative owner
+            .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!) // LEFT JOIN for optional analysts collection
                 .ThenInclude(pa => pa.Analyst)
             .FirstOrDefaultAsync(p => p.Id == id);
@@ -147,6 +150,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN for optional alternative owner
+             .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!) // LEFT JOIN for optional analysts collection
                 .ThenInclude(pa => pa.Analyst)
             .Where(p =>
@@ -186,6 +190,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.OwningUnitEntity)
             .Include(p => p.ProjectRequirements)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN for optional alternative owner
+             .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!) // LEFT JOIN for optional analysts collection
                 .ThenInclude(pa => pa.Analyst)
             .AsQueryable();
