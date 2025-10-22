@@ -1737,12 +1737,12 @@ export default function ProjectRequirementsPage() {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex gap-2 items-center justify-between border-b border-default-200 px-6 py-4">
-                <div className="flex gap-2 items-center">
+              <ModalHeader className="border-b border-default-200 px-6 py-4">
+                <div className="flex gap-3 items-center">
                   <div className="p-2 bg-secondary-50 dark:bg-secondary-100/10 rounded-lg">
                     <Sparkles className="w-5 h-5 text-secondary" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-lg font-semibold">
                       {t("requirements.aiSuggest")}
                     </h3>
@@ -1752,18 +1752,19 @@ export default function ProjectRequirementsPage() {
                         : "AI Requirements Analyst"}
                     </p>
                   </div>
+                  {conversationHistory.length > 0 && (
+                    <Button
+                      color="danger"
+                      size="sm"
+                      startContent={<RotateCcw className="w-4 h-4" />}
+                      variant="flat"
+                      onPress={handleClearConversation}
+                      className="me-8"
+                    >
+                      {t("requirements.clearHistory")}
+                    </Button>
+                  )}
                 </div>
-                {conversationHistory.length > 0 && (
-                  <Button
-                    color="danger"
-                    size="sm"
-                    startContent={<RotateCcw className="w-4 h-4" />}
-                    variant="flat"
-                    onPress={handleClearConversation}
-                  >
-                    {t("requirements.clearHistory")}
-                  </Button>
-                )}
               </ModalHeader>
               <ModalBody className="px-6 py-4">
                 <div className="space-y-4">
