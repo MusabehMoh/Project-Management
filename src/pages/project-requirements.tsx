@@ -4,7 +4,7 @@ import type {
   ProjectRequirementAttachment,
 } from "@/types/projectRequirement";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -40,6 +40,7 @@ import {
 import { Skeleton } from "@heroui/skeleton";
 import { DatePicker } from "@heroui/date-picker";
 import { Tooltip } from "@heroui/tooltip";
+import { ScrollShadow } from "@heroui/scroll-shadow";
 import {
   Plus,
   Search,
@@ -217,6 +218,9 @@ export default function ProjectRequirementsPage() {
   const [conversationHistory, setConversationHistory] = useState<
     Array<{ role: "user" | "assistant"; content: string; timestamp: number }>
   >([]);
+  
+  // Ref for auto-scrolling conversation
+  const conversationEndRef = useRef<HTMLDivElement>(null);
 
   // Form states
   const [selectedRequirement, setSelectedRequirement] =
@@ -277,6 +281,13 @@ export default function ProjectRequirementsPage() {
   // Check if any filters are active
   const hasActiveFilters =
     searchTerm || statusFilter !== null || priorityFilter;
+
+  // Auto-scroll to bottom when conversation history changes
+  useEffect(() => {
+    if (conversationEndRef.current) {
+      conversationEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [conversationHistory]);
 
   // Handle highlighting and scrolling for specific requirements
   useEffect(() => {
@@ -1758,76 +1769,84 @@ export default function ProjectRequirementsPage() {
                 <div className="space-y-4">
                   {/* Conversation History */}
                   {conversationHistory.length > 0 ? (
-                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                      {conversationHistory.map((msg, index) => (
-                        <div
-                          key={index}
-                          className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                        >
-                          {msg.role === "assistant" && (
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary-100 dark:bg-secondary-100/20 flex items-center justify-center mt-1">
-                              <Sparkles className="w-4 h-4 text-secondary" />
-                            </div>
-                          )}
+                    <ScrollShadow 
+                      hideScrollBar
+                      className="max-h-[500px]"
+                      size={20}
+                    >
+                      <div className="space-y-3 pr-2">
+                        {conversationHistory.map((msg, index) => (
                           <div
-                            className={`max-w-[75%] ${
-                              msg.role === "user"
-                                ? "bg-primary-500 text-white shadow-md"
-                                : "bg-default-100 dark:bg-default-50/10 border border-default-200"
-                            } rounded-2xl`}
-                            dir={language === "ar" ? "rtl" : "ltr"}
+                            key={index}
+                            className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                           >
-                            <div className="px-4 py-3">
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                {msg.content}
-                              </p>
-                              <p
-                                className={`text-xs mt-2 ${
-                                  msg.role === "user"
-                                    ? "text-white/70"
-                                    : "text-default-400"
-                                }`}
-                              >
-                                {new Date(msg.timestamp).toLocaleTimeString(
-                                  language === "ar" ? "ar-SA" : "en-US",
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },
-                                )}
-                              </p>
-                            </div>
                             {msg.role === "assistant" && (
-                              <div className="border-t border-default-200 px-4 py-2">
-                                <Button
-                                  className="text-xs"
-                                  color="secondary"
-                                  size="sm"
-                                  startContent={
-                                    <Check className="w-3.5 h-3.5" />
-                                  }
-                                  variant="flat"
-                                  onPress={() =>
-                                    handleUseAISuggestion(msg.content)
-                                  }
+                              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary-100 dark:bg-secondary-100/20 flex items-center justify-center mt-1">
+                                <Sparkles className="w-4 h-4 text-secondary" />
+                              </div>
+                            )}
+                            <div
+                              className={`max-w-[75%] ${
+                                msg.role === "user"
+                                  ? "bg-primary-500 text-white shadow-md"
+                                  : "bg-default-100 dark:bg-default-50/10 border border-default-200"
+                              } rounded-2xl`}
+                              dir={language === "ar" ? "rtl" : "ltr"}
+                            >
+                              <div className="px-4 py-3">
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                  {msg.content}
+                                </p>
+                                <p
+                                  className={`text-xs mt-2 ${
+                                    msg.role === "user"
+                                      ? "text-white/70"
+                                      : "text-default-400"
+                                  }`}
                                 >
-                                  {language === "ar"
-                                    ? "استخدم هذا الوصف"
-                                    : "Use This Description"}
-                                </Button>
+                                  {new Date(msg.timestamp).toLocaleTimeString(
+                                    language === "ar" ? "ar-SA" : "en-US",
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )}
+                                </p>
+                              </div>
+                              {msg.role === "assistant" && (
+                                <div className="border-t border-default-200 px-4 py-2">
+                                  <Button
+                                    className="text-xs"
+                                    color="secondary"
+                                    size="sm"
+                                    startContent={
+                                      <Check className="w-3.5 h-3.5" />
+                                    }
+                                    variant="flat"
+                                    onPress={() =>
+                                      handleUseAISuggestion(msg.content)
+                                    }
+                                  >
+                                    {language === "ar"
+                                      ? "استخدم هذا الوصف"
+                                      : "Use This Description"}
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                            {msg.role === "user" && (
+                              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-100/20 flex items-center justify-center mt-1">
+                                <span className="text-sm font-semibold text-primary">
+                                  {language === "ar" ? "أ" : "U"}
+                                </span>
                               </div>
                             )}
                           </div>
-                          {msg.role === "user" && (
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-100/20 flex items-center justify-center mt-1">
-                              <span className="text-sm font-semibold text-primary">
-                                {language === "ar" ? "أ" : "U"}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                        {/* Invisible element for auto-scroll */}
+                        <div ref={conversationEndRef} />
+                      </div>
+                    </ScrollShadow>
                   ) : (
                     <div className="text-center py-8 space-y-3">
                       <div className="w-16 h-16 mx-auto bg-secondary-50 dark:bg-secondary-100/10 rounded-full flex items-center justify-center">
@@ -1896,6 +1915,7 @@ export default function ProjectRequirementsPage() {
                             : t("requirements.aiPromptPlaceholder")
                         }
                         value={aiPromptText}
+                        onValueChange={setAIPromptText}
                         onKeyDown={(e) => {
                           if (
                             e.key === "Enter" &&
@@ -1905,12 +1925,6 @@ export default function ProjectRequirementsPage() {
                             e.preventDefault();
                             handleAIGenerate();
                           }
-                        }}
-                        minRows={1}
-                        maxRows={5}
-                        classNames={{
-                          input: "text-sm",
-                          inputWrapper: "min-h-[44px] !border-default-200 hover:!border-default-300 focus-within:!border-default-200 data-[focus=true]:!border-default-200 data-[hover=true]:!border-default-300",
                         }}
                       />
                       <Button

@@ -601,74 +601,78 @@ export default function RequirementsPage() {
 
                 {/* Requirements Statistics */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">
+                  <h3 className="text-lg font-semibold mb-4">
                     {t("requirements.requirementsCount")}
                   </h3>
-                  <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">
+                  
+                  {/* Modern Minimalist Stats - Same as Cards */}
+                  <div className="flex gap-3 mb-4">
+                    <div className="flex-1 bg-default-50 dark:bg-default-100/10 rounded-lg px-3 py-2">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-semibold text-default-700">
                           {selectedProject.requirementsCount}
-                        </div>
-                        <div className="text-xs text-default-500">
-                          {t("requirements.requirementsCount")}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-success">
-                          {selectedProject.completedRequirements}
-                        </div>
-                        <div className="text-xs text-default-500">
-                          {t("requirements.completedRequirements")}
-                        </div>
+                        </span>
+                        <span className="text-xs text-default-500">
+                          {t("requirements.total")}
+                        </span>
                       </div>
                     </div>
-
-                    {/* Progress Bar */}
-                    <div className="space-y-1 mt-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-default-600">
-                          {t("common.progress")}
+                    <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-semibold text-success-600 dark:text-success-500">
+                          {selectedProject.completedRequirements}
                         </span>
-                        <span className="text-default-500">
-                          {selectedProject.requirementsCount > 0
-                            ? Math.round(
-                                (selectedProject.completedRequirements /
-                                  selectedProject.requirementsCount) *
-                                  100,
-                              )
-                            : 0}
-                          %
+                        <span className="text-xs text-success-600/70 dark:text-success-500/70">
+                          {t("requirements.done")}
                         </span>
                       </div>
-                      <div className="w-full bg-default-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-300 ${
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-default-600">
+                        {t("common.progress")}
+                      </span>
+                      <span className="text-default-500">
+                        {selectedProject.requirementsCount > 0
+                          ? Math.round(
+                              (selectedProject.completedRequirements /
+                                selectedProject.requirementsCount) *
+                                100,
+                            )
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <div className="w-full bg-default-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          selectedProject.requirementsCount > 0
+                            ? (selectedProject.completedRequirements /
+                                selectedProject.requirementsCount) *
+                                100 >=
+                              70
+                              ? "bg-success"
+                              : (selectedProject.completedRequirements /
+                                    selectedProject.requirementsCount) *
+                                    100 >=
+                                  40
+                                ? "bg-warning"
+                                : "bg-danger"
+                            : "bg-default-300"
+                        }`}
+                        style={{
+                          width: `${
                             selectedProject.requirementsCount > 0
                               ? (selectedProject.completedRequirements /
                                   selectedProject.requirementsCount) *
-                                  100 >=
-                                70
-                                ? "bg-success"
-                                : (selectedProject.completedRequirements /
-                                      selectedProject.requirementsCount) *
-                                      100 >=
-                                    40
-                                  ? "bg-warning"
-                                  : "bg-danger"
-                              : "bg-default-300"
-                          }`}
-                          style={{
-                            width: `${
-                              selectedProject.requirementsCount > 0
-                                ? (selectedProject.completedRequirements /
-                                    selectedProject.requirementsCount) *
-                                  100
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
+                                100
+                              : 0
+                          }%`,
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
