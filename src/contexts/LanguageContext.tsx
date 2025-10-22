@@ -2756,7 +2756,7 @@ const translations = {
     "requirements.total": "إجمالي المتطلبات",
     "requirements.done": "منجز",
     "requirements.lastActivity": "آخر نشاط",
-    "requirements.viewRequirements": "عرض المتطلبات",
+    "requirements.viewRequirements": "عرض و إضافة المتطلبات",
     "requirements.viewDetails": "عرض التفاصيل",
     "requirements.projectDetails": "تفاصيل المشروع",
     "requirements.projectId": "رقم المشروع",
