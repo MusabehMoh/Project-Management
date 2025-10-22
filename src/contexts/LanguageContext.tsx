@@ -887,6 +887,13 @@ const translations = {
     "projects.searchByName": "Search by name, military number, or username",
     "projects.noRemarks": "No remarks",
     "projects.projectsFound": "{count} projects found",
+    "projects.filterByStatus": "Filter by Status",
+    "projects.allStatuses": "All Statuses",
+    "projects.sortBy": "Sort By",
+    "projects.sortByLastActivity": "Last Activity",
+    "projects.sortByName": "Project Name",
+    "projects.sortByRequirementsCount": "Requirements Count",
+    "projects.sortByCompletionRate": "Completion Rate",
 
     // Project Filter Messages
     "projects.filterActive": "Filter Active",
@@ -2663,6 +2670,13 @@ const translations = {
     "projects.saveError": "خطأ في حفظ المشروع",
     "projects.saveErrorDescription": "يرجى التحقق من إدخالك والمحاولة مرة أخرى",
     "projects.projectsFound": "{count} مشروع موجود",
+    "projects.filterByStatus": "تصفية حسب الحالة",
+    "projects.allStatuses": "جميع الحالات",
+    "projects.sortBy": "ترتيب حسب",
+    "projects.sortByLastActivity": "آخر نشاط",
+    "projects.sortByName": "اسم المشروع",
+    "projects.sortByRequirementsCount": "عدد المتطلبات",
+    "projects.sortByCompletionRate": "معدل الإنجاز",
 
     // Project Filter Messages
     "projects.filterActive": "الفلتر نشط",

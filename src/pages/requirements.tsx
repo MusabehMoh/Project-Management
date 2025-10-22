@@ -35,7 +35,7 @@ export default function RequirementsPage() {
   usePageTitle("requirements.title");
 
   // Phases hook for dynamic phase management
-  const { getProjectStatusName, getProjectStatusColor } = useProjectStatus();
+  const { phases, getProjectStatusName, getProjectStatusColor } = useProjectStatus();
 
   // Drawer state for project details
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -62,6 +62,10 @@ export default function RequirementsPage() {
 
   // Local debounced search to avoid re-rendering and focus loss on each keystroke
   const [localSearch, setLocalSearch] = useState(assignedProjectsSearch || "");
+  
+  // Additional filters
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("lastActivity");
 
   useEffect(() => {
     setLocalSearch(assignedProjectsSearch || "");
@@ -84,10 +88,12 @@ export default function RequirementsPage() {
   const resetFilters = () => {
     setLocalSearch("");
     handleAssignedProjectsSearchChange("");
+    setStatusFilter("all");
+    setSortBy("lastActivity");
   };
 
   // Check if any filters are active
-  const hasActiveFilters = localSearch.trim() !== "";
+  const hasActiveFilters = localSearch.trim() !== "" || statusFilter !== "all" || sortBy !== "lastActivity";
 
   useEffect(() => {
     loadAssignedProjects();
@@ -165,6 +171,33 @@ export default function RequirementsPage() {
     setIsDrawerOpen(true);
   };
 
+  // Filter and sort assigned projects
+  const filteredAndSortedProjects = assignedProjects
+    .filter((project) => {
+      // Status filter
+      if (statusFilter !== "all" && project.status.toString() !== statusFilter) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      // Sort logic
+      switch (sortBy) {
+        case "lastActivity":
+          return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+        case "requirementsCount":
+          return b.requirementsCount - a.requirementsCount;
+        case "completionRate":
+          const aRate = a.requirementsCount > 0 ? (a.completedRequirements / a.requirementsCount) * 100 : 0;
+          const bRate = b.requirementsCount > 0 ? (b.completedRequirements / b.requirementsCount) * 100 : 0;
+          return bRate - aRate;
+        case "name":
+          return a.applicationName.localeCompare(b.applicationName);
+        default:
+          return 0;
+      }
+    });
+
   // Show global loading logo only for non-assigned-projects loading states
   if (loading && !assignedProjectsLoading) {
     return (
@@ -217,7 +250,7 @@ export default function RequirementsPage() {
 
             {/* Filters */}
             <div className="flex flex-col lg:flex-row gap-3 w-full lg:items-center lg:justify-between">
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-wrap">
                 <Input
                   aria-label={t("common.search")}
                   className="w-full sm:w-80"
@@ -225,6 +258,51 @@ export default function RequirementsPage() {
                   value={localSearch}
                   onValueChange={(val) => setLocalSearch(val)}
                 />
+                
+                {/* Status Filter */}
+                <Select
+                  aria-label={t("projects.filterByStatus")}
+                  className="w-full sm:w-52"
+                  defaultSelectedKeys={["all"]}
+                  items={[
+                    { key: "all", label: t("projects.allStatuses") },
+                    ...phases.map((phase) => ({
+                      key: phase.code.toString(),
+                      label: language === "ar" ? phase.nameAr : phase.nameEn,
+                    })),
+                  ]}
+                  label={t("projects.filterByStatus")}
+                  selectedKeys={[statusFilter]}
+                  size="md"
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string;
+                    setStatusFilter(value || "all");
+                  }}
+                >
+                  {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                </Select>
+
+                {/* Sort By Filter */}
+                <Select
+                  aria-label={t("projects.sortBy")}
+                  className="w-full sm:w-52"
+                  defaultSelectedKeys={["lastActivity"]}
+                  items={[
+                    { key: "lastActivity", label: t("projects.sortByLastActivity") },
+                    { key: "name", label: t("projects.sortByName") },
+                    { key: "requirementsCount", label: t("projects.sortByRequirementsCount") },
+                    { key: "completionRate", label: t("projects.sortByCompletionRate") },
+                  ]}
+                  label={t("projects.sortBy")}
+                  selectedKeys={[sortBy]}
+                  size="md"
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string;
+                    setSortBy(value || "lastActivity");
+                  }}
+                >
+                  {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                </Select>
               </div>
 
               {/* Page Size Selector */}
@@ -281,7 +359,7 @@ export default function RequirementsPage() {
                 <span className="text-sm text-default-500">
                   {t("projects.projectsFound").replace(
                     "{count}",
-                    totalAssignedProjects.toString(),
+                    filteredAndSortedProjects.length.toString(),
                   )}
                 </span>
               </div>
@@ -336,7 +414,7 @@ export default function RequirementsPage() {
                   </Card>
                 ))}
               </div>
-            ) : !assignedProjects || assignedProjects.length === 0 ? (
+            ) : !filteredAndSortedProjects || filteredAndSortedProjects.length === 0 ? (
               <Card>
                 <CardBody className="text-center py-12">
                   <div className="flex flex-col items-center space-y-4">
@@ -345,10 +423,14 @@ export default function RequirementsPage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-default-700">
-                        {t("requirements.noAssignedProjects")}
+                        {hasActiveFilters 
+                          ? t("requirements.noResultsTitle")
+                          : t("requirements.noAssignedProjects")}
                       </h3>
                       <p className="text-default-500">
-                        {t("requirements.checkBackLater")}
+                        {hasActiveFilters
+                          ? t("requirements.noResultsDescription")
+                          : t("requirements.checkBackLater")}
                       </p>
                     </div>
                   </div>
@@ -356,7 +438,7 @@ export default function RequirementsPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {assignedProjects?.map((project) => (
+                {filteredAndSortedProjects?.map((project) => (
                   <Card
                     key={project.id}
                     className="hover:shadow-md transition-shadow"
