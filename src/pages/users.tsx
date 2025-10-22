@@ -1023,7 +1023,7 @@ export default function UsersPage() {
                           {t("actions.defaultActionsForRole")} &quot;
                           {getSelectedRoleData()?.name}&quot;
                         </p>
-                        <Card className="bg-success-50 border border-success-200">
+                        <Card className="bg-default-50 border border-default-200">
                           <CardBody className="py-3">
                             {/* Group role default actions by category */}
                             {Object.entries(
@@ -1044,7 +1044,7 @@ export default function UsersPage() {
                             ).map(([category, categoryActions]) => (
                               <div key={category} className="mb-3 last:mb-0">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-xs font-medium text-success-700 uppercase tracking-wider">
+                                  <span className="text-xs font-medium text-default-700 uppercase tracking-wider">
                                     {category}
                                   </span>
                                   <Chip
@@ -1072,7 +1072,7 @@ export default function UsersPage() {
                                 </div>
                               </div>
                             ))}
-                            <p className="text-tiny text-success-600 mt-3 pt-2 border-t border-success-200">
+                            <p className="text-tiny text-default-600 mt-3 pt-2 border-t border-default-200">
                               {t("actions.defaultActionsNote")}
                             </p>
                           </CardBody>
@@ -1101,7 +1101,7 @@ export default function UsersPage() {
 
                           {/* Selected Actions Display */}
                           {selectedAdditionalActions.length > 0 && (
-                            <Card className="bg-success-50 border border-success-200">
+                            <Card className="bg-default-50 border border-default-200">
                               <CardBody className="py-3">
                                 <div className="flex flex-wrap gap-2">
                                   {actions
@@ -1128,7 +1128,7 @@ export default function UsersPage() {
                                       </Chip>
                                     ))}
                                 </div>
-                                <p className="text-tiny text-success-600 mt-2">
+                                <p className="text-tiny text-default-600 mt-2">
                                   {selectedAdditionalActions.length}{" "}
                                   {t("actions.additionalActionsSelected")}
                                 </p>
