@@ -52,6 +52,8 @@ import {
 } from "@/components/icons";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { useUsers, useRoles, useActions } from "@/hooks/useUsers";
+import { ApiError } from "@/services/api/client";
+import { translateBackendError } from "@/utils/errorTranslation";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 import { usePageTitle } from "@/hooks";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
@@ -348,10 +350,22 @@ export default function UsersPage() {
       onOpenChange();
       resetForm();
     } catch (error) {
+      // Extract error message from the error object
+      let errorMessage: string | undefined;
+      
+      // Check if it's an ApiError with detailed error info
+      if (error instanceof ApiError && error.data?.error) {
+        errorMessage = translateBackendError(error.data.error, t);
+      } else if (error instanceof ApiError && error.data?.message) {
+        errorMessage = translateBackendError(error.data.message, t);
+      } else if (error instanceof Error) {
+        errorMessage = translateBackendError(error.message, t);
+      }
+
       if (isEditing) {
-        toasts.updateError();
+        toasts.updateError(errorMessage);
       } else {
-        toasts.createError();
+        toasts.createError(errorMessage);
       }
     } finally {
       setIsSavingUser(false);
@@ -367,7 +381,19 @@ export default function UsersPage() {
         onDeleteOpenChange();
         setSelectedUser(null);
       } catch (error) {
-        toasts.deleteError();
+        // Extract error message from the error object
+        let errorMessage: string | undefined;
+        
+        // Check if it's an ApiError with detailed error info
+        if (error instanceof ApiError && error.data?.error) {
+          errorMessage = translateBackendError(error.data.error, t);
+        } else if (error instanceof ApiError && error.data?.message) {
+          errorMessage = translateBackendError(error.data.message, t);
+        } else if (error instanceof Error) {
+          errorMessage = translateBackendError(error.message, t);
+        }
+        
+        toasts.deleteError(errorMessage);
       } finally {
         setIsDeletingUser(false);
       }
@@ -1023,7 +1049,7 @@ export default function UsersPage() {
                           {t("actions.defaultActionsForRole")} &quot;
                           {getSelectedRoleData()?.name}&quot;
                         </p>
-                        <Card className="bg-success-50 border border-success-200">
+                        <Card className="bg-default-50 border border-default-200">
                           <CardBody className="py-3">
                             {/* Group role default actions by category */}
                             {Object.entries(
@@ -1044,7 +1070,7 @@ export default function UsersPage() {
                             ).map(([category, categoryActions]) => (
                               <div key={category} className="mb-3 last:mb-0">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-xs font-medium text-success-700 uppercase tracking-wider">
+                                  <span className="text-xs font-medium text-default-700 uppercase tracking-wider">
                                     {category}
                                   </span>
                                   <Chip
@@ -1072,7 +1098,7 @@ export default function UsersPage() {
                                 </div>
                               </div>
                             ))}
-                            <p className="text-tiny text-success-600 mt-3 pt-2 border-t border-success-200">
+                            <p className="text-tiny text-default-600 mt-3 pt-2 border-t border-default-200">
                               {t("actions.defaultActionsNote")}
                             </p>
                           </CardBody>
@@ -1101,34 +1127,66 @@ export default function UsersPage() {
 
                           {/* Selected Actions Display */}
                           {selectedAdditionalActions.length > 0 && (
-                            <Card className="bg-success-50 border border-success-200">
+                            <Card className="bg-default-50 border border-default-200">
                               <CardBody className="py-3">
-                                <div className="flex flex-wrap gap-2">
-                                  {actions
+                                {/* Group additional actions by category */}
+                                {Object.entries(
+                                  actions
                                     .filter((action) =>
                                       selectedAdditionalActions.includes(
                                         action.id,
                                       ),
                                     )
-                                    .map((action) => (
+                                    .reduce(
+                                      (acc, action) => {
+                                        const category = getActionCategory(action);
+
+                                        if (!acc[category]) {
+                                          acc[category] = [];
+                                        }
+
+                                        acc[category].push(action);
+
+                                        return acc;
+                                      },
+                                      {} as { [categoryName: string]: Action[] },
+                                    ),
+                                ).map(([category, categoryActions]) => (
+                                  <div key={category} className="mb-3 last:mb-0">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-xs font-medium text-default-700 uppercase tracking-wider">
+                                        {category}
+                                      </span>
                                       <Chip
-                                        key={action.id}
                                         color="success"
                                         size="sm"
                                         variant="flat"
-                                        onClose={() => {
-                                          setSelectedAdditionalActions(
-                                            selectedAdditionalActions.filter(
-                                              (id) => id !== action.id,
-                                            ),
-                                          );
-                                        }}
                                       >
-                                        {action.description}
+                                        {categoryActions.length}
                                       </Chip>
-                                    ))}
-                                </div>
-                                <p className="text-tiny text-success-600 mt-2">
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {categoryActions.map((action) => (
+                                        <Chip
+                                          key={action.id}
+                                          color="success"
+                                          size="sm"
+                                          variant="flat"
+                                          onClose={() => {
+                                            setSelectedAdditionalActions(
+                                              selectedAdditionalActions.filter(
+                                                (id) => id !== action.id,
+                                              ),
+                                            );
+                                          }}
+                                        >
+                                          {action.description}
+                                        </Chip>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                                <p className="text-tiny text-default-600 mt-3 pt-2 border-t border-default-200">
                                   {selectedAdditionalActions.length}{" "}
                                   {t("actions.additionalActionsSelected")}
                                 </p>

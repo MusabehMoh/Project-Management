@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
@@ -169,6 +170,31 @@ public class UsersController : ApiBaseController
                 Message = "User created successfully"
             };
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Invalid operation while creating user. UserName: {UserName}, PrsId: {PrsId}",
+                request?.UserName, request?.PrsId);
+
+            return Error<User>("Cannot create user", ex.Message);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogWarning(ex, "Database constraint violation while creating user. UserName: {UserName}, PrsId: {PrsId}",
+                request?.UserName, request?.PrsId);
+
+            // Check if it's a unique constraint violation
+            var errorMessage = "User already exists";
+            if (ex.InnerException?.Message.Contains("IX_Users_UserName") == true)
+            {
+                errorMessage = $"User with username '{request?.UserName}' already exists.";
+            }
+            else if (ex.InnerException?.Message.Contains("PrsId") == true)
+            {
+                errorMessage = $"User with PRS ID '{request?.PrsId}' already exists.";
+            }
+
+            return Error<User>("Cannot create user", errorMessage);
         }
         catch (Exception ex)
         {

@@ -48,6 +48,20 @@ public class UserService : IUserService
 
     public async System.Threading.Tasks.Task<User> CreateUserAsync(User user)
     {
+        // Check if user already exists by UserName
+        var existingUserByUsername = await _userRepository.GetByUserNameAsync(user.UserName);
+        if (existingUserByUsername != null)
+        {
+            throw new InvalidOperationException($"User with username '{user.UserName}' already exists.");
+        }
+
+        // Check if user already exists by PrsId
+        var existingUserByPrsId = await _userRepository.GetByPrsIdAsync(user.PrsId);
+        if (existingUserByPrsId != null)
+        {
+            throw new InvalidOperationException($"User with PRS ID '{user.PrsId}' already exists.");
+        }
+
         user.CreatedAt = DateTime.UtcNow;
         user.UpdatedAt = DateTime.UtcNow;
         return await _userRepository.AddAsync(user);
@@ -92,12 +106,21 @@ public class UserService : IUserService
     public async System.Threading.Tasks.Task<bool> DeleteUserAsync(int id)
     {
         var user = await _userRepository.GetByIdAsync(id);
-        if (user != null)
+        if (user == null)
         {
-            await _userRepository.DeleteAsync(user);
-            return true;
+            return false;
         }
-        return false;
+
+        // Check for dependencies before deletion
+        var dependencies = await _userRepository.CheckUserDependenciesAsync(id);
+        if (dependencies.Any())
+        {
+            var errorMessage = $"Cannot delete user. User is referenced in: {string.Join(", ", dependencies)}";
+            throw new InvalidOperationException(errorMessage);
+        }
+
+        await _userRepository.DeleteAsync(user);
+        return true;
     }
 
     public async System.Threading.Tasks.Task<User?> GetUserWithRolesAndActionsAsync(int id)

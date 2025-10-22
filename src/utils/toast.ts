@@ -118,11 +118,11 @@ export const createTimelineToasts = (t: (key: string) => string) => ({
 // General toast helpers using the translations
 export const createGeneralToasts = (t: (key: string) => string) => ({
   createSuccess: () => showSuccessToast(t("toast.createSuccess")),
-  createError: () => showErrorToast(t("toast.createError")),
+  createError: (message?: string) => showErrorToast(t("toast.createError"), message),
   updateSuccess: () => showSuccessToast(t("toast.updateSuccess")),
-  updateError: () => showErrorToast(t("toast.updateError")),
+  updateError: (message?: string) => showErrorToast(t("toast.updateError"), message),
   deleteSuccess: () => showSuccessToast(t("toast.deleteSuccess")),
-  deleteError: () => showErrorToast(t("toast.deleteError")),
+  deleteError: (message?: string) => showErrorToast(t("toast.deleteError"), message),
   saveSuccess: () => showSuccessToast(t("toast.saveSuccess")),
   saveError: () => showErrorToast(t("toast.saveError")),
 });

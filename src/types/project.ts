@@ -83,6 +83,14 @@ export interface ProjectStats {
   underTesting: number; // Under Testing (قيد الأختبار)
   underDevelopment: number; // Under Development (قيد التطوير)
   production: number; // Production Environment (بيئة الانتاج)
+  statusNames?: {
+    new: { en: string; ar: string };
+    underStudy: { en: string; ar: string };
+    underDevelopment: { en: string; ar: string };
+    underTesting: { en: string; ar: string };
+    production: { en: string; ar: string };
+    delayed: { en: string; ar: string };
+  };
 }
 
 export interface ApiResponse<T> {

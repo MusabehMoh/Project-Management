@@ -99,6 +99,8 @@ This is a comprehensive Project Management Application (PMA) built with modern w
   - `api/` - API service classes and interfaces
 - `types/` - TypeScript type definitions
 - `utils/` - Utility functions
+  - `errorTranslation.ts` - Backend error message translation utility
+  - `toast.ts` - Toast notification helpers with custom message support
 - `styles/` - Global CSS styles
 - `layouts/` - Page layout components
 - create directories for everything new to keep things organized.
@@ -120,7 +122,11 @@ This is a comprehensive Project Management Application (PMA) built with modern w
   - `DTOs/` - Data Transfer Objects
   - `Enums/` - Enumerations (TaskStatus, Priority, RoleCodes)
   - `Interfaces/` - Service interfaces
+    - `IUserRepository` - Includes `CheckUserDependenciesAsync()` and `GetByPrsIdAsync()`
+    - `IUserService` - User management with validation
 - `src/PMA.Infrastructure/` - Data access and infrastructure
+  - `Repositories/` - Data access layer
+    - `UserRepository` - Implements dependency checking and duplicate detection
 - **Database**: SQL Server (DESKTOP-88VGRA9, Database: PMA)
 - **Build Command**: `dotnet build` (in PMA.Api directory)
 - **Run Command**: `dotnet run` (in PMA.Api directory)
@@ -1206,11 +1212,69 @@ public async Task<IActionResult> GetEntities(
 
 ## Error Handling Patterns
 
+### Backend Error Handling (.NET API)
+- **User Deletion Validation**: 
+  - `UserService.DeleteUserAsync()` checks dependencies before deletion via `UserRepository.CheckUserDependenciesAsync()`
+  - Validates references in: TaskAssignments, ProjectRequirements, DesignRequests, SubTasks, CalendarEvents, CalendarEventAssignments, Notifications, Teams
+  - Throws `InvalidOperationException` with detailed dependency list if user has active references
+  - Example error: "Cannot delete user 'username'. The user is referenced in: TaskAssignments (5), ProjectRequirements (3)"
+
+- **Duplicate User Detection**:
+  - `UserService.CreateUserAsync()` validates uniqueness before insert
+  - Checks both `UserName` (via `GetByUserNameAsync()`) and `PrsId` (via `GetByPrsIdAsync()`)
+  - Throws `InvalidOperationException` with specific message: "User with username '{username}' already exists" or "User with PRS ID {prsId} already exists"
+
+- **Database Constraint Violations**:
+  - `UsersController` catches `DbUpdateException` for constraint violations
+  - Parses constraint names (IX_Users_UserName, PK_Users) to provide user-friendly messages
+  - Returns structured `ApiResponse` with error message in `error` field
+
+### Frontend Error Handling
+- **ApiError Structure**: 
+  - Error responses structured as `{ success: false, data: null, error: "message", pagination: null }`
+  - Frontend extracts error from `error.data.error` property
+  - Falls back to `error.message` if `error.data.error` is not available
+
+- **Error Translation System**:
+  - `utils/errorTranslation.ts` provides `translateBackendError()` function
+  - Parses English error patterns and translates to current language (Arabic/English)
+  - Patterns supported:
+    * "Cannot delete user" → dependency list translation
+    * "User with username '{0}' already exists" → username duplication
+    * "User with PRS ID {0} already exists" → PrsId duplication
+    * Constraint violations → user-friendly messages
+  - Dependency type mapping: TaskAssignments → "task assignments", ProjectRequirements → "project requirements", etc.
+
+- **Toast Notifications with Custom Messages**:
+  - Updated `utils/toast.ts` functions to accept optional message parameter
+  - `showDeleteError(message?)`, `showCreateError(message?)`, `showUpdateError(message?)`
+  - Usage pattern:
+    ```typescript
+    import { translateBackendError } from "@/utils/errorTranslation";
+    
+    try {
+      await userService.deleteUser(userId);
+      showSuccessToast(t("users.deleteSuccess"));
+    } catch (error) {
+      const errorMessage = error.data?.error || error.message;
+      const translatedError = translateBackendError(errorMessage, t);
+      showDeleteError(translatedError);
+    }
+    ```
+
+- **Bilingual Error Messages**:
+  - All error translations added to `LanguageContext.tsx` under `users.error.*` namespace
+  - English keys: `cannotDelete`, `usernameExists`, `prsIdExists`, `constraintViolation`, etc.
+  - Arabic translations: "لا يمكن حذف المستخدم", "المستخدم باسم '{0}' موجود بالفعل", etc.
+  - Dependency translations: "taskAssignments", "projectRequirements", "designRequests", etc.
+
+### General Error Handling
 - Use try-catch blocks for async operations
 - Implement error boundaries for component errors
-- Provide user-friendly error messages
+- Provide user-friendly error messages with translation
 - Log errors appropriately for debugging
 - Graceful fallbacks for failed API calls
+- Always extract and display backend error messages from `ApiResponse.error` field
 
 ## Development Workflow
 
