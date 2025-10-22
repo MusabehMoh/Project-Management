@@ -14,17 +14,20 @@ public class ProjectService : IProjectService
     private readonly INotificationService _notificationService;
     private readonly IUserService _userService;
     private readonly IUserContextAccessor _userContextAccessor;
+    private readonly ILookupService _lookupService;
 
     public ProjectService(
         IProjectRepository projectRepository, 
         INotificationService notificationService, 
         IUserService userService,
-        IUserContextAccessor userContextAccessor)
+        IUserContextAccessor userContextAccessor,
+        ILookupService lookupService)
     {
         _projectRepository = projectRepository;
         _notificationService = notificationService;
         _userService = userService;
         _userContextAccessor = userContextAccessor;
+        _lookupService = lookupService;
     }
 
     public async System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null)
@@ -78,6 +81,10 @@ public class ProjectService : IProjectService
         var allProjects = await _projectRepository.GetAllAsync();
         var projects = allProjects.ToList();
 
+        // Get project status lookups from database
+        var statusLookups = await _lookupService.GetLookupsAsync("ProjectStatus");
+        var statusLookupDict = statusLookups.ToDictionary(s => s.Value, s => new { s.Name, s.NameAr });
+
         return new
         {
             Total = projects.Count,
@@ -86,7 +93,16 @@ public class ProjectService : IProjectService
             Delayed = projects.Count(p => p.Status == ProjectStatus.Delayed),
             UnderStudy = projects.Count(p => p.Status == ProjectStatus.UnderStudy),
             UnderDevelopment = projects.Count(p => p.Status == ProjectStatus.UnderDevelopment),
-            Production = projects.Count(p => p.Status == ProjectStatus.Production)
+            Production = projects.Count(p => p.Status == ProjectStatus.Production),
+            StatusNames = new
+            {
+                New = new { En = statusLookupDict.GetValueOrDefault(1)?.Name ?? "New", Ar = statusLookupDict.GetValueOrDefault(1)?.NameAr ?? "جديد" },
+                UnderStudy = new { En = statusLookupDict.GetValueOrDefault(2)?.Name ?? "Under Analysis", Ar = statusLookupDict.GetValueOrDefault(2)?.NameAr ?? "قيد التحليل" },
+                UnderDevelopment = new { En = statusLookupDict.GetValueOrDefault(3)?.Name ?? "Under Development", Ar = statusLookupDict.GetValueOrDefault(3)?.NameAr ?? "قيد البرمجة" },
+                UnderTesting = new { En = statusLookupDict.GetValueOrDefault(4)?.Name ?? "Under Testing", Ar = statusLookupDict.GetValueOrDefault(4)?.NameAr ?? "بيئة الفحص" },
+                Production = new { En = statusLookupDict.GetValueOrDefault(5)?.Name ?? "Production Environment", Ar = statusLookupDict.GetValueOrDefault(5)?.NameAr ?? "بيئة الانتاج" },
+                Delayed = new { En = statusLookupDict.GetValueOrDefault(6)?.Name ?? "Postponed", Ar = statusLookupDict.GetValueOrDefault(6)?.NameAr ?? "مؤجل" }
+            }
         };
     }
 

@@ -3156,7 +3156,7 @@ const translations = {
 
     // Project Status Options
     // Project Status/Phases
-    "projectStatus.1": "قيد الدراسة",
+    "projectStatus.1": "قيد التحليل",
     "projectStatus.2": "قيد البرمجة",
     "projectStatus.3": "بيئة الفحص",
     "projectStatus.4": "بيئة التشغيل",

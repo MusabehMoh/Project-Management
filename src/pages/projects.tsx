@@ -951,7 +951,9 @@ export default function ProjectsPage() {
                 {stats?.new || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" ? "جديد" : "New"}
+                {language === "ar" 
+                  ? stats?.statusNames?.new.ar || "جديد" 
+                  : stats?.statusNames?.new.en || "New"}
               </p>
             </div>
           </div>
@@ -963,7 +965,9 @@ export default function ProjectsPage() {
                 {stats?.underStudy || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" ? "قيد الدراسة" : "Under Study"}
+                {language === "ar" 
+                  ? stats?.statusNames?.underStudy.ar || "قيد التحليل" 
+                  : stats?.statusNames?.underStudy.en || "Under Analysis"}
               </p>
             </div>
           </div>
@@ -975,7 +979,9 @@ export default function ProjectsPage() {
                 {stats?.underDevelopment || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" ? "قيد التطوير" : "Under Development"}
+                {language === "ar" 
+                  ? stats?.statusNames?.underDevelopment.ar || "قيد البرمجة" 
+                  : stats?.statusNames?.underDevelopment.en || "Under Development"}
               </p>
             </div>
           </div>
@@ -987,7 +993,9 @@ export default function ProjectsPage() {
                 {stats?.underTesting || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" ? "قيد الأختبار" : "Under Testing"}
+                {language === "ar" 
+                  ? stats?.statusNames?.underTesting.ar || "بيئة الفحص" 
+                  : stats?.statusNames?.underTesting.en || "Under Testing"}
               </p>
             </div>
           </div>
@@ -999,7 +1007,9 @@ export default function ProjectsPage() {
                 {stats?.production || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" ? "بيئة الانتاج" : "Production"}
+                {language === "ar" 
+                  ? stats?.statusNames?.production.ar || "بيئة الانتاج" 
+                  : stats?.statusNames?.production.en || "Production Environment"}
               </p>
             </div>
           </div>
@@ -1011,7 +1021,9 @@ export default function ProjectsPage() {
                 {stats?.delayed || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" ? "مؤجل" : "Delayed"}
+                {language === "ar" 
+                  ? stats?.statusNames?.delayed.ar || "مؤجل" 
+                  : stats?.statusNames?.delayed.en || "Postponed"}
               </p>
             </div>
           </div>
