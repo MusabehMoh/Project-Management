@@ -52,6 +52,8 @@ import {
 } from "@/components/icons";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { useUsers, useRoles, useActions } from "@/hooks/useUsers";
+import { ApiError } from "@/services/api/client";
+import { translateBackendError } from "@/utils/errorTranslation";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 import { usePageTitle } from "@/hooks";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
@@ -348,10 +350,22 @@ export default function UsersPage() {
       onOpenChange();
       resetForm();
     } catch (error) {
+      // Extract error message from the error object
+      let errorMessage: string | undefined;
+      
+      // Check if it's an ApiError with detailed error info
+      if (error instanceof ApiError && error.data?.error) {
+        errorMessage = translateBackendError(error.data.error, t);
+      } else if (error instanceof ApiError && error.data?.message) {
+        errorMessage = translateBackendError(error.data.message, t);
+      } else if (error instanceof Error) {
+        errorMessage = translateBackendError(error.message, t);
+      }
+
       if (isEditing) {
-        toasts.updateError();
+        toasts.updateError(errorMessage);
       } else {
-        toasts.createError();
+        toasts.createError(errorMessage);
       }
     } finally {
       setIsSavingUser(false);
@@ -367,7 +381,19 @@ export default function UsersPage() {
         onDeleteOpenChange();
         setSelectedUser(null);
       } catch (error) {
-        toasts.deleteError();
+        // Extract error message from the error object
+        let errorMessage: string | undefined;
+        
+        // Check if it's an ApiError with detailed error info
+        if (error instanceof ApiError && error.data?.error) {
+          errorMessage = translateBackendError(error.data.error, t);
+        } else if (error instanceof ApiError && error.data?.message) {
+          errorMessage = translateBackendError(error.data.message, t);
+        } else if (error instanceof Error) {
+          errorMessage = translateBackendError(error.message, t);
+        }
+        
+        toasts.deleteError(errorMessage);
       } finally {
         setIsDeletingUser(false);
       }

@@ -31,8 +31,10 @@ public interface IUserRepository : IRepository<User>
 {
     System.Threading.Tasks.Task<(IEnumerable<User> Users, int TotalCount)> GetUsersAsync(int page, int limit, string? search = null, bool? isActive = null, int? departmentId = null, int? roleId = null);
     System.Threading.Tasks.Task<User?> GetByUserNameAsync(string userName);
+    System.Threading.Tasks.Task<User?> GetByPrsIdAsync(int prsId);
     System.Threading.Tasks.Task<User?> GetUserWithRolesAndActionsAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId);
+    System.Threading.Tasks.Task<List<string>> CheckUserDependenciesAsync(int userId);
 }
 
 public interface ITaskRepository : IRepository<TaskEntity>
