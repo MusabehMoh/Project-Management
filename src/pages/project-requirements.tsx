@@ -230,8 +230,8 @@ export default function ProjectRequirementsPage() {
   const [formData, setFormData] = useState<RequirementFormData>({
     name: "",
     description: "",
-    priority: REQUIREMENT_PRIORITY.MEDIUM,
-    type: REQUIREMENT_TYPE.NEW,
+    priority: 0, // No default priority - user must select
+    type: 0, // No default type - user must select
     expectedCompletionDate: null,
     attachments: [],
     uploadedFiles: [],
@@ -334,6 +334,12 @@ export default function ProjectRequirementsPage() {
     if (!stripHtml(formData.description)) {
       errors.description = t("requirements.validation.descriptionRequired");
     }
+    if (!formData.priority || formData.priority === 0) {
+      errors.priority = t("requirements.validation.priorityRequired");
+    }
+    if (!formData.type || formData.type === 0) {
+      errors.type = t("requirements.validation.typeRequired");
+    }
     if (!formData.expectedCompletionDate) {
       errors.expectedCompletionDate = t(
         "requirements.validation.expectedDateRequired",
@@ -349,8 +355,8 @@ export default function ProjectRequirementsPage() {
     setFormData({
       name: "",
       description: "",
-      priority: REQUIREMENT_PRIORITY.MEDIUM,
-      type: REQUIREMENT_TYPE.NEW,
+      priority: 0, // No default priority - user must select
+      type: 0, // No default type - user must select
       expectedCompletionDate: null,
       attachments: [],
       uploadedFiles: [],
@@ -1366,8 +1372,13 @@ export default function ProjectRequirementsPage() {
                       }
                     />
                     <Select
+                      isRequired
                       label={t("requirements.priority")}
-                      selectedKeys={[formData.priority.toString()]}
+                      placeholder={t("requirements.selectPriority")}
+                      isClearable
+                      isInvalid={!!validationErrors.priority}
+                      errorMessage={validationErrors.priority}
+                      selectedKeys={formData.priority > 0 ? [formData.priority.toString()] : []}
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
 
@@ -1377,6 +1388,12 @@ export default function ProjectRequirementsPage() {
                             priority: parseInt(selectedKey),
                           });
                         }
+                      }}
+                      onClear={() => {
+                        setFormData({
+                          ...formData,
+                          priority: 0,
+                        });
                       }}
                     >
                       {priorityOptions.map((priority) => (
@@ -1391,8 +1408,13 @@ export default function ProjectRequirementsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
                     <Select
+                      isRequired
                       label={t("requirements.type")}
-                      selectedKeys={[formData.type.toString()]}
+                      placeholder={t("requirements.selectType")}
+                      isClearable
+                      isInvalid={!!validationErrors.type}
+                      errorMessage={validationErrors.type}
+                      selectedKeys={formData.type > 0 ? [formData.type.toString()] : []}
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
 
@@ -1402,6 +1424,12 @@ export default function ProjectRequirementsPage() {
                             type: parseInt(selectedKey),
                           });
                         }
+                      }}
+                      onClear={() => {
+                        setFormData({
+                          ...formData,
+                          type: 0,
+                        });
                       }}
                     >
                       <SelectItem key={REQUIREMENT_TYPE.NEW.toString()}>
@@ -1435,7 +1463,7 @@ export default function ProjectRequirementsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-foreground">
-                        {t("requirements.requirementDescription")} *
+                        {t("requirements.requirementDescription")} <span className="text-danger">*</span>
                       </label>
                       <Tooltip content={t("requirements.aiSuggest")}>
                         <Button
