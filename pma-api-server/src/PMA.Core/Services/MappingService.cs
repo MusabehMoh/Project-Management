@@ -767,7 +767,7 @@ public class MappingService : IMappingService
             StartDate = createAdHocTaskDto.StartDate,
             EndDate = createAdHocTaskDto.EndDate,
             StatusId = TaskStatusEnum.ToDo,
-            PriorityId = Priority.Medium,
+            PriorityId = (Priority)createAdHocTaskDto.Priority,
             TypeId = TaskTypes.AdHoc, // Set TypeId to AdHoc
             Progress = 0,
             CreatedAt = DateTime.UtcNow,

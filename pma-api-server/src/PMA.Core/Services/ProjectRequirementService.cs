@@ -13,6 +13,7 @@ public class ProjectRequirementService : IProjectRequirementService
     private readonly IProjectRepository _projectRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IUserContextAccessor _userContextAccessor;
+    private readonly IUserService _userService;
     private readonly IAppPathProvider _pathProvider;
 
     public ProjectRequirementService(
@@ -20,12 +21,14 @@ public class ProjectRequirementService : IProjectRequirementService
         IProjectRepository projectRepository,
         IEmployeeRepository employeeRepository,
         IUserContextAccessor userContextAccessor,
+        IUserService userService,
         IAppPathProvider pathProvider)
     {
         _projectRequirementRepository = projectRequirementRepository;
         _projectRepository = projectRepository;
         _employeeRepository = employeeRepository;
         _userContextAccessor = userContextAccessor;
+        _userService = userService;
         _pathProvider = pathProvider;
     }
 
@@ -102,7 +105,7 @@ public class ProjectRequirementService : IProjectRequirementService
         return await _projectRequirementRepository.GetProjectRequirementsByProjectAsync(projectId);
     }
 
-    public async Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(int? userId, int page, int limit, string? search = null, int? projectId = null)
+    public async Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(int? userId, int page, int limit, string? search = null, int? projectId = null, bool skipAnalystFilter = false)
     {
         // Get current user context for filtering assigned projects
         var userContext = await _userContextAccessor.GetUserContextAsync();
@@ -111,8 +114,30 @@ public class ProjectRequirementService : IProjectRequirementService
             return (Enumerable.Empty<AssignedProjectDto>(), 0);
         }
 
-        // Delegate to repository for complex query logic
-        return await _projectRepository.GetAssignedProjectsAsync(userContext.PrsId, page, limit, search, projectId);
+        // Get current user with roles to determine access level
+        var currentUser = await _userService.GetCurrentUserAsync();
+        if (currentUser == null)
+        {
+            return (Enumerable.Empty<AssignedProjectDto>(), 0);
+        }
+
+        // Determine filtering based on user role (similar to MemberTaskService pattern)
+        bool shouldSkipAnalystFilter = skipAnalystFilter;
+
+        if (!shouldSkipAnalystFilter)
+        {
+            bool isAdministrator = currentUser.Roles?.Any(r => IsRoleCode(r.Code, RoleCodes.Administrator)) ?? false;
+            bool isManager = currentUser.Roles?.Any(r => IsManagerRole(r.Code)) ?? false;
+
+            if (isAdministrator || isManager)
+            {
+                // Administrators and managers see all projects - skip analyst filtering
+                shouldSkipAnalystFilter = true;
+            }
+        }
+
+        // Call repository with appropriate filtering
+        return await _projectRepository.GetAssignedProjectsAsync(userContext.PrsId, page, limit, search, projectId, shouldSkipAnalystFilter);
     }
 
     public async Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId)
@@ -586,5 +611,25 @@ public class ProjectRequirementService : IProjectRequirementService
 
         // Otherwise assume it is relative to wwwroot (our current storage strategy: uploads/...)
         return Path.Combine(_pathProvider.WebRootPath, normalized.Replace('/', Path.DirectorySeparatorChar));
+    }
+
+    private bool IsRoleCode(string? roleCode, RoleCodes targetRole)
+    {
+        if (string.IsNullOrEmpty(roleCode))
+            return false;
+
+        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) && parsedRole == targetRole;
+    }
+
+    private bool IsManagerRole(string? roleCode)
+    {
+        if (string.IsNullOrEmpty(roleCode))
+            return false;
+
+        return Enum.TryParse(roleCode, true, out RoleCodes parsedRole) &&
+               (parsedRole == RoleCodes.AnalystManager ||
+                parsedRole == RoleCodes.DevelopmentManager ||
+                parsedRole == RoleCodes.QCManager ||
+                parsedRole == RoleCodes.DesignerManager);
     }
 }

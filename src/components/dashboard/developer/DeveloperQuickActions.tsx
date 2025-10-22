@@ -1116,6 +1116,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                         description: formData.description,
                         startDate: formData.startDate,
                         endDate: formData.endDate,
+                        priority: 2, // Default to Medium priority
                         assignedMembers: selectedMembers.map((m) =>
                           m.id.toString(),
                         ),

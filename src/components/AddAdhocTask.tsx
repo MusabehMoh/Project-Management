@@ -11,23 +11,27 @@ import {
   Autocomplete,
   AutocompleteItem,
   Avatar,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { getLocalTimeZone, parseDate } from "@internationalized/date";
 import { X } from "lucide-react";
 import { today } from "@internationalized/date";
-
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MemberSearchResult } from "@/types";
-import useTeamSearch from "@/hooks/useTeamSearch";
+import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import { AdhocTask } from "@/types/membersTasks";
 import { UseAdhocTasks } from "@/hooks/useAdhocTask";
+import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 
 export interface AddAdhocTaskFormData {
   name: string;
   description: string;
   startDate: string;
   endDate: string;
+  priority: number;
   members: MemberSearchResult[];
 }
 
@@ -36,13 +40,14 @@ interface AddAdhocTaskProps {
 }
 
 const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<AddAdhocTaskFormData>({
     name: "",
     description: "",
     startDate: "",
     endDate: "",
+    priority: 0,
     members: [],
   });
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
@@ -53,14 +58,19 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
   const [selectedEmployee, setSelectedEmployee] =
     useState<MemberSearchResult | null>(null);
   // Employee search hooks for employees
+  const { user } = useCurrentUser();
   const {
     employees: employees,
     loading: employeeSearchLoading,
     searchEmployees: searchEmployees,
-  } = useTeamSearch({
+  } = useTeamSearchByDepartment({
+    departmentId: user?.roles?.[0]?.department?.id
+      ? Number(user.roles[0].department.id)
+      : 4, // Development Department
     minLength: 1,
     maxResults: 20,
-    loadInitialResults: false,
+    loadInitialResults: true, // Load initial results to populate on focus
+    initialResultsLimit: 20,
   });
 
   // Add validation errors state
@@ -69,10 +79,14 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
     description?: string;
     startDate?: string;
     endDate?: string;
+    priority?: string;
     members?: string;
   }>({});
 
-  const { addAdhocTask, loading, error } = UseAdhocTasks();
+  const { addAdhocTask, loading } = UseAdhocTasks();
+
+  // Priority lookups
+  const { priorityOptions } = usePriorityLookups();
 
   const validateForm = () => {
     const newErrors: {
@@ -80,6 +94,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
       description?: string;
       startDate?: string;
       endDate?: string;
+      priority?: string;
       members?: string;
     } = {};
 
@@ -94,6 +109,9 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
     }
     if (!formData.endDate) {
       newErrors.endDate = t("taskEndDateRequired");
+    }
+    if (!formData.priority || formData.priority === 0) {
+      newErrors.priority = t("taskPriorityRequired");
     }
 
     if (formData.startDate && formData.endDate) {
@@ -142,13 +160,13 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
 
   useEffect(() => {
     if (isOpen) {
-      console.log("reset called");
       resetUserDropDown();
       setFormData({
         name: "",
         description: "",
         startDate: "",
         endDate: "",
+        priority: 0,
         members: [],
       });
       setSelectedMembers([]);
@@ -209,6 +227,46 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                         handleInputChange("description", e.target.value)
                       }
                     />
+                  </div>
+
+                  <div>
+                    <Select
+                      isClearable
+                      isRequired
+                      errorMessage={errors.priority}
+                      isInvalid={!!errors.priority}
+                      label={t("requirements.priority")}
+                      placeholder={t("requirements.selectPriority")}
+                      selectedKeys={
+                        formData.priority > 0
+                          ? [formData.priority.toString()]
+                          : []
+                      }
+                      onClear={() => {
+                        setFormData({
+                          ...formData,
+                          priority: 0,
+                        });
+                      }}
+                      onSelectionChange={(keys) => {
+                        const selectedKey = Array.from(keys)[0] as string;
+
+                        if (selectedKey) {
+                          setFormData({
+                            ...formData,
+                            priority: parseInt(selectedKey),
+                          });
+                        }
+                      }}
+                    >
+                      {priorityOptions.map((priority) => (
+                        <SelectItem key={priority.value.toString()}>
+                          {language === "ar"
+                            ? priority.labelAr
+                            : priority.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -301,13 +359,20 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                   <label>{t("users.selectEmployee")}</label>
                   <Autocomplete
                     isClearable
+                    defaultFilter={(_textValue, _input) => true}
                     errorMessage={errors.members}
+                    inputValue={employeeInputValue}
                     isInvalid={!!errors.members ? true : false}
                     isLoading={employeeSearchLoading}
                     label={t("users.selectEmployee")}
                     menuTrigger="input"
                     placeholder={t("users.searchEmployees")}
                     selectedKey={selectedEmployee?.id.toString()}
+                    onOpenChange={(isOpen) => {
+                      if (isOpen && employees.length === 0) {
+                        searchEmployees("");
+                      }
+                    }}
                     onInputChange={(value) => {
                       setEmployeeInputValue(value);
                       if (
@@ -325,10 +390,12 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                     onSelectionChange={(key) => {
                       if (key) {
                         const selectedEmployee = employees.find(
-                          (e) => e.id.toString() === key
+                          (e) => e.id.toString() === key,
                         );
+
                         if (selectedEmployee) {
                           handleEmployeeSelect(selectedEmployee);
+
                           setErrors((prev) => ({
                             ...prev,
                             members: undefined,
@@ -339,9 +406,6 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                         setEmployeeInputValue("");
                       }
                     }}
-                    inputValue={employeeInputValue}
-                    // Disable client-side filtering; we already filter on the server
-                    defaultFilter={(textValue, input) => true}
                   >
                     {employees.map((employee) => (
                       <AutocompleteItem
@@ -364,9 +428,6 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                             </span>
                             <span className="text-xs text-default-400">
                               @{employee.userName || t("common.none")}
-                            </span>
-                            <span className="text-xs text-default-400">
-                              @{employee.department || t("common.none")}
                             </span>
                           </div>
                         </div>
@@ -393,6 +454,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                         description: formData.description,
                         startDate: formData.startDate,
                         endDate: formData.endDate,
+                        priority: formData.priority,
                         assignedMembers: selectedMembers.map((m) =>
                           m.id.toString(),
                         ),
@@ -407,6 +469,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                           description: "",
                           startDate: "",
                           endDate: "",
+                          priority: 0,
                           members: [],
                         });
                         setSelectedMembers([]);

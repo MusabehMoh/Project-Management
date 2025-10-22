@@ -954,6 +954,7 @@ export default function DevelopmentRequirementsPage() {
               </span>
               <Select
                 className="w-20"
+                disallowEmptySelection={true}
                 selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
                 size="sm"
                 onSelectionChange={(keys) => {

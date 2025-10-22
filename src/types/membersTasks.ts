@@ -89,5 +89,6 @@ export interface AdhocTask {
   description: string;
   startDate: string;
   endDate: string;
+  priority: number;
   assignedMembers: string[]; ///array of member ids
 }

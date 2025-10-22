@@ -1029,6 +1029,7 @@ export default function ProjectRequirementsPage() {
                 </span>
                 <Select
                   className="w-24 flex-shrink-0"
+                  disallowEmptySelection={true}
                   isDisabled={loading && isInitialLoad}
                   selectedKeys={[effectivePageSize.toString()]}
                   size="sm"
