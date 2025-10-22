@@ -263,7 +263,6 @@ export default function RequirementsPage() {
                 <Select
                   aria-label={t("projects.filterByStatus")}
                   className="w-full sm:w-52"
-                  defaultSelectedKeys={["all"]}
                   items={[
                     { key: "all", label: t("projects.allStatuses") },
                     ...phases.map((phase) => ({
@@ -271,8 +270,8 @@ export default function RequirementsPage() {
                       label: language === "ar" ? phase.nameAr : phase.nameEn,
                     })),
                   ]}
-                  label={t("projects.filterByStatus")}
-                  selectedKeys={[statusFilter]}
+                  placeholder={t("projects.filterByStatus")}
+                  selectedKeys={statusFilter !== "all" ? [statusFilter] : []}
                   size="md"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
@@ -286,15 +285,14 @@ export default function RequirementsPage() {
                 <Select
                   aria-label={t("projects.sortBy")}
                   className="w-full sm:w-52"
-                  defaultSelectedKeys={["lastActivity"]}
                   items={[
                     { key: "lastActivity", label: t("projects.sortByLastActivity") },
                     { key: "name", label: t("projects.sortByName") },
                     { key: "requirementsCount", label: t("projects.sortByRequirementsCount") },
                     { key: "completionRate", label: t("projects.sortByCompletionRate") },
                   ]}
-                  label={t("projects.sortBy")}
-                  selectedKeys={[sortBy]}
+                  placeholder={t("projects.sortBy")}
+                  selectedKeys={sortBy !== "lastActivity" ? [sortBy] : []}
                   size="md"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
