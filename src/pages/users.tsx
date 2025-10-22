@@ -1103,32 +1103,64 @@ export default function UsersPage() {
                           {selectedAdditionalActions.length > 0 && (
                             <Card className="bg-default-50 border border-default-200">
                               <CardBody className="py-3">
-                                <div className="flex flex-wrap gap-2">
-                                  {actions
+                                {/* Group additional actions by category */}
+                                {Object.entries(
+                                  actions
                                     .filter((action) =>
                                       selectedAdditionalActions.includes(
                                         action.id,
                                       ),
                                     )
-                                    .map((action) => (
+                                    .reduce(
+                                      (acc, action) => {
+                                        const category = getActionCategory(action);
+
+                                        if (!acc[category]) {
+                                          acc[category] = [];
+                                        }
+
+                                        acc[category].push(action);
+
+                                        return acc;
+                                      },
+                                      {} as { [categoryName: string]: Action[] },
+                                    ),
+                                ).map(([category, categoryActions]) => (
+                                  <div key={category} className="mb-3 last:mb-0">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-xs font-medium text-default-700 uppercase tracking-wider">
+                                        {category}
+                                      </span>
                                       <Chip
-                                        key={action.id}
                                         color="success"
                                         size="sm"
                                         variant="flat"
-                                        onClose={() => {
-                                          setSelectedAdditionalActions(
-                                            selectedAdditionalActions.filter(
-                                              (id) => id !== action.id,
-                                            ),
-                                          );
-                                        }}
                                       >
-                                        {action.description}
+                                        {categoryActions.length}
                                       </Chip>
-                                    ))}
-                                </div>
-                                <p className="text-tiny text-default-600 mt-2">
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {categoryActions.map((action) => (
+                                        <Chip
+                                          key={action.id}
+                                          color="success"
+                                          size="sm"
+                                          variant="flat"
+                                          onClose={() => {
+                                            setSelectedAdditionalActions(
+                                              selectedAdditionalActions.filter(
+                                                (id) => id !== action.id,
+                                              ),
+                                            );
+                                          }}
+                                        >
+                                          {action.description}
+                                        </Chip>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                                <p className="text-tiny text-default-600 mt-3 pt-2 border-t border-default-200">
                                   {selectedAdditionalActions.length}{" "}
                                   {t("actions.additionalActionsSelected")}
                                 </p>
