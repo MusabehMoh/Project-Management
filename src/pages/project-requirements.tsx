@@ -954,133 +954,129 @@ export default function ProjectRequirementsPage() {
         </div>
 
         {/* Filters and Search */}
-        <Card>
-          <CardBody>
-            <div className="flex flex-col md:flex-row gap-4 items-end">
-              <Input
-                className="md:max-w-xs"
-                isDisabled={loading && isInitialLoad}
-                placeholder={t("requirements.searchRequirements")}
-                startContent={
-                  <Search
-                    className={`w-4 h-4 ${
-                      loading && !isInitialLoad
-                        ? "animate-pulse text-primary"
-                        : ""
-                    }`}
-                  />
-                }
-                value={searchTerm}
-                onValueChange={setSearchTerm}
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <Input
+            className="md:max-w-xs"
+            isDisabled={loading && isInitialLoad}
+            placeholder={t("requirements.searchRequirements")}
+            startContent={
+              <Search
+                className={`w-4 h-4 ${
+                  loading && !isInitialLoad
+                    ? "animate-pulse text-primary"
+                    : ""
+                }`}
               />
+            }
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+          />
 
-              <Select
-                className="md:max-w-xs"
-                isDisabled={loading && isInitialLoad}
-                items={[
-                  { value: "", label: t("requirements.allStatuses") },
-                  ...(statuses || []).map((status) => ({
-                    value: status.value.toString(),
-                    label: language === "ar" ? status.nameAr : status.nameEn,
-                  })),
-                ]}
-                placeholder={t("requirements.filterByStatus")}
-                selectedKeys={
-                  statusFilter !== null ? [statusFilter.toString()] : []
-                }
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
+          <Select
+            className="md:max-w-xs"
+            isDisabled={loading && isInitialLoad}
+            items={[
+              { value: "", label: t("requirements.allStatuses") },
+              ...(statuses || []).map((status) => ({
+                value: status.value.toString(),
+                label: language === "ar" ? status.nameAr : status.nameEn,
+              })),
+            ]}
+            placeholder={t("requirements.filterByStatus")}
+            selectedKeys={
+              statusFilter !== null ? [statusFilter.toString()] : []
+            }
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
 
-                  setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
-                }}
-              >
-                {(item) => (
-                  <SelectItem key={item.value}>{item.label}</SelectItem>
-                )}
-              </Select>
-
-              <Select
-                className="md:max-w-xs"
-                isDisabled={loading && isInitialLoad}
-                items={[
-                  { value: "", label: t("requirements.allPriorities") },
-                  ...priorityOptions.map((p) => ({
-                    value: p.value.toString(),
-                    label: language === "ar" ? p.labelAr : p.label,
-                  })),
-                ]}
-                placeholder={t("requirements.filterByPriority")}
-                selectedKeys={priorityFilter ? [priorityFilter.toString()] : []}
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-
-                  setPriorityFilter(selectedKey || "");
-                }}
-              >
-                {(item) => (
-                  <SelectItem key={item.value}>{item.label}</SelectItem>
-                )}
-              </Select>
-
-              {/* Page Size Selector */}
-              <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
-                <span className="text-sm text-default-600">
-                  {t("common.show")}:
-                </span>
-                <Select
-                  className="w-24 flex-shrink-0"
-                  isDisabled={loading && isInitialLoad}
-                  selectedKeys={[effectivePageSize.toString()]}
-                  size="sm"
-                  onSelectionChange={(keys) => {
-                    const newSizeStr = Array.from(keys)[0] as string;
-
-                    if (!newSizeStr) return;
-                    const newSize = parseInt(newSizeStr, 10);
-
-                    if (!Number.isNaN(newSize)) {
-                      handlePageSizeChange(newSize);
-                    }
-                  }}
-                >
-                  {PAGE_SIZE_OPTIONS.map((opt) => {
-                    const val = opt.toString();
-
-                    return (
-                      <SelectItem key={val} textValue={val}>
-                        {val}
-                      </SelectItem>
-                    );
-                  })}
-                </Select>
-                <span className="text-sm text-default-600">
-                  {t("pagination.perPage")}
-                </span>
-              </div>
-            </div>
-
-            {/* Clear Filters */}
-            {hasActiveFilters && (
-              <div className="flex items-center gap-2 mt-2">
-                <Button
-                  color="secondary"
-                  size="sm"
-                  startContent={<X size={16} />}
-                  variant="flat"
-                  onPress={resetFilters}
-                >
-                  {t("requirements.clearFilters")}
-                </Button>
-                <span className="text-sm text-default-500">
-                  {t("requirements.requirementsFound").replace(
-                    "{count}",
-                    totalRequirements.toString(),
-                  )}
-                </span>
-              </div>
+              setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
+            }}
+          >
+            {(item) => (
+              <SelectItem key={item.value}>{item.label}</SelectItem>
             )}
-          </CardBody>
-        </Card>
+          </Select>
+
+          <Select
+            className="md:max-w-xs"
+            isDisabled={loading && isInitialLoad}
+            items={[
+              { value: "", label: t("requirements.allPriorities") },
+              ...priorityOptions.map((p) => ({
+                value: p.value.toString(),
+                label: language === "ar" ? p.labelAr : p.label,
+              })),
+            ]}
+            placeholder={t("requirements.filterByPriority")}
+            selectedKeys={priorityFilter ? [priorityFilter.toString()] : []}
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
+
+              setPriorityFilter(selectedKey || "");
+            }}
+          >
+            {(item) => (
+              <SelectItem key={item.value}>{item.label}</SelectItem>
+            )}
+          </Select>
+
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
+            <span className="text-sm text-default-600">
+              {t("common.show")}:
+            </span>
+            <Select
+              className="w-24 flex-shrink-0"
+              isDisabled={loading && isInitialLoad}
+              selectedKeys={[effectivePageSize.toString()]}
+              size="sm"
+              onSelectionChange={(keys) => {
+                const newSizeStr = Array.from(keys)[0] as string;
+
+                if (!newSizeStr) return;
+                const newSize = parseInt(newSizeStr, 10);
+
+                if (!Number.isNaN(newSize)) {
+                  handlePageSizeChange(newSize);
+                }
+              }}
+            >
+              {PAGE_SIZE_OPTIONS.map((opt) => {
+                const val = opt.toString();
+
+                return (
+                  <SelectItem key={val} textValue={val}>
+                    {val}
+                  </SelectItem>
+                );
+              })}
+            </Select>
+            <span className="text-sm text-default-600">
+              {t("pagination.perPage")}
+            </span>
+          </div>
+        </div>
+
+        {/* Clear Filters */}
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2">
+            <Button
+              color="secondary"
+              size="sm"
+              startContent={<X size={16} />}
+              variant="flat"
+              onPress={resetFilters}
+            >
+              {t("requirements.clearFilters")}
+            </Button>
+            <span className="text-sm text-default-500">
+              {t("requirements.requirementsFound").replace(
+                "{count}",
+                totalRequirements.toString(),
+              )}
+            </span>
+          </div>
+        )}
 
         {/* Requirements Table */}
         <Card>
@@ -1823,26 +1819,44 @@ export default function ProjectRequirementsPage() {
                               dir={language === "ar" ? "rtl" : "ltr"}
                             >
                               <div className="px-4 py-3">
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                  {msg.content}
-                                </p>
-                                <p
-                                  className={`text-xs mt-2 ${
-                                    msg.role === "user"
-                                      ? "text-white/70"
-                                      : "text-default-400"
-                                  }`}
-                                >
-                                  {new Date(msg.timestamp).toLocaleTimeString(
-                                    language === "ar" ? "ar-SA" : "en-US",
-                                    {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    },
-                                  )}
-                                </p>
+                                {/* Show breathing animation for empty assistant messages (loading) */}
+                                {msg.role === "assistant" && !msg.content ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex gap-1">
+                                      <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1.4s' }} />
+                                      <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }} />
+                                      <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }} />
+                                    </div>
+                                    <span className="text-xs text-default-400">
+                                      {language === "ar" ? "جاري التفكير..." : "Thinking..."}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                    {msg.content}
+                                  </p>
+                                )}
+                                {/* Only show timestamp if message has content or is from user */}
+                                {(msg.content || msg.role === "user") && (
+                                  <p
+                                    className={`text-xs mt-2 ${
+                                      msg.role === "user"
+                                        ? "text-white/70"
+                                        : "text-default-400"
+                                    }`}
+                                  >
+                                    {new Date(msg.timestamp).toLocaleTimeString(
+                                      language === "ar" ? "ar-SA" : "en-US",
+                                      {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      },
+                                    )}
+                                  </p>
+                                )}
                               </div>
-                              {msg.role === "assistant" && (
+                              {/* Only show "Use This Description" button if message has content */}
+                              {msg.role === "assistant" && msg.content && (
                                 <div className="border-t border-default-200 px-4 py-2">
                                   <Button
                                     className="text-xs"
