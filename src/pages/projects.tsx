@@ -131,10 +131,11 @@ export default function ProjectsPage() {
   });
 
   // Hook to fetch project details for drawer view
-  const { project: projectDetailsData, loading: detailsLoading } = useProjectDetails({
-    projectId: projectIdForDetails,
-    enabled: projectIdForDetails !== undefined,
-  });
+  const { project: projectDetailsData, loading: detailsLoading } =
+    useProjectDetails({
+      projectId: projectIdForDetails,
+      enabled: projectIdForDetails !== undefined,
+    });
 
   // Employee search hooks for project owner and alternative owner
   const {
@@ -1419,213 +1420,153 @@ export default function ProjectsPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    isRequired
-                    errorMessage={validationErrors.applicationName}
-                    isInvalid={!!validationErrors.applicationName}
-                    label={t("projects.applicationName")}
-                    placeholder={t("projects.applicationName")}
-                    value={formData.applicationName}
-                    onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        applicationName: e.target.value,
-                      });
-                      // Clear validation error when user starts typing
-                      if (validationErrors.applicationName) {
-                        setValidationErrors({
-                          ...validationErrors,
-                          applicationName: undefined,
+                    <Input
+                      isRequired
+                      errorMessage={validationErrors.applicationName}
+                      isInvalid={!!validationErrors.applicationName}
+                      label={t("projects.applicationName")}
+                      placeholder={t("projects.applicationName")}
+                      value={formData.applicationName}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          applicationName: e.target.value,
                         });
-                      }
-                    }}
-                  />
-                  <Autocomplete
-                    isClearable
-                    isRequired
-                    errorMessage={validationErrors.projectOwner}
-                    inputValue={ownerInputValue}
-                    isInvalid={!!validationErrors.projectOwner}
-                    isLoading={ownerSearchLoading}
-                    items={ownerEmployees}
-                    label={t("projects.projectOwner")}
-                    menuTrigger="input"
-                    placeholder={t("projects.searchByName")}
-                    selectedKey={selectedOwner?.id.toString()}
-                    onInputChange={(value) => {
-                      setOwnerInputValue(value);
-                      // Clear selection if input doesn't match the selected owner
-                      if (
-                        selectedOwner &&
-                        value !==
-                          `${selectedOwner.gradeName} ${selectedOwner.fullName}`
-                      ) {
-                        setSelectedOwner(null);
-                        setFormData({ ...formData, projectOwner: 0 });
-                      }
-                      // Clear validation error when user starts typing
-                      if (validationErrors.projectOwner) {
-                        setValidationErrors({
-                          ...validationErrors,
-                          projectOwner: undefined,
-                        });
-                      }
-                      // Search for employees
-                      searchOwnerEmployees(value);
-                    }}
-                    onSelectionChange={(key) => {
-                      if (key) {
-                        const selectedEmployee = ownerEmployees.find(
-                          (e) => e.id.toString() === key,
-                        );
-
-                        if (selectedEmployee) {
-                          handleOwnerSelect(selectedEmployee);
+                        // Clear validation error when user starts typing
+                        if (validationErrors.applicationName) {
+                          setValidationErrors({
+                            ...validationErrors,
+                            applicationName: undefined,
+                          });
                         }
-                      } else {
-                        // Clear selection
-                        setSelectedOwner(null);
-                        setOwnerInputValue("");
-                        setFormData({ ...formData, projectOwner: 0 });
-                      }
-                      // Clear validation error when user selects
-                      if (validationErrors.projectOwner) {
-                        setValidationErrors({
-                          ...validationErrors,
-                          projectOwner: undefined,
-                        });
-                      }
-                    }}
-                  >
-                    {ownerEmployees.map((employee) => (
-                      <AutocompleteItem
-                        key={employee.id.toString()}
-                        textValue={`${employee.gradeName} ${employee.fullName}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Avatar
-                            name={employee.fullName || t("common.none")}
-                            size="sm"
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {employee.gradeName}{" "}
-                              {employee.fullName || t("common.none")}
-                            </span>
-                            <span className="text-sm text-default-500">
-                              {employee.militaryNumber || "N/A"}
-                            </span>
-                            <span className="text-xs text-default-400">
-                              @{employee.userName || t("common.none")}
-                            </span>
-                          </div>
-                        </div>
-                      </AutocompleteItem>
-                    ))}
-                  </Autocomplete>
-                  <Autocomplete
-                    allowsCustomValue
-                    isClearable
-                    inputValue={alternativeOwnerInputValue}
-                    isLoading={alternativeOwnerSearchLoading}
-                    items={alternativeOwnerEmployees}
-                    label={t("projects.alternativeOwner")}
-                    menuTrigger="input"
-                    placeholder={t("projects.searchByName")}
-                    selectedKey={selectedAlternativeOwner?.id.toString()}
-                    onInputChange={(value) => {
-                      setAlternativeOwnerInputValue(value);
-                      // Clear selection if input doesn't match the selected alternative owner
-                      if (
-                        selectedAlternativeOwner &&
-                        value !==
-                          `${selectedAlternativeOwner.gradeName} ${selectedAlternativeOwner.fullName}`
-                      ) {
-                        setSelectedAlternativeOwner(null);
-                        setFormData({ ...formData, alternativeOwner: 0 });
-                      }
-                      // Search for employees
-                      searchAlternativeOwnerEmployees(value);
-                    }}
-                    onSelectionChange={(key) => {
-                      if (key) {
-                        const selectedEmployee = alternativeOwnerEmployees.find(
-                          (e) => e.id.toString() === key,
-                        );
-
-                        if (selectedEmployee) {
-                          handleAlternativeOwnerSelect(selectedEmployee);
-                        }
-                      } else {
-                        // Clear selection
-                        setSelectedAlternativeOwner(null);
-                        setAlternativeOwnerInputValue("");
-                        setFormData({ ...formData, alternativeOwner: 0 });
-                      }
-                    }}
-                  >
-                    {alternativeOwnerEmployees.map((employee) => (
-                      <AutocompleteItem
-                        key={employee.id.toString()}
-                        textValue={`${employee.gradeName} ${employee.fullName}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Avatar
-                            name={employee.fullName || t("common.none")}
-                            size="sm"
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {employee.gradeName}{" "}
-                              {employee.fullName || t("common.none")}
-                            </span>
-                            <span className="text-sm text-default-500">
-                              {employee.militaryNumber || "N/A"}
-                            </span>
-                            <span className="text-xs text-default-400">
-                              @{employee.userName || t("common.none")}
-                            </span>
-                          </div>
-                        </div>
-                      </AutocompleteItem>
-                    ))}
-                  </Autocomplete>
-
-                  {/* Analysts Selection Field */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      {t("projects.analysts")}
-                    </label>
-                    <Autocomplete
-                      allowsCustomValue
-                      className="max-w-full"
-                      inputValue={analystInputValue}
-                      isLoading={analystSearchLoading}
-                      items={analystEmployees}
-                      label={t("projects.selectAnalysts")}
-                      placeholder={t("projects.searchAnalysts")}
-                      onInputChange={(value) => {
-                        setAnalystInputValue(value);
-                        searchAnalystEmployees(value);
                       }}
-                      onOpenChange={(isOpen) => {
-                        if (isOpen && analystEmployees.length === 0) {
-                          searchAnalystEmployees("");
+                    />
+                    <Autocomplete
+                      isClearable
+                      isRequired
+                      errorMessage={validationErrors.projectOwner}
+                      inputValue={ownerInputValue}
+                      isInvalid={!!validationErrors.projectOwner}
+                      isLoading={ownerSearchLoading}
+                      items={ownerEmployees}
+                      label={t("projects.projectOwner")}
+                      menuTrigger="input"
+                      placeholder={t("projects.searchByName")}
+                      selectedKey={selectedOwner?.id.toString()}
+                      onInputChange={(value) => {
+                        setOwnerInputValue(value);
+                        // Clear selection if input doesn't match the selected owner
+                        if (
+                          selectedOwner &&
+                          value !==
+                            `${selectedOwner.gradeName} ${selectedOwner.fullName}`
+                        ) {
+                          setSelectedOwner(null);
+                          setFormData({ ...formData, projectOwner: 0 });
                         }
+                        // Clear validation error when user starts typing
+                        if (validationErrors.projectOwner) {
+                          setValidationErrors({
+                            ...validationErrors,
+                            projectOwner: undefined,
+                          });
+                        }
+                        // Search for employees
+                        searchOwnerEmployees(value);
                       }}
                       onSelectionChange={(key) => {
                         if (key) {
-                          const selectedEmployee = analystEmployees.find(
+                          const selectedEmployee = ownerEmployees.find(
                             (e) => e.id.toString() === key,
                           );
 
                           if (selectedEmployee) {
-                            handleAnalystSelect(selectedEmployee);
+                            handleOwnerSelect(selectedEmployee);
                           }
+                        } else {
+                          // Clear selection
+                          setSelectedOwner(null);
+                          setOwnerInputValue("");
+                          setFormData({ ...formData, projectOwner: 0 });
+                        }
+                        // Clear validation error when user selects
+                        if (validationErrors.projectOwner) {
+                          setValidationErrors({
+                            ...validationErrors,
+                            projectOwner: undefined,
+                          });
                         }
                       }}
                     >
-                      {analystEmployees.map((employee) => (
+                      {ownerEmployees.map((employee) => (
+                        <AutocompleteItem
+                          key={employee.id.toString()}
+                          textValue={`${employee.gradeName} ${employee.fullName}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar
+                              name={employee.fullName || t("common.none")}
+                              size="sm"
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {employee.gradeName}{" "}
+                                {employee.fullName || t("common.none")}
+                              </span>
+                              <span className="text-sm text-default-500">
+                                {employee.militaryNumber || "N/A"}
+                              </span>
+                              <span className="text-xs text-default-400">
+                                @{employee.userName || t("common.none")}
+                              </span>
+                            </div>
+                          </div>
+                        </AutocompleteItem>
+                      ))}
+                    </Autocomplete>
+                    <Autocomplete
+                      allowsCustomValue
+                      isClearable
+                      inputValue={alternativeOwnerInputValue}
+                      isLoading={alternativeOwnerSearchLoading}
+                      items={alternativeOwnerEmployees}
+                      label={t("projects.alternativeOwner")}
+                      menuTrigger="input"
+                      placeholder={t("projects.searchByName")}
+                      selectedKey={selectedAlternativeOwner?.id.toString()}
+                      onInputChange={(value) => {
+                        setAlternativeOwnerInputValue(value);
+                        // Clear selection if input doesn't match the selected alternative owner
+                        if (
+                          selectedAlternativeOwner &&
+                          value !==
+                            `${selectedAlternativeOwner.gradeName} ${selectedAlternativeOwner.fullName}`
+                        ) {
+                          setSelectedAlternativeOwner(null);
+                          setFormData({ ...formData, alternativeOwner: 0 });
+                        }
+                        // Search for employees
+                        searchAlternativeOwnerEmployees(value);
+                      }}
+                      onSelectionChange={(key) => {
+                        if (key) {
+                          const selectedEmployee =
+                            alternativeOwnerEmployees.find(
+                              (e) => e.id.toString() === key,
+                            );
+
+                          if (selectedEmployee) {
+                            handleAlternativeOwnerSelect(selectedEmployee);
+                          }
+                        } else {
+                          // Clear selection
+                          setSelectedAlternativeOwner(null);
+                          setAlternativeOwnerInputValue("");
+                          setFormData({ ...formData, alternativeOwner: 0 });
+                        }
+                      }}
+                    >
+                      {alternativeOwnerEmployees.map((employee) => (
                         <AutocompleteItem
                           key={employee.id.toString()}
                           textValue={`${employee.gradeName} ${employee.fullName}`}
@@ -1652,111 +1593,41 @@ export default function ProjectsPage() {
                       ))}
                     </Autocomplete>
 
-                    {/* Selected Analysts Display */}
-                    {selectedAnalysts.length > 0 && (
-                      <div className="space-y-2">
-                        <span className="text-sm text-default-600">
-                          {t("projects.selectedAnalysts")}:
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedAnalysts.map((analyst) => (
-                            <Chip
-                              key={analyst.id}
-                              color="primary"
-                              variant="flat"
-                              onClose={() => handleAnalystRemove(analyst.id)}
-                            >
-                              {analyst.gradeName} {analyst.fullName}
-                            </Chip>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <UnitSelector
-                    isRequired
-                    errorMessage={validationErrors.owningUnit}
-                    isInvalid={!!validationErrors.owningUnit}
-                    label={t("projects.owningUnit")}
-                    placeholder={t("projects.owningUnit")}
-                    selectedUnit={selectedUnit}
-                    onUnitSelect={(unit) => {
-                      setSelectedUnit(unit);
-                      setFormData({
-                        ...formData,
-                        owningUnit: unit ? unit.id : 0,
-                      });
-                      // Clear validation error when user selects
-                      if (validationErrors.owningUnit) {
-                        setValidationErrors({
-                          ...validationErrors,
-                          owningUnit: undefined,
-                        });
-                      }
-                    }}
-                  />
-                  {/* responsible manager */}
-                  <div>
-                    {selectedUnit && (
+                    {/* Analysts Selection Field */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {t("projects.analysts")}
+                      </label>
                       <Autocomplete
                         allowsCustomValue
-                        isClearable
                         className="max-w-full"
-                        inputValue={responsibleManagerInputValue}
-                        isLoading={responsibleManagerSearchLoading}
-                        items={responsibleManagers}
-                        label={t("projects.selectResponsibleManager")}
-                        placeholder={t("projects.searchManagers")}
-                        selectedKey={
-                          selectedResponsibleManager?.id.toString() || ""
-                        }
+                        inputValue={analystInputValue}
+                        isLoading={analystSearchLoading}
+                        items={analystEmployees}
+                        label={t("projects.selectAnalysts")}
+                        placeholder={t("projects.searchAnalysts")}
                         onInputChange={(value) => {
-                          setResponsibleManagerInputValue(value);
-                          // Clear selection if input doesn't match the selected manager
-                          if (
-                            selectedResponsibleManager &&
-                            value !==
-                              `${selectedResponsibleManager.gradeName} ${selectedResponsibleManager.fullName}`
-                          ) {
-                            setSelectedResponsibleManager(null);
-                            setFormData((prev) => ({
-                              ...prev,
-                              responsibleManagerId: 0,
-                            }));
+                          setAnalystInputValue(value);
+                          searchAnalystEmployees(value);
+                        }}
+                        onOpenChange={(isOpen) => {
+                          if (isOpen && analystEmployees.length === 0) {
+                            searchAnalystEmployees("");
                           }
-                          searchResponsibleManager(value);
                         }}
                         onSelectionChange={(key) => {
                           if (key) {
-                            const managerId = key.toString();
-                            const selectedManager = responsibleManagers.find(
-                              (e) => e.id.toString() === managerId,
+                            const selectedEmployee = analystEmployees.find(
+                              (e) => e.id.toString() === key,
                             );
 
-                            if (selectedManager) {
-                              // Directly set all values to ensure consistency
-                              setSelectedResponsibleManager(selectedManager);
-                              setResponsibleManagerInputValue(
-                                `${selectedManager.gradeName} ${selectedManager.fullName}`,
-                              );
-                              setFormData((prev) => ({
-                                ...prev,
-                                responsibleManagerId: selectedManager.id,
-                              }));
+                            if (selectedEmployee) {
+                              handleAnalystSelect(selectedEmployee);
                             }
-                          } else {
-                            // Clear selection
-                            setSelectedResponsibleManager(null);
-                            setResponsibleManagerInputValue("");
-                            setFormData((prev) => ({
-                              ...prev,
-                              responsibleManagerId: 0,
-                            }));
                           }
                         }}
                       >
-                        {responsibleManagers.map((employee) => (
+                        {analystEmployees.map((employee) => (
                           <AutocompleteItem
                             key={employee.id.toString()}
                             textValue={`${employee.gradeName} ${employee.fullName}`}
@@ -1782,103 +1653,234 @@ export default function ProjectsPage() {
                           </AutocompleteItem>
                         ))}
                       </Autocomplete>
-                    )}
-                  </div>
 
-                  <DatePicker
-                    isRequired
-                    errorMessage={validationErrors.startDate}
-                    isInvalid={!!validationErrors.startDate}
-                    label={t("projects.startDate")}
-                    value={formData.startDate}
-                    onChange={(date) => {
-                      setFormData({ ...formData, startDate: date });
-                      // Clear validation error when user selects
-                      if (validationErrors.startDate) {
-                        setValidationErrors({
-                          ...validationErrors,
-                          startDate: undefined,
-                        });
-                      }
-                    }}
-                  />
+                      {/* Selected Analysts Display */}
+                      {selectedAnalysts.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-sm text-default-600">
+                            {t("projects.selectedAnalysts")}:
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedAnalysts.map((analyst) => (
+                              <Chip
+                                key={analyst.id}
+                                color="primary"
+                                variant="flat"
+                                onClose={() => handleAnalystRemove(analyst.id)}
+                              >
+                                {analyst.gradeName} {analyst.fullName}
+                              </Chip>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                  <DatePicker
-                    isRequired
-                    errorMessage={validationErrors.expectedCompletionDate}
-                    isInvalid={!!validationErrors.expectedCompletionDate}
-                    label={t("projects.expectedCompletion")}
-                    value={formData.expectedCompletionDate}
-                    onChange={(date) => {
-                      setFormData({
-                        ...formData,
-                        expectedCompletionDate: date,
-                      });
-                      // Clear validation error when user selects
-                      if (validationErrors.expectedCompletionDate) {
-                        setValidationErrors({
-                          ...validationErrors,
-                          expectedCompletionDate: undefined,
-                        });
-                      }
-                    }}
-                  />
-                  <div className="md:col-span-2">
-                    <Input
+                    <UnitSelector
                       isRequired
-                      errorMessage={validationErrors.description}
-                      isInvalid={!!validationErrors.description}
-                      label={t("projects.description")}
-                      placeholder={t("projects.description")}
-                      value={formData.description}
-                      onChange={(e) => {
+                      errorMessage={validationErrors.owningUnit}
+                      isInvalid={!!validationErrors.owningUnit}
+                      label={t("projects.owningUnit")}
+                      placeholder={t("projects.owningUnit")}
+                      selectedUnit={selectedUnit}
+                      onUnitSelect={(unit) => {
+                        setSelectedUnit(unit);
                         setFormData({
                           ...formData,
-                          description: e.target.value,
+                          owningUnit: unit ? unit.id : 0,
                         });
-                        // Clear validation error when user starts typing
-                        if (validationErrors.description) {
+                        // Clear validation error when user selects
+                        if (validationErrors.owningUnit) {
                           setValidationErrors({
                             ...validationErrors,
-                            description: undefined,
+                            owningUnit: undefined,
                           });
                         }
                       }}
                     />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Input
-                      label={t("projects.remarks")}
-                      placeholder={t("projects.remarks")}
-                      value={formData.remarks}
-                      onChange={(e) =>
-                        setFormData({ ...formData, remarks: e.target.value })
-                      }
-                    />
-                  </div>
-                  <Select
-                    isLoading={phasesLoading}
-                    label={t("projects.status")}
-                    placeholder={t("projects.status")}
-                    selectedKeys={
-                      formData.status ? [formData.status.toString()] : []
-                    }
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
+                    {/* responsible manager */}
+                    <div>
+                      {selectedUnit && (
+                        <Autocomplete
+                          allowsCustomValue
+                          isClearable
+                          className="max-w-full"
+                          inputValue={responsibleManagerInputValue}
+                          isLoading={responsibleManagerSearchLoading}
+                          items={responsibleManagers}
+                          label={t("projects.selectResponsibleManager")}
+                          placeholder={t("projects.searchManagers")}
+                          selectedKey={
+                            selectedResponsibleManager?.id.toString() || ""
+                          }
+                          onInputChange={(value) => {
+                            setResponsibleManagerInputValue(value);
+                            // Clear selection if input doesn't match the selected manager
+                            if (
+                              selectedResponsibleManager &&
+                              value !==
+                                `${selectedResponsibleManager.gradeName} ${selectedResponsibleManager.fullName}`
+                            ) {
+                              setSelectedResponsibleManager(null);
+                              setFormData((prev) => ({
+                                ...prev,
+                                responsibleManagerId: 0,
+                              }));
+                            }
+                            searchResponsibleManager(value);
+                          }}
+                          onSelectionChange={(key) => {
+                            if (key) {
+                              const managerId = key.toString();
+                              const selectedManager = responsibleManagers.find(
+                                (e) => e.id.toString() === managerId,
+                              );
 
-                      setFormData({
-                        ...formData,
-                        status: selected ? parseInt(selected) : 1,
-                      });
-                    }}
-                  >
-                    {phases.map((phase) => (
-                      <SelectItem key={phase.code.toString()}>
-                        {language === "ar" ? phase.nameAr : phase.nameEn}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
+                              if (selectedManager) {
+                                // Directly set all values to ensure consistency
+                                setSelectedResponsibleManager(selectedManager);
+                                setResponsibleManagerInputValue(
+                                  `${selectedManager.gradeName} ${selectedManager.fullName}`,
+                                );
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  responsibleManagerId: selectedManager.id,
+                                }));
+                              }
+                            } else {
+                              // Clear selection
+                              setSelectedResponsibleManager(null);
+                              setResponsibleManagerInputValue("");
+                              setFormData((prev) => ({
+                                ...prev,
+                                responsibleManagerId: 0,
+                              }));
+                            }
+                          }}
+                        >
+                          {responsibleManagers.map((employee) => (
+                            <AutocompleteItem
+                              key={employee.id.toString()}
+                              textValue={`${employee.gradeName} ${employee.fullName}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Avatar
+                                  name={employee.fullName || t("common.none")}
+                                  size="sm"
+                                />
+                                <div className="flex flex-col">
+                                  <span className="font-medium">
+                                    {employee.gradeName}{" "}
+                                    {employee.fullName || t("common.none")}
+                                  </span>
+                                  <span className="text-sm text-default-500">
+                                    {employee.militaryNumber || "N/A"}
+                                  </span>
+                                  <span className="text-xs text-default-400">
+                                    @{employee.userName || t("common.none")}
+                                  </span>
+                                </div>
+                              </div>
+                            </AutocompleteItem>
+                          ))}
+                        </Autocomplete>
+                      )}
+                    </div>
+
+                    <DatePicker
+                      isRequired
+                      errorMessage={validationErrors.startDate}
+                      isInvalid={!!validationErrors.startDate}
+                      label={t("projects.startDate")}
+                      value={formData.startDate}
+                      onChange={(date) => {
+                        setFormData({ ...formData, startDate: date });
+                        // Clear validation error when user selects
+                        if (validationErrors.startDate) {
+                          setValidationErrors({
+                            ...validationErrors,
+                            startDate: undefined,
+                          });
+                        }
+                      }}
+                    />
+
+                    <DatePicker
+                      isRequired
+                      errorMessage={validationErrors.expectedCompletionDate}
+                      isInvalid={!!validationErrors.expectedCompletionDate}
+                      label={t("projects.expectedCompletion")}
+                      value={formData.expectedCompletionDate}
+                      onChange={(date) => {
+                        setFormData({
+                          ...formData,
+                          expectedCompletionDate: date,
+                        });
+                        // Clear validation error when user selects
+                        if (validationErrors.expectedCompletionDate) {
+                          setValidationErrors({
+                            ...validationErrors,
+                            expectedCompletionDate: undefined,
+                          });
+                        }
+                      }}
+                    />
+                    <div className="md:col-span-2">
+                      <Input
+                        isRequired
+                        errorMessage={validationErrors.description}
+                        isInvalid={!!validationErrors.description}
+                        label={t("projects.description")}
+                        placeholder={t("projects.description")}
+                        value={formData.description}
+                        onChange={(e) => {
+                          setFormData({
+                            ...formData,
+                            description: e.target.value,
+                          });
+                          // Clear validation error when user starts typing
+                          if (validationErrors.description) {
+                            setValidationErrors({
+                              ...validationErrors,
+                              description: undefined,
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Input
+                        label={t("projects.remarks")}
+                        placeholder={t("projects.remarks")}
+                        value={formData.remarks}
+                        onChange={(e) =>
+                          setFormData({ ...formData, remarks: e.target.value })
+                        }
+                      />
+                    </div>
+                    <Select
+                      isLoading={phasesLoading}
+                      label={t("projects.status")}
+                      placeholder={t("projects.status")}
+                      selectedKeys={
+                        formData.status ? [formData.status.toString()] : []
+                      }
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0] as string;
+
+                        setFormData({
+                          ...formData,
+                          status: selected ? parseInt(selected) : 1,
+                        });
+                      }}
+                    >
+                      {phases.map((phase) => (
+                        <SelectItem key={phase.code.toString()}>
+                          {language === "ar" ? phase.nameAr : phase.nameEn}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
                 )}
               </ModalBody>
               <ModalFooter>
