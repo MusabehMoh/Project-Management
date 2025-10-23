@@ -11,7 +11,7 @@ export const API_CONFIG = {
     (window as any).PMA_CONFIG?.wsUrl ||
     import.meta.env.VITE_WS_URL ||
     "http://localhost:52246/notificationHub",
-  TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || "20000"),
+  TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || "40000"),
   HEADERS: {
     Accept: "application/json",
   },

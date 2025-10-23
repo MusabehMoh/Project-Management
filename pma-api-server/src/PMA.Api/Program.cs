@@ -33,6 +33,29 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
+// Configure file upload limits for large file uploads
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    // Increase max form data size (default is 128 MB)
+    options.MultipartBodyLengthLimit = 500 * 1024 * 1024; // 500 MB
+    options.ValueLengthLimit = 50 * 1024 * 1024; // 50 MB for individual values
+    options.MultipartHeadersLengthLimit = 1024 * 1024; // 1 MB for headers
+});
+
+// Configure Kestrel server options for large requests
+builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = 500 * 1024 * 1024; // 500 MB
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(5);
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(10);
+});
+
+// Configure IIS options for large requests (when hosting on IIS)
+builder.Services.Configure<Microsoft.AspNetCore.Server.IIS.Core.IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = 500 * 1024 * 1024; // 500 MB
+});
+
 // Configure AttachmentSettings
 builder.Services.Configure<AttachmentSettings>(builder.Configuration.GetSection("AttachmentSettings"));
 

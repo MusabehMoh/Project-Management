@@ -1120,9 +1120,9 @@ const translations = {
       "Expected completion date is required",
     "requirements.validation.fileEmptyError": "Empty File Rejected",
     "requirements.validation.filesEmptyError": "files are empty",
-    "requirements.validation.fileSizeTooLarge": "File size exceeds the maximum limit of {0}MB",
+    "requirements.validation.fileSizeTooLarge": "File size exceeds the maximum limit of 50MB",
     "requirements.validation.fileTypeNotAllowed": "File type '{0}' is not allowed. Allowed types: {1}",
-    "requirements.validation.filesSizeTooLarge": "files exceed the maximum size limit of {0}MB",
+    "requirements.validation.filesSizeTooLarge": "files exceed the maximum size limit of 50MB",
     "requirements.emptyState.title": "No Requirements Yet",
     "requirements.emptyState.description":
       "Start by adding your first requirement for this project",
@@ -2919,11 +2919,11 @@ const translations = {
     "requirements.validation.fileEmptyError": "تم رفض ملف فارغ",
     "requirements.validation.filesEmptyError": "ملفات فارغة",
     "requirements.validation.fileSizeTooLarge":
-      "حجم الملف يتجاوز الحد الأقصى المسموح به وهو {0} ميجابايت",
+      "حجم الملف يتجاوز الحد الأقصى المسموح به وهو 50 ميجابايت",
     "requirements.validation.fileTypeNotAllowed":
       "نوع الملف '{0}' غير مسموح به. الأنواع المسموحة: {1}",
     "requirements.validation.filesSizeTooLarge":
-      "الملفات تتجاوز الحد الأقصى لحجم الملف وهو {0} ميجابايت",
+      "الملفات تتجاوز الحد الأقصى لحجم الملف وهو 50 ميجابايت",
     "requirements.emptyState.title": "لا توجد متطلبات بعد",
     "requirements.emptyState.description": "ابدأ بإضافة أول متطلب لهذا المشروع",
     "requirements.emptyState.action": "إضافة أول متطلب",

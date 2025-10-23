@@ -760,7 +760,6 @@ export default function ProjectRequirementsPage() {
 
     if (allRejectedFiles.length > 0) {
       setHasFileUploadError(true);
-
       // Handle empty files
       if (emptyFiles.length > 0) {
         const fileList = emptyFiles.join(", ");
@@ -776,10 +775,7 @@ export default function ProjectRequirementsPage() {
         const fileList = oversizedFiles.join(", ");
 
         showWarningToast(
-          t("requirements.validation.filesSizeTooLarge").replace(
-            "{0}",
-            maxFileSizeMB.toString(),
-          ),
+          t("requirements.validation.filesSizeTooLarge"),
           fileList,
         );
       }

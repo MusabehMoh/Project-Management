@@ -20,6 +20,6 @@ window.PMA_CONFIG = {
   basename: "",
 
   // File upload configuration
-  maxFileSizeMB: 10,
+  maxFileSizeMB: 50,
   allowedFileTypes: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "jpg", "jpeg", "png", "gif", "bmp", "zip", "rar"]
 };
