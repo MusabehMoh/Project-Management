@@ -801,13 +801,12 @@ export default function ProjectRequirementsPage() {
       setTimeout(() => {
         setHasFileUploadError(false);
       }, 4000);
-    }
 
-    // If all files were rejected, don't add anything
-    if (newFiles.length === 0) {
+      // Don't add any files if there are validation errors
       return;
     }
 
+    // Only add files if all validation passed
     setFormData((prev) => ({
       ...prev,
       uploadedFiles: [...prev.uploadedFiles, ...newFiles],
