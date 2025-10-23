@@ -311,6 +311,7 @@ export default function RequirementsPage() {
                   </span>
                   <Select
                     className="w-24"
+                    disallowEmptySelection={true}
                     selectedKeys={[effectivePageSize.toString()]}
                     size="sm"
                     onSelectionChange={(keys) => {

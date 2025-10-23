@@ -38,8 +38,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Timeline> Timelines { get; set; } 
     public DbSet<CalendarEvent> CalendarEvents { get; set; }
     public DbSet<CalendarEventAssignment> CalendarEventAssignments { get; set; }
-    public DbSet<SubTaskAssignment> SubTaskAssignments { get; set; }
+ 
     public DbSet<ProjectAnalyst> ProjectAnalysts { get; set; }
+ 
     
     // New DbSets for task assignments and dependencies
     public DbSet<TaskAssignment> TaskAssignments { get; set; }

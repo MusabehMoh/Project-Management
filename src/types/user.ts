@@ -1,3 +1,5 @@
+import { Department } from "./timeline";
+
 // User Management Types
 export interface User {
   id: number;
@@ -25,6 +27,7 @@ export interface Role {
   name: string;
   active: boolean;
   roleOrder: number;
+  department: Department;
   actions?: Action[];
 }
 

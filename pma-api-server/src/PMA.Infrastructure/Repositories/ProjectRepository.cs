@@ -93,6 +93,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         query = query.Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN due to nullable FK
+            .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!)
                 .ThenInclude(pa => pa.Analyst);
 
@@ -121,6 +122,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
 
         var totalCount = await query.CountAsync();
         var projects = await query
+            .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
             .ToListAsync();
@@ -136,6 +138,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.Tasks)
             .Include(p => p.ProjectRequirements)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN for optional alternative owner
+            .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!) // LEFT JOIN for optional analysts collection
                 .ThenInclude(pa => pa.Analyst)
             .FirstOrDefaultAsync(p => p.Id == id);
@@ -147,6 +150,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN for optional alternative owner
+             .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!) // LEFT JOIN for optional analysts collection
                 .ThenInclude(pa => pa.Analyst)
             .Where(p =>
@@ -178,7 +182,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .ToListAsync();
     }
 
-    public async Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(string currentUserPrsId, int page, int limit, string? search = null, int? projectId = null)
+    public async Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(string currentUserPrsId, int page, int limit, string? search = null, int? projectId = null, bool skipAnalystFilter = false)
     {
         // Get projects where the current user's PrsId is assigned as an analyst
         var query = _context.Projects
@@ -186,12 +190,13 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.OwningUnitEntity)
             .Include(p => p.ProjectRequirements)
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN for optional alternative owner
+            .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!) // LEFT JOIN for optional analysts collection
                 .ThenInclude(pa => pa.Analyst)
             .AsQueryable();
 
-        // Filter by analyst assignment - check if current user's PrsId matches any ProjectAnalyst
-        if (int.TryParse(currentUserPrsId, out int userId))
+        // Filter by analyst assignment - check if current user's PrsId matches any ProjectAnalyst (skip if manager/admin)
+        if (!skipAnalystFilter && int.TryParse(currentUserPrsId, out int userId))
         {
             query = query.Where(p => p.ProjectAnalysts!.Any(pa => pa.AnalystId == userId));
         }

@@ -105,8 +105,7 @@ public class TeamRepository : Repository<Team>, ITeamRepository
 
     public async Task<IEnumerable<Employee>> SearchEmployeesInTeamsAsync(string searchTerm)
     {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-            return Enumerable.Empty<Employee>();
+     
 
         // Get all team members who are active and match the search criteria
         var employees = await _context.Teams

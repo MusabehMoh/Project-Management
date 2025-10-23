@@ -28,6 +28,7 @@ public class Project
     public int ProjectOwnerId { get; set; }
 
     public int? AlternativeOwnerId { get; set; }
+    public int? ResponsibleUnitManagerId { get; set; }
 
     [Required]
     public int OwningUnitId { get; set; }
@@ -69,7 +70,8 @@ public class Project
     // Navigation properties
     [ForeignKey("ProjectOwnerId")]
     public Employee? ProjectOwnerEmployee { get; set; }
-
+    [ForeignKey("ResponsibleUnitManagerId")]
+    public Employee? ResponsibleUnitManagerEmployee { get; set; }
     [ForeignKey("AlternativeOwnerId")]
     public Employee? AlternativeOwnerEmployee { get; set; }
 
@@ -78,6 +80,7 @@ public class Project
 
     [ForeignKey("ProjectId")]
     public ICollection<ProjectAnalyst>? ProjectAnalysts { get; set; }
+     
 
     public ICollection<Task>? Tasks { get; set; }
     public ICollection<ProjectRequirement>? ProjectRequirements { get; set; }

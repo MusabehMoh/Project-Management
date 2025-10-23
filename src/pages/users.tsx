@@ -293,7 +293,9 @@ export default function UsersPage() {
     setSelectedRole(userRole?.id || null);
 
     // Set additional actions (exclude role's default actions)
-    const roleDefaultActions = userRole?.actions?.map((a) => a.id) || [];
+    // Use current role data instead of userRole.actions to ensure consistency
+    const roleData = roles.find((r) => r.id === userRole?.id);
+    const roleDefaultActions = roleData?.actions?.map((a) => a.id) || [];
     const userActions = user.actions?.map((a) => a.id) || [];
     const additionalActions = userActions.filter(
       (actionId) => !roleDefaultActions.includes(actionId),
@@ -564,6 +566,7 @@ export default function UsersPage() {
                 <Select
                   aria-label={t("pagination.perPage")}
                   className="w-24"
+                  disallowEmptySelection={true}
                   selectedKeys={[effectivePageSize.toString()]}
                   size="sm"
                   onSelectionChange={(keys) => {
@@ -1021,9 +1024,22 @@ export default function UsersPage() {
                           const selectedKeys = Array.from(keys);
                           const roleId = selectedKeys[0] as string;
 
-                          setSelectedRole(roleId ? parseInt(roleId) : null);
-                          // Reset additional actions when role changes
-                          setSelectedAdditionalActions([]);
+                          const newRoleId = roleId ? parseInt(roleId) : null;
+                          setSelectedRole(newRoleId);
+
+                          // Filter out additional actions that are now default actions for the new role
+                          if (newRoleId) {
+                            const newRoleData = roles.find((r) => r.id === newRoleId);
+                            const newRoleDefaultActionIds = newRoleData?.actions?.map((a) => a.id) || [];
+                            setSelectedAdditionalActions(
+                              selectedAdditionalActions.filter(
+                                (actionId) => !newRoleDefaultActionIds.includes(actionId)
+                              )
+                            );
+                          } else {
+                            // No role selected, clear additional actions
+                            setSelectedAdditionalActions([]);
+                          }
                         }}
                       >
                         {roles.map((role) => (
@@ -1210,40 +1226,6 @@ export default function UsersPage() {
                           )}
                         </div>
                       )}
-                    {/* Summary of All Permissions */}
-                    {/*{selectedRole && (
-                      <div>
-                        <p className="text-small text-default-500 mb-2">
-                          {t("users.permissionsSummary")}
-                        </p>
-                        <Card className="bg-primary-50 border border-primary-200">
-                          <CardBody className="py-3">
-                            <div className="space-y-2">
-                              <div>
-                                <p className="text-small font-medium text-primary">
-                                  {t("roles.role")}:{" "}
-                                  {getSelectedRoleData()?.name}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-tiny text-default-600">
-                                  {t("actions.totalActions")}:{" "}
-                                  {getAllUserActions().length}
-                                </p>
-                                <p className="text-tiny text-default-600">
-                                  {t("actions.defaultFromRole")}:{" "}
-                                  {getRoleDefaultActions().length}
-                                </p>
-                                <p className="text-tiny text-default-600">
-                                  {t("actions.additionalSelected")}:{" "}
-                                  {selectedAdditionalActions.length}
-                                </p>
-                              </div>
-                            </div>
-                          </CardBody>
-                        </Card>
-                      </div>
-                    )}*/}
                   </div>
                 </ModalBody>
                 <ModalFooter>

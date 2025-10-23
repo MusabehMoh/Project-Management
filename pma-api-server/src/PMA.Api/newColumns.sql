@@ -26,9 +26,9 @@ DROP COLUMN Analysts
 
 EXEC sp_rename 'Users.IsVisible', 'IsActive', 'COLUMN';
 
-
+ALTER TABLE Projects
+ADD ResponsibleUnitManagerId INT NULL;
 
 update Lookups set Name = N'Under Analysis' , NameAr = N'قيد التحليل' where id = 2
-
 
 update Lookups set NameAr = N'عاجلة' where id = 16

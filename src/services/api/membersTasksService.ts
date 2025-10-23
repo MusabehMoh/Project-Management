@@ -364,6 +364,7 @@ export class MembersTasksService {
       description: newTask.description,
       startDate: newTask.startDate,
       endDate: newTask.endDate,
+      priority: newTask.priority,
       assignedMembers: newTask.assignedMembers.map((id) => parseInt(id)),
     };
 

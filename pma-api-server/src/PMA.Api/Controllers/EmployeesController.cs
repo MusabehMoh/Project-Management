@@ -177,15 +177,15 @@ public class EmployeesController : ApiBaseController
     [HttpGet("searchEmployee")]
     [ProducesResponseType(typeof(IEnumerable<EmployeeDto>), 200)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> SearchEmployee([FromQuery] string q = "", [FromQuery] int? departmentId = null, [FromQuery] int? limit = null)
+    public async Task<IActionResult> SearchEmployee([FromQuery] string q = "", [FromQuery] int? departmentId = null, [FromQuery] int? limit = 20)
     {
         try
         {
             // Allow empty query when departmentId is provided (to get all department members)
-            if (string.IsNullOrWhiteSpace(q) && !departmentId.HasValue)
-            {
-                return BadRequest(Error<IEnumerable<EmployeeDto>>("Search query is required when departmentId is not provided", null, 400));
-            }
+            //if (string.IsNullOrWhiteSpace(q) && !departmentId.HasValue)
+            //{
+            //    return BadRequest(Error<IEnumerable<EmployeeDto>>("Search query is required when departmentId is not provided", null, 400));
+            //}
 
             // If departmentId is provided, filter by department
             IEnumerable<EmployeeDto> employees;

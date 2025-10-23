@@ -920,6 +920,7 @@ export default function MembersTasksPage() {
               <Select
                 aria-label={t("pagination.itemsPerPage")}
                 className="w-20"
+                disallowEmptySelection={true}
                 selectedKeys={[
                   normalizePageSize(effectivePageSize, 10).toString(),
                 ]}

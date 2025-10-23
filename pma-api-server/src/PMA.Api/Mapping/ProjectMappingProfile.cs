@@ -14,6 +14,7 @@ public class ProjectMappingProfile : Profile
             .ForMember(dest => dest.ProjectOwnerId, opt => opt.MapFrom(src => src.ProjectOwner))
             .ForMember(dest => dest.AlternativeOwnerId, opt => opt.MapFrom(src => src.AlternativeOwner))
             .ForMember(dest => dest.OwningUnitId, opt => opt.MapFrom(src => src.OwningUnit))
+            .ForMember(dest => dest.ResponsibleUnitManagerId, opt => opt.MapFrom(src => src.ResponsibleManagerId))
             .ForMember(dest => dest.ProjectAnalysts, opt => opt.Ignore()) // Will be handled separately
             .ForMember(dest => dest.ProjectOwner, opt => opt.Ignore()) // Will be populated from database lookup
             .ForMember(dest => dest.AlternativeOwner, opt => opt.Ignore()) // Will be populated from database lookup
@@ -21,6 +22,7 @@ public class ProjectMappingProfile : Profile
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
             .ForMember(dest => dest.ProjectOwnerEmployee, opt => opt.Ignore())
+            .ForMember(dest => dest.ResponsibleUnitManagerEmployee, opt => opt.Ignore())
             .ForMember(dest => dest.AlternativeOwnerEmployee, opt => opt.Ignore())
             .ForMember(dest => dest.OwningUnitEntity, opt => opt.Ignore())
             .ForMember(dest => dest.Tasks, opt => opt.Ignore());
@@ -33,11 +35,13 @@ public class ProjectMappingProfile : Profile
             .ForMember(dest => dest.ProjectOwnerId, opt => opt.MapFrom(src => src.ProjectOwner))
             .ForMember(dest => dest.AlternativeOwnerId, opt => opt.MapFrom(src => src.AlternativeOwner))
             .ForMember(dest => dest.OwningUnitId, opt => opt.MapFrom(src => src.OwningUnit))
+            .ForMember(dest => dest.ResponsibleUnitManagerId, opt => opt.MapFrom(src => src.ResponsibleManagerId))
             .ForMember(dest => dest.ProjectAnalysts, opt => opt.Ignore()) // Will be handled separately
             .ForMember(dest => dest.ProjectOwner, opt => opt.Ignore()) // Will be populated from database lookup
             .ForMember(dest => dest.AlternativeOwner, opt => opt.Ignore()) // Will be populated from database lookup
             .ForMember(dest => dest.OwningUnit, opt => opt.Ignore()) // Will be populated from database lookup 
             .ForMember(dest => dest.ProjectOwnerEmployee, opt => opt.Ignore())
+            .ForMember(dest => dest.ResponsibleUnitManagerEmployee, opt => opt.Ignore())
             .ForMember(dest => dest.AlternativeOwnerEmployee, opt => opt.Ignore())
             .ForMember(dest => dest.OwningUnitEntity, opt => opt.Ignore())
             .ForMember(dest => dest.Tasks, opt => opt.Ignore())

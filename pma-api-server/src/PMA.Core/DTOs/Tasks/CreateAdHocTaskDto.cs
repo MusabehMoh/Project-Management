@@ -17,6 +17,9 @@ public class CreateAdHocTaskDto
     [Required(ErrorMessage = "EndDate is required")]
     public DateTime EndDate { get; set; }
 
+    [Required(ErrorMessage = "Priority is required")]
+    public int Priority { get; set; }
+
     [Required(ErrorMessage = "At least one member must be assigned")]
     public List<int> AssignedMembers { get; set; } = new List<int>();
 }

@@ -546,6 +546,7 @@ export default function ApprovalRequestsPage() {
                     </span>
                     <Select
                       className="w-20"
+                      disallowEmptySelection={true}
                       selectedKeys={[
                         normalizePageSize(pageSize, 10).toString(),
                       ]}
