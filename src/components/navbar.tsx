@@ -588,7 +588,7 @@ export const Navbar = () => {
         justify="end"
       >
         <NavbarItem
-          className="hidden lg:flex animate-in slide-in-from-right duration-500"
+          className="hidden animate-in slide-in-from-right duration-500"
           style={{ animationDelay: "200ms" }}
         >
           {searchInput}
@@ -1035,7 +1035,7 @@ export const Navbar = () => {
       </NavbarMenu>
 
       {/* Global Search Modal */}
-      <GlobalSearchModal isOpen={isOpen} onOpenChange={onOpenChange} />
+      <GlobalSearchModal isOpen={isOpen} onOpenChange={onOpenChange}  />
     </HeroUINavbar>
   );
 };

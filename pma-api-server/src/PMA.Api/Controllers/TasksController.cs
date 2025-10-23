@@ -431,8 +431,15 @@ public class TasksController : ApiBaseController
             }
             else
             {
-                // Fallback: Set to 100 if Completed, otherwise 0
-                existingTask.Progress = updateStatusDto.StatusId == Core.Enums.TaskStatus.Completed ? 100 : 0;
+                // Set progress based on status
+                existingTask.Progress = updateStatusDto.StatusId switch
+                {
+                     Core.Enums.TaskStatus.ToDo => 0,
+                     Core.Enums.TaskStatus.InProgress => 25,
+                   Core.Enums.TaskStatus.InReview => 75,
+                    Core.Enums.TaskStatus.Completed => 100,
+                    _ => 0 // Default fallback
+                };
             }
             
             // Update the task
