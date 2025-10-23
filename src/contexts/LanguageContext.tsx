@@ -811,6 +811,10 @@ const translations = {
     "projects.alternativeOwner": "Alternative Owner",
     "projects.owningUnit": "Owning Unit",
     "projects.startDate": "Start Date",
+    "projects.expectedCompletionDate": "Expected Completion Date",
+    "projects.budget": "Budget",
+    "projects.responsibleManager": "Responsible Manager",
+    "projects.projectOwnerDetails": "Project Owner Details",
     "projects.expectedCompletion": "Expected Completion",
     "projects.description": "Description",
     "projects.remarks": "Remarks",
@@ -1120,9 +1124,12 @@ const translations = {
       "Expected completion date is required",
     "requirements.validation.fileEmptyError": "Empty File Rejected",
     "requirements.validation.filesEmptyError": "files are empty",
-    "requirements.validation.fileSizeTooLarge": "File size exceeds the maximum limit of 50MB",
-    "requirements.validation.fileTypeNotAllowed": "File type '{0}' is not allowed. Allowed types: {1}",
-    "requirements.validation.filesSizeTooLarge": "files exceed the maximum size limit of 50MB",
+    "requirements.validation.fileSizeTooLarge":
+      "File size exceeds the maximum limit of 50MB",
+    "requirements.validation.fileTypeNotAllowed":
+      "File type '{0}' is not allowed. Allowed types: {1}",
+    "requirements.validation.filesSizeTooLarge":
+      "files exceed the maximum size limit of 50MB",
     "requirements.emptyState.title": "No Requirements Yet",
     "requirements.emptyState.description":
       "Start by adding your first requirement for this project",
@@ -1192,13 +1199,15 @@ const translations = {
     "users.permissionsSummary": "Permissions Summary",
     "users.confirmDelete": "Confirm Delete User",
     "users.deleteConfirmMessage": "Are you sure you want to delete this user?",
-    
+
     // User error messages
     "users.error.cannotDelete": "Cannot delete user",
     "users.error.referencedIn": "User is referenced in",
     "users.error.taskAssignments": "Task Assignment(s)",
-    "users.error.projectRequirementsCreator": "Project Requirement(s) as Creator",
-    "users.error.projectRequirementsAnalyst": "Project Requirement(s) as Analyst",
+    "users.error.projectRequirementsCreator":
+      "Project Requirement(s) as Creator",
+    "users.error.projectRequirementsAnalyst":
+      "Project Requirement(s) as Analyst",
     "users.error.designRequests": "Design Request(s)",
     "users.error.subTasks": "Sub Task(s)",
     "users.error.calendarEvents": "Calendar Event(s)",
@@ -1208,7 +1217,7 @@ const translations = {
     "users.error.usernameExists": "User with username '{0}' already exists",
     "users.error.prsIdExists": "User with PRS ID '{0}' already exists",
     "users.error.userExists": "User already exists",
-    
+
     "users.userStats": "User Statistics",
     "users.totalUsers": "Total Users",
     "users.activeUsers": "Active Users",
@@ -2615,6 +2624,10 @@ const translations = {
     "projects.alternativeOwner": "مدير المشروع البديل",
     "projects.owningUnit": "الوحدة المالكة",
     "projects.startDate": "تاريخ البداية",
+    "projects.expectedCompletionDate": "تاريخ الإنجاز المتوقع",
+    "projects.budget": "الميزانية",
+    "projects.responsibleManager": "المدير المسؤول",
+    "projects.projectOwnerDetails": "تفاصيل مالك المشروع",
     "projects.expectedCompletion": "تاريخ الإنجاز المتوقع",
     "projects.description": "الوصف",
     "projects.remarks": "ملاحظات",
@@ -2993,7 +3006,7 @@ const translations = {
     "users.permissionsSummary": "ملخص الصلاحيات",
     "users.confirmDelete": "تأكيد حذف المستخدم",
     "users.deleteConfirmMessage": "هل أنت متأكد من حذف هذا المستخدم؟",
-    
+
     // User error messages (Arabic)
     "users.error.cannotDelete": "لا يمكن حذف المستخدم",
     "users.error.referencedIn": "المستخدم مرتبط بـ",
@@ -3009,7 +3022,7 @@ const translations = {
     "users.error.usernameExists": "المستخدم باسم '{0}' موجود بالفعل",
     "users.error.prsIdExists": "المستخدم برقم الموظف '{0}' موجود بالفعل",
     "users.error.userExists": "المستخدم موجود بالفعل",
-    
+
     "users.userStats": "إحصائيات المستخدمين",
     "users.totalUsers": "إجمالي المستخدمين",
     "users.activeUsers": "المستخدمون النشطون",

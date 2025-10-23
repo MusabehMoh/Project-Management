@@ -20,6 +20,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { FilePreview } from "@/components/FilePreview";
 import { projectRequirementsService } from "@/services/api";
+import { convertTypeToString } from "@/constants/projectRequirements";
 
 // Format date helper
 const formatDate = (dateString: string) => {
@@ -149,8 +150,18 @@ export default function RequirementDetailsDrawer({
                     {getPriorityLabel(requirement.priority)}
                   </Chip>
                   {requirement.type && (
-                    <Chip color="default" size="sm" variant="flat">
-                      {t(`requirements.type.${requirement.type}`)}
+                    <Chip
+                      color={
+                        convertTypeToString(requirement.type) === "new"
+                          ? "success"
+                          : "warning"
+                      }
+                      size="sm"
+                      variant="flat"
+                    >
+                      {convertTypeToString(requirement.type) === "new"
+                        ? t("requirements.new")
+                        : t("requirements.changeRequest")}
                     </Chip>
                   )}
                 </div>

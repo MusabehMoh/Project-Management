@@ -25,6 +25,9 @@ export interface Project {
   priority?: "low" | "medium" | "high";
   budget?: number;
   progress?: number;
+  // Requirements statistics (for drawer display)
+  requirementsCount?: number;
+  completedRequirements?: number;
 }
 
 export interface Employee {

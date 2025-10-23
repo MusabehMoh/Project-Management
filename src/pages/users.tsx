@@ -1472,10 +1472,7 @@ export default function UsersPage() {
                                         >
                                           <p className="font-medium text-small text-foreground">
                                             {action.description}
-                                          </p>
-                                          <p className="text-tiny text-default-500 mt-1">
-                                            {action.description}
-                                          </p>
+                                          </p> 
                                         </div>
                                       </div>
                                     </CardBody>

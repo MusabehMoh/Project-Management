@@ -112,6 +112,10 @@ public class MappingService : IMappingService
         if (project == null)
             return null!;
 
+        // Calculate requirements statistics
+        int totalRequirements = project.ProjectRequirements?.Count() ?? 0;
+        int completedRequirements = project.ProjectRequirements?.Count(r => r.Status == RequirementStatusEnum.Completed) ?? 0;
+
         return new ProjectDto
         {
             Id = project.Id,
@@ -137,7 +141,9 @@ public class MappingService : IMappingService
             CreatedAt = project.CreatedAt,
             UpdatedAt = project.UpdatedAt,
             Priority = project.Priority, 
-            Progress = project.Progress
+            Progress = project.Progress,
+            RequirementsCount = totalRequirements,
+            CompletedRequirements = completedRequirements
         };
     }
 

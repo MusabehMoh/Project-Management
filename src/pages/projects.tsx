@@ -11,8 +11,6 @@ import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { DatePicker } from "@heroui/date-picker";
 import { Avatar } from "@heroui/avatar";
-
-import { useTeamSearchByDepartment } from "@/hooks/useTeamSearchByDepartment";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Skeleton } from "@heroui/skeleton";
 import {
@@ -40,6 +38,7 @@ import {
 import { parseDate } from "@internationalized/date";
 import { addToast } from "@heroui/toast";
 
+import { useTeamSearchByDepartment } from "@/hooks/useTeamSearchByDepartment";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { projectService } from "@/services/api";
@@ -51,10 +50,11 @@ import {
   SendIcon,
   DownloadIcon,
   SearchIcon,
+  InfoIcon,
 } from "@/components/icons";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { UnitSelector } from "@/components/UnitSelector";
-import { ProjectDetailsModal } from "@/components/ProjectDetailsModal";
+import ProjectDetailsDrawer from "@/components/ProjectDetailsDrawer";
 import { useProjects } from "@/hooks/useProjects";
 import { useProjectStatus } from "@/hooks/useProjectStatus";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
@@ -899,8 +899,8 @@ export default function ProjectsPage() {
                 {stats?.new || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" 
-                  ? stats?.statusNames?.new.ar || "جديد" 
+                {language === "ar"
+                  ? stats?.statusNames?.new.ar || "جديد"
                   : stats?.statusNames?.new.en || "New"}
               </p>
             </div>
@@ -913,8 +913,8 @@ export default function ProjectsPage() {
                 {stats?.underStudy || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" 
-                  ? stats?.statusNames?.underStudy.ar || "قيد التحليل" 
+                {language === "ar"
+                  ? stats?.statusNames?.underStudy.ar || "قيد التحليل"
                   : stats?.statusNames?.underStudy.en || "Under Analysis"}
               </p>
             </div>
@@ -927,9 +927,10 @@ export default function ProjectsPage() {
                 {stats?.underDevelopment || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" 
-                  ? stats?.statusNames?.underDevelopment.ar || "قيد البرمجة" 
-                  : stats?.statusNames?.underDevelopment.en || "Under Development"}
+                {language === "ar"
+                  ? stats?.statusNames?.underDevelopment.ar || "قيد البرمجة"
+                  : stats?.statusNames?.underDevelopment.en ||
+                    "Under Development"}
               </p>
             </div>
           </div>
@@ -941,8 +942,8 @@ export default function ProjectsPage() {
                 {stats?.underTesting || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" 
-                  ? stats?.statusNames?.underTesting.ar || "بيئة الفحص" 
+                {language === "ar"
+                  ? stats?.statusNames?.underTesting.ar || "بيئة الفحص"
                   : stats?.statusNames?.underTesting.en || "Under Testing"}
               </p>
             </div>
@@ -955,9 +956,10 @@ export default function ProjectsPage() {
                 {stats?.production || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" 
-                  ? stats?.statusNames?.production.ar || "بيئة الانتاج" 
-                  : stats?.statusNames?.production.en || "Production Environment"}
+                {language === "ar"
+                  ? stats?.statusNames?.production.ar || "بيئة الانتاج"
+                  : stats?.statusNames?.production.en ||
+                    "Production Environment"}
               </p>
             </div>
           </div>
@@ -969,8 +971,8 @@ export default function ProjectsPage() {
                 {stats?.delayed || 0}
               </p>
               <p className="text-sm text-default-500">
-                {language === "ar" 
-                  ? stats?.statusNames?.delayed.ar || "مؤجل" 
+                {language === "ar"
+                  ? stats?.statusNames?.delayed.ar || "مؤجل"
                   : stats?.statusNames?.delayed.en || "Postponed"}
               </p>
             </div>
@@ -1282,6 +1284,14 @@ export default function ProjectsPage() {
                               </Button>
                             </DropdownTrigger>
                             <DropdownMenu aria-label="Project actions">
+                              <DropdownItem
+                                key="details"
+                                startContent={<InfoIcon />}
+                                onPress={() => handleViewDetails(project)}
+                              >
+                                {t("projects.viewDetails")}
+                              </DropdownItem>
+
                               {hasPermission({
                                 actions: ["projects.update"],
                               }) ? (
@@ -1886,11 +1896,15 @@ export default function ProjectsPage() {
         </ModalContent>
       </Modal>
 
-      {/* Project Details Modal */}
-      <ProjectDetailsModal
+      {/* Project Details Drawer */}
+      <ProjectDetailsDrawer
         isOpen={isDetailsOpen}
-        project={selectedProjectForDetails}
+        project={selectedProjectForDetails as any}
         onOpenChange={handleDetailsClose}
+        onViewRequirements={() => {
+          // Navigate to project requirements or handle as needed
+          handleDetailsClose();
+        }}
       />
     </>
   );

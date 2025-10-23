@@ -9,13 +9,6 @@ import { Skeleton } from "@heroui/skeleton";
 import { Select, SelectItem } from "@heroui/select";
 import { useNavigate } from "react-router-dom";
 import { FolderOpen, Clock, Users, Info, X } from "lucide-react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  DrawerFooter,
-} from "@heroui/drawer";
 import { Input } from "@heroui/input";
 import { Tooltip } from "@heroui/tooltip";
 
@@ -26,6 +19,7 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import { usePageTitle } from "@/hooks";
 import { useProjectStatus } from "@/hooks/useProjectStatus";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
+import ProjectDetailsDrawer from "@/components/ProjectDetailsDrawer";
 
 export default function RequirementsPage() {
   const { t, language } = useLanguage();
@@ -35,7 +29,8 @@ export default function RequirementsPage() {
   usePageTitle("requirements.title");
 
   // Phases hook for dynamic phase management
-  const { phases, getProjectStatusName, getProjectStatusColor } = useProjectStatus();
+  const { phases, getProjectStatusName, getProjectStatusColor } =
+    useProjectStatus();
 
   // Drawer state for project details
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -62,7 +57,7 @@ export default function RequirementsPage() {
 
   // Local debounced search to avoid re-rendering and focus loss on each keystroke
   const [localSearch, setLocalSearch] = useState(assignedProjectsSearch || "");
-  
+
   // Additional filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("lastActivity");
@@ -93,7 +88,10 @@ export default function RequirementsPage() {
   };
 
   // Check if any filters are active
-  const hasActiveFilters = localSearch.trim() !== "" || statusFilter !== "all" || sortBy !== "lastActivity";
+  const hasActiveFilters =
+    localSearch.trim() !== "" ||
+    statusFilter !== "all" ||
+    sortBy !== "lastActivity";
 
   useEffect(() => {
     loadAssignedProjects();
@@ -175,21 +173,35 @@ export default function RequirementsPage() {
   const filteredAndSortedProjects = assignedProjects
     .filter((project) => {
       // Status filter
-      if (statusFilter !== "all" && project.status.toString() !== statusFilter) {
+      if (
+        statusFilter !== "all" &&
+        project.status.toString() !== statusFilter
+      ) {
         return false;
       }
+
       return true;
     })
     .sort((a, b) => {
       // Sort logic
       switch (sortBy) {
         case "lastActivity":
-          return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+          return (
+            new Date(b.lastActivity).getTime() -
+            new Date(a.lastActivity).getTime()
+          );
         case "requirementsCount":
           return b.requirementsCount - a.requirementsCount;
         case "completionRate":
-          const aRate = a.requirementsCount > 0 ? (a.completedRequirements / a.requirementsCount) * 100 : 0;
-          const bRate = b.requirementsCount > 0 ? (b.completedRequirements / b.requirementsCount) * 100 : 0;
+          const aRate =
+            a.requirementsCount > 0
+              ? (a.completedRequirements / a.requirementsCount) * 100
+              : 0;
+          const bRate =
+            b.requirementsCount > 0
+              ? (b.completedRequirements / b.requirementsCount) * 100
+              : 0;
+
           return bRate - aRate;
         case "name":
           return a.applicationName.localeCompare(b.applicationName);
@@ -258,7 +270,7 @@ export default function RequirementsPage() {
                   value={localSearch}
                   onValueChange={(val) => setLocalSearch(val)}
                 />
-                
+
                 {/* Status Filter */}
                 <Select
                   aria-label={t("projects.filterByStatus")}
@@ -275,10 +287,13 @@ export default function RequirementsPage() {
                   size="md"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
+
                     setStatusFilter(value || "all");
                   }}
                 >
-                  {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                  {(item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  )}
                 </Select>
 
                 {/* Sort By Filter */}
@@ -286,20 +301,32 @@ export default function RequirementsPage() {
                   aria-label={t("projects.sortBy")}
                   className="w-full sm:w-52"
                   items={[
-                    { key: "lastActivity", label: t("projects.sortByLastActivity") },
+                    {
+                      key: "lastActivity",
+                      label: t("projects.sortByLastActivity"),
+                    },
                     { key: "name", label: t("projects.sortByName") },
-                    { key: "requirementsCount", label: t("projects.sortByRequirementsCount") },
-                    { key: "completionRate", label: t("projects.sortByCompletionRate") },
+                    {
+                      key: "requirementsCount",
+                      label: t("projects.sortByRequirementsCount"),
+                    },
+                    {
+                      key: "completionRate",
+                      label: t("projects.sortByCompletionRate"),
+                    },
                   ]}
                   placeholder={t("projects.sortBy")}
                   selectedKeys={sortBy !== "lastActivity" ? [sortBy] : []}
                   size="md"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
+
                     setSortBy(value || "lastActivity");
                   }}
                 >
-                  {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                  {(item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  )}
                 </Select>
               </div>
 
@@ -413,7 +440,8 @@ export default function RequirementsPage() {
                   </Card>
                 ))}
               </div>
-            ) : !filteredAndSortedProjects || filteredAndSortedProjects.length === 0 ? (
+            ) : !filteredAndSortedProjects ||
+              filteredAndSortedProjects.length === 0 ? (
               <Card>
                 <CardBody className="text-center py-12">
                   <div className="flex flex-col items-center space-y-4">
@@ -422,7 +450,7 @@ export default function RequirementsPage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-default-700">
-                        {hasActiveFilters 
+                        {hasActiveFilters
                           ? t("requirements.noResultsTitle")
                           : t("requirements.noAssignedProjects")}
                       </h3>
@@ -608,214 +636,12 @@ export default function RequirementsPage() {
       </div>
 
       {/* Project Details Drawer */}
-      <Drawer
+      <ProjectDetailsDrawer
         isOpen={isDrawerOpen}
-        placement="right"
-        size="lg"
+        project={selectedProject}
         onOpenChange={setIsDrawerOpen}
-      >
-        <DrawerContent>
-          <DrawerHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-semibold">
-              {selectedProject?.applicationName}
-            </h2>
-            <p className="text-sm text-default-500">
-              {t("requirements.projectDetails")}
-            </p>
-          </DrawerHeader>
-          <DrawerBody>
-            {selectedProject && (
-              <div className="space-y-6">
-                {/* Project Status */}
-                <div className="flex gap-4">
-                  <Chip
-                    color={getStatusColor(selectedProject.status)}
-                    size="sm"
-                    variant="flat"
-                  >
-                    {getStatusText(selectedProject.status)}
-                  </Chip>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">
-                    {t("requirements.projectDescription")}
-                  </h3>
-                  <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                    <p className="text-sm leading-relaxed">
-                      {selectedProject.description ||
-                        t("requirements.noDescription")}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Project Details */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-default-600 mb-1">
-                      {t("requirements.projectId")}
-                    </h4>
-                    <p className="text-sm">{selectedProject.id}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-default-600 mb-1">
-                      {t("requirements.lastActivity")}
-                    </h4>
-                    <p className="text-sm">
-                      {formatDate(selectedProject.lastActivity)}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-default-600 mb-1">
-                      {t("requirements.projectOwner")}
-                    </h4>
-                    <p className="text-sm">{selectedProject.projectOwner}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-default-600 mb-1">
-                      {t("requirements.owningUnit")}
-                    </h4>
-                    <p className="text-sm">{selectedProject.owningUnit}</p>
-                  </div>
-                </div>
-
-                {/* Requirements Statistics */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">
-                    {t("requirements.requirementsCount")}
-                  </h3>
-                  
-                  {/* Modern Minimalist Stats - Same as Cards */}
-                  <div className="flex gap-3 mb-4">
-                    <div className="flex-1 bg-default-50 dark:bg-default-100/10 rounded-lg px-3 py-2">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-semibold text-default-700">
-                          {selectedProject.requirementsCount}
-                        </span>
-                        <span className="text-xs text-default-500">
-                          {t("requirements.total")}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex-1 bg-success-50 dark:bg-success-100/10 rounded-lg px-3 py-2">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-semibold text-success-600 dark:text-success-500">
-                          {selectedProject.completedRequirements}
-                        </span>
-                        <span className="text-xs text-success-600/70 dark:text-success-500/70">
-                          {t("requirements.done")}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-default-600">
-                        {t("common.progress")}
-                      </span>
-                      <span className="text-default-500">
-                        {selectedProject.requirementsCount > 0
-                          ? Math.round(
-                              (selectedProject.completedRequirements /
-                                selectedProject.requirementsCount) *
-                                100,
-                            )
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                    <div className="w-full bg-default-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          selectedProject.requirementsCount > 0
-                            ? (selectedProject.completedRequirements /
-                                selectedProject.requirementsCount) *
-                                100 >=
-                              70
-                              ? "bg-success"
-                              : (selectedProject.completedRequirements /
-                                    selectedProject.requirementsCount) *
-                                    100 >=
-                                  40
-                                ? "bg-warning"
-                                : "bg-danger"
-                            : "bg-default-300"
-                        }`}
-                        style={{
-                          width: `${
-                            selectedProject.requirementsCount > 0
-                              ? (selectedProject.completedRequirements /
-                                  selectedProject.requirementsCount) *
-                                100
-                              : 0
-                          }%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Analysts Section */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-default-400" />
-                    {t("requirements.analysts")}
-                  </h3>
-                  <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProject.analysts ? (
-                        selectedProject.analysts
-                          .split(", ")
-                          .map((analyst, index) => (
-                            <Chip
-                              key={index}
-                              color="secondary"
-                              size="sm"
-                              variant="flat"
-                            >
-                              {analyst}
-                            </Chip>
-                          ))
-                      ) : (
-                        <p className="text-sm text-default-500">
-                          {t("requirements.noAnalysts")}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Created/Updated At */}
-              </div>
-            )}
-          </DrawerBody>
-          <DrawerFooter>
-            <div className="flex justify-between w-full">
-              <Button
-                color="primary"
-                onPress={() => {
-                  if (selectedProject) {
-                    handleViewRequirements(selectedProject);
-                  }
-                  setIsDrawerOpen(false);
-                }}
-              >
-                {t("requirements.viewRequirements")}
-              </Button>
-              <Button
-                color="danger"
-                variant="light"
-                onPress={() => setIsDrawerOpen(false)}
-              >
-                {t("common.close")}
-              </Button>
-            </div>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+        onViewRequirements={handleViewRequirements}
+      />
     </>
   );
 }

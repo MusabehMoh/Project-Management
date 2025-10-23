@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PMA.Core.Entities;
 using PMA.Core.Enums;
 using PMA.Core.Interfaces;
+using PMA.Core.Services;
 using PMA.Infrastructure.Data;
 
 namespace PMA.Api.Controllers;
@@ -13,13 +14,15 @@ public class TeamWorkloadController : ApiBaseController
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<TeamWorkloadController> _logger;
-
+    private readonly IUserService _userService;
     public TeamWorkloadController(
         ApplicationDbContext context,
+        IUserService userService,
         ILogger<TeamWorkloadController> logger)
     {
         _context = context;
         _logger = logger;
+        _userService = userService;
     }
 
     /// <summary>
@@ -40,16 +43,15 @@ public class TeamWorkloadController : ApiBaseController
             var teamMembersQuery = from t in _context.Teams
                                    join me in _context.MawaredEmployees on t.PrsId equals me.Id
                                    join d in _context.Departments on t.DepartmentId equals d.Id
-                                   where t.IsActive && me.StatusId == 1
-                                   group new { t, me, d } by me.Id into g
+                                   where t.IsActive 
                                    select new
                                    {
-                                       EmployeeId = g.Key,
-                                       FullName = g.First().me.FullName,
-                                       GradeName = g.First().me.GradeName,
+                                       EmployeeId = me.Id,
+                                       FullName = me.FullName,
+                                       GradeName = me.GradeName,
                                        // Take first department alphabetically for employees in multiple departments
-                                       Department = g.OrderBy(x => x.d.Name).First().d.Name,
-                                       DepartmentId = g.OrderBy(x => x.d.Name).First().d.Id,
+                                       Department = d.Name,
+                                       DepartmentId =  d.Id,
 
                                        // Availability Status - Available if no active tasks AND no active requirements
                                        AvailabilityStatus = (_context.TaskAssignments
@@ -57,7 +59,7 @@ public class TeamWorkloadController : ApiBaseController
                                                ta => ta.TaskId,
                                                task => task.Id,
                                                (ta, task) => new { ta, task })
-                                           .Any(x => x.ta.PrsId == g.Key && new[] {
+                                           .Any(x => x.ta.PrsId == me.Id && new[] {
                                                Core.Enums.TaskStatus.ToDo,
                                                Core.Enums.TaskStatus.InProgress,
                                                Core.Enums.TaskStatus.InReview,
@@ -70,7 +72,7 @@ public class TeamWorkloadController : ApiBaseController
                                                pa => pa.ProjectId,
                                                pr => pr.ProjectId,
                                                (pa, pr) => new { pa, pr })
-                                           .Any(x => x.pa.AnalystId == g.Key && new[] { 1, 2, 3, 4, 5 }.Contains((int)x.pr.Status)) == false)
+                                           .Any(x => x.pa.AnalystId == me.Id && new[] { 1, 2, 3, 4, 5 }.Contains((int)x.pr.Status)) == false)
                                        ? "Available" : "Busy",
 
                                        // Active Tasks Count
@@ -79,7 +81,7 @@ public class TeamWorkloadController : ApiBaseController
                                                ta => ta.TaskId,
                                                task => task.Id,
                                                (ta, task) => new { ta, task })
-                                           .Count(x => x.ta.PrsId == g.Key && new[] {
+                                           .Count(x => x.ta.PrsId == me.Id && new[] {
                                                Core.Enums.TaskStatus.ToDo,
                                                Core.Enums.TaskStatus.InProgress,
                                                Core.Enums.TaskStatus.InReview,
@@ -93,7 +95,7 @@ public class TeamWorkloadController : ApiBaseController
                                                pa => pa.ProjectId,
                                                pr => pr.ProjectId,
                                                (pa, pr) => new { pa, pr })
-                                           .Count(x => x.pa.AnalystId == g.Key && new[] { 1, 2, 3, 4, 5 }.Contains((int)x.pr.Status)),
+                                           .Count(x => x.pa.AnalystId == me.Id && new[] { 1, 2, 3, 4, 5 }.Contains((int)x.pr.Status)),
 
                                        // Overdue Tasks
                                        OverdueTasks = _context.TaskAssignments
@@ -101,7 +103,7 @@ public class TeamWorkloadController : ApiBaseController
                                                ta => ta.TaskId,
                                                task => task.Id,
                                                (ta, task) => new { ta, task })
-                                           .Count(x => x.ta.PrsId == g.Key &&
+                                           .Count(x => x.ta.PrsId == me.Id &&
                                                      new[] {
                                                          Core.Enums.TaskStatus.ToDo,
                                                          Core.Enums.TaskStatus.InProgress,
@@ -111,11 +113,12 @@ public class TeamWorkloadController : ApiBaseController
                                                      }.Contains(x.task.StatusId) &&
                                                      x.task.EndDate < DateTime.UtcNow)
                                    };
-
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser.Roles[0].Department?.Id;
             // Apply department filter if provided
-            if (departmentId.HasValue)
+            if (currentUserDepartmentId.HasValue)
             {
-                teamMembersQuery = teamMembersQuery.Where(x => x.DepartmentId == departmentId.Value);
+                teamMembersQuery = teamMembersQuery.Where(x => x.DepartmentId == currentUserDepartmentId.Value);
             }
 
             // Apply busy status filter if provided

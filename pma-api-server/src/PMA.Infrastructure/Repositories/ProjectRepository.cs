@@ -95,7 +95,8 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.AlternativeOwnerEmployee) // LEFT JOIN due to nullable FK
             .Include(p => p.ResponsibleUnitManagerEmployee)
             .Include(p => p.ProjectAnalysts!)
-                .ThenInclude(pa => pa.Analyst);
+                .ThenInclude(pa => pa.Analyst)
+            .Include(p => p.ProjectRequirements); // Include requirements for statistics calculation
 
 
         // Apply filters first (without includes for count efficiency)
@@ -224,7 +225,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Take(limit)
             .ToListAsync();
 
-        // Projects are already loaded with ProjectAnalysts and their related Analyst entities
+        // Projects are already loaded with all included references
         var assignedProjects = projects.Select(project =>
         {
             var totalRequirements = project.ProjectRequirements?.Count() ?? 0;
@@ -232,22 +233,81 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             
             // Extract analyst names from ProjectAnalyst junction table entities
             string analystNames = string.Empty;
+            var analystEmployees = new List<EmployeeDto>();
+            
             if (project.ProjectAnalysts != null && project.ProjectAnalysts.Any())
             {
-                var names = project.ProjectAnalysts
+                var analysts = project.ProjectAnalysts
                     .Where(pa => pa.Analyst != null)
+                    .ToList();
+                
+                var names = analysts
                     .Select(pa => pa.Analyst!.FullName)
                     .ToList();
                 
                 analystNames = string.Join(", ", names);
+                
+                // Map analyst employees to DTOs
+                analystEmployees = analysts
+                    .Select(pa => new EmployeeDto
+                    {
+                        Id = pa.Analyst!.Id,
+                        FullName = pa.Analyst.FullName,
+                        UserName = pa.Analyst.UserName,
+                        MilitaryNumber = pa.Analyst.MilitaryNumber,
+                        GradeName = pa.Analyst.GradeName,
+                        StatusId = pa.Analyst.StatusId
+                    })
+                    .ToList();
             }
+            
+            // Map ProjectOwnerEmployee to DTO
+            var projectOwnerEmployeeDto = project.ProjectOwnerEmployee != null ? new EmployeeDto
+            {
+                Id = project.ProjectOwnerEmployee.Id,
+                FullName = project.ProjectOwnerEmployee.FullName,
+                UserName = project.ProjectOwnerEmployee.UserName,
+                MilitaryNumber = project.ProjectOwnerEmployee.MilitaryNumber,
+                GradeName = project.ProjectOwnerEmployee.GradeName,
+                StatusId = project.ProjectOwnerEmployee.StatusId
+            } : null;
+            
+            // Map AlternativeOwnerEmployee to DTO
+            var alternativeOwnerEmployeeDto = project.AlternativeOwnerEmployee != null ? new EmployeeDto
+            {
+                Id = project.AlternativeOwnerEmployee.Id,
+                FullName = project.AlternativeOwnerEmployee.FullName,
+                UserName = project.AlternativeOwnerEmployee.UserName,
+                MilitaryNumber = project.AlternativeOwnerEmployee.MilitaryNumber,
+                GradeName = project.AlternativeOwnerEmployee.GradeName,
+                StatusId = project.AlternativeOwnerEmployee.StatusId
+            } : null;
+            
+            // Map ResponsibleUnitManagerEmployee to DTO
+            var responsibleUnitManagerEmployeeDto = project.ResponsibleUnitManagerEmployee != null ? new EmployeeDto
+            {
+                Id = project.ResponsibleUnitManagerEmployee.Id,
+                FullName = project.ResponsibleUnitManagerEmployee.FullName,
+                UserName = project.ResponsibleUnitManagerEmployee.UserName,
+                MilitaryNumber = project.ResponsibleUnitManagerEmployee.MilitaryNumber,
+                GradeName = project.ResponsibleUnitManagerEmployee.GradeName,
+                StatusId = project.ResponsibleUnitManagerEmployee.StatusId
+            } : null;
             
             return new AssignedProjectDto
             {
                 Id = project.Id,
                 ApplicationName = project.ApplicationName,
-                ProjectOwner = project.ProjectOwnerEmployee?.FullName ?? project.ProjectOwner ?? "Unknown",
+                ProjectOwnerEmployee = projectOwnerEmployeeDto,
+                AlternativeOwnerEmployee = alternativeOwnerEmployeeDto,
+                ResponsibleUnitManagerEmployee = responsibleUnitManagerEmployeeDto,
                 OwningUnit = project.OwningUnitEntity?.Name ?? project.OwningUnit ?? "Unknown",
+                OwningUnitId = project.OwningUnitId,
+                AnalystEmployees = analystEmployees,
+                ProjectOwner = project.ProjectOwnerEmployee?.FullName ?? project.ProjectOwner ?? "Unknown",
+                ProjectOwnerId = project.ProjectOwnerId,
+                AlternativeOwnerId = project.AlternativeOwnerId,
+                ResponsibleUnitManagerId = project.ResponsibleUnitManagerId,
                 Status = project.Status,
                 RequirementsCount = totalRequirements,
                 CompletedRequirements = completedRequirements,

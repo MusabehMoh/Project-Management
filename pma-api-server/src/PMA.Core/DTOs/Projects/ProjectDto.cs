@@ -28,4 +28,8 @@ public class ProjectDto
     public DateTime UpdatedAt { get; set; }
     public Priority Priority { get; set; } 
     public int Progress { get; set; }
+    
+    // Requirements statistics for dashboard display
+    public int RequirementsCount { get; set; }
+    public int CompletedRequirements { get; set; }
 }
