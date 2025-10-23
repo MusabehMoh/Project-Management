@@ -81,6 +81,7 @@ import { usePageTitle } from "@/hooks";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 import { showWarningToast, showSuccessToast } from "@/utils/toast";
+import { getFileUploadConfig } from "@/config/environment";
 
 // Form data type for creating/editing requirements
 // Uses string values for UI components - will be converted to integers before API calls
@@ -709,31 +710,92 @@ export default function ProjectRequirementsPage() {
     // Clear previous error state
     setHasFileUploadError(false);
 
-    // Filter out files with no size (0 bytes) and collect their names
+    // Get file upload configuration
+    const { maxFileSizeMB, allowedFileTypes } = getFileUploadConfig();
+    const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024; // Convert MB to bytes
+
+    // Arrays to collect rejected files by type
     const emptyFiles: string[] = [];
+    const oversizedFiles: string[] = [];
+    const invalidTypeFiles: string[] = [];
+
     const newFiles = Array.from(files).filter((file) => {
+      // Check for empty files (0 bytes)
       if (file.size === 0) {
         emptyFiles.push(file.name);
         console.warn(
           `File "${file.name}" has no size (0 bytes) and will be skipped`,
         );
+        return false;
+      }
 
+      // Check file size
+      if (file.size > maxFileSizeBytes) {
+        oversizedFiles.push(file.name);
+        console.warn(
+          `File "${file.name}" exceeds maximum size limit of ${maxFileSizeMB}MB`,
+        );
+        return false;
+      }
+
+      // Check file type
+      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+      if (!fileExtension || !allowedFileTypes.includes(fileExtension)) {
+        invalidTypeFiles.push(file.name);
+        console.warn(
+          `File "${file.name}" has invalid type. Allowed types: ${allowedFileTypes.join(", ")}`,
+        );
         return false;
       }
 
       return true;
     });
 
-    // Show toast notification and set error state if any files were rejected
-    if (emptyFiles.length > 0) {
-      setHasFileUploadError(true);
-      const fileList = emptyFiles.join(", ");
-      const message =
-        emptyFiles.length === 1
-          ? `${fileList}`
-          : `${emptyFiles.length} ${t("requirements.validation.filesEmptyError")}: ${fileList}`;
+    // Show toast notifications for rejected files
+    const allRejectedFiles = [
+      ...emptyFiles,
+      ...oversizedFiles,
+      ...invalidTypeFiles,
+    ];
 
-      showWarningToast(t("requirements.validation.fileEmptyError"), message);
+    if (allRejectedFiles.length > 0) {
+      setHasFileUploadError(true);
+
+      // Handle empty files
+      if (emptyFiles.length > 0) {
+        const fileList = emptyFiles.join(", ");
+        const message =
+          emptyFiles.length === 1
+            ? `${fileList}`
+            : `${emptyFiles.length} ${t("requirements.validation.filesEmptyError")}: ${fileList}`;
+        showWarningToast(t("requirements.validation.fileEmptyError"), message);
+      }
+
+      // Handle oversized files
+      if (oversizedFiles.length > 0) {
+        const fileList = oversizedFiles.join(", ");
+
+        showWarningToast(
+          t("requirements.validation.filesSizeTooLarge").replace(
+            "{0}",
+            maxFileSizeMB.toString(),
+          ),
+          fileList,
+        );
+      }
+
+      // Handle invalid type files
+      if (invalidTypeFiles.length > 0) {
+        const fileList = invalidTypeFiles.join(", ");
+        const allowedTypesStr = allowedFileTypes.join(", ");
+
+        showWarningToast(
+          t("requirements.validation.fileTypeNotAllowed")
+            .replace("{0}", invalidTypeFiles[0])
+            .replace("{1}", allowedTypesStr),
+          fileList,
+        );
+      }
 
       // Clear error state after 4 seconds (matching toast duration)
       setTimeout(() => {
@@ -741,10 +803,8 @@ export default function ProjectRequirementsPage() {
       }, 4000);
     }
 
-    // If all files were empty, don't add anything
+    // If all files were rejected, don't add anything
     if (newFiles.length === 0) {
-      console.warn("All selected files were empty or had no size");
-
       return;
     }
 
