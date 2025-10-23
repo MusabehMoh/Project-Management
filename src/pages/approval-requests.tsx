@@ -505,97 +505,93 @@ export default function ApprovalRequestsPage() {
         </div>
 
         {/* Filters and Search */}
-        <Card>
-          <CardBody className="p-4">
-            <div className="flex flex-col gap-4 filters-section">
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  <Input
-                    className="flex-1"
-                    placeholder={t("requirements.searchRequirements")}
-                    startContent={
-                      <Search className="text-default-400" size={20} />
-                    }
-                    value={searchTerm}
-                    onValueChange={setSearchTerm}
-                  />
+        <div className="flex flex-col gap-4 filters-section">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <Input
+                className="flex-1"
+                placeholder={t("requirements.searchRequirements")}
+                startContent={
+                  <Search className="text-default-400" size={20} />
+                }
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+              />
 
-                  <Select
-                    className="sm:w-48"
-                    placeholder={t("requirements.filterByPriority")}
-                    selectedKeys={priorityFilter ? [priorityFilter] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
+              <Select
+                className="sm:w-48"
+                placeholder={t("requirements.filterByPriority")}
+                selectedKeys={priorityFilter ? [priorityFilter] : []}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0] as string;
 
-                      setPriorityFilter(selected || "");
-                    }}
-                  >
-                    {priorityOptions.map((option) => (
-                      <SelectItem key={option.value}>
-                        {language === "ar" ? option.labelAr : option.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-
-                {/* Page Size Selector */}
-                {!loading && totalRequirements > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-default-600">
-                      {t("common.show")}:
-                    </span>
-                    <Select
-                      className="w-20"
-                      disallowEmptySelection={true}
-                      selectedKeys={[
-                        normalizePageSize(pageSize, 10).toString(),
-                      ]}
-                      size="sm"
-                      onSelectionChange={(keys) => {
-                        const newSize = parseInt(Array.from(keys)[0] as string);
-
-                        handlePageSizeChange(newSize);
-                      }}
-                    >
-                      {PAGE_SIZE_OPTIONS.map((opt) => (
-                        <SelectItem
-                          key={opt.toString()}
-                          textValue={opt.toString()}
-                        >
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <span className="text-sm text-default-600">
-                      {t("pagination.perPage")}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Clear Filters - New Row */}
-              {hasActiveFilters && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    color="secondary"
-                    size="sm"
-                    startContent={<X size={16} />}
-                    variant="flat"
-                    onPress={resetFilters}
-                  >
-                    {t("requirements.clearFilters")}
-                  </Button>
-                  <span className="text-sm text-default-500">
-                    {t("tasks.tasksFound").replace(
-                      "{count}",
-                      totalRequirements.toString(),
-                    )}
-                  </span>
-                </div>
-              )}
+                  setPriorityFilter(selected || "");
+                }}
+              >
+                {priorityOptions.map((option) => (
+                  <SelectItem key={option.value}>
+                    {language === "ar" ? option.labelAr : option.label}
+                  </SelectItem>
+                ))}
+              </Select>
             </div>
-          </CardBody>
-        </Card>
+
+            {/* Page Size Selector */}
+            {!loading && totalRequirements > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-default-600">
+                  {t("common.show")}:
+                </span>
+                <Select
+                  className="w-20"
+                  disallowEmptySelection={true}
+                  selectedKeys={[
+                    normalizePageSize(pageSize, 10).toString(),
+                  ]}
+                  size="sm"
+                  onSelectionChange={(keys) => {
+                    const newSize = parseInt(Array.from(keys)[0] as string);
+
+                    handlePageSizeChange(newSize);
+                  }}
+                >
+                  {PAGE_SIZE_OPTIONS.map((opt) => (
+                    <SelectItem
+                      key={opt.toString()}
+                      textValue={opt.toString()}
+                    >
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <span className="text-sm text-default-600">
+                  {t("pagination.perPage")}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Clear Filters - New Row */}
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2">
+              <Button
+                color="secondary"
+                size="sm"
+                startContent={<X size={16} />}
+                variant="flat"
+                onPress={resetFilters}
+              >
+                {t("requirements.clearFilters")}
+              </Button>
+              <span className="text-sm text-default-500">
+                {t("tasks.tasksFound").replace(
+                  "{count}",
+                  totalRequirements.toString(),
+                )}
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* Requirements Grid */}
         {requirements.length === 0 ? (
