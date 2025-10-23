@@ -1027,19 +1027,8 @@ export default function UsersPage() {
                           const newRoleId = roleId ? parseInt(roleId) : null;
                           setSelectedRole(newRoleId);
 
-                          // Filter out additional actions that are now default actions for the new role
-                          if (newRoleId) {
-                            const newRoleData = roles.find((r) => r.id === newRoleId);
-                            const newRoleDefaultActionIds = newRoleData?.actions?.map((a) => a.id) || [];
-                            setSelectedAdditionalActions(
-                              selectedAdditionalActions.filter(
-                                (actionId) => !newRoleDefaultActionIds.includes(actionId)
-                              )
-                            );
-                          } else {
-                            // No role selected, clear additional actions
-                            setSelectedAdditionalActions([]);
-                          }
+                          // Reset additional actions when role changes
+                          setSelectedAdditionalActions([]);
                         }}
                       >
                         {roles.map((role) => (

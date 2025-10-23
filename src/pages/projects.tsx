@@ -3,7 +3,7 @@ import type { EmployeeSearchResult } from "@/types/user";
 import type { MemberSearchResult } from "@/types/timeline";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -57,6 +57,7 @@ import { UnitSelector } from "@/components/UnitSelector";
 import ProjectDetailsDrawer from "@/components/ProjectDetailsDrawer";
 import { useProjects } from "@/hooks/useProjects";
 import { useProjectStatus } from "@/hooks/useProjectStatus";
+import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { Project, ProjectFormData } from "@/types/project";
@@ -66,6 +67,7 @@ import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
   const { hasPermission } = usePermissions();
+  const navigate = useNavigate();
 
   // Set page title
   usePageTitle("projects.title");
@@ -106,6 +108,14 @@ export default function ProjectsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const editProjectId = searchParams.get("edit");
 
+  // State for project ID to fetch (for edit and details)
+  const [projectIdForEdit, setProjectIdForEdit] = useState<number | undefined>(
+    undefined,
+  );
+  const [projectIdForDetails, setProjectIdForDetails] = useState<
+    number | undefined
+  >(undefined);
+
   // Phases hook for dynamic phase management
   const {
     phases,
@@ -113,6 +123,18 @@ export default function ProjectsPage() {
     getProjectStatusName,
     getProjectStatusColor,
   } = useProjectStatus();
+
+  // Hook to fetch project details for edit modal
+  const { project: projectForEdit, loading: editLoading } = useProjectDetails({
+    projectId: projectIdForEdit,
+    enabled: projectIdForEdit !== undefined,
+  });
+
+  // Hook to fetch project details for drawer view
+  const { project: projectDetailsData, loading: detailsLoading } = useProjectDetails({
+    projectId: projectIdForDetails,
+    enabled: projectIdForDetails !== undefined,
+  });
 
   // Employee search hooks for project owner and alternative owner
   const {
@@ -409,170 +431,155 @@ export default function ProjectsPage() {
     onOpen();
   };
 
-  const handleEditProject = (project: Project) => {
-    setIsEditing(true);
-    setSelectedProject(project);
-    setValidationErrors({});
-
-    // Find the unit by ID from project.owningUnitId
-    // For now, create a mock unit object based on the ID
-    // TODO: Replace this with actual unit lookup when units hook is available
-    const mockUnit = {
-      id: project.owningUnitId,
-      name: project.owningUnit,
-      nameAr: project.owningUnit, // TODO: Add Arabic names
-      code: `UNIT${project.owningUnitId}`,
-      parentId: undefined,
-      level: 1,
-      isActive: true,
-      children: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setSelectedUnit(mockUnit);
-
-    // Use the employee objects directly from the project
-    const ownerEmployee = project.projectOwnerEmployee;
-    const altOwnerEmployee = project.alternativeOwnerEmployee;
-    const responsibleUnitManagerEmployee =
-      project.responsibleUnitManagerEmployee;
-
-    // Convert User objects to EmployeeSearchResult objects
-    const ownerResult = ownerEmployee
-      ? {
-          id: ownerEmployee.id,
-          userName: ownerEmployee.userName,
-          fullName: ownerEmployee.fullName,
-          militaryNumber: ownerEmployee.militaryNumber,
-          gradeName: ownerEmployee.gradeName,
-          statusId: ownerEmployee.statusId,
-        }
-      : null;
-
-    const altOwnerResult = altOwnerEmployee
-      ? {
-          id: altOwnerEmployee.id,
-          userName: altOwnerEmployee.userName,
-          fullName: altOwnerEmployee.fullName,
-          militaryNumber: altOwnerEmployee.militaryNumber,
-          gradeName: altOwnerEmployee.gradeName,
-          statusId: altOwnerEmployee.statusId,
-        }
-      : null;
-
-    setSelectedOwner(ownerResult);
-    setSelectedAlternativeOwner(altOwnerResult);
-
-    // Use analyst employee data directly from project (no need to search users array)
-    if (project.analystEmployees && project.analystEmployees.length > 0) {
-      const foundAnalysts: MemberSearchResult[] = project.analystEmployees.map(
-        (analyst) => ({
-          id: analyst.id,
-          userName: analyst.userName,
-          fullName: analyst.fullName,
-          militaryNumber: analyst.militaryNumber,
-          gradeName: analyst.gradeName,
-          statusId: analyst.statusId || 0,
-          department: analyst.department || "",
-        }),
-      );
-
-      setSelectedAnalysts(foundAnalysts);
-    } else {
-      // No analysts to process
-      setSelectedAnalysts([]);
-    }
-
-    // Use manager employee data directly from project if available
-    if (responsibleUnitManagerEmployee) {
-      const managerResult: MemberSearchResult = {
-        id: responsibleUnitManagerEmployee.id,
-        userName: responsibleUnitManagerEmployee.userName,
-        fullName: responsibleUnitManagerEmployee.fullName,
-        militaryNumber: responsibleUnitManagerEmployee.militaryNumber,
-        gradeName: responsibleUnitManagerEmployee.gradeName,
-        statusId: responsibleUnitManagerEmployee.statusId || 0,
-        department: responsibleUnitManagerEmployee.department || "",
-      };
-
-      setSelectedResponsibleManager(managerResult);
-      setResponsibleManagerInputValue(
-        `${managerResult.gradeName} ${managerResult.fullName}`,
-      );
-    } else {
-      setSelectedResponsibleManager(null);
-      setResponsibleManagerInputValue("");
-    }
-
-    // Set input values
-    setOwnerInputValue(
-      ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : "",
-    );
-    setAlternativeOwnerInputValue(
-      altOwnerResult
-        ? `${altOwnerResult.gradeName} ${altOwnerResult.fullName}`
-        : "",
-    );
-    setAnalystInputValue("");
-
-    setFormData({
-      applicationName: project.applicationName,
-      projectOwner: project.projectOwnerId, // Use numeric ID
-      alternativeOwner: project.alternativeOwnerId, // Use numeric ID
-      owningUnit: project.owningUnitId, // Use numeric ID
-      analysts: Array.isArray(project.analystIds)
-        ? project.analystIds
-        : project.analystIds
-          ? [project.analystIds]
-          : [], // Ensure analysts is always an array
-      responsibleManagerId: responsibleUnitManagerEmployee?.id || 0, // Single manager ID
-      startDate: project.startDate
-        ? parseDate(project.startDate.split("T")[0])
-        : null,
-      expectedCompletionDate: project.expectedCompletionDate
-        ? parseDate(project.expectedCompletionDate.split("T")[0])
-        : null,
-      description: project.description,
-      remarks: project.remarks,
-      status: project.status,
-    });
-    onOpen();
+  const handleEditProject = (projectId: number) => {
+    setProjectIdForEdit(projectId);
+    onOpen(); // Open modal immediately
   };
 
-  // Effect to handle auto-editing when edit parameter is present
+  // Effect to populate form when project is fetched for editing
   useEffect(() => {
-    if (editProjectId) {
-      const fetchAndEditProject = async () => {
-        try {
-          // Fetch the specific project by ID
-          const response = await projectService.getProjectById(
-            parseInt(editProjectId),
-          );
+    if (projectForEdit) {
+      setIsEditing(true);
+      setSelectedProject(projectForEdit);
+      setValidationErrors({});
 
-          if (response.success && response.data) {
-            handleEditProject(response.data);
-          }
-        } catch (error) {
-          // If direct fetch fails, try to find in current loaded projects
-          const projectToEdit = projects.find(
-            (p) => p.id === parseInt(editProjectId),
-          );
-
-          if (projectToEdit) {
-            handleEditProject(projectToEdit);
-          }
-        } finally {
-          // Clear the URL parameter after attempting to open modal
-          setSearchParams((params) => {
-            params.delete("edit");
-
-            return params;
-          });
-        }
+      // Create mock unit object based on project data
+      const mockUnit = {
+        id: projectForEdit.owningUnitId,
+        name: projectForEdit.owningUnit,
+        nameAr: projectForEdit.owningUnit,
+        code: `UNIT${projectForEdit.owningUnitId}`,
+        parentId: undefined,
+        level: 1,
+        isActive: true,
+        children: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
-      fetchAndEditProject();
+      setSelectedUnit(mockUnit);
+
+      // Use the employee objects directly from the project
+      const ownerEmployee = projectForEdit.projectOwnerEmployee;
+      const altOwnerEmployee = projectForEdit.alternativeOwnerEmployee;
+      const responsibleUnitManagerEmployee =
+        projectForEdit.responsibleUnitManagerEmployee;
+
+      // Convert User objects to EmployeeSearchResult objects
+      const ownerResult = ownerEmployee
+        ? {
+            id: ownerEmployee.id,
+            userName: ownerEmployee.userName,
+            fullName: ownerEmployee.fullName,
+            militaryNumber: ownerEmployee.militaryNumber,
+            gradeName: ownerEmployee.gradeName,
+            statusId: ownerEmployee.statusId,
+          }
+        : null;
+
+      const altOwnerResult = altOwnerEmployee
+        ? {
+            id: altOwnerEmployee.id,
+            userName: altOwnerEmployee.userName,
+            fullName: altOwnerEmployee.fullName,
+            militaryNumber: altOwnerEmployee.militaryNumber,
+            gradeName: altOwnerEmployee.gradeName,
+            statusId: altOwnerEmployee.statusId,
+          }
+        : null;
+
+      setSelectedOwner(ownerResult);
+      setSelectedAlternativeOwner(altOwnerResult);
+
+      // Use analyst employee data directly from project
+      if (
+        projectForEdit.analystEmployees &&
+        projectForEdit.analystEmployees.length > 0
+      ) {
+        const foundAnalysts: MemberSearchResult[] =
+          projectForEdit.analystEmployees.map((analyst) => ({
+            id: analyst.id,
+            userName: analyst.userName,
+            fullName: analyst.fullName,
+            militaryNumber: analyst.militaryNumber,
+            gradeName: analyst.gradeName,
+            statusId: analyst.statusId || 0,
+            department: analyst.department || "",
+          }));
+
+        setSelectedAnalysts(foundAnalysts);
+      } else {
+        setSelectedAnalysts([]);
+      }
+
+      // Use manager employee data directly from project if available
+      if (responsibleUnitManagerEmployee) {
+        const managerResult: MemberSearchResult = {
+          id: responsibleUnitManagerEmployee.id,
+          userName: responsibleUnitManagerEmployee.userName,
+          fullName: responsibleUnitManagerEmployee.fullName,
+          militaryNumber: responsibleUnitManagerEmployee.militaryNumber,
+          gradeName: responsibleUnitManagerEmployee.gradeName,
+          statusId: responsibleUnitManagerEmployee.statusId || 0,
+          department: responsibleUnitManagerEmployee.department || "",
+        };
+
+        setSelectedResponsibleManager(managerResult);
+        setResponsibleManagerInputValue(
+          `${managerResult.gradeName} ${managerResult.fullName}`,
+        );
+      } else {
+        setSelectedResponsibleManager(null);
+        setResponsibleManagerInputValue("");
+      }
+
+      // Set input values
+      setOwnerInputValue(
+        ownerResult ? `${ownerResult.gradeName} ${ownerResult.fullName}` : "",
+      );
+      setAlternativeOwnerInputValue(
+        altOwnerResult
+          ? `${altOwnerResult.gradeName} ${altOwnerResult.fullName}`
+          : "",
+      );
+      setAnalystInputValue("");
+
+      setFormData({
+        applicationName: projectForEdit.applicationName,
+        projectOwner: projectForEdit.projectOwnerId,
+        alternativeOwner: projectForEdit.alternativeOwnerId,
+        owningUnit: projectForEdit.owningUnitId,
+        analysts: Array.isArray(projectForEdit.analystIds)
+          ? projectForEdit.analystIds
+          : projectForEdit.analystIds
+            ? [projectForEdit.analystIds]
+            : [],
+        responsibleManagerId: responsibleUnitManagerEmployee?.id || 0,
+        startDate: projectForEdit.startDate
+          ? parseDate(projectForEdit.startDate.split("T")[0])
+          : null,
+        expectedCompletionDate: projectForEdit.expectedCompletionDate
+          ? parseDate(projectForEdit.expectedCompletionDate.split("T")[0])
+          : null,
+        description: projectForEdit.description,
+        remarks: projectForEdit.remarks,
+        status: projectForEdit.status,
+      });
+
+      // Reset projectIdForEdit to allow re-triggering on next edit
+      setProjectIdForEdit(undefined);
+    }
+  }, [projectForEdit]);
+
+  // Effect to handle auto-editing when edit parameter is present in URL
+  useEffect(() => {
+    if (editProjectId) {
+      handleEditProject(parseInt(editProjectId));
+      // Clear the URL parameter after triggering edit
+      setSearchParams((params) => {
+        params.delete("edit");
+        return params;
+      });
     }
   }, [editProjectId, setSearchParams]);
 
@@ -610,13 +617,24 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleViewDetails = (project: Project) => {
-    setSelectedProjectForDetails(project);
-    onDetailsOpen();
+  const handleViewDetails = (projectId: number) => {
+    setProjectIdForDetails(projectId);
+    onDetailsOpen(); // Open drawer immediately
   };
+
+  // Effect to open details drawer when project is fetched
+  useEffect(() => {
+    if (projectDetailsData) {
+      setSelectedProjectForDetails(projectDetailsData);
+
+      // Reset projectIdForDetails to allow re-triggering on next view
+      setProjectIdForDetails(undefined);
+    }
+  }, [projectDetailsData]);
 
   const handleDetailsClose = () => {
     setSelectedProjectForDetails(null);
+    setProjectIdForDetails(undefined);
     onDetailsOpenChange();
   };
 
@@ -1287,7 +1305,7 @@ export default function ProjectsPage() {
                               <DropdownItem
                                 key="details"
                                 startContent={<InfoIcon />}
-                                onPress={() => handleViewDetails(project)}
+                                onPress={() => handleViewDetails(project.id)}
                               >
                                 {t("projects.viewDetails")}
                               </DropdownItem>
@@ -1298,7 +1316,7 @@ export default function ProjectsPage() {
                                 <DropdownItem
                                   key="edit"
                                   startContent={<EditIcon />}
-                                  onPress={() => handleEditProject(project)}
+                                  onPress={() => handleEditProject(project.id)}
                                 >
                                   {t("projects.editProject")}
                                 </DropdownItem>
@@ -1377,7 +1395,30 @@ export default function ProjectsPage() {
                 </p>
               </ModalHeader>
               <ModalBody>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {editLoading || !projectForEdit ? (
+                  <div className="space-y-6">
+                    {/* Loading skeletons for form fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Skeleton className="h-12 w-full rounded-lg" />
+                      <Skeleton className="h-12 w-full rounded-lg" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Skeleton className="h-12 w-full rounded-lg" />
+                      <Skeleton className="h-12 w-full rounded-lg" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Skeleton className="h-12 w-full rounded-lg" />
+                      <Skeleton className="h-12 w-full rounded-lg" />
+                    </div>
+                    <Skeleton className="h-24 w-full rounded-lg" />
+                    <Skeleton className="h-12 w-full rounded-lg" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Skeleton className="h-12 w-full rounded-lg" />
+                      <Skeleton className="h-12 w-full rounded-lg" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
                     isRequired
                     errorMessage={validationErrors.applicationName}
@@ -1838,6 +1879,7 @@ export default function ProjectsPage() {
                     ))}
                   </Select>
                 </div>
+                )}
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
@@ -1900,9 +1942,11 @@ export default function ProjectsPage() {
       <ProjectDetailsDrawer
         isOpen={isDetailsOpen}
         project={selectedProjectForDetails as any}
+        loading={detailsLoading}
         onOpenChange={handleDetailsClose}
-        onViewRequirements={() => {
-          // Navigate to project requirements or handle as needed
+        onViewRequirements={(project) => {
+          // Navigate to project requirements page
+          navigate(`/requirements/${project.id}`);
           handleDetailsClose();
         }}
       />

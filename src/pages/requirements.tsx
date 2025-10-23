@@ -14,6 +14,7 @@ import { Tooltip } from "@heroui/tooltip";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import LoadingLogo from "@/components/LoadingLogo";
+import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { useProjectRequirements } from "@/hooks/useProjectRequirements";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { usePageTitle } from "@/hooks";
@@ -36,6 +37,16 @@ export default function RequirementsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedProject, setSelectedProject] =
     useState<AssignedProject | null>(null);
+  const [projectIdForDetails, setProjectIdForDetails] = useState<
+    number | undefined
+  >(undefined);
+
+  // Hook to fetch project details for drawer view
+  const { project: projectDetailsData, loading: detailsLoading } =
+    useProjectDetails({
+      projectId: projectIdForDetails,
+      enabled: projectIdForDetails !== undefined,
+    });
 
   const {
     assignedProjects,
@@ -165,9 +176,19 @@ export default function RequirementsPage() {
 
   // Function to open project details drawer
   const handleViewDetails = (project: AssignedProject) => {
-    setSelectedProject(project);
+    setProjectIdForDetails(project.id);
     setIsDrawerOpen(true);
   };
+
+  // Effect to populate selected project when data is fetched
+  useEffect(() => {
+    if (projectDetailsData) {
+      setSelectedProject(projectDetailsData as unknown as AssignedProject);
+
+      // Reset projectIdForDetails to allow re-triggering on next view
+      setProjectIdForDetails(undefined);
+    }
+  }, [projectDetailsData]);
 
   // Filter and sort assigned projects
   const filteredAndSortedProjects = assignedProjects
@@ -638,6 +659,7 @@ export default function RequirementsPage() {
       {/* Project Details Drawer */}
       <ProjectDetailsDrawer
         isOpen={isDrawerOpen}
+        loading={detailsLoading}
         project={selectedProject}
         onOpenChange={setIsDrawerOpen}
         onViewRequirements={handleViewRequirements}

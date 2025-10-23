@@ -19,16 +19,19 @@ export function useDraftRequirements(): UseDraftRequirementsResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<Record<string, string>>({});
 
   const loadDraftRequirements = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const result = await projectRequirementsService.getDraftRequirements({
-        limit: 10, // Show first 10 draft requirements
-        page: 1,
-      });
+      const result =
+        await projectRequirementsService.getPendingApprovalRequirements({
+          limit: 10, // Show first 10 draft requirements
+          page: 1,
+          ...filters,
+        });
 
       setDraftRequirements(result.data || []);
       setTotal(result.pagination?.total || 0);

@@ -25,10 +25,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a Role entity to a RoleDto
     /// </summary>
-    public RoleDto MapToRoleDto(Role role)
+    public RoleDto? MapToRoleDto(Role? role)
     {
         if (role == null)
-            return null!;
+            return null;
 
         var roleDto = new RoleDto
         {
@@ -89,10 +89,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a Permission entity to an ActionDto
     /// </summary>
-    public ActionDto MapToActionDto(Permission permission)
+    public ActionDto? MapToActionDto(Permission? permission)
     {
         if (permission == null)
-            return null!;
+            return null;
 
         return new ActionDto
         {
@@ -107,10 +107,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a Project entity to a ProjectDto
     /// </summary>
-    public ProjectDto MapToProjectDto(Project project)
+    public ProjectDto? MapToProjectDto(Project? project)
     {
         if (project == null)
-            return null!;
+            return null;
 
         // Calculate requirements statistics
         int totalRequirements = project.ProjectRequirements?.Count() ?? 0;
@@ -131,6 +131,8 @@ public class MappingService : IMappingService
             AnalystIds = project.ProjectAnalysts?.Select(pa => pa.AnalystId).ToList() ?? new List<int>(),
             AnalystEmployees = project.ProjectAnalysts?.Where(pa => pa.Analyst != null)
                 .Select(pa => MapToEmployeeDto(pa.Analyst!))
+                .Where(dto => dto != null)
+                .Select(dto => dto!)
                 .ToList() ?? new List<EmployeeDto>(),
              
             StartDate = project.StartDate,
@@ -326,12 +328,15 @@ public class MappingService : IMappingService
         // Populate Analysts names from ProjectAnalyst entities
         if (project.ProjectAnalysts != null && project.ProjectAnalysts.Any())
         {
+            var analystIds = project.ProjectAnalysts.Select(pa => pa.AnalystId).ToList();
+            var analysts = await _employeeRepository.GetByIdsAsync(analystIds);
+            var analystDict = analysts.ToDictionary(a => a.Id, a => a);
+            
             var analystNames = new List<string>();
             
             foreach (var projectAnalyst in project.ProjectAnalysts)
             {
-                var analyst = await _employeeRepository.GetByIdAsync(projectAnalyst.AnalystId);
-                if (analyst != null)
+                if (analystDict.TryGetValue(projectAnalyst.AnalystId, out var analyst) && analyst != null)
                 {
                     analystNames.Add(analyst.FullName);
                 }
@@ -394,10 +399,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a ProjectRequirement entity to a ProjectRequirementDto
     /// </summary>
-    public ProjectRequirementDto MapToProjectRequirementDto(ProjectRequirement projectRequirement)
+    public ProjectRequirementDto? MapToProjectRequirementDto(ProjectRequirement? projectRequirement)
     {
         if (projectRequirement == null)
-            return null!;
+            return null;
             
         return new ProjectRequirementDto
         {
@@ -413,7 +418,7 @@ public class MappingService : IMappingService
             AssignedAnalyst = projectRequirement.AssignedAnalyst,
             CreatedAt = projectRequirement.CreatedAt,
             UpdatedAt = projectRequirement.UpdatedAt,
-            Attachments = projectRequirement.Attachments?.Select(MapToProjectRequirementAttachmentDto).ToList() ?? new List<ProjectRequirementAttachmentDto>(),
+            Attachments = projectRequirement.Attachments?.Select(MapToProjectRequirementAttachmentDto).Where(a => a != null).Select(a => a!).ToList() ?? new List<ProjectRequirementAttachmentDto>(),
             Project = projectRequirement.Project != null ? MapToProjectBasicInfoDto(projectRequirement.Project) : null,
             RequirementTask = projectRequirement.RequirementTask != null ? MapToRequirementTaskDto(projectRequirement.RequirementTask) : null,
             Timeline = projectRequirement.Timeline != null ? MapToTimelineBasicInfoDto(projectRequirement.Timeline) : null
@@ -423,10 +428,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a ProjectRequirementAttachment entity to a ProjectRequirementAttachmentDto
     /// </summary>
-    public ProjectRequirementAttachmentDto MapToProjectRequirementAttachmentDto(ProjectRequirementAttachment attachment)
+    public ProjectRequirementAttachmentDto? MapToProjectRequirementAttachmentDto(ProjectRequirementAttachment? attachment)
     {
         if (attachment == null)
-            return null!;
+            return null;
             
         return new ProjectRequirementAttachmentDto
         {
@@ -444,10 +449,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a Project entity to a ProjectBasicInfoDto
     /// </summary>
-    public ProjectBasicInfoDto MapToProjectBasicInfoDto(Project project)
+    public ProjectBasicInfoDto? MapToProjectBasicInfoDto(Project? project)
     {
         if (project == null)
-            return null!;
+            return null;
             
         return new ProjectBasicInfoDto
         {
@@ -462,10 +467,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a RequirementTask entity to a RequirementTaskDto
     /// </summary>
-    public RequirementTaskDto MapToRequirementTaskDto(RequirementTask requirementTask)
+    public RequirementTaskDto? MapToRequirementTaskDto(RequirementTask? requirementTask)
     {
         if (requirementTask == null)
-            return null!;
+            return null;
             
         return new RequirementTaskDto
         {
@@ -496,10 +501,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a Timeline entity to a TimelineBasicInfoDto
     /// </summary>
-    public TimelineBasicInfoDto MapToTimelineBasicInfoDto(Timeline timeline)
+    public TimelineBasicInfoDto? MapToTimelineBasicInfoDto(Timeline? timeline)
     {
         if (timeline == null)
-            return null!;
+            return null;
             
         return new TimelineBasicInfoDto
         {
@@ -511,10 +516,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a Timeline entity to a TimelineDto
     /// </summary>
-    public TimelineDto MapToTimelineDto(Timeline timeline)
+    public TimelineDto? MapToTimelineDto(Timeline? timeline)
     {
         if (timeline == null)
-            return null!;
+            return null;
 
         return new TimelineDto
         {
@@ -572,8 +577,11 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a Timeline entity to TimelineWithSprintsDto with generated treeId
     /// </summary>
-    public TimelineWithSprintsDto MapToTimelineWithSprintsDto(Timeline timeline)
+    public TimelineWithSprintsDto? MapToTimelineWithSprintsDto(Timeline? timeline)
     {
+        if (timeline == null)
+            return null;
+
         return new TimelineWithSprintsDto
         {
             Id = timeline.Id,
@@ -586,15 +594,18 @@ public class MappingService : IMappingService
             EndDate = timeline.EndDate,
             CreatedAt = timeline.CreatedAt,
             UpdatedAt = timeline.UpdatedAt,
-            Sprints = timeline.Sprints?.Select(MapToSprintDto).ToList() ?? new List<SprintDto>()
+            Sprints = timeline.Sprints?.Select(MapToSprintDto).Where(s => s != null).Select(s => s!).ToList() ?? new List<SprintDto>()
         };
     }
 
     /// <summary>
     /// Maps a Sprint entity to SprintDto with generated treeId
     /// </summary>
-    public SprintDto MapToSprintDto(Sprint sprint)
+    public SprintDto? MapToSprintDto(Sprint? sprint)
     {
+        if (sprint == null)
+            return null;
+
         return new SprintDto
         {
             Id = sprint.Id,
@@ -608,15 +619,18 @@ public class MappingService : IMappingService
             TimelineId = sprint.TimelineId,
             CreatedAt = sprint.CreatedAt,
             UpdatedAt = sprint.UpdatedAt,
-            Tasks = sprint.Tasks?.Select(MapToTaskDto).ToList() ?? new List<TaskDto>()
+            Tasks = sprint.Tasks?.Select(MapToTaskDto).Where(t => t != null).Select(t => t!).ToList() ?? new List<TaskDto>()
         };
     }
 
     /// <summary>
     /// Maps a Task entity to TaskDto with generated treeId
     /// </summary>
-    public TaskDto MapToTaskDto(PMA.Core.Entities.Task task)
+    public TaskDto? MapToTaskDto(PMA.Core.Entities.Task? task)
     {
+        if (task == null)
+            return null;
+
         return new TaskDto
         {
             Id = task.Id,
@@ -643,8 +657,11 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a User entity to UserDto
     /// </summary>
-    public UserDto MapToUserDto(User user)
+    public UserDto? MapToUserDto(User? user)
     {
+        if (user == null)
+            return null;
+
         return new UserDto
         {
             Id = user.Id,
@@ -665,10 +682,10 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps an Employee entity to EmployeeDto
     /// </summary>
-    public EmployeeDto MapToEmployeeDto(Employee employee)
+    public EmployeeDto? MapToEmployeeDto(Employee? employee)
     {
         if (employee == null)
-            return null!;
+            return null;
 
         return new EmployeeDto
         {
@@ -684,14 +701,17 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a Project entity to ProjectWithTimelinesDto with generated treeIds
     /// </summary>
-    public ProjectWithTimelinesDto MapToProjectWithTimelinesDto(Project project)
+    public ProjectWithTimelinesDto? MapToProjectWithTimelinesDto(Project? project)
     {
+        if (project == null)
+            return null;
+
         return new ProjectWithTimelinesDto
         {
             ProjectId = project.Id,
             ProjectName = project.ApplicationName,
             TimelineCount = project.Timelines?.Count ?? 0,
-            Timelines = project.Timelines?.Select(MapToTimelineWithSprintsDto).ToList() ?? new List<TimelineWithSprintsDto>()
+            Timelines = project.Timelines?.Select(MapToTimelineWithSprintsDto).Where(t => t != null).Select(t => t!).ToList() ?? new List<TimelineWithSprintsDto>()
         };
     }
 
@@ -822,8 +842,11 @@ public class MappingService : IMappingService
     /// <summary>
     /// Maps a DesignRequest entity to DesignRequestDto
     /// </summary>
-    public DesignRequestDto MapToDesignRequestDto(DesignRequest designRequest)
+    public DesignRequestDto? MapToDesignRequestDto(DesignRequest? designRequest)
     {
+        if (designRequest == null)
+            return null;
+
         return new DesignRequestDto
         {
             Id = designRequest.Id,

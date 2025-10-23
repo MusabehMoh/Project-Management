@@ -53,4 +53,11 @@ public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
 
         return (employees, totalCount);
     }
+
+    public async System.Threading.Tasks.Task<IEnumerable<Employee>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.MawaredEmployees
+            .Where(e => ids.Contains(e.Id))
+            .ToListAsync();
+    }
 }

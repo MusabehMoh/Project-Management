@@ -9,6 +9,7 @@ import {
   DrawerBody,
   DrawerFooter,
 } from "@heroui/drawer";
+import { Skeleton } from "@heroui/skeleton";
 import { Users } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -18,6 +19,7 @@ interface ProjectDetailsDrawerProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   project: AssignedProject | null;
+  loading?: boolean;
   onViewRequirements?: (project: AssignedProject) => void;
 }
 
@@ -25,6 +27,7 @@ export default function ProjectDetailsDrawer({
   isOpen,
   onOpenChange,
   project,
+  loading = false,
   onViewRequirements,
 }: ProjectDetailsDrawerProps) {
   const { t } = useLanguage();
@@ -46,6 +49,28 @@ export default function ProjectDetailsDrawer({
     return getProjectStatusName(status);
   };
 
+  const getAnalystsData = () => {
+    if (!project) return [];
+
+    // Check if project has analystEmployees (full Employee objects from Project type)
+    if (
+      (project as any).analystEmployees &&
+      Array.isArray((project as any).analystEmployees)
+    ) {
+      return (project as any).analystEmployees.map(
+        (employee: any) => `${employee.gradeName} ${employee.fullName}`,
+      );
+    }
+    // Check if project has analysts (comma-separated string from AssignedProject type)
+    if (project.analysts) {
+      return project.analysts.split(", ");
+    }
+
+    return [];
+  };
+
+  const analystsData = getAnalystsData();
+
   const handleViewRequirements = () => {
     if (project && onViewRequirements) {
       onViewRequirements(project);
@@ -62,13 +87,80 @@ export default function ProjectDetailsDrawer({
     >
       <DrawerContent>
         <DrawerHeader className="flex flex-col gap-1">
-          <h2 className="text-xl font-semibold">{project?.applicationName}</h2>
+          <h2 className="text-xl font-semibold">
+            {loading || !project
+              ? t("common.loading")
+              : project.applicationName}
+          </h2>
           <p className="text-sm text-default-500">
             {t("requirements.projectDetails")}
           </p>
         </DrawerHeader>
         <DrawerBody>
-          {project && (
+          {loading || !project ? (
+            <div className="space-y-6">
+              {/* Loading skeleton for status */}
+              <div className="flex gap-4">
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+
+              {/* Loading skeleton for description */}
+              <div>
+                <Skeleton className="h-6 w-40 mb-2" />
+                <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+
+              {/* Loading skeleton for project details */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                  <div>
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                  <div>
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Loading skeleton for requirements stats */}
+              <div>
+                <Skeleton className="h-6 w-40 mb-4" />
+                <div className="flex gap-3 mb-4">
+                  <Skeleton className="h-12 flex-1 rounded-lg" />
+                  <Skeleton className="h-12 flex-1 rounded-lg" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
+
+              {/* Loading skeleton for analysts */}
+              <div>
+                <Skeleton className="h-6 w-32 mb-2" />
+                <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                    <Skeleton className="h-6 w-18 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : project ? (
             <div className="space-y-6">
               {/* Project Status */}
               <div className="flex gap-4">
@@ -121,7 +213,8 @@ export default function ProjectDetailsDrawer({
                   <div>
                     <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                       <Users className="w-5 h-5 text-default-400" />
-                      {t("projects.responsibleManager") || "Responsible Manager"}
+                      {t("projects.responsibleManager") ||
+                        "Responsible Manager"}
                     </h3>
                     <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
                       <div className="space-y-2">
@@ -213,7 +306,6 @@ export default function ProjectDetailsDrawer({
                   </div>
                 )}
 
-                 
                 {/* Remarks */}
                 {(project as any).remarks && (
                   <div className="pt-2 border-t border-default-200">
@@ -315,8 +407,8 @@ export default function ProjectDetailsDrawer({
                 </h3>
                 <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
                   <div className="flex flex-wrap gap-2">
-                    {project.analysts ? (
-                      project.analysts.split(", ").map((analyst, index) => (
+                    {analystsData.length > 0 ? (
+                      analystsData.map((analyst: string, index: number) => (
                         <Chip
                           key={index}
                           color="secondary"
@@ -387,6 +479,12 @@ export default function ProjectDetailsDrawer({
               )}
 
               {/* Created/Updated At */}
+            </div>
+          ) : (
+            <div className="flex justify-center items-center py-12">
+              <p className="text-default-500">
+                {t("requirements.noProjectData")}
+              </p>
             </div>
           )}
         </DrawerBody>

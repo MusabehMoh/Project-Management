@@ -142,6 +142,7 @@ public interface IEmployeeRepository : IRepository<Employee>
 {
     System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> GetEmployeesAsync(int page, int limit, int? statusId = null);
     System.Threading.Tasks.Task<(IEnumerable<Employee> Employees, int TotalCount)> SearchEmployeesAsync(string query, int page = 1, int limit = 20);
+    System.Threading.Tasks.Task<IEnumerable<Employee>> GetByIdsAsync(IEnumerable<int> ids);
 }
 
 public interface ILookupRepository : IRepository<Lookup>
