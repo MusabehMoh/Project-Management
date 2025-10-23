@@ -54,6 +54,29 @@ export const LOCALE_CONFIG = {
   fallbackLanguage: import.meta.env.VITE_FALLBACK_LANGUAGE || "en",
 } as const;
 
+// File Upload Configuration
+export const FILE_UPLOAD_CONFIG = {
+  maxFileSizeMB: parseInt(import.meta.env.VITE_MAX_FILE_SIZE_MB || "10"),
+  allowedFileTypes: (
+    import.meta.env.VITE_ALLOWED_FILE_TYPES ||
+    "pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif,bmp,zip,rar"
+  )
+    .split(",")
+    .map((type: string) => type.trim().toLowerCase()),
+  // Runtime config override for production deployments
+  runtimeMaxFileSizeMB: (window as any).PMA_CONFIG?.maxFileSizeMB,
+  runtimeAllowedFileTypes: (window as any).PMA_CONFIG?.allowedFileTypes,
+} as const;
+
+// Get effective file upload configuration (runtime config takes precedence)
+export const getFileUploadConfig = () => ({
+  maxFileSizeMB:
+    FILE_UPLOAD_CONFIG.runtimeMaxFileSizeMB || FILE_UPLOAD_CONFIG.maxFileSizeMB,
+  allowedFileTypes:
+    FILE_UPLOAD_CONFIG.runtimeAllowedFileTypes ||
+    FILE_UPLOAD_CONFIG.allowedFileTypes,
+});
+
 // Theme Configuration
 export const THEME_CONFIG = {
   defaultTheme: import.meta.env.VITE_DEFAULT_THEME || "light",

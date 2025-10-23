@@ -17,5 +17,9 @@ window.PMA_CONFIG = {
   enableSignalR: true,
 
   // Application basename for routing (change this if deploying to a subdirectory)
-  basename: ""
+  basename: "",
+
+  // File upload configuration
+  maxFileSizeMB: 50,
+  allowedFileTypes: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "jpg", "jpeg", "png", "gif", "bmp", "zip", "rar"]
 };
