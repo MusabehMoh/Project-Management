@@ -50,11 +50,14 @@ builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServe
     options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(10);
 });
 
-// Configure IIS options for large requests (when hosting on IIS)
-builder.Services.Configure<Microsoft.AspNetCore.Server.IIS.Core.IISServerOptions>(options =>
-{
-    options.MaxRequestBodySize = 500 * 1024 * 1024; // 500 MB
-});
+// Note: For IIS deployments, configure maxAllowedContentLength in web.config:
+// <system.webServer>
+//   <security>
+//     <requestFiltering>
+//       <requestLimits maxAllowedContentLength="524288000" /> <!-- 500 MB -->
+//     </requestFiltering>
+//   </security>
+// </system.webServer>
 
 // Configure AttachmentSettings
 builder.Services.Configure<AttachmentSettings>(builder.Configuration.GetSection("AttachmentSettings"));
