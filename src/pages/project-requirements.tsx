@@ -890,7 +890,7 @@ export default function ProjectRequirementsPage() {
                 isIconOnly
                 size="sm"
                 variant="light"
-                onPress={() => navigate("/requirements")}
+                onPress={() => navigate(-1)}
               >
                 <ArrowLeft className="w-4 h-4" />
               </Button>

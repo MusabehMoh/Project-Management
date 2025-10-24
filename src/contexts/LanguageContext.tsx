@@ -2626,7 +2626,7 @@ const translations = {
     "projects.startDate": "تاريخ البداية",
     "projects.expectedCompletionDate": "تاريخ الإنجاز المتوقع",
     "projects.budget": "الميزانية",
-    "projects.responsibleManager": "المدير المسؤول",
+    "projects.responsibleManager": "مدير الوحدة المسؤول",
     "projects.projectOwnerDetails": "تفاصيل مالك المشروع",
     "projects.expectedCompletion": "تاريخ الإنجاز المتوقع",
     "projects.description": "الوصف",

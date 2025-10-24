@@ -1,3 +1,5 @@
+import { Employee } from "./project";
+
 export interface ProjectRequirement {
   id: number;
   projectId: number;
@@ -101,6 +103,7 @@ export interface AssignedProject {
   applicationName: string;
   projectOwner: string;
   owningUnit: string;
+  projectOwnerEmployee:Employee;
   status: number;
   requirementsCount: number;
   completedRequirements: number;

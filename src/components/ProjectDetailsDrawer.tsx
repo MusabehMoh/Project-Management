@@ -92,9 +92,6 @@ export default function ProjectDetailsDrawer({
               ? t("common.loading")
               : project.applicationName}
           </h2>
-          <p className="text-sm text-default-500">
-            {t("requirements.projectDetails")}
-          </p>
         </DrawerHeader>
         <DrawerBody>
           {loading || !project ? (
@@ -163,7 +160,7 @@ export default function ProjectDetailsDrawer({
           ) : project ? (
             <div className="space-y-6">
               {/* Project Status */}
-              <div className="flex gap-4">
+              <div className="flex gap-4 ">
                 <Chip
                   color={getStatusColor(project.status)}
                   size="sm"
@@ -173,32 +170,18 @@ export default function ProjectDetailsDrawer({
                 </Chip>
               </div>
 
-              {/* Description */}
-              <div>
-                <h3 className="text-lg font-semibold mb-2">
-                  {t("requirements.projectDescription")}
-                </h3>
-                <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                  <p className="text-sm leading-relaxed">
-                    {project.description || t("requirements.noDescription")}
-                  </p>
-                </div>
-              </div>
-
               {/* Project Details */}
-              <div className="space-y-4">
+              <div className="space-y-4 pt-2 border-t border-default-200">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-default-600 mb-1">
-                      {t("requirements.projectId")}
-                    </h4>
-                    <p className="text-sm">{project.id}</p>
-                  </div>
                   <div>
                     <h4 className="text-sm font-medium text-default-600 mb-1">
                       {t("requirements.projectOwner")}
                     </h4>
-                    <p className="text-sm">{project.projectOwner}</p>
+                    <p className="text-sm">
+                      {(project as any).projectOwnerEmployee
+                        ? `${(project as any).projectOwnerEmployee.gradeName} ${(project as any).projectOwnerEmployee.fullName}`
+                        : t("common.none")}
+                    </p>
                   </div>
                   <div>
                     <h4 className="text-sm font-medium text-default-600 mb-1">
@@ -207,35 +190,28 @@ export default function ProjectDetailsDrawer({
                     <p className="text-sm">{project.owningUnit}</p>
                   </div>
                 </div>
-
-                {/* Responsible Manager Section */}
-                {(project as any).responsibleUnitManagerEmployee && (
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-default-200">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <Users className="w-5 h-5 text-default-400" />
-                      {t("projects.responsibleManager") ||
-                        "Responsible Manager"}
-                    </h3>
-                    <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">
-                          {
-                            (project as any).responsibleUnitManagerEmployee
-                              ?.gradeName
-                          }{" "}
-                          {
-                            (project as any).responsibleUnitManagerEmployee
-                              ?.fullName
-                          }
-                        </p>
-                        <p className="text-xs text-default-500">
-                          {(project as any).responsibleUnitManagerEmployee
-                            ?.militaryNumber || "N/A"}
-                        </p>
-                      </div>
-                    </div>
+                    <h4 className="text-sm font-medium text-default-600 mb-1">
+                      {t("projects.alternativeOwner")}
+                    </h4>
+                    <p className="text-sm">
+                      {(project as any).alternativeOwnerEmployee
+                        ? `${(project as any).alternativeOwnerEmployee.gradeName} ${(project as any).alternativeOwnerEmployee.fullName}`
+                        : t("common.none")}
+                    </p>
                   </div>
-                )}
+                  <div>
+                    <h4 className="text-sm font-medium text-default-600 mb-1">
+                      {t("projects.responsibleManager")}
+                    </h4>
+                    <p className="text-sm">
+                      {(project as any).responsibleUnitManagerEmployee
+                        ? `${(project as any).responsibleUnitManagerEmployee.gradeName} ${(project as any).responsibleUnitManagerEmployee.fullName}`
+                        : t("common.none")}
+                    </p>
+                  </div>
+                </div>
 
                 {/* Start and End Dates */}
                 {((project as any).startDate ||
@@ -265,60 +241,6 @@ export default function ProjectDetailsDrawer({
                   </div>
                 )}
 
-                {/* Additional Project Info */}
-                {((project as any).priority ||
-                  (project as any).budget ||
-                  (project as any).progress) && (
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-default-200">
-                    {(project as any).priority && (
-                      <div>
-                        <h4 className="text-sm font-medium text-default-600 mb-1">
-                          {t("common.priority") || "Priority"}
-                        </h4>
-                        <Chip
-                          color={
-                            (project as any).priority === "high"
-                              ? "danger"
-                              : (project as any).priority === "medium"
-                                ? "warning"
-                                : "default"
-                          }
-                          size="sm"
-                          variant="flat"
-                        >
-                          {(project as any).priority}
-                        </Chip>
-                      </div>
-                    )}
-                    {(project as any).budget && (
-                      <div>
-                        <h4 className="text-sm font-medium text-default-600 mb-1">
-                          {t("projects.budget") || "Budget"}
-                        </h4>
-                        <p className="text-sm">
-                          {new Intl.NumberFormat("en-US", {
-                            style: "currency",
-                            currency: "USD",
-                          }).format((project as any).budget)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Remarks */}
-                {(project as any).remarks && (
-                  <div className="pt-2 border-t border-default-200">
-                    <h4 className="text-sm font-medium text-default-600 mb-2">
-                      {t("projects.remarks") || "Remarks"}
-                    </h4>
-                    <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
-                      <p className="text-sm leading-relaxed">
-                        {(project as any).remarks}
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Requirements Statistics */}
@@ -427,53 +349,28 @@ export default function ProjectDetailsDrawer({
                 </div>
               </div>
 
-              {/* Alternative Owner Section */}
-              {(project as any).alternativeOwnerEmployee && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-default-400" />
-                    {t("projects.alternativeOwner") || "Alternative Owner"}
-                  </h3>
-                  <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">
-                        {(project as any).alternativeOwnerEmployee?.gradeName}{" "}
-                        {(project as any).alternativeOwnerEmployee?.fullName}
-                      </p>
-                      <p className="text-xs text-default-500">
-                        {(project as any).alternativeOwnerEmployee
-                          ?.militaryNumber || "N/A"}
-                      </p>
-                    </div>
-                  </div>
+              {/* Description */}
+              <div>
+                <h3 className="text-lg font-semibold mb-2">
+                  {t("requirements.projectDescription")}
+                </h3>
+                <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
+                  <p className="text-sm leading-relaxed">
+                    {project.description || t("requirements.noDescription")}
+                  </p>
                 </div>
-              )}
+              </div>
 
-              {/* Project Owner Employee Details */}
-              {(project as any).projectOwnerEmployee && (
+              {/* Remarks */}
+              {(project as any).remarks && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-default-400" />
-                    {t("projects.projectOwnerDetails") ||
-                      "Project Owner Details"}
+                  <h3 className="text-lg font-semibold mb-2">
+                    {t("projects.remarks") || "Remarks"}
                   </h3>
                   <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">
-                        {(project as any).projectOwnerEmployee?.gradeName}{" "}
-                        {(project as any).projectOwnerEmployee?.fullName}
-                      </p>
-                      <p className="text-xs text-default-500">
-                        {(project as any).projectOwnerEmployee
-                          ?.militaryNumber || "N/A"}
-                      </p>
-                      {(project as any).projectOwnerEmployee?.department && (
-                        <p className="text-xs text-default-500">
-                          {t("common.department")}:{" "}
-                          {(project as any).projectOwnerEmployee?.department}
-                        </p>
-                      )}
-                    </div>
+                    <p className="text-sm leading-relaxed">
+                      {(project as any).remarks}
+                    </p>
                   </div>
                 </div>
               )}
