@@ -111,8 +111,8 @@ public class DeveloperQuickActionsController : ApiBaseController
                     statusId = (int)t.StatusId,
                     priorityId = (int)t.PriorityId,
                     progress = t.Progress,
-                    daysUntilDeadline = EF.Functions.DateDiffDay(DateTime.UtcNow, t.EndDate),
-                    isOverdue = t.EndDate < DateTime.UtcNow,
+                    daysUntilDeadline = EF.Functions.DateDiffDay(DateTime.Now, t.EndDate),
+                    isOverdue = t.EndDate < DateTime.Now,
                     estimatedHours = t.EstimatedHours,
                     actualHours = t.ActualHours,
                     departmentName = t.Department != null ? t.Department.Name : ""
@@ -122,7 +122,7 @@ public class DeveloperQuickActionsController : ApiBaseController
 
             // Get overdue tasks (tasks past their due date and not completed)
             var overdueTasks = await _context.Tasks
-                .Where(t => t.EndDate < DateTime.UtcNow && t.StatusId != TaskStatusEnum.Completed)
+                .Where(t => t.EndDate < DateTime.Now && t.StatusId != TaskStatusEnum.Completed)
                 .Include(t => t.ProjectRequirement)
                 .ThenInclude(pr => pr!.Project)
                 .Include(t => t.Assignments)
@@ -144,8 +144,8 @@ public class DeveloperQuickActionsController : ApiBaseController
                     statusId = (int)t.StatusId,
                     priorityId = (int)t.PriorityId,
                     progress = t.Progress,
-                    daysUntilDeadline = EF.Functions.DateDiffDay(DateTime.UtcNow, t.EndDate),
-                    isOverdue = t.EndDate < DateTime.UtcNow,
+                    daysUntilDeadline = EF.Functions.DateDiffDay(DateTime.Now, t.EndDate),
+                    isOverdue = t.EndDate < DateTime.Now,
                     estimatedHours = t.EstimatedHours,
                     actualHours = t.ActualHours,
                     departmentName = t.Department != null ? t.Department.Name : ""
@@ -248,8 +248,8 @@ public class DeveloperQuickActionsController : ApiBaseController
                     statusId = (int)t.StatusId,
                     priorityId = (int)t.PriorityId,
                     progress = t.Progress,
-                    daysUntilDeadline = EF.Functions.DateDiffDay(DateTime.UtcNow, t.EndDate),
-                    isOverdue = t.EndDate < DateTime.UtcNow,
+                    daysUntilDeadline = EF.Functions.DateDiffDay(DateTime.Now, t.EndDate),
+                    isOverdue = t.EndDate < DateTime.Now,
                     estimatedHours = t.EstimatedHours,
                     actualHours = t.ActualHours,
                     departmentName = t.Department != null ? t.Department.Name : ""
@@ -391,7 +391,7 @@ public class DeveloperQuickActionsController : ApiBaseController
             {
                 // Update existing assignment
                 existingAssignment.PrsId = developerId;
-                existingAssignment.AssignedAt = DateTime.UtcNow;
+                existingAssignment.AssignedAt = DateTime.Now;
             }
             else
             {
@@ -400,7 +400,7 @@ public class DeveloperQuickActionsController : ApiBaseController
                 {
                     TaskId = taskId,
                     PrsId = developerId,
-                    AssignedAt = DateTime.UtcNow
+                    AssignedAt = DateTime.Now
                 };
                 _context.TaskAssignments.Add(newAssignment);
             }
@@ -466,7 +466,7 @@ public class DeveloperQuickActionsController : ApiBaseController
     {
         try
         {
-            var currentDate = DateTime.UtcNow;
+            var currentDate = DateTime.Now;
 
             // Get team members with detailed workload information
             var teamMembersWorkload = await _context.Teams

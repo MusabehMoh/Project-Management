@@ -76,8 +76,8 @@ public class TeamRepository : Repository<Team>, ITeamRepository
 
     public async Task<Team> AddTeamMemberAsync(Team team)
     {
-        team.CreatedAt = DateTime.UtcNow;
-        team.UpdatedAt = DateTime.UtcNow;
+        team.CreatedAt = DateTime.Now;
+        team.UpdatedAt = DateTime.Now;
         await _context.Teams.AddAsync(team);
         await _context.SaveChangesAsync();
         return team;
@@ -85,7 +85,7 @@ public class TeamRepository : Repository<Team>, ITeamRepository
 
     public async Task UpdateTeamMemberAsync(Team team)
     {
-        team.UpdatedAt = DateTime.UtcNow;
+        team.UpdatedAt = DateTime.Now;
         _context.Teams.Update(team);
         await _context.SaveChangesAsync();
     }
@@ -96,7 +96,7 @@ public class TeamRepository : Repository<Team>, ITeamRepository
         if (team != null)
         {
             team.IsActive = false;
-            team.UpdatedAt = DateTime.UtcNow;
+            team.UpdatedAt = DateTime.Now;
             await _context.SaveChangesAsync();
             return true;
         }

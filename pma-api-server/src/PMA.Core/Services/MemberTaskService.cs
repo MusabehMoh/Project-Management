@@ -5,6 +5,7 @@ using PMA.Core.DTOs.Tasks;
 using TaskEntity = PMA.Core.Entities.Task;
 using Task = System.Threading.Tasks.Task;
 using PMA.Core.Enums;
+using Microsoft.AspNetCore.Http;
 
 namespace PMA.Core.Services;
 
@@ -157,6 +158,7 @@ public class MemberTaskService : IMemberTaskService
             Progress = task.Progress,  
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
+            RoleType=task.RoleType ?? "",
             AssignedMembers = assignedMembers,
             MemberIds = assignedMembers.Select(a => a.Id).ToList(),
             DepartmentId = task.DepartmentId,
@@ -256,7 +258,7 @@ public class MemberTaskService : IMemberTaskService
         existingTask.Progress = memberTask.Progress;
         existingTask.StartDate = memberTask.StartDate;
         existingTask.EndDate = memberTask.EndDate;
-        existingTask.UpdatedAt = DateTime.UtcNow;
+        existingTask.UpdatedAt = DateTime.Now;
 
         // Save the changes (UpdateAsync returns Task, not Task<T>)
         await _taskRepository.UpdateAsync(existingTask);
@@ -355,6 +357,234 @@ public class MemberTaskService : IMemberTaskService
         // Note: Audit trail for assignee changes could be added here in the future
         // if a TaskAssigneeHistory table is created
 
+        return true;
+    }
+
+    public async Task<IEnumerable<TaskCommentDto>> GetTaskCommentsAsync(int taskId)
+    {
+        // Get current user context
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        if (!userContext.IsAuthenticated)
+        {
+            return Enumerable.Empty<TaskCommentDto>();
+        }
+
+        var comments = await _taskRepository.GetTaskCommentsAsync(taskId);
+
+        // Map to DTOs and include user names
+        var commentDtos = new List<TaskCommentDto>();
+        foreach (var comment in comments)
+        {
+            var user = await _userService.GetUserByUserNameAsync((comment.CreatedBy));
+            var commentDto = new TaskCommentDto
+            {
+                Id = comment.Id,
+                TaskId = comment.TaskId,
+                CommentText = comment.CommentText,
+                CreatedAt = comment.CreatedAt,
+                CreatedBy = comment.CreatedBy,
+                CreatedByName = user?.FullName ?? comment.CreatedBy
+            };
+            commentDtos.Add(commentDto);
+        }
+
+        return commentDtos.OrderByDescending(c => c.CreatedAt);
+    }
+
+    public async Task<TaskCommentDto> AddTaskCommentAsync(int taskId, string commentText)
+    {
+        // Get current user context
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.PrsId))
+        {
+            throw new UnauthorizedAccessException("User not authenticated");
+        }
+
+        // Verify task exists
+        var task = await _taskRepository.GetByIdAsync(taskId);
+        if (task == null)
+        {
+            throw new InvalidOperationException($"Task with ID {taskId} not found");
+        }
+
+        var comment = await _taskRepository.AddTaskCommentAsync(taskId, commentText, userContext.UserName);
+
+        // Get user name for the response
+        var user = await _userService.GetUserByUserNameAsync(comment.CreatedBy);
+
+        return new TaskCommentDto
+        {
+            Id = comment.Id,
+            TaskId = comment.TaskId,
+            CommentText = comment.CommentText,
+            CreatedAt = comment.CreatedAt,
+            CreatedBy = comment.CreatedBy,
+            CreatedByName = user?.FullName ?? comment.CreatedBy
+        };
+    }
+
+    public async Task<IEnumerable<TaskHistoryDto>> GetTaskHistoryAsync(int taskId)
+    {
+        // Get current user context
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        if (!userContext.IsAuthenticated)
+        {
+            return Enumerable.Empty<TaskHistoryDto>();
+        }
+
+        var history = await _taskRepository.GetTaskHistoryAsync(taskId);
+
+        // Map to DTOs and include user names
+        var historyDtos = new List<TaskHistoryDto>();
+        foreach (var changeGroup in history)
+        {
+            var user = await _userService.GetUserByUserNameAsync(changeGroup.ChangedBy);
+            var historyDto = new TaskHistoryDto
+            {
+                Id = changeGroup.Id,
+                EntityType = changeGroup.EntityType,
+                EntityId = changeGroup.EntityId,
+                ChangedBy = changeGroup.ChangedBy,
+                ChangedByName = user?.FullName ?? changeGroup.ChangedBy,
+                ChangedAt = changeGroup.ChangedAt,
+                Items = changeGroup.Items.Select(item => new TaskHistoryItemDto
+                {
+                    Id = item.Id,
+                    FieldName = item.FieldName,
+                    OldValue = item.OldValue,
+                    NewValue = item.NewValue
+                }).ToList()
+            };
+            historyDtos.Add(historyDto);
+        }
+
+        return historyDtos.OrderByDescending(h => h.ChangedAt);
+    }
+
+    // Attachment methods
+    public async Task<IEnumerable<TaskAttachmentDto>> GetTaskAttachmentsAsync(int taskId)
+    {
+        var attachments = await _taskRepository.GetTaskAttachmentsAsync(taskId);
+
+        // Map to DTOs and include user names
+        var attachmentDtos = new List<TaskAttachmentDto>();
+        foreach (var attachment in attachments)
+        {
+            var user = await _userService.GetUserByUserNameAsync(attachment.CreatedBy ?? string.Empty);
+            var attachmentDto = new TaskAttachmentDto
+            {
+                Id = attachment.Id,
+                TaskId = attachment.TaskId,
+                FileName = attachment.FileName,
+                OriginalName = attachment.OriginalName,
+                FilePath = attachment.FilePath,
+                FileSize = attachment.FileSize,
+                ContentType = attachment.ContentType,
+                UploadedAt = attachment.UploadedAt,
+                CreatedBy = attachment.CreatedBy,
+                CreatedByName = user?.FullName ?? attachment.CreatedBy
+            };
+            attachmentDtos.Add(attachmentDto);
+        }
+
+        return attachmentDtos.OrderByDescending(a => a.UploadedAt);
+    }
+
+    public async Task<TaskAttachmentDto> AddTaskAttachmentAsync(int taskId, IFormFile file)
+    {
+        // Get current user context
+        var userContext = await _userContextAccessor.GetUserContextAsync();
+        if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.UserName))
+        {
+            throw new UnauthorizedAccessException("User not authenticated");
+        }
+
+        // Verify task exists
+        var task = await _taskRepository.GetByIdAsync(taskId);
+        if (task == null)
+        {
+            throw new InvalidOperationException("Task not found");
+        }
+
+        // Create uploads directory if it doesn't exist
+        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "tasks");
+        Directory.CreateDirectory(uploadsPath);
+
+        // Generate unique filename
+        var fileExtension = Path.GetExtension(file.FileName);
+        var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+        var filePath = Path.Combine(uploadsPath, uniqueFileName);
+
+        // Save file to disk
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        // Create attachment entity
+        var attachment = new TaskAttachment
+        {
+            TaskId = taskId,
+            FileName = uniqueFileName,
+            OriginalName = file.FileName,
+            FilePath = filePath,
+            FileSize = file.Length,
+            ContentType = file.ContentType,
+            CreatedBy = userContext.UserName
+        };
+
+        var savedAttachment = await _taskRepository.AddTaskAttachmentAsync(attachment);
+
+        // Get user info for DTO
+        var user = await _userService.GetUserByUserNameAsync(userContext.UserName);
+
+        return new TaskAttachmentDto
+        {
+            Id = savedAttachment.Id,
+            TaskId = savedAttachment.TaskId,
+            FileName = savedAttachment.FileName,
+            OriginalName = savedAttachment.OriginalName,
+            FilePath = savedAttachment.FilePath,
+            FileSize = savedAttachment.FileSize,
+            ContentType = savedAttachment.ContentType,
+            UploadedAt = savedAttachment.UploadedAt,
+            CreatedBy = savedAttachment.CreatedBy,
+            CreatedByName = user?.FullName ?? savedAttachment.CreatedBy
+        };
+    }
+
+    public async Task<(Stream? FileStream, string? FileName, string? ContentType)> DownloadTaskAttachmentAsync(int attachmentId)
+    {
+        var attachment = await _taskRepository.GetTaskAttachmentByIdAsync(attachmentId);
+        if (attachment == null || string.IsNullOrEmpty(attachment.FilePath))
+        {
+            return (null, null, null);
+        }
+
+        if (!System.IO.File.Exists(attachment.FilePath))
+        {
+            return (null, null, null);
+        }
+
+        var fileStream = new FileStream(attachment.FilePath, FileMode.Open, FileAccess.Read);
+        return (fileStream, attachment.OriginalName, attachment.ContentType ?? "application/octet-stream");
+    }
+
+    public async Task<bool> DeleteTaskAttachmentAsync(int attachmentId)
+    {
+        var attachment = await _taskRepository.GetTaskAttachmentByIdAsync(attachmentId);
+        if (attachment == null)
+        {
+            return false;
+        }
+
+        // Delete file from disk if it exists
+        if (!string.IsNullOrEmpty(attachment.FilePath) && System.IO.File.Exists(attachment.FilePath))
+        {
+            System.IO.File.Delete(attachment.FilePath);
+        }
+
+        await _taskRepository.DeleteTaskAttachmentAsync(attachmentId);
         return true;
     }
 }

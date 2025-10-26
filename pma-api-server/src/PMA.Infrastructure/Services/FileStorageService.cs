@@ -233,7 +233,7 @@ public class FileStorageService : IFileStorageService
     private string GenerateUniqueFileName(string originalFileName, string extension)
     {
         // Create a unique filename using timestamp and GUID
-        var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd_HHmmss");
+        var timestamp = DateTimeOffset.Now.ToString("yyyyMMdd_HHmmss");
         var guid = Guid.NewGuid().ToString("N")[..8]; // First 8 chars of GUID
         var cleanOriginalName = Path.GetFileNameWithoutExtension(originalFileName)
             .Replace(" ", "_")
@@ -248,7 +248,7 @@ public class FileStorageService : IFileStorageService
 
     private string BuildFilePath(string fileName, string? subFolder)
     {
-        var datePath = DateTime.UtcNow.ToString("yyyy/MM");
+        var datePath = DateTime.Now.ToString("yyyy/MM");
         
         if (!string.IsNullOrEmpty(subFolder))
         {

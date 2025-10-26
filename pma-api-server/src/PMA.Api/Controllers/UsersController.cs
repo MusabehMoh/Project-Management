@@ -144,8 +144,8 @@ public class UsersController : ApiBaseController
                 //Department = request.Department,
                 //Email = request.Email, // Can be overridden in request
                 //Phone = request.Phone, // Can be overridden in request
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
             };
 
             var createdUser = await _userService.CreateUserAsync(user);
@@ -247,7 +247,7 @@ public class UsersController : ApiBaseController
                 DepartmentId = request.DepartmentId,
                 //Email = request.Email, // Can be overridden in request
                 //Phone = request.Phone, // Can be overridden in request
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.Now
             };
 
             var updatedUser = await _userService.UpdateUserAsync(user);

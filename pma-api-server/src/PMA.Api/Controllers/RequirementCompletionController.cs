@@ -32,7 +32,7 @@ public class RequirementCompletionController : ApiBaseController
     {
         try
         {
-            var today = DateTime.UtcNow.Date;
+            var today = DateTime.Now.Date;
 
             // Base query for requirements
             var requirementsQuery = _context.ProjectRequirements
@@ -180,7 +180,7 @@ public class RequirementCompletionController : ApiBaseController
     {
         try
         {
-            var today = DateTime.UtcNow.Date;
+            var today = DateTime.Now.Date;
             DateTime startDate;
 
             // Determine the period
@@ -306,7 +306,7 @@ public class RequirementCompletionController : ApiBaseController
     {
         try
         {
-            var today = DateTime.UtcNow.Date;
+            var today = DateTime.Now.Date;
 
             var analystQuery = _context.Users
                 .Where(u => _context.UserRoles.Any(ur => ur.UserId == u.Id && 

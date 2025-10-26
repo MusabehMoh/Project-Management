@@ -329,9 +329,9 @@ public class MembersTasksController : ApiBaseController
                     "in review" => TaskStatusEnum.InReview,
                     "inreview" => TaskStatusEnum.InReview,
                     "rework" => TaskStatusEnum.Rework,
-                    "blocked" => TaskStatusEnum.OnHold,
-                    "on hold" => TaskStatusEnum.OnHold,
-                    "onhold" => TaskStatusEnum.OnHold,
+                    "blocked" => TaskStatusEnum.Blocked,
+                    "on hold" => TaskStatusEnum.Blocked,
+                    "onhold" => TaskStatusEnum.Blocked,
                     "completed" => TaskStatusEnum.Completed,
                     "done" => TaskStatusEnum.Completed,
                     _ => task.StatusId // Keep existing if invalid
@@ -555,6 +555,189 @@ public class MembersTasksController : ApiBaseController
                 Error = ex.Message
             };
             return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Get comments for a specific task
+    /// </summary>
+    [HttpGet("{id}/comments")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetTaskComments(int id)
+    {
+        try
+        {
+            var comments = await _memberTaskService.GetTaskCommentsAsync(id);
+            return Success(comments, message: "Task comments retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<TaskCommentDto>>("An error occurred while retrieving task comments", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Add a comment to a specific task
+    /// </summary>
+    [HttpPost("{id}/comments")]
+    [ProducesResponseType(201)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> AddTaskComment(int id, [FromBody] AddTaskCommentRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                var validationResponse = new ApiResponse<TaskCommentDto>
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Error = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))
+                };
+                return BadRequest(validationResponse);
+            }
+
+            var comment = await _memberTaskService.AddTaskCommentAsync(id, request.CommentText);
+            var response = new ApiResponse<TaskCommentDto>
+            {
+                Success = true,
+                Data = comment,
+                Message = "Comment added successfully"
+            };
+
+            return CreatedAtAction(nameof(GetTaskComments), new { id }, response);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new ApiResponse<TaskCommentDto>
+            {
+                Success = false,
+                Message = "An error occurred while adding the comment",
+                Error = ex.Message
+            };
+            return StatusCode(500, errorResponse);
+        }
+    }
+
+    /// <summary>
+    /// Get change history for a specific task
+    /// </summary>
+    [HttpGet("{id}/history")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetTaskHistory(int id)
+    {
+        try
+        {
+            var history = await _memberTaskService.GetTaskHistoryAsync(id);
+            return Success(history, message: "Task history retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<TaskHistoryDto>>("An error occurred while retrieving task history", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get attachments for a specific task
+    /// </summary>
+    [HttpGet("{id}/attachments")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetTaskAttachments(int id)
+    {
+        try
+        {
+            var attachments = await _memberTaskService.GetTaskAttachmentsAsync(id);
+            return Success(attachments, message: "Task attachments retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<TaskAttachmentDto>>("An error occurred while retrieving task attachments", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Upload an attachment to a specific task
+    /// </summary>
+    [HttpPost("{id}/attachments")]
+    [ProducesResponseType(201)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> UploadTaskAttachment(int id, IFormFile file)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return Error<TaskAttachmentDto>("No file provided or file is empty");
+            }
+
+            // Validate file size (max 10MB)
+            if (file.Length > 10 * 1024 * 1024)
+            {
+                return Error<TaskAttachmentDto>("File size exceeds the maximum allowed size of 10MB");
+            }
+
+            // Validate file type
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".jpg", ".jpeg", ".png", ".gif", ".zip", ".rar" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                return Error<TaskAttachmentDto>("File type not allowed. Allowed types: PDF, Word, Excel, PowerPoint, Text, Images, Archives");
+            }
+
+            var attachment = await _memberTaskService.AddTaskAttachmentAsync(id, file);
+            return Success(attachment, message: "Attachment uploaded successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<TaskAttachmentDto>("An error occurred while uploading the attachment", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Download an attachment by ID
+    /// </summary>
+    [HttpGet("attachments/{attachmentId}/download")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DownloadTaskAttachment(int attachmentId)
+    {
+        try
+        {
+            var (fileStream, fileName, contentType) = await _memberTaskService.DownloadTaskAttachmentAsync(attachmentId);
+            if (fileStream == null || fileName == null || contentType == null)
+            {
+                return Error<object>("Attachment not found");
+            }
+
+            return File(fileStream, contentType, fileName);
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while downloading the attachment", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Delete an attachment by ID
+    /// </summary>
+    [HttpDelete("attachments/{attachmentId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> DeleteTaskAttachment(int attachmentId)
+    {
+        try
+        {
+            var result = await _memberTaskService.DeleteTaskAttachmentAsync(attachmentId);
+            if (!result)
+            {
+                return Error<object>("Attachment not found");
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while deleting the attachment", ex.Message);
         }
     }
 }

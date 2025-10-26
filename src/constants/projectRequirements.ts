@@ -20,6 +20,8 @@ export const REQUIREMENT_STATUS = {
   UNDER_DEVELOPMENT: 4,
   UNDER_TESTING: 5,
   COMPLETED: 6,
+  POSTPONED: 7,
+  CANCELLED: 8,
 } as const;
 
 // Type definitions for the constants

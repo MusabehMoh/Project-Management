@@ -72,6 +72,7 @@ public class Task
     public virtual ICollection<TaskAssignment> Assignments { get; set; } = new List<TaskAssignment>();
     public virtual ICollection<TaskDependency> Dependencies_Relations { get; set; } = new List<TaskDependency>();
     public virtual ICollection<TaskDependency> DependentTasks { get; set; } = new List<TaskDependency>();
+    public virtual ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
 }
 
 [Table("TaskAssignments")]
@@ -116,5 +117,42 @@ public class TaskDependency
 
     [ForeignKey("DependsOnTaskId")]
     public virtual Task? DependsOnTask { get; set; }
+}
+
+[Table("TaskAttachments")]
+public class TaskAttachment
+{
+    [Key]
+    public int Id { get; set; }
+
+    [Required]
+    public int TaskId { get; set; }
+
+    [Required]
+    [MaxLength(255)]
+    public string FileName { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(255)]
+    public string OriginalName { get; set; } = string.Empty;
+
+    [MaxLength(500)]
+    public string? FilePath { get; set; }
+
+    [Required]
+    public long FileSize { get; set; }
+
+    [MaxLength(100)]
+    public string? ContentType { get; set; }
+
+    [Required]
+    public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+
+    [MaxLength(150)]
+    public string? CreatedBy { get; set; }
+
+    // Navigation property
+    [ForeignKey("TaskId")]
+    public virtual Task? Task { get; set; }
 }
 

@@ -24,7 +24,7 @@
 //    {
 //        try
 //        {
-//            var today = DateTime.UtcNow.Date;
+//            var today = DateTime.Now.Date;
 
 //            // Active projects count (Planning, In Progress, Testing statuses)
 //            var activeProjectsCount = await _context.Projects
@@ -82,7 +82,7 @@
 //    {
 //        try
 //        {
-//            var today = DateTime.UtcNow.Date;
+//            var today = DateTime.Now.Date;
 
 //            // Projects breakdown by status
 //            var projectsByStatus = await _context.Projects

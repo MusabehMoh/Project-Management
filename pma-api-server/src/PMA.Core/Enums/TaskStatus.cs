@@ -7,5 +7,5 @@ public enum TaskStatus
     InReview = 3,
     Rework = 4,
     Completed = 5,
-    OnHold = 6
+    Blocked = 6
 }

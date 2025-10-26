@@ -103,7 +103,7 @@ public class DesignRequestService : IDesignRequestService
         existingDesignRequest.AssignedToPrsId = designRequestDto.AssignedToPrsId;
         existingDesignRequest.Status = designRequestDto.Status;
         existingDesignRequest.DueDate = designRequestDto.DueDate;
-        existingDesignRequest.UpdatedAt = DateTime.UtcNow;
+        existingDesignRequest.UpdatedAt = DateTime.Now;
 
         await _designRequestRepository.UpdateAsync(existingDesignRequest);
         return _mappingService.MapToDesignRequestDto(existingDesignRequest);
@@ -142,7 +142,7 @@ public class DesignRequestService : IDesignRequestService
 
         designRequest.AssignedToPrsId = assignedToPrsId;
         designRequest.Notes = comment;
-        designRequest.UpdatedAt = DateTime.UtcNow;
+        designRequest.UpdatedAt = DateTime.Now;
         designRequest.Status = (int)DesignRequestsStatus.Assigned;
         await _designRequestRepository.UpdateAsync(designRequest);
 
@@ -171,8 +171,8 @@ public class DesignRequestService : IDesignRequestService
             {
                 Name = $"Design Task: {originalTask.Name}",
                 Description = $"Design task created from: {originalTask.Description}\n\nAssignment Comment: {comment ?? "No comment provided"}",
-                StartDate = DateTime.UtcNow.Date, // Start today
-                EndDate = DateTime.UtcNow.Date.AddDays(7), // Default 7 days duration
+                StartDate = DateTime.Now.Date, // Start today
+                EndDate = DateTime.Now.Date.AddDays(7), // Default 7 days duration
                 TypeId = originalTask.TypeId, // Assuming Design task type exists
                 StatusId = TaskStatusEnum.ToDo,
                 PriorityId = originalTask.PriorityId,

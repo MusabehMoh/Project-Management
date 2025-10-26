@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyModel;
+using PMA.Core.DTOs;
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
-using PMA.Core.DTOs;
 using PMA.Core.Services;
 using TaskEntity = PMA.Core.Entities.Task;
 
@@ -20,6 +21,208 @@ public class TasksController : ApiBaseController
         _taskService = taskService;
         _mappingService = mappingService;
         _userContextAccessor = userContextAccessor;
+    }
+
+    /// <summary>
+    /// Handle automatic dependent task status updates when developer task status changes
+    /// </summary>
+    private async Task<IActionResult?> HandleDependentTaskStatusUpdatesAsync(int taskId, Core.Enums.TaskStatus newStatus, int changedByPrsId)
+    {
+        try
+        {
+            // Find dependent tasks that are QC tasks
+            var taskDependencies = await _taskService.GetTaskDependenciesAsync(taskId);
+            var dependentTaskIds = taskDependencies
+                .Where(td => td.TaskId != taskId) // Tasks that depend on this task
+                .Select(td => td.TaskId)
+                .Distinct()
+                .ToList();
+
+            // Get the actual dependent task entities
+            var dependentTasks = new List<TaskEntity>();
+            foreach (var depTaskId in dependentTaskIds)
+            {
+                var depTask = await _taskService.GetTaskByIdAsync(depTaskId);
+                if (depTask != null)
+                {
+                    dependentTasks.Add(depTask);
+                }
+            }
+
+            // Handle different status transitions
+            if (newStatus == Core.Enums.TaskStatus.InReview)
+            {
+                // Developer task moved to In Review - unblock dependent QC tasks
+                var qcBlockedTasks = dependentTasks
+                    .Where(t => t.RoleType?.ToLower() == "qc")
+                    .ToList();
+
+                foreach (var qcTask in qcBlockedTasks)
+                {
+                    qcTask.StatusId = Core.Enums.TaskStatus.InReview;
+                    qcTask.Progress = 0; // Reset progress for To Do status
+                    qcTask.UpdatedAt = DateTime.Now;
+
+                    // Create task status history record for the dependent task
+                    var dependentTaskHistory = new TaskStatusHistory
+                    {
+                        TaskId = qcTask.Id,
+                        OldStatus = Core.Enums.TaskStatus.Blocked,
+                        NewStatus = Core.Enums.TaskStatus.InReview,
+                        ChangedByPrsId = changedByPrsId,
+                        Comment = $"Status automatically changed from Blocked to To Do due to dependent developer task moving to In Review",
+                        UpdatedAt = DateTime.Now
+                    };
+
+                    await _taskService.CreateTaskStatusHistoryAsync(dependentTaskHistory);
+                    await _taskService.UpdateTaskAsync(qcTask);
+                }
+            }
+            else if (newStatus == Core.Enums.TaskStatus.ToDo || newStatus == Core.Enums.TaskStatus.InProgress)
+            {
+                // Developer task moved back to To Do or In Progress - block dependent QC tasks
+                var qcUnblockedTasks = dependentTasks
+                    .Where(t => t.RoleType?.ToLower() == "qc" )
+                    .ToList();
+
+                foreach (var qcTask in qcUnblockedTasks)
+                {
+                    var oldStatus = qcTask.StatusId;
+                    qcTask.StatusId = Core.Enums.TaskStatus.Blocked;
+                    qcTask.Progress = 0; // Reset progress when blocked
+                    qcTask.UpdatedAt = DateTime.Now;
+
+                    // Create task status history record for the dependent task
+                    var dependentTaskHistory = new TaskStatusHistory
+                    {
+                        TaskId = qcTask.Id,
+                        OldStatus = oldStatus,
+                        NewStatus = Core.Enums.TaskStatus.Blocked,
+                        ChangedByPrsId = changedByPrsId,
+                        Comment = $"Status automatically changed to Blocked due to dependent developer task moving back to {newStatus.ToString()}",
+                        UpdatedAt = DateTime.Now
+                    };
+
+                    await _taskService.CreateTaskStatusHistoryAsync(dependentTaskHistory);
+                    await _taskService.UpdateTaskAsync(qcTask);
+                }
+            }
+            
+            return null; // Success - no error
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while updating dependent tasks", ex.Message);
+        }
+    }
+    private async Task<IActionResult?> HandlePrerequisitesTaskStatusUpdatesAsync(int taskId, Core.Enums.TaskStatus newStatus, int changedByPrsId)
+    {
+        try
+        {
+            
+
+            // Find Prerequisites tasks that are QC tasks
+            var taskPrerequisites = await _taskService.GetTaskPrerequisitesAsync(taskId);
+            var PrerequisitesTaskIds = taskPrerequisites 
+                .Select(td => td.DependsOnTaskId)
+                .Distinct()
+                .ToList();
+
+            // Get the actual dependent task entities
+            var prerequisitesTasks = new List<TaskEntity>();
+            foreach (var preTaskId in PrerequisitesTaskIds)
+            {
+                var preTask = await _taskService.GetTaskByIdAsync(preTaskId);
+                if (preTask != null)
+                {
+                    prerequisitesTasks.Add(preTask);
+                }
+            }
+            if (newStatus == Core.Enums.TaskStatus.InReview)
+            {
+                // Developer task moved to In Review - unblock dependent QC tasks
+                var developerBlockedTasks = prerequisitesTasks
+                    .Where(t => t.RoleType?.ToLower() == "developer")
+                    .ToList();
+
+                foreach (var qcTask in developerBlockedTasks)
+                {
+                    qcTask.StatusId = Core.Enums.TaskStatus.InReview;
+                    qcTask.Progress = 0; // Reset progress for To Do status
+                    qcTask.UpdatedAt = DateTime.Now;
+
+                    // Create task status history record for the dependent task
+                    var dependentTaskHistory = new TaskStatusHistory
+                    {
+                        TaskId = qcTask.Id,
+                        OldStatus = Core.Enums.TaskStatus.Blocked,
+                        NewStatus = Core.Enums.TaskStatus.InReview,
+                        ChangedByPrsId = changedByPrsId,
+                        Comment = $"Status automatically changed from Blocked to To Do due to dependent developer task moving to In Review",
+                        UpdatedAt = DateTime.Now
+                    };
+
+                    await _taskService.CreateTaskStatusHistoryAsync(dependentTaskHistory);
+                    await _taskService.UpdateTaskAsync(qcTask);
+                }
+            }
+            else if (newStatus == Core.Enums.TaskStatus.Completed)
+            {
+                // Task completed - update prerequisites tasks to completed
+                foreach (var prereqTask in prerequisitesTasks)
+                {
+                    var oldStatus = prereqTask.StatusId;
+                    prereqTask.StatusId = Core.Enums.TaskStatus.Completed;
+                    prereqTask.Progress = 100;
+                    prereqTask.UpdatedAt = DateTime.Now;
+
+                    // Create task status history record for the prerequisite task
+                    var prereqTaskHistory = new TaskStatusHistory
+                    {
+                        TaskId = prereqTask.Id,
+                        OldStatus = oldStatus,
+                        NewStatus = Core.Enums.TaskStatus.Completed,
+                        ChangedByPrsId = changedByPrsId,
+                        Comment = $"Status automatically changed to Completed due to dependent task being completed",
+                        UpdatedAt = DateTime.Now
+                    };
+
+                    await _taskService.CreateTaskStatusHistoryAsync(prereqTaskHistory);
+                    await _taskService.UpdateTaskAsync(prereqTask);
+                }
+            }
+            else if (newStatus == Core.Enums.TaskStatus.Rework)
+            {
+                // Task moved to rework - update prerequisites tasks to in progress
+                foreach (var prereqTask in prerequisitesTasks)
+                {
+                    var oldStatus = prereqTask.StatusId;
+                    prereqTask.StatusId = Core.Enums.TaskStatus.InProgress;
+                    prereqTask.Progress = 25; // Set progress for In Progress status
+                    prereqTask.UpdatedAt = DateTime.Now;
+
+                    // Create task status history record for the prerequisite task
+                    var prereqTaskHistory = new TaskStatusHistory
+                    {
+                        TaskId = prereqTask.Id,
+                        OldStatus = oldStatus,
+                        NewStatus = Core.Enums.TaskStatus.InProgress,
+                        ChangedByPrsId = changedByPrsId,
+                        Comment = $"Status automatically changed to In Progress due to dependent task moving to Rework",
+                        UpdatedAt = DateTime.Now
+                    };
+
+                    await _taskService.CreateTaskStatusHistoryAsync(prereqTaskHistory);
+                    await _taskService.UpdateTaskAsync(prereqTask);
+                }
+            }
+
+            return null; // Success - no error
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while updating dependent tasks", ex.Message);
+        }
     }
 
     /// <summary>
@@ -193,6 +396,48 @@ public class TasksController : ApiBaseController
             {
                 await _taskService.UpdateTaskDependenciesAsync(id, updateTaskDto.DepTaskIds);
             }
+            // Get current user context for audit trail
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrEmpty(userContext.PrsId))
+            {
+                return Error<object>("Unable to identify current user", status: 401);
+            }
+
+            // Parse PrsId to int
+            if (!int.TryParse(userContext.PrsId, out var changedByPrsId))
+            {
+                return Error<object>("Invalid user identifier", status: 401);
+            }
+            // Handle dependent task status updates when developer task status changes
+            if (updateTaskDto.StatusId.HasValue &&
+                ((int)updateTaskDto.StatusId.Value == (int)Core.Enums.TaskStatus.InReview ||
+                 (int)updateTaskDto.StatusId.Value == (int)Core.Enums.TaskStatus.ToDo ||
+                 (int)updateTaskDto.StatusId.Value == (int)Core.Enums.TaskStatus.InProgress) &&
+                existingTask.RoleType?.ToLower() == "developer")
+            {
+              
+
+                // Handle dependent task updates
+                var dependentUpdateResult = await HandleDependentTaskStatusUpdatesAsync(id, updateTaskDto.StatusId.Value, changedByPrsId);
+                if (dependentUpdateResult != null)
+                {
+                    return dependentUpdateResult;
+                }
+            }
+            // Handle Prerequesite task status updates when developer task status changes
+            if ((updateTaskDto.StatusId == Core.Enums.TaskStatus.Completed ||
+                 updateTaskDto.StatusId == Core.Enums.TaskStatus.Rework ||
+                 updateTaskDto.StatusId == Core.Enums.TaskStatus.InReview) &&
+                existingTask.RoleType?.ToLower() == "qc")
+            {
+
+                // Handle dependent task updates
+                var dependentUpdateResult = await HandlePrerequisitesTaskStatusUpdatesAsync(id, updateTaskDto.StatusId.Value, changedByPrsId);
+                if (dependentUpdateResult != null)
+                {
+                    return dependentUpdateResult;
+                }
+            }
 
             // Map back to DTO for response
             var taskDto = _mappingService.MapToTaskDto(updatedTask);
@@ -255,7 +500,7 @@ public class TasksController : ApiBaseController
             var daysToMove = moveTaskDto.MoveDays;
             existingTask.StartDate = existingTask.StartDate.AddDays(daysToMove);
             existingTask.EndDate = existingTask.EndDate.AddDays(daysToMove);
-            existingTask.UpdatedAt = DateTime.UtcNow;
+            existingTask.UpdatedAt = DateTime.Now;
 
             // Update the task
             var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
@@ -296,7 +541,7 @@ public class TasksController : ApiBaseController
 
             // Move the task to the target sprint
             existingTask.SprintId = moveTaskToSprintDto.TargetSprintId;
-            existingTask.UpdatedAt = DateTime.UtcNow;
+            existingTask.UpdatedAt = DateTime.Now;
 
             // Update the task
             var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
@@ -415,14 +660,14 @@ public class TasksController : ApiBaseController
                 NewStatus = updateStatusDto.StatusId,
                 ChangedByPrsId = changedByPrsId,
                 Comment = updateStatusDto.Comment,
-                UpdatedAt=DateTime.UtcNow
+                UpdatedAt=DateTime.Now
             };
 
             await _taskService.CreateTaskStatusHistoryAsync(taskStatusHistory);
 
             // Update the task status
             existingTask.StatusId = updateStatusDto.StatusId;
-            existingTask.UpdatedAt = DateTime.UtcNow;
+            existingTask.UpdatedAt = DateTime.Now;
             
             // Update progress if provided, otherwise use automatic logic
             if (updateStatusDto.Progress.HasValue)
@@ -436,14 +681,42 @@ public class TasksController : ApiBaseController
                 {
                      Core.Enums.TaskStatus.ToDo => 0,
                      Core.Enums.TaskStatus.InProgress => 25,
-                   Core.Enums.TaskStatus.InReview => 75,
-                    Core.Enums.TaskStatus.Completed => 100,
+                     Core.Enums.TaskStatus.InReview => 75,
+                     Core.Enums.TaskStatus.Completed => 100,
                     _ => 0 // Default fallback
                 };
             }
             
             // Update the task
             var updatedTask = await _taskService.UpdateTaskAsync(existingTask);
+
+            // Handle dependent task status updates when developer task status changes
+            if ((updateStatusDto.StatusId == Core.Enums.TaskStatus.InReview ||
+                 updateStatusDto.StatusId == Core.Enums.TaskStatus.ToDo ||
+                 updateStatusDto.StatusId == Core.Enums.TaskStatus.InProgress) &&
+                existingTask.RoleType?.ToLower() == "developer")
+            {
+                // Handle dependent task updates
+                var dependentUpdateResult = await HandleDependentTaskStatusUpdatesAsync(id, updateStatusDto.StatusId, changedByPrsId);
+                if (dependentUpdateResult != null)
+                {
+                    return dependentUpdateResult;
+                }
+            }
+
+            // Handle Prerequesite task status updates when developer task status changes
+            if ((updateStatusDto.StatusId == Core.Enums.TaskStatus.Completed ||
+                 updateStatusDto.StatusId == Core.Enums.TaskStatus.Rework ||
+                 updateStatusDto.StatusId == Core.Enums.TaskStatus.InReview) &&
+                existingTask.RoleType?.ToLower() == "qc")
+            {
+                // Handle dependent task updates
+                var dependentUpdateResult = await HandlePrerequisitesTaskStatusUpdatesAsync(id, updateStatusDto.StatusId, changedByPrsId);
+                if (dependentUpdateResult != null)
+                {
+                    return dependentUpdateResult;
+                }
+            }
 
             // Map back to DTO for response
             var taskDto = _mappingService.MapToTaskDto(updatedTask);

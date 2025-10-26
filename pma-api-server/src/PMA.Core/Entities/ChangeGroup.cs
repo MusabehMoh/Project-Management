@@ -25,7 +25,7 @@ public class ChangeGroup
     /// <summary>
     /// Timestamp when the change was made (UTC)
     /// </summary>
-    public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
+    public DateTime ChangedAt { get; set; } = DateTime.Now;
 
     /// <summary>
     /// Collection of individual field changes within this change group

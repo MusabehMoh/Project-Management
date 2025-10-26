@@ -17,6 +17,7 @@ import {
   getTaskTypeColor,
   TASK_TYPES,
 } from "@/constants/taskTypes";
+import { TASK_STATUSES } from "@/constants/taskStatuses";
 import { tasksService } from "@/services/api";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
@@ -56,7 +57,7 @@ export const TaskCard = ({
   const [isCompleting, setIsCompleting] = useState(false);
 
   const isAdhoc = task.typeId === TASK_TYPES.ADHOC;
-  const canComplete = isAdhoc && task.statusId !== 5; // Only if not already completed
+  const canComplete = isAdhoc && task.statusId !== TASK_STATUSES.COMPLETED; // Only if not already completed
 
   const getProgressColor = (progress: number) => {
     if (progress >= 80) return "success";
@@ -102,7 +103,7 @@ export const TaskCard = ({
       // Move task to completed status (5) with 100% progress
       const response = await tasksService.updateTaskStatus(
         parseInt(task.id),
-        5, // Completed status
+        TASK_STATUSES.COMPLETED, // Completed status
         `Adhoc task completed via quick action`,
         100, // Set progress to 100%
       );
@@ -115,8 +116,7 @@ export const TaskCard = ({
           onTaskComplete();
         }
       }
-    } catch (err) {
-      console.error("Failed to complete adhoc task:", err);
+    } catch {
       showErrorToast(t("teamDashboard.kanban.taskCompleteFailed"));
     } finally {
       setIsCompleting(false);
@@ -162,8 +162,15 @@ export const TaskCard = ({
                 <Tooltip content={t("teamDashboard.kanban.markComplete")}>
                   <div
                     className="flex-shrink-0"
+                    role="button"
+                    tabIndex={0}
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent card click
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.stopPropagation(); // Prevent card click
+                      }
                     }}
                   >
                     <Switch
@@ -379,10 +386,13 @@ export const TaskCard = ({
                     {t("requestedAlready")}
                   </Chip>
                 </div>
+              ) : task.roleType === "QC" ? (
+                <div className="flex-1" />
               ) : (
                 <Button
                   className="flex-1"
                   color="default"
+                  isDisabled={task.statusId === TASK_STATUSES.BLOCKED}
                   size="sm"
                   variant="faded"
                   onClick={(e) => {
@@ -397,6 +407,7 @@ export const TaskCard = ({
               <Button
                 className="flex-1"
                 color="default"
+                isDisabled={task.statusId === TASK_STATUSES.BLOCKED}
                 size="sm"
                 variant="solid"
                 onClick={(e) => {

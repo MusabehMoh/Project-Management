@@ -31,6 +31,7 @@ import { FilePreview } from "@/components/FilePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useApprovedRequirements } from "@/hooks/useApprovedRequirements";
 import useTeamSearch from "@/hooks/useTeamSearch";
+import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import { useTimeline } from "@/hooks/useTimeline";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRequirementStatus } from "@/hooks/useRequirementStatus";
@@ -379,33 +380,29 @@ export default function DevelopmentRequirementsPage() {
     skipProjectsFetch: true, // Projects already loaded
   });
 
-  // Team search hooks for developers and QC
   const {
     employees: developers,
-    loading: loadingDevelopers,
+    loading: loadingDevelopers ,
     searchEmployees: searchDevelopers,
-  } = useTeamSearch({
-    minLength: 2,
-    maxResults: 15,
+  } = useTeamSearchByDepartment({
+    departmentId: 2, // development Department
+    minLength: 1,
+    maxResults: 100,
+    loadInitialResults: true, // Load all developers initially
+    initialResultsLimit: 100,
   });
-
   const {
     employees: qcMembers,
     loading: loadingQC,
     searchEmployees: searchQC,
-  } = useTeamSearch({
-    minLength: 2,
-    maxResults: 15,
+  } = useTeamSearchByDepartment({
+    departmentId: 5, // QC Department
+    minLength: 1,
+    maxResults: 100,
+    loadInitialResults: true, // Load all QC members initially
+    initialResultsLimit: 100,
   });
-
-  const {
-    employees: designers,
-    loading: loadingDesigners,
-    searchEmployees: searchDesigners,
-  } = useTeamSearch({
-    minLength: 2,
-    maxResults: 15,
-  });
+ 
 
   // Debug: log team search results to help diagnose autocomplete issues
   // Debug hooks intentionally left out to keep production linting clean.

@@ -117,7 +117,7 @@ public class ActionsController : ApiBaseController
             existingAction.Resource = action.Resource ?? existingAction.Resource;
             existingAction.Action = action.Action ?? existingAction.Action;
             existingAction.IsActive = action.IsActive;
-            existingAction.UpdatedAt = DateTime.UtcNow;
+            existingAction.UpdatedAt = DateTime.Now;
             var updatedAction = await _actionService.UpdateActionAsync(existingAction);
             return Success(updatedAction);
         }

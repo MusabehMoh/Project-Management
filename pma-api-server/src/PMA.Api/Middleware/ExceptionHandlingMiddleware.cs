@@ -61,7 +61,7 @@ public class ExceptionHandlingMiddleware
             error = context.RequestServices.GetService<IHostEnvironment>()?.IsDevelopment() == true
                 ? exception.Message
                 : null,
-            timestamp = DateTime.UtcNow,
+            timestamp = DateTime.Now,
             path = context.Request.Path,
             traceId = context.TraceIdentifier
         };

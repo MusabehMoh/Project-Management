@@ -25,14 +25,14 @@ public class TimelineService : ITimelineService
 
     public async Task<Timeline> CreateTimelineAsync(Timeline timeline)
     {
-        timeline.CreatedAt = DateTime.UtcNow;
-        timeline.UpdatedAt = DateTime.UtcNow; 
+        timeline.CreatedAt = DateTime.Now;
+        timeline.UpdatedAt = DateTime.Now; 
         return await _timelineRepository.AddAsync(timeline);
     }
 
     public async Task<Timeline> UpdateTimelineAsync(Timeline timeline)
     {
-        timeline.UpdatedAt = DateTime.UtcNow;
+        timeline.UpdatedAt = DateTime.Now;
         await _timelineRepository.UpdateAsync(timeline);
         return timeline;
     }

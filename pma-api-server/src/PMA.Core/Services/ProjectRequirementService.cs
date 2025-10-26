@@ -15,6 +15,7 @@ public class ProjectRequirementService : IProjectRequirementService
     private readonly IUserContextAccessor _userContextAccessor;
     private readonly IUserService _userService;
     private readonly IAppPathProvider _pathProvider;
+    private readonly IProjectRequirementStatusHistoryRepository _statusHistoryRepository;
 
     public ProjectRequirementService(
         IProjectRequirementRepository projectRequirementRepository, 
@@ -22,7 +23,8 @@ public class ProjectRequirementService : IProjectRequirementService
         IEmployeeRepository employeeRepository,
         IUserContextAccessor userContextAccessor,
         IUserService userService,
-        IAppPathProvider pathProvider)
+        IAppPathProvider pathProvider,
+        IProjectRequirementStatusHistoryRepository statusHistoryRepository)
     {
         _projectRequirementRepository = projectRequirementRepository;
         _projectRepository = projectRepository;
@@ -30,6 +32,7 @@ public class ProjectRequirementService : IProjectRequirementService
         _userContextAccessor = userContextAccessor;
         _userService = userService;
         _pathProvider = pathProvider;
+        _statusHistoryRepository = statusHistoryRepository;
     }
 
     public async Task<(IEnumerable<ProjectRequirement> ProjectRequirements, int TotalCount)> GetProjectRequirementsAsync(int page, int limit, int? projectId = null, int? status = null, string? priority = null, string? search = null)
@@ -45,14 +48,14 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<ProjectRequirement> CreateProjectRequirementAsync(ProjectRequirement projectRequirement)
     {
-        projectRequirement.CreatedAt = DateTime.UtcNow;
-        projectRequirement.UpdatedAt = DateTime.UtcNow;
+        projectRequirement.CreatedAt = DateTime.Now;
+        projectRequirement.UpdatedAt = DateTime.Now;
         return await _projectRequirementRepository.AddAsync(projectRequirement);
     }
 
     public async Task<ProjectRequirement> UpdateProjectRequirementAsync(ProjectRequirement projectRequirement)
     {
-        projectRequirement.UpdatedAt = DateTime.UtcNow;
+        projectRequirement.UpdatedAt = DateTime.Now;
         await _projectRequirementRepository.UpdateAsync(projectRequirement);
         return projectRequirement;
     }
@@ -162,7 +165,7 @@ public class ProjectRequirementService : IProjectRequirementService
         // Get requirements with status NOT in "New" (1) or "ManagerReview" (2)
         // This returns all requirements that are approved or further in the process
         // Apply additional filters on top of the status filtering
-        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, status, priority, search, new[] { 1, 2 });
+        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, status, priority, search, new[] { 1, 2,7 });
     }
     public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetApprovedRequirementsAsync(int page, int limit, int? projectId = null, string? priority = null, string? search = null)
     {
@@ -181,7 +184,7 @@ public class ProjectRequirementService : IProjectRequirementService
 
         // Update status to "Under Study" (assuming status 2)
         requirement.Status = (RequirementStatusEnum)2;
-        requirement.UpdatedAt = DateTime.UtcNow;
+        requirement.UpdatedAt = DateTime.Now;
         await _projectRequirementRepository.UpdateAsync(requirement);
         return true;
     }
@@ -202,7 +205,7 @@ public class ProjectRequirementService : IProjectRequirementService
 
         // Update status to "Approved" (assuming status 3)
         requirement.Status = RequirementStatusEnum.Approved;
-        requirement.UpdatedAt = DateTime.UtcNow;
+        requirement.UpdatedAt = DateTime.Now;
         await _projectRequirementRepository.UpdateAsync(requirement);
         return true;
     }
@@ -249,7 +252,7 @@ public class ProjectRequirementService : IProjectRequirementService
             task.QcEndDate = taskDto.QcEndDate;
             task.DesignerStartDate = taskDto.DesignerStartDate;
             task.DesignerEndDate = taskDto.DesignerEndDate;
-            task.UpdatedAt = DateTime.UtcNow;
+            task.UpdatedAt = DateTime.Now;
         }
         else
         {
@@ -269,8 +272,8 @@ public class ProjectRequirementService : IProjectRequirementService
                 DesignerEndDate = taskDto.DesignerEndDate,
                 Status = "not-started",
                 CreatedBy = 1, // This should be the current user ID
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
             };
 
             // Add the task to the requirement's tasks collection
@@ -283,7 +286,7 @@ public class ProjectRequirementService : IProjectRequirementService
             requirement.Status = RequirementStatusEnum.UnderDevelopment;
         }
 
-        requirement.UpdatedAt = DateTime.UtcNow;
+        requirement.UpdatedAt = DateTime.Now;
 
         // Save the requirement (which will cascade save the task due to EF Core relationships)
         await _projectRequirementRepository.UpdateAsync(requirement);
@@ -332,7 +335,7 @@ public class ProjectRequirementService : IProjectRequirementService
                 FilePath = relativePathForDb,
                 FileSize = file.Length,
                 ContentType = file.ContentType,
-                UploadedAt = DateTime.UtcNow
+                UploadedAt = DateTime.Now
             };
 
             requirement.Attachments ??= new List<ProjectRequirementAttachment>();
@@ -378,7 +381,7 @@ public class ProjectRequirementService : IProjectRequirementService
                     FilePath = relativePathForDb,
                     FileSize = file.Length,
                     ContentType = file.ContentType,
-                    UploadedAt = DateTime.UtcNow
+                    UploadedAt = DateTime.Now
                 };
                 requirement.Attachments.Add(attachment);
                 uploaded.Add(attachment);
@@ -391,7 +394,7 @@ public class ProjectRequirementService : IProjectRequirementService
 
         if (uploaded.Count > 0)
         {
-            requirement.UpdatedAt = DateTime.UtcNow;
+            requirement.UpdatedAt = DateTime.Now;
             await _projectRequirementRepository.UpdateAsync(requirement);
         }
 
@@ -570,7 +573,7 @@ public class ProjectRequirementService : IProjectRequirementService
                     FilePath = relativePathForDb,
                     FileSize = file.Length,
                     ContentType = file.ContentType,
-                    UploadedAt = DateTime.UtcNow
+                    UploadedAt = DateTime.Now
                 });
             }
             catch
@@ -579,7 +582,7 @@ public class ProjectRequirementService : IProjectRequirementService
             }
         }
 
-        requirement.UpdatedAt = DateTime.UtcNow;
+        requirement.UpdatedAt = DateTime.Now;
         await _projectRequirementRepository.UpdateAsync(requirement);
 
         // Return a snapshot (read-only copy) of attachments
@@ -631,5 +634,17 @@ public class ProjectRequirementService : IProjectRequirementService
                 parsedRole == RoleCodes.DevelopmentManager ||
                 parsedRole == RoleCodes.QCManager ||
                 parsedRole == RoleCodes.DesignerManager);
+    }
+
+    // Status history methods
+    public async Task<ProjectRequirementStatusHistory> CreateRequirementStatusHistoryAsync(ProjectRequirementStatusHistory statusHistory)
+    {
+        statusHistory.CreatedAt = DateTime.Now;
+        return await _statusHistoryRepository.AddAsync(statusHistory);
+    }
+
+    public async Task<IEnumerable<ProjectRequirementStatusHistory>> GetRequirementStatusHistoryAsync(int requirementId)
+    {
+        return await _statusHistoryRepository.GetRequirementStatusHistoryAsync(requirementId);
     }
 }

@@ -70,6 +70,7 @@ export default function TeamKanbanBoard({
   );
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
   // Get user's role IDs for permission checking
   const userRoleIds = useMemo(() => {
@@ -230,6 +231,9 @@ export default function TeamKanbanBoard({
     }
 
     try {
+      // Set loading state for the dragged task
+      setUpdatingTaskId(draggedTask.id);
+
       // Calculate progress based on target status
       let updatedProgress: number;
 
@@ -310,6 +314,7 @@ export default function TeamKanbanBoard({
     } finally {
       setDraggedTask(null);
       setDraggedFromColumn(null);
+      setUpdatingTaskId(null);
     }
   };
 
@@ -547,20 +552,23 @@ export default function TeamKanbanBoard({
                           const isAdhoc = task.typeId === TASK_TYPES.ADHOC;
                           const isHovered = hoveredTaskId === task.id;
                           const isCompleting = completingTaskId === task.id;
+                          const isUpdating = updatingTaskId === task.id;
                           const canComplete = isAdhoc && task.statusId !== 5; // Only if not already completed
 
                           return (
                             <Card
                               key={task.id}
-                              className={`${canDrag ? "cursor-move" : "cursor-default"} transition-all duration-500 ease-in-out bg-content1 dark:bg-content2 ${
+                              className={`relative ${canDrag ? "cursor-move" : "cursor-default"} transition-all duration-500 ease-in-out bg-content1 dark:bg-content2 ${
                                 isAdhoc && isHovered
                                   ? "shadow-2xl border-2 border-success ring-2 ring-success/20"
                                   : "hover:shadow-lg border-2 border-transparent"
-                              }`}
-                              draggable={canDrag}
+                              } ${isUpdating ? "opacity-50" : ""}`}
+                              draggable={canDrag && !isUpdating}
                               shadow="sm"
                               onDragStart={() =>
-                                canDrag && handleDragStart(task, column.id)
+                                canDrag &&
+                                !isUpdating &&
+                                handleDragStart(task, column.id)
                               }
                               onMouseEnter={() =>
                                 isAdhoc && setHoveredTaskId(task.id)
@@ -692,6 +700,18 @@ export default function TeamKanbanBoard({
                                   </Chip>
                                 )}
                               </CardBody>
+
+                              {/* Loading Overlay */}
+                              {isUpdating && (
+                                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                                  <div className="flex items-center gap-2 text-primary">
+                                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                    <span className="text-sm font-medium">
+                                      {t("common.updating")}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
                             </Card>
                           );
                         })

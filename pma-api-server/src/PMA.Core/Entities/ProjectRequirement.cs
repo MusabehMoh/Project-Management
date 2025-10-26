@@ -37,8 +37,8 @@ public class ProjectRequirement
     public int CreatedBy { get; set; }
     public int? AssignedAnalyst { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
     // Navigation properties
     public virtual Project? Project { get; set; }
@@ -83,8 +83,8 @@ public class RequirementTask
 
     public int CreatedBy { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
     // Navigation properties
     public virtual ProjectRequirement? ProjectRequirement { get; set; }

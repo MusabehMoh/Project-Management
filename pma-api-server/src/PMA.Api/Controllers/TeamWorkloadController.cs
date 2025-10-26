@@ -64,7 +64,7 @@ public class TeamWorkloadController : ApiBaseController
                                                Core.Enums.TaskStatus.InProgress,
                                                Core.Enums.TaskStatus.InReview,
                                                Core.Enums.TaskStatus.Rework,
-                                               Core.Enums.TaskStatus.OnHold
+                                               Core.Enums.TaskStatus.Blocked
                                            }.Contains(x.task.StatusId)) == false)
                                        &&
                                        (_context.ProjectAnalysts
@@ -86,7 +86,7 @@ public class TeamWorkloadController : ApiBaseController
                                                Core.Enums.TaskStatus.InProgress,
                                                Core.Enums.TaskStatus.InReview,
                                                Core.Enums.TaskStatus.Rework,
-                                               Core.Enums.TaskStatus.OnHold
+                                               Core.Enums.TaskStatus.Blocked
                                            }.Contains(x.task.StatusId)),
 
                                        // Active Requirements Count
@@ -109,9 +109,9 @@ public class TeamWorkloadController : ApiBaseController
                                                          Core.Enums.TaskStatus.InProgress,
                                                          Core.Enums.TaskStatus.InReview,
                                                          Core.Enums.TaskStatus.Rework,
-                                                         Core.Enums.TaskStatus.OnHold
+                                                         Core.Enums.TaskStatus.Blocked
                                                      }.Contains(x.task.StatusId) &&
-                                                     x.task.EndDate < DateTime.UtcNow)
+                                                     x.task.EndDate < DateTime.Now)
                                    };
             var currentUser = await _userService.GetCurrentUserAsync();
             var currentUserDepartmentId = currentUser.Roles[0].Department?.Id;
@@ -152,7 +152,7 @@ public class TeamWorkloadController : ApiBaseController
                         Core.Enums.TaskStatus.InProgress, 
                         Core.Enums.TaskStatus.InReview, 
                         Core.Enums.TaskStatus.Rework, 
-                        Core.Enums.TaskStatus.OnHold 
+                        Core.Enums.TaskStatus.Blocked
                     }.Contains(x.task.StatusId))
                     .MaxAsync(x => (DateTime?)x.task.EndDate);
 

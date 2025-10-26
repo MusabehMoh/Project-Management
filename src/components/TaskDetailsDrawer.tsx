@@ -1,0 +1,744 @@
+import type { MemberTask } from "@/types/membersTasks";
+import type { ProjectRequirement } from "@/types/projectRequirement";
+
+import { useState } from "react";
+import { Button } from "@heroui/button";
+import { Badge } from "@heroui/badge";
+import { Chip } from "@heroui/chip";
+import {
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+} from "@heroui/react";
+import { Accordion, AccordionItem } from "@heroui/accordion";
+import { Tabs, Tab } from "@heroui/tabs";
+import { Textarea } from "@heroui/input";
+import {
+  Calendar,
+  Paperclip,
+  Eye,
+  Download,
+  CheckCircle,
+  MessageSquare,
+  History,
+  Send,
+  Upload,
+} from "lucide-react";
+
+import { useLanguage } from "@/contexts/LanguageContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useTaskActivity } from "@/hooks/useTaskActivity";
+import { TASK_STATUSES } from "@/constants/taskStatuses";
+import { membersTasksService } from "@/services/api/membersTasksService";
+import { formatRelativeTime } from "@/utils/dateFormatter";
+
+interface TaskDetailsDrawerProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedTask: MemberTask | null;
+  fullRequirement: ProjectRequirement | null;
+  loadingRequirement: boolean;
+  onFilePreview: (attachment: any) => void;
+  onFileDownload: (attachment: any) => void;
+  onFileUpload: (taskId: number, files: File[]) => Promise<void>;
+  onChangeAssignees: (task: MemberTask) => void;
+  onChangeStatus: (task: MemberTask) => void;
+  onRequestDesign: (task: MemberTask) => void;
+  formatDate: (dateString: string) => string;
+  getTaskStatusColor: (
+    status: number,
+  ) => "success" | "primary" | "warning" | "danger" | "default" | "secondary";
+  getStatusText: (status: number) => string;
+  getPriorityColor: (
+    priorityId: number,
+  ) => "success" | "primary" | "warning" | "danger" | "default" | "secondary";
+  getPriorityLabel: (priorityId: number) => string | undefined;
+}
+
+export default function TaskDetailsDrawer({
+  isOpen,
+  onOpenChange,
+  selectedTask,
+  fullRequirement,
+  loadingRequirement,
+  onFilePreview,
+  onFileDownload,
+  onFileUpload,
+  onChangeAssignees,
+  onChangeStatus,
+  onRequestDesign,
+  formatDate,
+  getTaskStatusColor,
+  getStatusText,
+  getPriorityColor,
+  getPriorityLabel,
+}: TaskDetailsDrawerProps) {
+  const { t, language } = useLanguage();
+  const { hasAnyRoleById } = usePermissions();
+
+  const {
+    comments,
+    history,
+    attachments,
+    loading: activityLoading,
+    refetch: refetchActivity,
+  } = useTaskActivity({
+    taskId: selectedTask?.id ? parseInt(selectedTask.id) : undefined,
+    enabled: isOpen && !!selectedTask,
+  });
+
+  // Comment input state
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  // File upload state
+  const [hasFileUploadError, setHasFileUploadError] = useState<boolean>(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+
+  // Handle file upload
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || !selectedTask) return;
+
+    setUploadingFiles(true);
+    setHasFileUploadError(false);
+
+    try {
+      const filesArray = Array.from(files);
+      const taskId = parseInt(selectedTask.id);
+
+      await onFileUpload(taskId, filesArray);
+      refetchActivity(); // Refresh attachments after upload
+    } catch (error) {
+      console.error("File upload failed:", error);
+      setHasFileUploadError(true);
+      setTimeout(() => setHasFileUploadError(false), 4000);
+    } finally {
+      setUploadingFiles(false);
+    }
+  };
+
+  const isTeamManager = hasAnyRoleById([
+    2, // ANALYST_DEPARTMENT_MANAGER
+    4, // DEVELOPMENT_MANAGER
+    6, // QUALITY_CONTROL_MANAGER
+    8, // DESIGNER_MANAGER
+    1, // ADMINISTRATOR
+  ]);
+
+  // Handle comment submission
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !selectedTask) return;
+
+    setSubmittingComment(true);
+    try {
+      const taskId = parseInt(selectedTask.id);
+      const response = await membersTasksService.addTaskComment(
+        taskId,
+        newComment.trim(),
+      );
+
+      if (response.success) {
+        setNewComment("");
+        refetchActivity();
+      }
+    } catch {
+      // Error handled silently for now
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  return (
+    <Drawer
+      isOpen={isOpen}
+      placement={language === "en" ? "left" : "right"}
+      size="xl"
+      onOpenChange={onOpenChange}
+    >
+      <DrawerContent
+        className={`min-h-[400px] transition-all duration-200 hover:shadow-lg bg-content1 ${
+          selectedTask?.isOverdue
+            ? "border-l-4 border-l-danger-500"
+            : `border-l-4 border-l-${getTaskStatusColor(selectedTask?.statusId || 1)}-500`
+        }`}
+      >
+        <DrawerHeader className="flex flex-col gap-1">
+          <h2 className="text-xl font-semibold">{selectedTask?.name}</h2>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: selectedTask?.department?.color }}
+            />
+            <span className="text-sm text-foreground-600">
+              {selectedTask?.department?.name}
+            </span>
+            {selectedTask?.isOverdue && (
+              <Badge color="danger" size="sm" variant="flat">
+                {t("overdueTask")}
+              </Badge>
+            )}
+          </div>
+        </DrawerHeader>
+        <DrawerBody>
+          {selectedTask && (
+            <div className="space-y-6">
+              {/* Status and Priority */}
+              <div className="flex justify-between gap-8">
+                {/* Column 1: Priority */}
+                <div className="flex flex-col items-start gap-1">
+                  <h4 className="text-md">{t("priority")}</h4>
+                  <Chip
+                    color={getPriorityColor(selectedTask.priorityId)}
+                    size="sm"
+                    variant="solid"
+                  >
+                    {getPriorityLabel(selectedTask.priorityId) || ""}
+                  </Chip>
+                </div>
+
+                {/* Column 2: Status */}
+                <div className="flex flex-col items-start gap-1">
+                  <h4 className="text-md">{t("status")}</h4>
+                  <Chip
+                    color={getTaskStatusColor(selectedTask.statusId)}
+                    size="sm"
+                    variant="flat"
+                  >
+                    {getStatusText(selectedTask.statusId)}
+                  </Chip>
+                </div>
+              </div>
+
+              {/* Assigned Members */}
+              {selectedTask?.assignedMembers &&
+                selectedTask.assignedMembers.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-md font-medium">
+                      {t("timeline.assignedMembers")}
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTask.assignedMembers.map((assignee) => (
+                        <Chip key={assignee.id} color="primary" variant="flat">
+                          {assignee.gradeName} {assignee.fullName}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              <div className="flex justify-between items-start">
+                {/* Start Date */}
+                <div>
+                  <h3 className="text-md mb-2">{t("startDate")}</h3>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-default-400" />
+                    <span className="text-sm">
+                      {formatDate(selectedTask.startDate)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expected Completion Date */}
+                <div>
+                  <h3 className="text-md mb-2">
+                    {t("requirements.expectedCompletion")}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-default-400" />
+                    <span className="text-sm">
+                      {formatDate(selectedTask.endDate)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* project & requirement */}
+              <div className="mt-3 pt-3 pb-3 border-t border-b border-divider">
+                <div className="flex flex-col gap-4">
+                  {/* Project */}
+                  <div className="flex flex-col gap-1">
+                    <span className="font-md">{t("project")}</span>
+                    <span className="font-md">
+                      {selectedTask.project?.applicationName ||
+                        t("tasks.noAssociatedProject")}
+                    </span>
+                  </div>
+
+                  {/* Requirement */}
+                  <div className="flex flex-col gap-1">
+                    <span className="font-md">{t("requirement")}</span>
+                    <span className="font-md">
+                      {selectedTask.requirement?.name || t("common.none")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Requirement Description and Files */}
+              {fullRequirement && (
+                <>
+                  {/* Requirement Description */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {t("requirements.requirementDescription")}
+                    </h3>
+                    <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
+                      <p
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            fullRequirement.description ||
+                            t("requirements.noDescription"),
+                        }}
+                        className="text-sm leading-relaxed"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Requirement Attachments */}
+                  {fullRequirement.attachments &&
+                    fullRequirement.attachments.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Paperclip className="w-5 h-5 text-default-400" />
+                          {t("requirements.attachments")} (
+                          {fullRequirement.attachments.length})
+                        </h3>
+                        <div className="space-y-2">
+                          {fullRequirement.attachments.map((attachment) => (
+                            <div
+                              key={attachment.id}
+                              className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg hover:bg-default-100 dark:hover:bg-default-100/20 transition-colors"
+                            >
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Paperclip className="w-5 h-5 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">
+                                    {attachment.originalName}
+                                  </p>
+                                  <div className="flex items-center gap-4 text-xs text-default-500 mt-1">
+                                    <span>
+                                      {(
+                                        (attachment.fileSize || 0) /
+                                        1024 /
+                                        1024
+                                      ).toFixed(2)}{" "}
+                                      MB
+                                    </span>
+                                    {attachment.uploadedAt && (
+                                      <span>
+                                        {t("requirements.uploadedOn")}:{" "}
+                                        {formatDate(attachment.uploadedAt)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                {/* Preview Button for supported file types */}
+                                {(attachment.originalName
+                                  .toLowerCase()
+                                  .endsWith(".pdf") ||
+                                  attachment.originalName
+                                    .toLowerCase()
+                                    .match(
+                                      /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/,
+                                    )) && (
+                                  <Button
+                                    color="default"
+                                    size="sm"
+                                    startContent={<Eye className="w-4 h-4" />}
+                                    variant="light"
+                                    onPress={() => onFilePreview(attachment)}
+                                  >
+                                    {t("common.preview")}
+                                  </Button>
+                                )}
+                                <Button
+                                  color="primary"
+                                  size="sm"
+                                  startContent={
+                                    <Download className="w-4 h-4" />
+                                  }
+                                  variant="light"
+                                  onPress={() => onFileDownload(attachment)}
+                                >
+                                  {t("common.download")}
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </>
+              )}
+
+              {/* Loading state for requirement details */}
+              {loadingRequirement && (
+                <div className="text-center py-4">
+                  <p className="text-sm text-default-500">
+                    {t("requirements.loadingDetails")}
+                  </p>
+                </div>
+              )}
+
+              {/* Comments and History Accordion */}
+              <Accordion className="w-full" variant="bordered">
+                <AccordionItem
+                  key="comments-history"
+                  aria-label={t("taskDetails.activity")}
+                  title={
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4" />
+                      <span>{t("taskDetails.activity")}</span>
+                    </div>
+                  }
+                >
+                  <Tabs
+                    aria-label={t("taskDetails.activityTabs")}
+                    className="w-full max-h-96 overflow-y-auto"
+                  >
+                    <Tab
+                      key="comments"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          <span>{t("taskDetails.comments")}</span>
+                          {comments.length > 0 && (
+                            <Badge color="primary" size="sm" variant="solid">
+                              {comments.length}
+                            </Badge>
+                          )}
+                        </div>
+                      }
+                    >
+                      {activityLoading ? (
+                        <div className="p-4 text-center">
+                          <p>{t("common.loading")}</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 p-2">
+                          {/* Add Comment Form */}
+                          <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
+                            <div className="flex gap-2">
+                              <Textarea
+                                className="flex-1"
+                                disabled={submittingComment}
+                                maxRows={4}
+                                minRows={2}
+                                placeholder={t("taskDetails.addComment")}
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                              />
+                              <Button
+                                isIconOnly
+                                className="self-end"
+                                color="primary"
+                                isDisabled={
+                                  !newComment.trim() || submittingComment
+                                }
+                                isLoading={submittingComment}
+                                size="sm"
+                                onPress={handleSubmitComment}
+                              >
+                                <Send className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Comments List */}
+                          {comments.length > 0 ? (
+                            <div className="space-y-3">
+                              {comments.map((comment) => (
+                                <div
+                                  key={comment.id}
+                                  className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg"
+                                >
+                                  <div className="flex items-start justify-between mb-2">
+                                    <span className="font-medium text-sm">
+                                      {comment.createdByName}
+                                    </span>
+                                    <span className="text-xs text-default-500">
+                                      {formatRelativeTime(
+                                        comment.createdAt,
+                                        language,
+                                      )}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm leading-relaxed">
+                                    {comment.commentText}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-4 text-center text-default-500">
+                              <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                              <p>{t("taskDetails.noComments")}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Tab>
+                    <Tab
+                      key="history"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <History className="w-4 h-4" />
+                          <span>{t("taskDetails.history")}</span>
+                          {history.length > 0 && (
+                            <Badge color="secondary" size="sm" variant="solid">
+                              {history.length}
+                            </Badge>
+                          )}
+                        </div>
+                      }
+                    >
+                      {activityLoading ? (
+                        <div className="p-4 text-center">
+                          <p>{t("common.loading")}</p>
+                        </div>
+                      ) : history.length > 0 ? (
+                        <div className="space-y-3 p-2">
+                          {history.map((item) => (
+                            <div
+                              key={item.id}
+                              className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg"
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <span className="font-medium text-sm">
+                                  {item.changedByName}
+                                </span>
+                                <span className="text-xs text-default-500">
+                                  {formatRelativeTime(item.changedAt, language)}
+                                </span>
+                              </div>
+                              <div className="space-y-1">
+                                {item.items.map((change, index) => (
+                                  <div key={index} className="text-sm">
+                                    <span className="font-medium">
+                                      {change.fieldName}:
+                                    </span>{" "}
+                                    <span className="text-danger-600 line-through">
+                                      {change.oldValue || t("common.none")}
+                                    </span>{" "}
+                                    <span className="text-success-600">
+                                      → {change.newValue}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-default-500">
+                          <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p>{t("taskDetails.noHistory")}</p>
+                        </div>
+                      )}
+                    </Tab>
+                  </Tabs>
+                </AccordionItem>
+
+                {/* Task Attachments Accordion */}
+                <AccordionItem
+                  key="attachments"
+                  aria-label={t("taskDetails.attachments")}
+                  startContent={<Paperclip className="w-5 h-5" />}
+                  title={
+                    <div className="flex items-center gap-2">
+                      <span>{t("taskDetails.attachments")}</span>
+                      {attachments.length > 0 && (
+                        <Badge color="primary" size="sm" variant="flat">
+                          {attachments.length}
+                        </Badge>
+                      )}
+                    </div>
+                  }
+                >
+                  {/* File Upload Area */}
+                  <div className="mb-4">
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-3 hover:border-default-400 transition-colors ${
+                        hasFileUploadError
+                          ? "border-danger"
+                          : "border-default-300"
+                      }`}
+                    >
+                      <input
+                        multiple
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.zip,.rar"
+                        className="hidden"
+                        disabled={uploadingFiles}
+                        id="task-file-upload"
+                        type="file"
+                        onChange={(e) => handleFileUpload(e.target.files)}
+                      />
+                      <label
+                        className={`cursor-pointer flex flex-col items-center justify-center space-y-2 ${
+                          uploadingFiles ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        htmlFor="task-file-upload"
+                      >
+                        <Upload className="w-6 h-6 text-default-400" />
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-default-700">
+                            {uploadingFiles
+                              ? t("common.uploading")
+                              : t("requirements.uploadFiles")}
+                          </p>
+                          <p className="text-xs text-default-500">
+                            PDF, DOC, XLS, Images, ZIP
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {attachments.length > 0 ? (
+                    <div className="space-y-3">
+                      {attachments.map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <Paperclip className="w-5 h-5 text-default-400 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {attachment.originalName}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-default-500">
+                                <span>
+                                  {t("requirements.uploadedBy")}:{" "}
+                                  {attachment.createdByName}
+                                </span>
+                                {attachment.uploadedAt && (
+                                  <span>
+                                    {t("requirements.uploadedOn")}:{" "}
+                                    {formatDate(attachment.uploadedAt)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            {/* Preview Button for supported file types */}
+                            {(attachment.originalName
+                              .toLowerCase()
+                              .endsWith(".pdf") ||
+                              attachment.originalName
+                                .toLowerCase()
+                                .match(
+                                  /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/,
+                                )) && (
+                              <Button
+                                color="default"
+                                size="sm"
+                                startContent={<Eye className="w-4 h-4" />}
+                                variant="light"
+                                onPress={() => onFilePreview(attachment)}
+                              >
+                                {t("common.preview")}
+                              </Button>
+                            )}
+                            <Button
+                              color="primary"
+                              size="sm"
+                              startContent={<Download className="w-4 h-4" />}
+                              variant="light"
+                              onPress={() => onFileDownload(attachment)}
+                            >
+                              {t("common.download")}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-default-500">
+                      <Paperclip className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>{t("taskDetails.noAttachments")}</p>
+                    </div>
+                  )}
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
+        </DrawerBody>
+        <DrawerFooter className="flex flex-col gap-4">
+          {/* buttons */}
+          <div className="mt-3 pt-3 flex flex-col gap-3">
+            {selectedTask && isTeamManager ? (
+              <div className="flex gap-3">
+                <Button
+                  className="flex-1"
+                  color="default"
+                  size="sm"
+                  variant="solid"
+                  onPress={() => onChangeAssignees(selectedTask)}
+                >
+                  {t("changeAssignees")}
+                </Button>
+              </div>
+            ) : selectedTask ? (
+              /* Member */
+              <div className="flex gap-3">
+                {selectedTask.hasDesignRequest ? (
+                  <Chip
+                    className="flex-1"
+                    color="success"
+                    size="md"
+                    startContent={<CheckCircle className="w-4 h-4" />}
+                    variant="flat"
+                  >
+                    {t("requestedAlready")}
+                  </Chip>
+                ) : selectedTask.roleType === "QC" ? (
+                  <div className="flex-1" />
+                ) : (
+                  <Button
+                    className="flex-1"
+                    color="primary"
+                    isDisabled={
+                      selectedTask?.statusId === TASK_STATUSES.BLOCKED
+                    }
+                    size="sm"
+                    variant="flat"
+                    onPress={() => onRequestDesign(selectedTask)}
+                  >
+                    {t("requestDesign")}
+                  </Button>
+                )}
+
+                <Button
+                  className="flex-1"
+                  color="success"
+                  isDisabled={selectedTask?.statusId === TASK_STATUSES.BLOCKED}
+                  size="sm"
+                  variant="flat"
+                  onPress={() => onChangeStatus(selectedTask)}
+                >
+                  {t("changeStatus")}
+                </Button>
+              </div>
+            ) : null}
+          </div>
+
+          <Button
+            color="danger"
+            variant="light"
+            onPress={() => onOpenChange(false)}
+          >
+            {t("common.close")}
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  );
+}

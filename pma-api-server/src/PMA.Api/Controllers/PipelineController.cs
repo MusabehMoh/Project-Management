@@ -28,7 +28,7 @@
 //    {
 //        try
 //        {
-//            var today = DateTime.UtcNow;
+//            var today = DateTime.Now;
 
 //            // Get all projects with their requirements data
 //            var allProjects = await _context.Projects
@@ -180,7 +180,7 @@
 //    {
 //        try
 //        {
-//            var today = DateTime.UtcNow.Date;
+//            var today = DateTime.Now.Date;
 
 //            var summary = new
 //            {

@@ -31,7 +31,7 @@
 //    {
 //        try
 //        {
-//            var today = DateTime.UtcNow.Date;
+//            var today = DateTime.Now.Date;
 //            DateTime startDate;
 
 //            // Determine the period for "new" requirements

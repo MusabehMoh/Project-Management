@@ -28,14 +28,14 @@ public class CalendarEventService : ICalendarEventService
 
     public async System.Threading.Tasks.Task<CalendarEvent> CreateCalendarEventAsync(CalendarEvent calendarEvent)
     {
-        calendarEvent.CreatedAt = DateTime.UtcNow;
-        calendarEvent.UpdatedAt = DateTime.UtcNow;
+        calendarEvent.CreatedAt = DateTime.Now;
+        calendarEvent.UpdatedAt = DateTime.Now;
         return await _calendarEventRepository.AddAsync(calendarEvent);
     }
 
     public async System.Threading.Tasks.Task<CalendarEvent> UpdateCalendarEventAsync(CalendarEvent calendarEvent)
     {
-        calendarEvent.UpdatedAt = DateTime.UtcNow;
+        calendarEvent.UpdatedAt = DateTime.Now;
         await _calendarEventRepository.UpdateAsync(calendarEvent);
         return calendarEvent;
     }
@@ -67,7 +67,7 @@ public class CalendarEventService : ICalendarEventService
         var allEvents = await _calendarEventRepository.GetAllAsync();
         var eventsList = allEvents.ToList();
 
-        var now = DateTime.UtcNow;
+        var now = DateTime.Now;
         var weekAgo = now.AddDays(-7);
 
         return new

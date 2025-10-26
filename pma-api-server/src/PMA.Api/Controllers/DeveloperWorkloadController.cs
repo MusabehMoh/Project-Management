@@ -63,7 +63,7 @@ public class DeveloperWorkloadController : ApiBaseController
                         Core.Enums.TaskStatus.InProgress, 
                         Core.Enums.TaskStatus.InReview, 
                         Core.Enums.TaskStatus.Rework, 
-                        Core.Enums.TaskStatus.OnHold 
+                        Core.Enums.TaskStatus.Blocked
                     }.Contains(x.task.StatusId)),
                     
                     // Completed tasks
@@ -76,7 +76,7 @@ public class DeveloperWorkloadController : ApiBaseController
                             Core.Enums.TaskStatus.InProgress, 
                             Core.Enums.TaskStatus.InReview, 
                             Core.Enums.TaskStatus.Rework 
-                        }.Contains(x.task.StatusId) && x.task.EndDate < DateTime.UtcNow),
+                        }.Contains(x.task.StatusId) && x.task.EndDate < DateTime.Now),
                     
                     // Total days occupied by active tasks (sum of all task durations)
                     TotalActiveDays = g
@@ -85,7 +85,7 @@ public class DeveloperWorkloadController : ApiBaseController
                             Core.Enums.TaskStatus.InProgress, 
                             Core.Enums.TaskStatus.InReview, 
                             Core.Enums.TaskStatus.Rework, 
-                            Core.Enums.TaskStatus.OnHold 
+                            Core.Enums.TaskStatus.Blocked
                         }.Contains(x.task.StatusId) &&
                         x.task.StartDate != default(DateTime) &&
                         x.task.EndDate != default(DateTime))
@@ -99,7 +99,7 @@ public class DeveloperWorkloadController : ApiBaseController
                             Core.Enums.TaskStatus.InProgress, 
                             Core.Enums.TaskStatus.InReview, 
                             Core.Enums.TaskStatus.Rework, 
-                            Core.Enums.TaskStatus.OnHold 
+                            Core.Enums.TaskStatus.Blocked
                         }.Contains(x.task.StatusId))
                         .Min(x => (DateTime?)x.task.StartDate),
                     
@@ -110,7 +110,7 @@ public class DeveloperWorkloadController : ApiBaseController
                             Core.Enums.TaskStatus.InProgress, 
                             Core.Enums.TaskStatus.InReview, 
                             Core.Enums.TaskStatus.Rework, 
-                            Core.Enums.TaskStatus.OnHold 
+                            Core.Enums.TaskStatus.Blocked
                         }.Contains(x.task.StatusId))
                         .Max(x => (DateTime?)x.task.EndDate),
                     
@@ -129,7 +129,7 @@ public class DeveloperWorkloadController : ApiBaseController
                             Core.Enums.TaskStatus.InProgress, 
                             Core.Enums.TaskStatus.InReview, 
                             Core.Enums.TaskStatus.Rework, 
-                            Core.Enums.TaskStatus.OnHold 
+                            Core.Enums.TaskStatus.Blocked
                         }.Contains(x.task.StatusId))
                         .Select(x => new { 
                             StartDate = x.task.StartDate, 
@@ -147,7 +147,7 @@ public class DeveloperWorkloadController : ApiBaseController
                 if (tasks == null || !tasks.Any()) return 0;
                 
                 var taskList = tasks.Cast<dynamic>().ToList();
-                var now = DateTime.UtcNow.Date;
+                var now = DateTime.Now.Date;
                 var maxDate = taskList.Max(t => (DateTime)t.EndDate);
                 var daysToCheck = (maxDate - now).Days;
                 
@@ -220,13 +220,13 @@ public class DeveloperWorkloadController : ApiBaseController
                 if (stats?.EarliestStartDate != null && stats?.MaxActiveTaskEndDate != null)
                 {
                     // Calculate total timeline span
-                    var timelineStart = stats.EarliestStartDate.Value < DateTime.UtcNow 
-                        ? DateTime.UtcNow 
+                    var timelineStart = stats.EarliestStartDate.Value < DateTime.Now 
+                        ? DateTime.Now 
                         : stats.EarliestStartDate.Value;
                     var timelineEnd = stats.MaxActiveTaskEndDate.Value;
                     
                     // Days from now until all tasks complete
-                    activeDaysRemaining = Math.Max(0, (timelineEnd - DateTime.UtcNow).Days);
+                    activeDaysRemaining = Math.Max(0, (timelineEnd - DateTime.Now).Days);
                     
                     // Calculate workload percentage
                     // Assuming 5 working days per week, so ~22 working days per month
@@ -859,7 +859,7 @@ public class DeveloperWorkloadController : ApiBaseController
                         authorId = "1",
                         repository = "main-repo",
                         branch = "feature-branch",
-                        createdAt = DateTime.UtcNow.AddDays(-2),
+                        createdAt = DateTime.Now.AddDays(-2),
                         linesAdded = 150,
                         linesDeleted = 20,
                         filesChanged = 5,
