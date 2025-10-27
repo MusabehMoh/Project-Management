@@ -22,6 +22,12 @@ dist-ssr
 *.sln
 *.sw?
 
+# Archive files
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tgz
 
 pnpm-lock.yaml
 yarn.lock

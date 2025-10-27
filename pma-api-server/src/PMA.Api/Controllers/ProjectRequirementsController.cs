@@ -7,6 +7,7 @@ using PMA.Core.Enums;
 using Microsoft.Extensions.Options;
 using PMA.Api.Config;
 using PMA.Core.Services;
+using PMA.Api.Utils;
 using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 namespace PMA.Api.Controllers;
 
@@ -43,17 +44,14 @@ public class ProjectRequirementsController : ApiBaseController
 
     /// <summary>
     /// Validates an uploaded attachment file for size and extension constraints.
+    /// Uses global FileValidationHelper for consistency across controllers.
     /// </summary>
     private (bool IsValid, string? Error) ValidateAttachment(IFormFile file)
     {
-        if (file == null || file.Length == 0)
-            return (false, "No file uploaded");
-        if (file.Length > _attachmentSettings.MaxFileSize)
-            return (false, $"File size exceeds {_attachmentSettings.MaxFileSize / (1024 * 1024)}MB limit");
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (!_attachmentSettings.AllowedExtensions.Contains(ext))
-            return (false, "File type not allowed");
-        return (true, null);
+        return FileValidationHelper.ValidateAttachment(
+            file,
+            _attachmentSettings.MaxFileSize,
+            _attachmentSettings.AllowedExtensions);
     }
 
     /// <summary>

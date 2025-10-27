@@ -50,6 +50,7 @@ import { useDepartments, useDepartmentMembers } from "@/hooks/useDepartments";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 export default function DepartmentsPage() {
   const { t, language } = useLanguage();
@@ -215,12 +216,15 @@ export default function DepartmentsPage() {
         fullName: memberForm.fullName,
         role: "member", // Default role for new members
       });
+      showSuccessToast(t("toast.memberAddSuccess"));
       onMemberModalOpenChange();
       setSelectedEmployee(null);
       clearResults();
-    } catch (error) {
+    } catch (error: any) {
       // eslint-disable-next-line no-console
       console.error("Failed to save member:", error);
+      const errorMessage = error?.data?.error || error?.message || t("toast.memberAddError");
+      showErrorToast(errorMessage);
     }
   };
 

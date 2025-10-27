@@ -6,6 +6,9 @@ using PMA.Core.DTOs;
 using PMA.Core.DTOs.Tasks;
 using PMA.Core.Enums;
 using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
+using Microsoft.Extensions.Options;
+using PMA.Api.Config;
+using PMA.Api.Utils;
 using System;
 
 namespace PMA.Api.Controllers;
@@ -17,13 +20,35 @@ public class MembersTasksController : ApiBaseController
     private readonly IMemberTaskService _memberTaskService;
     private readonly IUserContextAccessor _userContextAccessor;
     private readonly IUserService _userService;
+    private readonly AttachmentSettings _attachmentSettings;
 
-    public MembersTasksController(IMemberTaskService memberTaskService, IUserContextAccessor userContextAccessor, IUserService userService)
+    public MembersTasksController(
+        IMemberTaskService memberTaskService,
+        IUserContextAccessor userContextAccessor,
+        IUserService userService,
+        IOptions<AttachmentSettings> attachmentSettings)
     {
         _memberTaskService = memberTaskService;
         _userContextAccessor = userContextAccessor;
         _userService = userService;
+        _attachmentSettings = attachmentSettings.Value;
     }
+
+    #region Private Helpers
+
+    /// <summary>
+    /// Validates an uploaded attachment file for size and extension constraints.
+    /// Uses global FileValidationHelper for consistency across controllers.
+    /// </summary>
+    private (bool IsValid, string? Error) ValidateAttachment(IFormFile file)
+    {
+        return FileValidationHelper.ValidateAttachment(
+            file,
+            _attachmentSettings.MaxFileSize,
+            _attachmentSettings.AllowedExtensions);
+    }
+
+    #endregion
 
     /// <summary>
     /// Get team members for assignee filtering
@@ -665,23 +690,10 @@ public class MembersTasksController : ApiBaseController
     {
         try
         {
-            if (file == null || file.Length == 0)
+            var (isValid, error) = ValidateAttachment(file);
+            if (!isValid)
             {
-                return Error<TaskAttachmentDto>("No file provided or file is empty");
-            }
-
-            // Validate file size (max 10MB)
-            if (file.Length > 10 * 1024 * 1024)
-            {
-                return Error<TaskAttachmentDto>("File size exceeds the maximum allowed size of 10MB");
-            }
-
-            // Validate file type
-            var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".jpg", ".jpeg", ".png", ".gif", ".zip", ".rar" };
-            var fileExtension = Path.GetExtension(file.FileName).ToLower();
-            if (!allowedExtensions.Contains(fileExtension))
-            {
-                return Error<TaskAttachmentDto>("File type not allowed. Allowed types: PDF, Word, Excel, PowerPoint, Text, Images, Archives");
+                return Error<TaskAttachmentDto>(error ?? "Invalid file");
             }
 
             var attachment = await _memberTaskService.AddTaskAttachmentAsync(id, file);

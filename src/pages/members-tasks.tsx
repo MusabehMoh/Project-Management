@@ -202,6 +202,7 @@ export default function MembersTasksPage() {
   const handleTaskFileUpload = async (taskId: number, files: File[]) => {
     // Get file upload configuration
     const { maxFileSizeMB, allowedFileTypes } = getFileUploadConfig();
+    debugger
     const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024; // Convert MB to bytes
 
     // Arrays to collect rejected files by type
@@ -302,6 +303,37 @@ export default function MembersTasksPage() {
         console.error("Upload failed:", error);
         showErrorToast(t("requirements.uploadError"));
       }
+    }
+  };
+
+  const handleTaskFileDelete = async (attachment: any) => {
+    const confirmMessage = t("taskDetails.confirmDeleteAttachment").replace(
+      "{fileName}",
+      attachment.originalName,
+    );
+    const confirmed = window.confirm(confirmMessage);
+
+    if (!confirmed) return;
+
+    try {
+      const result = await membersTasksService.deleteTaskAttachment(
+        attachment.id,
+      );
+
+      if (result.success) {
+        showSuccessToast(t("taskDetails.attachmentDeleted"));
+        // Refresh the task details to update the attachments list
+        if (selectedTask) {
+          // Trigger a refresh of the task details drawer
+          setIsDrawerOpen(false);
+          setTimeout(() => setIsDrawerOpen(true), 100);
+        }
+      } else {
+        showErrorToast(t("taskDetails.attachmentDeleteError"));
+      }
+    } catch (error) {
+      console.error("Attachment deletion failed:", error);
+      showErrorToast(t("taskDetails.attachmentDeleteError"));
     }
   };
 
@@ -637,13 +669,6 @@ export default function MembersTasksPage() {
       taskParametersRequest.memberIds.length > 0);
 
   const handleRefresh = () => refreshTasks();
-
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
 
   // Helper function to get status color using TaskStatus lookup
   const getTaskStatusColor = (
@@ -1245,7 +1270,6 @@ export default function MembersTasksPage() {
 
         {/* Task Details Drawer */}
         <TaskDetailsDrawer
-          formatDate={formatDate}
           fullRequirement={fullRequirement}
           getPriorityColor={getPriorityColor}
           getPriorityLabel={getPriorityLabel}
@@ -1256,6 +1280,7 @@ export default function MembersTasksPage() {
           selectedTask={selectedTask}
           onChangeAssignees={handleChangeAssignees}
           onChangeStatus={handleChangeStatus}
+          onFileDelete={handleTaskFileDelete}
           onFileDownload={handleTaskFileDownload}
           onFilePreview={handleTaskFilePreview}
           onFileUpload={handleTaskFileUpload}

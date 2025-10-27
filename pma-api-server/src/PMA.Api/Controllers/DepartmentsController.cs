@@ -199,11 +199,11 @@ public class DepartmentsController : ApiBaseController
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(Error<TeamMemberDto>(ex.Message, null, 404));
+            return Error<TeamMemberDto>(ex.Message, null, 404);
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(Error<TeamMemberDto>(ex.Message, null, 400));
+            return Error<TeamMemberDto>(ex.Message, null, 400);
         }
         catch (Exception ex)
         {

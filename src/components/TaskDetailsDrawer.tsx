@@ -12,7 +12,6 @@ import {
   DrawerFooter,
   DrawerHeader,
 } from "@heroui/react";
-import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Textarea } from "@heroui/input";
 import {
@@ -25,6 +24,7 @@ import {
   History,
   Send,
   Upload,
+  Trash2,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -32,7 +32,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useTaskActivity } from "@/hooks/useTaskActivity";
 import { TASK_STATUSES } from "@/constants/taskStatuses";
 import { membersTasksService } from "@/services/api/membersTasksService";
-import { formatRelativeTime } from "@/utils/dateFormatter";
+import { formatRelativeTime, formatDateTime } from "@/utils/dateFormatter";
 
 interface TaskDetailsDrawerProps {
   isOpen: boolean;
@@ -42,11 +42,11 @@ interface TaskDetailsDrawerProps {
   loadingRequirement: boolean;
   onFilePreview: (attachment: any) => void;
   onFileDownload: (attachment: any) => void;
+  onFileDelete: (attachment: any) => Promise<void>;
   onFileUpload: (taskId: number, files: File[]) => Promise<void>;
   onChangeAssignees: (task: MemberTask) => void;
   onChangeStatus: (task: MemberTask) => void;
   onRequestDesign: (task: MemberTask) => void;
-  formatDate: (dateString: string) => string;
   getTaskStatusColor: (
     status: number,
   ) => "success" | "primary" | "warning" | "danger" | "default" | "secondary";
@@ -65,11 +65,11 @@ export default function TaskDetailsDrawer({
   loadingRequirement,
   onFilePreview,
   onFileDownload,
+  onFileDelete,
   onFileUpload,
   onChangeAssignees,
   onChangeStatus,
   onRequestDesign,
-  formatDate,
   getTaskStatusColor,
   getStatusText,
   getPriorityColor,
@@ -235,7 +235,10 @@ export default function TaskDetailsDrawer({
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-default-400" />
                     <span className="text-sm">
-                      {formatDate(selectedTask.startDate)}
+                      {formatDateTime(selectedTask.startDate, {
+                        showTime: false,
+                        language: "en-US",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -248,7 +251,10 @@ export default function TaskDetailsDrawer({
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-default-400" />
                     <span className="text-sm">
-                      {formatDate(selectedTask.endDate)}
+                      {formatDateTime(selectedTask.endDate, {
+                        showTime: false,
+                        language: "en-US",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -331,7 +337,10 @@ export default function TaskDetailsDrawer({
                                     {attachment.uploadedAt && (
                                       <span>
                                         {t("requirements.uploadedOn")}:{" "}
-                                        {formatDate(attachment.uploadedAt)}
+                                        {formatDateTime(attachment.uploadedAt, {
+                                          showTime: false,
+                                          language: "en-US",
+                                        })}
                                       </span>
                                     )}
                                   </div>
@@ -386,288 +395,291 @@ export default function TaskDetailsDrawer({
                 </div>
               )}
 
-              {/* Comments and History Accordion */}
-              <Accordion className="w-full" variant="bordered">
-                <AccordionItem
-                  key="comments-history"
-                  aria-label={t("taskDetails.activity")}
-                  title={
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4" />
-                      <span>{t("taskDetails.activity")}</span>
-                    </div>
-                  }
+              {/* Activity Section */}
+              <div className="mt-6 pt-4 border-t border-divider">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  {t("taskDetails.activity")}
+                </h3>
+
+                <Tabs
+                  aria-label={t("taskDetails.activityTabs")}
+                  className="w-full"
+                  variant="underlined"
                 >
-                  <Tabs
-                    aria-label={t("taskDetails.activityTabs")}
-                    className="w-full max-h-96 overflow-y-auto"
+                  <Tab
+                    key="comments"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        <span>{t("taskDetails.comments")}</span>
+                        {comments.length > 0 && (
+                          <Badge color="primary" size="sm" variant="solid">
+                            {comments.length}
+                          </Badge>
+                        )}
+                      </div>
+                    }
                   >
-                    <Tab
-                      key="comments"
-                      title={
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4" />
-                          <span>{t("taskDetails.comments")}</span>
-                          {comments.length > 0 && (
-                            <Badge color="primary" size="sm" variant="solid">
-                              {comments.length}
-                            </Badge>
-                          )}
-                        </div>
-                      }
-                    >
-                      {activityLoading ? (
-                        <div className="p-4 text-center">
-                          <p>{t("common.loading")}</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-4 p-2">
-                          {/* Add Comment Form */}
-                          <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
-                            <div className="flex gap-2">
-                              <Textarea
-                                className="flex-1"
-                                disabled={submittingComment}
-                                maxRows={4}
-                                minRows={2}
-                                placeholder={t("taskDetails.addComment")}
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                              />
-                              <Button
-                                isIconOnly
-                                className="self-end"
-                                color="primary"
-                                isDisabled={
-                                  !newComment.trim() || submittingComment
-                                }
-                                isLoading={submittingComment}
-                                size="sm"
-                                onPress={handleSubmitComment}
-                              >
-                                <Send className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Comments List */}
-                          {comments.length > 0 ? (
-                            <div className="space-y-3">
-                              {comments.map((comment) => (
-                                <div
-                                  key={comment.id}
-                                  className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg"
-                                >
-                                  <div className="flex items-start justify-between mb-2">
-                                    <span className="font-medium text-sm">
-                                      {comment.createdByName}
-                                    </span>
-                                    <span className="text-xs text-default-500">
-                                      {formatRelativeTime(
-                                        comment.createdAt,
-                                        language,
-                                      )}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm leading-relaxed">
-                                    {comment.commentText}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="p-4 text-center text-default-500">
-                              <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                              <p>{t("taskDetails.noComments")}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Tab>
-                    <Tab
-                      key="history"
-                      title={
-                        <div className="flex items-center gap-2">
-                          <History className="w-4 h-4" />
-                          <span>{t("taskDetails.history")}</span>
-                          {history.length > 0 && (
-                            <Badge color="secondary" size="sm" variant="solid">
-                              {history.length}
-                            </Badge>
-                          )}
-                        </div>
-                      }
-                    >
-                      {activityLoading ? (
-                        <div className="p-4 text-center">
-                          <p>{t("common.loading")}</p>
-                        </div>
-                      ) : history.length > 0 ? (
-                        <div className="space-y-3 p-2">
-                          {history.map((item) => (
-                            <div
-                              key={item.id}
-                              className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg"
-                            >
-                              <div className="flex items-start justify-between mb-2">
-                                <span className="font-medium text-sm">
-                                  {item.changedByName}
-                                </span>
-                                <span className="text-xs text-default-500">
-                                  {formatRelativeTime(item.changedAt, language)}
-                                </span>
-                              </div>
-                              <div className="space-y-1">
-                                {item.items.map((change, index) => (
-                                  <div key={index} className="text-sm">
-                                    <span className="font-medium">
-                                      {change.fieldName}:
-                                    </span>{" "}
-                                    <span className="text-danger-600 line-through">
-                                      {change.oldValue || t("common.none")}
-                                    </span>{" "}
-                                    <span className="text-success-600">
-                                      → {change.newValue}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-4 text-center text-default-500">
-                          <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p>{t("taskDetails.noHistory")}</p>
-                        </div>
-                      )}
-                    </Tab>
-                  </Tabs>
-                </AccordionItem>
-
-                {/* Task Attachments Accordion */}
-                <AccordionItem
-                  key="attachments"
-                  aria-label={t("taskDetails.attachments")}
-                  startContent={<Paperclip className="w-5 h-5" />}
-                  title={
-                    <div className="flex items-center gap-2">
-                      <span>{t("taskDetails.attachments")}</span>
-                      {attachments.length > 0 && (
-                        <Badge color="primary" size="sm" variant="flat">
-                          {attachments.length}
-                        </Badge>
-                      )}
-                    </div>
-                  }
-                >
-                  {/* File Upload Area */}
-                  <div className="mb-4">
-                    <div
-                      className={`border-2 border-dashed rounded-lg p-3 hover:border-default-400 transition-colors ${
-                        hasFileUploadError
-                          ? "border-danger"
-                          : "border-default-300"
-                      }`}
-                    >
-                      <input
-                        multiple
-                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.zip,.rar"
-                        className="hidden"
-                        disabled={uploadingFiles}
-                        id="task-file-upload"
-                        type="file"
-                        onChange={(e) => handleFileUpload(e.target.files)}
-                      />
-                      <label
-                        className={`cursor-pointer flex flex-col items-center justify-center space-y-2 ${
-                          uploadingFiles ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                        htmlFor="task-file-upload"
-                      >
-                        <Upload className="w-6 h-6 text-default-400" />
-                        <div className="text-center">
-                          <p className="text-sm font-medium text-default-700">
-                            {uploadingFiles
-                              ? t("common.uploading")
-                              : t("requirements.uploadFiles")}
-                          </p>
-                          <p className="text-xs text-default-500">
-                            PDF, DOC, XLS, Images, ZIP
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  {attachments.length > 0 ? (
-                    <div className="space-y-3">
-                      {attachments.map((attachment) => (
-                        <div
-                          key={attachment.id}
-                          className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg"
-                        >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <Paperclip className="w-5 h-5 text-default-400 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {attachment.originalName}
-                              </p>
-                              <div className="flex items-center gap-2 text-xs text-default-500">
-                                <span>
-                                  {t("requirements.uploadedBy")}:{" "}
-                                  {attachment.createdByName}
-                                </span>
-                                {attachment.uploadedAt && (
-                                  <span>
-                                    {t("requirements.uploadedOn")}:{" "}
-                                    {formatDate(attachment.uploadedAt)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 flex-shrink-0">
-                            {/* Preview Button for supported file types */}
-                            {(attachment.originalName
-                              .toLowerCase()
-                              .endsWith(".pdf") ||
-                              attachment.originalName
-                                .toLowerCase()
-                                .match(
-                                  /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/,
-                                )) && (
-                              <Button
-                                color="default"
-                                size="sm"
-                                startContent={<Eye className="w-4 h-4" />}
-                                variant="light"
-                                onPress={() => onFilePreview(attachment)}
-                              >
-                                {t("common.preview")}
-                              </Button>
-                            )}
+                    {activityLoading ? (
+                      <div className="p-4 text-center">
+                        <p>{t("common.loading")}</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4 p-2">
+                        {/* Add Comment Form */}
+                        <div className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg">
+                          <div className="flex gap-2">
+                            <Textarea
+                              className="flex-1"
+                              disabled={submittingComment}
+                              maxRows={4}
+                              minRows={2}
+                              placeholder={t("taskDetails.addComment")}
+                              value={newComment}
+                              onChange={(e) => setNewComment(e.target.value)}
+                            />
                             <Button
+                              isIconOnly
+                              className="self-end"
                               color="primary"
+                              isDisabled={
+                                !newComment.trim() || submittingComment
+                              }
+                              isLoading={submittingComment}
                               size="sm"
-                              startContent={<Download className="w-4 h-4" />}
-                              variant="light"
-                              onPress={() => onFileDownload(attachment)}
+                              onPress={handleSubmitComment}
                             >
-                              {t("common.download")}
+                              <Send className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
-                      ))}
+
+                        {/* Comments List */}
+                        {comments.length > 0 ? (
+                          <div className="space-y-3">
+                            {comments.map((comment) => (
+                              <div
+                                key={comment.id}
+                                className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg"
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <span className="font-medium text-sm">
+                                    {comment.createdByName}
+                                  </span>
+                                  <span className="text-xs text-default-500">
+                                    {formatRelativeTime(
+                                      comment.createdAt,
+                                      language,
+                                    )}
+                                  </span>
+                                </div>
+                                <p className="text-sm leading-relaxed">
+                                  {comment.commentText}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-4 text-center text-default-500">
+                            <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p>{t("taskDetails.noComments")}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Tab>
+                  <Tab
+                    key="history"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <History className="w-4 h-4" />
+                        <span>{t("taskDetails.history")}</span>
+                        {history.length > 0 && (
+                          <Badge color="secondary" size="sm" variant="solid">
+                            {history.length}
+                          </Badge>
+                        )}
+                      </div>
+                    }
+                  >
+                    {activityLoading ? (
+                      <div className="p-4 text-center">
+                        <p>{t("common.loading")}</p>
+                      </div>
+                    ) : history.length > 0 ? (
+                      <div className="space-y-3 p-2">
+                        {history.map((item) => (
+                          <div
+                            key={item.id}
+                            className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg"
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <span className="font-medium text-sm">
+                                {item.changedByName}
+                              </span>
+                              <span className="text-xs text-default-500">
+                                {formatRelativeTime(item.changedAt, language)}
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              {item.items.map((change, index) => (
+                                <div key={index} className="text-sm">
+                                  <span className="font-medium">
+                                    {change.fieldName}:
+                                  </span>{" "}
+                                  <span className="text-danger-600 line-through">
+                                    {change.oldValue || t("common.none")}
+                                  </span>{" "}
+                                  <span className="text-success-600">
+                                    → {change.newValue}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-default-500">
+                        <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>{t("taskDetails.noHistory")}</p>
+                      </div>
+                    )}
+                  </Tab>
+
+                  {/* Task Attachments Tab */}
+                  <Tab
+                    key="attachments"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <Paperclip className="w-4 h-4" />
+                        <span>{t("taskDetails.attachments")}</span>
+                        {attachments.length > 0 && (
+                          <Badge color="primary" size="sm" variant="flat">
+                            {attachments.length}
+                          </Badge>
+                        )}
+                      </div>
+                    }
+                  >
+                    {/* File Upload Area */}
+                    <div className="mb-4">
+                      <div
+                        className={`border-2 border-dashed rounded-lg p-3 hover:border-default-400 transition-colors ${
+                          hasFileUploadError
+                            ? "border-danger"
+                            : "border-default-300"
+                        }`}
+                      >
+                        <input
+                          multiple
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.zip,.rar"
+                          className="hidden"
+                          disabled={uploadingFiles}
+                          id="task-file-upload"
+                          type="file"
+                          onChange={(e) => handleFileUpload(e.target.files)}
+                        />
+                        <label
+                          className={`cursor-pointer flex flex-col items-center justify-center space-y-2 ${
+                            uploadingFiles
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                          htmlFor="task-file-upload"
+                        >
+                          <Upload className="w-6 h-6 text-default-400" />
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-default-700">
+                              {uploadingFiles
+                                ? t("common.uploading")
+                                : t("requirements.uploadFiles")}
+                            </p>
+                            <p className="text-xs text-default-500">
+                              PDF, DOC, XLS, Images, ZIP
+                            </p>
+                          </div>
+                        </label>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="p-4 text-center text-default-500">
-                      <Paperclip className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>{t("taskDetails.noAttachments")}</p>
-                    </div>
-                  )}
-                </AccordionItem>
-              </Accordion>
+
+                    {attachments.length > 0 ? (
+                      <div className="space-y-3">
+                        {attachments.map((attachment) => (
+                          <div
+                            key={attachment.id}
+                            className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg"
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <Paperclip className="w-5 h-5 text-default-400 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">
+                                  {attachment.originalName}
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-default-500">
+                                  <span>{attachment.createdByName}</span>
+                                  {attachment.uploadedAt && (
+                                    <span>
+                                      {formatDateTime(attachment.uploadedAt, {
+                                        showTime: false,
+                                        language: "en-US",
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 flex-shrink-0">
+                              {/* Preview Button for supported file types */}
+                              {(attachment.originalName
+                                .toLowerCase()
+                                .endsWith(".pdf") ||
+                                attachment.originalName
+                                  .toLowerCase()
+                                  .match(
+                                    /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/,
+                                  )) && (
+                                <Button
+                                  color="default"
+                                  size="sm"
+                                  startContent={<Eye className="w-4 h-4" />}
+                                  variant="light"
+                                  onPress={() => onFilePreview(attachment)}
+                                >
+                                  {t("common.preview")}
+                                </Button>
+                              )}
+                              <Button
+                                color="primary"
+                                size="sm"
+                                startContent={<Download className="w-4 h-4" />}
+                                variant="light"
+                                onPress={() => onFileDownload(attachment)}
+                              >
+                                {t("common.download")}
+                              </Button>
+                              <Button
+                                color="danger"
+                                size="sm"
+                                startContent={<Trash2 className="w-4 h-4" />}
+                                variant="light"
+                                onPress={() => onFileDelete(attachment)}
+                              >
+                                {t("common.delete")}
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-default-500">
+                        <Paperclip className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>{t("taskDetails.noAttachments")}</p>
+                      </div>
+                    )}
+                  </Tab>
+                </Tabs>
+              </div>
             </div>
           )}
         </DrawerBody>

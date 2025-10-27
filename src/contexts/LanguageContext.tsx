@@ -212,7 +212,7 @@ const translations = {
     "requirements.ongoing": "Ongoing Requirements",
     "requirements.active": "Active Requirements",
     "requirements.pendingApprovals": "Pending Approvals",
-
+    "requirements.uploadedBy": "Uploaded By",
     // Common Date References
     "common.today": "Today",
     "common.yesterday": "Yesterday",
@@ -472,6 +472,8 @@ const translations = {
     "toast.deleteError": "Failed to delete",
     "toast.saveSuccess": "Successfully saved",
     "toast.saveError": "Failed to save",
+    "toast.memberAddSuccess": "Member added successfully",
+    "toast.memberAddError": "Failed to add member",
 
     // Table
     "table.noData": "No data available",
@@ -1775,6 +1777,9 @@ const translations = {
     "taskDetails.addComment": "Add a comment...",
     "taskDetails.attachments": "Attachments",
     "taskDetails.noAttachments": "No attachments yet",
+    "taskDetails.confirmDeleteAttachment": "Are you sure you want to delete the attachment '{fileName}'?",
+    "taskDetails.attachmentDeleted": "Attachment deleted successfully",
+    "taskDetails.attachmentDeleteError": "Failed to delete attachment",
     priority: "Priority",
     status: "Status",
     project: "Project",
@@ -1894,6 +1899,8 @@ const translations = {
     "toast.designerAssignmentFailed": "فشل في تعيين المصمم",
     "toast.designTaskCreatedSuccess": "تم إنشاء مهمة التصميم بنجاح",
     "toast.designTaskCreationFailed": "فشل في إنشاء مهمة التصميم",
+    "toast.memberAddSuccess": "تم إضافة العضو بنجاح",
+    "toast.memberAddError": "فشل في إضافة العضو",
 
     // Navbar
     "nav.dashboard": "لوحة التحكم",
@@ -1933,7 +1940,7 @@ const translations = {
     "requirements.ongoing": "متطلبات قيد التنفيذ",
     "requirements.active": "المتطلبات النشطة",
     "requirements.pendingApprovals": "موافقات معلقة",
-
+    "requirements.uploadedBy": "تم الرفع بواسطة",
     // Project Pipeline
     "pipeline.planning": "التخطيط",
     "pipeline.inProgress": "قيد التنفيذ",
@@ -3596,6 +3603,9 @@ const translations = {
     "taskDetails.addComment": "أضف تعليقاً...",
     "taskDetails.attachments": "المرفقات",
     "taskDetails.noAttachments": "لا توجد مرفقات بعد",
+    "taskDetails.confirmDeleteAttachment": "هل أنت متأكد من أنك تريد حذف المرفق '{fileName}'؟",
+    "taskDetails.attachmentDeleted": "تم حذف المرفق بنجاح",
+    "taskDetails.attachmentDeleteError": "فشل في حذف المرفق",
     priority: "الأولوية",
     status: "الحالة",
     project: "المشروع",

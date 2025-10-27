@@ -1404,7 +1404,7 @@ export default function ProjectsPage() {
                 </p>
               </ModalHeader>
               <ModalBody>
-                {editLoading || !projectForEdit ? (
+                {isEditing && (editLoading || !projectForEdit) ? (
                   <div className="space-y-6">
                     {/* Loading skeletons for form fields */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
