@@ -97,4 +97,35 @@ GO
 
 
 
+USE [PMA]
+GO
+
+/****** Object:  Table [dbo].[TaskComments]    Script Date: 10/27/2025 7:23:25 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[TaskComments](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[TaskId] [int] NULL,
+	[CommentText] [nvarchar](max) NULL,
+	[CreatedAt] [datetime2](7) NULL,
+	[CreatedBy] [nvarchar](150) NULL,
+ CONSTRAINT [PK_TaskComments] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[TaskComments]  WITH CHECK ADD  CONSTRAINT [FK_TaskComments_Tasks] FOREIGN KEY([TaskId])
+REFERENCES [dbo].[Tasks] ([Id])
+GO
+
+ALTER TABLE [dbo].[TaskComments] CHECK CONSTRAINT [FK_TaskComments_Tasks]
+GO
+
+
 
