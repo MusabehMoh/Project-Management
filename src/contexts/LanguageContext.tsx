@@ -1830,6 +1830,7 @@ const translations = {
     taskEndDateRequired: "Task end date is required",
     taskValidEndDate: "Task end date must be after start date",
     taskAssigneeRequired: "Select one member at least",
+    taskPriorityRequired: "Task priority is required",
 
     // Task List Columns
     taskName: "Task Name",
@@ -3622,6 +3623,7 @@ const translations = {
     taskEndDateRequired: "تاريخ نهاية المهمة مطلوب",
     taskValidEndDate: "يجب أن يكون تاريخ نهاية المهمة بعد تاريخ البداية",
     taskAssigneeRequired: "اختار معين واحد على الأقل مطلوب",
+    taskPriorityRequired: "أولوية المهمة مطلوبة",
 
     // Task List Columns
     taskName: "اسم المهمة",

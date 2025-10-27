@@ -111,6 +111,7 @@ export default function MembersTasksPage() {
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
   const [viewType, setViewType] = useState<"grid" | "list" | "gantt">("grid");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isOptionOpen, setIsOptionOpen] = useState(false);
   const { hasAnyRoleById, loading: userLoading, user } = usePermissions();
 
   // Add state for full requirement details
@@ -921,10 +922,12 @@ export default function MembersTasksPage() {
                 aria-label={t("pagination.itemsPerPage")}
                 className="w-20"
                 disallowEmptySelection={true}
+                isOpen={isOptionOpen}
                 selectedKeys={[
                   normalizePageSize(effectivePageSize, 10).toString(),
                 ]}
                 size="sm"
+                onOpenChange={setIsOptionOpen}
                 onSelectionChange={(keys) => {
                   const newSize = parseInt(Array.from(keys)[0] as string);
 
@@ -932,7 +935,13 @@ export default function MembersTasksPage() {
                 }}
               >
                 {PAGE_SIZE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                  <SelectItem
+                    key={opt.toString()}
+                    textValue={opt.toString()}
+                    onPress={() => {
+                      setIsOptionOpen(false); // Force close when any item is clicked
+                    }}
+                  >
                     {opt}
                   </SelectItem>
                 ))}

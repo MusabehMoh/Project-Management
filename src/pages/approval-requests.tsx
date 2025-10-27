@@ -364,6 +364,7 @@ export default function ApprovalRequestsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRequirement, setSelectedRequirement] =
     useState<ProjectRequirement | null>(null);
+  const [isOptionOpen, setIsOptionOpen] = useState(false);
 
   // Approval modal state
   const {
@@ -545,10 +546,12 @@ export default function ApprovalRequestsPage() {
                 <Select
                   className="w-20"
                   disallowEmptySelection={true}
+                  isOpen={isOptionOpen}
                   selectedKeys={[
                     normalizePageSize(pageSize, 10).toString(),
                   ]}
                   size="sm"
+                  onOpenChange={setIsOptionOpen}
                   onSelectionChange={(keys) => {
                     const newSize = parseInt(Array.from(keys)[0] as string);
 
@@ -559,6 +562,9 @@ export default function ApprovalRequestsPage() {
                     <SelectItem
                       key={opt.toString()}
                       textValue={opt.toString()}
+                      onPress={() => {
+                        setIsOptionOpen(false); // Force close when any item is clicked
+                      }}
                     >
                       {opt}
                     </SelectItem>

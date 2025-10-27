@@ -117,6 +117,7 @@ export default function ProjectRequirementsPage() {
 
   // Page size state for dynamic pagination
   const [currentPageSize, setCurrentPageSize] = useState(10);
+  const [isOptionOpen, setIsOptionOpen] = useState(false);
 
   const {
     requirements,
@@ -1083,8 +1084,10 @@ export default function ProjectRequirementsPage() {
             <Select
               className="w-24 flex-shrink-0"
               isDisabled={loading && isInitialLoad}
+              isOpen={isOptionOpen}
               selectedKeys={[effectivePageSize.toString()]}
               size="sm"
+              onOpenChange={setIsOptionOpen}
               onSelectionChange={(keys) => {
                 const newSizeStr = Array.from(keys)[0] as string;
 
@@ -1100,7 +1103,13 @@ export default function ProjectRequirementsPage() {
                 const val = opt.toString();
 
                 return (
-                  <SelectItem key={val} textValue={val}>
+                  <SelectItem
+                    key={val}
+                    textValue={val}
+                    onPress={() => {
+                      setIsOptionOpen(false); // Force close when any item is clicked
+                    }}
+                  >
                     {val}
                   </SelectItem>
                 );

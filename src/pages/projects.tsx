@@ -115,7 +115,7 @@ export default function ProjectsPage() {
   const [projectIdForDetails, setProjectIdForDetails] = useState<
     number | undefined
   >(undefined);
-
+  const [isOptionOpen, setIsOptionOpen] = useState(false);
   // Phases hook for dynamic phase management
   const {
     phases,
@@ -1090,8 +1090,10 @@ export default function ProjectsPage() {
               <Select
                 className="w-20"
                 disallowEmptySelection={true}
+                isOpen={isOptionOpen}
                 selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
                 size="sm"
+                onOpenChange={setIsOptionOpen}
                 onSelectionChange={(keys) => {
                   const newSize = parseInt(Array.from(keys)[0] as string);
 
@@ -1099,7 +1101,13 @@ export default function ProjectsPage() {
                 }}
               >
                 {PAGE_SIZE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                  <SelectItem
+                    key={opt.toString()}
+                    textValue={opt.toString()}
+                    onPress={() => {
+                      setIsOptionOpen(false); // Force close when any item is clicked
+                    }}
+                  >
                     {opt}
                   </SelectItem>
                 ))}

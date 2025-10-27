@@ -40,6 +40,7 @@ export default function RequirementsPage() {
   const [projectIdForDetails, setProjectIdForDetails] = useState<
     number | undefined
   >(undefined);
+  const [isOptionOpen, setIsOptionOpen] = useState(false);
 
   // Hook to fetch project details for drawer view
   const { project: projectDetailsData, loading: detailsLoading } =
@@ -360,8 +361,10 @@ export default function RequirementsPage() {
                   <Select
                     className="w-24"
                     disallowEmptySelection={true}
+                    isOpen={isOptionOpen}
                     selectedKeys={[effectivePageSize.toString()]}
                     size="sm"
+                    onOpenChange={setIsOptionOpen}
                     onSelectionChange={(keys) => {
                       const newSizeStr = Array.from(keys)[0] as string;
 
@@ -378,7 +381,13 @@ export default function RequirementsPage() {
                       const val = opt.toString();
 
                       return (
-                        <SelectItem key={val} textValue={val}>
+                        <SelectItem
+                          key={val}
+                          textValue={val}
+                          onPress={() => {
+                            setIsOptionOpen(false); // Force close when any item is clicked
+                          }}
+                        >
                           {val}
                         </SelectItem>
                       );

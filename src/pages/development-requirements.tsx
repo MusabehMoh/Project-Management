@@ -373,6 +373,7 @@ export default function DevelopmentRequirementsPage() {
   const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
   const [timelineRequirement, setTimelineRequirement] =
     useState<ProjectRequirement | null>(null);
+  const [isOptionOpen, setIsOptionOpen] = useState(false);
 
   // Timeline hook for creating timelines
   const { createTimeline, loading: timelineLoading } = useTimeline({
@@ -955,8 +956,10 @@ export default function DevelopmentRequirementsPage() {
               <Select
                 className="w-20"
                 disallowEmptySelection={true}
+                isOpen={isOptionOpen}
                 selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
                 size="sm"
+                onOpenChange={setIsOptionOpen}
                 onSelectionChange={(keys) => {
                   const newSize = parseInt(Array.from(keys)[0] as string);
 
@@ -964,7 +967,13 @@ export default function DevelopmentRequirementsPage() {
                 }}
               >
                 {PAGE_SIZE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.toString()} textValue={opt.toString()}>
+                  <SelectItem
+                    key={opt.toString()}
+                    textValue={opt.toString()}
+                    onPress={() => {
+                      setIsOptionOpen(false); // Force close when any item is clicked
+                    }}
+                  >
                     {opt}
                   </SelectItem>
                 ))}

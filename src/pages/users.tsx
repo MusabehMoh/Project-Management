@@ -126,6 +126,7 @@ export default function UsersPage() {
   // Operation loading states
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [isOptionOpen, setIsOptionOpen] = useState(false);
 
   // Helper functions for role and action management
   const getSelectedRoleData = () => {
@@ -567,8 +568,10 @@ export default function UsersPage() {
                   aria-label={t("pagination.perPage")}
                   className="w-24"
                   disallowEmptySelection={true}
+                  isOpen={isOptionOpen}
                   selectedKeys={[effectivePageSize.toString()]}
                   size="sm"
+                  onOpenChange={setIsOptionOpen}
                   onSelectionChange={(keys) => {
                     const newSizeStr = Array.from(keys)[0] as string;
 
@@ -584,7 +587,13 @@ export default function UsersPage() {
                     const val = opt.toString();
 
                     return (
-                      <SelectItem key={val} textValue={val}>
+                      <SelectItem
+                        key={val}
+                        textValue={val}
+                        onPress={() => {
+                          setIsOptionOpen(false); // Force close when any item is clicked
+                        }}
+                      >
                         {val}
                       </SelectItem>
                     );
