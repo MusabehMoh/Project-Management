@@ -25,8 +25,8 @@ public class SprintService : ISprintService
 
     public async System.Threading.Tasks.Task<Sprint> CreateSprintAsync(Sprint sprint)
     {
-        sprint.CreatedAt = DateTime.UtcNow;
-        sprint.UpdatedAt = DateTime.UtcNow;
+        sprint.CreatedAt = DateTime.Now;
+        sprint.UpdatedAt = DateTime.Now;
         return await _sprintRepository.AddAsync(sprint);
     }
 
@@ -37,7 +37,7 @@ public class SprintService : ISprintService
 
     public async Task<Sprint> UpdateSprintAsync(Sprint sprint)
     {
-        sprint.UpdatedAt = DateTime.UtcNow;
+        sprint.UpdatedAt = DateTime.Now;
         await _sprintRepository.UpdateAsync(sprint);
         return sprint;
     }

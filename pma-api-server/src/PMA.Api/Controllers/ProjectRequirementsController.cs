@@ -15,7 +15,7 @@ namespace PMA.Api.Controllers;
 public class ProjectRequirementsController : ApiBaseController
 {
     private readonly IProjectRequirementService _projectRequirementService;
-    private readonly ICurrentUserService _currentUser;
+    private readonly IUserContextAccessor _userContextAccessor;
     private readonly ILogger<ProjectRequirementsController> _logger;
     private readonly AttachmentSettings _attachmentSettings;
     private readonly IMappingService _mappingService; 
@@ -23,7 +23,7 @@ public class ProjectRequirementsController : ApiBaseController
     private readonly IProjectService _projectService;
     public ProjectRequirementsController(
         IProjectRequirementService projectRequirementService, 
-        ICurrentUserService currentUser,
+        IUserContextAccessor userContextAccessor,
         ILogger<ProjectRequirementsController> logger,
         IOptions<AttachmentSettings> attachmentSettings,
         IMappingService mappingService,
@@ -31,7 +31,7 @@ public class ProjectRequirementsController : ApiBaseController
         IProjectService projectService)
     {
         _projectRequirementService = projectRequirementService;
-        _currentUser = currentUser;
+        _userContextAccessor = userContextAccessor;
         _logger = logger;
         _attachmentSettings = attachmentSettings.Value;
         _mappingService = mappingService;
@@ -349,7 +349,7 @@ public class ProjectRequirementsController : ApiBaseController
                 return Error<ProjectRequirement>("Project requirement not found", null, 404);
 
             existingRequirement.Status = statusDto.Status;
-            existingRequirement.UpdatedAt = DateTime.UtcNow;
+            existingRequirement.UpdatedAt = DateTime.Now;
 
             var updatedProjectRequirement = await _projectRequirementService
                 .UpdateProjectRequirementAsync(existingRequirement);
@@ -431,7 +431,7 @@ public class ProjectRequirementsController : ApiBaseController
 
     /// <summary>
     /// Get draft requirements (requirements in draft status)
-    ///// </summary>
+    /// </summary>
     //[HttpGet("draft-requirements")]
     //[ProducesResponseType(200)]
     //public async Task<IActionResult> GetDraftRequirements(
@@ -739,4 +739,149 @@ public class ProjectRequirementsController : ApiBaseController
     //    var redirectUrl = $"/api/team-workload/performance?{string.Join("&", queryParams)}";
     //    return Redirect(redirectUrl);
     //}
+
+    /// <summary>
+    /// Postpone a requirement and add record to status history
+    /// </summary>
+    [HttpPost("requirements/{id}/postpone")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> PostponeRequirement(int id, [FromBody] PostponeRequirementDto postponeDto)
+    {
+        try
+        {
+            var invalid = ValidateModelState();
+            if (invalid != null) return invalid;
+
+            var existingRequirement = await _projectRequirementService
+                .GetProjectRequirementByIdAsync(id);
+            if (existingRequirement == null)
+                return Error<ProjectRequirement>("Project requirement not found", null, 404);
+
+            // Check if current status allows postponement (New=1, ManagerReview=2, Approved=3)
+            if (existingRequirement.Status != RequirementStatusEnum.New &&
+                existingRequirement.Status != RequirementStatusEnum.ManagerReview &&
+                existingRequirement.Status != RequirementStatusEnum.Approved)
+            {
+                return Error<string>("Cannot postpone requirement with current status", null, 400);
+            }
+
+            // Store the old status for history
+            var oldStatus = existingRequirement.Status;
+
+            // Update status to Postponed
+            existingRequirement.Status = RequirementStatusEnum.Postponed;
+            existingRequirement.UpdatedAt = DateTime.Now;
+
+            var updatedRequirement = await _projectRequirementService
+                .UpdateProjectRequirementAsync(existingRequirement);
+
+            // Get current user context
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrEmpty(userContext.PrsId))
+            {
+                return Error<string>("Unable to identify current user", null, 401);
+            }
+
+            // Parse PrsId to int
+            if (!int.TryParse(userContext.PrsId, out var changedByPrsId))
+            {
+                return Error<string>("Invalid user identifier", null, 401);
+            }
+
+            // Add record to ProjectRequirementStatusHistory table
+            var statusHistory = new ProjectRequirementStatusHistory
+            {
+                RequirementId = id,
+                FromStatus = (int)oldStatus,
+                ToStatus = (int)RequirementStatusEnum.Postponed,
+                CreatedBy = changedByPrsId,
+                Reason = postponeDto.Reason
+            };
+            await _projectRequirementService.CreateRequirementStatusHistoryAsync(statusHistory);
+
+            return Success("Requirement postponed successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<string>("An error occurred while postponing the requirement", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Unpostpone a requirement (resume from postponed status)
+    /// </summary>
+    [HttpPost("requirements/{id}/unpostpone")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> UnpostponeRequirement(int id)
+    {
+        try
+        {
+            var existingRequirement = await _projectRequirementService
+                .GetProjectRequirementByIdAsync(id);
+            if (existingRequirement == null)
+                return Error<ProjectRequirement>("Project requirement not found", null, 404);
+
+            // Check if current status is Postponed
+            if (existingRequirement.Status != RequirementStatusEnum.Postponed)
+            {
+                return Error<string>("Cannot unpostpone requirement that is not postponed", null, 400);
+            }
+
+            // Get current user context
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrEmpty(userContext.PrsId))
+            {
+                return Error<string>("Unable to identify current user", null, 401);
+            }
+
+            // Parse PrsId to int
+            if (!int.TryParse(userContext.PrsId, out var changedByPrsId))
+            {
+                return Error<string>("Invalid user identifier", null, 401);
+            }
+
+            // Get status history to find the previous status (most recent non-postponed status)
+            var statusHistory = await _projectRequirementService.GetRequirementStatusHistoryAsync(id);
+            var previousStatusRecord = statusHistory
+                .Where(h => h.ToStatus == (int)RequirementStatusEnum.Postponed)
+                .OrderByDescending(h => h.CreatedAt)
+                .FirstOrDefault();
+
+            // Default to New status if no previous status found
+            var previousStatus = previousStatusRecord != null 
+                ? (RequirementStatusEnum)previousStatusRecord.FromStatus 
+                : RequirementStatusEnum.New;
+
+            // Store the old status for history
+            var oldStatus = existingRequirement.Status;
+
+            // Update status to previous status
+            existingRequirement.Status = previousStatus!= RequirementStatusEnum.Postponed? previousStatus : RequirementStatusEnum.New;
+            existingRequirement.UpdatedAt = DateTime.Now;
+
+            var updatedRequirement = await _projectRequirementService
+                .UpdateProjectRequirementAsync(existingRequirement);
+
+            // Add record to ProjectRequirementStatusHistory table
+            var statusHistoryRecord = new ProjectRequirementStatusHistory
+            {
+                RequirementId = id,
+                FromStatus = (int)oldStatus,
+                ToStatus = (int)previousStatus,
+                CreatedBy = changedByPrsId,
+                Reason = $"Unpostponed - restored to {previousStatus}"
+            };
+            await _projectRequirementService.CreateRequirementStatusHistoryAsync(statusHistoryRecord);
+
+            return Success("Requirement unpostponed successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<string>("An error occurred while unpostponing the requirement", ex.Message);
+        }
+    }
 }

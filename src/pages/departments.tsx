@@ -322,10 +322,16 @@ export default function DepartmentsPage() {
                       {renderDepartmentStatus(department.isActive)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <UsersIcon size={16} />
-                        {department.memberCount}
-                      </div>
+                      <Button
+                        className="h-auto p-0 justify-start min-w-0"
+                        variant="light"
+                        onPress={() => handleViewMembers(department)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <UsersIcon size={16} />
+                          {department.memberCount}
+                        </div>
+                      </Button>
                     </TableCell>
                     <TableCell>
                       <Dropdown>

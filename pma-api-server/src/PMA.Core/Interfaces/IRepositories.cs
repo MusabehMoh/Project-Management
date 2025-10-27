@@ -51,14 +51,33 @@ public interface ITaskRepository : IRepository<TaskEntity>
     System.Threading.Tasks.Task UpdateTaskDependenciesAsync(int taskId, IEnumerable<int> predecessorIds);
     System.Threading.Tasks.Task<IEnumerable<TaskAssignment>> GetTaskAssignmentsAsync(int taskId);
     System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId);
+    System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskPrerequisitesAsync(int taskId);
+
+    System.Threading.Tasks.Task CleanupTaskDependenciesAsync(int taskId);
     
     // Team member access methods
     System.Threading.Tasks.Task<IEnumerable<User>> GetTeamMembersAsync(bool isAdministrator, bool isManager, int? currentUserDepartmentId);
+
+    // Comments and history methods
+    System.Threading.Tasks.Task<IEnumerable<TaskComment>> GetTaskCommentsAsync(int taskId);
+    System.Threading.Tasks.Task<TaskComment> AddTaskCommentAsync(int taskId, string commentText, string createdBy);
+    System.Threading.Tasks.Task<IEnumerable<ChangeGroup>> GetTaskHistoryAsync(int taskId);
+
+    // Attachment methods
+    System.Threading.Tasks.Task<IEnumerable<TaskAttachment>> GetTaskAttachmentsAsync(int taskId);
+    System.Threading.Tasks.Task<TaskAttachment?> GetTaskAttachmentByIdAsync(int attachmentId);
+    System.Threading.Tasks.Task<TaskAttachment> AddTaskAttachmentAsync(TaskAttachment attachment);
+    System.Threading.Tasks.Task DeleteTaskAttachmentAsync(int attachmentId);
 }
 
 public interface ITaskStatusHistoryRepository : IRepository<TaskStatusHistory>
 {
     System.Threading.Tasks.Task<IEnumerable<TaskStatusHistory>> GetTaskStatusHistoryAsync(int taskId);
+}
+
+public interface IProjectRequirementStatusHistoryRepository : IRepository<ProjectRequirementStatusHistory>
+{
+    System.Threading.Tasks.Task<IEnumerable<ProjectRequirementStatusHistory>> GetRequirementStatusHistoryAsync(int requirementId);
 }
 
 public interface ISprintRepository : IRepository<Sprint>

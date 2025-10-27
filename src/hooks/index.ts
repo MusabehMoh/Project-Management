@@ -33,6 +33,9 @@ export { useFormSuggestion } from "./useFormSuggestion";
 export { useTimelineFormHelpers } from "./useTimelineFormHelpers";
 export { useTimelineFormValidation } from "./useTimelineFormValidation";
 
+// Export task activity hook
+export { useTaskActivity } from "./useTaskActivity";
+
 // Export types
 export type {
   StatusOption,

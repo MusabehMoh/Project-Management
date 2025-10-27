@@ -33,6 +33,10 @@ const ENDPOINTS = {
     "/project-requirements/pending-approval-requirements",
   APPROVE_REQUIREMENT: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/approve`,
+  POSTPONE_REQUIREMENT: (requirementId: number) =>
+    `/project-requirements/requirements/${requirementId}/postpone`,
+  UNPOSTPONE_REQUIREMENT: (requirementId: number) =>
+    `/project-requirements/requirements/${requirementId}/unpostpone`,
   CREATE_REQUIREMENT_TASK: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/tasks`,
   UPLOAD_ATTACHMENT: (requirementId: number) =>
@@ -472,6 +476,20 @@ class ProjectRequirementsService {
    */
   async approveRequirement(requirementId: number): Promise<void> {
     await apiClient.post<void>(ENDPOINTS.APPROVE_REQUIREMENT(requirementId));
+  }
+
+  /**
+   * Postpone a requirement
+   */
+  async postponeRequirement(requirementId: number, reason: string): Promise<void> {
+    await apiClient.post<void>(ENDPOINTS.POSTPONE_REQUIREMENT(requirementId), { reason });
+  }
+
+  /**
+   * Unpostpone a requirement
+   */
+  async unpostponeRequirement(requirementId: number): Promise<void> {
+    await apiClient.post<void>(ENDPOINTS.UNPOSTPONE_REQUIREMENT(requirementId));
   }
 
   /**

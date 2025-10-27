@@ -48,8 +48,8 @@ public class ProjectService : IProjectService
         if (!userContext.IsAuthenticated)
             throw new UnauthorizedAccessException("User must be authenticated to create a project");
 
-        project.CreatedAt = DateTime.UtcNow;
-        project.UpdatedAt = DateTime.UtcNow;
+        project.CreatedAt = DateTime.Now;
+        project.UpdatedAt = DateTime.Now;
         // Set CreatedBy if your Project entity has such a field
         // project.CreatedBy = userContext.PrsId;
         
@@ -58,7 +58,7 @@ public class ProjectService : IProjectService
 
     public async System.Threading.Tasks.Task UpdateProjectAsync(Project project)
     {
-        project.UpdatedAt = DateTime.UtcNow;
+        project.UpdatedAt = DateTime.Now;
         await _projectRepository.UpdateAsync(project);
     }
 
@@ -116,7 +116,7 @@ public class ProjectService : IProjectService
 
         // Update project status to Under Review
         project.Status = ProjectStatus.UnderStudy;
-        project.UpdatedAt = DateTime.UtcNow;
+        project.UpdatedAt = DateTime.Now;
         await _projectRepository.UpdateAsync(project);
 
         // Parse analyst IDs from ProjectAnalyst entities
@@ -159,7 +159,7 @@ public class ProjectService : IProjectService
                     Priority = NotificationPriority.Medium,
                     UserId = user.Id,
                     IsRead = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
 
                 await _notificationService.CreateNotificationAsync(notification);

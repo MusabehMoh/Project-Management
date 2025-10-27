@@ -26,14 +26,14 @@ public class ActionService : IActionService
 
     public async System.Threading.Tasks.Task<Permission> CreateActionAsync(Permission action)
     {
-        action.CreatedAt = DateTime.UtcNow;
-        action.UpdatedAt = DateTime.UtcNow;
+        action.CreatedAt = DateTime.Now;
+        action.UpdatedAt = DateTime.Now;
         return await _actionRepository.AddAsync(action);
     }
 
     public async System.Threading.Tasks.Task<Permission> UpdateActionAsync(Permission action)
     {
-        action.UpdatedAt = DateTime.UtcNow;
+        action.UpdatedAt = DateTime.Now;
         await _actionRepository.UpdateAsync(action);
         return action;
     }

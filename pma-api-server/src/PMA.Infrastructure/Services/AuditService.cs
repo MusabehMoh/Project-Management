@@ -99,7 +99,7 @@ public class AuditService : IAuditService
     /// <inheritdoc />
     public async System.Threading.Tasks.Task<int> DeleteOldAuditLogsAsync(int olderThanDays)
     {
-        var cutoffDate = DateTime.UtcNow.AddDays(-olderThanDays);
+        var cutoffDate = DateTime.Now.AddDays(-olderThanDays);
         
         var itemsToDelete = _context.ChangeItems
             .Where(ci => ci.ChangeGroup.ChangedAt < cutoffDate)

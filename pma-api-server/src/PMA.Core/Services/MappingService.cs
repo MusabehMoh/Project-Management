@@ -66,8 +66,8 @@ public class MappingService : IMappingService
             Description = roleDto.Description,
             IsActive = roleDto.IsActive,
             RoleOrder = roleDto.RoleOrder,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
     }
 
@@ -83,7 +83,7 @@ public class MappingService : IMappingService
         role.Description = roleDto.Description;
         role.IsActive = roleDto.IsActive;
         role.RoleOrder = roleDto.RoleOrder;
-        role.UpdatedAt = DateTime.UtcNow;
+        role.UpdatedAt = DateTime.Now;
     }
 
     /// <summary>
@@ -177,8 +177,8 @@ public class MappingService : IMappingService
             Priority = createDto.Priority, 
             Progress = createDto.Progress,
             Status = createDto.Status,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
             // Navigation properties will be populated by the service layer
             ProjectOwner = string.Empty, // Will be populated from database
             AlternativeOwner = string.Empty, // Will be populated from database 
@@ -288,7 +288,7 @@ public class MappingService : IMappingService
         if (updateDto.Status.HasValue)
             project.Status = updateDto.Status.Value;
 
-        project.UpdatedAt = DateTime.UtcNow;
+        project.UpdatedAt = DateTime.Now;
         project.UpdatedBy = updatedBy;
     }
 
@@ -374,7 +374,7 @@ public class MappingService : IMappingService
     {
         var entity = existing ?? new ProjectRequirement
         {
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now
         };
 
         entity.ProjectId = dto.ProjectId;
@@ -392,7 +392,7 @@ public class MappingService : IMappingService
             entity.Status = RequirementStatusEnum.New;
         }
         
-        entity.UpdatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.Now;
         return entity;
     }
     
@@ -549,8 +549,8 @@ public class MappingService : IMappingService
             Description = createDto.Description,
             StartDate = createDto.StartDate,
             EndDate = createDto.EndDate,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
     }
 
@@ -571,7 +571,7 @@ public class MappingService : IMappingService
             timeline.StartDate = updateDto.StartDate.Value;
         if (updateDto.EndDate.HasValue)
             timeline.EndDate = updateDto.EndDate.Value;
-        timeline.UpdatedAt = DateTime.UtcNow;
+        timeline.UpdatedAt = DateTime.Now;
     }
 
     /// <summary>
@@ -727,8 +727,8 @@ public class MappingService : IMappingService
             StartDate = createSprintDto.StartDate,
             EndDate = createSprintDto.EndDate,
             Status = createSprintDto.Status,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
     }
 
@@ -752,7 +752,7 @@ public class MappingService : IMappingService
         if (updateSprintDto.Status.HasValue)
             sprint.Status = updateSprintDto.Status.Value;
 
-        sprint.UpdatedAt = DateTime.UtcNow;
+        sprint.UpdatedAt = DateTime.Now;
     }
 
     /// <summary>
@@ -774,8 +774,8 @@ public class MappingService : IMappingService
             TimelineId = createTaskDto.TimelineId,
             EstimatedHours = createTaskDto.EstimatedHours,
             Progress = createTaskDto.Progress,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
             TypeId = createTaskDto.TypeId
 
         };
@@ -796,8 +796,8 @@ public class MappingService : IMappingService
             PriorityId = (Priority)createAdHocTaskDto.Priority,
             TypeId = TaskTypes.AdHoc, // Set TypeId to AdHoc
             Progress = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
     }
 
@@ -836,7 +836,7 @@ public class MappingService : IMappingService
         if (updateTaskDto.Progress.HasValue)
             task.Progress = updateTaskDto.Progress.Value;
 
-        task.UpdatedAt = DateTime.UtcNow;
+        task.UpdatedAt = DateTime.Now;
     }
 
     /// <summary>
@@ -875,8 +875,8 @@ public class MappingService : IMappingService
             AssignedToPrsId = createDesignRequestDto.AssignedToPrsId,
             Status = createDesignRequestDto.Status ?? 1, // Default to pending status
             DueDate = createDesignRequestDto.DueDate,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
             CreateBy= createDesignRequestDto.CreateBy
         };
     }

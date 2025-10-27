@@ -19,6 +19,7 @@ public class TaskDto
     public string DepartmentName { get; set; } = string.Empty;
     public DepartmentDto? Department { get; set; }
     public string ProjectName { get; set; } = string.Empty;
+    public string RoleType { get; set; } = string.Empty;
     public ProjectDto? Project { get; set; }
     public RequirementBasicDto? Requirement { get; set; }
     public int? TimelineId { get; set; }

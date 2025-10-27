@@ -372,14 +372,14 @@ public class NotificationsController : ApiBaseController
             //    {
             //        type = "NOTIFICATION_TYPE",
             //        message = "Your message here",
-            //        timestamp = DateTime.UtcNow,
+            //        timestamp = DateTime.Now,
             //        projectId = 123
             //    });
             var testNotification = new
             {
                 type = "TEST_NOTIFICATION",
                 message = "This is a test push notification sent on page load!",
-                timestamp = DateTime.UtcNow,
+                timestamp = DateTime.Now,
                 projectId = (int?)null,
                 targetUsernames = (string[]?)null,
                 targetUserIds = (int[]?)null
@@ -392,7 +392,7 @@ public class NotificationsController : ApiBaseController
             {
                 Success = true,
                 Message = "Test push notification sent successfully",
-                Data = new { sentAt = DateTime.UtcNow }
+                Data = new { sentAt = DateTime.Now }
             };
 
             return Ok(response);

@@ -25,6 +25,7 @@ export interface MemberTask {
   isOverdue: boolean;
   createdAt: string;
   updatedAt: string;
+  roleType: string;
 }
 
 export interface TaskSearchParams {
@@ -91,4 +92,42 @@ export interface AdhocTask {
   endDate: string;
   priority: number;
   assignedMembers: string[]; ///array of member ids
+}
+
+export interface TaskCommentDto {
+  id: number;
+  taskId: number;
+  commentText: string;
+  createdAt: string;
+  createdBy: string;
+  createdByName: string;
+}
+
+export interface TaskHistoryItemDto {
+  fieldName: string;
+  oldValue: string;
+  newValue: string;
+}
+
+export interface TaskHistoryDto {
+  id: number;
+  entityType: string;
+  entityId: number;
+  changedBy: string;
+  changedByName: string;
+  changedAt: string;
+  items: TaskHistoryItemDto[];
+}
+
+export interface TaskAttachmentDto {
+  id: number;
+  taskId: number;
+  fileName: string;
+  originalName: string;
+  filePath: string | null;
+  fileSize: number;
+  contentType: string | null;
+  uploadedAt: string;
+  createdBy: string | null;
+  createdByName: string | null;
 }

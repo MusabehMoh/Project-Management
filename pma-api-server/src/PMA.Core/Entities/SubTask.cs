@@ -35,8 +35,8 @@ public class SubTask
     public int? EstimatedHours { get; set; }
     public int? ActualHours { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
     // Navigation properties
     public virtual Task? Task { get; set; }

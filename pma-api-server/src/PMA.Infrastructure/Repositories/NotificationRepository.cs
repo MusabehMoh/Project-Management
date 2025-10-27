@@ -58,7 +58,7 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
         if (notification != null)
         {
             notification.IsRead = true;
-            notification.ReadAt = DateTime.UtcNow;
+            notification.ReadAt = DateTime.Now;
             await _context.SaveChangesAsync();
         }
     }
@@ -72,7 +72,7 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
         foreach (var notification in unreadNotifications)
         {
             notification.IsRead = true;
-            notification.ReadAt = DateTime.UtcNow;
+            notification.ReadAt = DateTime.Now;
         }
 
         await _context.SaveChangesAsync();

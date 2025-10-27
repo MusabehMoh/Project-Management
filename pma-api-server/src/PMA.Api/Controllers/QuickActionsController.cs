@@ -100,7 +100,7 @@ public class QuickActionsController : ApiBaseController
                     .Where(pr => pr.Status == RequirementStatusEnum.New || pr.Status == RequirementStatusEnum.ManagerReview)
                     .CountAsync(),
                 overdueProjects = await _context.Projects
-                    .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
+                    .Where(p => p.ExpectedCompletionDate < DateTime.Now &&
                                p.Status != ProjectStatus.Production)
                     .CountAsync()
             };
@@ -295,7 +295,7 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
-            var currentDate = DateTime.UtcNow;
+            var currentDate = DateTime.Now;
 
             // Get all active departments with their teams
             var departmentsWithTeams = await _context.Departments
@@ -387,7 +387,7 @@ public class QuickActionsController : ApiBaseController
                 // Total tasks (all tasks except Completed and OnHold)
                 totalTasks = await _context.Tasks
                     .Where(t => t.StatusId != Core.Enums.TaskStatus.Completed && 
-                               t.StatusId != Core.Enums.TaskStatus.OnHold)
+                               t.StatusId != Core.Enums.TaskStatus.Blocked)
                     .CountAsync(),
                 
                 // Active project requirements (all project requirements except Completed)
@@ -420,7 +420,7 @@ public class QuickActionsController : ApiBaseController
                     .CountAsync(),
                 
                 overdueProjects = await _context.Projects
-                    .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
+                    .Where(p => p.ExpectedCompletionDate < DateTime.Now &&
                                p.Status != ProjectStatus.Production)
                     .CountAsync(),
                 
@@ -486,7 +486,7 @@ public class QuickActionsController : ApiBaseController
                     .CountAsync(),
                 
                 overdueItems = await _context.Projects
-                    .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
+                    .Where(p => p.ExpectedCompletionDate < DateTime.Now &&
                                p.Status != ProjectStatus.Production)
                     .CountAsync(),
                 
@@ -606,7 +606,7 @@ public class QuickActionsController : ApiBaseController
             {
                 stats,
                 actions,
-                lastUpdated = DateTime.UtcNow.ToString("o")
+                lastUpdated = DateTime.Now.ToString("o")
             };
 
             return Ok(new
@@ -663,7 +663,7 @@ public class QuickActionsController : ApiBaseController
                     .CountAsync(),
                 
                 overdueItems = await _context.Projects
-                    .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
+                    .Where(p => p.ExpectedCompletionDate < DateTime.Now &&
                                p.Status != ProjectStatus.Production)
                     .CountAsync(),
                 
@@ -783,7 +783,7 @@ public class QuickActionsController : ApiBaseController
             {
                 stats,
                 actions,
-                lastUpdated = DateTime.UtcNow.ToString("o")
+                lastUpdated = DateTime.Now.ToString("o")
             };
 
             return Ok(new
@@ -816,7 +816,7 @@ public class QuickActionsController : ApiBaseController
 
             // Overdue projects
             var overdueProjects = await _context.Projects
-                .Where(p => p.ExpectedCompletionDate < DateTime.UtcNow &&
+                .Where(p => p.ExpectedCompletionDate < DateTime.Now &&
                            p.Status != ProjectStatus.Production)
                 .Select(p => new
                 {
@@ -834,7 +834,7 @@ public class QuickActionsController : ApiBaseController
 
             // Overdue tasks
             var overdueTasks = await _context.Tasks
-                .Where(t => t.EndDate < DateTime.UtcNow &&
+                .Where(t => t.EndDate < DateTime.Now &&
                            t.StatusId != Core.Enums.TaskStatus.Completed)
                 .Include(t => t.Assignments)
                 .ThenInclude(a => a.Employee)
@@ -856,7 +856,7 @@ public class QuickActionsController : ApiBaseController
 
             // Overdue requirements
             var overdueRequirementsQuery = await _context.ProjectRequirements
-                .Where(pr => pr.ExpectedCompletionDate < DateTime.UtcNow &&
+                .Where(pr => pr.ExpectedCompletionDate < DateTime.Now &&
                            pr.Status != RequirementStatusEnum.Completed &&
                            pr.Status != RequirementStatusEnum.Cancelled)
                 .Include(pr => pr.Analyst)
@@ -868,7 +868,7 @@ public class QuickActionsController : ApiBaseController
                 id = pr.Id,
                 title = pr.Name,
                 type = "requirement",
-                dueDate = pr.ExpectedCompletionDate?.ToString("o") ?? DateTime.UtcNow.ToString("o"),
+                dueDate = pr.ExpectedCompletionDate?.ToString("o") ?? DateTime.Now.ToString("o"),
                 priority = pr.Priority == RequirementPriority.High ? "high" : 
                           pr.Priority == RequirementPriority.Medium ? "medium" : "low",
                 assignee = pr.Analyst?.FullName ?? null,
@@ -1026,7 +1026,7 @@ public class QuickActionsController : ApiBaseController
                     requirement.Status = RequirementStatusEnum.Cancelled;
                 }
                 
-                requirement.UpdatedAt = DateTime.UtcNow;
+                requirement.UpdatedAt = DateTime.Now;
                 await _context.SaveChangesAsync();
 
                 return Ok(new
@@ -1082,7 +1082,7 @@ public class QuickActionsController : ApiBaseController
             {
                 // Update existing assignment
                 existingAssignment.PrsId = request.AssigneeId;
-                existingAssignment.AssignedAt = DateTime.UtcNow;
+                existingAssignment.AssignedAt = DateTime.Now;
             }
             else
             {
@@ -1091,7 +1091,7 @@ public class QuickActionsController : ApiBaseController
                 {
                     TaskId = taskId,
                     PrsId = request.AssigneeId,
-                    AssignedAt = DateTime.UtcNow
+                    AssignedAt = DateTime.Now
                 };
                 
                 _context.TaskAssignments.Add(assignment);

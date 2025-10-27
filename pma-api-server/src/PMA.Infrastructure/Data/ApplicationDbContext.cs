@@ -45,12 +45,15 @@ public class ApplicationDbContext : DbContext
     // New DbSets for task assignments and dependencies
     public DbSet<TaskAssignment> TaskAssignments { get; set; }
     public DbSet<TaskDependency> TaskDependencies { get; set; }
+    public DbSet<TaskAttachment> TaskAttachments { get; set; }
     public DbSet<TaskStatusHistory> TaskStatusHistory { get; set; }
+    public DbSet<ProjectRequirementStatusHistory> ProjectRequirementStatusHistory { get; set; }
     public DbSet<DesignRequest> DesignRequests { get; set; }
 
     // Audit logging DbSets
     public DbSet<ChangeGroup> ChangeGroups { get; set; }
     public DbSet<ChangeItem> ChangeItems { get; set; }
+    public DbSet<TaskComment> TaskComments { get; set; }
 
     /// <summary>
     /// The current user making changes (injected via IHttpContextAccessor or UserContext)
@@ -134,7 +137,7 @@ public class ApplicationDbContext : DbContext
                     EntityType = entityType,
                     EntityId = entityId,
                     ChangedBy = CurrentUser ?? "system",
-                    ChangedAt = DateTime.UtcNow
+                    ChangedAt = DateTime.Now
                 };
 
                 // Track all modified properties

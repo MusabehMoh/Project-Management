@@ -35,7 +35,7 @@ public class NotificationHub : Hub
         {
             type,
             message,
-            timestamp = DateTime.UtcNow,
+            timestamp = DateTime.Now,
             projectId,
             targetUsernames,
             targetUserIds

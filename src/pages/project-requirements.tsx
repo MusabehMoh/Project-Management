@@ -59,6 +59,8 @@ import {
   RotateCcw,
   Sparkles,
   Check,
+  Clock,
+  Play,
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
@@ -80,7 +82,11 @@ import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
-import { showWarningToast, showSuccessToast } from "@/utils/toast";
+import {
+  showWarningToast,
+  showSuccessToast,
+  showErrorToast,
+} from "@/utils/toast";
 import { getFileUploadConfig } from "@/config/environment";
 
 // Form data type for creating/editing requirements
@@ -211,6 +217,16 @@ export default function ProjectRequirementsPage() {
     onOpen: onDeleteOpen,
     onOpenChange: onDeleteOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isPostponeOpen,
+    onOpen: onPostponeOpen,
+    onOpenChange: onPostponeOpenChange,
+  } = useDisclosure();
+  const {
+    isOpen: isUnpostponeOpen,
+    onOpen: onUnpostponeOpen,
+    onOpenChange: onUnpostponeOpenChange,
+  } = useDisclosure();
 
   // AI Prompt Modal state
   const [isAIPromptOpen, setIsAIPromptOpen] = useState(false);
@@ -220,7 +236,7 @@ export default function ProjectRequirementsPage() {
   const [conversationHistory, setConversationHistory] = useState<
     Array<{ role: "user" | "assistant"; content: string; timestamp: number }>
   >([]);
-  
+
   // Ref for auto-scrolling conversation
   const conversationEndRef = useRef<HTMLDivElement>(null);
 
@@ -229,6 +245,13 @@ export default function ProjectRequirementsPage() {
     useState<ProjectRequirement | null>(null);
   const [requirementToDelete, setRequirementToDelete] =
     useState<ProjectRequirement | null>(null);
+  const [requirementToPostpone, setRequirementToPostpone] =
+    useState<ProjectRequirement | null>(null);
+  const [requirementToUnpostpone, setRequirementToUnpostpone] =
+    useState<ProjectRequirement | null>(null);
+  const [postponeReason, setPostponeReason] = useState<string>("");
+  const [postponeLoading, setPostponeLoading] = useState(false);
+  const [unpostponeLoading, setUnpostponeLoading] = useState(false);
   const [formData, setFormData] = useState<RequirementFormData>({
     name: "",
     description: "",
@@ -518,6 +541,61 @@ export default function ProjectRequirementsPage() {
     }
   };
 
+  const handlePostponeRequirement = (requirement: ProjectRequirement) => {
+    setRequirementToPostpone(requirement);
+    setPostponeReason("");
+    onPostponeOpen();
+  };
+
+  const handleUnpostponeRequirement = (requirement: ProjectRequirement) => {
+    setRequirementToUnpostpone(requirement);
+    onUnpostponeOpen();
+  };
+
+  const confirmPostpone = async () => {
+    if (!requirementToPostpone || !postponeReason.trim()) return;
+
+    setPostponeLoading(true);
+    try {
+      await projectRequirementsService.postponeRequirement(
+        requirementToPostpone.id,
+        postponeReason,
+      );
+      showSuccessToast(t("requirements.postponeSuccess"));
+      await refreshData();
+      await resetFilters();
+      setRequirementToPostpone(null);
+      setPostponeReason("");
+      onPostponeOpenChange();
+    } catch (error) {
+      showErrorToast(t("requirements.postponeError"));
+      console.error("Error postponing requirement:", error);
+    } finally {
+      setPostponeLoading(false);
+    }
+  };
+
+  const confirmUnpostpone = async () => {
+    if (!requirementToUnpostpone) return;
+
+    setUnpostponeLoading(true);
+    try {
+      await projectRequirementsService.unpostponeRequirement(
+        requirementToUnpostpone.id,
+      );
+      showSuccessToast(t("requirements.unpostponeSuccess"));
+      await refreshData();
+      await resetFilters();
+      setRequirementToUnpostpone(null);
+      onUnpostponeOpenChange();
+    } catch (error) {
+      showErrorToast(t("requirements.unpostponeError"));
+      console.error("Error unpostponing requirement:", error);
+    } finally {
+      setUnpostponeLoading(false);
+    }
+  };
+
   // AI Generation handler with streaming support
   const handleAIGenerate = async () => {
     if (!aiPromptText.trim()) return;
@@ -583,10 +661,7 @@ export default function ProjectRequirementsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "llama3.1:8b",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...messages,
-          ],
+          messages: [{ role: "system", content: systemPrompt }, ...messages],
           stream: true,
           options: {
             temperature: 0.5,
@@ -679,13 +754,11 @@ export default function ProjectRequirementsPage() {
     // Split content by double line breaks (empty lines between paragraphs)
     const paragraphs = content
       .split(/\n\s*\n/) // Split by one or more empty lines
-      .map(para => para.trim())
-      .filter(para => para.length > 0);
+      .map((para) => para.trim())
+      .filter((para) => para.length > 0);
 
     // Wrap each paragraph in <p> tags
-    const htmlDescription = paragraphs
-      .map(para => `<p>${para}</p>`)
-      .join('');
+    const htmlDescription = paragraphs.map((para) => `<p>${para}</p>`).join("");
 
     setFormData({
       ...formData,
@@ -1018,9 +1091,7 @@ export default function ProjectRequirementsPage() {
             startContent={
               <Search
                 className={`w-4 h-4 ${
-                  loading && !isInitialLoad
-                    ? "animate-pulse text-primary"
-                    : ""
+                  loading && !isInitialLoad ? "animate-pulse text-primary" : ""
                 }`}
               />
             }
@@ -1048,9 +1119,7 @@ export default function ProjectRequirementsPage() {
               setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
             }}
           >
-            {(item) => (
-              <SelectItem key={item.value}>{item.label}</SelectItem>
-            )}
+            {(item) => <SelectItem key={item.value}>{item.label}</SelectItem>}
           </Select>
 
           <Select
@@ -1071,9 +1140,7 @@ export default function ProjectRequirementsPage() {
               setPriorityFilter(selectedKey || "");
             }}
           >
-            {(item) => (
-              <SelectItem key={item.value}>{item.label}</SelectItem>
-            )}
+            {(item) => <SelectItem key={item.value}>{item.label}</SelectItem>}
           </Select>
 
           {/* Page Size Selector */}
@@ -1353,6 +1420,34 @@ export default function ProjectRequirementsPage() {
                                     </DropdownItem>
                                   ) : null
                                 ) : null}
+                                {requirement.status ===
+                                  REQUIREMENT_STATUS.NEW ||
+                                requirement.status ===
+                                  REQUIREMENT_STATUS.MANAGER_REVIEW ||
+                                requirement.status ===
+                                  REQUIREMENT_STATUS.APPROVED ? (
+                                  <DropdownItem
+                                    key="postpone"
+                                    startContent={<Clock className="w-4 h-4" />}
+                                    onPress={() =>
+                                      handlePostponeRequirement(requirement)
+                                    }
+                                  >
+                                    {t("requirements.postpone")}
+                                  </DropdownItem>
+                                ) : null}
+                                {requirement.status ===
+                                REQUIREMENT_STATUS.POSTPONED ? (
+                                  <DropdownItem
+                                    key="unpostpone"
+                                    startContent={<Play className="w-4 h-4" />}
+                                    onPress={() =>
+                                      handleUnpostponeRequirement(requirement)
+                                    }
+                                  >
+                                    {t("requirements.unpostpone")}
+                                  </DropdownItem>
+                                ) : null}
                                 {hasPermission({
                                   actions: ["requirements.delete"],
                                 }) ? (
@@ -1438,7 +1533,11 @@ export default function ProjectRequirementsPage() {
                       isClearable
                       isInvalid={!!validationErrors.priority}
                       errorMessage={validationErrors.priority}
-                      selectedKeys={formData.priority > 0 ? [formData.priority.toString()] : []}
+                      selectedKeys={
+                        formData.priority > 0
+                          ? [formData.priority.toString()]
+                          : []
+                      }
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
 
@@ -1474,7 +1573,9 @@ export default function ProjectRequirementsPage() {
                       isClearable
                       isInvalid={!!validationErrors.type}
                       errorMessage={validationErrors.type}
-                      selectedKeys={formData.type > 0 ? [formData.type.toString()] : []}
+                      selectedKeys={
+                        formData.type > 0 ? [formData.type.toString()] : []
+                      }
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
 
@@ -1523,7 +1624,8 @@ export default function ProjectRequirementsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-foreground">
-                        {t("requirements.requirementDescription")} <span className="text-danger">*</span>
+                        {t("requirements.requirementDescription")}{" "}
+                        <span className="text-danger">*</span>
                       </label>
                       <Tooltip content={t("requirements.aiSuggest")}>
                         <Button
@@ -1798,6 +1900,97 @@ export default function ProjectRequirementsPage() {
         </ModalContent>
       </Modal>
 
+      {/* Postpone Confirmation Modal */}
+      <Modal isOpen={isPostponeOpen} onOpenChange={onPostponeOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-warning" />
+                  {t("requirements.postponeRequirement")}
+                </div>
+              </ModalHeader>
+              <ModalBody>
+                <p>{t("requirements.postponeConfirmMessage")}</p>
+                {requirementToPostpone && (
+                  <div className="p-3 bg-default-100 rounded-lg mb-4">
+                    <div className="font-medium">
+                      {requirementToPostpone.name}
+                    </div>
+                  </div>
+                )}
+                <Textarea
+                  label={t("requirements.postponeReason")}
+                  placeholder={t("requirements.postponeReason")}
+                  value={postponeReason}
+                  onChange={(e) => setPostponeReason(e.target.value)}
+                  isRequired
+                  minRows={3}
+                  errorMessage={
+                    !postponeReason.trim()
+                      ? t("requirements.postponeReasonRequired")
+                      : ""
+                  }
+                  isInvalid={!postponeReason.trim()}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  color="warning"
+                  isLoading={postponeLoading}
+                  onPress={confirmPostpone}
+                  isDisabled={!postponeReason.trim()}
+                >
+                  {t("requirements.postpone")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Unpostpone Confirmation Modal */}
+      <Modal isOpen={isUnpostponeOpen} onOpenChange={onUnpostponeOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Play className="w-5 h-5 text-success" />
+                  {t("requirements.unpostponeRequirement")}
+                </div>
+              </ModalHeader>
+              <ModalBody>
+                <p>{t("requirements.unpostponeConfirmMessage")}</p>
+                {requirementToUnpostpone && (
+                  <div className="p-3 bg-default-100 rounded-lg mb-4">
+                    <div className="font-medium">
+                      {requirementToUnpostpone.name}
+                    </div>
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={unpostponeLoading}
+                  onPress={confirmUnpostpone}
+                >
+                  {t("requirements.unpostpone")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
       {/* File Preview Modal */}
       <FilePreview
         previewState={previewState}
@@ -1858,7 +2051,7 @@ export default function ProjectRequirementsPage() {
                 <div className="space-y-4">
                   {/* Conversation History */}
                   {conversationHistory.length > 0 ? (
-                    <ScrollShadow 
+                    <ScrollShadow
                       hideScrollBar
                       className="max-h-[500px]"
                       size={20}
@@ -1887,12 +2080,32 @@ export default function ProjectRequirementsPage() {
                                 {msg.role === "assistant" && !msg.content ? (
                                   <div className="flex items-center gap-2">
                                     <div className="flex gap-1">
-                                      <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1.4s' }} />
-                                      <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }} />
-                                      <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }} />
+                                      <div
+                                        className="w-2 h-2 bg-secondary rounded-full animate-pulse"
+                                        style={{
+                                          animationDelay: "0ms",
+                                          animationDuration: "1.4s",
+                                        }}
+                                      />
+                                      <div
+                                        className="w-2 h-2 bg-secondary rounded-full animate-pulse"
+                                        style={{
+                                          animationDelay: "200ms",
+                                          animationDuration: "1.4s",
+                                        }}
+                                      />
+                                      <div
+                                        className="w-2 h-2 bg-secondary rounded-full animate-pulse"
+                                        style={{
+                                          animationDelay: "400ms",
+                                          animationDuration: "1.4s",
+                                        }}
+                                      />
                                     </div>
                                     <span className="text-xs text-default-400">
-                                      {language === "ar" ? "جاري التفكير..." : "Thinking..."}
+                                      {language === "ar"
+                                        ? "جاري التفكير..."
+                                        : "Thinking..."}
                                     </span>
                                   </div>
                                 ) : (

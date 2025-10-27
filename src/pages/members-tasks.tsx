@@ -14,28 +14,12 @@ import {
 } from "@heroui/dropdown";
 import { Select, SelectItem } from "@heroui/select";
 import { DatePicker } from "@heroui/date-picker";
-import { Badge } from "@heroui/badge";
-import {
-  RefreshCw,
-  Grid3X3,
-  List,
-  BarChart3,
-  Calendar,
-  Paperclip,
-  Eye,
-  Download,
-  CheckCircle,
-} from "lucide-react";
+import { RefreshCw, Grid3X3, List, BarChart3 } from "lucide-react";
 import {
   Autocomplete,
   AutocompleteItem,
   Avatar,
   Chip,
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
   Input,
   Modal,
   ModalBody,
@@ -64,11 +48,19 @@ import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { usePermissions } from "@/hooks/usePermissions";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
+import { membersTasksService } from "@/services/api/membersTasksService";
+import { getFileUploadConfig } from "@/config/environment";
+import {
+  showSuccessToast,
+  showErrorToast,
+  showWarningToast,
+} from "@/utils/toast";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { FilePreview } from "@/components/FilePreview";
 import { projectRequirementsService } from "@/services/api";
 import { RoleIds } from "@/constants/roles";
 import { isTransitionAllowed } from "@/utils/kanbanRoleConfig";
+import TaskDetailsDrawer from "@/components/TaskDetailsDrawer";
 
 export default function MembersTasksPage() {
   const { t, language } = useLanguage();
@@ -171,6 +163,144 @@ export default function MembersTasksPage() {
         document.body.removeChild(a);
       } catch (error) {
         console.error("Download failed:", error);
+      }
+    }
+  };
+
+  // Task attachment handlers
+  const handleTaskFilePreview = async (attachment: any) => {
+    try {
+      const blob = await membersTasksService.downloadTaskAttachment(
+        attachment.id,
+      );
+      const url = window.URL.createObjectURL(blob);
+      await previewFile(attachment.originalName, url, attachment.fileSize);
+    } catch (error) {
+      console.error("Task attachment preview failed:", error);
+    }
+  };
+
+  const handleTaskFileDownload = async (attachment: any) => {
+    try {
+      const blob = await membersTasksService.downloadTaskAttachment(
+        attachment.id,
+      );
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = attachment.originalName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Task attachment download failed:", error);
+    }
+  };
+
+  const handleTaskFileUpload = async (taskId: number, files: File[]) => {
+    // Get file upload configuration
+    const { maxFileSizeMB, allowedFileTypes } = getFileUploadConfig();
+    const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024; // Convert MB to bytes
+
+    // Arrays to collect rejected files by type
+    const emptyFiles: string[] = [];
+    const oversizedFiles: string[] = [];
+    const invalidTypeFiles: string[] = [];
+
+    const validFiles = files.filter((file) => {
+      // Check for empty files (0 bytes)
+      if (file.size === 0) {
+        emptyFiles.push(file.name);
+        console.warn(
+          `File "${file.name}" has no size (0 bytes) and will be skipped`,
+        );
+        return false;
+      }
+
+      // Check file size
+      if (file.size > maxFileSizeBytes) {
+        oversizedFiles.push(file.name);
+        console.warn(
+          `File "${file.name}" exceeds maximum size limit of ${maxFileSizeMB}MB`,
+        );
+        return false;
+      }
+
+      // Check file type
+      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+      if (!fileExtension || !allowedFileTypes.includes(fileExtension)) {
+        invalidTypeFiles.push(file.name);
+        console.warn(
+          `File "${file.name}" has invalid type. Allowed types: ${allowedFileTypes.join(", ")}`,
+        );
+        return false;
+      }
+
+      return true;
+    });
+
+    // Show toast notifications for rejected files
+    const allRejectedFiles = [
+      ...emptyFiles,
+      ...oversizedFiles,
+      ...invalidTypeFiles,
+    ];
+
+    if (allRejectedFiles.length > 0) {
+      // Handle empty files
+      if (emptyFiles.length > 0) {
+        const fileList = emptyFiles.join(", ");
+        const message =
+          emptyFiles.length === 1
+            ? `${fileList}`
+            : `${emptyFiles.length} ${t("requirements.validation.filesEmptyError")}: ${fileList}`;
+        showWarningToast(t("requirements.validation.fileEmptyError"), message);
+      }
+
+      // Handle oversized files
+      if (oversizedFiles.length > 0) {
+        const fileList = oversizedFiles.join(", ");
+        showWarningToast(
+          t("requirements.validation.filesSizeTooLarge"),
+          fileList,
+        );
+      }
+
+      // Handle invalid type files
+      if (invalidTypeFiles.length > 0) {
+        const fileList = invalidTypeFiles.join(", ");
+        const allowedTypesStr = allowedFileTypes.join(", ");
+        showWarningToast(
+          t("requirements.validation.fileTypeNotAllowed")
+            .replace("{0}", invalidTypeFiles[0])
+            .replace("{1}", allowedTypesStr),
+          fileList,
+        );
+      }
+
+      // Don't upload any files if there are validation errors
+      if (validFiles.length === 0) {
+        return;
+      }
+    }
+
+    // Upload valid files
+    for (const file of validFiles) {
+      try {
+        const result = await membersTasksService.uploadTaskAttachment(
+          taskId,
+          file,
+        );
+        if (result.success) {
+          showSuccessToast(t("requirements.uploadSuccess"));
+        } else {
+          showErrorToast(t("requirements.uploadError"));
+        }
+      } catch (error) {
+        console.error("Upload failed:", error);
+        showErrorToast(t("requirements.uploadError"));
       }
     }
   };
@@ -1113,322 +1243,25 @@ export default function MembersTasksPage() {
           </>
         )}
 
-        {/* Task Details Modal */}
-        {/* Requirement Details Drawer */}
-        <Drawer
+        {/* Task Details Drawer */}
+        <TaskDetailsDrawer
+          formatDate={formatDate}
+          fullRequirement={fullRequirement}
+          getPriorityColor={getPriorityColor}
+          getPriorityLabel={getPriorityLabel}
+          getStatusText={getStatusText}
+          getTaskStatusColor={getTaskStatusColor}
           isOpen={isDrawerOpen}
-          placement={language === "en" ? "left" : "right"}
-          size="lg"
-          onOpenChange={(open) => {
-            setIsDrawerOpen(open);
-          }}
-        >
-          <DrawerContent
-            className={`min-h-[400px] transition-all duration-200 hover:shadow-lg bg-content1 ${
-              selectedTask?.isOverdue
-                ? "border-l-4 border-l-danger-500"
-                : `border-l-4 border-l-${getTaskStatusColor(selectedTask?.statusId || 1)}-500`
-            }`}
-          >
-            <DrawerHeader className="flex flex-col gap-1">
-              <h2 className="text-xl font-semibold">{selectedTask?.name}</h2>
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: selectedTask?.department?.color }}
-                />
-                <span className="text-sm text-foreground-600">
-                  {selectedTask?.department?.name}
-                </span>
-                {selectedTask?.isOverdue && (
-                  <Badge color="danger" size="sm" variant="flat">
-                    {t("overdueTask")}
-                  </Badge>
-                )}
-              </div>
-            </DrawerHeader>
-            <DrawerBody>
-              {selectedTask && (
-                <div className="space-y-6">
-                  {/* Status and Priority */}
-                  <div className="flex justify-between gap-8">
-                    {/* Column 1: Priority */}
-                    <div className="flex flex-col items-start gap-1">
-                      <h4 className="text-md">{t("priority")}</h4>
-                      <Chip
-                        color={getPriorityColor(selectedTask.priorityId)}
-                        size="sm"
-                        variant="solid"
-                      >
-                        {getPriorityLabel(selectedTask.priorityId) || ""}
-                      </Chip>
-                    </div>
-
-                    {/* Column 2: Status */}
-                    <div className="flex flex-col items-start gap-1">
-                      <h4 className="text-md">{t("status")}</h4>
-                      <Chip
-                        color={getTaskStatusColor(selectedTask.statusId)}
-                        size="sm"
-                        variant="flat"
-                      >
-                        {getStatusText(selectedTask.statusId)}
-                      </Chip>
-                    </div>
-                  </div>
-
-                  {/* Assigned Members */}
-                  {selectedTask?.assignedMembers &&
-                    selectedTask.assignedMembers.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-md font-medium">
-                          {t("timeline.assignedMembers")}
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedTask.assignedMembers.map((assignee) => (
-                            <Chip
-                              key={assignee.id}
-                              color="primary"
-                              variant="flat"
-                            >
-                              {assignee.gradeName} {assignee.fullName}
-                            </Chip>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                  <div className="flex justify-between items-start">
-                    {/* Start Date */}
-                    <div>
-                      <h3 className="text-md mb-2">{t("startDate")}</h3>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-default-400" />
-                        <span className="text-sm">
-                          {formatDate(selectedTask.startDate)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Expected Completion Date */}
-                    <div>
-                      <h3 className="text-md mb-2">
-                        {t("requirements.expectedCompletion")}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-default-400" />
-                        <span className="text-sm">
-                          {formatDate(selectedTask.endDate)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* project & requirement */}
-                  <div className="mt-3 pt-3 pb-3 border-t border-b border-divider">
-                    <div className="flex flex-col gap-4">
-                      {/* Project */}
-                      <div className="flex flex-col gap-1">
-                        <span className="font-md">{t("project")}</span>
-                        <span className="font-md">
-                          {selectedTask.project?.applicationName ||
-                            t("tasks.noAssociatedProject")}
-                        </span>
-                      </div>
-
-                      {/* Requirement */}
-                      <div className="flex flex-col gap-1">
-                        <span className="font-md">{t("requirement")}</span>
-                        <span className="font-md">
-                          {selectedTask.requirement?.name || t("common.none")}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Requirement Description and Files */}
-                  {fullRequirement && (
-                    <>
-                      {/* Requirement Description */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2">
-                          {t("requirements.requirementDescription")}
-                        </h3>
-                        <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg">
-                          <p
-                            dangerouslySetInnerHTML={{
-                              __html:
-                                fullRequirement.description ||
-                                t("requirements.noDescription"),
-                            }}
-                            className="text-sm leading-relaxed"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Requirement Attachments */}
-                      {fullRequirement.attachments &&
-                        fullRequirement.attachments.length > 0 && (
-                          <div>
-                            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                              <Paperclip className="w-5 h-5 text-default-400" />
-                              {t("requirements.attachments")} (
-                              {fullRequirement.attachments.length})
-                            </h3>
-                            <div className="space-y-2">
-                              {fullRequirement.attachments.map((attachment) => (
-                                <div
-                                  key={attachment.id}
-                                  className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-lg hover:bg-default-100 dark:hover:bg-default-100/20 transition-colors"
-                                >
-                                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                                      <Paperclip className="w-5 h-5 text-primary" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium truncate">
-                                        {attachment.originalName}
-                                      </p>
-                                      <div className="flex items-center gap-4 text-xs text-default-500 mt-1">
-                                        <span>
-                                          {(
-                                            (attachment.fileSize || 0) /
-                                            1024 /
-                                            1024
-                                          ).toFixed(2)}{" "}
-                                          MB
-                                        </span>
-                                        {attachment.uploadedAt && (
-                                          <span>
-                                            {t("requirements.uploadedOn")}:{" "}
-                                            {formatDate(attachment.uploadedAt)}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2 flex-shrink-0">
-                                    {/* Preview Button for supported file types */}
-                                    {(attachment.originalName
-                                      .toLowerCase()
-                                      .endsWith(".pdf") ||
-                                      attachment.originalName
-                                        .toLowerCase()
-                                        .match(
-                                          /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/,
-                                        )) && (
-                                      <Button
-                                        color="default"
-                                        size="sm"
-                                        startContent={
-                                          <Eye className="w-4 h-4" />
-                                        }
-                                        variant="light"
-                                        onPress={() =>
-                                          handleFilePreview(attachment)
-                                        }
-                                      >
-                                        {t("common.preview")}
-                                      </Button>
-                                    )}
-                                    <Button
-                                      color="primary"
-                                      size="sm"
-                                      startContent={
-                                        <Download className="w-4 h-4" />
-                                      }
-                                      variant="light"
-                                      onPress={() =>
-                                        handleFileDownload(attachment)
-                                      }
-                                    >
-                                      {t("common.download")}
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                    </>
-                  )}
-
-                  {/* Loading state for requirement details */}
-                  {loadingRequirement && (
-                    <div className="text-center py-4">
-                      <p className="text-sm text-default-500">
-                        {t("requirements.loadingDetails")}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* buttons */}
-                  <div className="mt-3 pt-3 flex flex-col gap-3">
-                    {isTeamManager ? (
-                      <div className="flex gap-3">
-                        <Button
-                          className="flex-1"
-                          color="default"
-                          size="sm"
-                          variant="solid"
-                          onPress={() => handleChangeAssignees(selectedTask!)}
-                        >
-                          {t("changeAssignees")}
-                        </Button>
-                      </div>
-                    ) : (
-                      /* Member */
-                      <div className="flex gap-3">
-                        {selectedTask.hasDesignRequest ? (
-                          <Chip
-                            className="flex-1"
-                            color="success"
-                            size="md"
-                            startContent={<CheckCircle className="w-4 h-4" />}
-                            variant="flat"
-                          >
-                            {t("requestedAlready")}
-                          </Chip>
-                        ) : (
-                          <Button
-                            className="flex-1"
-                            color="primary"
-                            size="sm"
-                            variant="flat"
-                            onPress={() => handleRequestDesign(selectedTask)}
-                          >
-                            {t("requestDesign")}
-                          </Button>
-                        )}
-
-                        <Button
-                          className="flex-1"
-                          color="success"
-                          size="sm"
-                          variant="flat"
-                          onPress={() => handleChangeStatus(selectedTask)}
-                        >
-                          {t("changeStatus")}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </DrawerBody>
-            <DrawerFooter>
-              <Button
-                color="danger"
-                variant="light"
-                onPress={() => {
-                  setIsDrawerOpen(false);
-                }}
-              >
-                {t("common.close")}
-              </Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+          loadingRequirement={loadingRequirement}
+          selectedTask={selectedTask}
+          onChangeAssignees={handleChangeAssignees}
+          onChangeStatus={handleChangeStatus}
+          onFileDownload={handleTaskFileDownload}
+          onFilePreview={handleTaskFilePreview}
+          onFileUpload={handleTaskFileUpload}
+          onOpenChange={setIsDrawerOpen}
+          onRequestDesign={handleRequestDesign}
+        />
 
         {/* Change Assignees Modal */}
         <Modal

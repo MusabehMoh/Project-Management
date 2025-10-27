@@ -28,8 +28,8 @@ public class TaskService : ITaskService
 
     public async System.Threading.Tasks.Task<TaskEntity> CreateTaskAsync(TaskEntity task)
     {
-        task.CreatedAt = DateTime.UtcNow;
-        task.UpdatedAt = DateTime.UtcNow;
+        task.CreatedAt = DateTime.Now;
+        task.UpdatedAt = DateTime.Now;
         return await _taskRepository.AddAsync(task);
     }
 
@@ -40,7 +40,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskEntity> UpdateTaskAsync(TaskEntity task)
     {
-        task.UpdatedAt = DateTime.UtcNow;
+        task.UpdatedAt = DateTime.Now;
         await _taskRepository.UpdateAsync(task);
         return task;
     }
@@ -50,6 +50,8 @@ public class TaskService : ITaskService
         var task = await _taskRepository.GetByIdAsync(id);
         if (task != null)
         {
+            // Clean up dependencies before deleting the task
+            await CleanupTaskDependenciesAsync(id);
             await _taskRepository.DeleteAsync(task);
             return true;
         }
@@ -96,16 +98,63 @@ public class TaskService : ITaskService
         return await _taskRepository.GetTaskDependenciesAsync(taskId);
     }
 
+    public async System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskPrerequisitesAsync(int taskId)
+    {
+        return await _taskRepository.GetTaskPrerequisitesAsync(taskId);
+    }
+
+    public async System.Threading.Tasks.Task CleanupTaskDependenciesAsync(int taskId)
+    {
+        await _taskRepository.CleanupTaskDependenciesAsync(taskId);
+    }
+
     // TaskStatusHistory methods
     public async System.Threading.Tasks.Task<TaskStatusHistory> CreateTaskStatusHistoryAsync(TaskStatusHistory taskStatusHistory)
     {
-        taskStatusHistory.UpdatedAt = DateTime.UtcNow;
+        taskStatusHistory.UpdatedAt = DateTime.Now;
         return await _taskStatusHistoryRepository.AddAsync(taskStatusHistory);
     }
 
     public async System.Threading.Tasks.Task<IEnumerable<TaskStatusHistory>> GetTaskStatusHistoryAsync(int taskId)
     {
         return await _taskStatusHistoryRepository.GetTaskStatusHistoryAsync(taskId);
+    }
+
+    // Comments and history methods
+    public async System.Threading.Tasks.Task<IEnumerable<TaskComment>> GetTaskCommentsAsync(int taskId)
+    {
+        return await _taskRepository.GetTaskCommentsAsync(taskId);
+    }
+
+    public async System.Threading.Tasks.Task<TaskComment> AddTaskCommentAsync(int taskId, string commentText, string createdBy)
+    {
+        return await _taskRepository.AddTaskCommentAsync(taskId, commentText, createdBy);
+    }
+
+    public async System.Threading.Tasks.Task<IEnumerable<ChangeGroup>> GetTaskHistoryAsync(int taskId)
+    {
+        return await _taskRepository.GetTaskHistoryAsync(taskId);
+    }
+
+    // Attachment methods
+    public async System.Threading.Tasks.Task<IEnumerable<TaskAttachment>> GetTaskAttachmentsAsync(int taskId)
+    {
+        return await _taskRepository.GetTaskAttachmentsAsync(taskId);
+    }
+
+    public async System.Threading.Tasks.Task<TaskAttachment?> GetTaskAttachmentByIdAsync(int attachmentId)
+    {
+        return await _taskRepository.GetTaskAttachmentByIdAsync(attachmentId);
+    }
+
+    public async System.Threading.Tasks.Task<TaskAttachment> AddTaskAttachmentAsync(TaskAttachment attachment)
+    {
+        return await _taskRepository.AddTaskAttachmentAsync(attachment);
+    }
+
+    public async System.Threading.Tasks.Task DeleteTaskAttachmentAsync(int attachmentId)
+    {
+        await _taskRepository.DeleteTaskAttachmentAsync(attachmentId);
     }
 }
 

@@ -5,6 +5,9 @@ import type {
   TaskFiltersData,
   TaskConfigData,
   AdhocTask,
+  TaskCommentDto,
+  TaskHistoryDto,
+  TaskAttachmentDto,
 } from "@/types/membersTasks";
 import type { ApiResponse } from "@/types/project";
 import type { MemberSearchResult } from "@/types/timeline";
@@ -427,6 +430,195 @@ export class MembersTasksService {
         success: false,
         data: [],
         message: "Failed to fetch team members",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get comments for a specific task
+   */
+  async getTaskComments(
+    taskId: number,
+  ): Promise<ApiResponse<TaskCommentDto[]>> {
+    try {
+      return await apiClient.get<TaskCommentDto[]>(
+        `${this.baseUrl}/${taskId}/comments`,
+      );
+    } catch {
+      return {
+        success: false,
+        data: [],
+        message: "Failed to fetch task comments",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get history for a specific task
+   */
+  async getTaskHistory(taskId: number): Promise<ApiResponse<TaskHistoryDto[]>> {
+    try {
+      return await apiClient.get<TaskHistoryDto[]>(
+        `${this.baseUrl}/${taskId}/history`,
+      );
+    } catch {
+      return {
+        success: false,
+        data: [],
+        message: "Failed to fetch task history",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Add a comment to a specific task
+   */
+  async addTaskComment(
+    taskId: number,
+    commentText: string,
+  ): Promise<ApiResponse<TaskCommentDto>> {
+    try {
+      return await apiClient.post<TaskCommentDto>(
+        `${this.baseUrl}/${taskId}/comments`,
+        { commentText },
+      );
+    } catch {
+      return {
+        success: false,
+        data: {} as TaskCommentDto,
+        message: "Failed to add comment",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get attachments for a specific task
+   */
+  async getTaskAttachments(taskId: number): Promise<ApiResponse<TaskAttachmentDto[]>> {
+    try {
+      return await apiClient.get<TaskAttachmentDto[]>(
+        `${this.baseUrl}/${taskId}/attachments`,
+      );
+    } catch {
+      return {
+        success: false,
+        data: [],
+        message: "Failed to fetch task attachments",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Download a task attachment
+   */
+  async downloadTaskAttachment(attachmentId: number): Promise<Blob> {
+    // Build full URL using configured API base (avoid hitting the front-end dev server and getting index.html)
+    const path = `${this.baseUrl}/attachments/${attachmentId}/download`;
+    const base = API_CONFIG.BASE_URL.replace(/\/$/, "");
+    const url = `${base}${path}`;
+
+    // Authorization (mirror apiClient behavior)
+    const token = localStorage.getItem("authToken");
+    const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const headerInit: Record<string, string> = { Accept: "*/*" };
+
+    if (authHeader.Authorization) {
+      headerInit["Authorization"] = authHeader.Authorization;
+    }
+
+    const response = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      headers: headerInit,
+    });
+
+    if (!response.ok) {
+      let serverMessage = "";
+
+      try {
+        const ct = response.headers.get("content-type") || "";
+
+        if (ct.includes("application/json")) {
+          const data = await response.json();
+
+          serverMessage = data?.message || data?.error?.message || "";
+        }
+      } catch {
+        /* ignore */
+      }
+
+      throw new Error(serverMessage || `Download failed (${response.status})`);
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+
+    // Guard: if we accidentally received HTML (e.g., login page) treat as error
+    if (contentType.includes("text/html")) {
+      const peek = await response.text().catch(() => "");
+      const snippet = peek.slice(0, 120).replace(/\s+/g, " ");
+
+      throw new Error(
+        `Unexpected HTML response while downloading file. Likely wrong base URL or auth redirect. Snippet: ${snippet}`,
+      );
+    }
+
+    const blob = await response.blob();
+
+    // Optional sanity check: empty blob
+    if (blob.size === 0) {
+      throw new Error("Downloaded file is empty");
+    }
+
+    return blob;
+  }
+
+  /**
+   * Upload an attachment to a task
+   */
+  async uploadTaskAttachment(
+    taskId: number,
+    file: File,
+  ): Promise<ApiResponse<TaskAttachmentDto>> {
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    try {
+      return await apiClient.post<TaskAttachmentDto>(
+        `${this.baseUrl}/${taskId}/attachments`,
+        formData,
+      );
+    } catch {
+      return {
+        success: false,
+        data: null as any,
+        message: "Failed to upload task attachment",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Delete a task attachment
+   */
+  async deleteTaskAttachment(
+    attachmentId: number,
+  ): Promise<ApiResponse<boolean>> {
+    try {
+      return await apiClient.delete<boolean>(
+        `${this.baseUrl}/attachments/${attachmentId}`,
+      );
+    } catch {
+      return {
+        success: false,
+        data: false,
+        message: "Failed to delete task attachment",
         timestamp: new Date().toISOString(),
       };
     }

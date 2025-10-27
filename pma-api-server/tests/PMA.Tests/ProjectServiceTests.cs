@@ -101,8 +101,8 @@
 //            Priority = Priority.Medium,
 //            Budget = 50000,
 //            Progress = 0,
-//            CreatedAt = DateTime.UtcNow,
-//            UpdatedAt = DateTime.UtcNow
+//            CreatedAt = DateTime.Now,
+//            UpdatedAt = DateTime.Now
 //        };
 
 //        _projectRepositoryMock

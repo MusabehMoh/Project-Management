@@ -30,9 +30,9 @@ public class Permission
 
     public bool IsActive { get; set; } = true;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
     // Navigation properties
     public virtual ICollection<RoleAction> RoleActions { get; set; } = new List<RoleAction>();

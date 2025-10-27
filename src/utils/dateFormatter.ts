@@ -118,3 +118,49 @@ export const formatTimeOnly = (
 ): string => {
   return formatDateTime(dateString, { showDate: false, language });
 };
+
+/**
+ * Formats relative time (e.g., "22 minutes ago")
+ *
+ * @param dateString - The date string to format
+ * @param language - Language for formatting ("en" or "ar")
+ * @returns Relative time string
+ */
+export const formatRelativeTime = (
+  dateString: string | null | undefined,
+  language: "en" | "ar" = "en",
+): string => {
+  if (!dateString) return "-";
+
+  try {
+    const now = new Date();
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) return "-";
+
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 1) {
+      return language === "ar" ? "الآن" : "Just now";
+    } else if (diffInMinutes < 60) {
+      return language === "ar"
+        ? `منذ ${diffInMinutes} دقيقة`
+        : `${diffInMinutes} minute${diffInMinutes === 1 ? "" : "s"} ago`;
+    } else if (diffInHours < 24) {
+      return language === "ar"
+        ? `منذ ${diffInHours} ساعة`
+        : `${diffInHours} hour${diffInHours === 1 ? "" : "s"} ago`;
+    } else if (diffInDays < 7) {
+      return language === "ar"
+        ? `منذ ${diffInDays} يوم`
+        : `${diffInDays} day${diffInDays === 1 ? "" : "s"} ago`;
+    } else {
+      return formatDateOnly(dateString, language === "ar" ? "ar" : "en-US");
+    }
+  } catch {
+    return "-";
+  }
+};

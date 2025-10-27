@@ -30,8 +30,8 @@ public class DepartmentService : IDepartmentService
 
     public async System.Threading.Tasks.Task<Department> CreateDepartmentAsync(Department department)
     {
-        department.CreatedAt = DateTime.UtcNow;
-        department.UpdatedAt = DateTime.UtcNow;
+        department.CreatedAt = DateTime.Now;
+        department.UpdatedAt = DateTime.Now;
         return await _departmentRepository.AddAsync(department);
     }
 
@@ -42,7 +42,7 @@ public class DepartmentService : IDepartmentService
 
     public async Task<Department> UpdateDepartmentAsync(Department department)
     {
-        department.UpdatedAt = DateTime.UtcNow;
+        department.UpdatedAt = DateTime.Now;
         await _departmentRepository.UpdateAsync(department);
         return department;
     }
@@ -118,7 +118,7 @@ public class DepartmentService : IDepartmentService
         {
             PrsId = prsId,
             DepartmentId = departmentId,
-            JoinDate = DateTime.UtcNow,
+            JoinDate = DateTime.Now,
             UserName = userName,
             FullName = fullName, 
             IsActive = true,

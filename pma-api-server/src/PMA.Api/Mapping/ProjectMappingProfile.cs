@@ -19,8 +19,8 @@ public class ProjectMappingProfile : Profile
             .ForMember(dest => dest.ProjectOwner, opt => opt.Ignore()) // Will be populated from database lookup
             .ForMember(dest => dest.AlternativeOwner, opt => opt.Ignore()) // Will be populated from database lookup
             .ForMember(dest => dest.OwningUnit, opt => opt.Ignore()) // Will be populated from database lookup 
-            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.Now))
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.Now))
             .ForMember(dest => dest.ProjectOwnerEmployee, opt => opt.Ignore())
             .ForMember(dest => dest.ResponsibleUnitManagerEmployee, opt => opt.Ignore())
             .ForMember(dest => dest.AlternativeOwnerEmployee, opt => opt.Ignore())
@@ -31,7 +31,7 @@ public class ProjectMappingProfile : Profile
         CreateMap<UpdateProjectDto, Project>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.Now))
             .ForMember(dest => dest.ProjectOwnerId, opt => opt.MapFrom(src => src.ProjectOwner))
             .ForMember(dest => dest.AlternativeOwnerId, opt => opt.MapFrom(src => src.AlternativeOwner))
             .ForMember(dest => dest.OwningUnitId, opt => opt.MapFrom(src => src.OwningUnit))

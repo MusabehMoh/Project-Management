@@ -46,6 +46,11 @@ public class UserService : IUserService
         return await _userRepository.GetByUserNameAsync(userName);
     }
 
+    public async System.Threading.Tasks.Task<User?> GetUserByPrsIdAsync(int prsId)
+    {
+        return await _userRepository.GetByPrsIdAsync(prsId);
+    }
+   
     public async System.Threading.Tasks.Task<User> CreateUserAsync(User user)
     {
         // Check if user already exists by UserName
@@ -62,8 +67,8 @@ public class UserService : IUserService
             throw new InvalidOperationException($"User with PRS ID '{user.PrsId}' already exists.");
         }
 
-        user.CreatedAt = DateTime.UtcNow;
-        user.UpdatedAt = DateTime.UtcNow;
+        user.CreatedAt = DateTime.Now;
+        user.UpdatedAt = DateTime.Now;
         return await _userRepository.AddAsync(user);
     }
 
@@ -93,7 +98,7 @@ public class UserService : IUserService
         existing.DepartmentId = user.DepartmentId;
         existing.Email = user.Email;
         existing.Phone = user.Phone;
-        existing.UpdatedAt = DateTime.UtcNow;
+        existing.UpdatedAt = DateTime.Now;
 
         await _userRepository.UpdateAsync(existing);
 
@@ -316,7 +321,7 @@ public class UserService : IUserService
                         UserId = userId,
                         RoleId = roleId,
                         IsActive = true,
-                        AssignedAt = DateTime.UtcNow
+                        AssignedAt = DateTime.Now
                     });
                 }
             }
@@ -357,7 +362,7 @@ public class UserService : IUserService
                         UserId = userId,
                         ActionId = actionId,
                         IsActive = true,
-                        AssignedAt = DateTime.UtcNow
+                        AssignedAt = DateTime.Now
                     });
                 }
             }

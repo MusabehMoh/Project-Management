@@ -180,7 +180,7 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
         {
             TaskId = taskId,
             PrsId = memberId,
-            AssignedAt = DateTime.UtcNow
+            AssignedAt = DateTime.Now
         });
 
         await _context.TaskAssignments.AddRangeAsync(newAssignments);
@@ -201,7 +201,7 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
         {
             TaskId = taskId,
             DependsOnTaskId = predecessorId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now
         });
 
         await _context.TaskDependencies.AddRangeAsync(newDependencies);
@@ -220,8 +220,34 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
     {
         return await _context.TaskDependencies
             .Include(td => td.DependsOnTask)
+            .Where(td => td.DependsOnTaskId == taskId)
+            .ToListAsync();
+    }
+    public async Task<IEnumerable<TaskDependency>> GetTaskPrerequisitesAsync(int taskId)
+    {
+        return await _context.TaskDependencies
+            .Include(td => td.DependsOnTask)
             .Where(td => td.TaskId == taskId)
             .ToListAsync();
+    }
+
+    public async Task CleanupTaskDependenciesAsync(int taskId)
+    {
+        // Remove all dependencies where this task is the predecessor (other tasks depend on it)
+        var dependenciesWhereTaskIsPredecessor = await _context.TaskDependencies
+            .Where(td => td.DependsOnTaskId == taskId)
+            .ToListAsync();
+
+        _context.TaskDependencies.RemoveRange(dependenciesWhereTaskIsPredecessor);
+
+        // Remove all dependencies where this task depends on others
+        var dependenciesWhereTaskIsSuccessor = await _context.TaskDependencies
+            .Where(td => td.TaskId == taskId)
+            .ToListAsync();
+
+        _context.TaskDependencies.RemoveRange(dependenciesWhereTaskIsSuccessor);
+
+        await _context.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<User>> GetTeamMembersAsync(bool isAdministrator, bool isManager, int? currentUserDepartmentId)
@@ -243,8 +269,8 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
                     IsActive = true,
                     Email = "",
                     Phone = "",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
                     Employee = t.Employee,
                     DepartmentId = t.DepartmentId
                 })
@@ -273,8 +299,8 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
                     IsActive = true,
                     Email = "",
                     Phone = "",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
                     Employee = t.Employee,
                     DepartmentId = t.DepartmentId
                 })
@@ -288,6 +314,129 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
         {
             // If no department context, return empty list
             return new List<User>();
+        }
+    }
+
+    public async Task<IEnumerable<TaskComment>> GetTaskCommentsAsync(int taskId)
+    {
+        // Get all task IDs that are related through dependencies
+        var relatedTaskIds = new List<int> { taskId };
+
+        // Add tasks that depend on this task (where this task is the DependsOnTaskId)
+        var dependentTaskIds = await _context.TaskDependencies
+            .Where(td => td.DependsOnTaskId == taskId)
+            .Select(td => td.TaskId)
+            .ToListAsync();
+        relatedTaskIds.AddRange(dependentTaskIds);
+
+        // Add tasks that this task depends on (where this task is the TaskId)
+        var dependencyTaskIds = await _context.TaskDependencies
+            .Where(td => td.TaskId == taskId)
+            .Select(td => td.DependsOnTaskId)
+            .ToListAsync();
+        relatedTaskIds.AddRange(dependencyTaskIds);
+
+        // Remove duplicates
+        relatedTaskIds = relatedTaskIds.Distinct().ToList();
+
+        return await _context.TaskComments
+            .Where(tc => relatedTaskIds.Contains(tc.TaskId))
+            .OrderByDescending(tc => tc.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<TaskComment> AddTaskCommentAsync(int taskId, string commentText, string createdBy)
+    {
+        var comment = new TaskComment
+        {
+            TaskId = taskId,
+            CommentText = commentText,
+            CreatedBy = createdBy,
+            CreatedAt = DateTime.Now
+        };
+
+        _context.TaskComments.Add(comment);
+        await _context.SaveChangesAsync();
+        return comment;
+    }
+
+    public async Task<IEnumerable<ChangeGroup>> GetTaskHistoryAsync(int taskId)
+    {
+        // Get all task IDs that are related through dependencies
+        var relatedTaskIds = new List<int> { taskId };
+
+        // Add tasks that depend on this task (where this task is the DependsOnTaskId)
+        var dependentTaskIds = await _context.TaskDependencies
+            .Where(td => td.DependsOnTaskId == taskId)
+            .Select(td => td.TaskId)
+            .ToListAsync();
+        relatedTaskIds.AddRange(dependentTaskIds);
+
+        // Add tasks that this task depends on (where this task is the TaskId)
+        var dependencyTaskIds = await _context.TaskDependencies
+            .Where(td => td.TaskId == taskId)
+            .Select(td => td.DependsOnTaskId)
+            .ToListAsync();
+        relatedTaskIds.AddRange(dependencyTaskIds);
+
+        // Remove duplicates
+        relatedTaskIds = relatedTaskIds.Distinct().ToList();
+
+        return await _context.ChangeGroups
+            .Where(cg => cg.EntityType == "Task" && relatedTaskIds.Contains(cg.EntityId))
+            .Include(cg => cg.Items)
+            .OrderByDescending(cg => cg.ChangedAt)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<TaskAttachment>> GetTaskAttachmentsAsync(int taskId)
+    {
+        // Get all task IDs that are related through dependencies
+        var relatedTaskIds = new List<int> { taskId };
+
+        // Add tasks that depend on this task (where this task is the DependsOnTaskId)
+        var dependentTaskIds = await _context.TaskDependencies
+            .Where(td => td.DependsOnTaskId == taskId)
+            .Select(td => td.TaskId)
+            .ToListAsync();
+        relatedTaskIds.AddRange(dependentTaskIds);
+
+        // Add tasks that this task depends on (where this task is the TaskId)
+        var dependencyTaskIds = await _context.TaskDependencies
+            .Where(td => td.TaskId == taskId)
+            .Select(td => td.DependsOnTaskId)
+            .ToListAsync();
+        relatedTaskIds.AddRange(dependencyTaskIds);
+
+        // Remove duplicates
+        relatedTaskIds = relatedTaskIds.Distinct().ToList();
+
+        return await _context.TaskAttachments 
+            .Where(tc => relatedTaskIds.Contains(tc.TaskId))
+            .OrderByDescending(ta => ta.UploadedAt)
+            .ToListAsync();
+    }
+
+    public async Task<TaskAttachment?> GetTaskAttachmentByIdAsync(int attachmentId)
+    {
+        return await _context.TaskAttachments
+            .FirstOrDefaultAsync(ta => ta.Id == attachmentId);
+    }
+
+    public async Task<TaskAttachment> AddTaskAttachmentAsync(TaskAttachment attachment)
+    {
+        _context.TaskAttachments.Add(attachment);
+        await _context.SaveChangesAsync();
+        return attachment;
+    }
+
+    public async Task DeleteTaskAttachmentAsync(int attachmentId)
+    {
+        var attachment = await _context.TaskAttachments.FindAsync(attachmentId);
+        if (attachment != null)
+        {
+            _context.TaskAttachments.Remove(attachment);
+            await _context.SaveChangesAsync();
         }
     }
 }

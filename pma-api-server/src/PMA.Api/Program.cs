@@ -162,6 +162,7 @@ builder.Services.AddScoped<ITaskStatusHistoryRepository, TaskStatusHistoryReposi
 builder.Services.AddScoped<ISprintRepository, SprintRepository>();
 builder.Services.AddScoped<IRequirementRepository, RequirementRepository>();
 builder.Services.AddScoped<IProjectRequirementRepository, ProjectRequirementRepository>();
+builder.Services.AddScoped<IProjectRequirementStatusHistoryRepository, ProjectRequirementStatusHistoryRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<IUnitRepository, UnitRepository>();
@@ -278,7 +279,7 @@ app.MapHub<PMA.Api.Hubs.NotificationHub>("/notificationHub");
 app.MapGet("/health", () => new
 {
     status = "ok",
-    timestamp = DateTime.UtcNow,
+    timestamp = DateTime.Now,
     version = "1.0.0",
     environment = app.Environment.EnvironmentName
 });

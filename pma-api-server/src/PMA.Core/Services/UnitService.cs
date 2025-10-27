@@ -26,8 +26,8 @@ public class UnitService : IUnitService
 
     public async System.Threading.Tasks.Task<Unit> CreateUnitAsync(Unit unit)
     {
-        unit.CreatedAt = DateTime.UtcNow;
-        unit.UpdatedAt = DateTime.UtcNow;
+        unit.CreatedAt = DateTime.Now;
+        unit.UpdatedAt = DateTime.Now;
         return await _unitRepository.AddAsync(unit);
     }
 
@@ -43,7 +43,7 @@ public class UnitService : IUnitService
 
     public async Task<Unit> UpdateUnitAsync(Unit unit)
     {
-        unit.UpdatedAt = DateTime.UtcNow;
+        unit.UpdatedAt = DateTime.Now;
         await _unitRepository.UpdateAsync(unit);
         return unit;
     }

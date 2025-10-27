@@ -35,6 +35,7 @@ public interface IUserService
     System.Threading.Tasks.Task AssignActionsToUserAsync(int userId, List<int> actionIds);
     System.Threading.Tasks.Task RemoveUserRolesAsync(int userId, List<int> roleIds);
     System.Threading.Tasks.Task RemoveUserActionsAsync(int userId, List<int> actionIds);
+    System.Threading.Tasks.Task<User?> GetUserByPrsIdAsync(int prsId); 
 }
 
 public interface ITaskService
@@ -54,10 +55,23 @@ public interface ITaskService
     System.Threading.Tasks.Task UpdateTaskDependenciesAsync(int taskId, IEnumerable<int> predecessorIds);
     System.Threading.Tasks.Task<IEnumerable<TaskAssignment>> GetTaskAssignmentsAsync(int taskId);
     System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId);
+    System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskPrerequisitesAsync(int taskId);
+    System.Threading.Tasks.Task CleanupTaskDependenciesAsync(int taskId);
 
     // TaskStatusHistory methods
     System.Threading.Tasks.Task<TaskStatusHistory> CreateTaskStatusHistoryAsync(TaskStatusHistory taskStatusHistory);
     System.Threading.Tasks.Task<IEnumerable<TaskStatusHistory>> GetTaskStatusHistoryAsync(int taskId);
+
+    // Comments and history methods
+    System.Threading.Tasks.Task<IEnumerable<TaskComment>> GetTaskCommentsAsync(int taskId);
+    System.Threading.Tasks.Task<TaskComment> AddTaskCommentAsync(int taskId, string commentText, string createdBy);
+    System.Threading.Tasks.Task<IEnumerable<ChangeGroup>> GetTaskHistoryAsync(int taskId);
+
+    // Attachment methods
+    System.Threading.Tasks.Task<IEnumerable<TaskAttachment>> GetTaskAttachmentsAsync(int taskId);
+    System.Threading.Tasks.Task<TaskAttachment?> GetTaskAttachmentByIdAsync(int attachmentId);
+    System.Threading.Tasks.Task<TaskAttachment> AddTaskAttachmentAsync(TaskAttachment attachment);
+    System.Threading.Tasks.Task DeleteTaskAttachmentAsync(int attachmentId);
 }
 
 public interface ISprintService
@@ -212,6 +226,9 @@ public interface IProjectRequirementService
     System.Threading.Tasks.Task<DTOs.FileDownloadResult?> DownloadAttachmentAsync(int requirementId, int attachmentId);
     // Bulk sync: add new files & remove specified attachment IDs in one operation
     System.Threading.Tasks.Task<IReadOnlyList<ProjectRequirementAttachment>?> SyncAttachmentsAsync(int requirementId, IEnumerable<IFormFile> newFiles, IEnumerable<int> removeIds);
+    // Status history methods
+    System.Threading.Tasks.Task<ProjectRequirementStatusHistory> CreateRequirementStatusHistoryAsync(ProjectRequirementStatusHistory statusHistory);
+    System.Threading.Tasks.Task<IEnumerable<ProjectRequirementStatusHistory>> GetRequirementStatusHistoryAsync(int requirementId);
 }
 
 public interface ISubTaskService
@@ -274,6 +291,15 @@ public interface IMemberTaskService
     System.Threading.Tasks.Task<IEnumerable<TaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId);
     System.Threading.Tasks.Task<IEnumerable<MemberSearchResultDto>> GetTeamMembersAsync();
     System.Threading.Tasks.Task<bool> ChangeTaskAssigneesAsync(int taskId, IEnumerable<int> assigneeIds, string? notes = null);
+    System.Threading.Tasks.Task<IEnumerable<TaskCommentDto>> GetTaskCommentsAsync(int taskId);
+    System.Threading.Tasks.Task<TaskCommentDto> AddTaskCommentAsync(int taskId, string commentText);
+    System.Threading.Tasks.Task<IEnumerable<TaskHistoryDto>> GetTaskHistoryAsync(int taskId);
+
+    // Attachment methods
+    System.Threading.Tasks.Task<IEnumerable<TaskAttachmentDto>> GetTaskAttachmentsAsync(int taskId);
+    System.Threading.Tasks.Task<TaskAttachmentDto> AddTaskAttachmentAsync(int taskId, IFormFile file);
+    System.Threading.Tasks.Task<(Stream? FileStream, string? FileName, string? ContentType)> DownloadTaskAttachmentAsync(int attachmentId);
+    System.Threading.Tasks.Task<bool> DeleteTaskAttachmentAsync(int attachmentId);
 }
 
 public interface IDesignRequestService

@@ -25,8 +25,8 @@ public class RequirementService : IRequirementService
 
     public async System.Threading.Tasks.Task<Requirement> CreateRequirementAsync(Requirement requirement)
     {
-        requirement.CreatedAt = DateTime.UtcNow;
-        requirement.UpdatedAt = DateTime.UtcNow;
+        requirement.CreatedAt = DateTime.Now;
+        requirement.UpdatedAt = DateTime.Now;
         return await _requirementRepository.AddAsync(requirement);
     }
 
@@ -37,7 +37,7 @@ public class RequirementService : IRequirementService
 
     public async Task<Requirement> UpdateRequirementAsync(Requirement requirement)
     {
-        requirement.UpdatedAt = DateTime.UtcNow;
+        requirement.UpdatedAt = DateTime.Now;
         await _requirementRepository.UpdateAsync(requirement);
         return requirement;
     }

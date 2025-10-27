@@ -76,6 +76,7 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
     /// Creates tasks for all assigned roles (Developer, QC, Designer)
     /// Each assignee gets their own separate task
     /// Handles reassignments by cleaning up old assignee tasks
+    /// Creates dependencies between tasks (QC depends on Developer)
     /// </summary>
     private async System.Threading.Tasks.Task<List<PMA.Core.Entities.Task>> CreateTasksForAssignedRolesAsync(
         int requirementId, 
@@ -83,17 +84,19 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
         ProjectRequirement requirement)
     {
         var createdTasks = new List<PMA.Core.Entities.Task>();
+        PMA.Core.Entities.Task? developerTask = null;
 
         // Handle Developer reassignment
         await HandleRoleReassignmentAsync(requirementId, "Developer", taskDto.DeveloperId);
         if (taskDto.DeveloperId.HasValue)
         {
-            var developerTask = await CreateOrUpdateTaskForRoleAsync(
+            developerTask = await CreateOrUpdateTaskForRoleAsync(
                 requirementId, 
                 taskDto.DeveloperId.Value, 
                 "Developer", 
                 taskDto.DeveloperStartDate, 
-                taskDto.DeveloperEndDate, 
+                taskDto.DeveloperEndDate,
+                TaskStatusEnum.ToDo,
                 taskDto.Description, 
                 requirement);
             
@@ -110,12 +113,21 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
                 taskDto.QcId.Value, 
                 "QC", 
                 taskDto.QcStartDate, 
-                taskDto.QcEndDate, 
-                taskDto.Description, 
+                taskDto.QcEndDate,
+                TaskStatusEnum.Blocked,
+                taskDto.Description,
                 requirement);
             
             if (qcTask != null)
+            {
                 createdTasks.Add(qcTask);
+                
+                // Create dependency: QC task depends on Developer task
+                if (developerTask != null)
+                {
+                    await _taskService.UpdateTaskDependenciesAsync(qcTask.Id, new List<int> { developerTask.Id });
+                }
+            }
         }
 
         // Handle Designer reassignment
@@ -127,7 +139,8 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
                 taskDto.DesignerId.Value, 
                 "Designer", 
                 taskDto.DesignerStartDate, 
-                taskDto.DesignerEndDate, 
+                taskDto.DesignerEndDate,
+                TaskStatusEnum.ToDo,
                 taskDto.Description, 
                 requirement);
             
@@ -221,6 +234,7 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
         string roleType,
         DateTime? startDate,
         DateTime? endDate,
+        TaskStatusEnum? StatusId,
         string? description,
         ProjectRequirement requirement)
     {
@@ -234,7 +248,7 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
         else
         {
             return await CreateNewTaskForRoleAsync(requirementId, assigneeId, roleType, 
-                startDate, endDate, description, requirement);
+                startDate, endDate, description, StatusId, requirement);
         }
     }
 
@@ -267,7 +281,7 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
         existingTask.Description = description ?? existingTask.Description;
         existingTask.StartDate = startDate ?? existingTask.StartDate;
         existingTask.EndDate = endDate ?? existingTask.EndDate;
-        existingTask.UpdatedAt = DateTime.UtcNow;
+        existingTask.UpdatedAt = DateTime.Now;
 
         await _taskService.UpdateTaskAsync(existingTask);
         await _taskService.UpdateTaskAssignmentsAsync(existingTask.Id, new List<int> { assigneeId });
@@ -285,10 +299,11 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
         DateTime? startDate,
         DateTime? endDate,
         string? description,
+        TaskStatusEnum? StatusId,
         ProjectRequirement requirement)
     {
         var newTask = TaskEntityFactory.CreateChangeRequestTask(
-            requirementId, roleType, startDate, endDate, description, requirement);
+            requirementId, roleType, startDate, endDate, description, StatusId, requirement);
             
         var createdTask = await _taskService.CreateTaskAsync(newTask);
 
@@ -317,10 +332,11 @@ public static class TaskEntityFactory
         DateTime? startDate,
         DateTime? endDate,
         string? description,
+        TaskStatusEnum? StatusId,
         ProjectRequirement requirement)
     {
-        var defaultStartDate = DateTime.UtcNow;
-        var defaultEndDate = DateTime.UtcNow.AddDays(7);
+        var defaultStartDate = DateTime.Now;
+        var defaultEndDate = DateTime.Now.AddDays(7);
 
         return new PMA.Core.Entities.Task
         {
@@ -330,11 +346,11 @@ public static class TaskEntityFactory
             SprintId=null,
             StartDate = startDate ?? defaultStartDate,
             EndDate = endDate ?? defaultEndDate,
-            StatusId = TaskStatusEnum.ToDo,
+            StatusId = StatusId ?? TaskStatusEnum.ToDo,
             PriorityId = Priority.Medium,
             TypeId = TaskTypes.ChangeRequest,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
             RoleType = roleType,
             Progress = 0
         };
