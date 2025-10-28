@@ -250,6 +250,21 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task<IEnumerable<int>> GetTaskIdsWithNoDependentTasksAsync()
+    {
+        // Get all task IDs that are not referenced as DependsOnTaskId in TaskDependencies
+        var tasksWithDependencies = await _context.TaskDependencies
+            .Select(td => td.DependsOnTaskId)
+            .Distinct()
+            .ToListAsync();
+
+        var allTaskIds = await _context.Tasks.Where(w=>w.RoleType=="developer")
+            .Select(t => t.Id)
+            .ToListAsync();
+
+        return allTaskIds.Except(tasksWithDependencies);
+    }
+
     public async Task<IEnumerable<User>> GetTeamMembersAsync(bool isAdministrator, bool isManager, int? currentUserDepartmentId)
     {
         if (isAdministrator)

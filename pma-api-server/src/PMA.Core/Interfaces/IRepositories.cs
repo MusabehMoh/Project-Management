@@ -55,6 +55,9 @@ public interface ITaskRepository : IRepository<TaskEntity>
 
     System.Threading.Tasks.Task CleanupTaskDependenciesAsync(int taskId);
     
+    // Get tasks that have no other tasks depending on them
+    System.Threading.Tasks.Task<IEnumerable<int>> GetTaskIdsWithNoDependentTasksAsync();
+    
     // Team member access methods
     System.Threading.Tasks.Task<IEnumerable<User>> GetTeamMembersAsync(bool isAdministrator, bool isManager, int? currentUserDepartmentId);
 

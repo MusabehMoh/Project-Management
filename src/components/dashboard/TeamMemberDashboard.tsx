@@ -1,14 +1,19 @@
+import type { MemberTask } from "@/types/membersTasks";
+
 import React, { useState } from "react";
 
 import Calendar from "./calendar";
 import TeamKanbanBoard from "./team-member/TeamKanbanBoard";
 
+import TaskDetailsDrawer from "@/components/TaskDetailsDrawer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
 
 export default function TeamMemberDashboard() {
   const { t, language } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Handle task status update from TeamQuickActions only
   // Kanban board handles its own updates internally, no need to refresh
@@ -40,6 +45,12 @@ export default function TeamMemberDashboard() {
     // Kanban updates its own state optimistically, no need to refresh anything
   };
 
+  // Handle task click from Kanban board to open drawer
+  const handleTaskClick = (task: MemberTask) => {
+    setSelectedTask(task);
+    setIsDrawerOpen(true);
+  };
+
   return (
     <div className={`space-y-8 pb-16 ${language === "ar" ? "rtl" : "ltr"}`}>
       {/* Header */}
@@ -56,7 +67,10 @@ export default function TeamMemberDashboard() {
       <ModernQuickStats />
 
       {/* Kanban Board - Full Width */}
-      <TeamKanbanBoard onTaskUpdate={handleKanbanUpdate} />
+      <TeamKanbanBoard
+        onTaskClick={handleTaskClick}
+        onTaskUpdate={handleKanbanUpdate}
+      />
 
       {/* Quick Actions (50%) and Calendar (50%) */}
       {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -69,6 +83,26 @@ export default function TeamMemberDashboard() {
 
       {/* Calendar - Full Width */}
       <Calendar maxHeight="600px" showSidebar={false} />
+
+      {/* Task Details Drawer */}
+      <TaskDetailsDrawer
+        fullRequirement={null}
+        getPriorityColor={() => "default"}
+        getPriorityLabel={() => ""}
+        getStatusText={() => ""}
+        getTaskStatusColor={() => "default"}
+        isOpen={isDrawerOpen}
+        loadingRequirement={false}
+        onChangeAssignees={async () => {}}
+        onChangeStatus={async () => {}}
+        onFileDelete={async () => {}}
+        onFileDownload={async () => {}}
+        onFilePreview={async () => {}}
+        onFileUpload={async () => {}}
+        onOpenChange={setIsDrawerOpen}
+        onRequestDesign={async () => {}}
+        selectedTask={selectedTask}
+      />
     </div>
   );
 }

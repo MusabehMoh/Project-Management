@@ -1115,14 +1115,34 @@ const translations = {
     "tasks.type.timeline": "Timeline Task",
     "tasks.type.changeRequest": "Change Request",
     "tasks.type.adhoc": "Adhoc Task",
-    "tasks.taskName": "Task Name",
     "tasks.noAssociatedProject": "Not associated with a project",
+    // Task create modal keys (English)
+    "task.create.title": "Create Adhoc Task",
+    "task.create.subtitle": "Create a new adhoc task for quality assurance",
+    "task.create.taskInfo":
+      "This task will be assigned to the quality assurance team for review and testing",
+    "task.create.taskName": "Task Name",
+    "task.create.taskNamePlaceholder": "Enter task name",
+    "task.create.startDate": "Start Date",
+    "task.create.endDate": "End Date",
+    "task.create.priority": "Priority",
+    "task.create.description": "Description",
+    "task.create.qcAssignmentNote":
+      "This task will be automatically assigned to quality assurance team members",
+    "task.create.cancel": "Cancel",
+    "task.create.createTask": "Create Task",
+    "task.create.success": "Task created successfully",
+    "task.create.failedToCreate": "Failed to create task",
+
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
     "requirements.taskInfo": "Task Information",
     "requirements.timelineInfo": "Timeline Information",
     "timeline.name": "Timeline Name",
     "timeline.id": "Timeline ID",
+    "timeline.selectPredecessors": "Select Predecessors",
+    "timeline.selectPredecessorsPlaceholder": "Choose predecessor tasks...",
+    "users.selectEmployee": "Select Employee",
 
     // Common keys
     "common.preview": "Preview",
@@ -1214,13 +1234,6 @@ const translations = {
     "users.filterByStatus": "Filter by Status",
     "users.searchEmployees":
       "Search employees by name, military number, or username",
-    "users.noEmployeesFound": "No employees found",
-    "users.noUsersFound": "No users found matching your search",
-    "users.noUsersAvailable": "No users available",
-    "users.tryDifferentSearch": "Try adjusting your search terms or filters.",
-    "users.createFirstUser": "Start by creating your first user.",
-    "users.selectEmployee": "Select Employee",
-    "users.employeeNotFound": "Employee not found",
     "users.assignRoles": "Assign Role",
     "users.assignActions": "Assign Actions",
     "users.assignAdditionalActions": "Assign Additional Actions",
@@ -1706,8 +1719,6 @@ const translations = {
     "timeline.detailsPanel.selectStatus": "Select status",
     "timeline.detailsPanel.selectPriority": "Select priority",
     "timeline.chooseTask": "Choose Task",
-    "timeline.selectPredecessors": "Select Predecessors",
-    "timeline.selectPredecessorsPlaceholder": "Choose a predecessor task...",
     "timeline.searchTask": "Search for a task",
 
     ///Gantt view
@@ -2968,6 +2979,23 @@ const translations = {
     "tasks.type.changeRequest": "طلب تغيير",
     "tasks.type.adhoc": "مهمة عاجلة",
     "tasks.noAssociatedProject": "غير مرتبط بمشروع",
+    // Task create modal keys (Arabic)
+    "task.create.title": "إنشاء مهمة عاجلة",
+    "task.create.subtitle": "إنشاء مهمة عاجلة جديدة لضمان الجودة",
+    "task.create.taskInfo":
+      "سيتم تعيين هذه المهمة لفريق ضمان الجودة للمراجعة والاختبار",
+    "task.create.taskName": "اسم المهمة",
+    "task.create.taskNamePlaceholder": "أدخل اسم المهمة",
+    "task.create.startDate": "تاريخ البداية",
+    "task.create.endDate": "تاريخ النهاية",
+    "task.create.priority": "الأولوية",
+    "task.create.description": "الوصف",
+    "task.create.qcAssignmentNote":
+      "سيتم تعيين هذه المهمة تلقائيًا لأعضاء فريق ضمان الجودة",
+    "task.create.cancel": "إلغاء",
+    "task.createTask": "إنشاء المهمة",
+    "task.create.success": "تم إنشاء المهمة بنجاح",
+    "task.create.failedToCreate": "فشل في إنشاء المهمة",
 
     "requirements.updated": "تاريخ التحديث",
     "requirements.uploadedOn": "تم الرفع في",
@@ -3366,6 +3394,8 @@ const translations = {
     "timeline.treeView.loadingTimeline": "جاري تحميل المخطط الزمني...",
     "timeline.treeView.searchPlaceholder":
       "البحث في السبرينتات والمتطلبات والمهام...",
+    "timeline.selectPredecessors": "اختيار المهام السابقة",
+    "timeline.selectPredecessorsPlaceholder": "اختر المهام السابقة...",
     "timeline.treeView.filtered": "مفلتر",
 
     // Timeline Move Task Modal
@@ -3545,8 +3575,6 @@ const translations = {
     "timeline.detailsPanel.selectStatus": "اختر الحالة",
     "timeline.detailsPanel.selectPriority": "اختر الأولوية",
     "timeline.chooseTask": "اختر مهمة",
-    "timeline.selectPredecessors": "اختر المهام السابقة",
-    "timeline.selectPredecessorsPlaceholder": "اختر مهمة سابقة...",
     "timeline.searchTask": "البحث عن مهمة",
     "timeline.taskName": "اسم المهمة",
     "timeline.startDate": "تاربخ البدء",

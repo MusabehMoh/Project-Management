@@ -48,10 +48,12 @@ interface KanbanColumn {
 
 interface TeamKanbanBoardProps {
   onTaskUpdate?: (taskId: number, newStatus: string) => void;
+  onTaskClick?: (task: MemberTask) => void;
 }
 
 export default function TeamKanbanBoard({
   onTaskUpdate,
+  onTaskClick,
 }: TeamKanbanBoardProps) {
   const { t, language } = useLanguage();
   const { user } = useCurrentUser();
@@ -71,6 +73,10 @@ export default function TeamKanbanBoard({
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [dragStartPos, setDragStartPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   // Get user's role IDs for permission checking
   const userRoleIds = useMemo(() => {
@@ -193,6 +199,33 @@ export default function TeamKanbanBoard({
 
     setDraggedTask(task);
     setDraggedFromColumn(columnId);
+  };
+
+  const handleMouseDown = (
+    e: React.MouseEvent,
+    task: MemberTask,
+    columnId: number,
+  ) => {
+    // Store the position where drag started
+    setDragStartPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleCardClick = (e: React.MouseEvent, task: MemberTask) => {
+    // Prevent default to stop any default click behavior
+    e.preventDefault();
+    e.stopPropagation();
+
+    console.log("handleCardClick called for task:", task.id, task.name);
+    console.log("dragStartPos:", dragStartPos);
+    console.log("onTaskClick exists:", !!onTaskClick);
+
+    // Always trigger click if onTaskClick is available
+    if (onTaskClick) {
+      console.log("Triggering onTaskClick for task:", task.name);
+      onTaskClick(task);
+    } else {
+      console.log("onTaskClick not available");
+    }
   };
 
   const handleDragOver = (e: React.DragEvent, targetColumnId: number) => {
@@ -556,163 +589,193 @@ export default function TeamKanbanBoard({
                           const canComplete = isAdhoc && task.statusId !== 5; // Only if not already completed
 
                           return (
-                            <Card
+                            <div
                               key={task.id}
-                              className={`relative ${canDrag ? "cursor-move" : "cursor-default"} transition-all duration-500 ease-in-out bg-content1 dark:bg-content2 ${
-                                isAdhoc && isHovered
-                                  ? "shadow-2xl border-2 border-success ring-2 ring-success/20"
-                                  : "hover:shadow-lg border-2 border-transparent"
-                              } ${isUpdating ? "opacity-50" : ""}`}
+                              className={`relative ${canDrag ? "cursor-move" : onTaskClick ? "cursor-pointer" : "cursor-default"}`}
                               draggable={canDrag && !isUpdating}
-                              shadow="sm"
-                              onDragStart={() =>
-                                canDrag &&
-                                !isUpdating &&
-                                handleDragStart(task, column.id)
-                              }
+                              role="button"
+                              tabIndex={0}
+                              onClick={(e) => {
+                                handleCardClick(e, task);
+                              }}
+                              onDragStart={() => {
+                                if (canDrag && !isUpdating && dragStartPos) {
+                                  handleDragStart(task, column.id);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  handleCardClick(e as any, task);
+                                }
+                              }}
+                              onMouseDown={(e) => {
+                                if (canDrag) {
+                                  setDragStartPos({
+                                    x: e.clientX,
+                                    y: e.clientY,
+                                  });
+                                }
+                              }}
                               onMouseEnter={() =>
                                 isAdhoc && setHoveredTaskId(task.id)
                               }
-                              onMouseLeave={() =>
-                                isAdhoc && setHoveredTaskId(null)
-                              }
+                              onMouseLeave={() => {
+                                isAdhoc && setHoveredTaskId(null);
+                              }}
                             >
-                              <CardBody className="p-3 space-y-2">
-                                {/* Task Title with Complete Switch for Adhoc */}
-                                <div className="flex items-start justify-between gap-2">
-                                  <h4 className="font-semibold text-sm line-clamp-2 flex-1">
-                                    {task.name}
-                                  </h4>
-                                  {isAdhoc && canComplete && isHovered && (
-                                    <Tooltip
-                                      content={t(
-                                        "teamDashboard.kanban.markComplete",
-                                      )}
-                                    >
-                                      <div
-                                        className={`flex-shrink-0 ${language === "ar" ? "order-first" : ""}`}
+                              <Card
+                                className={`transition-all duration-500 ease-in-out bg-content1 dark:bg-content2 ${
+                                  isAdhoc && isHovered
+                                    ? "shadow-2xl border-2 border-success ring-2 ring-success/20"
+                                    : "hover:shadow-lg border-2 border-transparent"
+                                } ${isUpdating ? "opacity-50" : ""}`}
+                                shadow="sm"
+                              >
+                                <CardBody className="p-3 space-y-2">
+                                  {/* Task Title with Complete Switch for Adhoc */}
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4 className="font-semibold text-sm line-clamp-2 flex-1">
+                                      {task.name}
+                                    </h4>
+                                    {isAdhoc && canComplete && isHovered && (
+                                      <Tooltip
+                                        content={t(
+                                          "teamDashboard.kanban.markComplete",
+                                        )}
                                       >
-                                        <Switch
-                                          color="success"
-                                          isDisabled={isCompleting}
-                                          size="sm"
-                                          thumbIcon={({
-                                            isSelected,
-                                            className,
-                                          }) =>
-                                            isSelected ? (
-                                              <CheckCircle
-                                                className={className}
-                                              />
-                                            ) : null
-                                          }
-                                          onValueChange={(isChecked) => {
-                                            if (isChecked) {
-                                              handleCompleteAdhocTask(task);
+                                        <div
+                                          className={`flex-shrink-0 ${language === "ar" ? "order-first" : ""}`}
+                                        >
+                                          <Switch
+                                            color="success"
+                                            isDisabled={isCompleting}
+                                            size="sm"
+                                            thumbIcon={({
+                                              isSelected,
+                                              className,
+                                            }) =>
+                                              isSelected ? (
+                                                <CheckCircle
+                                                  className={className}
+                                                />
+                                              ) : null
                                             }
-                                          }}
-                                        />
-                                      </div>
-                                    </Tooltip>
-                                  )}
-                                </div>
+                                            onValueChange={(isChecked) => {
+                                              if (isChecked) {
+                                                handleCompleteAdhocTask(task);
+                                              }
+                                            }}
+                                          />
+                                        </div>
+                                      </Tooltip>
+                                    )}
+                                  </div>
 
-                                {/* Priority & Task Type */}
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <div className="flex items-center gap-1">
-                                    <Flag className="w-3 h-3" />
+                                  {/* Priority & Task Type */}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <div className="flex items-center gap-1">
+                                      <Flag className="w-3 h-3" />
+                                      <Chip
+                                        color={
+                                          getPriorityColor(
+                                            task.priorityId,
+                                          ) as any
+                                        }
+                                        size="sm"
+                                        variant="flat"
+                                      >
+                                        {getPriorityLabel(task.priorityId)}
+                                      </Chip>
+                                    </div>
                                     <Chip
                                       color={
-                                        getPriorityColor(task.priorityId) as any
+                                        getTaskTypeColor(task.typeId) as any
                                       }
+                                      size="sm"
+                                      variant="bordered"
+                                    >
+                                      {t(getTaskTypeText(task.typeId))}
+                                    </Chip>
+                                  </div>
+
+                                  {/* Project & Requirement */}
+                                  <div
+                                    className={`space-y-1 text-xs text-default-500 ${language === "ar" ? "text-right" : "text-left"}`}
+                                  >
+                                    {task.project && (
+                                      <div className="line-clamp-1">
+                                        <strong>
+                                          {t("teamDashboard.kanban.project")}:
+                                        </strong>{" "}
+                                        {task.project.applicationName}
+                                      </div>
+                                    )}
+                                    {task.requirement && (
+                                      <div className="line-clamp-1">
+                                        <strong>
+                                          {t(
+                                            "teamDashboard.kanban.requirement",
+                                          )}
+                                          :
+                                        </strong>{" "}
+                                        {task.requirement.name}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* End Date & Progress */}
+                                  <div className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-1 text-default-500">
+                                      <CalendarIcon className="w-3 h-3" />
+                                      {formatDate(task.endDate)}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3 text-default-400" />
+                                      <span
+                                        className={
+                                          task.progress === 100
+                                            ? "text-success font-semibold"
+                                            : task.progress >= 70
+                                              ? "text-success"
+                                              : task.progress >= 40
+                                                ? "text-warning"
+                                                : task.progress > 0
+                                                  ? "text-danger"
+                                                  : "text-default-600"
+                                        }
+                                      >
+                                        {task.progress}%
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Overdue Badge */}
+                                  {task.isOverdue && (
+                                    <Chip
+                                      className="w-full"
+                                      color="danger"
                                       size="sm"
                                       variant="flat"
                                     >
-                                      {getPriorityLabel(task.priorityId)}
+                                      {t("teamDashboard.kanban.overdue")}
                                     </Chip>
-                                  </div>
-                                  <Chip
-                                    color={getTaskTypeColor(task.typeId) as any}
-                                    size="sm"
-                                    variant="bordered"
-                                  >
-                                    {t(getTaskTypeText(task.typeId))}
-                                  </Chip>
-                                </div>
-
-                                {/* Project & Requirement */}
-                                <div
-                                  className={`space-y-1 text-xs text-default-500 ${language === "ar" ? "text-right" : "text-left"}`}
-                                >
-                                  {task.project && (
-                                    <div className="line-clamp-1">
-                                      <strong>
-                                        {t("teamDashboard.kanban.project")}:
-                                      </strong>{" "}
-                                      {task.project.applicationName}
-                                    </div>
                                   )}
-                                  {task.requirement && (
-                                    <div className="line-clamp-1">
-                                      <strong>
-                                        {t("teamDashboard.kanban.requirement")}:
-                                      </strong>{" "}
-                                      {task.requirement.name}
+                                </CardBody>
+
+                                {/* Loading Overlay */}
+                                {isUpdating && (
+                                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                                    <div className="flex items-center gap-2 text-primary">
+                                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                      <span className="text-sm font-medium">
+                                        {t("common.updating")}
+                                      </span>
                                     </div>
-                                  )}
-                                </div>
-
-                                {/* End Date & Progress */}
-                                <div className="flex items-center justify-between text-xs">
-                                  <div className="flex items-center gap-1 text-default-500">
-                                    <CalendarIcon className="w-3 h-3" />
-                                    {formatDate(task.endDate)}
                                   </div>
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3 text-default-400" />
-                                    <span
-                                      className={
-                                        task.progress === 100
-                                          ? "text-success font-semibold"
-                                          : task.progress >= 70
-                                            ? "text-success"
-                                            : task.progress >= 40
-                                              ? "text-warning"
-                                              : task.progress > 0
-                                                ? "text-danger"
-                                                : "text-default-600"
-                                      }
-                                    >
-                                      {task.progress}%
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Overdue Badge */}
-                                {task.isOverdue && (
-                                  <Chip
-                                    className="w-full"
-                                    color="danger"
-                                    size="sm"
-                                    variant="flat"
-                                  >
-                                    {t("teamDashboard.kanban.overdue")}
-                                  </Chip>
                                 )}
-                              </CardBody>
-
-                              {/* Loading Overlay */}
-                              {isUpdating && (
-                                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
-                                  <div className="flex items-center gap-2 text-primary">
-                                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                    <span className="text-sm font-medium">
-                                      {t("common.updating")}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-                            </Card>
+                              </Card>
+                            </div>
                           );
                         })
                       )}

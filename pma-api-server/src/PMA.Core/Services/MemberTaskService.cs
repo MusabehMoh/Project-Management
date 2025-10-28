@@ -98,14 +98,41 @@ public class MemberTaskService : IMemberTaskService
 
         var (tasks, totalCount) = await _taskRepository.GetTasksAsync(page, limit, null, projectId, assigneeId, statusId, priorityId, deptId, search, typeId);
 
+        // Check if current user is QC Manager to include additional developer tasks
+        bool isQCManager = currentUser.Roles?.Any(r => IsRoleCode(r.Code, RoleCodes.QCManager)) ?? false;
+        List<TaskEntity> additionalTasks = new List<TaskEntity>();
+        
+        if (isQCManager)
+        {
+            // Get task IDs that have no dependent tasks
+            var noDependentTaskIds = await _taskRepository.GetTaskIdsWithNoDependentTasksAsync();
+            var noDependentTaskIdsSet = new HashSet<int>(noDependentTaskIds);
+            
+            // Get developer tasks that have no dependent tasks
+            var developerTasksWithNoDependents = await _taskRepository.GetTasksAsync(1, 1000, null, null, null, null, null, null, null, null);
+            var filteredDeveloperTasks = developerTasksWithNoDependents.Tasks
+                .Where(t => t.RoleType == "Developer" && noDependentTaskIdsSet.Contains(t.Id))
+                .ToList();
+            
+            additionalTasks.AddRange(filteredDeveloperTasks);
+        }
+
+        // Combine regular tasks with additional tasks for analyst manager
+        var allTasks = tasks.Concat(additionalTasks).DistinctBy(t => t.Id).ToList();
+        var allTotalCount = totalCount + additionalTasks.Count;
+
         // Get design request information for all tasks
-        var taskIds = tasks.Select(t => t.Id).ToList();
+        var taskIds = allTasks.Select(t => t.Id).ToList();
         var designRequestTaskIds = await _designRequestRepository.GetTaskIdsWithDesignRequestsAsync(taskIds);
         var designRequestTaskIdSet = new HashSet<int>(designRequestTaskIds);
 
-        var memberTasks = tasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet));
+        // Get task IDs with no dependent tasks for the HasNoDependentTasks property
+        var taskIdsWithNoDependents = await _taskRepository.GetTaskIdsWithNoDependentTasksAsync();
+        var taskIdsWithNoDependentsSet = new HashSet<int>(taskIdsWithNoDependents);
 
-        return (memberTasks, totalCount);
+        var memberTasks = allTasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet, taskIdsWithNoDependentsSet));
+
+        return (memberTasks, allTotalCount);
     }
 
     private bool IsRoleCode(string? roleCode, RoleCodes targetRole)
@@ -128,7 +155,7 @@ public class MemberTaskService : IMemberTaskService
                 parsedRole == RoleCodes.DesignerManager);
     }
 
-    private TaskDto MapTaskEntityToTaskDto(TaskEntity task, HashSet<int> designRequestTaskIds)
+    private TaskDto MapTaskEntityToTaskDto(TaskEntity task, HashSet<int> designRequestTaskIds, HashSet<int>? taskIdsWithNoDependents = null)
     {
         // Get all assigned members
         var assignedMembers = task.Assignments?.Select(a => new MemberSearchResultDto
@@ -213,7 +240,8 @@ public class MemberTaskService : IMemberTaskService
                 Id = task.ProjectRequirement.Id.ToString(),
                 Name = task.ProjectRequirement.Name
             } : null,
-            HasDesignRequest = designRequestTaskIds.Contains(task.Id)
+            HasDesignRequest = designRequestTaskIds.Contains(task.Id),
+            HasNoDependentTasks = taskIdsWithNoDependents?.Contains(task.Id) ?? false
             //PrimaryAssignee = primaryAssignee
         };
     }

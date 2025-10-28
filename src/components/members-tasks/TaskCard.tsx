@@ -8,6 +8,7 @@ import { Switch } from "@heroui/switch";
 import { Tooltip } from "@heroui/tooltip";
 import { useState } from "react";
 
+import TaskCreateModal from "./TaskCreateModal";
 import { MemberTask } from "@/types/membersTasks";
 import { MemberSearchResult } from "@/types/timeline";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -28,6 +29,8 @@ interface TaskCardProps {
   onChangeStatus?: (task: MemberTask) => void;
   onChangeAssignees?: (task: MemberTask) => void;
   onTaskComplete?: () => void; // Callback to refresh tasks after completion
+  onCreateTask?: (parentTask: MemberTask) => void; // Callback to create a new task based on parent task
+  onTaskCreated?: () => void; // Callback to refresh tasks after task creation
   isTeamManager: boolean;
   getStatusColor: (
     statusId: number,
@@ -46,6 +49,8 @@ export const TaskCard = ({
   onChangeStatus,
   onChangeAssignees,
   onTaskComplete,
+  onCreateTask: _onCreateTask,
+  onTaskCreated,
   isTeamManager,
   getStatusColor,
   getStatusText,
@@ -55,6 +60,7 @@ export const TaskCard = ({
   const { t, language } = useLanguage();
   const [isHovered, setIsHovered] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const isAdhoc = task.typeId === TASK_TYPES.ADHOC;
   const canComplete = isAdhoc && task.statusId !== TASK_STATUSES.COMPLETED; // Only if not already completed
@@ -94,6 +100,10 @@ export const TaskCard = ({
     if (onChangeAssignees) {
       onChangeAssignees(task);
     }
+  };
+
+  const handleCreateTaskClick = () => {
+    setIsCreateModalOpen(true);
   };
 
   const handleCompleteAdhocTask = async () => {
@@ -359,18 +369,39 @@ export const TaskCard = ({
           {isTeamManager ? (
             /* actions for team managers */
             <div className="flex gap-2">
-              <Button
-                className="flex-1"
-                color="default"
-                size="sm"
-                variant="solid"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleChangeAssigneesClick();
-                }}
-              >
-                {t("changeAssignees")}
-              </Button>
+              {task.hasNoDependentTasks ? (
+                <Tooltip content={t("task.createTaskHint")}>
+                  <Button
+                    className="flex-1"
+                    color="primary"
+                    size="sm"
+                    variant="solid"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCreateTaskClick();
+                    }}
+                  >
+                    {t("task.createTask")}
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  className="flex-1"
+                  color="default"
+                  isDisabled={
+                    task.statusId === TASK_STATUSES.BLOCKED ||
+                    task.statusId === TASK_STATUSES.COMPLETED
+                  }
+                  size="sm"
+                  variant="solid"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleChangeAssigneesClick();
+                  }}
+                >
+                  {t("changeAssignees")}
+                </Button>
+              )}
             </div>
           ) : (
             /* actions for members */
@@ -392,7 +423,10 @@ export const TaskCard = ({
                 <Button
                   className="flex-1"
                   color="default"
-                  isDisabled={task.statusId === TASK_STATUSES.BLOCKED}
+                  isDisabled={
+                    task.statusId === TASK_STATUSES.BLOCKED ||
+                    task.statusId === TASK_STATUSES.COMPLETED
+                  }
                   size="sm"
                   variant="faded"
                   onClick={(e) => {
@@ -407,7 +441,10 @@ export const TaskCard = ({
               <Button
                 className="flex-1"
                 color="default"
-                isDisabled={task.statusId === TASK_STATUSES.BLOCKED}
+                isDisabled={
+                  task.statusId === TASK_STATUSES.BLOCKED ||
+                  task.statusId === TASK_STATUSES.COMPLETED
+                }
                 size="sm"
                 variant="solid"
                 onClick={(e) => {
@@ -421,6 +458,13 @@ export const TaskCard = ({
           )}
         </div>
       </CardBody>
+
+      <TaskCreateModal
+        isOpen={isCreateModalOpen}
+        parentTask={task}
+        onOpenChange={setIsCreateModalOpen}
+        onTaskCreated={onTaskCreated}
+      />
     </Card>
   );
 };

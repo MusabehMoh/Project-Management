@@ -462,6 +462,7 @@ export default function MembersTasksPage() {
   const isTeamManager = hasAnyRoleById([
     RoleIds.ANALYST_DEPARTMENT_MANAGER,
     RoleIds.ADMINISTRATOR,
+    RoleIds.QUALITY_CONTROL_MANAGER,
     RoleIds.DESIGNER_MANAGER,
     RoleIds.DEVELOPMENT_MANAGER,
   ]);
@@ -1241,6 +1242,7 @@ export default function MembersTasksPage() {
                     onClick={handleTaskClick}
                     onRequestDesign={handleRequestDesign}
                     onTaskComplete={handleRefresh}
+                    onTaskCreated={handleRefresh}
                   />
                 ))}
               </div>

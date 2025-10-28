@@ -35,4 +35,5 @@ public class TaskDto
 
     public List<int> DepTaskIds { get; set; } = new List<int>();
     public bool HasDesignRequest { get; set; }
+    public bool HasNoDependentTasks { get; set; }
 }

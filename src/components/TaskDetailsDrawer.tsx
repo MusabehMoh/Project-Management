@@ -691,6 +691,10 @@ export default function TaskDetailsDrawer({
                 <Button
                   className="flex-1"
                   color="default"
+                  isDisabled={
+                    selectedTask?.statusId === TASK_STATUSES.BLOCKED ||
+                    selectedTask?.statusId === TASK_STATUSES.COMPLETED
+                  }
                   size="sm"
                   variant="solid"
                   onPress={() => onChangeAssignees(selectedTask)}
@@ -718,7 +722,8 @@ export default function TaskDetailsDrawer({
                     className="flex-1"
                     color="primary"
                     isDisabled={
-                      selectedTask?.statusId === TASK_STATUSES.BLOCKED
+                      selectedTask?.statusId === TASK_STATUSES.BLOCKED ||
+                      selectedTask?.statusId === TASK_STATUSES.COMPLETED
                     }
                     size="sm"
                     variant="flat"
@@ -731,7 +736,10 @@ export default function TaskDetailsDrawer({
                 <Button
                   className="flex-1"
                   color="success"
-                  isDisabled={selectedTask?.statusId === TASK_STATUSES.BLOCKED}
+                  isDisabled={
+                    selectedTask?.statusId === TASK_STATUSES.BLOCKED ||
+                    selectedTask?.statusId === TASK_STATUSES.COMPLETED
+                  }
                   size="sm"
                   variant="flat"
                   onPress={() => onChangeStatus(selectedTask)}
