@@ -240,7 +240,6 @@ export default function ProjectDetailsDrawer({
                     )}
                   </div>
                 )}
-
               </div>
 
               {/* Requirements Statistics */}

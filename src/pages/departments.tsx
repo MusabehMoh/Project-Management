@@ -196,11 +196,19 @@ export default function DepartmentsPage() {
     if (deletingMember) {
       try {
         await removeMember(deletingMember.id);
+        showSuccessToast(t("departments.members.removeSuccess"));
         onDeleteMemberOpenChange();
         setDeletingMember(null);
-      } catch (error) {
+      } catch (error: any) {
         // eslint-disable-next-line no-console
         console.error("Failed to remove member:", error);
+
+        const errorMessage =
+          error?.data?.error ||
+          error?.message ||
+          t("departments.members.removeError");
+
+        showErrorToast(errorMessage);
       }
     }
   };
@@ -223,7 +231,10 @@ export default function DepartmentsPage() {
     } catch (error: any) {
       // eslint-disable-next-line no-console
       console.error("Failed to save member:", error);
-      const errorMessage = error?.data?.error || error?.message || t("toast.memberAddError");
+
+      const errorMessage =
+        error?.data?.error || error?.message || t("toast.memberAddError");
+
       showErrorToast(errorMessage);
     }
   };

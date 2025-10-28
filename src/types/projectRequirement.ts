@@ -103,7 +103,7 @@ export interface AssignedProject {
   applicationName: string;
   projectOwner: string;
   owningUnit: string;
-  projectOwnerEmployee:Employee;
+  projectOwnerEmployee: Employee;
   status: number;
   requirementsCount: number;
   completedRequirements: number;

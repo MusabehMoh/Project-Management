@@ -23,9 +23,11 @@ export function translateBackendError(
     const match = errorMessage.match(
       /Cannot delete user\. User is referenced in: (.+)/,
     );
+
     if (match) {
       const dependencies = match[1];
       const translatedDeps = translateDependencies(dependencies, t);
+
       return `${t("users.error.cannotDelete")}. ${t("users.error.referencedIn")}: ${translatedDeps}`;
     }
   }
@@ -34,12 +36,16 @@ export function translateBackendError(
   const usernameMatch = errorMessage.match(
     /User with username '(.+)' already exists/,
   );
+
   if (usernameMatch) {
     return t("users.error.usernameExists").replace("{0}", usernameMatch[1]);
   }
 
   // Handle "User with PRS ID 'xxx' already exists."
-  const prsIdMatch = errorMessage.match(/User with PRS ID '(.+)' already exists/);
+  const prsIdMatch = errorMessage.match(
+    /User with PRS ID '(.+)' already exists/,
+  );
+
   if (prsIdMatch) {
     return t("users.error.prsIdExists").replace("{0}", prsIdMatch[1]);
   }
@@ -68,6 +74,7 @@ function translateDependencies(
   const translated = parts.map((part) => {
     // Extract number and type
     const match = part.match(/^(\d+)\s+(.+)$/);
+
     if (!match) return part;
 
     const count = match[1];
@@ -76,8 +83,10 @@ function translateDependencies(
     // Map English types to translation keys
     const typeMap: Record<string, string> = {
       "Task Assignment(s)": "users.error.taskAssignments",
-      "Project Requirement(s) as Creator": "users.error.projectRequirementsCreator",
-      "Project Requirement(s) as Analyst": "users.error.projectRequirementsAnalyst",
+      "Project Requirement(s) as Creator":
+        "users.error.projectRequirementsCreator",
+      "Project Requirement(s) as Analyst":
+        "users.error.projectRequirementsAnalyst",
       "Design Request(s)": "users.error.designRequests",
       "Sub Task(s)": "users.error.subTasks",
       "Calendar Event(s)": "users.error.calendarEvents",
@@ -87,6 +96,7 @@ function translateDependencies(
     };
 
     const translationKey = typeMap[type];
+
     if (translationKey) {
       return `${count} ${t(translationKey)}`;
     }

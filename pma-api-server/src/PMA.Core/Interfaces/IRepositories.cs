@@ -109,6 +109,7 @@ public interface IDepartmentRepository : IRepository<Department>
 {
     System.Threading.Tasks.Task<(IEnumerable<(Department Department, int MemberCount)> Departments, int TotalCount)> GetDepartmentsAsync(int page, int limit, bool? isActive = null);
     System.Threading.Tasks.Task<Department?> GetDepartmentByNameAsync(string name);
+    System.Threading.Tasks.Task<List<string>> CheckMemberDependenciesAsync(int? prsId);
 }
 
 public interface ITeamRepository : IRepository<Team>

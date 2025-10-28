@@ -9,6 +9,8 @@ import {
   ModalBody,
   ModalFooter,
 } from "@heroui/modal";
+import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
+import { Info } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -160,7 +162,33 @@ export default function TimelineCreateModal({
         {(onClose) => (
           <div className={direction === "rtl" ? "text-right" : "text-left"}>
             <ModalHeader className="flex flex-col gap-1">
-              {t("timeline.create.title")}
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold">
+                  {t("timeline.create.title")}
+                </h2>
+                <Popover placement="bottom">
+                  <PopoverTrigger>
+                    <Button
+                      isIconOnly
+                      className="text-default-400 hover:text-default-600"
+                      size="sm"
+                      variant="light"
+                    >
+                      <Info className="w-4 h-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <div className="px-1 py-2">
+                      <div className="text-small font-bold">
+                        {t("common.info")}
+                      </div>
+                      <div className="text-tiny text-default-600 max-w-xs">
+                        {t("timeline.create.timelineInfo")}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
               <p className="text-sm text-default-500 font-normal">
                 {t("timeline.create.subtitle")}
               </p>

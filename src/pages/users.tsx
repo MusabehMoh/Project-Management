@@ -355,7 +355,7 @@ export default function UsersPage() {
     } catch (error) {
       // Extract error message from the error object
       let errorMessage: string | undefined;
-      
+
       // Check if it's an ApiError with detailed error info
       if (error instanceof ApiError && error.data?.error) {
         errorMessage = translateBackendError(error.data.error, t);
@@ -386,7 +386,7 @@ export default function UsersPage() {
       } catch (error) {
         // Extract error message from the error object
         let errorMessage: string | undefined;
-        
+
         // Check if it's an ApiError with detailed error info
         if (error instanceof ApiError && error.data?.error) {
           errorMessage = translateBackendError(error.data.error, t);
@@ -395,7 +395,7 @@ export default function UsersPage() {
         } else if (error instanceof Error) {
           errorMessage = translateBackendError(error.message, t);
         }
-        
+
         toasts.deleteError(errorMessage);
       } finally {
         setIsDeletingUser(false);
@@ -949,10 +949,10 @@ export default function UsersPage() {
                         <CardBody>
                           <div className="grid grid-cols-2 gap-4">
                             <div
-                              dir={language === "ar" ? "rtl" : "ltr"}
                               className={
                                 language === "ar" ? "text-right" : "text-left"
                               }
+                              dir={language === "ar" ? "rtl" : "ltr"}
                             >
                               <p className="text-small text-default-500">
                                 {t("users.fullName")}
@@ -962,10 +962,10 @@ export default function UsersPage() {
                               </p>
                             </div>
                             <div
-                              dir={language === "ar" ? "rtl" : "ltr"}
                               className={
                                 language === "ar" ? "text-right" : "text-left"
                               }
+                              dir={language === "ar" ? "rtl" : "ltr"}
                             >
                               <p className="text-small text-default-500">
                                 {t("users.userName")}
@@ -975,10 +975,10 @@ export default function UsersPage() {
                               </p>
                             </div>
                             <div
-                              dir={language === "ar" ? "rtl" : "ltr"}
                               className={
                                 language === "ar" ? "text-right" : "text-left"
                               }
+                              dir={language === "ar" ? "rtl" : "ltr"}
                             >
                               <p className="text-small text-default-500">
                                 {t("users.militaryNumber")}
@@ -988,10 +988,10 @@ export default function UsersPage() {
                               </p>
                             </div>
                             <div
-                              dir={language === "ar" ? "rtl" : "ltr"}
                               className={
                                 language === "ar" ? "text-right" : "text-left"
                               }
+                              dir={language === "ar" ? "rtl" : "ltr"}
                             >
                               <p className="text-small text-default-500">
                                 {t("users.gradeName")}
@@ -1034,6 +1034,7 @@ export default function UsersPage() {
                           const roleId = selectedKeys[0] as string;
 
                           const newRoleId = roleId ? parseInt(roleId) : null;
+
                           setSelectedRole(newRoleId);
 
                           // Reset additional actions when role changes
@@ -1153,7 +1154,8 @@ export default function UsersPage() {
                                     )
                                     .reduce(
                                       (acc, action) => {
-                                        const category = getActionCategory(action);
+                                        const category =
+                                          getActionCategory(action);
 
                                         if (!acc[category]) {
                                           acc[category] = [];
@@ -1163,10 +1165,15 @@ export default function UsersPage() {
 
                                         return acc;
                                       },
-                                      {} as { [categoryName: string]: Action[] },
+                                      {} as {
+                                        [categoryName: string]: Action[];
+                                      },
                                     ),
                                 ).map(([category, categoryActions]) => (
-                                  <div key={category} className="mb-3 last:mb-0">
+                                  <div
+                                    key={category}
+                                    className="mb-3 last:mb-0"
+                                  >
                                     <div className="flex items-center gap-2 mb-2">
                                       <span className="text-xs font-medium text-default-700 uppercase tracking-wider">
                                         {category}
@@ -1470,7 +1477,7 @@ export default function UsersPage() {
                                         >
                                           <p className="font-medium text-small text-foreground">
                                             {action.description}
-                                          </p> 
+                                          </p>
                                         </div>
                                       </div>
                                     </CardBody>

@@ -69,7 +69,6 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import {
   convertTypeToString,
   REQUIREMENT_STATUS,
-  REQUIREMENT_PRIORITY,
   REQUIREMENT_TYPE,
 } from "@/constants/projectRequirements";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
@@ -611,6 +610,7 @@ export default function ProjectRequirementsPage() {
 
       // Add user message to conversation immediately
       const updatedHistory = [...conversationHistory, userMessage];
+
       setConversationHistory(updatedHistory);
 
       // Create a placeholder for streaming response
@@ -619,6 +619,7 @@ export default function ProjectRequirementsPage() {
         content: "",
         timestamp: Date.now(),
       };
+
       setConversationHistory([...updatedHistory, streamingMessage]);
 
       // Clear input
@@ -682,6 +683,7 @@ export default function ProjectRequirementsPage() {
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
+
           if (done) break;
 
           const chunk = decoder.decode(value);
@@ -690,6 +692,7 @@ export default function ProjectRequirementsPage() {
           for (const line of lines) {
             try {
               const json = JSON.parse(line);
+
               if (json.message?.content) {
                 fullResponse += json.message.content;
 
@@ -800,6 +803,7 @@ export default function ProjectRequirementsPage() {
         console.warn(
           `File "${file.name}" has no size (0 bytes) and will be skipped`,
         );
+
         return false;
       }
 
@@ -809,16 +813,19 @@ export default function ProjectRequirementsPage() {
         console.warn(
           `File "${file.name}" exceeds maximum size limit of ${maxFileSizeMB}MB`,
         );
+
         return false;
       }
 
       // Check file type
       const fileExtension = file.name.split(".").pop()?.toLowerCase();
+
       if (!fileExtension || !allowedFileTypes.includes(fileExtension)) {
         invalidTypeFiles.push(file.name);
         console.warn(
           `File "${file.name}" has invalid type. Allowed types: ${allowedFileTypes.join(", ")}`,
         );
+
         return false;
       }
 
@@ -841,6 +848,7 @@ export default function ProjectRequirementsPage() {
           emptyFiles.length === 1
             ? `${fileList}`
             : `${emptyFiles.length} ${t("requirements.validation.filesEmptyError")}: ${fileList}`;
+
         showWarningToast(t("requirements.validation.fileEmptyError"), message);
       }
 
@@ -1527,17 +1535,23 @@ export default function ProjectRequirementsPage() {
                       }
                     />
                     <Select
+                      isClearable
                       isRequired
+                      errorMessage={validationErrors.priority}
+                      isInvalid={!!validationErrors.priority}
                       label={t("requirements.priority")}
                       placeholder={t("requirements.selectPriority")}
-                      isClearable
-                      isInvalid={!!validationErrors.priority}
-                      errorMessage={validationErrors.priority}
                       selectedKeys={
                         formData.priority > 0
                           ? [formData.priority.toString()]
                           : []
                       }
+                      onClear={() => {
+                        setFormData({
+                          ...formData,
+                          priority: 0,
+                        });
+                      }}
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
 
@@ -1547,12 +1561,6 @@ export default function ProjectRequirementsPage() {
                             priority: parseInt(selectedKey),
                           });
                         }
-                      }}
-                      onClear={() => {
-                        setFormData({
-                          ...formData,
-                          priority: 0,
-                        });
                       }}
                     >
                       {priorityOptions.map((priority) => (
@@ -1567,15 +1575,21 @@ export default function ProjectRequirementsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-2">
                     <Select
+                      isClearable
                       isRequired
+                      errorMessage={validationErrors.type}
+                      isInvalid={!!validationErrors.type}
                       label={t("requirements.type")}
                       placeholder={t("requirements.selectType")}
-                      isClearable
-                      isInvalid={!!validationErrors.type}
-                      errorMessage={validationErrors.type}
                       selectedKeys={
                         formData.type > 0 ? [formData.type.toString()] : []
                       }
+                      onClear={() => {
+                        setFormData({
+                          ...formData,
+                          type: 0,
+                        });
+                      }}
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
 
@@ -1585,12 +1599,6 @@ export default function ProjectRequirementsPage() {
                             type: parseInt(selectedKey),
                           });
                         }
-                      }}
-                      onClear={() => {
-                        setFormData({
-                          ...formData,
-                          type: 0,
-                        });
                       }}
                     >
                       <SelectItem key={REQUIREMENT_TYPE.NEW.toString()}>
@@ -1921,18 +1929,18 @@ export default function ProjectRequirementsPage() {
                   </div>
                 )}
                 <Textarea
-                  label={t("requirements.postponeReason")}
-                  placeholder={t("requirements.postponeReason")}
-                  value={postponeReason}
-                  onChange={(e) => setPostponeReason(e.target.value)}
                   isRequired
-                  minRows={3}
                   errorMessage={
                     !postponeReason.trim()
                       ? t("requirements.postponeReasonRequired")
                       : ""
                   }
                   isInvalid={!postponeReason.trim()}
+                  label={t("requirements.postponeReason")}
+                  minRows={3}
+                  placeholder={t("requirements.postponeReason")}
+                  value={postponeReason}
+                  onChange={(e) => setPostponeReason(e.target.value)}
                 />
               </ModalBody>
               <ModalFooter>
@@ -1941,9 +1949,9 @@ export default function ProjectRequirementsPage() {
                 </Button>
                 <Button
                   color="warning"
+                  isDisabled={!postponeReason.trim()}
                   isLoading={postponeLoading}
                   onPress={confirmPostpone}
-                  isDisabled={!postponeReason.trim()}
                 >
                   {t("requirements.postpone")}
                 </Button>
@@ -2035,12 +2043,12 @@ export default function ProjectRequirementsPage() {
                   </div>
                   {conversationHistory.length > 0 && (
                     <Button
+                      className="me-8"
                       color="danger"
                       size="sm"
                       startContent={<RotateCcw className="w-4 h-4" />}
                       variant="flat"
                       onPress={handleClearConversation}
-                      className="me-8"
                     >
                       {t("requirements.clearHistory")}
                     </Button>
@@ -2235,7 +2243,6 @@ export default function ProjectRequirementsPage() {
                             : t("requirements.aiPromptPlaceholder")
                         }
                         value={aiPromptText}
-                        onValueChange={setAIPromptText}
                         onKeyDown={(e) => {
                           if (
                             e.key === "Enter" &&
@@ -2246,6 +2253,7 @@ export default function ProjectRequirementsPage() {
                             handleAIGenerate();
                           }
                         }}
+                        onValueChange={setAIPromptText}
                       />
                       <Button
                         isIconOnly

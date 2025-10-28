@@ -1,4 +1,8 @@
-import type { TaskCommentDto, TaskHistoryDto, TaskAttachmentDto } from "@/types/membersTasks";
+import type {
+  TaskCommentDto,
+  TaskHistoryDto,
+  TaskAttachmentDto,
+} from "@/types/membersTasks";
 
 import { useState, useEffect } from "react";
 
@@ -36,11 +40,12 @@ export function useTaskActivity(
 
     try {
       // Fetch comments, history, and attachments in parallel
-      const [commentsResponse, historyResponse, attachmentsResponse] = await Promise.all([
-        membersTasksService.getTaskComments(taskId),
-        membersTasksService.getTaskHistory(taskId),
-        membersTasksService.getTaskAttachments(taskId),
-      ]);
+      const [commentsResponse, historyResponse, attachmentsResponse] =
+        await Promise.all([
+          membersTasksService.getTaskComments(taskId),
+          membersTasksService.getTaskHistory(taskId),
+          membersTasksService.getTaskAttachments(taskId),
+        ]);
 
       if (commentsResponse.success && commentsResponse.data) {
         setComments(commentsResponse.data);

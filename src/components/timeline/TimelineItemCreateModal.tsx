@@ -64,7 +64,9 @@ export default function TimelineItemCreateModal({
 
   // Use shared helpers and validation
   const { statusOptions, priorityOptions } = useTimelineFormHelpers();
-  const { validateForm, errors, clearError } = useTimelineFormValidation();
+  const { validateForm, errors, clearError } = useTimelineFormValidation({
+    requireDepartment: true,
+  });
 
   // Helper functions to map between numeric IDs and string keys
   // Status and priority now use direct value mapping
@@ -140,6 +142,7 @@ export default function TimelineItemCreateModal({
       name: formData.name,
       startDate: formData.startDate?.toString() || "",
       endDate: formData.endDate?.toString() || "",
+      departmentId: formData.departmentId,
     };
 
     if (!validateForm(validationData)) {
@@ -204,7 +207,8 @@ export default function TimelineItemCreateModal({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  {t("timeline.treeView.name")}
+                  {t("timeline.treeView.name")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <Input
                   errorMessage={errors.name}
@@ -216,9 +220,12 @@ export default function TimelineItemCreateModal({
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  {t("timeline.detailsPanel.department")}
+                  {t("timeline.detailsPanel.department")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <Select
+                  errorMessage={errors.departmentId}
+                  isInvalid={!!errors.departmentId}
                   placeholder={t("timeline.detailsPanel.selectDepartment")}
                   selectedKeys={
                     formData.departmentId ? [formData.departmentId] : []
@@ -244,7 +251,7 @@ export default function TimelineItemCreateModal({
                 isRequired
                 errorMessage={errors.startDate}
                 isInvalid={!!errors.startDate}
-                label={t("timeline.detailsPanel.startDate")}
+                label={`${t("timeline.detailsPanel.startDate")} *`}
                 value={formData.startDate}
                 onChange={(date) => handleInputChange("startDate", date)}
               />
@@ -252,7 +259,7 @@ export default function TimelineItemCreateModal({
                 isRequired
                 errorMessage={errors.endDate}
                 isInvalid={!!errors.endDate}
-                label={t("timeline.detailsPanel.endDate")}
+                label={`${t("timeline.detailsPanel.endDate")} *`}
                 value={formData.endDate}
                 onChange={(date) => handleInputChange("endDate", date)}
               />
@@ -262,7 +269,8 @@ export default function TimelineItemCreateModal({
                 <>
                   <div>
                     <label className="block text-sm font-medium mb-1">
-                      {t("timeline.detailsPanel.status")}
+                      {t("timeline.detailsPanel.status")}{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <Select
                       items={statusOptions.map((s) => ({
@@ -298,7 +306,8 @@ export default function TimelineItemCreateModal({
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">
-                      {t("timeline.detailsPanel.priority")}
+                      {t("timeline.detailsPanel.priority")}{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <Select
                       items={priorityOptions.map((p) => ({

@@ -705,7 +705,7 @@ export default function TeamKanbanBoard({
                               {isUpdating && (
                                 <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
                                   <div className="flex items-center gap-2 text-primary">
-                                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                                     <span className="text-sm font-medium">
                                       {t("common.updating")}
                                     </span>

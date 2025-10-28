@@ -41,6 +41,32 @@ public class DepartmentRepository : Repository<Department>, IDepartmentRepositor
         return await _context.Departments
             .FirstOrDefaultAsync(d => d.Name.ToLower() == name.ToLower() && d.IsActive);
     }
+
+    public async Task<List<string>> CheckMemberDependenciesAsync(int? prsId)
+    {
+        var dependencies = new List<string>();
+
+        if (!prsId.HasValue)
+            return dependencies;
+
+        // Check ProjectAnalyst table
+        var projectAnalystCount = await _context.ProjectAnalysts
+            .CountAsync(pa => pa.AnalystId == prsId.Value);
+        if (projectAnalystCount > 0)
+        {
+            dependencies.Add($"{projectAnalystCount} تعيين محلل مشروع");
+        }
+
+        // Check TaskAssignment table
+        var taskAssignmentCount = await _context.TaskAssignments
+            .CountAsync(ta => ta.PrsId == prsId.Value);
+        if (taskAssignmentCount > 0)
+        {
+            dependencies.Add($"{taskAssignmentCount} تعيين مهمة");
+        }
+
+        return dependencies;
+    }
 }
 
 public class TeamRepository : Repository<Team>, ITeamRepository

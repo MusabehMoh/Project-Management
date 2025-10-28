@@ -145,9 +145,10 @@ export default function RequirementDetailsDrawer({
                   <Chip
                     color={getPriorityColor(requirement.priority)}
                     size="sm"
-                    variant="dot"
+                    variant="flat"
                   >
-                    {getPriorityLabel(requirement.priority)}
+                    {getPriorityLabel(requirement.priority) ||
+                      t(`requirements.priority.${requirement.priority}`)}
                   </Chip>
                   {requirement.type && (
                     <Chip

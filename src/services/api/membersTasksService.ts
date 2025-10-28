@@ -498,7 +498,9 @@ export class MembersTasksService {
   /**
    * Get attachments for a specific task
    */
-  async getTaskAttachments(taskId: number): Promise<ApiResponse<TaskAttachmentDto[]>> {
+  async getTaskAttachments(
+    taskId: number,
+  ): Promise<ApiResponse<TaskAttachmentDto[]>> {
     try {
       return await apiClient.get<TaskAttachmentDto[]>(
         `${this.baseUrl}/${taskId}/attachments`,

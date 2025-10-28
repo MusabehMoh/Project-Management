@@ -481,8 +481,13 @@ class ProjectRequirementsService {
   /**
    * Postpone a requirement
    */
-  async postponeRequirement(requirementId: number, reason: string): Promise<void> {
-    await apiClient.post<void>(ENDPOINTS.POSTPONE_REQUIREMENT(requirementId), { reason });
+  async postponeRequirement(
+    requirementId: number,
+    reason: string,
+  ): Promise<void> {
+    await apiClient.post<void>(ENDPOINTS.POSTPONE_REQUIREMENT(requirementId), {
+      reason,
+    });
   }
 
   /**

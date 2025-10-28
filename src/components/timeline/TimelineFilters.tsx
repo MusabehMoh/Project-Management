@@ -208,7 +208,10 @@ export default function TimelineFilters({
               textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
             >
               <span className="flex items-center gap-3">
-                <Avatar name={employee.fullName || t("common.none")} size="sm" />
+                <Avatar
+                  name={employee.fullName || t("common.none")}
+                  size="sm"
+                />
                 <span className="flex flex-col">
                   <span className="font-medium">
                     {employee.gradeName} {employee.fullName || t("common.none")}

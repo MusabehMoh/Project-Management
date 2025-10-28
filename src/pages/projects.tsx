@@ -579,6 +579,7 @@ export default function ProjectsPage() {
       // Clear the URL parameter after triggering edit
       setSearchParams((params) => {
         params.delete("edit");
+
         return params;
       });
     }
@@ -1951,8 +1952,8 @@ export default function ProjectsPage() {
       {/* Project Details Drawer */}
       <ProjectDetailsDrawer
         isOpen={isDetailsOpen}
-        project={selectedProjectForDetails as any}
         loading={detailsLoading}
+        project={selectedProjectForDetails as any}
         onOpenChange={handleDetailsClose}
         onViewRequirements={(project) => {
           // Navigate to project requirements page

@@ -244,6 +244,7 @@ public class DepartmentsController : ApiBaseController
     /// </summary>
     [HttpDelete("members/{memberId}")]
     [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     public async Task<IActionResult> RemoveDepartmentMember(int memberId)
     {
@@ -253,6 +254,11 @@ public class DepartmentsController : ApiBaseController
             if (!result)
                 return NotFound(Error<TeamMemberDto>("Member not found", null, 404));
             return Success("Member removed successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Return 400 with the actual backend error message
+            return Error<TeamMemberDto>(ex.Message, ex.Message, 400);
         }
         catch (Exception ex)
         {

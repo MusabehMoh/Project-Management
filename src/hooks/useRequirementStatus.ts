@@ -91,13 +91,15 @@ export function useRequirementStatus(): UseRequirementStatus {
     switch (code) {
       case 1: // New
         return "default";
-      case 2: // Under Study
+      case 2: // Manager Review
         return "warning";
-      case 3: // Under Development
+      case 3: // Approved
+        return "success";
+      case 4: // Under Development
         return "primary";
-      case 4: // Under Testing
+      case 5: // Under Testing
         return "secondary";
-      case 5: // Completed
+      case 6: // Completed
         return "success";
       default:
         return "default";

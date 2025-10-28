@@ -512,9 +512,7 @@ export default function ApprovalRequestsPage() {
               <Input
                 className="flex-1"
                 placeholder={t("requirements.searchRequirements")}
-                startContent={
-                  <Search className="text-default-400" size={20} />
-                }
+                startContent={<Search className="text-default-400" size={20} />}
                 value={searchTerm}
                 onValueChange={setSearchTerm}
               />
@@ -547,9 +545,7 @@ export default function ApprovalRequestsPage() {
                   className="w-20"
                   disallowEmptySelection={true}
                   isOpen={isOptionOpen}
-                  selectedKeys={[
-                    normalizePageSize(pageSize, 10).toString(),
-                  ]}
+                  selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
                   size="sm"
                   onOpenChange={setIsOptionOpen}
                   onSelectionChange={(keys) => {

@@ -442,6 +442,7 @@ const translations = {
     "common.error": "Error",
     "common.all": "All",
     "common.inactive": "Inactive",
+    "common.info": "Info",
     "common.show": "Show",
     "common.loading": "Loading...",
     "common.uploading": "Uploading...",
@@ -1098,6 +1099,8 @@ const translations = {
     "tasks.qcDates": "QC Schedule",
     "tasks.assignmentNote":
       "Select at least one team member for this task. Each role is optional but at least one assignment is required.",
+    "tasks.assignmentNoteInfo":
+      "If the requirement is simple or limited in scope, it can be assigned directly to the developer",
     "tasks.selectAtLeastOne":
       "Please select at least one team member (Developer, Designer, or QC).",
     "tasks.validation.startDateMustBeBeforeEndDate":
@@ -1112,6 +1115,7 @@ const translations = {
     "tasks.type.timeline": "Timeline Task",
     "tasks.type.changeRequest": "Change Request",
     "tasks.type.adhoc": "Adhoc Task",
+    "tasks.taskName": "Task Name",
     "tasks.noAssociatedProject": "Not associated with a project",
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
@@ -1154,12 +1158,14 @@ const translations = {
     "requirements.postponeRequirement": "Postpone Requirement",
     "requirements.postponeReason": "Postpone Reason",
     "requirements.postponeReasonRequired": "Postpone reason is required",
-    "requirements.postponeConfirmMessage": "Are you sure you want to postpone this requirement?",
+    "requirements.postponeConfirmMessage":
+      "Are you sure you want to postpone this requirement?",
     "requirements.postponeSuccess": "Requirement postponed successfully",
     "requirements.postponeError": "Failed to postpone requirement",
     "requirements.unpostpone": "Resume",
     "requirements.unpostponeRequirement": "Resume Requirement",
-    "requirements.unpostponeConfirmMessage": "Are you sure you want to resume this requirement?",
+    "requirements.unpostponeConfirmMessage":
+      "Are you sure you want to resume this requirement?",
     "requirements.unpostponeSuccess": "Requirement resumed successfully",
     "requirements.unpostponeError": "Failed to resume requirement",
 
@@ -1188,6 +1194,7 @@ const translations = {
     "validation.startDateRequired": "Start date is required",
     "validation.endDateRequired": "End date is required",
     "validation.endDateAfterStart": "End date must be after start date",
+    "validation.departmentRequired": "Department is required",
 
     // User Management
     "users.title": "User Management",
@@ -1305,6 +1312,8 @@ const translations = {
       "Are you sure you want to remove this member from the department?",
     "departments.members.searchPlaceholder":
       "Search by name, military number, or username",
+    "departments.members.removeSuccess": "Member removed successfully",
+    "departments.members.removeError": "Failed to remove member",
 
     // Department Statistics
     "departments.stats.title": "Department Statistics",
@@ -1661,6 +1670,8 @@ const translations = {
     "timeline.create.endDateAfterStart": "End date must be after start date",
     "timeline.create.projectRequired": "Project ID is required",
     "timeline.create.failedToCreate": "Failed to create timeline",
+    "timeline.create.timelineInfo":
+      "If the requirement is complex or involves multiple components, follow an organized approach by dividing into sprints: Break down the timeline into manageable sprints, where each sprint focuses on a specific part of the requirement.",
     "timeline.pageTitle": "Project Timeline",
     "timeline.pageDescription":
       "Manage project timelines, sprints, requirements, and tasks",
@@ -1777,7 +1788,8 @@ const translations = {
     "taskDetails.addComment": "Add a comment...",
     "taskDetails.attachments": "Attachments",
     "taskDetails.noAttachments": "No attachments yet",
-    "taskDetails.confirmDeleteAttachment": "Are you sure you want to delete the attachment '{fileName}'?",
+    "taskDetails.confirmDeleteAttachment":
+      "Are you sure you want to delete the attachment '{fileName}'?",
     "taskDetails.attachmentDeleted": "Attachment deleted successfully",
     "taskDetails.attachmentDeleteError": "Failed to delete attachment",
     priority: "Priority",
@@ -2301,6 +2313,7 @@ const translations = {
     "common.error": "خطأ",
     "common.all": "الكل",
     "common.inactive": "غير نشط",
+    "common.info": "معلومات",
     "common.show": "عرض",
     "common.loading": "جاري التحميل...",
     "common.uploading": "جاري الرفع...",
@@ -2938,6 +2951,8 @@ const translations = {
     "tasks.qcDates": "جدولة ضمان الجودة",
     "tasks.assignmentNote":
       "اختر عضو فريق واحد على الأقل لهذه المهمة. كل دور اختياري ولكن يجب تعيين واحد على الأقل.",
+    "tasks.assignmentNoteInfo":
+      "إذا كان المتطلب بسيطًا أو محدود النطاق، يمكن تعيينه مباشرة إلى المطور",
     "tasks.selectAtLeastOne":
       "يرجى اختيار عضو فريق واحد على الأقل (مطور، مصمم، أو ضمان الجودة).",
     "tasks.validation.startDateMustBeBeforeEndDate":
@@ -2994,12 +3009,14 @@ const translations = {
     "requirements.postponeRequirement": "تأجيل المتطلب",
     "requirements.postponeReason": "سبب التأجيل",
     "requirements.postponeReasonRequired": "سبب التأجيل مطلوب",
-    "requirements.postponeConfirmMessage": "هل أنت متأكد من أنك تريد تأجيل هذا المتطلب؟",
+    "requirements.postponeConfirmMessage":
+      "هل أنت متأكد من أنك تريد تأجيل هذا المتطلب؟",
     "requirements.postponeSuccess": "تم تأجيل المتطلب بنجاح",
     "requirements.postponeError": "فشل في تأجيل المتطلب",
     "requirements.unpostpone": "استئناف",
     "requirements.unpostponeRequirement": "استئناف المتطلب",
-    "requirements.unpostponeConfirmMessage": "هل أنت متأكد من أنك تريد استئناف هذا المتطلب؟",
+    "requirements.unpostponeConfirmMessage":
+      "هل أنت متأكد من أنك تريد استئناف هذا المتطلب؟",
     "requirements.unpostponeSuccess": "تم استئناف المتطلب بنجاح",
     "requirements.unpostponeError": "فشل في استئناف المتطلب",
 
@@ -3029,6 +3046,7 @@ const translations = {
     "validation.endDateRequired": "تاريخ النهاية مطلوب",
     "validation.endDateAfterStart":
       "يجب أن يكون تاريخ النهاية بعد تاريخ البداية",
+    "validation.departmentRequired": "القسم مطلوب",
 
     // User Management
     "users.title": "إدارة المستخدمين",
@@ -3140,6 +3158,8 @@ const translations = {
       "هل أنت متأكد من إزالة هذا العضو من القسم؟",
     "departments.members.searchPlaceholder":
       "البحث بالاسم أو الرقم العسكري أو اسم المستخدم",
+    "departments.members.removeSuccess": "تم إزالة العضو بنجاح",
+    "departments.members.removeError": "فشل في إزالة العضو",
 
     // Department Statistics
     "departments.stats.title": "إحصائيات الأقسام",
@@ -3490,6 +3510,8 @@ const translations = {
       "يجب أن يكون تاريخ النهاية بعد تاريخ البداية",
     "timeline.create.projectRequired": "معرف المشروع مطلوب",
     "timeline.create.failedToCreate": "فشل في إنشاء المخطط الزمني",
+    "timeline.create.timelineInfo":
+      "إذا كان المتطلب معقدًا أو يتضمن عدة مكونات، ينبغي اتباع نهج منظم يعتمد على تقسيمه إلى سباقات (Sprints) ومهام (Tasks): تقسيم الجدول الزمني إلى سباقات يمكن إدارتها، بحيث يركز كل سباق على جزء محدد من المتطلب، ويُقسم هذا الجزء بدوره إلى مهام صغيرة وقابلة للتنفيذ والقياس، مما يتيح تتبع التقدم بدقة وتسليم قيمة جزئية في نهاية كل سباق.",
     "timeline.pageTitle": "المخطط الزمني للمشروع",
     "timeline.pageDescription":
       "إدارة الجداول الزمنية للمشروع والسبرينتات والمتطلبات والمهام",
@@ -3603,7 +3625,8 @@ const translations = {
     "taskDetails.addComment": "أضف تعليقاً...",
     "taskDetails.attachments": "المرفقات",
     "taskDetails.noAttachments": "لا توجد مرفقات بعد",
-    "taskDetails.confirmDeleteAttachment": "هل أنت متأكد من أنك تريد حذف المرفق '{fileName}'؟",
+    "taskDetails.confirmDeleteAttachment":
+      "هل أنت متأكد من أنك تريد حذف المرفق '{fileName}'؟",
     "taskDetails.attachmentDeleted": "تم حذف المرفق بنجاح",
     "taskDetails.attachmentDeleteError": "فشل في حذف المرفق",
     priority: "الأولوية",

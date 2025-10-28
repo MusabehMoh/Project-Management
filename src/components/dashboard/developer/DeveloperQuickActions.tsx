@@ -362,8 +362,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              {t("developerQuickActions.noActionsTitle") ||
-                "All Clear!"}
+              {t("developerQuickActions.noActionsTitle") || "All Clear!"}
             </h3>
             <p className="text-sm text-default-500 max-w-md">
               {t("developerQuickActions.noActionsDescription") ||

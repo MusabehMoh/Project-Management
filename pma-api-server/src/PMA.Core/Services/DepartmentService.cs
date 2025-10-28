@@ -11,7 +11,10 @@ public class DepartmentService : IDepartmentService
     private readonly ITeamRepository _teamRepository;
     private readonly IEmployeeService _employeeService;
 
-    public DepartmentService(IDepartmentRepository departmentRepository, ITeamRepository teamRepository, IEmployeeService employeeService)
+    public DepartmentService(
+        IDepartmentRepository departmentRepository, 
+        ITeamRepository teamRepository, 
+        IEmployeeService employeeService)
     {
         _departmentRepository = departmentRepository;
         _teamRepository = teamRepository;
@@ -175,8 +178,20 @@ public class DepartmentService : IDepartmentService
         if (teamMember == null)
             return false;
 
+        // Check for dependencies before removal
+        var dependencies = await CheckMemberDependenciesAsync(teamMember.PrsId);
+        if (dependencies.Any())
+        {
+            throw new InvalidOperationException($"لا يمكن إزالة العضو. العضو مرتبط بي: {string.Join("، ", dependencies)}");
+        }
+
         // Direct call to repository - no duplicate department validation needed
         return await _teamRepository.RemoveTeamMemberAsync(memberId);
+    }
+
+    private async Task<List<string>> CheckMemberDependenciesAsync(int? prsId)
+    {
+        return await _departmentRepository.CheckMemberDependenciesAsync(prsId);
     }
 
     public async Task<IEnumerable<EmployeeDto>> SearchEmployeesInTeamsAsync(string searchTerm)

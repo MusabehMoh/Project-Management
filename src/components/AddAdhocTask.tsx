@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { getLocalTimeZone, parseDate } from "@internationalized/date";
 import { X } from "lucide-react";
 import { today } from "@internationalized/date";
+
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MemberSearchResult } from "@/types";
@@ -368,11 +369,6 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                     menuTrigger="input"
                     placeholder={t("users.searchEmployees")}
                     selectedKey={selectedEmployee?.id.toString()}
-                    onOpenChange={(isOpen) => {
-                      if (isOpen && employees.length === 0) {
-                        searchEmployees("");
-                      }
-                    }}
                     onInputChange={(value) => {
                       setEmployeeInputValue(value);
                       if (
@@ -385,6 +381,11 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                       searchEmployees(value);
                       if (errors.members) {
                         setErrors((prev) => ({ ...prev, members: undefined })); // clear error on typing
+                      }
+                    }}
+                    onOpenChange={(isOpen) => {
+                      if (isOpen && employees.length === 0) {
+                        searchEmployees("");
                       }
                     }}
                     onSelectionChange={(key) => {

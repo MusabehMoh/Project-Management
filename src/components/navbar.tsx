@@ -1035,7 +1035,7 @@ export const Navbar = () => {
       </NavbarMenu>
 
       {/* Global Search Modal */}
-      <GlobalSearchModal isOpen={isOpen} onOpenChange={onOpenChange}  />
+      <GlobalSearchModal isOpen={isOpen} onOpenChange={onOpenChange} />
     </HeroUINavbar>
   );
 };

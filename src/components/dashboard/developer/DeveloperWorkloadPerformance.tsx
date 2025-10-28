@@ -292,13 +292,11 @@ export default function DeveloperWorkloadPerformance({
 
                 <Select
                   aria-label={
-                    t("developerDashboard.filterByStatus") ||
-                    "Filter by status"
+                    t("developerDashboard.filterByStatus") || "Filter by status"
                   }
                   className="max-w-xs"
                   placeholder={
-                    t("developerDashboard.filterByStatus") ||
-                    "Filter by status"
+                    t("developerDashboard.filterByStatus") || "Filter by status"
                   }
                   selectedKeys={statusFilter ? [statusFilter] : []}
                   onSelectionChange={(keys) => {
@@ -320,8 +318,7 @@ export default function DeveloperWorkloadPerformance({
                     {t("developerDashboard.status.busy") || "Busy"}
                   </SelectItem>
                   <SelectItem key="overloaded">
-                    {t("developerDashboard.status.overloaded") ||
-                      "Overloaded"}
+                    {t("developerDashboard.status.overloaded") || "Overloaded"}
                   </SelectItem>
                 </Select>
 
@@ -348,8 +345,7 @@ export default function DeveloperWorkloadPerformance({
                 {searchQuery || statusFilter
                   ? t("developerDashboard.noDevelopersFound") ||
                     "No Developers Found"
-                  : t("developerDashboard.noTeamMembers") ||
-                    "No Team Members"}
+                  : t("developerDashboard.noTeamMembers") || "No Team Members"}
               </h3>
               <p className="text-sm text-default-500 max-w-md mb-4">
                 {searchQuery || statusFilter

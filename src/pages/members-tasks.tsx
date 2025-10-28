@@ -174,6 +174,7 @@ export default function MembersTasksPage() {
         attachment.id,
       );
       const url = window.URL.createObjectURL(blob);
+
       await previewFile(attachment.originalName, url, attachment.fileSize);
     } catch (error) {
       console.error("Task attachment preview failed:", error);
@@ -202,7 +203,8 @@ export default function MembersTasksPage() {
   const handleTaskFileUpload = async (taskId: number, files: File[]) => {
     // Get file upload configuration
     const { maxFileSizeMB, allowedFileTypes } = getFileUploadConfig();
-    debugger
+
+    debugger;
     const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024; // Convert MB to bytes
 
     // Arrays to collect rejected files by type
@@ -217,6 +219,7 @@ export default function MembersTasksPage() {
         console.warn(
           `File "${file.name}" has no size (0 bytes) and will be skipped`,
         );
+
         return false;
       }
 
@@ -226,16 +229,19 @@ export default function MembersTasksPage() {
         console.warn(
           `File "${file.name}" exceeds maximum size limit of ${maxFileSizeMB}MB`,
         );
+
         return false;
       }
 
       // Check file type
       const fileExtension = file.name.split(".").pop()?.toLowerCase();
+
       if (!fileExtension || !allowedFileTypes.includes(fileExtension)) {
         invalidTypeFiles.push(file.name);
         console.warn(
           `File "${file.name}" has invalid type. Allowed types: ${allowedFileTypes.join(", ")}`,
         );
+
         return false;
       }
 
@@ -257,12 +263,14 @@ export default function MembersTasksPage() {
           emptyFiles.length === 1
             ? `${fileList}`
             : `${emptyFiles.length} ${t("requirements.validation.filesEmptyError")}: ${fileList}`;
+
         showWarningToast(t("requirements.validation.fileEmptyError"), message);
       }
 
       // Handle oversized files
       if (oversizedFiles.length > 0) {
         const fileList = oversizedFiles.join(", ");
+
         showWarningToast(
           t("requirements.validation.filesSizeTooLarge"),
           fileList,
@@ -273,6 +281,7 @@ export default function MembersTasksPage() {
       if (invalidTypeFiles.length > 0) {
         const fileList = invalidTypeFiles.join(", ");
         const allowedTypesStr = allowedFileTypes.join(", ");
+
         showWarningToast(
           t("requirements.validation.fileTypeNotAllowed")
             .replace("{0}", invalidTypeFiles[0])
@@ -294,6 +303,7 @@ export default function MembersTasksPage() {
           taskId,
           file,
         );
+
         if (result.success) {
           showSuccessToast(t("requirements.uploadSuccess"));
         } else {

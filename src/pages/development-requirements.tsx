@@ -24,13 +24,13 @@ import {
 } from "@heroui/modal";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { DatePicker } from "@heroui/date-picker";
-import { Search, Calendar, Code, Eye, Plus, Edit, X } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
+import { Search, Calendar, Code, Eye, Plus, Edit, X, Info } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
 import { FilePreview } from "@/components/FilePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useApprovedRequirements } from "@/hooks/useApprovedRequirements";
-import useTeamSearch from "@/hooks/useTeamSearch";
 import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import { useTimeline } from "@/hooks/useTimeline";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -66,6 +66,7 @@ const RequirementCard = ({
   getStatusText,
   getPriorityColor,
   getPriorityLabel,
+  convertTypeToString,
   isHighlighted = false,
   cardRef,
 }: {
@@ -81,6 +82,7 @@ const RequirementCard = ({
     priority: number,
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
   getPriorityLabel: (priority: number) => string | undefined;
+  convertTypeToString: (type: number) => string;
   isHighlighted?: boolean;
   cardRef?: (element: HTMLDivElement | null) => void;
 }) => {
@@ -122,6 +124,21 @@ const RequirementCard = ({
             >
               {getStatusText(requirement.status)}
             </Chip>
+            {requirement.type && (
+              <Chip
+                color={
+                  convertTypeToString(requirement.type) === "new"
+                    ? "success"
+                    : "warning"
+                }
+                size="sm"
+                variant="flat"
+              >
+                {convertTypeToString(requirement.type) === "new"
+                  ? t("requirements.new")
+                  : t("requirements.changeRequest")}
+              </Chip>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -313,6 +330,11 @@ export default function DevelopmentRequirementsPage() {
     return getRequirementStatusName(status);
   };
 
+  // Helper function to convert requirement type to string
+  const convertTypeToString = (type: number): string => {
+    return type === 1 ? "new" : "changeRequest";
+  };
+
   // Grid-only view
 
   const {
@@ -383,7 +405,7 @@ export default function DevelopmentRequirementsPage() {
 
   const {
     employees: developers,
-    loading: loadingDevelopers ,
+    loading: loadingDevelopers,
     searchEmployees: searchDevelopers,
   } = useTeamSearchByDepartment({
     departmentId: 2, // development Department
@@ -403,7 +425,6 @@ export default function DevelopmentRequirementsPage() {
     loadInitialResults: true, // Load all QC members initially
     initialResultsLimit: 100,
   });
- 
 
   // Debug: log team search results to help diagnose autocomplete issues
   // Debug hooks intentionally left out to keep production linting clean.
@@ -1055,6 +1076,7 @@ export default function DevelopmentRequirementsPage() {
                       requirementRefs.current[requirement.id] = element;
                     }
                   }}
+                  convertTypeToString={convertTypeToString}
                   getPriorityColor={getPriorityColor}
                   getPriorityLabel={getPriorityLabel}
                   getStatusColor={getStatusColor}
@@ -1115,16 +1137,45 @@ export default function DevelopmentRequirementsPage() {
             {(_onClose) => (
               <>
                 <ModalHeader className="flex flex-col gap-1 flex-shrink-0">
-                  <h2 className="text-xl font-semibold">
-                    {selectedRequirement?.requirementTask
-                      ? t("tasks.editTask")
-                      : t("tasks.createTask")}
-                  </h2>
-                  <p className="text-sm text-default-500">
-                    {selectedRequirement?.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-semibold">
+                      {selectedRequirement?.requirementTask
+                        ? t("tasks.editTask")
+                        : t("tasks.createTask")}
+                    </h2>
+                    <Popover placement="bottom">
+                      <PopoverTrigger>
+                        <Button
+                          isIconOnly
+                          className="text-default-400 hover:text-default-600"
+                          size="sm"
+                          variant="light"
+                        >
+                          <Info className="w-4 h-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <div className="px-1 py-2">
+                          <div className="text-small font-bold">
+                            {t("common.info")}
+                          </div>
+                          <div className="text-tiny text-default-600 max-w-xs">
+                            {t("tasks.assignmentNoteInfo")}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </ModalHeader>
                 <ModalBody className="overflow-y-auto flex-1">
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-default-700">
+                      {t("tasks.taskName")}
+                    </label>
+                    <p className="text-sm text-default-500 mt-1">
+                      {selectedRequirement?.name}
+                    </p>
+                  </div>
                   <div className="space-y-4">
                     {/* Task Description */}
                     <div className="space-y-2">
