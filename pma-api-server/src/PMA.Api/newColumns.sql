@@ -129,3 +129,5 @@ GO
 
 
 
+ALTER TABLE DesignRequests
+ADD DesignerTaskId INT
