@@ -219,7 +219,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
     projectsWithoutRequirements.length +
     availableMembers.length;
 
-  if (loading) {
+  if (loading || refreshing) {
     return (
       <Card
         className={`${className} border-default-200`}
