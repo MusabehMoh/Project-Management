@@ -144,18 +144,23 @@ public class DesignRequestService : IDesignRequestService
         designRequest.Notes = comment;
         designRequest.UpdatedAt = DateTime.Now;
         designRequest.Status = (int)DesignRequestsStatus.Assigned;
-        await _designRequestRepository.UpdateAsync(designRequest);
 
-        // Create a design task for the assigned designer
+        // Create a design task for the assigned designer and store the task ID
         if (designRequest.TaskId.HasValue)
         {
-            await CreateDesignTaskForAssigneeAsync(designRequest.TaskId.Value, assignedToPrsId, comment);
+            var designerTaskId = await CreateDesignTaskForAssigneeAsync(designRequest.TaskId.Value, assignedToPrsId, comment);
+            if (designerTaskId.HasValue)
+            {
+                designRequest.DesignerTaskId = designerTaskId.Value;
+            }
         }
+
+        await _designRequestRepository.UpdateAsync(designRequest);
 
         return _mappingService.MapToDesignRequestDto(designRequest);
     }
 
-    private async Task<bool> CreateDesignTaskForAssigneeAsync(int originalTaskId, int assignedToPrsId, string? comment)
+    private async Task<int?> CreateDesignTaskForAssigneeAsync(int originalTaskId, int assignedToPrsId, string? comment)
     {
         try
         {
@@ -163,7 +168,7 @@ public class DesignRequestService : IDesignRequestService
             var originalTask = await _taskService.GetTaskByIdAsync(originalTaskId);
             if (originalTask == null)
             {
-                return false;
+                return null;
             }
 
             // Create the design task DTO with metadata from the original task
@@ -198,12 +203,12 @@ public class DesignRequestService : IDesignRequestService
                 await _taskService.UpdateTaskAssignmentsAsync(createdTask.Id, createTaskDto.MemberIds);
             }
 
-            return true;
+            return createdTask.Id;
         }
         catch (Exception)
         {
             // Log error but don't fail the assignment process
-            return false;
+            return null;
         }
     }
 }

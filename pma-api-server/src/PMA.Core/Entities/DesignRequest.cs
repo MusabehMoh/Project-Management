@@ -10,6 +10,8 @@ public class DesignRequest
 
     public int? TaskId { get; set; }
 
+    public int? DesignerTaskId { get; set; }
+
     public string? Notes { get; set; }
 
     public int? AssignedToPrsId { get; set; }

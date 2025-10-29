@@ -851,6 +851,7 @@ public class MappingService : IMappingService
         {
             Id = designRequest.Id,
             TaskId = designRequest.TaskId,
+            DesignerTaskId = designRequest.DesignerTaskId,
             Notes = designRequest.Notes,
             AssignedToPrsId = designRequest.AssignedToPrsId,
             Status = designRequest.Status,
