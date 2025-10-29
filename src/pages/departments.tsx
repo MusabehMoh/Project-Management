@@ -51,6 +51,7 @@ import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 import { usePermissions } from "@/hooks/usePermissions";
 import { usePageTitle } from "@/hooks";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
+import { translateBackendError } from "@/utils/errorTranslation";
 
 export default function DepartmentsPage() {
   const { t, language } = useLanguage();
@@ -208,7 +209,9 @@ export default function DepartmentsPage() {
           error?.message ||
           t("departments.members.removeError");
 
-        showErrorToast(errorMessage);
+        const translatedError = translateBackendError(errorMessage, t);
+
+        showErrorToast(translatedError);
       }
     }
   };
@@ -235,7 +238,9 @@ export default function DepartmentsPage() {
       const errorMessage =
         error?.data?.error || error?.message || t("toast.memberAddError");
 
-      showErrorToast(errorMessage);
+      const translatedError = translateBackendError(errorMessage, t);
+
+      showErrorToast(translatedError);
     }
   };
 

@@ -55,6 +55,11 @@ export function translateBackendError(
     return t("users.error.userExists");
   }
 
+  // Handle "Employee is already a member of this department"
+  if (errorMessage.includes("Employee is already a member of this department")) {
+    return t("departments.members.alreadyMember");
+  }
+
   // Return original message if no pattern matches
   return errorMessage;
 }

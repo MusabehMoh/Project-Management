@@ -1330,6 +1330,8 @@ const translations = {
       "Search by name, military number, or username",
     "departments.members.removeSuccess": "Member removed successfully",
     "departments.members.removeError": "Failed to remove member",
+    "departments.members.alreadyMember":
+      "Employee is already a member of this department",
 
     // Department Statistics
     "departments.stats.title": "Department Statistics",
@@ -3194,6 +3196,7 @@ const translations = {
       "البحث بالاسم أو الرقم العسكري أو اسم المستخدم",
     "departments.members.removeSuccess": "تم إزالة العضو بنجاح",
     "departments.members.removeError": "فشل في إزالة العضو",
+    "departments.members.alreadyMember": "الموظف عضو بالفعل في هذا القسم",
 
     // Department Statistics
     "departments.stats.title": "إحصائيات الأقسام",
