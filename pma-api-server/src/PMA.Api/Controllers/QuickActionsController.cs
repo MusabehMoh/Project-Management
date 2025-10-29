@@ -32,7 +32,7 @@ public class QuickActionsController : ApiBaseController
         {
             // Get unassigned projects (projects with no analysts assigned)
             // Active statuses: New, UnderStudy, UnderDevelopment, UnderTesting
-            var unassignedProjects = await _context.Projects
+            var unassignedProjects = await _context.Projects.Include(p => p.ProjectOwnerEmployee).Include(p => p.OwningUnitEntity)
                 .Where(p => !_context.ProjectAnalysts.Any(pa => pa.ProjectId == p.Id) &&
                            (p.Status == ProjectStatus.New ||
                             p.Status == ProjectStatus.UnderStudy ||
@@ -42,8 +42,8 @@ public class QuickActionsController : ApiBaseController
                 {
                     id = p.Id,
                     applicationName = p.ApplicationName,
-                    projectOwner = p.ProjectOwner,
-                    owningUnit = p.OwningUnit,
+                    projectOwner = p.ProjectOwnerEmployee.FullName??"",
+                    owningUnit = p.OwningUnitEntity.Name??"",
                     status = p.Status.ToString(),
                     startDate = p.StartDate,
                     expectedCompletionDate = p.ExpectedCompletionDate
@@ -51,7 +51,7 @@ public class QuickActionsController : ApiBaseController
                 .ToListAsync();
 
             // Get projects without requirements (active projects with no requirements)
-            var projectsWithoutRequirements = await _context.Projects
+            var projectsWithoutRequirements = await _context.Projects.Include(p => p.ProjectOwnerEmployee).Include(p => p.OwningUnitEntity)
                 .Where(p => !_context.ProjectRequirements.Any(pr => pr.ProjectId == p.Id) &&
                            (p.Status == ProjectStatus.New ||
                             p.Status == ProjectStatus.UnderStudy ||
@@ -61,8 +61,8 @@ public class QuickActionsController : ApiBaseController
                 {
                     id = p.Id,
                     applicationName = p.ApplicationName,
-                    projectOwner = p.ProjectOwner,
-                    owningUnit = p.OwningUnit,
+                    projectOwner = p.ProjectOwnerEmployee.FullName??"",
+                    owningUnit = p.OwningUnitEntity.Name??"",
                     status = p.Status.ToString(),
                     startDate = p.StartDate,
                     expectedCompletionDate = p.ExpectedCompletionDate
@@ -137,7 +137,7 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
-            var unassignedProjects = await _context.Projects
+            var unassignedProjects = await _context.Projects.Include(p => p.ProjectOwnerEmployee).Include(p => p.OwningUnitEntity)
                 .Where(p => !_context.ProjectAnalysts.Any(pa => pa.ProjectId == p.Id) &&
                            (p.Status == ProjectStatus.New ||
                             p.Status == ProjectStatus.UnderStudy ||
@@ -147,8 +147,8 @@ public class QuickActionsController : ApiBaseController
                 {
                     id = p.Id,
                     applicationName = p.ApplicationName,
-                    projectOwner = p.ProjectOwner,
-                    owningUnit = p.OwningUnit,
+                    projectOwner = p.ProjectOwnerEmployee.FullName??"",
+                    owningUnit = p.OwningUnitEntity.Name??"",
                     status = p.Status.ToString(),
                     startDate = p.StartDate,
                     expectedCompletionDate = p.ExpectedCompletionDate,
@@ -184,7 +184,7 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
-            var projectsWithoutRequirements = await _context.Projects
+            var projectsWithoutRequirements = await _context.Projects.Include(p => p.ProjectOwnerEmployee).Include(p => p.OwningUnitEntity)
                 .Where(p => !_context.ProjectRequirements.Any(pr => pr.ProjectId == p.Id) &&
                            (p.Status == ProjectStatus.New ||
                             p.Status == ProjectStatus.UnderStudy ||
@@ -194,8 +194,8 @@ public class QuickActionsController : ApiBaseController
                 {
                     id = p.Id,
                     applicationName = p.ApplicationName,
-                    projectOwner = p.ProjectOwner,
-                    owningUnit = p.OwningUnit,
+                    projectOwner = p.ProjectOwnerEmployee.FullName??"",
+                    owningUnit = p.OwningUnitEntity.Name??"",
                     status = p.Status.ToString(),
                     startDate = p.StartDate,
                     expectedCompletionDate = p.ExpectedCompletionDate,
@@ -815,7 +815,7 @@ public class QuickActionsController : ApiBaseController
             var overdueItems = new List<object>();
 
             // Overdue projects
-            var overdueProjects = await _context.Projects
+            var overdueProjects = await _context.Projects.Include(p => p.ProjectOwnerEmployee).Include(p => p.OwningUnitEntity)
                 .Where(p => p.ExpectedCompletionDate < DateTime.Now &&
                            p.Status != ProjectStatus.Production)
                 .Select(p => new
@@ -825,7 +825,7 @@ public class QuickActionsController : ApiBaseController
                     type = "project",
                     dueDate = p.ExpectedCompletionDate.ToString("o"),
                     priority = "high",
-                    assignee = p.ProjectOwner,
+                    assignee = p.ProjectOwnerEmployee.FullName??"",
                     projectName = p.ApplicationName
                 })
                 .ToListAsync();
@@ -1294,18 +1294,16 @@ public class QuickActionsController : ApiBaseController
         try
         {
             // Get projects with requirements count and completion data
-            var projectsQuery = from p in _context.Projects
-                               join pr in _context.ProjectRequirements on p.Id equals pr.ProjectId into prGroup
-                               from pr in prGroup.DefaultIfEmpty()
-                               group pr by p into g
-                               select new
-                               {
-                                   Project = g.Key,
-                                   RequirementsCount = g.Count(x => x != null),
-                                   CompletedRequirements = g.Count(x => x != null && 
-                                       (x.Status == RequirementStatusEnum.Approved || 
-                                        x.Status == RequirementStatusEnum.Completed))
-                               };
+            var projectsQuery = _context.Projects
+                .Include(p => p.ProjectOwnerEmployee)
+                .Include(p => p.OwningUnitEntity)
+                .GroupJoin(_context.ProjectRequirements, p => p.Id, pr => pr.ProjectId, (p, prGroup) => new { Project = p, Requirements = prGroup })
+                .Select(g => new
+                {
+                    Project = g.Project,
+                    RequirementsCount = g.Requirements.Count(x => x != null),
+                    CompletedRequirements = g.Requirements.Count(x => x != null && (x.Status == RequirementStatusEnum.Approved || x.Status == RequirementStatusEnum.Completed))
+                });
 
             var projectsData = await projectsQuery.ToListAsync();
 
@@ -1324,8 +1322,8 @@ public class QuickActionsController : ApiBaseController
                 {
                     id = p.Project.Id,
                     applicationName = p.Project.ApplicationName,
-                    projectOwner = p.Project.ProjectOwner,
-                    owningUnit = p.Project.OwningUnit,
+                    projectOwner = p.Project.ProjectOwnerEmployee?.FullName ?? "",
+                    owningUnit = p.Project.OwningUnitEntity?.Name ?? "",
                     status = (int)p.Project.Status,
                     statusName = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.Name ?? p.Project.Status.ToString(),
                     statusNameAr = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.NameAr ?? p.Project.Status.ToString(),
@@ -1341,8 +1339,8 @@ public class QuickActionsController : ApiBaseController
                 {
                     id = p.Project.Id,
                     applicationName = p.Project.ApplicationName,
-                    projectOwner = p.Project.ProjectOwner,
-                    owningUnit = p.Project.OwningUnit,
+                    projectOwner = p.Project.ProjectOwnerEmployee?.FullName ?? "",
+                    owningUnit = p.Project.OwningUnitEntity?.Name ?? "",
                     status = (int)p.Project.Status,
                     statusName = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.Name ?? p.Project.Status.ToString(),
                     statusNameAr = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.NameAr ?? p.Project.Status.ToString(),
@@ -1358,8 +1356,8 @@ public class QuickActionsController : ApiBaseController
                 {
                     id = p.Project.Id,
                     applicationName = p.Project.ApplicationName,
-                    projectOwner = p.Project.ProjectOwner,
-                    owningUnit = p.Project.OwningUnit,
+                    projectOwner = p.Project.ProjectOwnerEmployee?.FullName ?? "",
+                    owningUnit = p.Project.OwningUnitEntity?.Name ?? "",
                     status = (int)p.Project.Status,
                     statusName = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.Name ?? p.Project.Status.ToString(),
                     statusNameAr = statusLookups.FirstOrDefault(s => s.Code == (int)p.Project.Status)?.NameAr ?? p.Project.Status.ToString(),

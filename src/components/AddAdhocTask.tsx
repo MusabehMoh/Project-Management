@@ -203,7 +203,8 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      {t("timeline.treeView.name")}
+                      {t("timeline.treeView.name")}{" "}
+                      <span className="text-danger">*</span>
                     </label>
                     <Input
                       errorMessage={errors.name}
@@ -218,7 +219,8 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
 
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      {t("timeline.detailsPanel.description")}
+                      {t("timeline.detailsPanel.description")}{" "}
+                      <span className="text-danger">*</span>
                     </label>
                     <Textarea
                       errorMessage={errors.description}
@@ -359,7 +361,10 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                       </div>
                     ))}
                   </div>
-                  <label>{t("users.selectEmployee")}</label>
+                  <label>
+                    {t("users.selectEmployee")}{" "}
+                    <span className="text-danger">*</span>
+                  </label>
                   <Autocomplete
                     isClearable
                     defaultFilter={(_textValue, _input) => true}

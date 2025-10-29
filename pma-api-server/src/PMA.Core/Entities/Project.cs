@@ -13,17 +13,7 @@ public class Project
     [MaxLength(200)]
     public string ApplicationName { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(100)]
-    public string ProjectOwner { get; set; } = string.Empty;
-
-    [MaxLength(100)]
-    public string? AlternativeOwner { get; set; }
-
-    [Required]
-    [MaxLength(100)]
-    public string OwningUnit { get; set; } = string.Empty;
-
+    
     [Required]
     public int ProjectOwnerId { get; set; }
 

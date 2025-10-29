@@ -240,7 +240,7 @@ public class MemberTaskService : IMemberTaskService
                     FullName = task.ProjectRequirement.Project.AlternativeOwnerEmployee.FullName,
                     StatusId = task.ProjectRequirement.Project.AlternativeOwnerEmployee.StatusId
                 } : null,
-                OwningUnit = task.ProjectRequirement.Project.OwningUnit,
+                OwningUnit = task.ProjectRequirement.Project.OwningUnitEntity.Name??"",
                 ProjectOwnerId = task.ProjectRequirement.Project.ProjectOwnerId,
                 AlternativeOwnerId = task.ProjectRequirement.Project.AlternativeOwnerId,
                 OwningUnitId = task.ProjectRequirement.Project.OwningUnitId, 

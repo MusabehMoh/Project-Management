@@ -123,7 +123,7 @@ public class MappingService : IMappingService
             ProjectOwnerEmployee = project.ProjectOwnerEmployee != null ? MapToEmployeeDto(project.ProjectOwnerEmployee) : null,
             AlternativeOwnerEmployee = project.AlternativeOwnerEmployee != null ? MapToEmployeeDto(project.AlternativeOwnerEmployee) : null,
             ResponsibleUnitManagerEmployee = project.ResponsibleUnitManagerEmployee != null ? MapToEmployeeDto(project.ResponsibleUnitManagerEmployee) : null,
-            OwningUnit = project.OwningUnit,
+            OwningUnit = project.OwningUnitEntity?.Name ?? "",
             ProjectOwnerId = project.ProjectOwnerId,
             AlternativeOwnerId = project.AlternativeOwnerId,
             ResponsibleUnitManagerId = project.ResponsibleUnitManagerId,
@@ -179,10 +179,7 @@ public class MappingService : IMappingService
             Status = createDto.Status,
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now,
-            // Navigation properties will be populated by the service layer
-            ProjectOwner = string.Empty, // Will be populated from database
-            AlternativeOwner = string.Empty, // Will be populated from database 
-            OwningUnit = string.Empty, // Will be populated from database
+            // Navigation properties will be populated by the service layer  
             CreatedBy = createdBy,
 
             ProjectAnalysts = new List<ProjectAnalyst>() // Initialize empty collection
@@ -210,25 +207,18 @@ public class MappingService : IMappingService
             project.ProjectOwnerId = updateDto.ProjectOwner.Value;
             // Populate ProjectOwner name and navigation property from database
             var owner = await _employeeRepository.GetByIdAsync(updateDto.ProjectOwner.Value);
-            project.ProjectOwner = owner?.FullName ?? string.Empty;
-            project.ProjectOwnerEmployee = owner;
+             project.ProjectOwnerEmployee = owner;
         }
 
         if (updateDto.AlternativeOwner.HasValue)
         {
             project.AlternativeOwnerId = updateDto.AlternativeOwner.Value;
-            // Populate AlternativeOwner name and navigation property from database
-            var altOwner = await _employeeRepository.GetByIdAsync(updateDto.AlternativeOwner.Value);
-            project.AlternativeOwner = altOwner?.FullName ?? string.Empty;
-            project.AlternativeOwnerEmployee = altOwner;
+             
         }
 
         if (updateDto.OwningUnit.HasValue)
         {
-            project.OwningUnitId = updateDto.OwningUnit.Value;
-            // Populate OwningUnit name from database
-            var unit = await _unitRepository.GetByIdAsync(updateDto.OwningUnit.Value);
-            project.OwningUnit = unit?.Name ?? string.Empty;
+            project.OwningUnitId = updateDto.OwningUnit.Value; 
         }
 
         // Handle responsible manager
@@ -300,18 +290,9 @@ public class MappingService : IMappingService
         if (project == null)
             return;
 
-        // Populate ProjectOwner name and navigation property
-        var owner = await _employeeRepository.GetByIdAsync(project.ProjectOwnerId);
-        project.ProjectOwner = owner?.FullName ?? string.Empty;
-        project.ProjectOwnerEmployee = owner;
+         
 
-        // Populate AlternativeOwner name and navigation property
-        if (project.AlternativeOwnerId.HasValue)
-        {
-            var altOwner = await _employeeRepository.GetByIdAsync(project.AlternativeOwnerId.Value);
-            project.AlternativeOwner = altOwner?.FullName;
-            project.AlternativeOwnerEmployee = altOwner;
-        }
+       
 
         // Populate ResponsibleUnitManagerEmployee name and navigation property
         if (project.ResponsibleUnitManagerId.HasValue)
@@ -321,10 +302,7 @@ public class MappingService : IMappingService
             project.ResponsibleUnitManagerEmployee = manager;
         }
 
-        // Populate OwningUnit name
-        var unit = await _unitRepository.GetByIdAsync(project.OwningUnitId);
-        project.OwningUnit = unit?.Name ?? string.Empty;
-
+       
         // Populate Analysts names from ProjectAnalyst entities
         if (project.ProjectAnalysts != null && project.ProjectAnalysts.Any())
         {
@@ -458,8 +436,8 @@ public class MappingService : IMappingService
         {
             Id = project.Id,
             ApplicationName = project.ApplicationName,
-            ProjectOwner = project.ProjectOwner,
-            OwningUnit = project.OwningUnit, 
+            ProjectOwner = project.ProjectOwnerEmployee?.FullName??"",
+            OwningUnit = project.OwningUnitEntity?.Name??"", 
             AnalystIds = project.ProjectAnalysts?.Select(pa => pa.AnalystId).ToList() ?? new List<int>()
         };
     }

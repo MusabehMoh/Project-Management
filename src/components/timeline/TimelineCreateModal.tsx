@@ -11,6 +11,7 @@ import {
 } from "@heroui/modal";
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { Info } from "lucide-react";
+import { today, getLocalTimeZone } from "@internationalized/date";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -217,6 +218,7 @@ export default function TimelineCreateModal({
                     errorMessage={errors.startDate}
                     isInvalid={!!errors.startDate}
                     label={t("timeline.create.startDate")}
+                    minValue={today(getLocalTimeZone())}
                     value={formData.startDate}
                     onChange={(date) => handleInputChange("startDate", date)}
                   />
@@ -226,6 +228,7 @@ export default function TimelineCreateModal({
                     errorMessage={errors.endDate}
                     isInvalid={!!errors.endDate}
                     label={t("timeline.create.endDate")}
+                    minValue={today(getLocalTimeZone())}
                     value={formData.endDate}
                     onChange={(date) => handleInputChange("endDate", date)}
                   />

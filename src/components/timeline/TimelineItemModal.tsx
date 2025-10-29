@@ -156,7 +156,7 @@ export default function TimelineItemModal({
     requireDepartment: mode === "create",
     timelineStartDate: timelineData?.startDate,
     timelineEndDate: timelineData?.endDate,
-    validateTimelineRange: mode === "create",
+    validateTimelineRange: true,
   });
 
   // Members/Tasks selection state
@@ -329,6 +329,7 @@ export default function TimelineItemModal({
 
   const handleInputChange = (field: keyof LocalFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    debugger
     if (errors[field as keyof typeof errors]) {
       clearError(field as keyof typeof errors);
     }

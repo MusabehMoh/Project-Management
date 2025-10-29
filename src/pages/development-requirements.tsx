@@ -26,7 +26,7 @@ import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { DatePicker } from "@heroui/date-picker";
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { Search, Calendar, Code, Eye, Plus, Edit, X, Info } from "lucide-react";
-import { parseDate } from "@internationalized/date";
+import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 
 import { FilePreview } from "@/components/FilePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1204,7 +1204,8 @@ export default function DevelopmentRequirementsPage() {
                     {/* Developer Selection */}
                     <div>
                       <label className="text-sm font-medium text-default-700 mb-2 block">
-                        {t("tasks.developer")} *
+                        {t("tasks.developer")}{" "}
+                        <span className="text-danger">*</span>
                       </label>
                       <Autocomplete
                         defaultFilter={() => true}
@@ -1285,12 +1286,10 @@ export default function DevelopmentRequirementsPage() {
                     {/* Developer Dates */}
                     {selectedDeveloper && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-default-700">
-                          {t("tasks.developerDates")} *
-                        </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <DatePicker
                             label={t("tasks.startDate")}
+                            minValue={today(getLocalTimeZone())}
                             value={developerStartDate}
                             onChange={(date) => {
                               setDeveloperStartDate(date);
@@ -1305,6 +1304,7 @@ export default function DevelopmentRequirementsPage() {
                           />
                           <DatePicker
                             label={t("tasks.endDate")}
+                            minValue={today(getLocalTimeZone())}
                             value={developerEndDate}
                             onChange={(date) => {
                               setDeveloperEndDate(date);
@@ -1329,7 +1329,7 @@ export default function DevelopmentRequirementsPage() {
                     {/* QC Selection */}
                     <div>
                       <label className="text-sm font-medium text-default-700 mb-2 block">
-                        {t("tasks.qcMember")} *
+                        {t("tasks.qcMember")}
                       </label>
                       <Autocomplete
                         defaultFilter={() => true}
@@ -1408,12 +1408,10 @@ export default function DevelopmentRequirementsPage() {
                     {/* QC Dates */}
                     {selectedQC && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-default-700">
-                          {t("tasks.qcDates")} *
-                        </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <DatePicker
                             label={t("tasks.startDate")}
+                            minValue={today(getLocalTimeZone())}
                             value={qcStartDate}
                             onChange={(date) => {
                               setQcStartDate(date);
@@ -1428,6 +1426,7 @@ export default function DevelopmentRequirementsPage() {
                           />
                           <DatePicker
                             label={t("tasks.endDate")}
+                            minValue={today(getLocalTimeZone())}
                             value={qcEndDate}
                             onChange={(date) => {
                               setQcEndDate(date);

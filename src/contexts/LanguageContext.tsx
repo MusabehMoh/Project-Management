@@ -3017,7 +3017,7 @@ const translations = {
     "tasks.assignmentNoteInfo":
       "إذا كان المتطلب بسيطًا أو محدود النطاق، يمكن تعيينه مباشرة إلى المطور",
     "tasks.selectAtLeastOne":
-      "يرجى اختيار عضو فريق واحد على الأقل (مطور، مصمم، أو ضمان الجودة).",
+      "يرجى اختيار عضو فريق واحد على الأقل (مطور، أو ضمان الجودة).",
     "tasks.validation.startDateMustBeBeforeEndDate":
       "يجب أن يكون تاريخ البداية قبل تاريخ النهاية",
     "tasks.validation.bothDatesRequired":

@@ -173,11 +173,9 @@ public class ProjectsController : ApiBaseController
 
             // Create the project
             var createdProject = await _projectService.CreateProjectAsync(project);
+             ;
 
-            // Map back to DTO for response
-            var projectDto = _mappingService.MapToProjectDto(createdProject);
-
-            return Created(projectDto, nameof(GetProject), new { id = createdProject.Id }, "Project created successfully");
+            return Created(new ProjectDto(), nameof(GetProject), new { id = createdProject.Id }, "Project created successfully");
         }
         catch (Exception ex)
         {

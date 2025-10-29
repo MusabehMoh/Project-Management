@@ -379,13 +379,8 @@ export const useProjects = (options?: {
 
   // Refresh all data
   const refreshData = useCallback(async () => {
-    await Promise.all([
-      loadProjects(),
-      loadUsers(),
-      loadOwningUnits(),
-      loadStats(),
-    ]);
-  }, [loadProjects, loadUsers, loadOwningUnits, loadStats]);
+    await Promise.all([loadProjects(), loadOwningUnits(), loadStats()]);
+  }, [loadProjects, loadOwningUnits, loadStats]);
 
   // Calculate local statistics (fallback if API stats fail)
   const calculateLocalStats = useCallback((): ProjectStats => {

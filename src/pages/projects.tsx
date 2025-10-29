@@ -36,6 +36,7 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 import { parseDate } from "@internationalized/date";
+import { today, getLocalTimeZone } from "@internationalized/date";
 import { addToast } from "@heroui/toast";
 
 import { useTeamSearchByDepartment } from "@/hooks/useTeamSearchByDepartment";
@@ -1619,9 +1620,6 @@ export default function ProjectsPage() {
 
                     {/* Analysts Selection Field */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        {t("projects.analysts")}
-                      </label>
                       <Autocomplete
                         allowsCustomValue
                         className="max-w-full"
@@ -1816,6 +1814,7 @@ export default function ProjectsPage() {
                       errorMessage={validationErrors.startDate}
                       isInvalid={!!validationErrors.startDate}
                       label={t("projects.startDate")}
+                      minValue={today(getLocalTimeZone()).add({ days: 1 })}
                       value={formData.startDate}
                       onChange={(date) => {
                         setFormData({ ...formData, startDate: date });
@@ -1834,6 +1833,7 @@ export default function ProjectsPage() {
                       errorMessage={validationErrors.expectedCompletionDate}
                       isInvalid={!!validationErrors.expectedCompletionDate}
                       label={t("projects.expectedCompletion")}
+                      minValue={today(getLocalTimeZone()).add({ days: 1 })}
                       value={formData.expectedCompletionDate}
                       onChange={(date) => {
                         setFormData({

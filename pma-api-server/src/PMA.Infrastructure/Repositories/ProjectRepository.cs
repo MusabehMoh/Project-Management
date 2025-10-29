@@ -23,8 +23,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         {
             query = query.Where(p =>
                 p.ApplicationName.Contains(search) ||
-                p.Description.Contains(search) ||
-                p.ProjectOwner.Contains(search));
+                p.Description.Contains(search) );
         }
 
         if (status.HasValue)
@@ -62,8 +61,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         {
             query = query.Where(p =>
                 p.ApplicationName.Contains(search) ||
-                p.Description.Contains(search) ||
-                p.ProjectOwner.Contains(search));
+                p.Description.Contains(search));
         }
 
         // Apply status filter
@@ -104,8 +102,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         {
             query = query.Where(p =>
                 p.ApplicationName.Contains(search) ||
-                p.Description.Contains(search) ||
-                p.ProjectOwner.Contains(search));
+                p.Description.Contains(search)  );
         }
 
         if (status.HasValue)
@@ -156,9 +153,7 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
                 .ThenInclude(pa => pa.Analyst)
             .Where(p =>
                 p.ApplicationName.Contains(query) ||
-                p.Description.Contains(query) ||
-                p.ProjectOwner.Contains(query) ||
-                (p.AlternativeOwner != null && p.AlternativeOwner.Contains(query))) // Safe null check
+                p.Description.Contains(query) ) // Safe null check
             .AsQueryable();
 
         // Apply status filter
@@ -301,10 +296,10 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
                 ProjectOwnerEmployee = projectOwnerEmployeeDto,
                 AlternativeOwnerEmployee = alternativeOwnerEmployeeDto,
                 ResponsibleUnitManagerEmployee = responsibleUnitManagerEmployeeDto,
-                OwningUnit = project.OwningUnitEntity?.Name ?? project.OwningUnit ?? "Unknown",
+                OwningUnit = project.OwningUnitEntity?.Name ?? "",
                 OwningUnitId = project.OwningUnitId,
                 AnalystEmployees = analystEmployees,
-                ProjectOwner = project.ProjectOwnerEmployee?.FullName ?? project.ProjectOwner ?? "Unknown",
+                ProjectOwner = project.ProjectOwnerEmployee?.FullName  ?? "",
                 ProjectOwnerId = project.ProjectOwnerId,
                 AlternativeOwnerId = project.AlternativeOwnerId,
                 ResponsibleUnitManagerId = project.ResponsibleUnitManagerId,

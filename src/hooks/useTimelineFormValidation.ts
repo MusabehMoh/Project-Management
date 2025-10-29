@@ -104,7 +104,7 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
             newErrors.endDate = t("validation.endDateAfterStart");
           }
         }
-
+debugger
         // Timeline date range validation
         if (
           validateTimelineRange &&
@@ -115,6 +115,10 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
         ) {
           const timelineStart = new Date(timelineStartDate);
           const timelineEnd = new Date(timelineEndDate);
+
+          // Reset time to compare only dates
+          timelineStart.setHours(0, 0, 0, 0);
+          timelineEnd.setHours(0, 0, 0, 0);
 
           // Handle both string and DatePicker object formats
           const itemStartDate = new Date(
@@ -128,10 +132,14 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
               : formData.endDate.toString(),
           );
 
+          // Reset time to compare only dates
+          itemStartDate.setHours(0, 0, 0, 0);
+          itemEndDate.setHours(0, 0, 0, 0);
+
           if (itemStartDate < timelineStart || itemStartDate > timelineEnd) {
             newErrors.startDate = t("validation.startDateWithinTimeline");
           }
-
+ 
           if (itemEndDate < timelineStart || itemEndDate > timelineEnd) {
             newErrors.endDate = t("validation.endDateWithinTimeline");
           }
