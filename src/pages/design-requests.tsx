@@ -333,7 +333,7 @@ export function DesignRequestsPage() {
             shadow="sm"
           >
             <CardHeader className={`flex flex-col items-start gap-3 pb-3 ${language === "ar" ? "text-right" : "text-left"}`}>
-              <div className={`flex justify-between items-start w-full gap-3 ${language === "ar" ? "flex-row-reverse" : "flex-row"}`}>
+              <div className="flex justify-between items-start w-full gap-3">
                 <div className="flex-1">
                   <p className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}>
                     {t("designRequests.taskName")}
@@ -810,11 +810,11 @@ export function DesignRequestsPage() {
                   </span>
                 </div>
 
-                {selectedRequest?.task?.statusId && (
+                {selectedRequest?.status && (
                   <div className="flex items-center justify-between py-2 border-b border-default-100">
                     <span className="text-default-500">{t("status")}</span>
                     <Chip
-                      color={getStatusColor(selectedRequest.task.statusId)}
+                      color={getStatusColor(selectedRequest.status)}
                       size="sm"
                       variant="flat"
                     >
@@ -917,13 +917,13 @@ export function DesignRequestsPage() {
                     <label className="text-sm font-medium text-default-600 dark:text-default-400 mb-2 block">
                       {t("status")}
                     </label>
-                    {selectedRequest.task.statusId && (
+                    {selectedRequest.status && (
                       <Chip
-                        color={getStatusColor(selectedRequest.task.statusId)}
+                        color={getStatusColor(selectedRequest.status)}
                         size="sm"
                         variant="flat"
                       >
-                        {getStatusText(selectedRequest.task.statusId)}
+                        {getStatusText(selectedRequest.status)}
                       </Chip>
                     )}
                   </div>
@@ -938,7 +938,7 @@ export function DesignRequestsPage() {
                           selectedRequest.task.priorityId,
                         )}
                         size="sm"
-                        variant="solid"
+                        variant="flat"
                       >
                         {getRequirementPriorityText(
                           selectedRequest.task.priorityId,
