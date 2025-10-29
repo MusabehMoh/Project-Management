@@ -2201,7 +2201,7 @@ const translations = {
     "quickActions.overdueItems": "العناصر المتأخرة",
     "quickActions.overdueItemsDesc": "عرض وإدارة المهام والمشاريع المتأخرة",
     "quickActions.assignAnalyst": "تعيين محلل",
-    "quickActions.assignAnalystTo": "تعيين محللين لـ",
+    "quickActions.assignAnalystTo": "تعيين محللين",
     "quickActions.selectAnalyst": "اختيار محللين",
     "quickActions.chooseAnalyst": "البحث واختيار محللين",
     "quickActions.selectedAnalysts": "المحللين المختارين",

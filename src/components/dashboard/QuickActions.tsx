@@ -569,13 +569,15 @@ const QuickActions: React.FC<QuickActionsProps> = ({
       <Modal dir={direction} isOpen={isModalOpen} onOpenChange={setIsModalOpen}>
         <ModalContent>
           <ModalHeader>
-            {t("quickActions.assignAnalyst") || "Assign Analyst"}
+            <div className="flex flex-col gap-1">
+              <span>{t("quickActions.assignAnalystTo") || "Assign Analyst"}</span>
+              <span className="text-base font-normal text-default-600">
+                {t("projects.applicationName")}:{" "}
+                {selectedProject?.applicationName}
+              </span>
+            </div>
           </ModalHeader>
           <ModalBody>
-            <p className="text-sm text-default-600 mb-4">
-              {t("quickActions.assignAnalystTo") || "Assign analysts to"}:{" "}
-              {selectedProject?.applicationName}
-            </p>
 
             {/* Selected Analysts Display */}
             {selectedAnalysts.length > 0 && (
