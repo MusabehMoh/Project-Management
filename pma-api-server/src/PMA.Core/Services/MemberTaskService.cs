@@ -189,6 +189,8 @@ public class MemberTaskService : IMemberTaskService
             AssignedMembers = assignedMembers,
             MemberIds = assignedMembers.Select(a => a.Id).ToList(),
             DepartmentId = task.DepartmentId,
+            SprintId=task.SprintId,
+            TimelineId=task.TimelineId,
             DepartmentName = task.Department?.Name ?? "",
             Department = task.Department != null ? new DepartmentDto
             {

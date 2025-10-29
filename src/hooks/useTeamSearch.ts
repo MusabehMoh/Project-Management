@@ -80,9 +80,9 @@ export function useTeamSearch(options: EmployeeSearchOptions = {}) {
         throw error;
       }
     },
-    // Include the search method in dependencies for proper hook behavior
-    // If timelineService is a stable module import, this ensures proper tracking
-    [timelineService.searchAllMembers],
+    // Empty dependency array: timelineService is a stable module import
+    // This prevents unnecessary callback recreation and multiple search calls on page load
+    [],
   );
 
   const {

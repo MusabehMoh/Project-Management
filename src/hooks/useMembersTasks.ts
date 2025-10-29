@@ -272,67 +272,61 @@ export const useMembersTasks = (): UseMembersTasksResult => {
    * Normalize task response from various possible formats
    * This ensures consistent response handling regardless of API format changes
    */
-  const normalizeTasksResponse = useCallback(
-    (raw: any): TasksResponse | null => {
-      if (!raw) return null;
+  const normalizeTasksResponse = (raw: any): TasksResponse | null => {
+    if (!raw) return null;
 
-      // Standard format where tasks is an array property
-      if (Array.isArray(raw.tasks)) return raw as TasksResponse;
+    // Standard format where tasks is an array property
+    if (Array.isArray(raw.tasks)) return raw as TasksResponse;
 
-      // Nested format where tasks are in data property
-      if (Array.isArray(raw.data?.tasks)) return raw.data as TasksResponse;
+    // Nested format where tasks are in data property
+    if (Array.isArray(raw.data?.tasks)) return raw.data as TasksResponse;
 
-      // Alternative format where tasks are in items property
-      if (Array.isArray(raw.items)) {
-        return {
-          tasks: raw.items,
-          totalCount: raw.totalCount || raw.items.length,
-          totalPages: raw.totalPages || 1,
-          currentPage: raw.currentPage || 1,
-          hasNextPage: Boolean(raw.hasNextPage),
-          hasPrevPage: Boolean(raw.hasPrevPage),
-        };
-      }
+    // Alternative format where tasks are in items property
+    if (Array.isArray(raw.items)) {
+      return {
+        tasks: raw.items,
+        totalCount: raw.totalCount || raw.items.length,
+        totalPages: raw.totalPages || 1,
+        currentPage: raw.currentPage || 1,
+        hasNextPage: Boolean(raw.hasNextPage),
+        hasPrevPage: Boolean(raw.hasPrevPage),
+      };
+    }
 
-      return null;
-    },
-    [],
-  );
+    return null;
+  };
 
-  const fetchTasks = useCallback(
-    async (request?: TaskSearchParams) => {
-      setLoading(true);
-      setError(null);
+  const fetchTasks = useCallback(async (request?: TaskSearchParams) => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        // Using the standardized API service pattern
-        const response = await membersTasksService.getTasks(request);
+    try {
+      // Using the standardized API service pattern
+      const response = await membersTasksService.getTasks(request);
 
-        if (response?.success && response.data) {
-          // Use the standardized response normalization
-          const normalized = normalizeTasksResponse(response.data);
+      if (response?.success && response.data) {
+        // Use the standardized response normalization
+        const normalized = normalizeTasksResponse(response.data);
 
-          if (normalized) {
-            setTasks(normalized.tasks || []);
-            setTotalPages(normalized.totalPages || 0);
-            setTotalCount(normalized.totalCount || 0);
-          } else {
-            throw new Error("Invalid tasks response shape");
-          }
+        if (normalized) {
+          setTasks(normalized.tasks || []);
+          setTotalPages(normalized.totalPages || 0);
+          setTotalCount(normalized.totalCount || 0);
         } else {
-          throw new Error(response?.message || "Failed to fetch tasks");
+          throw new Error("Invalid tasks response shape");
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch tasks");
-        setTasks([]);
-        setTotalPages(0);
-        setTotalCount(0);
-      } finally {
-        setLoading(false);
+      } else {
+        throw new Error(response?.message || "Failed to fetch tasks");
       }
-    },
-    [normalizeTasksResponse],
-  );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch tasks");
+      setTasks([]);
+      setTotalPages(0);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   /**
    * Refresh tasks using current parameters
@@ -342,7 +336,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     setHeaderLoading(true);
     await fetchTasks(taskParametersRequest);
     setHeaderLoading(false);
-  }, [fetchTasks, taskParametersRequest]);
+  }, [taskParametersRequest]);
 
   /**
    * Export tasks to CSV, PDF, or Excel format

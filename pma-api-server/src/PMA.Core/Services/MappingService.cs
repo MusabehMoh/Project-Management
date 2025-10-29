@@ -649,6 +649,7 @@ public class MappingService : IMappingService
             ActualHours = task.ActualHours,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
+            AssignedMembers = task.Assignments?.Select(a => MapToMemberSearchResultDto(a.Employee)).ToList() ?? new List<MemberSearchResultDto>(),
             MemberIds = task.Assignments?.Select(a => a.PrsId).ToList() ?? new List<int>(),
             DepTaskIds = task.Dependencies_Relations?.Select(d => d.DependsOnTaskId).ToList() ?? new List<int>()
         };
@@ -774,6 +775,7 @@ public class MappingService : IMappingService
             TimelineId = createTaskDto.TimelineId,
             EstimatedHours = createTaskDto.EstimatedHours,
             Progress = createTaskDto.Progress,
+            RoleType= createTaskDto.DepartmentId==(int)DepartmentEnum .Development? "Developer": createTaskDto.DepartmentId== (int)DepartmentEnum.Qc ? "QA": createTaskDto.DepartmentId== (int)DepartmentEnum.Designer ? "Designer": null,
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now,
             TypeId = createTaskDto.TypeId
@@ -836,6 +838,7 @@ public class MappingService : IMappingService
         if (updateTaskDto.Progress.HasValue)
             task.Progress = updateTaskDto.Progress.Value;
 
+        task.ProjectRequirementId=  updateTaskDto.ProjectRequirementId ?? task.ProjectRequirementId;
         task.UpdatedAt = DateTime.Now;
     }
 
@@ -878,6 +881,26 @@ public class MappingService : IMappingService
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now,
             CreateBy= createDesignRequestDto.CreateBy
+        };
+    }
+
+    /// <summary>
+    /// Maps an Employee entity to MemberSearchResultDto
+    /// </summary>
+    public MemberSearchResultDto? MapToMemberSearchResultDto(Employee? employee)
+    {
+        if (employee == null)
+            return null;
+
+        return new MemberSearchResultDto
+        {
+            Id = employee.Id,
+            UserName = employee.UserName,
+            MilitaryNumber = employee.MilitaryNumber,
+            FullName = employee.FullName,
+            GradeName = employee.GradeName,
+            StatusId = employee.StatusId,
+            Department = employee.User?.Department?.Name ?? string.Empty
         };
     }
 }

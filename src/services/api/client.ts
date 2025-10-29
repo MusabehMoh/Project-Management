@@ -80,11 +80,7 @@ class ApiClient {
 
     // Debug logging for API calls
     if (API_CONFIG.ENABLE_LOGS) {
-      // eslint-disable-next-line no-console
-     
       if (data) {
-        // eslint-disable-next-line no-console
-   
       }
     }
 

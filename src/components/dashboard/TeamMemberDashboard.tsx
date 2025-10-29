@@ -93,6 +93,7 @@ export default function TeamMemberDashboard() {
         getTaskStatusColor={() => "default"}
         isOpen={isDrawerOpen}
         loadingRequirement={false}
+        selectedTask={selectedTask}
         onChangeAssignees={async () => {}}
         onChangeStatus={async () => {}}
         onFileDelete={async () => {}}
@@ -101,7 +102,6 @@ export default function TeamMemberDashboard() {
         onFileUpload={async () => {}}
         onOpenChange={setIsDrawerOpen}
         onRequestDesign={async () => {}}
-        selectedTask={selectedTask}
       />
     </div>
   );

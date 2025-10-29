@@ -19,7 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { MemberTask } from "@/types/membersTasks";
 import { MemberSearchResult } from "@/types/timeline";
 import { timelineApiService } from "@/services/api/timelineService";
-import useTeamSearch from "@/hooks/useTeamSearch";
+import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import useTaskSearch from "@/hooks/useTaskSearch";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
 interface TaskCreateModalProps {
@@ -36,7 +36,7 @@ export default function TaskCreateModal({
   loading = false,
   onTaskCreated,
 }: TaskCreateModalProps) {
-  const { t, direction } = useLanguage();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -72,11 +72,18 @@ export default function TaskCreateModal({
     employees,
     loading: employeeSearchLoading,
     searchEmployees,
-  } = useTeamSearch({ minLength: 1, maxResults: 20 });
+  } = useTeamSearchByDepartment({
+    departmentId: 5, // qc Department
+    minLength: 1,
+    maxResults: 100,
+    loadInitialResults: true, // Load all qc initially
+    initialResultsLimit: 100,
+  });
   const { workItems: tasks, loading: taskSearchLoading } = useTaskSearch({
     maxResults: 100,
     loadInitialResults: true,
   });
+
   // Update form data when parent task changes
   useEffect(() => {
     if (isOpen && parentTask) {
@@ -110,6 +117,7 @@ export default function TaskCreateModal({
   };
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+
     // Name validation
     if (!formData.name.trim()) {
       newErrors.name = t("validation.nameRequired");
@@ -130,11 +138,13 @@ export default function TaskCreateModal({
     } else if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
+
       if (start >= end) {
         newErrors.endDate = t("validation.endDateAfterStart");
       }
     }
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
   const handleSave = async () => {
@@ -143,13 +153,13 @@ export default function TaskCreateModal({
     }
     try {
       const taskData = {
-        sprintId: parentTask.sprintId || "",
-        timelineId: parentTask.timelineId || "",
+        sprintId: parentTask.sprintId || null,
+        timelineId: parentTask.timelineId || null,
         name: formData.name,
         description: formData.description,
         startDate: formData.startDate!.toString(),
         endDate: formData.endDate!.toString(),
-        departmentId: formData.departmentId?.toString(),
+        departmentId: 5,
         statusId: 1, // Default status for new tasks
         priorityId: formData.priority,
         progress: 0,
@@ -158,6 +168,7 @@ export default function TaskCreateModal({
         notes: "",
       };
       const result = await timelineApiService.createTask(taskData);
+
       if (result.success) {
         showSuccessToast(t("task.create.success"));
         onTaskCreated?.();
@@ -198,288 +209,268 @@ export default function TaskCreateModal({
     setEmployeeInputValue("");
     onOpenChange(false);
   };
+
   return (
     <Modal
       isOpen={isOpen}
-      scrollBehavior="outside"
+      scrollBehavior="inside"
       size="5xl"
       onClose={handleClose}
       onOpenChange={onOpenChange}
     >
       <ModalContent>
-        <div className={direction === "rtl" ? "text-right" : "text-left"}>
-            <ModalHeader className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold">
-                  {t("task.create.title")}
-                </h2>
-                <Popover placement="bottom">
-                  <PopoverTrigger>
-                    <Button
-                      isIconOnly
-                      className="text-default-400 hover:text-default-600"
-                      size="sm"
-                      variant="light"
-                    >
-                      <Info className="w-4 h-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <div className="px-1 py-2">
-                      <div className="text-small font-bold">
-                        {t("common.info")}
-                      </div>
-                      <div className="text-tiny text-default-600 max-w-xs">
-                        {t("task.create.taskInfo")}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <p className="text-sm text-default-500 font-normal">
-                {t("task.create.subtitle")}
-              </p>
-            </ModalHeader>
-            <ModalBody>
-              <div className="space-y-4">
-                {errors.general && (
-                  <div className="p-3 text-sm text-danger bg-danger-50 rounded-lg">
-                    {errors.general}
+        <ModalHeader className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">{t("task.create.title")}</h2>
+            <Popover placement="bottom">
+              <PopoverTrigger>
+                <Button
+                  isIconOnly
+                  className="text-default-400 hover:text-default-600"
+                  size="sm"
+                  variant="light"
+                >
+                  <Info className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <div className="px-1 py-2">
+                  <div className="text-small font-bold">{t("common.info")}</div>
+                  <div className="text-tiny text-default-600 max-w-xs">
+                    {t("task.create.taskInfo")}
                   </div>
-                )}
-                <Input
-                  isRequired
-                  errorMessage={errors.name}
-                  isInvalid={!!errors.name}
-                  label={t("task.create.taskName")}
-                  placeholder={t("task.create.taskNamePlaceholder")}
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <DatePicker
-                    isRequired
-                    errorMessage={errors.startDate}
-                    isInvalid={!!errors.startDate}
-                    label={t("task.create.startDate")}
-                    value={formData.startDate}
-                    onChange={(date) => handleInputChange("startDate", date)}
-                  />
-                  <DatePicker
-                    isRequired
-                    errorMessage={errors.endDate}
-                    isInvalid={!!errors.endDate}
-                    label={t("task.create.endDate")}
-                    value={formData.endDate}
-                    onChange={(date) => handleInputChange("endDate", date)}
-                  />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    label={t("task.create.priority")}
-                    selectedKeys={[formData.priority.toString()]}
-                    onSelectionChange={(keys) => {
-                      const selectedKey = Array.from(keys)[0] as string;
-                      if (selectedKey) {
-                        handleInputChange("priority", parseInt(selectedKey));
-                      }
-                    }}
-                  >
-                    <SelectItem key="1">{t("priority.low")}</SelectItem>
-                    <SelectItem key="2">{t("priority.medium")}</SelectItem>
-                    <SelectItem key="3">{t("priority.high")}</SelectItem>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    {t("task.create.description")}
-                  </label>
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: formData.description || "",
-                    }}
-                    contentEditable
-                    className="w-full min-h-[80px] p-3 border border-default-200 rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
-                    onInput={(e) =>
-                      setFormData({
-                        ...formData,
-                        description: e.currentTarget.innerHTML,
-                      })
-                    }
-                  />
-                </div>
-
-                {/* Dependent Tasks selection */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    {t("timeline.selectPredecessors")}
-                  </label>
-                  <Select
-                    isDisabled={true} // Parent task is pre-selected and disabled
-                    isLoading={taskSearchLoading}
-                    items={tasks}
-                    label={t("timeline.selectPredecessors")}
-                    placeholder={t("timeline.selectPredecessorsPlaceholder")}
-                    selectedKeys={selectedTasks.map((task) =>
-                      task.id.toString(),
-                    )}
-                    selectionMode="multiple"
-                    onSelectionChange={(keys) => {
-                      if (keys === "all") return;
-
-                      const selectedKeys = Array.from(keys);
-                      const newSelectedTasks = tasks.filter((task) =>
-                        selectedKeys.includes(task.id.toString()),
-                      );
-
-                      setSelectedTasks(newSelectedTasks);
-                    }}
-                  >
-                    {(task) => (
-                      <SelectItem
-                        key={task.id.toString()}
-                        textValue={task.name}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex flex-col">
-                            <span className="font-medium">{task.name}</span>
-                            <span className="text-xs text-default-500">
-                              {task.description || t("common.none")}
-                            </span>
-                          </span>
-                        </div>
-                      </SelectItem>
-                    )}
-                  </Select>
-                </div>
-
-                {/* Members selection */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    {t("users.selectEmployee")}
-                  </label>
-                  <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
-                    {selectedMembers.map((m) => (
-                      <div
-                        key={m.id}
-                        className="flex items-center gap-2 rounded-full bg-default-200 px-2 py-1 text-xs"
-                      >
-                        <span>
-                          {m.gradeName} {m.fullName}
-                        </span>
-                        <button
-                          className="text-danger"
-                          onClick={() =>
-                            setSelectedMembers((prev) =>
-                              prev.filter((x) => x.id !== m.id),
-                            )
-                          }
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <Autocomplete
-                    isClearable
-                    defaultFilter={() => true}
-                    inputValue={employeeInputValue}
-                    isLoading={employeeSearchLoading}
-                    label={t("users.selectEmployee")}
-                    menuTrigger="input"
-                    placeholder={t("users.searchEmployees")}
-                    selectedKey={selectedEmployee?.id?.toString()}
-                    size="sm"
-                    onInputChange={(value) => {
-                      setEmployeeInputValue(value);
-                      if (
-                        selectedEmployee &&
-                        value !==
-                          `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
-                      ) {
-                        setSelectedEmployee(null);
-                      }
-                      searchEmployees(value);
-                    }}
-                    onSelectionChange={(key) => {
-                      if (!key) {
-                        setSelectedEmployee(null);
-                        setEmployeeInputValue("");
-
-                        return;
-                      }
-
-                      const found = employees.find(
-                        (e) => e.id.toString() === key,
-                      );
-
-                      if (found) {
-                        setSelectedMembers((prev) =>
-                          prev.some((x) => x.id === found.id)
-                            ? prev
-                            : [...prev, found],
-                        );
-                        // reset for next pick
-                        setSelectedEmployee(null);
-                        setEmployeeInputValue("");
-                      }
-                    }}
-                  >
-                    {employees.map((employee) => (
-                      <AutocompleteItem
-                        key={employee.id.toString()}
-                        textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
-                      >
-                        <span className="flex items-center gap-3">
-                          <Avatar
-                            name={employee.fullName || t("common.none")}
-                            size="sm"
-                          />
-                          <span className="flex flex-col">
-                            <span className="font-medium">
-                              {employee.gradeName}{" "}
-                              {employee.fullName || t("common.none")}
-                            </span>
-                            <span className="text-xs text-default-500">
-                              {employee.militaryNumber || "N/A"}
-                            </span>
-                            <span className="text-xs text-default-400">
-                              @{employee.userName || t("common.none")}
-                            </span>
-                            <span className="text-xs text-default-400">
-                              @{employee.department || t("common.none")}
-                            </span>
-                          </span>
-                        </span>
-                      </AutocompleteItem>
-                    ))}
-                  </Autocomplete>
-                </div>
-
-                <div className="p-3 text-sm text-info bg-info-50 rounded-lg">
-                  {t("task.create.qcAssignmentNote")}
-                </div>
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                color="danger"
-                isDisabled={loading}
-                variant="light"
-                onPress={handleClose}
-              >
-                {t("task.create.cancel")}
-              </Button>
-              <Button
-                color="primary"
-                isDisabled={loading}
-                isLoading={loading}
-                onPress={handleSave}
-              >
-                {t("task.create.createTask")}
-              </Button>
-            </ModalFooter>
+              </PopoverContent>
+            </Popover>
           </div>
+          <p className="text-sm text-default-500 font-normal">
+            {t("task.create.subtitle")}
+          </p>
+        </ModalHeader>
+        <ModalBody>
+          <div className="space-y-4">
+            {errors.general && (
+              <div className="p-3 text-sm text-danger bg-danger-50 rounded-lg">
+                {errors.general}
+              </div>
+            )}
+            <Input
+              isRequired
+              errorMessage={errors.name}
+              isInvalid={!!errors.name}
+              label={t("task.create.taskName")}
+              placeholder={t("task.create.taskNamePlaceholder")}
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <DatePicker
+                isRequired
+                errorMessage={errors.startDate}
+                isInvalid={!!errors.startDate}
+                label={t("task.create.startDate")}
+                value={formData.startDate}
+                onChange={(date) => handleInputChange("startDate", date)}
+              />
+              <DatePicker
+                isRequired
+                errorMessage={errors.endDate}
+                isInvalid={!!errors.endDate}
+                label={t("task.create.endDate")}
+                value={formData.endDate}
+                onChange={(date) => handleInputChange("endDate", date)}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select
+                label={t("task.create.priority")}
+                selectedKeys={[formData.priority.toString()]}
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as string;
+
+                  if (selectedKey) {
+                    handleInputChange("priority", parseInt(selectedKey));
+                  }
+                }}
+              >
+                <SelectItem key="1">{t("priority.low")}</SelectItem>
+                <SelectItem key="2">{t("priority.medium")}</SelectItem>
+                <SelectItem key="3">{t("priority.high")}</SelectItem>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                {t("task.create.description")}
+              </label>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: formData.description || "",
+                }}
+                contentEditable
+                className="w-full min-h-[80px] p-3 border border-default-200 rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
+                onInput={(e) =>
+                  setFormData({
+                    ...formData,
+                    description: e.currentTarget.innerHTML,
+                  })
+                }
+              />
+            </div>
+
+            {/* Dependent Tasks selection */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                {t("timeline.selectPredecessors")}
+              </label>
+              <Select
+                isDisabled={true} // Parent task is pre-selected and disabled
+                isLoading={taskSearchLoading}
+                items={tasks}
+                label={t("timeline.selectPredecessors")}
+                placeholder={t("timeline.selectPredecessorsPlaceholder")}
+                selectedKeys={selectedTasks.map((task) => task.id.toString())}
+                selectionMode="multiple"
+                onSelectionChange={(keys) => {
+                  if (keys === "all") return;
+
+                  const selectedKeys = Array.from(keys);
+                  const newSelectedTasks = tasks.filter((task) =>
+                    selectedKeys.includes(task.id.toString()),
+                  );
+
+                  setSelectedTasks(newSelectedTasks);
+                }}
+              >
+                {(task) => (
+                  <SelectItem key={task.id.toString()} textValue={task.name}>
+                    <div className="flex items-center gap-3">
+                      <span className="flex flex-col">
+                        <span className="font-medium">{task.name}</span>
+                        <span className="text-xs text-default-500">
+                          {task.description || t("common.none")}
+                        </span>
+                      </span>
+                    </div>
+                  </SelectItem>
+                )}
+              </Select>
+            </div>
+
+            {/* Members selection */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                {t("users.selectEmployee")}
+              </label>
+              <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
+                {selectedMembers.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center gap-2 rounded-full bg-default-200 px-2 py-1 text-xs"
+                  >
+                    <span>
+                      {m.gradeName} {m.fullName}
+                    </span>
+                    <button
+                      className="text-danger"
+                      onClick={() =>
+                        setSelectedMembers((prev) =>
+                          prev.filter((x) => x.id !== m.id),
+                        )
+                      }
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <Autocomplete
+                isClearable
+                defaultFilter={() => true}
+                inputValue={employeeInputValue}
+                isLoading={employeeSearchLoading}
+                label={t("users.selectEmployee")}
+                menuTrigger="input"
+                placeholder={t("users.searchEmployees")}
+                selectedKey={selectedEmployee?.id?.toString()}
+                size="sm"
+                onInputChange={(value) => {
+                  setEmployeeInputValue(value);
+                  if (
+                    selectedEmployee &&
+                    value !==
+                      `${selectedEmployee.gradeName} ${selectedEmployee.fullName}`
+                  ) {
+                    setSelectedEmployee(null);
+                  }
+                  searchEmployees(value);
+                }}
+                onSelectionChange={(key) => {
+                  if (!key) {
+                    setSelectedEmployee(null);
+                    setEmployeeInputValue("");
+
+                    return;
+                  }
+
+                  const found = employees.find((e) => e.id.toString() === key);
+
+                  if (found) {
+                    setSelectedMembers((prev) =>
+                      prev.some((x) => x.id === found.id)
+                        ? prev
+                        : [...prev, found],
+                    );
+                    // reset for next pick
+                    setSelectedEmployee(null);
+                    setEmployeeInputValue("");
+                  }
+                }}
+              >
+                {employees.map((employee) => (
+                  <AutocompleteItem
+                    key={employee.id.toString()}
+                    textValue={`${employee.gradeName} ${employee.fullName}    `}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Avatar
+                        name={employee.fullName || t("common.none")}
+                        size="sm"
+                      />
+                      <span className="flex flex-col">
+                        <span className="font-medium">
+                          {employee.gradeName}{" "}
+                          {employee.fullName || t("common.none")}
+                        </span>
+                      </span>
+                    </span>
+                  </AutocompleteItem>
+                ))}
+              </Autocomplete>
+            </div>
+
+            <div className="p-3 text-sm text-info bg-info-50 rounded-lg">
+              {t("task.create.qcAssignmentNote")}
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            color="danger"
+            isDisabled={loading}
+            variant="light"
+            onPress={handleClose}
+          >
+            {t("task.create.cancel")}
+          </Button>
+          <Button
+            color="primary"
+            isDisabled={loading}
+            isLoading={loading}
+            onPress={handleSave}
+          >
+            {t("task.createTask")}
+          </Button>
+        </ModalFooter>
       </ModalContent>
     </Modal>
   );

@@ -85,13 +85,6 @@ export function useOptimizedSearch<T extends SearchResult = SearchResult>(
     return () => clearInterval(interval);
   }, [config.cacheMs]);
 
-  // Load initial results if requested
-  useEffect(() => {
-    if (config.loadInitialResults) {
-      loadInitialResults();
-    }
-  }, [config.loadInitialResults]);
-
   const loadInitialResults = useCallback(async () => {
     try {
       setLoading(true);
@@ -114,11 +107,17 @@ export function useOptimizedSearch<T extends SearchResult = SearchResult>(
         err instanceof Error ? err.message : "Failed to load initial results";
 
       setError(errorMessage);
-      console.error("Error loading initial results:", err);
     } finally {
       setLoading(false);
     }
   }, [searchFunction, config.initialResultsLimit, config.maxResults]);
+
+  // Load initial results if requested
+  useEffect(() => {
+    if (config.loadInitialResults) {
+      loadInitialResults();
+    }
+  }, [config.loadInitialResults, loadInitialResults]);
 
   const performSearch = useCallback(
     async (query: string) => {
@@ -172,7 +171,6 @@ export function useOptimizedSearch<T extends SearchResult = SearchResult>(
           err instanceof Error ? err.message : "Search failed";
 
         setError(errorMessage);
-        console.error("Search error:", err);
         setResults([]);
       } finally {
         if (!abortControllerRef.current?.signal.aborted) {

@@ -144,7 +144,7 @@ export const hasRoleById = (user: User | null, roleId: number): boolean => {
 export const hasAnyRoleById = (
   user: User | null,
   roleIds: number[],
-): boolean => { 
+): boolean => {
   if (!user) return false;
 
   return roleIds.some((roleId) => hasRoleById(user, roleId));

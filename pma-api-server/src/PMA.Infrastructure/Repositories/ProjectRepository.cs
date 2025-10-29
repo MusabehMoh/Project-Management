@@ -340,10 +340,11 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
                 .ThenInclude(t => t.Sprints!)
                     .ThenInclude(s => s.Tasks!)
                         .ThenInclude(task => task.Assignments)
+                            .ThenInclude(e=>e.Employee)
             .Include(p => p.Timelines!)
                 .ThenInclude(t => t.Sprints!)
                     .ThenInclude(s => s.Tasks!)
-                        .ThenInclude(task => task.Dependencies_Relations)
+                        .ThenInclude(task => task.DependentTasks)
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .FirstOrDefaultAsync(p => p.Id == projectId);

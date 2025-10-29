@@ -27,6 +27,9 @@ export interface ValidationOptions {
   requireDepartment?: boolean;
   minNameLength?: number;
   maxNameLength?: number;
+  timelineStartDate?: string;
+  timelineEndDate?: string;
+  validateTimelineRange?: boolean;
 }
 
 /**
@@ -45,6 +48,9 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
     requireDepartment = false,
     minNameLength = 2,
     maxNameLength = 100,
+    timelineStartDate,
+    timelineEndDate,
+    validateTimelineRange = true,
   } = options;
 
   const validateForm = useCallback(
@@ -98,6 +104,38 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
             newErrors.endDate = t("validation.endDateAfterStart");
           }
         }
+
+        // Timeline date range validation
+        if (
+          validateTimelineRange &&
+          timelineStartDate &&
+          timelineEndDate &&
+          formData.startDate &&
+          formData.endDate
+        ) {
+          const timelineStart = new Date(timelineStartDate);
+          const timelineEnd = new Date(timelineEndDate);
+
+          // Handle both string and DatePicker object formats
+          const itemStartDate = new Date(
+            typeof formData.startDate === "string"
+              ? formData.startDate
+              : formData.startDate.toString(),
+          );
+          const itemEndDate = new Date(
+            typeof formData.endDate === "string"
+              ? formData.endDate
+              : formData.endDate.toString(),
+          );
+
+          if (itemStartDate < timelineStart || itemStartDate > timelineEnd) {
+            newErrors.startDate = t("validation.startDateWithinTimeline");
+          }
+
+          if (itemEndDate < timelineStart || itemEndDate > timelineEnd) {
+            newErrors.endDate = t("validation.endDateWithinTimeline");
+          }
+        }
       }
 
       setErrors(newErrors);
@@ -113,6 +151,9 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
       requireDepartment,
       minNameLength,
       maxNameLength,
+      timelineStartDate,
+      timelineEndDate,
+      validateTimelineRange,
     ],
   );
 

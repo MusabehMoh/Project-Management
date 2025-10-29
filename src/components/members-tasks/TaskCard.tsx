@@ -9,6 +9,7 @@ import { Tooltip } from "@heroui/tooltip";
 import { useState } from "react";
 
 import TaskCreateModal from "./TaskCreateModal";
+
 import { MemberTask } from "@/types/membersTasks";
 import { MemberSearchResult } from "@/types/timeline";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -290,31 +291,31 @@ export const TaskCard = ({
 
         {/* Assignees */}
         {task.assignedMembers && task.assignedMembers.length > 0 && (
-          <div
-            className={`flex items-start gap-2 ${language === "ar" ? " text-right" : ""}`}
-          >
-            <CheckCircle className="w-4 h-4 text-foreground-500 flex-shrink-0 mt-0.5" />
-            <div
-              className={`flex-1 min-w-0 ${language === "ar" ? "text-right" : ""}`}
-            >
-              <p className="text-xs text-foreground-500 mb-2">
-                {t("assignees")}
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {task.assignedMembers
-                  .slice(0, 2)
-                  .map((assignee: MemberSearchResult, index: number) => (
-                    <Chip key={index} color="primary" size="sm" variant="flat">
+          <div className="flex flex-wrap gap-1">
+            {task.assignedMembers
+              .slice(0, 2)
+              .map((assignee: MemberSearchResult, index: number) => (
+                <Tooltip
+                  key={index}
+                  content={`${assignee.gradeName} ${assignee.fullName}`}
+                >
+                  <Chip
+                    className="max-w-[140px]"
+                    color="primary"
+                    size="sm"
+                    variant="flat"
+                  >
+                    <span className="block truncate">
                       {`${assignee.gradeName} ${assignee.fullName}`}
-                    </Chip>
-                  ))}
-                {task.assignedMembers.length > 2 && (
-                  <Chip size="sm" variant="flat">
-                    +{task.assignedMembers.length - 2}
+                    </span>
                   </Chip>
-                )}
-              </div>
-            </div>
+                </Tooltip>
+              ))}
+            {task.assignedMembers.length > 2 && (
+              <Chip size="sm" variant="flat">
+                +{task.assignedMembers.length - 2}
+              </Chip>
+            )}
           </div>
         )}
 

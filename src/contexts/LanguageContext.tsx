@@ -612,6 +612,10 @@ const translations = {
     // Validation messages
     "validation.dateRequired": "Date is required",
     "validation.reasonRequired": "Reason is required",
+    "validation.startDateWithinTimeline":
+      "Start date must be within the timeline's date range",
+    "validation.endDateWithinTimeline":
+      "End date must be within the timeline's date range",
     "developerDashboard.currentTasks": "Tasks",
     "developerDashboard.status": "Status",
     "developerDashboard.status.available": "Available",
@@ -1133,6 +1137,7 @@ const translations = {
     "task.create.createTask": "Create Task",
     "task.create.success": "Task created successfully",
     "task.create.failedToCreate": "Failed to create task",
+    "task.createTaskHint": "Create a new task based on this developer task",
 
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
@@ -2980,8 +2985,8 @@ const translations = {
     "tasks.type.adhoc": "مهمة عاجلة",
     "tasks.noAssociatedProject": "غير مرتبط بمشروع",
     // Task create modal keys (Arabic)
-    "task.create.title": "إنشاء مهمة عاجلة",
-    "task.create.subtitle": "إنشاء مهمة عاجلة جديدة لضمان الجودة",
+    "task.create.title": "إنشاء مهمة",
+    "task.create.subtitle": "إنشاء مهمة جديدة لضمان الجودة",
     "task.create.taskInfo":
       "سيتم تعيين هذه المهمة لفريق ضمان الجودة للمراجعة والاختبار",
     "task.create.taskName": "اسم المهمة",
@@ -2996,6 +3001,7 @@ const translations = {
     "task.createTask": "إنشاء المهمة",
     "task.create.success": "تم إنشاء المهمة بنجاح",
     "task.create.failedToCreate": "فشل في إنشاء المهمة",
+    "task.createTaskHint": "إنشاء مهمة جديدة بناءً على  مهمة المطور",
 
     "requirements.updated": "تاريخ التحديث",
     "requirements.uploadedOn": "تم الرفع في",
@@ -3074,6 +3080,10 @@ const translations = {
     "validation.endDateRequired": "تاريخ النهاية مطلوب",
     "validation.endDateAfterStart":
       "يجب أن يكون تاريخ النهاية بعد تاريخ البداية",
+    "validation.startDateWithinTimeline":
+      "يجب أن يكون تاريخ البداية ضمن نطاق تواريخ الجدول الزمني",
+    "validation.endDateWithinTimeline":
+      "يجب أن يكون تاريخ النهاية ضمن نطاق تواريخ الجدول الزمني",
     "validation.departmentRequired": "القسم مطلوب",
 
     // User Management

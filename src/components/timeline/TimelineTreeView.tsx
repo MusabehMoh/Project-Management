@@ -451,6 +451,7 @@ export default function TimelineTreeView({
     type: "timeline" | "sprint" | "task" | "subtask",
     item: any,
   ) => {
+    debugger;
     setEditModalType(type);
     setEditingItem(item);
     setEditModalInitialValues({
@@ -463,8 +464,10 @@ export default function TimelineTreeView({
       priorityId: item.priorityId || 2,
       progress: item.progress || 0,
       notes: item.notes || "",
-      members: item.members || [],
-      memberIds: item.members ? item.members.map((m: any) => m.id) : [],
+      members: item.assignedMembers || item.members || [],
+      memberIds: item.memberIds || [],
+      depTasks: item.dependentTasks || item.depTasks || [],
+      depTaskIds: item.depTaskIds || [],
     });
     setIsEditModalOpen(true);
   };
@@ -487,8 +490,10 @@ export default function TimelineTreeView({
         });
         toasts.onSprintUpdateSuccess();
       } else if (editModalType === "task") {
+        debugger;
         await _onUpdateTask({
           id: editingItem.id,
+          projectRequirementId: timeline.projectRequirementId,
           // Preserve the task's sprint association explicitly during update
           sprintId: (editingItem.sprintId ?? editingItem.sprintId).toString(),
           ...formData,
@@ -613,6 +618,7 @@ export default function TimelineTreeView({
       } else if (createModalType === "task") {
         await onCreateTask({
           timelineId: timeline.id.toString(),
+          projectRequirementId: timeline.projectRequirementId,
           sprintId: createParentId,
           ...formData,
         });
