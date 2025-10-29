@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@heroui/button";
 import { Badge } from "@heroui/badge";
 import { Chip } from "@heroui/chip";
+import { Avatar } from "@heroui/avatar";
 import {
   Drawer,
   DrawerBody,
@@ -227,6 +228,31 @@ export default function TaskDetailsDrawer({
                     </div>
                   </div>
                 )}
+
+              {/* Assigned Designer */}
+              {selectedTask?.assignedDesigner && (
+                <div className="space-y-2">
+                  <h4 className="text-md font-medium">
+                    {t("tasks.assignedDesigner")}
+                  </h4>
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      name={selectedTask.assignedDesigner.fullName}
+                      size="sm"
+                      className="flex-shrink-0"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        {selectedTask.assignedDesigner.gradeName}{" "}
+                        {selectedTask.assignedDesigner.fullName}
+                      </span>
+                      <span className="text-xs text-default-500">
+                        {selectedTask.assignedDesigner.militaryNumber}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-between items-start">
                 {/* Start Date */}

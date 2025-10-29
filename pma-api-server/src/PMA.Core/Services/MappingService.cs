@@ -857,9 +857,18 @@ public class MappingService : IMappingService
             DueDate = designRequest.DueDate,
             CreatedAt = designRequest.CreatedAt,
             UpdatedAt = designRequest.UpdatedAt,
-            AssignedToUserName = designRequest.AssignedToUser?.FullName,
+            AssignedToUserName = designRequest.AssignedToEmployee?.FullName,
             Task = designRequest.Task != null ? MapToTaskDto(designRequest.Task) : null,
-            AssignedToUser = designRequest.AssignedToUser != null ? MapToUserDto(designRequest.AssignedToUser) : null
+            AssignedToUser = designRequest.AssignedToEmployee != null ? new UserDto
+            {
+                Id = designRequest.AssignedToEmployee.Id,
+                UserName = designRequest.AssignedToEmployee.UserName,
+                PrsId = designRequest.AssignedToEmployee.Id,
+                FullName = designRequest.AssignedToEmployee.FullName,
+                MilitaryNumber = designRequest.AssignedToEmployee.MilitaryNumber,
+                GradeName = designRequest.AssignedToEmployee.GradeName,
+                IsActive = true // Employee records are typically active
+            } : null
         };
     }
 

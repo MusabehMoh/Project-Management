@@ -1119,6 +1119,7 @@ const translations = {
     "tasks.type.changeRequest": "Change Request",
     "tasks.type.adhoc": "Adhoc Task",
     "tasks.noAssociatedProject": "Not associated with a project",
+    "tasks.assignedDesigner": "Assigned Designer",
     // Task create modal keys (English)
     "task.create.title": "Create Adhoc Task",
     "task.create.subtitle": "Create a new adhoc task for quality assurance",
@@ -2987,6 +2988,7 @@ const translations = {
     "tasks.type.changeRequest": "طلب تغيير",
     "tasks.type.adhoc": "مهمة عاجلة",
     "tasks.noAssociatedProject": "غير مرتبط بمشروع",
+    "tasks.assignedDesigner": "المصمم المعين",
     // Task create modal keys (Arabic)
     "task.create.title": "إنشاء مهمة عاجلة",
     "task.create.subtitle": "إنشاء مهمة عاجلة جديدة لضمان الجودة",

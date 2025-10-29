@@ -12,6 +12,7 @@ export interface MemberTask {
   typeId?: number; // 1=TimeLine, 2=ChangeRequest, 3=AdHoc
   department: Department;
   assignedMembers: MemberSearchResult[]; // Multiple assignees array
+  assignedDesigner?: MemberSearchResult; // Designer assigned from design request
   primaryAssignee?: MemberSearchResult; // Main responsible person
   memberIds: number[]; // For API filtering
   project: { id: string; applicationName: string };

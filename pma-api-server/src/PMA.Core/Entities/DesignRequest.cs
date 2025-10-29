@@ -28,5 +28,5 @@ public class DesignRequest
     public virtual Task? Task { get; set; }
 
     [ForeignKey("AssignedToPrsId")]
-    public virtual User? AssignedToUser { get; set; }
+    public virtual Employee? AssignedToEmployee { get; set; }
 }

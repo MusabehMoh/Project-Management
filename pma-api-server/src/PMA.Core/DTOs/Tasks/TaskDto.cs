@@ -32,6 +32,7 @@ public class TaskDto
     // Task assignments and dependencies - matching frontend naming
     public List<int> MemberIds { get; set; } = new List<int>();
     public List<MemberSearchResultDto> AssignedMembers { get; set; } = new List<MemberSearchResultDto>();
+    public MemberSearchResultDto? AssignedDesigner { get; set; }
 
     public List<int> DepTaskIds { get; set; } = new List<int>();
     public bool HasDesignRequest { get; set; }
