@@ -650,6 +650,7 @@ public class MappingService : IMappingService
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
             Progress = task.Progress,
+            AssignedMembers = task.Assignments?.Select(a => MapToMemberSearchResultDto(a.Employee)).ToList() ?? new List<MemberSearchResultDto>(),
             CompletedFromDeveloper = task.CompletedFromDeveloper,
             Notes = task.Notes,
             MemberIds = task.Assignments?.Select(a => a.PrsId).ToList() ?? new List<int>(),
