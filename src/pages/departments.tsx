@@ -495,7 +495,10 @@ export default function DepartmentsPage() {
                       {members.map((member) => (
                         <TableRow key={member.id}>
                           <TableCell>
-                            <div className="flex items-center gap-2">
+                            <div
+                              className={`flex items-center gap-2 ${language === "ar" ? "text-right" : ""}`}
+                              dir={language === "ar" ? "rtl" : "ltr"}
+                            >
                               <Avatar
                                 showFallback
                                 name={member.user.fullName}
@@ -511,8 +514,22 @@ export default function DepartmentsPage() {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>{member.user.militaryNumber}</TableCell>
-                          <TableCell>{member.user.gradeName}</TableCell>
+                          <TableCell>
+                            <span
+                              className={language === "ar" ? "text-right block" : ""}
+                              dir={language === "ar" ? "rtl" : "ltr"}
+                            >
+                              {member.user.militaryNumber}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={language === "ar" ? "text-right block" : ""}
+                              dir={language === "ar" ? "rtl" : "ltr"}
+                            >
+                              {member.user.gradeName}
+                            </span>
+                          </TableCell>
                           <TableCell>
                             {new Date(member.joinDate).toLocaleDateString(
                               "en-US",
@@ -634,7 +651,10 @@ export default function DepartmentsPage() {
                           key={employee.id.toString()}
                           textValue={`${employee.fullName} (${employee.militaryNumber})`}
                         >
-                          <div className="flex flex-col">
+                          <div
+                            className={`flex flex-col ${language === "ar" ? "text-right" : ""}`}
+                            dir={language === "ar" ? "rtl" : "ltr"}
+                          >
                             <span className="font-medium">
                               {employee.fullName}
                             </span>
@@ -650,8 +670,11 @@ export default function DepartmentsPage() {
                     {selectedEmployee && (
                       <Card>
                         <CardBody>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
+                          <div
+                            className="grid grid-cols-2 gap-4"
+                            dir={language === "ar" ? "rtl" : "ltr"}
+                          >
+                            <div className={language === "ar" ? "text-right" : ""}>
                               <p className="text-small text-default-500">
                                 {t("users.fullName")}
                               </p>
@@ -659,7 +682,7 @@ export default function DepartmentsPage() {
                                 {selectedEmployee.fullName}
                               </p>
                             </div>
-                            <div>
+                            <div className={language === "ar" ? "text-right" : ""}>
                               <p className="text-small text-default-500">
                                 {t("users.userName")}
                               </p>
@@ -667,7 +690,7 @@ export default function DepartmentsPage() {
                                 {selectedEmployee.userName}
                               </p>
                             </div>
-                            <div>
+                            <div className={language === "ar" ? "text-right" : ""}>
                               <p className="text-small text-default-500">
                                 {t("users.militaryNumber")}
                               </p>
@@ -675,7 +698,7 @@ export default function DepartmentsPage() {
                                 {selectedEmployee.militaryNumber}
                               </p>
                             </div>
-                            <div>
+                            <div className={language === "ar" ? "text-right" : ""}>
                               <p className="text-small text-default-500">
                                 {t("users.gradeName")}
                               </p>
