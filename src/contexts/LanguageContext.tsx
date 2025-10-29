@@ -714,6 +714,26 @@ const translations = {
     "teamDashboard.kanban.markComplete": "Mark as Complete",
     "teamDashboard.kanban.taskCompleted": "Task completed successfully!",
     "teamDashboard.kanban.taskCompleteFailed": "Failed to complete task",
+    "teamDashboard.kanban.updateFailed": "Failed to update task status",
+    "teamDashboard.kanban.designRequestWarning": "Design Request Warning",
+    "teamDashboard.kanban.designRequestNoDesignerMessage":
+      "This task has a design request that has not been assigned to a designer yet. Proceeding will delete the design request.",
+    "teamDashboard.kanban.designRequestWithDesignerMessage":
+      "This task has a design request that has been assigned to a designer. If you want to proceed without designer assistance, please confirm below.",
+    "teamDashboard.kanban.completedWithoutDesigner":
+      "Completed without designer assistance",
+    "teamDashboard.kanban.designRequestWillBeDeleted":
+      "The design request will be permanently deleted.",
+    "teamDashboard.kanban.designerTaskWillBeCompleted":
+      "The designer's task will be marked as completed.",
+    "teamDashboard.kanban.designRequestDeleted":
+      "Design request deleted successfully",
+    "teamDashboard.kanban.designerTaskCompleted":
+      "Designer task marked as completed",
+    "teamDashboard.kanban.mustConfirmCompletion":
+      "Please confirm completion without designer",
+    "teamDashboard.kanban.designRequestError":
+      "Error processing design request",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "Quick Actions",
@@ -2591,6 +2611,24 @@ const translations = {
     "teamDashboard.kanban.markComplete": "تحديد كمكتمل",
     "teamDashboard.kanban.taskCompleted": "تم إكمال المهمة بنجاح!",
     "teamDashboard.kanban.taskCompleteFailed": "فشل إكمال المهمة",
+    "teamDashboard.kanban.updateFailed": "فشل تحديث حالة المهمة",
+    "teamDashboard.kanban.designRequestWarning": "تحذير طلب التصميم",
+    "teamDashboard.kanban.designRequestNoDesignerMessage":
+      "هذه المهمة تحتوي على طلب تصميم لم يتم تعيينه لمصمم بعد. المتابعة ستؤدي إلى حذف طلب التصميم.",
+    "teamDashboard.kanban.designRequestWithDesignerMessage":
+      "هذه المهمة تحتوي على طلب تصميم تم تعيينه لمصمم. إذا كنت تريد المتابعة بدون مساعدة المصمم، يرجى التأكيد أدناه.",
+    "teamDashboard.kanban.completedWithoutDesigner":
+      "مكتمل بدون مساعدة المصمم",
+    "teamDashboard.kanban.designRequestWillBeDeleted":
+      "سيتم حذف طلب التصميم نهائياً.",
+    "teamDashboard.kanban.designerTaskWillBeCompleted":
+      "سيتم تحديد مهمة المصمم كمكتملة.",
+    "teamDashboard.kanban.designRequestDeleted": "تم حذف طلب التصميم بنجاح",
+    "teamDashboard.kanban.designerTaskCompleted":
+      "تم تحديد مهمة المصمم كمكتملة",
+    "teamDashboard.kanban.mustConfirmCompletion":
+      "يرجى تأكيد الإكمال بدون المصمم",
+    "teamDashboard.kanban.designRequestError": "خطأ في معالجة طلب التصميم",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "الإجراءات السريعة",

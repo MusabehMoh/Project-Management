@@ -649,6 +649,9 @@ public class MappingService : IMappingService
             ActualHours = task.ActualHours,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
+            Progress = task.Progress,
+            CompletedFromDeveloper = task.CompletedFromDeveloper,
+            Notes = task.Notes,
             MemberIds = task.Assignments?.Select(a => a.PrsId).ToList() ?? new List<int>(),
             DepTaskIds = task.Dependencies_Relations?.Select(d => d.DependsOnTaskId).ToList() ?? new List<int>()
         };

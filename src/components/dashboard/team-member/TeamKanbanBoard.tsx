@@ -8,6 +8,16 @@ import { Skeleton } from "@heroui/skeleton";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Tooltip } from "@heroui/tooltip";
 import { Switch } from "@heroui/switch";
+import { Checkbox } from "@heroui/checkbox";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
+import { Button } from "@heroui/button";
 import {
   ListTodo,
   PlayCircle,
@@ -18,6 +28,7 @@ import {
   Flag,
   Calendar as CalendarIcon,
   Lock,
+  AlertTriangle,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -77,6 +88,23 @@ export default function TeamKanbanBoard({
     x: number;
     y: number;
   } | null>(null);
+
+  // Design request confirmation modal state
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [pendingDrop, setPendingDrop] = useState<{
+    task: MemberTask;
+    fromColumn: number;
+    toColumn: number;
+    progress: number;
+  } | null>(null);
+  const [designRequestInfo, setDesignRequestInfo] = useState<{
+    hasDesignRequest: boolean;
+    hasDesignerTask: boolean;
+    designerTaskId: number | null;
+  } | null>(null);
+  const [completedWithoutDesigner, setCompletedWithoutDesigner] =
+    useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // Get user's role IDs for permission checking
   const userRoleIds = useMemo(() => {
@@ -263,40 +291,102 @@ export default function TeamKanbanBoard({
       return;
     }
 
+    // Calculate progress based on target status
+    let updatedProgress: number;
+
+    // Set progress based on the target status
+    if (targetColumnId === 1) {
+      updatedProgress = 0; // To Do
+    } else if (targetColumnId === 2) {
+      updatedProgress = 25; // In Progress
+    } else if (targetColumnId === 3) {
+      updatedProgress = 75; // In Review
+    } else if (targetColumnId === 4) {
+      updatedProgress = 50; // Rework
+    } else if (targetColumnId === 5) {
+      updatedProgress = 100; // Completed
+    } else {
+      // Fallback: keep existing progress for unknown statuses
+      updatedProgress = draggedTask.progress;
+    }
+
+    // Check if moving to "In Review" (status 3) and user is developer (role ID 5)
+    // If yes, check for design request
+    const isDeveloper = userRoleIds.includes(5);
+    const isMovingToInReview = targetColumnId === 3;
+    const isFromToDoOrInProgress = draggedFromColumn === 1 || draggedFromColumn === 2;
+
+    if (isDeveloper && isMovingToInReview && isFromToDoOrInProgress) {
+      try {
+        // Check for design request
+        const response = await tasksService.checkDesignRequest(
+          parseInt(draggedTask.id),
+        );
+
+        if (response.success && response.data?.hasDesignRequest) {
+          // Store pending drop information
+          setPendingDrop({
+            task: draggedTask,
+            fromColumn: draggedFromColumn,
+            toColumn: targetColumnId,
+            progress: updatedProgress,
+          });
+          setDesignRequestInfo({
+            hasDesignRequest: true,
+            hasDesignerTask: response.data.hasDesignerTask,
+            designerTaskId: response.data.designerTaskId,
+          });
+          setCompletedWithoutDesigner(false);
+
+          // Show confirmation modal
+          onOpen();
+
+          // Clear drag state
+          setDraggedTask(null);
+          setDraggedFromColumn(null);
+
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking design request:", error);
+        // Continue with normal drop if check fails
+      }
+    }
+
+    // Proceed with normal drop
+    await executeDrop(
+      draggedTask,
+      draggedFromColumn,
+      targetColumnId,
+      updatedProgress,
+    );
+
+    setDraggedTask(null);
+    setDraggedFromColumn(null);
+  };
+
+  // Execute the actual drop operation
+  const executeDrop = async (
+    task: MemberTask,
+    fromColumn: number,
+    toColumn: number,
+    progress: number,
+  ) => {
     try {
       // Set loading state for the dragged task
-      setUpdatingTaskId(draggedTask.id);
-
-      // Calculate progress based on target status
-      let updatedProgress: number;
-
-      // Set progress based on the target status
-      if (targetColumnId === 1) {
-        updatedProgress = 0; // To Do
-      } else if (targetColumnId === 2) {
-        updatedProgress = 25; // In Progress
-      } else if (targetColumnId === 3) {
-        updatedProgress = 75; // In Review
-      } else if (targetColumnId === 4) {
-        updatedProgress = 50; // Rework
-      } else if (targetColumnId === 5) {
-        updatedProgress = 100; // Completed
-      } else {
-        // Fallback: keep existing progress for unknown statuses
-        updatedProgress = draggedTask.progress;
-      }
+      setUpdatingTaskId(task.id);
 
       console.log(
-        `Kanban: Moving task ${draggedTask.id} from status ${draggedFromColumn} to ${targetColumnId}, setting progress to ${updatedProgress}%`,
+        `Kanban: Moving task ${task.id} from status ${fromColumn} to ${toColumn}, setting progress to ${progress}%`,
       );
 
       // Update task status via API using TasksController PATCH endpoint
       // This creates a status history record and updates the task (including progress)
       const response = await tasksService.updateTaskStatus(
-        parseInt(draggedTask.id),
-        targetColumnId,
-        `Status changed from ${getStatusLabel(draggedFromColumn.toString())} to ${getStatusLabel(targetColumnId.toString())} via Kanban board`,
-        updatedProgress,
+        parseInt(task.id),
+        toColumn,
+        `Status changed from ${getStatusLabel(fromColumn.toString())} to ${getStatusLabel(toColumn.toString())} via Kanban board`,
+        progress,
       );
 
       if (response.success) {
@@ -305,27 +395,23 @@ export default function TeamKanbanBoard({
           const newColumns = [...prevColumns];
 
           // Remove from source column
-          const sourceColumn = newColumns.find(
-            (col) => col.id === draggedFromColumn,
-          );
+          const sourceColumn = newColumns.find((col) => col.id === fromColumn);
 
           if (sourceColumn) {
             sourceColumn.tasks = sourceColumn.tasks.filter(
-              (t) => t.id !== draggedTask.id,
+              (t) => t.id !== task.id,
             );
           }
 
           // Add to target column with updated status and progress
-          const targetColumn = newColumns.find(
-            (col) => col.id === targetColumnId,
-          );
+          const targetColumn = newColumns.find((col) => col.id === toColumn);
 
           if (targetColumn) {
             // Create updated task with new status and progress
             const updatedTask = {
-              ...draggedTask,
-              statusId: targetColumnId,
-              progress: updatedProgress,
+              ...task,
+              statusId: toColumn,
+              progress: progress,
             };
 
             console.log(`Kanban: Updated task in UI:`, updatedTask);
@@ -337,18 +423,76 @@ export default function TeamKanbanBoard({
 
         // Notify parent component
         if (onTaskUpdate) {
-          onTaskUpdate(parseInt(draggedTask.id), targetColumnId.toString());
+          onTaskUpdate(parseInt(task.id), toColumn.toString());
         }
       }
     } catch (err) {
       console.error("Failed to update task status:", err);
-      // TODO: Show error toast notification to user
-      // TODO: Revert optimistic update on failure
+      showErrorToast(t("teamDashboard.kanban.updateFailed"));
     } finally {
-      setDraggedTask(null);
-      setDraggedFromColumn(null);
       setUpdatingTaskId(null);
     }
+  };
+
+  // Handle confirmation modal confirm
+  const handleConfirmDrop = async () => {
+    if (!pendingDrop || !designRequestInfo) return;
+
+    setModalLoading(true);
+
+    try {
+      // Case 1: No designer task assigned - just delete design request
+      if (!designRequestInfo.hasDesignerTask) {
+        await tasksService.completeFromDeveloper(
+          parseInt(pendingDrop.task.id),
+          false,
+        );
+        showSuccessToast(t("teamDashboard.kanban.designRequestDeleted"));
+      }
+      // Case 2: Designer task exists - need checkbox confirmation
+      else if (completedWithoutDesigner) {
+        await tasksService.completeFromDeveloper(
+          parseInt(pendingDrop.task.id),
+          true,
+        );
+        showSuccessToast(t("teamDashboard.kanban.designerTaskCompleted"));
+      } else {
+        // Checkbox not checked
+        showErrorToast(t("teamDashboard.kanban.mustConfirmCompletion"));
+        setModalLoading(false);
+
+        return;
+      }
+
+      // Close modal
+      onClose();
+
+      // Execute the drop
+      await executeDrop(
+        pendingDrop.task,
+        pendingDrop.fromColumn,
+        pendingDrop.toColumn,
+        pendingDrop.progress,
+      );
+
+      // Clear state
+      setPendingDrop(null);
+      setDesignRequestInfo(null);
+      setCompletedWithoutDesigner(false);
+    } catch (error) {
+      console.error("Error handling design request:", error);
+      showErrorToast(t("teamDashboard.kanban.designRequestError"));
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Handle confirmation modal cancel
+  const handleCancelDrop = () => {
+    onClose();
+    setPendingDrop(null);
+    setDesignRequestInfo(null);
+    setCompletedWithoutDesigner(false);
   };
 
   // Handler for completing adhoc tasks
@@ -480,11 +624,12 @@ export default function TeamKanbanBoard({
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex items-center gap-3 pb-4">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-default-100">
-          <ListTodo className="w-5 h-5 text-foreground" />
-        </div>
+    <>
+      <Card className="w-full">
+        <CardHeader className="flex items-center gap-3 pb-4">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-default-100">
+            <ListTodo className="w-5 h-5 text-foreground" />
+          </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold">
             {userRoleIds.includes(3) // Analyst role ID
@@ -788,5 +933,55 @@ export default function TeamKanbanBoard({
         </div>
       </CardBody>
     </Card>
+
+    {/* Design Request Confirmation Modal */}
+    <Modal isOpen={isOpen} onClose={handleCancelDrop} size="lg">
+      <ModalContent>
+        <ModalHeader className="flex gap-2 items-center">
+          <AlertTriangle className="w-5 h-5 text-warning" />
+          {t("teamDashboard.kanban.designRequestWarning")}
+        </ModalHeader>
+        <ModalBody>
+          <div className="space-y-4">
+            <p className="text-default-600">
+              {designRequestInfo?.hasDesignerTask
+                ? t("teamDashboard.kanban.designRequestWithDesignerMessage")
+                : t("teamDashboard.kanban.designRequestNoDesignerMessage")}
+            </p>
+
+            {/* Show checkbox only when designer task exists */}
+            {designRequestInfo?.hasDesignerTask && (
+              <Checkbox
+                isSelected={completedWithoutDesigner}
+                onValueChange={setCompletedWithoutDesigner}
+              >
+                {t("teamDashboard.kanban.completedWithoutDesigner")}
+              </Checkbox>
+            )}
+
+            <div className="p-3 bg-warning-50 dark:bg-warning-100/10 rounded-lg border border-warning-200 dark:border-warning-800/30">
+              <p className="text-sm text-warning-700 dark:text-warning-600">
+                {designRequestInfo?.hasDesignerTask
+                  ? t("teamDashboard.kanban.designerTaskWillBeCompleted")
+                  : t("teamDashboard.kanban.designRequestWillBeDeleted")}
+              </p>
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="flat" onPress={handleCancelDrop}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            color="warning"
+            isLoading={modalLoading}
+            onPress={handleConfirmDrop}
+          >
+            {t("common.confirm")}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+    </>
   );
 }

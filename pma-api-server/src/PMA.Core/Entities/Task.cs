@@ -49,6 +49,10 @@ public class Task
     [Range(0, 100)]
     public int Progress { get; set; }
 
+    public bool CompletedFromDeveloper { get; set; } = false;
+
+    public string? Notes { get; set; }
+
     [Required]
     public DateTime CreatedAt { get; set; }
 

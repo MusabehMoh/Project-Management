@@ -29,6 +29,38 @@ export class TasksService {
       progress: progress !== undefined ? progress : undefined,
     });
   }
+
+  /**
+   * Check if task has a design request and get its details
+   * @param taskId - The task ID
+   */
+  async checkDesignRequest(taskId: number): Promise<ApiResponse<{
+    hasDesignRequest: boolean;
+    designRequestId: number | null;
+    hasDesignerTask: boolean;
+    designerTaskId: number | null;
+  }>> {
+    return apiClient.get<{
+      hasDesignRequest: boolean;
+      designRequestId: number | null;
+      hasDesignerTask: boolean;
+      designerTaskId: number | null;
+    }>(`${this.baseUrl}/${taskId}/design-request-check`);
+  }
+
+  /**
+   * Handle developer completing task without designer
+   * @param taskId - The task ID
+   * @param completedWithoutDesigner - Whether to mark designer task as completed
+   */
+  async completeFromDeveloper(
+    taskId: number,
+    completedWithoutDesigner: boolean,
+  ): Promise<ApiResponse<any>> {
+    return apiClient.post<any>(`${this.baseUrl}/${taskId}/complete-from-developer`, {
+      completedWithoutDesigner,
+    });
+  }
 }
 
 // Export a singleton instance
