@@ -26,6 +26,7 @@ import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import { AdhocTask } from "@/types/membersTasks";
 import { UseAdhocTasks } from "@/hooks/useAdhocTask";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
+import { PlusIcon } from "@/components/icons";
 
 export interface AddAdhocTaskFormData {
   name: string;
@@ -181,9 +182,10 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
     <>
       {/* Button */}
       <Button
+        className="text-danger"
         color="danger"
-        size="lg"
-        variant="bordered"
+        startContent={<PlusIcon className="h-4 w-4" />}
+        variant="flat"
         onPress={() => setIsOpen(true)}
       >
         {t("common.AddAdhocTask")}

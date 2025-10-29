@@ -20,6 +20,8 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .Include(t => t.Assignments)
             .Include(t => t.Dependencies_Relations)
             .Include(t => t.Sprint)
+            .Include(t => t.DesignRequests)
+                .ThenInclude(dr => dr.AssignedToEmployee)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
@@ -34,6 +36,8 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .Include(t => t.ProjectRequirement)
                 .ThenInclude(pr => pr!.Project)
             .Include(t => t.Dependencies_Relations)
+            .Include(t => t.DesignRequests)
+                .ThenInclude(dr => dr.AssignedToEmployee)
             .AsQueryable();
 
         if (sprintId.HasValue)
@@ -111,6 +115,8 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .Include(t => t.Department)
             .Include(t => t.ProjectRequirement)
             .Include(t => t.Dependencies_Relations)
+            .Include(t => t.DesignRequests)
+                .ThenInclude(dr => dr.AssignedToEmployee)
             .Where(t => t.Assignments.Any(a => a.PrsId == assigneeId))
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
@@ -126,6 +132,8 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .Include(t => t.Department)
             .Include(t => t.ProjectRequirement)
             .Include(t => t.Dependencies_Relations)
+            .Include(t => t.DesignRequests)
+                .ThenInclude(dr => dr.AssignedToEmployee)
             .Where(t => t.Sprint != null && t.Sprint.ProjectId == projectId)
             .OrderBy(t => t.StartDate)
             .ToListAsync();
@@ -137,6 +145,8 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             .Include(t => t.Sprint)
             .Include(t => t.Assignments)
             .Include(t => t.Dependencies_Relations)
+            .Include(t => t.DesignRequests)
+                .ThenInclude(dr => dr.AssignedToEmployee)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 

@@ -1077,47 +1077,7 @@ export default function MembersTasksPage() {
           )}
         </div>
 
-        {/* Pagination Controls */}
-        {!initialLoading && (tasks?.length || 0) > 0 && (
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4">
-            <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
-              <span className="text-sm text-default-600">
-                {t("common.show")}
-              </span>
-              <Select
-                aria-label={t("pagination.itemsPerPage")}
-                className="w-20"
-                disallowEmptySelection={true}
-                isOpen={isOptionOpen}
-                selectedKeys={[
-                  normalizePageSize(effectivePageSize, 10).toString(),
-                ]}
-                size="sm"
-                onOpenChange={setIsOptionOpen}
-                onSelectionChange={(keys) => {
-                  const newSize = parseInt(Array.from(keys)[0] as string);
-
-                  handlePageSizeChange(newSize);
-                }}
-              >
-                {PAGE_SIZE_OPTIONS.map((opt) => (
-                  <SelectItem
-                    key={opt.toString()}
-                    textValue={opt.toString()}
-                    onPress={() => {
-                      setIsOptionOpen(false); // Force close when any item is clicked
-                    }}
-                  >
-                    {opt}
-                  </SelectItem>
-                ))}
-              </Select>
-              <span className="text-sm text-default-600">
-                {t("pagination.perPage")}
-              </span>
-            </div>
-          </div>
-        )}
+        {/* Pagination Controls - Moved below tabs */}
 
         {/* Controls */}
         {loading ? (
@@ -1138,7 +1098,7 @@ export default function MembersTasksPage() {
             </div>
           </div>
         ) : (
-          <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               {/* View Toggle */}
               <div className="flex items-center bg-content2 rounded-full p-1">
@@ -1170,6 +1130,46 @@ export default function MembersTasksPage() {
                 {t("pagination.of")} {totalCount} {t("common.tasks")}
               </span>
             </div>
+
+            {/* Page Size Selector - Now on same line as tabs */}
+            {!initialLoading && (tasks?.length || 0) > 0 && (
+              <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
+                <span className="text-sm text-default-600">
+                  {t("common.show")}
+                </span>
+                <Select
+                  aria-label={t("pagination.itemsPerPage")}
+                  className="w-20"
+                  disallowEmptySelection={true}
+                  isOpen={isOptionOpen}
+                  selectedKeys={[
+                    normalizePageSize(effectivePageSize, 10).toString(),
+                  ]}
+                  size="sm"
+                  onOpenChange={setIsOptionOpen}
+                  onSelectionChange={(keys) => {
+                    const newSize = parseInt(Array.from(keys)[0] as string);
+
+                    handlePageSizeChange(newSize);
+                  }}
+                >
+                  {PAGE_SIZE_OPTIONS.map((opt) => (
+                    <SelectItem
+                      key={opt.toString()}
+                      textValue={opt.toString()}
+                      onPress={() => {
+                        setIsOptionOpen(false); // Force close when any item is clicked
+                      }}
+                    >
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <span className="text-sm text-default-600">
+                  {t("pagination.perPage")}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

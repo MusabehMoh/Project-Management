@@ -649,7 +649,9 @@ public class MappingService : IMappingService
             ActualHours = task.ActualHours,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
-            AssignedMembers = task.Assignments?.Select(a => MapToMemberSearchResultDto(a.Employee)).ToList() ?? new List<MemberSearchResultDto>(),
+            Progress = task.Progress,
+            CompletedFromDeveloper = task.CompletedFromDeveloper,
+            Notes = task.Notes,
             MemberIds = task.Assignments?.Select(a => a.PrsId).ToList() ?? new List<int>(),
             DepTaskIds = task.Dependencies_Relations?.Select(d => d.DependsOnTaskId).ToList() ?? new List<int>()
         };
@@ -854,15 +856,25 @@ public class MappingService : IMappingService
         {
             Id = designRequest.Id,
             TaskId = designRequest.TaskId,
+            DesignerTaskId = designRequest.DesignerTaskId,
             Notes = designRequest.Notes,
             AssignedToPrsId = designRequest.AssignedToPrsId,
             Status = designRequest.Status,
             DueDate = designRequest.DueDate,
             CreatedAt = designRequest.CreatedAt,
             UpdatedAt = designRequest.UpdatedAt,
-            AssignedToUserName = designRequest.AssignedToUser?.FullName,
+            AssignedToUserName = designRequest.AssignedToEmployee?.FullName,
             Task = designRequest.Task != null ? MapToTaskDto(designRequest.Task) : null,
-            AssignedToUser = designRequest.AssignedToUser != null ? MapToUserDto(designRequest.AssignedToUser) : null
+            AssignedToUser = designRequest.AssignedToEmployee != null ? new UserDto
+            {
+                Id = designRequest.AssignedToEmployee.Id,
+                UserName = designRequest.AssignedToEmployee.UserName,
+                PrsId = designRequest.AssignedToEmployee.Id,
+                FullName = designRequest.AssignedToEmployee.FullName,
+                MilitaryNumber = designRequest.AssignedToEmployee.MilitaryNumber,
+                GradeName = designRequest.AssignedToEmployee.GradeName,
+                IsActive = true // Employee records are typically active
+            } : null
         };
     }
 

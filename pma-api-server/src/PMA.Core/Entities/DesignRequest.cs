@@ -10,6 +10,8 @@ public class DesignRequest
 
     public int? TaskId { get; set; }
 
+    public int? DesignerTaskId { get; set; }
+
     public string? Notes { get; set; }
 
     public int? AssignedToPrsId { get; set; }
@@ -28,5 +30,5 @@ public class DesignRequest
     public virtual Task? Task { get; set; }
 
     [ForeignKey("AssignedToPrsId")]
-    public virtual User? AssignedToUser { get; set; }
+    public virtual Employee? AssignedToEmployee { get; set; }
 }

@@ -169,6 +169,23 @@ public class MemberTaskService : IMemberTaskService
             Department = "" // Employee doesn't have direct department property
         }).ToList() ?? new List<MemberSearchResultDto>();
 
+        // Get assigned designer from design request
+        var assignedDesigner = task.DesignRequests?.FirstOrDefault()?.AssignedToEmployee;
+        MemberSearchResultDto? designerDto = null;
+        if (assignedDesigner != null)
+        {
+            designerDto = new MemberSearchResultDto
+            {
+                Id = assignedDesigner.Id,
+                UserName = assignedDesigner.UserName ?? "",
+                MilitaryNumber = assignedDesigner.MilitaryNumber ?? "",
+                FullName = assignedDesigner.FullName ?? "",
+                GradeName = assignedDesigner.GradeName ?? "",
+                StatusId = assignedDesigner.StatusId,
+                Department = "" // Employee doesn't have direct department property
+            };
+        }
+
         // Get primary assignee (first assignee or null)
         //var primaryAssignee = assignedMembers.FirstOrDefault();
 
@@ -187,6 +204,7 @@ public class MemberTaskService : IMemberTaskService
             UpdatedAt = task.UpdatedAt,
             RoleType=task.RoleType ?? "",
             AssignedMembers = assignedMembers,
+            AssignedDesigner = designerDto,
             MemberIds = assignedMembers.Select(a => a.Id).ToList(),
             DepartmentId = task.DepartmentId,
             SprintId=task.SprintId,

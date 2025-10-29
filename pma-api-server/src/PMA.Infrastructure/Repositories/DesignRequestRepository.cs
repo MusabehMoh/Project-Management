@@ -16,7 +16,7 @@ public class DesignRequestRepository : Repository<DesignRequest>, IDesignRequest
     {
         var query = _context.DesignRequests
             .Include(dr => dr.Task)
-            .Include(dr => dr.AssignedToUser)
+            .Include(dr => dr.AssignedToEmployee)
             .AsQueryable();
 
         if (taskId.HasValue)
@@ -48,7 +48,7 @@ public class DesignRequestRepository : Repository<DesignRequest>, IDesignRequest
     {
         return await _context.DesignRequests
             .Include(dr => dr.Task)
-            .Include(dr => dr.AssignedToUser)
+            .Include(dr => dr.AssignedToEmployee)
             .FirstOrDefaultAsync(dr => dr.TaskId == taskId);
     }
 

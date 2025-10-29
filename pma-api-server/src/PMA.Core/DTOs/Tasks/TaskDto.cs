@@ -29,9 +29,12 @@ public class TaskDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int Progress { get; set; }
+    public bool CompletedFromDeveloper { get; set; }
+    public string? Notes { get; set; }
     // Task assignments and dependencies - matching frontend naming
     public List<int> MemberIds { get; set; } = new List<int>();
     public List<MemberSearchResultDto> AssignedMembers { get; set; } = new List<MemberSearchResultDto>();
+    public MemberSearchResultDto? AssignedDesigner { get; set; }
 
     public List<int> DepTaskIds { get; set; } = new List<int>();
     public bool HasDesignRequest { get; set; }

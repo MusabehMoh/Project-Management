@@ -15,12 +15,18 @@ public class TasksController : ApiBaseController
     private readonly ITaskService _taskService;
     private readonly IMappingService _mappingService;
     private readonly IUserContextAccessor _userContextAccessor;
+    private readonly IDesignRequestService _designRequestService;
 
-    public TasksController(ITaskService taskService, IMappingService mappingService, IUserContextAccessor userContextAccessor)
+    public TasksController(
+        ITaskService taskService, 
+        IMappingService mappingService, 
+        IUserContextAccessor userContextAccessor,
+        IDesignRequestService designRequestService)
     {
         _taskService = taskService;
         _mappingService = mappingService;
         _userContextAccessor = userContextAccessor;
+        _designRequestService = designRequestService;
     }
 
     /// <summary>
@@ -726,6 +732,141 @@ public class TasksController : ApiBaseController
         catch (Exception ex)
         {
             return Error<TaskDto>("An error occurred while updating task status", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Check if task has a design request and return its details
+    /// </summary>
+    [HttpGet("{id}/design-request-check")]
+    [ProducesResponseType(typeof(ApiResponse<DesignRequestCheckDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> CheckDesignRequest(int id)
+    {
+        try
+        {
+            var task = await _taskService.GetTaskByIdAsync(id);
+            if (task == null)
+            {
+                return Error<object>("Task not found", status: 404);
+            }
+
+            // Check if task has a design request
+            var designRequest = task.DesignRequests?.FirstOrDefault();
+            
+            if (designRequest == null)
+            {
+                return Success(new DesignRequestCheckDto
+                {
+                    HasDesignRequest = false,
+                    DesignRequestId = null,
+                    HasDesignerTask = false,
+                    DesignerTaskId = null
+                });
+            }
+
+            return Success(new DesignRequestCheckDto
+            {
+                HasDesignRequest = true,
+                DesignRequestId = designRequest.Id,
+                HasDesignerTask = designRequest.DesignerTaskId.HasValue,
+                DesignerTaskId = designRequest.DesignerTaskId
+            });
+        }
+        catch (Exception ex)
+        {
+            return Error<DesignRequestCheckDto>("An error occurred while checking design request", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Handle developer completing task without designer (delete design request or mark designer task as completed)
+    /// </summary>
+    [HttpPost("{id}/complete-from-developer")]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+    public async Task<IActionResult> CompleteFromDeveloper(int id, [FromBody] CompleteFromDeveloperDto dto)
+    {
+        try
+        {
+            var task = await _taskService.GetTaskByIdAsync(id);
+            if (task == null)
+            {
+                return Error<object>("Task not found", status: 404);
+            }
+
+            // Get design request
+            var designRequest = task.DesignRequests?.FirstOrDefault();
+            if (designRequest == null)
+            {
+                return Error<object>("No design request found for this task", status: 400);
+            }
+
+            // Get current user context
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrEmpty(userContext.PrsId))
+            {
+                return Error<object>("Unable to identify current user", status: 401);
+            }
+
+            // Parse PrsId to int
+            if (!int.TryParse(userContext.PrsId, out var changedByPrsId))
+            {
+                return Error<object>("Invalid user identifier", status: 401);
+            }
+
+            // Case 1: No designer task assigned yet - just delete the design request
+            if (!designRequest.DesignerTaskId.HasValue)
+            {
+                await _designRequestService.DeleteDesignRequestAsync(designRequest.Id);
+                
+                // Mark task as completed from developer
+                task.CompletedFromDeveloper = true;
+                await _taskService.UpdateTaskAsync(task);
+
+                return Success(new { Message = "Design request deleted successfully" });
+            }
+
+            // Case 2: Designer task exists
+            if (dto.CompletedWithoutDesigner)
+            {
+                // Mark the designer task as completed
+                var designerTask = await _taskService.GetTaskByIdAsync(designRequest.DesignerTaskId.Value);
+                if (designerTask != null)
+                {
+                    // Create task status history
+                    var taskStatusHistory = new TaskStatusHistory
+                    {
+                        TaskId = designerTask.Id,
+                        OldStatus = designerTask.StatusId,
+                        NewStatus = Core.Enums.TaskStatus.Completed,
+                        ChangedByPrsId = changedByPrsId,
+                        Comment = "Completed by developer without designer assistance",
+                        UpdatedAt = DateTime.Now
+                    };
+                    await _taskService.CreateTaskStatusHistoryAsync(taskStatusHistory);
+
+                    designerTask.StatusId = Core.Enums.TaskStatus.Completed;
+                    designerTask.Progress = 100;
+                    designerTask.UpdatedAt = DateTime.Now;
+                    await _taskService.UpdateTaskAsync(designerTask);
+                }
+
+                // Mark main task as completed from developer
+                task.CompletedFromDeveloper = true;
+                await _taskService.UpdateTaskAsync(task);
+
+                return Success(new { Message = "Designer task marked as completed" });
+            }
+            else
+            {
+                return Error<object>("CompletedWithoutDesigner flag must be true when designer task exists", status: 400);
+            }
+        }
+        catch (Exception ex)
+        {
+            return Error<object>("An error occurred while processing the request", ex.Message);
         }
     }
 }

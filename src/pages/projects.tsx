@@ -362,6 +362,10 @@ export default function ProjectsPage() {
 
     if (!formData.applicationName.trim()) {
       errors.applicationName = t("projects.validation.applicationNameRequired");
+    } else if (formData.applicationName.length > 200) {
+      errors.applicationName = t(
+        "projects.validation.applicationNameMaxLength",
+      );
     }
 
     if (!formData.projectOwner || formData.projectOwner === 0) {
@@ -1431,18 +1435,29 @@ export default function ProjectsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
                       isRequired
+                      description={`${formData.applicationName.length}/200 ${t("common.characters") || "characters"}`}
                       errorMessage={validationErrors.applicationName}
                       isInvalid={!!validationErrors.applicationName}
                       label={t("projects.applicationName")}
+                      maxLength={200}
                       placeholder={t("projects.applicationName")}
                       value={formData.applicationName}
                       onChange={(e) => {
+                        const newValue = e.target.value;
+
                         setFormData({
                           ...formData,
-                          applicationName: e.target.value,
+                          applicationName: newValue,
                         });
-                        // Clear validation error when user starts typing
-                        if (validationErrors.applicationName) {
+                        // Real-time validation for character limit
+                        if (newValue.length > 200) {
+                          setValidationErrors({
+                            ...validationErrors,
+                            applicationName: t(
+                              "projects.validation.applicationNameMaxLength",
+                            ),
+                          });
+                        } else if (validationErrors.applicationName) {
                           setValidationErrors({
                             ...validationErrors,
                             applicationName: undefined,

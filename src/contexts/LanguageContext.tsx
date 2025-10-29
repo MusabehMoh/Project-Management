@@ -441,6 +441,7 @@ const translations = {
     "common.update": "Update",
     "common.error": "Error",
     "common.all": "All",
+    "common.characters": "characters",
     "common.inactive": "Inactive",
     "common.info": "Info",
     "common.show": "Show",
@@ -717,6 +718,26 @@ const translations = {
     "teamDashboard.kanban.markComplete": "Mark as Complete",
     "teamDashboard.kanban.taskCompleted": "Task completed successfully!",
     "teamDashboard.kanban.taskCompleteFailed": "Failed to complete task",
+    "teamDashboard.kanban.updateFailed": "Failed to update task status",
+    "teamDashboard.kanban.designRequestWarning": "Design Request Warning",
+    "teamDashboard.kanban.designRequestNoDesignerMessage":
+      "This task has a design request that has not been assigned to a designer yet. Proceeding will delete the design request.",
+    "teamDashboard.kanban.designRequestWithDesignerMessage":
+      "This task has a design request that has been assigned to a designer. If you want to proceed without designer assistance, please confirm below.",
+    "teamDashboard.kanban.completedWithoutDesigner":
+      "Completed without designer assistance",
+    "teamDashboard.kanban.designRequestWillBeDeleted":
+      "The design request will be permanently deleted.",
+    "teamDashboard.kanban.designerTaskWillBeCompleted":
+      "The designer's task will be marked as completed.",
+    "teamDashboard.kanban.designRequestDeleted":
+      "Design request deleted successfully",
+    "teamDashboard.kanban.designerTaskCompleted":
+      "Designer task marked as completed",
+    "teamDashboard.kanban.mustConfirmCompletion":
+      "Please confirm completion without designer",
+    "teamDashboard.kanban.designRequestError":
+      "Error processing design request",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "Quick Actions",
@@ -916,6 +937,8 @@ const translations = {
     // Project Validation Messages
     "projects.validation.applicationNameRequired":
       "Application name is required",
+    "projects.validation.applicationNameMaxLength":
+      "Application name must not exceed 200 characters",
     "projects.validation.projectOwnerRequired": "Project owner is required",
     "projects.validation.owningUnitRequired": "Owning unit is required",
     "projects.validation.startDateRequired": "Start date is required",
@@ -1120,6 +1143,7 @@ const translations = {
     "tasks.type.changeRequest": "Change Request",
     "tasks.type.adhoc": "Adhoc Task",
     "tasks.noAssociatedProject": "Not associated with a project",
+    "tasks.assignedDesigner": "Assigned Designer",
     // Task create modal keys (English)
     "task.create.title": "Create Adhoc Task",
     "task.create.subtitle": "Create a new adhoc task for quality assurance",
@@ -1332,6 +1356,8 @@ const translations = {
       "Search by name, military number, or username",
     "departments.members.removeSuccess": "Member removed successfully",
     "departments.members.removeError": "Failed to remove member",
+    "departments.members.alreadyMember":
+      "Employee is already a member of this department",
 
     // Department Statistics
     "departments.stats.title": "Department Statistics",
@@ -2201,7 +2227,7 @@ const translations = {
     "quickActions.overdueItems": "العناصر المتأخرة",
     "quickActions.overdueItemsDesc": "عرض وإدارة المهام والمشاريع المتأخرة",
     "quickActions.assignAnalyst": "تعيين محلل",
-    "quickActions.assignAnalystTo": "تعيين محللين لـ",
+    "quickActions.assignAnalystTo": "تعيين محللين",
     "quickActions.selectAnalyst": "اختيار محللين",
     "quickActions.chooseAnalyst": "البحث واختيار محللين",
     "quickActions.selectedAnalysts": "المحللين المختارين",
@@ -2328,6 +2354,7 @@ const translations = {
     "common.update": "تحديث",
     "common.error": "خطأ",
     "common.all": "الكل",
+    "common.characters": "حرف",
     "common.inactive": "غير نشط",
     "common.info": "معلومات",
     "common.show": "عرض",
@@ -2589,6 +2616,24 @@ const translations = {
     "teamDashboard.kanban.markComplete": "تحديد كمكتمل",
     "teamDashboard.kanban.taskCompleted": "تم إكمال المهمة بنجاح!",
     "teamDashboard.kanban.taskCompleteFailed": "فشل إكمال المهمة",
+    "teamDashboard.kanban.updateFailed": "فشل تحديث حالة المهمة",
+    "teamDashboard.kanban.designRequestWarning": "تحذير طلب التصميم",
+    "teamDashboard.kanban.designRequestNoDesignerMessage":
+      "هذه المهمة تحتوي على طلب تصميم لم يتم تعيينه لمصمم بعد. المتابعة ستؤدي إلى حذف طلب التصميم.",
+    "teamDashboard.kanban.designRequestWithDesignerMessage":
+      "هذه المهمة تحتوي على طلب تصميم تم تعيينه لمصمم. إذا كنت تريد المتابعة بدون مساعدة المصمم، يرجى التأكيد أدناه.",
+    "teamDashboard.kanban.completedWithoutDesigner":
+      "مكتمل بدون مساعدة المصمم",
+    "teamDashboard.kanban.designRequestWillBeDeleted":
+      "سيتم حذف طلب التصميم نهائياً.",
+    "teamDashboard.kanban.designerTaskWillBeCompleted":
+      "سيتم تحديد مهمة المصمم كمكتملة.",
+    "teamDashboard.kanban.designRequestDeleted": "تم حذف طلب التصميم بنجاح",
+    "teamDashboard.kanban.designerTaskCompleted":
+      "تم تحديد مهمة المصمم كمكتملة",
+    "teamDashboard.kanban.mustConfirmCompletion":
+      "يرجى تأكيد الإكمال بدون المصمم",
+    "teamDashboard.kanban.designRequestError": "خطأ في معالجة طلب التصميم",
 
     // Team Member - Quick Actions
     "teamDashboard.quickActions.title": "الإجراءات السريعة",
@@ -2785,6 +2830,8 @@ const translations = {
 
     // Project Validation Messages
     "projects.validation.applicationNameRequired": "اسم المشروع مطلوب",
+    "projects.validation.applicationNameMaxLength":
+      "يجب ألا يتجاوز اسم المشروع 200 حرف",
     "projects.validation.projectOwnerRequired": "مدير المشروع مطلوب",
     "projects.validation.owningUnitRequired": "الوحدة المالكة مطلوبة",
     "projects.validation.startDateRequired": "تاريخ البداية مطلوب",
@@ -2984,6 +3031,7 @@ const translations = {
     "tasks.type.changeRequest": "طلب تغيير",
     "tasks.type.adhoc": "مهمة عاجلة",
     "tasks.noAssociatedProject": "غير مرتبط بمشروع",
+    "tasks.assignedDesigner": "المصمم المعين",
     // Task create modal keys (Arabic)
     "task.create.title": "إنشاء مهمة",
     "task.create.subtitle": "إنشاء مهمة جديدة لضمان الجودة",
@@ -3198,6 +3246,7 @@ const translations = {
       "البحث بالاسم أو الرقم العسكري أو اسم المستخدم",
     "departments.members.removeSuccess": "تم إزالة العضو بنجاح",
     "departments.members.removeError": "فشل في إزالة العضو",
+    "departments.members.alreadyMember": "الموظف عضو بالفعل في هذا القسم",
 
     // Department Statistics
     "departments.stats.title": "إحصائيات الأقسام",

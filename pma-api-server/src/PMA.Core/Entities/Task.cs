@@ -49,6 +49,10 @@ public class Task
     [Range(0, 100)]
     public int Progress { get; set; }
 
+    public bool CompletedFromDeveloper { get; set; } = false;
+
+    public string? Notes { get; set; }
+
     [Required]
     public DateTime CreatedAt { get; set; }
 
@@ -73,6 +77,7 @@ public class Task
     public virtual ICollection<TaskDependency> Dependencies_Relations { get; set; } = new List<TaskDependency>();
     public virtual ICollection<TaskDependency> DependentTasks { get; set; } = new List<TaskDependency>();
     public virtual ICollection<TaskAttachment> Attachments { get; set; } = new List<TaskAttachment>();
+    public virtual ICollection<DesignRequest> DesignRequests { get; set; } = new List<DesignRequest>();
 }
 
 [Table("TaskAssignments")]
