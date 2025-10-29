@@ -441,6 +441,7 @@ const translations = {
     "common.update": "Update",
     "common.error": "Error",
     "common.all": "All",
+    "common.characters": "characters",
     "common.inactive": "Inactive",
     "common.info": "Info",
     "common.show": "Show",
@@ -912,6 +913,8 @@ const translations = {
     // Project Validation Messages
     "projects.validation.applicationNameRequired":
       "Application name is required",
+    "projects.validation.applicationNameMaxLength":
+      "Application name must not exceed 200 characters",
     "projects.validation.projectOwnerRequired": "Project owner is required",
     "projects.validation.owningUnitRequired": "Owning unit is required",
     "projects.validation.startDateRequired": "Start date is required",
@@ -2323,6 +2326,7 @@ const translations = {
     "common.update": "تحديث",
     "common.error": "خطأ",
     "common.all": "الكل",
+    "common.characters": "حرف",
     "common.inactive": "غير نشط",
     "common.info": "معلومات",
     "common.show": "عرض",
@@ -2780,6 +2784,8 @@ const translations = {
 
     // Project Validation Messages
     "projects.validation.applicationNameRequired": "اسم المشروع مطلوب",
+    "projects.validation.applicationNameMaxLength":
+      "يجب ألا يتجاوز اسم المشروع 200 حرف",
     "projects.validation.projectOwnerRequired": "مدير المشروع مطلوب",
     "projects.validation.owningUnitRequired": "الوحدة المالكة مطلوبة",
     "projects.validation.startDateRequired": "تاريخ البداية مطلوب",
