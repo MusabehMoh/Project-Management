@@ -47,7 +47,6 @@ import { designRequestsService } from "@/services/api";
 import { DesignRequestDto } from "@/services/api/designRequestsService";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { normalizePageSize } from "@/constants/pagination";
-import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { useTeamSearchByDepartment } from "@/hooks/useTeamSearchByDepartment";
 
 export function DesignRequestsPage() {

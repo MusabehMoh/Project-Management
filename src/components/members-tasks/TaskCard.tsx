@@ -22,6 +22,8 @@ import {
 import { TASK_STATUSES } from "@/constants/taskStatuses";
 import { tasksService } from "@/services/api";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { RoleIds } from "@/constants/roles";
 
 interface TaskCardProps {
   task: MemberTask;
@@ -59,9 +61,14 @@ export const TaskCard = ({
   getPriorityLabel,
 }: TaskCardProps) => {
   const { t, language } = useLanguage();
+  const { user } = useCurrentUser();
   const [isHovered, setIsHovered] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const isQcManager =
+    user?.roles?.some((role) => role.id === RoleIds.QUALITY_CONTROL_MANAGER) ??
+    false;
 
   const isAdhoc = task.typeId === TASK_TYPES.ADHOC;
   const canComplete = isAdhoc && task.statusId !== TASK_STATUSES.COMPLETED; // Only if not already completed
@@ -392,7 +399,7 @@ export const TaskCard = ({
             {isTeamManager ? (
               /* actions for team managers */
               <div className="flex gap-2">
-                {task.hasNoDependentTasks ? (
+                {task.hasNoDependentTasks && isQcManager ? (
                   <Tooltip content={t("task.createTaskHint")}>
                     <Button
                       className="flex-1"

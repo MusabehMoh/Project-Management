@@ -611,14 +611,12 @@ export default function MembersTasksPage() {
     const currentStatusId = selectedTask.statusId;
 
     // Check if moving to "In Review" status from "To Do" or "In Progress"
-    if (
-      newStatusId === 3 &&
-      (currentStatusId === 1 || currentStatusId === 2)
-    ) {
+    if (newStatusId === 3 && (currentStatusId === 1 || currentStatusId === 2)) {
       try {
         // Check if task has a design request
-        const designCheckResult =
-          await tasksService.checkDesignRequest(parseInt(selectedTask.id));
+        const designCheckResult = await tasksService.checkDesignRequest(
+          parseInt(selectedTask.id),
+        );
 
         if (designCheckResult.success && designCheckResult.data) {
           setDesignRequestInfo(designCheckResult.data);
