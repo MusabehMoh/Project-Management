@@ -20,6 +20,7 @@ export interface MemberTask {
   canRequestDesign: boolean;
   hasDesignRequest: boolean; // Whether a design request already exists for this task
   hasNoDependentTasks: boolean; // Whether this task has no other tasks depending on it
+  completedFromDeveloper?: boolean; // Whether task was completed without designer
   //canChangeStatus: boolean;
   timeSpent: number; // hours
   estimatedTime: number; // hours

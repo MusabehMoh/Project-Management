@@ -367,25 +367,86 @@ export const TaskCard = ({
 
         {/* buttons */}
         <div className="mt-3 pt-3 border-t border-divider">
-          {isTeamManager ? (
-            /* actions for team managers */
-            <div className="flex gap-2">
-              {task.hasNoDependentTasks ? (
-                <Tooltip content={t("task.createTaskHint")}>
+          <div className="flex flex-col gap-2">
+            {task.completedFromDeveloper && (
+              <div className="flex items-center justify-center">
+                <span className="text-xs font-medium text-primary">
+                  ✓ Completed by Developer
+                </span>
+              </div>
+            )}
+            {isTeamManager ? (
+              /* actions for team managers */
+              <div className="flex gap-2">
+                {task.hasNoDependentTasks ? (
+                  <Tooltip content={t("task.createTaskHint")}>
+                    <Button
+                      className="flex-1"
+                      color="primary"
+                      size="sm"
+                      variant="solid"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTaskClick();
+                      }}
+                    >
+                      {t("task.createTask")}
+                    </Button>
+                  </Tooltip>
+                ) : (
                   <Button
                     className="flex-1"
-                    color="primary"
+                    color="default"
+                    isDisabled={
+                      task.statusId === TASK_STATUSES.BLOCKED ||
+                      task.statusId === TASK_STATUSES.COMPLETED
+                    }
                     size="sm"
                     variant="solid"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCreateTaskClick();
+                      handleChangeAssigneesClick();
                     }}
                   >
-                    {t("task.createTask")}
+                    {t("changeAssignees")}
                   </Button>
-                </Tooltip>
-              ) : (
+                )}
+              </div>
+            ) : (
+              /* actions for members */
+              <div className="flex gap-2">
+                {task.hasDesignRequest ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <Chip
+                      color="success"
+                      size="sm"
+                      startContent={<CheckCircle className="w-3 h-3" />}
+                      variant="flat"
+                    >
+                      {t("requestedAlready")}
+                    </Chip>
+                  </div>
+                ) : task.roleType === "QC" ? (
+                  <div className="flex-1" />
+                ) : (
+                  <Button
+                    className="flex-1"
+                    color="default"
+                    isDisabled={
+                      task.statusId === TASK_STATUSES.BLOCKED ||
+                      task.statusId === TASK_STATUSES.COMPLETED
+                    }
+                    size="sm"
+                    variant="faded"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRequestDesignClick();
+                    }}
+                  >
+                    {t("requestDesign")}
+                  </Button>
+                )}
+
                 <Button
                   className="flex-1"
                   color="default"
@@ -397,66 +458,14 @@ export const TaskCard = ({
                   variant="solid"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleChangeAssigneesClick();
+                    handleChangeStatusClick();
                   }}
                 >
-                  {t("changeAssignees")}
+                  {t("changeStatus")}
                 </Button>
-              )}
-            </div>
-          ) : (
-            /* actions for members */
-            <div className="flex gap-2">
-              {task.hasDesignRequest ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <Chip
-                    color="success"
-                    size="sm"
-                    startContent={<CheckCircle className="w-3 h-3" />}
-                    variant="flat"
-                  >
-                    {t("requestedAlready")}
-                  </Chip>
-                </div>
-              ) : task.roleType === "QC" ? (
-                <div className="flex-1" />
-              ) : (
-                <Button
-                  className="flex-1"
-                  color="default"
-                  isDisabled={
-                    task.statusId === TASK_STATUSES.BLOCKED ||
-                    task.statusId === TASK_STATUSES.COMPLETED
-                  }
-                  size="sm"
-                  variant="faded"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRequestDesignClick();
-                  }}
-                >
-                  {t("requestDesign")}
-                </Button>
-              )}
-
-              <Button
-                className="flex-1"
-                color="default"
-                isDisabled={
-                  task.statusId === TASK_STATUSES.BLOCKED ||
-                  task.statusId === TASK_STATUSES.COMPLETED
-                }
-                size="sm"
-                variant="solid"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleChangeStatusClick();
-                }}
-              >
-                {t("changeStatus")}
-              </Button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </CardBody>
 

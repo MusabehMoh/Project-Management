@@ -855,9 +855,8 @@ public class TasksController : ApiBaseController
                     await _taskService.UpdateTaskAsync(designerTask);
                 }
 
-                // Mark main task as completed from developer
-                task.CompletedFromDeveloper = true;
-                await _taskService.UpdateTaskAsync(task);
+                // Do NOT mark the developer's task with CompletedFromDeveloper flag
+                // Only the designer's task should have this flag
 
                 return Success(new { Message = "Designer task marked as completed" });
             }
