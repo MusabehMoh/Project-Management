@@ -212,6 +212,22 @@ export default function TaskDetailsDrawer({
                 </div>
               </div>
 
+              {/* Completed by Developer Flag */}
+              {selectedTask.completedFromDeveloper && (
+                <div
+                  className={`flex items-center ${language === "ar" ? "justify-start" : "justify-start"}`}
+                >
+                  <Chip
+                    color="primary"
+                    size="sm"
+                    startContent={<CheckCircle className="w-3 h-3" />}
+                    variant="flat"
+                  >
+                    {t("completedByDeveloper")}
+                  </Chip>
+                </div>
+              )}
+
               {/* Assigned Members */}
               {selectedTask?.assignedMembers &&
                 selectedTask.assignedMembers.length > 0 && (
