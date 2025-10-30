@@ -299,7 +299,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                       errorMessage={errors.endDate}
                       isInvalid={!!errors.endDate}
                       label={t("timeline.detailsPanel.endDate")}
-                      minValue={today("UTC")}
+                      minValue={today(getLocalTimeZone())}
                       value={
                         formData.endDate
                           ? parseDate(formData.endDate.substring(0, 10))

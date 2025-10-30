@@ -48,6 +48,7 @@ import { DesignRequestDto } from "@/services/api/designRequestsService";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { normalizePageSize } from "@/constants/pagination";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
+import { useTeamSearchByDepartment } from "@/hooks/useTeamSearchByDepartment";
 
 export function DesignRequestsPage() {
   const { t, language } = useLanguage();
@@ -95,12 +96,13 @@ export function DesignRequestsPage() {
     employees: designers,
     loading: designersLoading,
     searchEmployees: searchDesigners,
-  } = useTeamSearch({
+  } = useTeamSearchByDepartment({
+    departmentId: 3, // Design Department
     minLength: 1,
-    maxResults: 20,
-    loadInitialResults: false, // Don't load users on page load
+    maxResults: 100,
+    loadInitialResults: true, // Load all designers initially
+    initialResultsLimit: 100,
   });
-
   // Fetch design requests
   const fetchDesignRequests = useCallback(async () => {
     setLoading(true);
@@ -732,7 +734,7 @@ export function DesignRequestsPage() {
                       inputValue={designerInputValue}
                       isLoading={designersLoading}
                       label={t("designRequests.selectDesignerForAssignment")}
-                      menuTrigger="input"
+                      menuTrigger="focus"
                       placeholder={t("tasks.selectDesigner")}
                       selectedKey={selectedDesigner?.id?.toString() || ""}
                       value={

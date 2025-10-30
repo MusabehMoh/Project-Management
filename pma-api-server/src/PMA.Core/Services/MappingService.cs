@@ -756,7 +756,7 @@ public class MappingService : IMappingService
             TimelineId = createTaskDto.TimelineId,
             EstimatedHours = createTaskDto.EstimatedHours,
             Progress = createTaskDto.Progress,
-            RoleType= createTaskDto.DepartmentId==(int)DepartmentEnum .Development? "Developer": createTaskDto.DepartmentId== (int)DepartmentEnum.Qc ? "QA": createTaskDto.DepartmentId== (int)DepartmentEnum.Designer ? "Designer": null,
+            RoleType= createTaskDto.DepartmentId==(int)DepartmentEnum .Development? "Developer": createTaskDto.DepartmentId== (int)DepartmentEnum.Qc ? "QA": createTaskDto.DepartmentId== (int)DepartmentEnum.Designer ? "Designer": createTaskDto.RoleType,
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now,
             TypeId = createTaskDto.TypeId

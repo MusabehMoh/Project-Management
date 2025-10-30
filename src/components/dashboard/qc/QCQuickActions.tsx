@@ -7,10 +7,14 @@ import { Skeleton } from "@heroui/skeleton";
 import { Alert } from "@heroui/alert";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
-import { RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
+import { Tooltip } from "@heroui/tooltip";
+import { Progress } from "@heroui/progress";
+import { RefreshCw, AlertTriangle, CheckCircle, Plus } from "lucide-react";
 
 import { useLanguage, Direction } from "@/contexts/LanguageContext";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
+import TaskCreateModal from "@/components/members-tasks/TaskCreateModal";
+import { qcQuickActionsService } from "@/services/api";
 
 // Animated Counter Component
 const AnimatedCounter = ({
@@ -154,6 +158,8 @@ export default function QCQuickActions({
   const [tasksNeedingReview, setTasksNeedingReview] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedTaskForCreate, setSelectedTaskForCreate] = useState<any>(null);
 
   // Mock data for tasks needing QC review
   useEffect(() => {
@@ -165,34 +171,20 @@ export default function QCQuickActions({
     setError(null);
 
     try {
-      // TODO: Replace with actual API call
-      // Simulating API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await qcQuickActionsService.getQCQuickActions();
 
-      const mockTasks = [
-        {
-          id: 1,
-          taskName: "Implement User Authentication",
-          projectName: "Project Management System",
-          requirementName: "Security Module",
-          priority: "high",
-          completedDate: "2025-10-28",
-          developer: "Ahmed Hassan",
-        },
-        {
-          id: 2,
-          taskName: "Database Schema Design",
-          projectName: "E-Commerce Platform",
-          requirementName: "Data Layer",
-          priority: "medium",
-          completedDate: "2025-10-27",
-          developer: "Sara Mohamed",
-        },
-      ];
+      if (response.success && response.data?.tasksNeedingQCAssignment) {
+        setTasksNeedingReview(response.data.tasksNeedingQCAssignment);
+      } else {
+        throw new Error(response.message || "Failed to fetch QC quick actions");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "An error occurred while fetching tasks";
 
-      setTasksNeedingReview(mockTasks);
-    } catch {
-      setError(t("qcDashboard.loadError"));
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -294,69 +286,181 @@ export default function QCQuickActions({
                       title={task.taskName}
                     >
                       <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-default-600">
-                          <span className="font-medium">
-                            {t("common.project")}:
-                          </span>
-                          <span>{task.projectName}</span>
+                        {/* Description */}
+                        {task.description && (
+                          <div className="text-default-600 text-xs leading-relaxed">
+                            {task.description}
+                          </div>
+                        )}
+
+                        {/* Task Type */}
+                        <div className="flex items-center gap-2">
+                          <Chip
+                            color={
+                              task.typeId === 1
+                                ? "primary"
+                                : task.typeId === 2
+                                  ? "secondary"
+                                  : "warning"
+                            }
+                            size="sm"
+                            variant="bordered"
+                          >
+                            {task.typeId === 1
+                              ? t("tasks.type.timeline")
+                              : task.typeId === 2
+                                ? t("tasks.type.changeRequest")
+                                : t("tasks.type.adhoc")}
+                          </Chip>
+                          <Chip
+                            color={
+                              task.priority === "high"
+                                ? "danger"
+                                : task.priority === "medium"
+                                  ? "warning"
+                                  : "default"
+                            }
+                            size="sm"
+                            variant="flat"
+                          >
+                            {t(`priority.${task.priority}`)}
+                          </Chip>
                         </div>
-                        <div className="flex items-center gap-2 text-default-600">
-                          <span className="font-medium">
-                            {t("requirements.requirement")}:
-                          </span>
-                          <span>{task.requirementName}</span>
+
+                        {/* Progress */}
+                        {task.progress !== undefined && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-default-500">
+                                {t("taskProgress")}
+                              </span>
+                              <span className="text-xs font-medium">
+                                {task.progress}%
+                              </span>
+                            </div>
+                            <Progress
+                              color={
+                                task.progress >= 80
+                                  ? "success"
+                                  : task.progress >= 60
+                                    ? "primary"
+                                    : task.progress >= 40
+                                      ? "warning"
+                                      : "danger"
+                              }
+                              size="sm"
+                              value={task.progress}
+                            />
+                          </div>
+                        )}
+
+                        {/* Dates */}
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          {task.startDate && (
+                            <div>
+                              <span className="text-default-500">
+                                {t("startDate")}:{" "}
+                              </span>
+                              <span className="font-medium text-default-700">
+                                {task.startDate}
+                              </span>
+                            </div>
+                          )}
+                          {task.endDate && (
+                            <div>
+                              <span className="text-default-500">
+                                {t("endDate")}:{" "}
+                              </span>
+                              <span className="font-medium text-default-700">
+                                {task.endDate}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 text-default-600">
-                          <span className="font-medium">
-                            {t("common.developer")}:
-                          </span>
-                          <span>{task.developer}</span>
+
+                        {/* Project & Requirement */}
+                        <div className="pt-2 border-t border-default-200 space-y-1">
+                          <div className="text-xs">
+                            <span className="text-default-500 font-medium">
+                              {t("common.project")}:{" "}
+                            </span>
+                            <span className="text-default-700">
+                              {task.projectName}
+                            </span>
+                          </div>
+                          <div className="text-xs">
+                            <span className="text-default-500 font-medium">
+                              {t("requirements.requirement")}:{" "}
+                            </span>
+                            <span className="text-default-700">
+                              {task.requirementName}
+                            </span>
+                          </div>
+                          <div className="text-xs">
+                            <span className="text-default-500 font-medium">
+                              {t("common.developer")}:{" "}
+                            </span>
+                            <span className="text-default-700">
+                              {task.developer}
+                            </span>
+                          </div>
+                          {task.completedDate && (
+                            <div className="text-xs">
+                              <span className="text-default-500 font-medium">
+                                {t("common.completedDate")}:{" "}
+                              </span>
+                              <span className="text-default-700">
+                                {task.completedDate}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 text-default-600">
-                          <span className="font-medium">
-                            {t("common.completedDate")}:
-                          </span>
-                          <span>{task.completedDate}</span>
-                        </div>
-                        <Chip
-                          color={
-                            task.priority === "high"
-                              ? "danger"
-                              : task.priority === "medium"
-                                ? "warning"
-                                : "default"
-                          }
-                          size="sm"
-                          variant="flat"
-                        >
-                          {t(`priority.${task.priority}`)}
-                        </Chip>
 
                         <Divider className="bg-default-200 my-3" />
 
                         <div className="flex gap-2">
-                          <Button
-                            className="shadow-small"
-                            color="success"
-                            size="sm"
-                            variant="bordered"
-                            onPress={() => {
-                              // Handle approve action - TODO: Implement actual API call
-                            }}
-                          >
-                            {t("qcDashboard.approveTask")}
-                          </Button>
-                          <Button
-                            className="shadow-small"
-                            color="danger"
-                            size="sm"
-                            variant="bordered"
-                            onPress={() => {
-                              // Handle reject/rework action - TODO: Implement actual API call
-                            }}
-                          >
-                            {t("qcDashboard.requestRework")}
-                          </Button>
+                          {task.hasNoDependentTasks ? (
+                            <Tooltip content={t("task.createTaskHint")}>
+                              <Button
+                                className="flex-1"
+                                color="primary"
+                                size="sm"
+                                startContent={<Plus className="w-4 h-4" />}
+                                variant="solid"
+                                onPress={() => {
+                                  setSelectedTaskForCreate(task);
+                                  setIsCreateModalOpen(true);
+                                }}
+                              >
+                                {t("task.createTask")}
+                              </Button>
+                            </Tooltip>
+                          ) : (
+                            <>
+                              <Button
+                                className="shadow-small"
+                                color="success"
+                                size="sm"
+                                variant="bordered"
+                                onPress={() => {
+                                  // Handle approve action - TODO: Implement actual API call
+                                }}
+                              >
+                                {t("qcDashboard.approveTask")}
+                              </Button>
+                              <Button
+                                className="shadow-small"
+                                color="danger"
+                                size="sm"
+                                variant="bordered"
+                                onPress={() => {
+                                  // Handle reject/rework action - TODO: Implement actual API call
+                                }}
+                              >
+                                {t("qcDashboard.requestRework")}
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </CustomAlert>
@@ -367,6 +471,14 @@ export default function QCQuickActions({
           </Accordion>
         )}
       </CardBody>
+      <TaskCreateModal
+        isOpen={isCreateModalOpen}
+        parentTask={selectedTaskForCreate}
+        onOpenChange={setIsCreateModalOpen}
+        onTaskCreated={() => {
+          fetchTasks(); // Refresh tasks after creating new one
+        }}
+      />
     </Card>
   );
 }
