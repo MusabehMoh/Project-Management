@@ -1892,6 +1892,7 @@ const translations = {
     changeStatus: "Change Status",
     requestDesign: "Request Design",
     requestedAlready: "Design Requested",
+    completedByDeveloper: "Completed by Developer",
     requestDesignConfirmation:
       "Are you sure you want to request a design for this task? This will notify the design team and cannot be undone.",
     confirm: "Confirm",
@@ -3823,6 +3824,7 @@ const translations = {
     changeStatus: "تغيير الحالة",
     requestDesign: "طلب تصميم",
     requestedAlready: "طُلب التصميم",
+    completedByDeveloper: "مكتملة بواسطة المطور",
     requestDesignConfirmation:
       "هل أنت متأكد من أنك تريد طلب تصميم لهذه المهمة؟ سيتم إشعار فريق التصميم ولا يمكن التراجع عن ذلك.",
     confirm: "تأكيد",

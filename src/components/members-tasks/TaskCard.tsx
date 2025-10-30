@@ -369,10 +369,17 @@ export const TaskCard = ({
         <div className="mt-3 pt-3 border-t border-divider">
           <div className="flex flex-col gap-2">
             {task.completedFromDeveloper && (
-              <div className="flex items-center justify-center">
-                <span className="text-xs font-medium text-primary">
-                  ✓ Completed by Developer
-                </span>
+              <div
+                className={`flex items-center ${language === "ar" ? "justify-start" : "justify-start"}`}
+              >
+                <Chip
+                  color="primary"
+                  size="sm"
+                  startContent={<CheckCircle className="w-3 h-3" />}
+                  variant="flat"
+                >
+                  {t("completedByDeveloper")}
+                </Chip>
               </div>
             )}
             {isTeamManager ? (
