@@ -761,13 +761,12 @@ export default function TaskDetailsDrawer({
 
                 <Button
                   className="flex-1"
-                  color="success"
                   isDisabled={
                     selectedTask?.statusId === TASK_STATUSES.BLOCKED ||
                     selectedTask?.statusId === TASK_STATUSES.COMPLETED
                   }
                   size="sm"
-                  variant="flat"
+                  variant="bordered"
                   onPress={() => onChangeStatus(selectedTask)}
                 >
                   {t("changeStatus")}
