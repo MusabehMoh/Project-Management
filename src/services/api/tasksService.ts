@@ -34,12 +34,14 @@ export class TasksService {
    * Check if task has a design request and get its details
    * @param taskId - The task ID
    */
-  async checkDesignRequest(taskId: number): Promise<ApiResponse<{
-    hasDesignRequest: boolean;
-    designRequestId: number | null;
-    hasDesignerTask: boolean;
-    designerTaskId: number | null;
-  }>> {
+  async checkDesignRequest(taskId: number): Promise<
+    ApiResponse<{
+      hasDesignRequest: boolean;
+      designRequestId: number | null;
+      hasDesignerTask: boolean;
+      designerTaskId: number | null;
+    }>
+  > {
     return apiClient.get<{
       hasDesignRequest: boolean;
       designRequestId: number | null;
@@ -57,9 +59,12 @@ export class TasksService {
     taskId: number,
     completedWithoutDesigner: boolean,
   ): Promise<ApiResponse<any>> {
-    return apiClient.post<any>(`${this.baseUrl}/${taskId}/complete-from-developer`, {
-      completedWithoutDesigner,
-    });
+    return apiClient.post<any>(
+      `${this.baseUrl}/${taskId}/complete-from-developer`,
+      {
+        completedWithoutDesigner,
+      },
+    );
   }
 }
 

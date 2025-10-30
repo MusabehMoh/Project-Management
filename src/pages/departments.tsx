@@ -521,7 +521,9 @@ export default function DepartmentsPage() {
                           </TableCell>
                           <TableCell>
                             <span
-                              className={language === "ar" ? "text-right block" : ""}
+                              className={
+                                language === "ar" ? "text-right block" : ""
+                              }
                               dir={language === "ar" ? "rtl" : "ltr"}
                             >
                               {member.user.militaryNumber}
@@ -529,7 +531,9 @@ export default function DepartmentsPage() {
                           </TableCell>
                           <TableCell>
                             <span
-                              className={language === "ar" ? "text-right block" : ""}
+                              className={
+                                language === "ar" ? "text-right block" : ""
+                              }
                               dir={language === "ar" ? "rtl" : "ltr"}
                             >
                               {member.user.gradeName}
@@ -679,7 +683,9 @@ export default function DepartmentsPage() {
                             className="grid grid-cols-2 gap-4"
                             dir={language === "ar" ? "rtl" : "ltr"}
                           >
-                            <div className={language === "ar" ? "text-right" : ""}>
+                            <div
+                              className={language === "ar" ? "text-right" : ""}
+                            >
                               <p className="text-small text-default-500">
                                 {t("users.fullName")}
                               </p>
@@ -687,7 +693,9 @@ export default function DepartmentsPage() {
                                 {selectedEmployee.fullName}
                               </p>
                             </div>
-                            <div className={language === "ar" ? "text-right" : ""}>
+                            <div
+                              className={language === "ar" ? "text-right" : ""}
+                            >
                               <p className="text-small text-default-500">
                                 {t("users.userName")}
                               </p>
@@ -695,7 +703,9 @@ export default function DepartmentsPage() {
                                 {selectedEmployee.userName}
                               </p>
                             </div>
-                            <div className={language === "ar" ? "text-right" : ""}>
+                            <div
+                              className={language === "ar" ? "text-right" : ""}
+                            >
                               <p className="text-small text-default-500">
                                 {t("users.militaryNumber")}
                               </p>
@@ -703,7 +713,9 @@ export default function DepartmentsPage() {
                                 {selectedEmployee.militaryNumber}
                               </p>
                             </div>
-                            <div className={language === "ar" ? "text-right" : ""}>
+                            <div
+                              className={language === "ar" ? "text-right" : ""}
+                            >
                               <p className="text-small text-default-500">
                                 {t("users.gradeName")}
                               </p>

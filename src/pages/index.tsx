@@ -7,6 +7,7 @@ import { usePageTitle } from "@/hooks";
 import AnalystManagerDashboard from "@/components/dashboard/AnalystManagerDashboard";
 import TeamMemberDashboard from "@/components/dashboard/TeamMemberDashboard";
 import DesignerManagerDashboard from "@/components/dashboard/DesignerManagerDashboard";
+import QualityControlManagerDashboard from "@/components/dashboard/QualityControlManagerDashboard";
 import { RoleIds } from "@/constants/roles";
 
 export default function IndexPage() {
@@ -28,7 +29,9 @@ export default function IndexPage() {
   const hasAnalystRole = hasAnyRoleById([RoleIds.ANALYST_DEPARTMENT_MANAGER]);
   const hasDevManagerRole = hasAnyRoleById([RoleIds.DEVELOPMENT_MANAGER]);
   const hasDesignerManagerRole = hasAnyRoleById([RoleIds.DESIGNER_MANAGER]);
-
+  const hasQualityControlManagerRole = hasAnyRoleById([
+    RoleIds.QUALITY_CONTROL_MANAGER,
+  ]);
   // Check if user is a team member (QC, Developer, Designer)
   const isTeamMember = hasAnyRoleById([
     RoleIds.QUALITY_CONTROL_TEAM_MEMBER,
@@ -42,6 +45,11 @@ export default function IndexPage() {
       {hasAnalystRole ? <AnalystManagerDashboard /> : <div />}
       {hasDevManagerRole ? <DeveloperManagerDashboard /> : <div />}
       {hasDesignerManagerRole ? <DesignerManagerDashboard /> : <div />}
+      {hasQualityControlManagerRole ? (
+        <QualityControlManagerDashboard />
+      ) : (
+        <div />
+      )}
       {isTeamMember ? <TeamMemberDashboard /> : <div />}
     </>
   );

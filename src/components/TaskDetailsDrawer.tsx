@@ -237,9 +237,9 @@ export default function TaskDetailsDrawer({
                   </h4>
                   <div className="flex items-center gap-3">
                     <Avatar
+                      className="flex-shrink-0"
                       name={selectedTask.assignedDesigner.fullName}
                       size="sm"
-                      className="flex-shrink-0"
                     />
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">

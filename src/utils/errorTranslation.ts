@@ -56,7 +56,9 @@ export function translateBackendError(
   }
 
   // Handle "Employee is already a member of this department"
-  if (errorMessage.includes("Employee is already a member of this department")) {
+  if (
+    errorMessage.includes("Employee is already a member of this department")
+  ) {
     return t("departments.members.alreadyMember");
   }
 

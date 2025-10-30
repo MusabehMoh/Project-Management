@@ -570,7 +570,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         <ModalContent>
           <ModalHeader>
             <div className="flex flex-col gap-1">
-              <span>{t("quickActions.assignAnalystTo") || "Assign Analyst"}</span>
+              <span>
+                {t("quickActions.assignAnalystTo") || "Assign Analyst"}
+              </span>
               <span className="text-base font-normal text-default-600">
                 {t("projects.applicationName")}:{" "}
                 {selectedProject?.applicationName}
@@ -578,7 +580,6 @@ const QuickActions: React.FC<QuickActionsProps> = ({
             </div>
           </ModalHeader>
           <ModalBody>
-
             {/* Selected Analysts Display */}
             {selectedAnalysts.length > 0 && (
               <div className="mb-4">

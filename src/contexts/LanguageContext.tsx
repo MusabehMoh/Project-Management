@@ -458,6 +458,8 @@ const translations = {
     "common.type": "Type",
     "common.taskDetails": "Task Details",
     "common.dueDate": "Due Date",
+    "common.developer": "Developer",
+    "common.completedDate": "Completed Date",
 
     // Toast Messages
     "toast.success": "Success",
@@ -787,6 +789,52 @@ const translations = {
     "designerDashboard.designsCompleted": "Designs Completed",
     "designerDashboard.avgDesignTime": "Avg Design Time",
     "designerDashboard.prototypesCreated": "Prototypes Created",
+
+    // Quality Control Dashboard
+    "qualityControlDashboard.title": "Quality Control Manager Dashboard",
+    "qualityControlDashboard.subtitle":
+      "Monitor and manage quality control processes and team performance",
+    "qualityControlDashboard.myActions": "My Actions",
+    "qualityControlDashboard.quickActionsSubtitle":
+      "Assign QC tasks that need your attention",
+    "qualityControlDashboard.teamPerformance": "QC Team Performance",
+    "qualityControlDashboard.teamPerformanceSubtitle":
+      "Monitor QC team workload and efficiency metrics",
+    "qualityControlDashboard.searchQCMembers": "Search QC members...",
+    "qualityControlDashboard.noQcMembers": "No QC members found",
+
+    // QC Dashboard (Short key alias for components)
+    "qcDashboard.title": "Quality Control Manager Dashboard",
+    "qcDashboard.subtitle":
+      "Monitor and manage quality control processes and team performance",
+    "qcDashboard.myActions": "My Actions",
+    "qcDashboard.actionsSubtitle": "Tasks awaiting quality control review",
+    "qcDashboard.needsReview": "Needs Review",
+    "qcDashboard.approveTask": "Approve Task",
+    "qcDashboard.requestRework": "Request Rework",
+    "qcDashboard.noActions": "No actions require your attention at this time",
+    "qcDashboard.loadError": "Failed to load QC tasks",
+    "qcDashboard.assignQCSuccess": "QC member assigned successfully",
+    "qcDashboard.assignQCError": "Failed to assign QC member",
+    "qcDashboard.teamPerformance": "QC Team Performance",
+    "qcDashboard.performanceComingSoon":
+      "QC team performance metrics coming soon",
+
+    // Quality Control
+    "qualityControl.qcMember": "QC Member",
+    "qualityControl.avgCompletionTime": "Avg Completion Time",
+    "qualityControl.assignRequired": "QC member selection is required",
+    "qualityControl.assignSuccess": "Task assigned successfully",
+    "qualityControl.assignError": "Failed to assign task",
+    "qualityControl.assignTo": "Assign to QC Member",
+    "qualityControl.selectQCMember": "Select QC Member",
+    "qualityControl.searchQCMember": "Search for QC member...",
+    "qualityControl.assignmentNotes": "Assignment Notes",
+    "qualityControl.assignmentNotesPlaceholder":
+      "Add any notes for the QC member...",
+    "qualityControl.assignTask": "Assign Task",
+    "qualityControl.noTasksNeedingReview":
+      "No tasks require your attention at this time",
 
     // Common translations for filters
     "common.allStatus": "All Status",
@@ -2371,6 +2419,8 @@ const translations = {
     "common.type": "النوع",
     "common.taskDetails": "تفاصيل المهمة",
     "common.dueDate": "تاريخ الاستحقاق",
+    "common.developer": "المطور",
+    "common.completedDate": "تاريخ الإنجاز",
 
     // Toast Messages
     "toast.success": "نجح",
@@ -2622,8 +2672,7 @@ const translations = {
       "هذه المهمة تحتوي على طلب تصميم لم يتم تعيينه لمصمم بعد. المتابعة ستؤدي إلى حذف طلب التصميم.",
     "teamDashboard.kanban.designRequestWithDesignerMessage":
       "هذه المهمة تحتوي على طلب تصميم تم تعيينه لمصمم. إذا كنت تريد المتابعة بدون مساعدة المصمم، يرجى التأكيد أدناه.",
-    "teamDashboard.kanban.completedWithoutDesigner":
-      "مكتمل بدون مساعدة المصمم",
+    "teamDashboard.kanban.completedWithoutDesigner": "مكتمل بدون مساعدة المصمم",
     "teamDashboard.kanban.designRequestWillBeDeleted":
       "سيتم حذف طلب التصميم نهائياً.",
     "teamDashboard.kanban.designerTaskWillBeCompleted":
@@ -2682,6 +2731,53 @@ const translations = {
     "designerDashboard.designsCompleted": "التصاميم المكتملة",
     "designerDashboard.avgDesignTime": "متوسط وقت التصميم",
     "designerDashboard.prototypesCreated": "النماذج المنشأة",
+
+    // Quality Control Dashboard
+    "qualityControlDashboard.title": "لوحة مدير مراقبة الجودة",
+    "qualityControlDashboard.subtitle":
+      "مراقبة وإدارة عمليات مراقبة الجودة وأداء الفريق",
+    "qualityControlDashboard.myActions": "إجراءاتي",
+    "qualityControlDashboard.quickActionsSubtitle":
+      "تعيين مهام مراقبة الجودة التي تحتاج انتباهك",
+    "qualityControlDashboard.teamPerformance": "أداء فريق مراقبة الجودة",
+    "qualityControlDashboard.teamPerformanceSubtitle":
+      "مراقبة حمل عمل فريق مراقبة الجودة ومقاييس الكفاءة",
+    "qualityControlDashboard.searchQCMembers":
+      "البحث عن أعضاء مراقبة الجودة...",
+    "qualityControlDashboard.noQcMembers":
+      "لم يتم العثور على أعضاء مراقبة الجودة",
+
+    // QC Dashboard (Short key alias for components)
+    "qcDashboard.title": "لوحة مدير مراقبة الجودة",
+    "qcDashboard.subtitle": "مراقبة وإدارة عمليات مراقبة الجودة وأداء الفريق",
+    "qcDashboard.myActions": "إجراءاتي",
+    "qcDashboard.actionsSubtitle": "المهام التي تنتظر مراجعة مراقبة الجودة",
+    "qcDashboard.needsReview": "بحاجة إلى مراجعة",
+    "qcDashboard.approveTask": "الموافقة على المهمة",
+    "qcDashboard.requestRework": "طلب إعادة العمل",
+    "qcDashboard.noActions": "لا توجد إجراءات تحتاج انتباهك في الوقت الحالي",
+    "qcDashboard.loadError": "فشل في تحميل مهام مراقبة الجودة",
+    "qcDashboard.assignQCSuccess": "تم تعيين عضو مراقبة الجودة بنجاح",
+    "qcDashboard.assignQCError": "فشل في تعيين عضو مراقبة الجودة",
+    "qcDashboard.teamPerformance": "أداء فريق مراقبة الجودة",
+    "qcDashboard.performanceComingSoon":
+      "قريبًا مقاييس أداء فريق مراقبة الجودة",
+
+    // Quality Control
+    "qualityControl.qcMember": "عضو مراقبة الجودة",
+    "qualityControl.avgCompletionTime": "متوسط وقت الإنجاز",
+    "qualityControl.assignRequired": "مطلوب اختيار عضو مراقبة الجودة",
+    "qualityControl.assignSuccess": "تم تعيين المهمة بنجاح",
+    "qualityControl.assignError": "فشل في تعيين المهمة",
+    "qualityControl.assignTo": "تعيين إلى عضو مراقبة الجودة",
+    "qualityControl.selectQCMember": "اختيار عضو مراقبة الجودة",
+    "qualityControl.searchQCMember": "البحث عن عضو مراقبة الجودة...",
+    "qualityControl.assignmentNotes": "ملاحظات التعيين",
+    "qualityControl.assignmentNotesPlaceholder":
+      "أضف أي ملاحظات لعضو مراقبة الجودة...",
+    "qualityControl.assignTask": "تعيين المهمة",
+    "qualityControl.noTasksNeedingReview":
+      "لا توجد مهام تحتاج انتباهك في الوقت الحالي",
 
     // Common translations for filters
     "common.allStatus": "جميع الحالات",

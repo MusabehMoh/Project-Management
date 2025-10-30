@@ -104,7 +104,7 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
             newErrors.endDate = t("validation.endDateAfterStart");
           }
         }
-debugger
+        debugger;
         // Timeline date range validation
         if (
           validateTimelineRange &&
@@ -139,7 +139,7 @@ debugger
           if (itemStartDate < timelineStart || itemStartDate > timelineEnd) {
             newErrors.startDate = t("validation.startDateWithinTimeline");
           }
- 
+
           if (itemEndDate < timelineStart || itemEndDate > timelineEnd) {
             newErrors.endDate = t("validation.endDateWithinTimeline");
           }

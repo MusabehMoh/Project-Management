@@ -329,7 +329,7 @@ export default function TimelineItemModal({
 
   const handleInputChange = (field: keyof LocalFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    debugger
+    debugger;
     if (errors[field as keyof typeof errors]) {
       clearError(field as keyof typeof errors);
     }

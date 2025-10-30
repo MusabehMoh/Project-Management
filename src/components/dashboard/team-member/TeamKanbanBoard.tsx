@@ -314,7 +314,8 @@ export default function TeamKanbanBoard({
     // If yes, check for design request
     const isDeveloper = userRoleIds.includes(5);
     const isMovingToInReview = targetColumnId === 3;
-    const isFromToDoOrInProgress = draggedFromColumn === 1 || draggedFromColumn === 2;
+    const isFromToDoOrInProgress =
+      draggedFromColumn === 1 || draggedFromColumn === 2;
 
     if (isDeveloper && isMovingToInReview && isFromToDoOrInProgress) {
       try {
@@ -630,358 +631,361 @@ export default function TeamKanbanBoard({
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-default-100">
             <ListTodo className="w-5 h-5 text-foreground" />
           </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold">
-            {userRoleIds.includes(3) // Analyst role ID
-              ? t("teamDashboard.kanban.titleAdhoc")
-              : t("teamDashboard.kanban.title")}
-          </h3>
-          <p className="text-sm text-default-500">
-            {userRoleIds.includes(3) // Analyst role ID
-              ? t("teamDashboard.kanban.subtitleAdhoc")
-              : t("teamDashboard.kanban.subtitle")}
-          </p>
-        </div>
-      </CardHeader>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold">
+              {userRoleIds.includes(3) // Analyst role ID
+                ? t("teamDashboard.kanban.titleAdhoc")
+                : t("teamDashboard.kanban.title")}
+            </h3>
+            <p className="text-sm text-default-500">
+              {userRoleIds.includes(3) // Analyst role ID
+                ? t("teamDashboard.kanban.subtitleAdhoc")
+                : t("teamDashboard.kanban.subtitle")}
+            </p>
+          </div>
+        </CardHeader>
 
-      <CardBody className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {columns.map((column) => {
-            const columnAccess = getColumnAccessibility(userRoleIds, column.id);
-            const isDroppable =
-              draggedFromColumn !== null &&
-              kanbanConfig.canDropTo(column.id, draggedFromColumn);
+        <CardBody className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {columns.map((column) => {
+              const columnAccess = getColumnAccessibility(
+                userRoleIds,
+                column.id,
+              );
+              const isDroppable =
+                draggedFromColumn !== null &&
+                kanbanConfig.canDropTo(column.id, draggedFromColumn);
 
-            // Get background color class for column
-            const getColumnBgClass = (color: string) => {
-              switch (color) {
-                case "primary":
-                  return "bg-primary/5";
-                case "warning":
-                  return "bg-warning/5";
-                case "danger":
-                  return "bg-danger/5";
-                case "success":
-                  return "bg-success/5";
-                default:
-                  return "bg-default/5";
-              }
-            };
+              // Get background color class for column
+              const getColumnBgClass = (color: string) => {
+                switch (color) {
+                  case "primary":
+                    return "bg-primary/5";
+                  case "warning":
+                    return "bg-warning/5";
+                  case "danger":
+                    return "bg-danger/5";
+                  case "success":
+                    return "bg-success/5";
+                  default:
+                    return "bg-default/5";
+                }
+              };
 
-            return (
-              <div
-                key={column.id}
-                className={`flex flex-col gap-3 ${!columnAccess.isDroppable && draggedFromColumn !== null ? "opacity-50" : ""}`}
-              >
-                {/* Column Header */}
-                <Card
-                  className={`bg-${column.color}/10 backdrop-blur-sm ${!columnAccess.isDraggable && !columnAccess.isDroppable ? "relative" : ""}`}
-                  shadow="sm"
-                >
-                  <CardBody className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`text-${column.color}`}>
-                          {column.icon}
-                        </div>
-                        <span className="font-semibold text-sm">
-                          {language === "ar" ? column.titleAr : column.title}
-                        </span>
-                        {!columnAccess.isDraggable &&
-                          !columnAccess.isDroppable && (
-                            <Tooltip
-                              content={getRestrictionReason(
-                                columnAccess.reasonCode,
-                              )}
-                            >
-                              <Lock className="w-3 h-3 text-default-400" />
-                            </Tooltip>
-                          )}
-                      </div>
-                      <Chip
-                        color={column.color as any}
-                        size="sm"
-                        variant="flat"
-                      >
-                        {column.tasks.length}
-                      </Chip>
-                    </div>
-                  </CardBody>
-                </Card>
-
-                {/* Divider */}
-                <Divider className={`bg-${column.color}/20`} />
-
-                {/* Column Tasks */}
+              return (
                 <div
-                  className={`p-3 rounded-lg ${getColumnBgClass(column.color)}`}
-                  onDragOver={(e) => handleDragOver(e, column.id)}
-                  onDrop={(e) => handleDrop(e, column.id)}
+                  key={column.id}
+                  className={`flex flex-col gap-3 ${!columnAccess.isDroppable && draggedFromColumn !== null ? "opacity-50" : ""}`}
                 >
-                  <ScrollShadow hideScrollBar className="h-[500px]">
-                    <div className="space-y-3 pr-2">
-                      {column.tasks.length === 0 ? (
-                        <div className="text-center text-sm text-default-400 py-8">
-                          {t("teamDashboard.kanban.noTasks")}
-                        </div>
-                      ) : (
-                        column.tasks.map((task) => {
-                          const canDrag = columnAccess.isDraggable;
-                          const isAdhoc = task.typeId === TASK_TYPES.ADHOC;
-                          const isHovered = hoveredTaskId === task.id;
-                          const isCompleting = completingTaskId === task.id;
-                          const isUpdating = updatingTaskId === task.id;
-                          const canComplete = isAdhoc && task.statusId !== 5; // Only if not already completed
-
-                          return (
-                            <div
-                              key={task.id}
-                              className={`relative ${canDrag ? "cursor-move" : onTaskClick ? "cursor-pointer" : "cursor-default"}`}
-                              draggable={canDrag && !isUpdating}
-                              role="button"
-                              tabIndex={0}
-                              onClick={(e) => {
-                                handleCardClick(e, task);
-                              }}
-                              onDragStart={() => {
-                                if (canDrag && !isUpdating && dragStartPos) {
-                                  handleDragStart(task, column.id);
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  handleCardClick(e as any, task);
-                                }
-                              }}
-                              onMouseDown={(e) => {
-                                if (canDrag) {
-                                  setDragStartPos({
-                                    x: e.clientX,
-                                    y: e.clientY,
-                                  });
-                                }
-                              }}
-                              onMouseEnter={() =>
-                                isAdhoc && setHoveredTaskId(task.id)
-                              }
-                              onMouseLeave={() => {
-                                isAdhoc && setHoveredTaskId(null);
-                              }}
-                            >
-                              <Card
-                                className={`transition-all duration-500 ease-in-out bg-content1 dark:bg-content2 ${
-                                  isAdhoc && isHovered
-                                    ? "shadow-2xl border-2 border-success ring-2 ring-success/20"
-                                    : "hover:shadow-lg border-2 border-transparent"
-                                } ${isUpdating ? "opacity-50" : ""}`}
-                                shadow="sm"
+                  {/* Column Header */}
+                  <Card
+                    className={`bg-${column.color}/10 backdrop-blur-sm ${!columnAccess.isDraggable && !columnAccess.isDroppable ? "relative" : ""}`}
+                    shadow="sm"
+                  >
+                    <CardBody className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`text-${column.color}`}>
+                            {column.icon}
+                          </div>
+                          <span className="font-semibold text-sm">
+                            {language === "ar" ? column.titleAr : column.title}
+                          </span>
+                          {!columnAccess.isDraggable &&
+                            !columnAccess.isDroppable && (
+                              <Tooltip
+                                content={getRestrictionReason(
+                                  columnAccess.reasonCode,
+                                )}
                               >
-                                <CardBody className="p-3 space-y-2">
-                                  {/* Task Title with Complete Switch for Adhoc */}
-                                  <div className="flex items-start justify-between gap-2">
-                                    <h4 className="font-semibold text-sm line-clamp-2 flex-1">
-                                      {task.name}
-                                    </h4>
-                                    {isAdhoc && canComplete && isHovered && (
-                                      <Tooltip
-                                        content={t(
-                                          "teamDashboard.kanban.markComplete",
-                                        )}
-                                      >
-                                        <div
-                                          className={`flex-shrink-0 ${language === "ar" ? "order-first" : ""}`}
-                                        >
-                                          <Switch
-                                            color="success"
-                                            isDisabled={isCompleting}
-                                            size="sm"
-                                            thumbIcon={({
-                                              isSelected,
-                                              className,
-                                            }) =>
-                                              isSelected ? (
-                                                <CheckCircle
-                                                  className={className}
-                                                />
-                                              ) : null
-                                            }
-                                            onValueChange={(isChecked) => {
-                                              if (isChecked) {
-                                                handleCompleteAdhocTask(task);
-                                              }
-                                            }}
-                                          />
-                                        </div>
-                                      </Tooltip>
-                                    )}
-                                  </div>
+                                <Lock className="w-3 h-3 text-default-400" />
+                              </Tooltip>
+                            )}
+                        </div>
+                        <Chip
+                          color={column.color as any}
+                          size="sm"
+                          variant="flat"
+                        >
+                          {column.tasks.length}
+                        </Chip>
+                      </div>
+                    </CardBody>
+                  </Card>
 
-                                  {/* Priority & Task Type */}
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <div className="flex items-center gap-1">
-                                      <Flag className="w-3 h-3" />
+                  {/* Divider */}
+                  <Divider className={`bg-${column.color}/20`} />
+
+                  {/* Column Tasks */}
+                  <div
+                    className={`p-3 rounded-lg ${getColumnBgClass(column.color)}`}
+                    onDragOver={(e) => handleDragOver(e, column.id)}
+                    onDrop={(e) => handleDrop(e, column.id)}
+                  >
+                    <ScrollShadow hideScrollBar className="h-[500px]">
+                      <div className="space-y-3 pr-2">
+                        {column.tasks.length === 0 ? (
+                          <div className="text-center text-sm text-default-400 py-8">
+                            {t("teamDashboard.kanban.noTasks")}
+                          </div>
+                        ) : (
+                          column.tasks.map((task) => {
+                            const canDrag = columnAccess.isDraggable;
+                            const isAdhoc = task.typeId === TASK_TYPES.ADHOC;
+                            const isHovered = hoveredTaskId === task.id;
+                            const isCompleting = completingTaskId === task.id;
+                            const isUpdating = updatingTaskId === task.id;
+                            const canComplete = isAdhoc && task.statusId !== 5; // Only if not already completed
+
+                            return (
+                              <div
+                                key={task.id}
+                                className={`relative ${canDrag ? "cursor-move" : onTaskClick ? "cursor-pointer" : "cursor-default"}`}
+                                draggable={canDrag && !isUpdating}
+                                role="button"
+                                tabIndex={0}
+                                onClick={(e) => {
+                                  handleCardClick(e, task);
+                                }}
+                                onDragStart={() => {
+                                  if (canDrag && !isUpdating && dragStartPos) {
+                                    handleDragStart(task, column.id);
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    handleCardClick(e as any, task);
+                                  }
+                                }}
+                                onMouseDown={(e) => {
+                                  if (canDrag) {
+                                    setDragStartPos({
+                                      x: e.clientX,
+                                      y: e.clientY,
+                                    });
+                                  }
+                                }}
+                                onMouseEnter={() =>
+                                  isAdhoc && setHoveredTaskId(task.id)
+                                }
+                                onMouseLeave={() => {
+                                  isAdhoc && setHoveredTaskId(null);
+                                }}
+                              >
+                                <Card
+                                  className={`transition-all duration-500 ease-in-out bg-content1 dark:bg-content2 ${
+                                    isAdhoc && isHovered
+                                      ? "shadow-2xl border-2 border-success ring-2 ring-success/20"
+                                      : "hover:shadow-lg border-2 border-transparent"
+                                  } ${isUpdating ? "opacity-50" : ""}`}
+                                  shadow="sm"
+                                >
+                                  <CardBody className="p-3 space-y-2">
+                                    {/* Task Title with Complete Switch for Adhoc */}
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h4 className="font-semibold text-sm line-clamp-2 flex-1">
+                                        {task.name}
+                                      </h4>
+                                      {isAdhoc && canComplete && isHovered && (
+                                        <Tooltip
+                                          content={t(
+                                            "teamDashboard.kanban.markComplete",
+                                          )}
+                                        >
+                                          <div
+                                            className={`flex-shrink-0 ${language === "ar" ? "order-first" : ""}`}
+                                          >
+                                            <Switch
+                                              color="success"
+                                              isDisabled={isCompleting}
+                                              size="sm"
+                                              thumbIcon={({
+                                                isSelected,
+                                                className,
+                                              }) =>
+                                                isSelected ? (
+                                                  <CheckCircle
+                                                    className={className}
+                                                  />
+                                                ) : null
+                                              }
+                                              onValueChange={(isChecked) => {
+                                                if (isChecked) {
+                                                  handleCompleteAdhocTask(task);
+                                                }
+                                              }}
+                                            />
+                                          </div>
+                                        </Tooltip>
+                                      )}
+                                    </div>
+
+                                    {/* Priority & Task Type */}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <div className="flex items-center gap-1">
+                                        <Flag className="w-3 h-3" />
+                                        <Chip
+                                          color={
+                                            getPriorityColor(
+                                              task.priorityId,
+                                            ) as any
+                                          }
+                                          size="sm"
+                                          variant="flat"
+                                        >
+                                          {getPriorityLabel(task.priorityId)}
+                                        </Chip>
+                                      </div>
                                       <Chip
                                         color={
-                                          getPriorityColor(
-                                            task.priorityId,
-                                          ) as any
+                                          getTaskTypeColor(task.typeId) as any
                                         }
+                                        size="sm"
+                                        variant="bordered"
+                                      >
+                                        {t(getTaskTypeText(task.typeId))}
+                                      </Chip>
+                                    </div>
+
+                                    {/* Project & Requirement */}
+                                    <div
+                                      className={`space-y-1 text-xs text-default-500 ${language === "ar" ? "text-right" : "text-left"}`}
+                                    >
+                                      {task.project && (
+                                        <div className="line-clamp-1">
+                                          <strong>
+                                            {t("teamDashboard.kanban.project")}:
+                                          </strong>{" "}
+                                          {task.project.applicationName}
+                                        </div>
+                                      )}
+                                      {task.requirement && (
+                                        <div className="line-clamp-1">
+                                          <strong>
+                                            {t(
+                                              "teamDashboard.kanban.requirement",
+                                            )}
+                                            :
+                                          </strong>{" "}
+                                          {task.requirement.name}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* End Date & Progress */}
+                                    <div className="flex items-center justify-between text-xs">
+                                      <div className="flex items-center gap-1 text-default-500">
+                                        <CalendarIcon className="w-3 h-3" />
+                                        {formatDate(task.endDate)}
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3 text-default-400" />
+                                        <span
+                                          className={
+                                            task.progress === 100
+                                              ? "text-success font-semibold"
+                                              : task.progress >= 70
+                                                ? "text-success"
+                                                : task.progress >= 40
+                                                  ? "text-warning"
+                                                  : task.progress > 0
+                                                    ? "text-danger"
+                                                    : "text-default-600"
+                                          }
+                                        >
+                                          {task.progress}%
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Overdue Badge */}
+                                    {task.isOverdue && (
+                                      <Chip
+                                        className="w-full"
+                                        color="danger"
                                         size="sm"
                                         variant="flat"
                                       >
-                                        {getPriorityLabel(task.priorityId)}
+                                        {t("teamDashboard.kanban.overdue")}
                                       </Chip>
-                                    </div>
-                                    <Chip
-                                      color={
-                                        getTaskTypeColor(task.typeId) as any
-                                      }
-                                      size="sm"
-                                      variant="bordered"
-                                    >
-                                      {t(getTaskTypeText(task.typeId))}
-                                    </Chip>
-                                  </div>
-
-                                  {/* Project & Requirement */}
-                                  <div
-                                    className={`space-y-1 text-xs text-default-500 ${language === "ar" ? "text-right" : "text-left"}`}
-                                  >
-                                    {task.project && (
-                                      <div className="line-clamp-1">
-                                        <strong>
-                                          {t("teamDashboard.kanban.project")}:
-                                        </strong>{" "}
-                                        {task.project.applicationName}
-                                      </div>
                                     )}
-                                    {task.requirement && (
-                                      <div className="line-clamp-1">
-                                        <strong>
-                                          {t(
-                                            "teamDashboard.kanban.requirement",
-                                          )}
-                                          :
-                                        </strong>{" "}
-                                        {task.requirement.name}
+                                  </CardBody>
+
+                                  {/* Loading Overlay */}
+                                  {isUpdating && (
+                                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                                      <div className="flex items-center gap-2 text-primary">
+                                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                        <span className="text-sm font-medium">
+                                          {t("common.updating")}
+                                        </span>
                                       </div>
-                                    )}
-                                  </div>
-
-                                  {/* End Date & Progress */}
-                                  <div className="flex items-center justify-between text-xs">
-                                    <div className="flex items-center gap-1 text-default-500">
-                                      <CalendarIcon className="w-3 h-3" />
-                                      {formatDate(task.endDate)}
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3 text-default-400" />
-                                      <span
-                                        className={
-                                          task.progress === 100
-                                            ? "text-success font-semibold"
-                                            : task.progress >= 70
-                                              ? "text-success"
-                                              : task.progress >= 40
-                                                ? "text-warning"
-                                                : task.progress > 0
-                                                  ? "text-danger"
-                                                  : "text-default-600"
-                                        }
-                                      >
-                                        {task.progress}%
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Overdue Badge */}
-                                  {task.isOverdue && (
-                                    <Chip
-                                      className="w-full"
-                                      color="danger"
-                                      size="sm"
-                                      variant="flat"
-                                    >
-                                      {t("teamDashboard.kanban.overdue")}
-                                    </Chip>
                                   )}
-                                </CardBody>
-
-                                {/* Loading Overlay */}
-                                {isUpdating && (
-                                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
-                                    <div className="flex items-center gap-2 text-primary">
-                                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                      <span className="text-sm font-medium">
-                                        {t("common.updating")}
-                                      </span>
-                                    </div>
-                                  </div>
-                                )}
-                              </Card>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </ScrollShadow>
+                                </Card>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </ScrollShadow>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardBody>
-    </Card>
-
-    {/* Design Request Confirmation Modal */}
-    <Modal isOpen={isOpen} onClose={handleCancelDrop} size="lg">
-      <ModalContent>
-        <ModalHeader className="flex gap-2 items-center">
-          <AlertTriangle className="w-5 h-5 text-warning" />
-          {t("teamDashboard.kanban.designRequestWarning")}
-        </ModalHeader>
-        <ModalBody>
-          <div className="space-y-4">
-            <p className="text-default-600">
-              {designRequestInfo?.hasDesignerTask
-                ? t("teamDashboard.kanban.designRequestWithDesignerMessage")
-                : t("teamDashboard.kanban.designRequestNoDesignerMessage")}
-            </p>
-
-            {/* Show checkbox only when designer task exists */}
-            {designRequestInfo?.hasDesignerTask && (
-              <Checkbox
-                isSelected={completedWithoutDesigner}
-                onValueChange={setCompletedWithoutDesigner}
-              >
-                {t("teamDashboard.kanban.completedWithoutDesigner")}
-              </Checkbox>
-            )}
-
-            <div className="p-3 bg-warning-50 dark:bg-warning-100/10 rounded-lg border border-warning-200 dark:border-warning-800/30">
-              <p className="text-sm text-warning-700 dark:text-warning-600">
-                {designRequestInfo?.hasDesignerTask
-                  ? t("teamDashboard.kanban.designerTaskWillBeCompleted")
-                  : t("teamDashboard.kanban.designRequestWillBeDeleted")}
-              </p>
-            </div>
+              );
+            })}
           </div>
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="flat" onPress={handleCancelDrop}>
-            {t("common.cancel")}
-          </Button>
-          <Button
-            color="warning"
-            isLoading={modalLoading}
-            onPress={handleConfirmDrop}
-          >
-            {t("common.confirm")}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </CardBody>
+      </Card>
+
+      {/* Design Request Confirmation Modal */}
+      <Modal isOpen={isOpen} size="lg" onClose={handleCancelDrop}>
+        <ModalContent>
+          <ModalHeader className="flex gap-2 items-center">
+            <AlertTriangle className="w-5 h-5 text-warning" />
+            {t("teamDashboard.kanban.designRequestWarning")}
+          </ModalHeader>
+          <ModalBody>
+            <div className="space-y-4">
+              <p className="text-default-600">
+                {designRequestInfo?.hasDesignerTask
+                  ? t("teamDashboard.kanban.designRequestWithDesignerMessage")
+                  : t("teamDashboard.kanban.designRequestNoDesignerMessage")}
+              </p>
+
+              {/* Show checkbox only when designer task exists */}
+              {designRequestInfo?.hasDesignerTask && (
+                <Checkbox
+                  isSelected={completedWithoutDesigner}
+                  onValueChange={setCompletedWithoutDesigner}
+                >
+                  {t("teamDashboard.kanban.completedWithoutDesigner")}
+                </Checkbox>
+              )}
+
+              <div className="p-3 bg-warning-50 dark:bg-warning-100/10 rounded-lg border border-warning-200 dark:border-warning-800/30">
+                <p className="text-sm text-warning-700 dark:text-warning-600">
+                  {designRequestInfo?.hasDesignerTask
+                    ? t("teamDashboard.kanban.designerTaskWillBeCompleted")
+                    : t("teamDashboard.kanban.designRequestWillBeDeleted")}
+                </p>
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={handleCancelDrop}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              color="warning"
+              isLoading={modalLoading}
+              onPress={handleConfirmDrop}
+            >
+              {t("common.confirm")}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }

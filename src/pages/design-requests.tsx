@@ -332,13 +332,19 @@ export function DesignRequestsPage() {
             className="border border-default-200"
             shadow="sm"
           >
-            <CardHeader className={`flex flex-col items-start gap-3 pb-3 ${language === "ar" ? "text-right" : "text-left"}`}>
+            <CardHeader
+              className={`flex flex-col items-start gap-3 pb-3 ${language === "ar" ? "text-right" : "text-left"}`}
+            >
               <div className="flex justify-between items-start w-full gap-3">
                 <div className="flex-1">
-                  <p className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}>
+                  <p
+                    className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}
+                  >
                     {t("designRequests.taskName")}
                   </p>
-                  <h3 className={`text-base font-semibold text-default-700 line-clamp-2 ${language === "ar" ? "text-right" : "text-left"}`}>
+                  <h3
+                    className={`text-base font-semibold text-default-700 line-clamp-2 ${language === "ar" ? "text-right" : "text-left"}`}
+                  >
                     {request.task?.name || `Task #${request.taskId}`}
                   </h3>
                 </div>
@@ -359,12 +365,16 @@ export function DesignRequestsPage() {
               <div className="border-t border-default-200" />
             </div>
 
-            <CardBody className={`space-y-4 pt-3 ${language === "ar" ? "text-right" : "text-left"}`}>
+            <CardBody
+              className={`space-y-4 pt-3 ${language === "ar" ? "text-right" : "text-left"}`}
+            >
               {/* Request Information */}
               <div className="space-y-3">
                 {/* Request Date */}
                 <div>
-                  <p className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}>
+                  <p
+                    className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}
+                  >
                     {t("designRequests.requestDate")}
                   </p>
                   <Chip
@@ -383,7 +393,9 @@ export function DesignRequestsPage() {
                 {/* Assigned Designer */}
                 {request.assignedToUserName && (
                   <div>
-                    <p className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}>
+                    <p
+                      className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}
+                    >
                       {t("designRequests.assignedTo")}
                     </p>
                     <Chip
@@ -406,7 +418,9 @@ export function DesignRequestsPage() {
                   <>
                     <div className="border-t border-default-100 pt-3" />
                     <div>
-                      <p className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}>
+                      <p
+                        className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}
+                      >
                         {t("common.project")}
                       </p>
                       <Chip
@@ -423,10 +437,14 @@ export function DesignRequestsPage() {
                       </Chip>
                     </div>
                     <div>
-                      <p className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}>
+                      <p
+                        className={`text-xs text-default-500 mb-1 ${language === "ar" ? "text-right" : "text-left"}`}
+                      >
                         {t("requirements.requirement")}
                       </p>
-                      <p className={`text-sm text-default-700 line-clamp-1 ${language === "ar" ? "text-right" : "text-left"}`}>
+                      <p
+                        className={`text-sm text-default-700 line-clamp-1 ${language === "ar" ? "text-right" : "text-left"}`}
+                      >
                         {request.requirementDetails.name}
                       </p>
                     </div>
