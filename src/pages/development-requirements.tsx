@@ -164,9 +164,7 @@ const RequirementCard = ({
 
         {/* Detail, Task, and Timeline Creation Buttons */}
         <div className="flex items-center pt-2 gap-2 mt-auto">
-          {hasPermission({
-            actions: ["requirements.view"],
-          }) && (
+          {
             <Button
               className="flex-1"
               color="default"
@@ -177,7 +175,7 @@ const RequirementCard = ({
             >
               {t("common.viewDetails")}
             </Button>
-          )}
+          }
 
           {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
           {!requirement.timeline &&
@@ -1211,7 +1209,7 @@ export default function DevelopmentRequirementsPage() {
                         defaultFilter={() => true}
                         inputValue={developerInputValue}
                         isLoading={loadingDevelopers}
-                        menuTrigger="input"
+                        menuTrigger="focus"
                         placeholder={t("tasks.selectDeveloper")}
                         selectedKey={selectedDeveloper?.id?.toString() || ""}
                         onInputChange={(value) => {

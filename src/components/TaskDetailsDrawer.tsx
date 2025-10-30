@@ -1,5 +1,8 @@
 import type { MemberTask } from "@/types/membersTasks";
-import type { ProjectRequirement } from "@/types/projectRequirement";
+import type {
+  ProjectRequirement,
+  ProjectRequirementAttachment,
+} from "@/types/projectRequirement";
 
 import { useState } from "react";
 import { Button } from "@heroui/button";
@@ -34,6 +37,7 @@ import { useTaskActivity } from "@/hooks/useTaskActivity";
 import { TASK_STATUSES } from "@/constants/taskStatuses";
 import { membersTasksService } from "@/services/api/membersTasksService";
 import { formatRelativeTime, formatDateTime } from "@/utils/dateFormatter";
+import { projectRequirementsService } from "@/services/api";
 
 interface TaskDetailsDrawerProps {
   isOpen: boolean;
@@ -97,6 +101,30 @@ export default function TaskDetailsDrawer({
   // File upload state
   const [hasFileUploadError, setHasFileUploadError] = useState<boolean>(false);
   const [uploadingFiles, setUploadingFiles] = useState(false);
+  // Handle file preview with attachment data
+  const handleFilePreview = async (
+    attachment: ProjectRequirementAttachment,
+  ) => {
+    if (!fullRequirement) return;
+
+    try {
+      const blob = await projectRequirementsService.downloadAttachment(
+        fullRequirement.id,
+        attachment.id,
+      );
+      const previewUrl = window.URL.createObjectURL(blob);
+      
+      // Open in new tab for preview instead of downloading
+      window.open(previewUrl, "_blank");
+      
+      // Clean up the URL after a delay to allow the tab to load
+      setTimeout(() => {
+        window.URL.revokeObjectURL(previewUrl);
+      }, 1000);
+    } catch {
+      // Error handled silently for now
+    }
+  };
 
   // Handle file upload
   const handleFileUpload = async (files: FileList | null) => {
@@ -111,8 +139,7 @@ export default function TaskDetailsDrawer({
 
       await onFileUpload(taskId, filesArray);
       refetchActivity(); // Refresh attachments after upload
-    } catch (error) {
-      console.error("File upload failed:", error);
+    } catch {
       setHasFileUploadError(true);
       setTimeout(() => setHasFileUploadError(false), 4000);
     } finally {
@@ -403,7 +430,9 @@ export default function TaskDetailsDrawer({
                                     size="sm"
                                     startContent={<Eye className="w-4 h-4" />}
                                     variant="light"
-                                    onPress={() => onFilePreview(attachment)}
+                                    onPress={() =>
+                                      handleFilePreview(attachment)
+                                    }
                                   >
                                     {t("common.preview")}
                                   </Button>
@@ -415,7 +444,29 @@ export default function TaskDetailsDrawer({
                                     <Download className="w-4 h-4" />
                                   }
                                   variant="light"
-                                  onPress={() => onFileDownload(attachment)}
+                                  onPress={async () => {
+                                    try {
+                                      const blob =
+                                        await projectRequirementsService.downloadAttachment(
+                                          parseInt(
+                                            selectedTask.requirement?.id,
+                                          ),
+                                          attachment.id,
+                                        );
+                                      const url =
+                                        window.URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+
+                                      a.href = url;
+                                      a.download = attachment.originalName;
+                                      document.body.appendChild(a);
+                                      a.click();
+                                      window.URL.revokeObjectURL(url);
+                                      document.body.removeChild(a);
+                                    } catch {
+                                      // Handle download error silently
+                                    }
+                                  }}
                                 >
                                   {t("common.download")}
                                 </Button>
