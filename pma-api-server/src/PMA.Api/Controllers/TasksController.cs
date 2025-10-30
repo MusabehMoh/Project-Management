@@ -831,7 +831,7 @@ public class TasksController : ApiBaseController
             // Case 2: Designer task exists
             if (dto.CompletedWithoutDesigner)
             {
-                // Mark the designer task as completed
+                // Mark the designer task as completed AND flag it as completed from developer
                 var designerTask = await _taskService.GetTaskByIdAsync(designRequest.DesignerTaskId.Value);
                 if (designerTask != null)
                 {
@@ -847,15 +847,16 @@ public class TasksController : ApiBaseController
                     };
                     await _taskService.CreateTaskStatusHistoryAsync(taskStatusHistory);
 
+                    // Update designer task: mark as completed AND set CompletedFromDeveloper flag
                     designerTask.StatusId = Core.Enums.TaskStatus.Completed;
                     designerTask.Progress = 100;
+                    designerTask.CompletedFromDeveloper = true; // FLAG: This task was completed by developer, not designer
                     designerTask.UpdatedAt = DateTime.Now;
                     await _taskService.UpdateTaskAsync(designerTask);
                 }
 
-                // Mark main task as completed from developer
-                task.CompletedFromDeveloper = true;
-                await _taskService.UpdateTaskAsync(task);
+                // Do NOT mark the developer's task with CompletedFromDeveloper flag
+                // Only the designer's task should have this flag
 
                 return Success(new { Message = "Designer task marked as completed" });
             }

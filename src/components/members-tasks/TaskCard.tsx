@@ -291,31 +291,38 @@ export const TaskCard = ({
 
         {/* Assignees */}
         {task.assignedMembers && task.assignedMembers.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {task.assignedMembers
-              .slice(0, 2)
-              .map((assignee: MemberSearchResult, index: number) => (
-                <Tooltip
-                  key={index}
-                  content={`${assignee.gradeName} ${assignee.fullName}`}
-                >
-                  <Chip
-                    className="max-w-[140px]"
-                    color="primary"
-                    size="sm"
-                    variant="flat"
+          <div className="space-y-2">
+            <h4
+              className={`text-xs font-medium text-default-600 ${language === "ar" ? "text-right" : "text-left"}`}
+            >
+              {t("timeline.assignedMembers")}
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {task.assignedMembers
+                .slice(0, 2)
+                .map((assignee: MemberSearchResult, index: number) => (
+                  <Tooltip
+                    key={index}
+                    content={`${assignee.gradeName} ${assignee.fullName}`}
                   >
-                    <span className="block truncate">
-                      {`${assignee.gradeName} ${assignee.fullName}`}
-                    </span>
-                  </Chip>
-                </Tooltip>
-              ))}
-            {task.assignedMembers.length > 2 && (
-              <Chip size="sm" variant="flat">
-                +{task.assignedMembers.length - 2}
-              </Chip>
-            )}
+                    <Chip
+                      className="max-w-[140px]"
+                      color="primary"
+                      size="sm"
+                      variant="flat"
+                    >
+                      <span className="block truncate">
+                        {`${assignee.gradeName} ${assignee.fullName}`}
+                      </span>
+                    </Chip>
+                  </Tooltip>
+                ))}
+              {task.assignedMembers.length > 2 && (
+                <Chip size="sm" variant="flat">
+                  +{task.assignedMembers.length - 2}
+                </Chip>
+              )}
+            </div>
           </div>
         )}
 
@@ -367,25 +374,93 @@ export const TaskCard = ({
 
         {/* buttons */}
         <div className="mt-3 pt-3 border-t border-divider">
-          {isTeamManager ? (
-            /* actions for team managers */
-            <div className="flex gap-2">
-              {task.hasNoDependentTasks ? (
-                <Tooltip content={t("task.createTaskHint")}>
+          <div className="flex flex-col gap-2">
+            {task.completedFromDeveloper && (
+              <div
+                className={`flex items-center ${language === "ar" ? "justify-start" : "justify-start"}`}
+              >
+                <Chip
+                  color="primary"
+                  size="sm"
+                  startContent={<CheckCircle className="w-3 h-3" />}
+                  variant="flat"
+                >
+                  {t("completedByDeveloper")}
+                </Chip>
+              </div>
+            )}
+            {isTeamManager ? (
+              /* actions for team managers */
+              <div className="flex gap-2">
+                {task.hasNoDependentTasks ? (
+                  <Tooltip content={t("task.createTaskHint")}>
+                    <Button
+                      className="flex-1"
+                      color="primary"
+                      size="sm"
+                      variant="solid"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateTaskClick();
+                      }}
+                    >
+                      {t("task.createTask")}
+                    </Button>
+                  </Tooltip>
+                ) : (
                   <Button
                     className="flex-1"
-                    color="primary"
+                    color="default"
+                    isDisabled={
+                      task.statusId === TASK_STATUSES.BLOCKED ||
+                      task.statusId === TASK_STATUSES.COMPLETED
+                    }
                     size="sm"
                     variant="solid"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCreateTaskClick();
+                      handleChangeAssigneesClick();
                     }}
                   >
-                    {t("task.createTask")}
+                    {t("changeAssignees")}
                   </Button>
-                </Tooltip>
-              ) : (
+                )}
+              </div>
+            ) : (
+              /* actions for members */
+              <div className="flex gap-2">
+                {task.hasDesignRequest ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <Chip
+                      color="success"
+                      size="sm"
+                      startContent={<CheckCircle className="w-3 h-3" />}
+                      variant="flat"
+                    >
+                      {t("requestedAlready")}
+                    </Chip>
+                  </div>
+                ) : task.roleType === "QC" ? (
+                  <div className="flex-1" />
+                ) : (
+                  <Button
+                    className="flex-1"
+                    color="default"
+                    isDisabled={
+                      task.statusId === TASK_STATUSES.BLOCKED ||
+                      task.statusId === TASK_STATUSES.COMPLETED
+                    }
+                    size="sm"
+                    variant="faded"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRequestDesignClick();
+                    }}
+                  >
+                    {t("requestDesign")}
+                  </Button>
+                )}
+
                 <Button
                   className="flex-1"
                   color="default"
@@ -397,66 +472,14 @@ export const TaskCard = ({
                   variant="solid"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleChangeAssigneesClick();
+                    handleChangeStatusClick();
                   }}
                 >
-                  {t("changeAssignees")}
+                  {t("changeStatus")}
                 </Button>
-              )}
-            </div>
-          ) : (
-            /* actions for members */
-            <div className="flex gap-2">
-              {task.hasDesignRequest ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <Chip
-                    color="success"
-                    size="sm"
-                    startContent={<CheckCircle className="w-3 h-3" />}
-                    variant="flat"
-                  >
-                    {t("requestedAlready")}
-                  </Chip>
-                </div>
-              ) : task.roleType === "QC" ? (
-                <div className="flex-1" />
-              ) : (
-                <Button
-                  className="flex-1"
-                  color="default"
-                  isDisabled={
-                    task.statusId === TASK_STATUSES.BLOCKED ||
-                    task.statusId === TASK_STATUSES.COMPLETED
-                  }
-                  size="sm"
-                  variant="faded"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRequestDesignClick();
-                  }}
-                >
-                  {t("requestDesign")}
-                </Button>
-              )}
-
-              <Button
-                className="flex-1"
-                color="default"
-                isDisabled={
-                  task.statusId === TASK_STATUSES.BLOCKED ||
-                  task.statusId === TASK_STATUSES.COMPLETED
-                }
-                size="sm"
-                variant="solid"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleChangeStatusClick();
-                }}
-              >
-                {t("changeStatus")}
-              </Button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </CardBody>
 

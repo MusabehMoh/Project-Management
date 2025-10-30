@@ -4,7 +4,7 @@ import { parseDate } from "@internationalized/date";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 import { Button } from "@heroui/button";
-import { Search, ChevronDown, X } from "lucide-react";
+import { Search, ChevronDown, X, AlertTriangle } from "lucide-react";
 import { Card, CardBody } from "@heroui/card";
 import {
   Dropdown,
@@ -19,6 +19,7 @@ import {
   Autocomplete,
   AutocompleteItem,
   Avatar,
+  Checkbox,
   Chip,
   Input,
   Modal,
@@ -49,6 +50,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import useTeamSearch from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
 import { membersTasksService } from "@/services/api/membersTasksService";
+import { tasksService } from "@/services/api/tasksService";
 import { getFileUploadConfig } from "@/config/environment";
 import {
   showSuccessToast,
@@ -417,6 +419,22 @@ export default function MembersTasksPage() {
 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
+  // Design request confirmation modal states (same as Kanban)
+  const [isDesignRequestConfirmModalOpen, setIsDesignRequestConfirmModalOpen] =
+    useState(false);
+  const [designRequestInfo, setDesignRequestInfo] = useState<{
+    hasDesignRequest: boolean;
+    hasDesignerTask: boolean;
+    designerTaskId: number | null;
+  } | null>(null);
+  const [completedWithoutDesigner, setCompletedWithoutDesigner] =
+    useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    taskId: string;
+    newStatusId: number;
+    notes: string;
+  } | null>(null);
+
   const [selectedMembers, setSelectedMembers] = useState<MemberSearchResult[]>(
     [],
   );
@@ -540,10 +558,99 @@ export default function MembersTasksPage() {
     }
   };
 
+  // Handler for design request confirmation modal (same as Kanban)
+  const handleConfirmDesignRequestAction = async () => {
+    if (!pendingStatusChange) return;
+
+    try {
+      // Call the complete-from-developer API
+      const result = await tasksService.completeFromDeveloper(
+        parseInt(pendingStatusChange.taskId),
+        completedWithoutDesigner,
+      );
+
+      if (result.success) {
+        // Show success message
+        if (completedWithoutDesigner) {
+          showSuccessToast(t("teamDashboard.kanban.designerTaskCompleted"));
+        } else {
+          showSuccessToast(t("teamDashboard.kanban.designRequestDeleted"));
+        }
+
+        // Execute the status change
+        const success = await changeStatus(
+          pendingStatusChange.taskId,
+          `${pendingStatusChange.newStatusId}`,
+          pendingStatusChange.notes,
+        );
+
+        if (success) {
+          // Close modal and refresh
+          setIsDesignRequestConfirmModalOpen(false);
+          setPendingStatusChange(null);
+          setDesignRequestInfo(null);
+          setCompletedWithoutDesigner(false);
+          setNotes("");
+          handleRefresh();
+        } else {
+          setModalError(true);
+        }
+      } else {
+        showErrorToast(t("teamDashboard.kanban.actionFailed"));
+      }
+    } catch (error) {
+      console.error("Error confirming design request action:", error);
+      showErrorToast(t("teamDashboard.kanban.actionFailed"));
+    }
+  };
+
   const handleChangeStatusSubmit = async () => {
+    if (!selectedTask || !selectedStatus) return;
+
+    const newStatusId = selectedStatus.id;
+    const currentStatusId = selectedTask.statusId;
+
+    // Check if moving to "In Review" status from "To Do" or "In Progress"
+    if (
+      newStatusId === 3 &&
+      (currentStatusId === 1 || currentStatusId === 2)
+    ) {
+      try {
+        // Check if task has a design request
+        const designCheckResult =
+          await tasksService.checkDesignRequest(parseInt(selectedTask.id));
+
+        if (designCheckResult.success && designCheckResult.data) {
+          setDesignRequestInfo(designCheckResult.data);
+
+          // If there's a design request, show confirmation modal
+          if (designCheckResult.data.hasDesignRequest) {
+            // Store the pending status change
+            setPendingStatusChange({
+              taskId: selectedTask.id.toString(),
+              newStatusId: newStatusId,
+              notes: notes ?? "",
+            });
+
+            // Close the status change modal
+            setIsChangeStatusModalOpend(false);
+
+            // Open the design request confirmation modal
+            setIsDesignRequestConfirmModalOpen(true);
+
+            return; // Don't proceed with status change yet
+          }
+        }
+      } catch (error) {
+        console.error("Error checking design request:", error);
+        // Continue with normal status change if check fails
+      }
+    }
+
+    // Normal status change (no design request check needed or passed)
     const success = await changeStatus(
       selectedTask?.id ?? "0",
-      `${selectedStatus?.id ?? 3}`,
+      `${newStatusId}`,
       notes ?? "",
     );
 
@@ -1714,6 +1821,74 @@ export default function MembersTasksPage() {
           task={selectedTask}
           onClose={onDetailsClose}
         /> */}
+
+        {/* Design Request Confirmation Modal (same as Kanban) */}
+        <Modal
+          isOpen={isDesignRequestConfirmModalOpen}
+          scrollBehavior="inside"
+          size="md"
+          onOpenChange={() => {
+            setIsDesignRequestConfirmModalOpen(false);
+            setPendingStatusChange(null);
+            setDesignRequestInfo(null);
+            setCompletedWithoutDesigner(false);
+          }}
+        >
+          <ModalContent>
+            {(_onClose) => (
+              <>
+                <ModalHeader className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-warning" />
+                  <span>{t("teamDashboard.kanban.designRequestWarning")}</span>
+                </ModalHeader>
+
+                <ModalBody>
+                  <div className="space-y-4">
+                    <p className="text-default-600">
+                      {designRequestInfo?.hasDesignerTask
+                        ? t(
+                            "teamDashboard.kanban.designRequestWithDesignerMessage",
+                          )
+                        : t(
+                            "teamDashboard.kanban.designRequestWithoutDesignerMessage",
+                          )}
+                    </p>
+
+                    {designRequestInfo?.hasDesignerTask && (
+                      <Checkbox
+                        isSelected={completedWithoutDesigner}
+                        onValueChange={setCompletedWithoutDesigner}
+                      >
+                        {t("teamDashboard.kanban.completedWithoutDesigner")}
+                      </Checkbox>
+                    )}
+                  </div>
+                </ModalBody>
+
+                <ModalFooter>
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={() => {
+                      setIsDesignRequestConfirmModalOpen(false);
+                      setPendingStatusChange(null);
+                      setDesignRequestInfo(null);
+                      setCompletedWithoutDesigner(false);
+                    }}
+                  >
+                    {t("cancel")}
+                  </Button>
+                  <Button
+                    color="primary"
+                    onPress={handleConfirmDesignRequestAction}
+                  >
+                    {t("common.confirm")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
 
         {/* File Preview Modal */}
         <FilePreview

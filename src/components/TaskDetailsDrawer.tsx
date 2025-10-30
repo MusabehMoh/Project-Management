@@ -212,6 +212,22 @@ export default function TaskDetailsDrawer({
                 </div>
               </div>
 
+              {/* Completed by Developer Flag */}
+              {selectedTask.completedFromDeveloper && (
+                <div
+                  className={`flex items-center ${language === "ar" ? "justify-start" : "justify-start"}`}
+                >
+                  <Chip
+                    color="primary"
+                    size="sm"
+                    startContent={<CheckCircle className="w-3 h-3" />}
+                    variant="flat"
+                  >
+                    {t("completedByDeveloper")}
+                  </Chip>
+                </div>
+              )}
+
               {/* Assigned Members */}
               {selectedTask?.assignedMembers &&
                 selectedTask.assignedMembers.length > 0 && (
@@ -761,13 +777,12 @@ export default function TaskDetailsDrawer({
 
                 <Button
                   className="flex-1"
-                  color="success"
                   isDisabled={
                     selectedTask?.statusId === TASK_STATUSES.BLOCKED ||
                     selectedTask?.statusId === TASK_STATUSES.COMPLETED
                   }
                   size="sm"
-                  variant="flat"
+                  variant="bordered"
                   onPress={() => onChangeStatus(selectedTask)}
                 >
                   {t("changeStatus")}

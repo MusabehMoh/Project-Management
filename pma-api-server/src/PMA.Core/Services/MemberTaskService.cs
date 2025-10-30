@@ -261,7 +261,8 @@ public class MemberTaskService : IMemberTaskService
                 Name = task.ProjectRequirement.Name
             } : null,
             HasDesignRequest = designRequestTaskIds.Contains(task.Id),
-            HasNoDependentTasks = taskIdsWithNoDependents?.Contains(task.Id) ?? false
+            HasNoDependentTasks = taskIdsWithNoDependents?.Contains(task.Id) ?? false,
+            CompletedFromDeveloper = task.CompletedFromDeveloper
             //PrimaryAssignee = primaryAssignee
         };
     }

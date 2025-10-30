@@ -429,6 +429,7 @@ const translations = {
     "common.refresh": "Refresh",
     "common.editProject": "Edit Project",
     "common.cancel": "Cancel",
+    "common.confirm": "Confirm",
     "common.select": "Select",
     "common.clear": "Clear",
     "common.reset": "Reset",
@@ -1892,6 +1893,7 @@ const translations = {
     changeStatus: "Change Status",
     requestDesign: "Request Design",
     requestedAlready: "Design Requested",
+    completedByDeveloper: "Completed by Developer",
     requestDesignConfirmation:
       "Are you sure you want to request a design for this task? This will notify the design team and cannot be undone.",
     confirm: "Confirm",
@@ -2390,6 +2392,7 @@ const translations = {
     "common.refresh": "تحديث",
     "common.editProject": "تعديل المشروع",
     "common.cancel": "إلغاء",
+    "common.confirm": "تأكيد",
     "common.none": "لا يوجد",
     "common.select": "اختيار",
     "common.clear": "مسح",
@@ -3822,6 +3825,7 @@ const translations = {
     changeStatus: "تغيير الحالة",
     requestDesign: "طلب تصميم",
     requestedAlready: "طُلب التصميم",
+    completedByDeveloper: "مكتملة بواسطة المطور",
     requestDesignConfirmation:
       "هل أنت متأكد من أنك تريد طلب تصميم لهذه المهمة؟ سيتم إشعار فريق التصميم ولا يمكن التراجع عن ذلك.",
     confirm: "تأكيد",
