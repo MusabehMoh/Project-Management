@@ -291,31 +291,38 @@ export const TaskCard = ({
 
         {/* Assignees */}
         {task.assignedMembers && task.assignedMembers.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {task.assignedMembers
-              .slice(0, 2)
-              .map((assignee: MemberSearchResult, index: number) => (
-                <Tooltip
-                  key={index}
-                  content={`${assignee.gradeName} ${assignee.fullName}`}
-                >
-                  <Chip
-                    className="max-w-[140px]"
-                    color="primary"
-                    size="sm"
-                    variant="flat"
+          <div className="space-y-2">
+            <h4
+              className={`text-xs font-medium text-default-600 ${language === "ar" ? "text-right" : "text-left"}`}
+            >
+              {t("timeline.assignedMembers")}
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {task.assignedMembers
+                .slice(0, 2)
+                .map((assignee: MemberSearchResult, index: number) => (
+                  <Tooltip
+                    key={index}
+                    content={`${assignee.gradeName} ${assignee.fullName}`}
                   >
-                    <span className="block truncate">
-                      {`${assignee.gradeName} ${assignee.fullName}`}
-                    </span>
-                  </Chip>
-                </Tooltip>
-              ))}
-            {task.assignedMembers.length > 2 && (
-              <Chip size="sm" variant="flat">
-                +{task.assignedMembers.length - 2}
-              </Chip>
-            )}
+                    <Chip
+                      className="max-w-[140px]"
+                      color="primary"
+                      size="sm"
+                      variant="flat"
+                    >
+                      <span className="block truncate">
+                        {`${assignee.gradeName} ${assignee.fullName}`}
+                      </span>
+                    </Chip>
+                  </Tooltip>
+                ))}
+              {task.assignedMembers.length > 2 && (
+                <Chip size="sm" variant="flat">
+                  +{task.assignedMembers.length - 2}
+                </Chip>
+              )}
+            </div>
           </div>
         )}
 
