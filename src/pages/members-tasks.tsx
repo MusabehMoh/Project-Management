@@ -1,6 +1,6 @@
 import type { CalendarDate } from "@internationalized/date";
 
-import { parseDate } from "@internationalized/date";
+import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 import { useEffect, useRef, useState } from "react";
 import React from "react";
 import { Button } from "@heroui/button";
@@ -48,6 +48,7 @@ import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { usePermissions } from "@/hooks/usePermissions";
 import useTeamSearch from "@/hooks/useTeamSearch";
+import { validateDateNotInPast } from "@/utils/validation";
 import { MemberSearchResult } from "@/types/timeline";
 import { membersTasksService } from "@/services/api/membersTasksService";
 import { tasksService } from "@/services/api/tasksService";
@@ -416,6 +417,8 @@ export default function MembersTasksPage() {
   const [notes, setNotes] = useState("");
   const [modalError, setModalError] = useState(false);
   const [assigneeModalError, setAssigneeModalError] = useState(false);
+  const [startDateError, setStartDateError] = useState<string | null>(null);
+  const [endDateError, setEndDateError] = useState<string | null>(null);
 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
@@ -505,34 +508,82 @@ export default function MembersTasksPage() {
     });
   }, [selectedTask, statusOptions, userRoleIds]);
 
+  const handleValidateDateNotInPast = (date: any) => {
+    return validateDateNotInPast(date);
+  };
+
   const handleChangeAssigneesSubmit = async () => {
     if (typeof changeAssignees === "function") {
+      // Reset previous errors
+      setAssigneeModalError(false);
+      setStartDateError(null);
+      setEndDateError(null);
+
+      // Validate assignees
       if (selectedMembers.length === 0) {
         setAssigneeModalError(true);
 
         return;
-      } else {
-        // Convert CalendarDate to ISO string format (YYYY-MM-DD)
-        const startDateString = taskStartDate
-          ? taskStartDate.toString()
-          : undefined;
-        const endDateString = taskEndDate ? taskEndDate.toString() : undefined;
+      }
 
-        const success = await changeAssignees(
-          selectedTask?.id ?? "0",
-          selectedMembers.map((member) => member.id.toString()),
-          notes ?? "",
-          startDateString,
-          endDateString,
-        );
+      // Validate start date is not in the past
+      if (taskStartDate) {
+        const startDateValidation = handleValidateDateNotInPast(taskStartDate);
 
-        if (success) {
-          setIsChangeAssigneesModalOpened(false);
-          setNotes("");
-          handleRefresh();
-        } else {
-          setModalError(true);
+        if (startDateValidation !== true) {
+          setStartDateError(t("common.validation.dateNotInPast"));
+
+          return;
         }
+      }
+
+      // Validate end date is not in the past
+      if (taskEndDate) {
+        const endDateValidation = handleValidateDateNotInPast(taskEndDate);
+
+        if (endDateValidation !== true) {
+          setEndDateError(t("common.validation.dateNotInPast"));
+
+          return;
+        }
+      }
+
+      // Validate end date is after start date if both are provided
+      if (taskStartDate && taskEndDate) {
+        const start = new Date(taskStartDate.toString());
+        const end = new Date(taskEndDate.toString());
+
+        if (end <= start) {
+          setEndDateError(t("validation.endDateAfterStart"));
+
+          return;
+        }
+      }
+
+      // Convert CalendarDate to ISO string format (YYYY-MM-DD)
+      const startDateString = taskStartDate
+        ? taskStartDate.toString()
+        : undefined;
+      const endDateString = taskEndDate ? taskEndDate.toString() : undefined;
+
+      const success = await changeAssignees(
+        selectedTask?.id ?? "0",
+        selectedMembers.map((member) => member.id.toString()),
+        notes ?? "",
+        startDateString,
+        endDateString,
+      );
+
+      if (success) {
+        setIsChangeAssigneesModalOpened(false);
+        setNotes("");
+        setTaskStartDate(null);
+        setTaskEndDate(null);
+        setStartDateError(null);
+        setEndDateError(null);
+        handleRefresh();
+      } else {
+        setModalError(true);
       }
     } else {
       setModalError(true);
@@ -1541,15 +1592,27 @@ export default function MembersTasksPage() {
                     {/* Start Date and End Date in one row */}
                     <div className="grid grid-cols-2 gap-4">
                       <DatePicker
+                        errorMessage={startDateError}
+                        isInvalid={!!startDateError}
                         label={t("tasks.startDate")}
+                        minValue={today(getLocalTimeZone())}
                         value={taskStartDate}
-                        onChange={(date) => setTaskStartDate(date)}
+                        onChange={(date) => {
+                          setTaskStartDate(date);
+                          if (startDateError) setStartDateError(null);
+                        }}
                       />
 
                       <DatePicker
+                        errorMessage={endDateError}
+                        isInvalid={!!endDateError}
                         label={t("tasks.endDate")}
+                        minValue={today(getLocalTimeZone())}
                         value={taskEndDate}
-                        onChange={(date) => setTaskEndDate(date)}
+                        onChange={(date) => {
+                          setTaskEndDate(date);
+                          if (endDateError) setEndDateError(null);
+                        }}
                       />
                     </div>
 
@@ -1571,6 +1634,8 @@ export default function MembersTasksPage() {
                       setIsChangeAssigneesModalOpened(false);
                       setModalError(false);
                       setAssigneeModalError(false);
+                      setStartDateError(null);
+                      setEndDateError(null);
                     }}
                   >
                     {t("cancel")}

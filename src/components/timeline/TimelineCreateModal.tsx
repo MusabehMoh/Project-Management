@@ -24,6 +24,7 @@ import {
   CreateTimelineRequest,
   TimelineFormData,
 } from "@/types/timeline";
+import { validateDateNotInPast } from "@/utils/dateValidation";
 
 interface TimelineCreateModalProps {
   isOpen: boolean;
@@ -45,6 +46,13 @@ export default function TimelineCreateModal({
   initialDescription = "",
 }: TimelineCreateModalProps) {
   const { t, direction } = useLanguage();
+
+  // Wrapper function for validation that passes translation
+  const handleValidateDateNotInPast = (
+    value: any,
+  ): string | true | null | undefined => {
+    return validateDateNotInPast(value, t);
+  };
 
   const [formData, setFormData] = useState<TimelineFormData>({
     name: "",
@@ -88,12 +96,36 @@ export default function TimelineCreateModal({
     // Start date validation
     if (!formData.startDate) {
       newErrors.startDate = t("validation.startDateRequired");
+    } else {
+      // Validate start date is not in the past
+      const startDateValidation = handleValidateDateNotInPast(
+        formData.startDate,
+      );
+
+      if (startDateValidation !== true) {
+        newErrors.startDate = t("common.validation.dateNotInPast");
+      }
     }
 
     // End date validation
     if (!formData.endDate) {
       newErrors.endDate = t("validation.endDateRequired");
-    } else if (formData.startDate && formData.endDate) {
+    } else {
+      // Validate end date is not in the past
+      const endDateValidation = handleValidateDateNotInPast(formData.endDate);
+
+      if (endDateValidation !== true) {
+        newErrors.endDate = t("common.validation.dateNotInPast");
+      }
+    }
+
+    // Check if end date is after start date (only if both dates exist and are valid)
+    if (
+      formData.startDate &&
+      formData.endDate &&
+      !newErrors.startDate &&
+      !newErrors.endDate
+    ) {
       const start = new Date(formData.startDate.toString());
       const end = new Date(formData.endDate.toString());
 

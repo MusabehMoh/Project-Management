@@ -35,7 +35,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
-import { parseDate } from "@internationalized/date";
+import { parseDate, DateValue } from "@internationalized/date";
 import { today, getLocalTimeZone } from "@internationalized/date";
 import { addToast } from "@heroui/toast";
 
@@ -64,6 +64,10 @@ import useTeamSearch from "@/hooks/useTeamSearch";
 import { Project, ProjectFormData } from "@/types/project";
 import { usePageTitle } from "@/hooks";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
+import {
+  validateDateNotInPast,
+  validateExpectedCompletionDate,
+} from "@/utils/dateValidation";
 
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
@@ -391,9 +395,38 @@ export default function ProjectsPage() {
       errors.description = t("projects.validation.descriptionRequired");
     }
 
+    // Validate start date is not in the past
+    const dateValidation = handleValidateDateNotInPast(formData.startDate);
+
+    if (typeof dateValidation === "string") {
+      errors.startDate = dateValidation;
+    }
+
+    // Validate expected completion date
+    const expectedCompletionValidation = handleValidateExpectedCompletionDate(
+      formData.expectedCompletionDate,
+    );
+
+    if (typeof expectedCompletionValidation === "string") {
+      errors.expectedCompletionDate = expectedCompletionValidation;
+    }
+
     setValidationErrors(errors);
 
     return Object.keys(errors).length === 0;
+  };
+
+  // Wrapper functions for validation that pass translation and form data
+  const handleValidateDateNotInPast = (
+    value: DateValue | null,
+  ): string | true | null | undefined => {
+    return validateDateNotInPast(value, t);
+  };
+
+  const handleValidateExpectedCompletionDate = (
+    value: DateValue | null,
+  ): string | true | null | undefined => {
+    return validateExpectedCompletionDate(value, formData.startDate, t);
   };
 
   const getStatusColor = (status: number) => {
@@ -693,7 +726,6 @@ export default function ProjectsPage() {
   };
 
   const handleSave = async () => {
-    // Validate form before saving
     if (!validateForm()) {
       return;
     }
@@ -1852,7 +1884,8 @@ export default function ProjectsPage() {
                       value={formData.startDate}
                       onChange={(date) => {
                         setFormData({ ...formData, startDate: date });
-                        // Clear validation error when user selects
+
+                        // Clear error when user selects a valid date
                         if (validationErrors.startDate) {
                           setValidationErrors({
                             ...validationErrors,
@@ -1886,8 +1919,6 @@ export default function ProjectsPage() {
                     <div className="md:col-span-2">
                       <Input
                         isRequired
-                        errorMessage={validationErrors.description}
-                        isInvalid={!!validationErrors.description}
                         label={t("projects.description")}
                         placeholder={t("projects.description")}
                         value={formData.description}

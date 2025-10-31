@@ -15,7 +15,11 @@ import {
   SelectItem,
 } from "@heroui/react";
 import { useEffect, useState } from "react";
-import { getLocalTimeZone, parseDate } from "@internationalized/date";
+import {
+  getLocalTimeZone,
+  parseDate,
+  DateValue,
+} from "@internationalized/date";
 import { X } from "lucide-react";
 import { today } from "@internationalized/date";
 
@@ -27,6 +31,7 @@ import { AdhocTask } from "@/types/membersTasks";
 import { UseAdhocTasks } from "@/hooks/useAdhocTask";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { PlusIcon } from "@/components/icons";
+import { validateDateNotInPast } from "@/utils/dateValidation";
 
 export interface AddAdhocTaskFormData {
   name: string;
@@ -43,6 +48,14 @@ interface AddAdhocTaskProps {
 
 const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
   const { t, language } = useLanguage();
+
+  // Wrapper function for validation that passes translation
+  const handleValidateDateNotInPast = (
+    value: DateValue | null,
+  ): string | true | null | undefined => {
+    return validateDateNotInPast(value, t);
+  };
+
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<AddAdhocTaskFormData>({
     name: "",
@@ -114,6 +127,28 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
     }
     if (!formData.priority || formData.priority === 0) {
       newErrors.priority = t("taskPriorityRequired");
+    }
+
+    // Validate start date is not in the past
+    if (formData.startDate) {
+      const startDateValidation = handleValidateDateNotInPast(
+        parseDate(formData.startDate.substring(0, 10))
+      );
+
+      if (startDateValidation !== true) {
+        newErrors.startDate = t("common.validation.dateNotInPast");
+      }
+    }
+
+    // Validate end date is not in the past
+    if (formData.endDate) {
+      const endDateValidation = handleValidateDateNotInPast(
+        parseDate(formData.endDate.substring(0, 10))
+      );
+
+      if (endDateValidation !== true) {
+        newErrors.endDate = t("common.validation.dateNotInPast");
+      }
     }
 
     if (formData.startDate && formData.endDate) {

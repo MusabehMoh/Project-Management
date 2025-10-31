@@ -218,19 +218,19 @@ public class ProjectRequirementService : IProjectRequirementService
 
         // Validate dates for each role if both are provided
         if (taskDto.DeveloperStartDate.HasValue && taskDto.DeveloperEndDate.HasValue && 
-            taskDto.DeveloperStartDate.Value >= taskDto.DeveloperEndDate.Value)
+            taskDto.DeveloperStartDate.Value > taskDto.DeveloperEndDate.Value)
         {
             throw new ArgumentException("Developer end date must be after start date");
         }
 
         if (taskDto.QcStartDate.HasValue && taskDto.QcEndDate.HasValue && 
-            taskDto.QcStartDate.Value >= taskDto.QcEndDate.Value)
+            taskDto.QcStartDate.Value > taskDto.QcEndDate.Value)
         {
             throw new ArgumentException("QC end date must be after start date");
         }
 
         if (taskDto.DesignerStartDate.HasValue && taskDto.DesignerEndDate.HasValue && 
-            taskDto.DesignerStartDate.Value >= taskDto.DesignerEndDate.Value)
+            taskDto.DesignerStartDate.Value > taskDto.DesignerEndDate.Value)
         {
             throw new ArgumentException("Designer end date must be after start date");
         }

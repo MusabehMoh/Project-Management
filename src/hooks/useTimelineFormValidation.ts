@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { validateDateNotInPast } from "@/utils/dateValidation";
 
 export interface TimelineFormErrors {
   name?: string;
@@ -39,6 +40,13 @@ export interface ValidationOptions {
 export function useTimelineFormValidation(options: ValidationOptions = {}) {
   const { t } = useLanguage();
   const [errors, setErrors] = useState<TimelineFormErrors>({});
+
+  // Wrapper function for validation that passes translation
+  const handleValidateDateNotInPast = (
+    value: any,
+  ): string | true | null | undefined => {
+    return validateDateNotInPast(value, t);
+  };
 
   const {
     requireName = true,
@@ -81,68 +89,95 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
       // Start date validation
       if (requireStartDate && !formData.startDate) {
         newErrors.startDate = t("validation.startDateRequired");
+      } else if (requireStartDate && formData.startDate) {
+        // Validate start date is not in the past
+        const startDateValidation = handleValidateDateNotInPast(
+          formData.startDate,
+        );
+
+        if (startDateValidation !== true) {
+          newErrors.startDate = t("common.validation.dateNotInPast");
+        }
       }
 
       // End date validation
       if (requireEndDate) {
         if (!formData.endDate) {
           newErrors.endDate = t("validation.endDateRequired");
-        } else if (formData.startDate && formData.endDate) {
-          // Handle both string and DatePicker object formats
-          const startDate = new Date(
-            typeof formData.startDate === "string"
-              ? formData.startDate
-              : formData.startDate.toString(),
-          );
-          const endDate = new Date(
-            typeof formData.endDate === "string"
-              ? formData.endDate
-              : formData.endDate.toString(),
+        } else {
+          // Validate end date is not in the past
+          const endDateValidation = handleValidateDateNotInPast(
+            formData.endDate,
           );
 
-          if (startDate >= endDate) {
-            newErrors.endDate = t("validation.endDateAfterStart");
+          if (endDateValidation !== true) {
+            newErrors.endDate = t("common.validation.dateNotInPast");
           }
         }
-        debugger;
-        // Timeline date range validation
-        if (
-          validateTimelineRange &&
-          timelineStartDate &&
-          timelineEndDate &&
-          formData.startDate &&
-          formData.endDate
-        ) {
-          const timelineStart = new Date(timelineStartDate);
-          const timelineEnd = new Date(timelineEndDate);
+      }
 
-          // Reset time to compare only dates
-          timelineStart.setHours(0, 0, 0, 0);
-          timelineEnd.setHours(0, 0, 0, 0);
+      // Check if end date is after start date (only if both dates exist and are valid)
+      if (
+        requireEndDate &&
+        formData.startDate &&
+        formData.endDate &&
+        !newErrors.startDate &&
+        !newErrors.endDate
+      ) {
+        // Handle both string and DatePicker object formats
+        const startDate = new Date(
+          typeof formData.startDate === "string"
+            ? formData.startDate
+            : formData.startDate.toString(),
+        );
+        const endDate = new Date(
+          typeof formData.endDate === "string"
+            ? formData.endDate
+            : formData.endDate.toString(),
+        );
 
-          // Handle both string and DatePicker object formats
-          const itemStartDate = new Date(
-            typeof formData.startDate === "string"
-              ? formData.startDate
-              : formData.startDate.toString(),
-          );
-          const itemEndDate = new Date(
-            typeof formData.endDate === "string"
-              ? formData.endDate
-              : formData.endDate.toString(),
-          );
+        if (startDate >= endDate) {
+          newErrors.endDate = t("validation.endDateAfterStart");
+        }
+      }
 
-          // Reset time to compare only dates
-          itemStartDate.setHours(0, 0, 0, 0);
-          itemEndDate.setHours(0, 0, 0, 0);
+      // Timeline date range validation
+      if (
+        validateTimelineRange &&
+        timelineStartDate &&
+        timelineEndDate &&
+        formData.startDate &&
+        formData.endDate
+      ) {
+        const timelineStart = new Date(timelineStartDate);
+        const timelineEnd = new Date(timelineEndDate);
 
-          if (itemStartDate < timelineStart || itemStartDate > timelineEnd) {
-            newErrors.startDate = t("validation.startDateWithinTimeline");
-          }
+        // Reset time to compare only dates
+        timelineStart.setHours(0, 0, 0, 0);
+        timelineEnd.setHours(0, 0, 0, 0);
 
-          if (itemEndDate < timelineStart || itemEndDate > timelineEnd) {
-            newErrors.endDate = t("validation.endDateWithinTimeline");
-          }
+        // Handle both string and DatePicker object formats
+        const itemStartDate = new Date(
+          typeof formData.startDate === "string"
+            ? formData.startDate
+            : formData.startDate.toString(),
+        );
+        const itemEndDate = new Date(
+          typeof formData.endDate === "string"
+            ? formData.endDate
+            : formData.endDate.toString(),
+        );
+
+        // Reset time to compare only dates
+        itemStartDate.setHours(0, 0, 0, 0);
+        itemEndDate.setHours(0, 0, 0, 0);
+
+        if (itemStartDate < timelineStart || itemStartDate > timelineEnd) {
+          newErrors.startDate = t("validation.startDateWithinTimeline");
+        }
+
+        if (itemEndDate < timelineStart || itemEndDate > timelineEnd) {
+          newErrors.endDate = t("validation.endDateWithinTimeline");
         }
       }
 

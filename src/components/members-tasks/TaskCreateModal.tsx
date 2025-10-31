@@ -22,6 +22,8 @@ import { timelineApiService } from "@/services/api/timelineService";
 import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import useTaskSearch from "@/hooks/useTaskSearch";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
+import { validateDateNotInPast } from "@/utils/dateValidation";
+import { getLocalTimeZone, today } from "@internationalized/date";
 interface TaskCreateModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,6 +39,14 @@ export default function TaskCreateModal({
   onTaskCreated,
 }: TaskCreateModalProps) {
   const { t } = useLanguage();
+
+  // Wrapper function for validation that passes translation
+  const handleValidateDateNotInPast = (
+    value: any,
+  ): string | true | null | undefined => {
+    return validateDateNotInPast(value, t);
+  };
+
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -131,11 +141,36 @@ export default function TaskCreateModal({
     // Start date validation
     if (!formData.startDate) {
       newErrors.startDate = t("validation.startDateRequired");
+    } else {
+      // Validate start date is not in the past
+      const startDateValidation = handleValidateDateNotInPast(
+        formData.startDate,
+      );
+
+      if (startDateValidation !== true) {
+        newErrors.startDate = t("common.validation.dateNotInPast");
+      }
     }
+
     // End date validation
     if (!formData.endDate) {
       newErrors.endDate = t("validation.endDateRequired");
-    } else if (formData.startDate && formData.endDate) {
+    } else {
+      // Validate end date is not in the past
+      const endDateValidation = handleValidateDateNotInPast(formData.endDate);
+
+      if (endDateValidation !== true) {
+        newErrors.endDate = t("common.validation.dateNotInPast");
+      }
+    }
+
+    // Check if end date is after start date (only if both dates exist and are valid)
+    if (
+      formData.startDate &&
+      formData.endDate &&
+      !newErrors.startDate &&
+      !newErrors.endDate
+    ) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
 
@@ -159,7 +194,7 @@ export default function TaskCreateModal({
         description: formData.description,
         startDate: formData.startDate!.toString(),
         endDate: formData.endDate!.toString(),
-        departmentId: 5,
+        departmentId: "5",
         statusId: 1, // Default status for new tasks
         priorityId: formData.priority,
         progress: 0,
@@ -269,6 +304,7 @@ export default function TaskCreateModal({
                 errorMessage={errors.startDate}
                 isInvalid={!!errors.startDate}
                 label={t("task.create.startDate")}
+                minValue={today(getLocalTimeZone())}
                 value={formData.startDate}
                 onChange={(date) => handleInputChange("startDate", date)}
               />
@@ -277,6 +313,7 @@ export default function TaskCreateModal({
                 errorMessage={errors.endDate}
                 isInvalid={!!errors.endDate}
                 label={t("task.create.endDate")}
+                minValue={today(getLocalTimeZone())}
                 value={formData.endDate}
                 onChange={(date) => handleInputChange("endDate", date)}
               />

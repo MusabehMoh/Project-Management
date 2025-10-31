@@ -87,6 +87,7 @@ import {
   showErrorToast,
 } from "@/utils/toast";
 import { getFileUploadConfig } from "@/config/environment";
+import { validateDateNotInPast } from "@/utils/dateValidation";
 
 // Form data type for creating/editing requirements
 // Uses string values for UI components - will be converted to integers before API calls
@@ -105,6 +106,13 @@ export default function ProjectRequirementsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+
+  // Wrapper function for validation that passes translation
+  const handleValidateDateNotInPast = (
+    value: any,
+  ): string | true | null | undefined => {
+    return validateDateNotInPast(value, t);
+  };
 
   // Fetch project details
   const { projectName } = useProjectDetails({ projectId });
@@ -368,6 +376,15 @@ export default function ProjectRequirementsPage() {
       errors.expectedCompletionDate = t(
         "requirements.validation.expectedDateRequired",
       );
+    } else {
+      // Validate expected completion date is not in the past
+      const dateValidation = handleValidateDateNotInPast(
+        formData.expectedCompletionDate,
+      );
+
+      if (dateValidation !== true) {
+        errors.expectedCompletionDate = t("common.validation.dateNotInPast");
+      }
     }
 
     setValidationErrors(errors);

@@ -438,7 +438,7 @@ export default function DevelopmentRequirementsPage() {
     const start = new Date(startDate.toString());
     const end = new Date(endDate.toString());
 
-    if (start >= end) {
+    if (start > end) {
       return t("tasks.validation.startDateMustBeBeforeEndDate");
     }
 

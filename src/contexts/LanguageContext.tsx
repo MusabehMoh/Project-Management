@@ -207,6 +207,11 @@ const translations = {
     "common.overdue": "Overdue",
     "common.success": "Success",
 
+    // Common Validation Messages
+    "common.validation.dateRequired": "Date is required",
+    "common.validation.dateCannotBeInPast": "Date cannot be in the past",
+    "common.validation.dateNotInPast": "Date cannot be in the past",
+
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
     "requirements.ongoing": "Ongoing Requirements",
@@ -1002,6 +1007,8 @@ const translations = {
     "projects.validation.expectedCompletionRequired":
       "Expected completion date is required",
     "projects.validation.descriptionRequired": "Description is required",
+    "projects.validation.expectedCompletionAfterStart":
+      "Expected completion date must be after start date",
 
     // Project Export Messages
     "projects.exportSuccess": "Projects exported successfully",
@@ -2076,6 +2083,11 @@ const translations = {
     "common.scrollToTop": "انتقل إلى الأعلى",
     "common.overdue": "متأخر",
     "common.success": "نجح",
+
+    // Common Validation Messages
+    "common.validation.dateRequired": "التاريخ مطلوب",
+    "common.validation.dateCannotBeInPast": "لا يمكن أن يكون التاريخ في الماضي",
+    "common.validation.dateNotInPast": "لا يمكن أن يكون التاريخ في الماضي",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",
@@ -2955,6 +2967,8 @@ const translations = {
     "projects.validation.expectedCompletionRequired":
       "تاريخ الإنجاز المتوقع مطلوب",
     "projects.validation.descriptionRequired": "الوصف مطلوب",
+    "projects.validation.expectedCompletionAfterStart":
+      "يجب أن يكون تاريخ الإنجاز المتوقع بعد تاريخ البداية",
 
     // Project Export Messages
     "projects.exportSuccess": "تم تصدير المشاريع بنجاح",

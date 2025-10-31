@@ -34,6 +34,7 @@ import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActionsV2";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
+import { validateDateNotInPast } from "@/utils/validation";
 
 // Animated Counter Component
 const AnimatedCounter = ({
@@ -807,6 +808,10 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       members?: string;
     }>({});
 
+    const handleValidateDateNotInPast = (date: any) => {
+      return validateDateNotInPast(date);
+    };
+
     const validateForm = () => {
       const newErrors: {
         name?: string;
@@ -826,9 +831,25 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
       if (!formData.startDate) {
         newErrors.startDate =
           t("taskStartDateRequired") || "Start date is required";
+      } else {
+        // Validate start date is not in the past
+        const startDateValidation = handleValidateDateNotInPast(
+          formData.startDate,
+        );
+
+        if (startDateValidation !== true) {
+          newErrors.startDate = t("common.validation.dateNotInPast");
+        }
       }
       if (!formData.endDate) {
         newErrors.endDate = t("taskEndDateRequired") || "End date is required";
+      } else {
+        // Validate end date is not in the past
+        const endDateValidation = handleValidateDateNotInPast(formData.endDate);
+
+        if (endDateValidation !== true) {
+          newErrors.endDate = t("common.validation.dateNotInPast");
+        }
       }
 
       if (formData.startDate && formData.endDate) {
