@@ -386,9 +386,12 @@ export default function ProjectDetailsDrawer({
         </DrawerBody>
         <DrawerFooter>
           <div className="flex justify-between w-full">
-            <Button color="primary" onPress={handleViewRequirements}>
-              {t("requirements.viewRequirements")}
-            </Button>
+            {/* Only show View Requirements button if status is not "New" (status !== 1) */}
+            {project && project.status !== 1 && (
+              <Button color="primary" onPress={handleViewRequirements}>
+                {t("requirements.viewRequirements")}
+              </Button>
+            )}
             <Button
               color="danger"
               variant="light"
