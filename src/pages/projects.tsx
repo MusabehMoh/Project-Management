@@ -651,7 +651,14 @@ export default function ProjectsPage() {
         const success = await deleteProject(projectToDelete.id);
 
         if (success) {
-          console.log("Project deleted successfully");
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.log("Project deleted successfully");
+          }
+          addToast({
+            title: t("projects.deleteSuccess"),
+            color: "success",
+          });
           // If we're on the last page and it becomes empty, go to previous page
           const remainingOnPage = projects.length - 1;
 
@@ -661,11 +668,26 @@ export default function ProjectsPage() {
             // Refresh current page
             handlePageChange(currentPage);
           }
+        } else {
+          // Show error message from the hook
+          addToast({
+            title: error || t("projects.deleteError"),
+            color: "danger",
+          });
+          // Clear the error state to prevent it from persisting
+          clearError();
         }
         setProjectToDelete(null);
         onDeleteOpenChange();
       } catch (err) {
-        console.error("Error deleting project:", err);
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.error("Error deleting project:", err);
+        }
+        addToast({
+          title: t("common.unexpectedError") || "An unexpected error occurred",
+          color: "danger",
+        });
       }
     }
   };
@@ -693,7 +715,10 @@ export default function ProjectsPage() {
         const updatedProject = await updateProject(updateData);
 
         if (updatedProject) {
-          console.log("Project updated successfully");
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.log("Project updated successfully");
+          }
           // Clear any previous errors
           clearError();
           // Stay on current page after update
@@ -727,7 +752,10 @@ export default function ProjectsPage() {
         const newProject = await createProject(createData);
 
         if (newProject) {
-          console.log("Project created successfully");
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.log("Project created successfully");
+          }
           // Clear any previous errors
           clearError();
           // Go to first page to see the new project (assuming newest first)
@@ -748,7 +776,10 @@ export default function ProjectsPage() {
         }
       }
     } catch (err) {
-      console.error("Error saving project:", err);
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("Error saving project:", err);
+      }
       // Clear any error from the hook to prevent duplicate error display
       clearError();
       // Don't close modal on error - let user fix issues or manually close
@@ -831,7 +862,10 @@ export default function ProjectsPage() {
         color: "success",
       });
     } catch (error) {
-      console.error("Error exporting projects:", error);
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("Error exporting projects:", error);
+      }
       addToast({
         title: t("projects.exportError") || "Failed to export projects",
         color: "danger",

@@ -50,25 +50,7 @@ public class MembersTasksController : ApiBaseController
 
     #endregion
 
-    /// <summary>
-    /// Get team members for assignee filtering
-    /// Returns members from current user's department or all members for administrators
-    /// </summary>
-    [HttpGet("team-members")]
-    [ProducesResponseType(200)]
-    public async Task<IActionResult> GetTeamMembers()
-    {
-        try
-        { 
-            var teamMembers = await _memberTaskService.GetTeamMembersAsync();
-            
-            return Success(teamMembers, message: "Team members retrieved successfully");
-        }
-        catch (Exception ex)
-        {
-            return Error<IEnumerable<MemberSearchResultDto>>("An error occurred while retrieving team members", ex.Message);
-        }
-    }
+
 
     /// <summary>
     /// Get all member tasks with pagination and filtering
@@ -728,7 +710,25 @@ public class MembersTasksController : ApiBaseController
             return Error<object>("An error occurred while downloading the attachment", ex.Message);
         }
     }
+    /// <summary>
+    /// Get team members for assignee filtering
+    /// Returns members from current user's department or all members for administrators
+    /// </summary>
+    [HttpGet("team-members")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetTeamMembers()
+    {
+        try
+        {
+            var teamMembers = await _memberTaskService.GetTeamMembersAsync();
 
+            return Success(teamMembers, message: "Team members retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            return Error<IEnumerable<MemberSearchResultDto>>("An error occurred while retrieving team members", ex.Message);
+        }
+    }
     /// <summary>
     /// Delete an attachment by ID
     /// </summary>

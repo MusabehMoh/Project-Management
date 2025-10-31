@@ -28,6 +28,10 @@ import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { Search, Calendar, Code, Eye, Plus, Edit, X, Info } from "lucide-react";
 import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 
+// Import ReactQuill for rich text editing
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
 import { FilePreview } from "@/components/FilePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useApprovedRequirements } from "@/hooks/useApprovedRequirements";
@@ -1180,16 +1184,25 @@ export default function DevelopmentRequirementsPage() {
                       <label className="text-sm font-medium text-default-700">
                         {t("tasks.description")}
                       </label>
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: taskDescription || "",
-                        }}
-                        contentEditable
-                        className="w-full min-h-[80px] p-3 border border-default-200 rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
-                        onInput={(e) =>
-                          setTaskDescription(e.currentTarget.innerHTML)
-                        }
-                      />
+                      <div className="min-h-[120px]">
+                        <ReactQuill
+                          className={language === "ar" ? "rtl-editor" : ""}
+                          modules={{
+                            toolbar: [
+                              ["bold", "italic", "underline"],
+                              [{ list: "ordered" }, { list: "bullet" }],
+                              ["clean"],
+                            ],
+                          }}
+                          placeholder={t("tasks.taskDescriptionPlaceholder")}
+                          style={{
+                            height: "100px",
+                          }}
+                          theme="snow"
+                          value={taskDescription || ""}
+                          onChange={setTaskDescription}
+                        />
+                      </div>
                     </div>
 
                     {/* Instructions */}

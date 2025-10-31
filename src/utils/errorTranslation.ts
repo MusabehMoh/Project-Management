@@ -32,6 +32,20 @@ export function translateBackendError(
     }
   }
 
+  // Handle "Cannot delete project. Project is referenced in: X Timeline(s), Y Project Requirement(s), etc."
+  if (errorMessage.includes("Cannot delete project")) {
+    const match = errorMessage.match(
+      /Cannot delete project\. Project is referenced in: (.+)/,
+    );
+
+    if (match) {
+      const dependencies = match[1];
+      const translatedDeps = translateProjectDependencies(dependencies, t);
+
+      return `${t("projects.cannotDelete")}. ${t("projects.referencedIn")}: ${translatedDeps}`;
+    }
+  }
+
   // Handle "User with username 'xxx' already exists."
   const usernameMatch = errorMessage.match(
     /User with username '(.+)' already exists/,
@@ -100,6 +114,47 @@ function translateDependencies(
       "Calendar Event Assignment(s)": "users.error.calendarEventAssignments",
       "Notification(s)": "users.error.notifications",
       "Team(s) Created": "users.error.teamsCreated",
+    };
+
+    const translationKey = typeMap[type];
+
+    if (translationKey) {
+      return `${count} ${t(translationKey)}`;
+    }
+
+    return part;
+  });
+
+  return translated.join("، "); // Use Arabic comma separator
+}
+
+/**
+ * Translates project dependency list from backend
+ * @param dependencies - Comma-separated list of project dependencies (e.g., "2 Timeline(s), 5 Project Requirement(s)")
+ * @param t - Translation function
+ * @returns Translated dependencies string
+ */
+function translateProjectDependencies(
+  dependencies: string,
+  t: TranslateFunction,
+): string {
+  const parts = dependencies.split(",").map((part) => part.trim());
+
+  const translated = parts.map((part) => {
+    // Extract number and type
+    const match = part.match(/^(\d+)\s+(.+)$/);
+
+    if (!match) return part;
+
+    const count = match[1];
+    const type = match[2];
+
+    // Map English types to translation keys
+    const typeMap: Record<string, string> = {
+      "Timeline(s)": "projects.error.timelines",
+      "Project Requirement(s)": "projects.error.projectRequirements",
+      "Task(s)": "projects.error.tasks",
+      "Design Request(s)": "projects.error.designRequests",
     };
 
     const translationKey = typeMap[type];

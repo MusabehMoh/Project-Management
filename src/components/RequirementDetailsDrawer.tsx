@@ -302,7 +302,7 @@ export default function RequirementDetailsDrawer({
                                     {t("common.preview")}
                                   </Button>
                                 )}
-                                { (
+                                {
                                   <Button
                                     color="primary"
                                     size="sm"
@@ -334,7 +334,7 @@ export default function RequirementDetailsDrawer({
                                   >
                                     {t("common.download")}
                                   </Button>
-                                )}
+                                }
                               </div>
                             </div>
                           ))}

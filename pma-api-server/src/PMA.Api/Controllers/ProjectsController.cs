@@ -259,14 +259,15 @@ public class ProjectsController : ApiBaseController
 
             return NoContent();
         }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Cannot delete project due to dependencies. ProjectId: {ProjectId}", id);
+            return Error<object>("Cannot delete project", ex.Message);
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResponse<object>
-            {
-                Success = false,
-                Message = "Internal server error",
-                Error = ex.Message
-            });
+            _logger.LogError(ex, "Error occurred while deleting project. ProjectId: {ProjectId}", id);
+            return Error<object>("Internal server error", ex.Message);
         }
     }
 

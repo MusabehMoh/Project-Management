@@ -21,10 +21,12 @@ public interface IProjectRepository : IRepository<Project>
     System.Threading.Tasks.Task<int> GetTotalProjectsCountAsync(string? search = null, int? status = null, string? priority = null);
     System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsWithPaginationAndCountAsync(int page, int limit, string? search = null, int? status = null, string? priority = null);
     System.Threading.Tasks.Task<Project?> GetProjectWithDetailsAsync(int id);
+    System.Threading.Tasks.Task<Project?> GetProjectAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<Project>> SearchProjectsAsync(string query, int? status = null, string? priority = null, int page = 1, int limit = 20);
     System.Threading.Tasks.Task<(IEnumerable<AssignedProjectDto> AssignedProjects, int TotalCount)> GetAssignedProjectsAsync(string currentUserPrsId, int page, int limit, string? search = null, int? projectId = null, bool skipAnalystFilter = false);
     System.Threading.Tasks.Task<IEnumerable<Project>> GetProjectsWithTimelinesAsync();
     System.Threading.Tasks.Task<Project?> GetProjectWithTimelinesAsync(int projectId);
+    System.Threading.Tasks.Task<List<string>> CheckProjectDependenciesAsync(int projectId);
 }
 
 public interface IUserRepository : IRepository<User>

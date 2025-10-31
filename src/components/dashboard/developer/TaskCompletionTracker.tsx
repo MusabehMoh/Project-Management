@@ -24,38 +24,13 @@ import {
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { GlobalPagination } from "@/components/GlobalPagination";
-
-interface TaskItem {
-  id: string;
-  title: string;
-  type: "feature" | "bug" | "improvement";
-  priority: "low" | "medium" | "high" | "critical";
-  status: "todo" | "in-progress" | "review" | "done";
-  assignee: string;
-  projectName: string;
-  estimatedHours: number;
-  actualHours: number;
-  dueDate: string;
-  completedDate?: string;
-  daysOverdue?: number;
-  daysUntilDeadline?: number;
-}
-
-interface TaskCompletionAnalytics {
-  summary: {
-    totalTasks: number;
-    completedTasks: number;
-    onTimeCompleted: number;
-    onTimeRate: number;
-    avgDelayDays: number;
-  };
-  overdueItems: TaskItem[];
-  atRiskItems: TaskItem[];
-}
+import {
+  developerQuickActionsService,
+  TaskCompletionAnalytics,
+} from "@/services/api/developerQuickActionsService";
 
 interface TaskCompletionTrackerProps {
   className?: string;
-  useMockData?: boolean;
   developerId?: string;
 }
 
@@ -89,7 +64,6 @@ const getPriorityColor = (priority: string) => {
 
 export default function TaskCompletionTracker({
   className = "",
-  useMockData = true,
   developerId,
 }: TaskCompletionTrackerProps) {
   const { t, language } = useLanguage();
@@ -102,60 +76,6 @@ export default function TaskCompletionTracker({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Mock data
-  const mockAnalytics: TaskCompletionAnalytics = {
-    summary: {
-      totalTasks: 45,
-      completedTasks: 38,
-      onTimeCompleted: 32,
-      onTimeRate: 84,
-      avgDelayDays: 1.5,
-    },
-    overdueItems: [
-      {
-        id: "t1",
-        title: "Fix authentication bug in login form",
-        type: "bug",
-        priority: "high",
-        status: "in-progress",
-        assignee: "Ahmed Ali",
-        projectName: "E-Commerce Platform",
-        estimatedHours: 4,
-        actualHours: 6,
-        dueDate: "2025-09-17",
-        daysOverdue: 1,
-      },
-      {
-        id: "t2",
-        title: "Implement OAuth integration",
-        type: "feature",
-        priority: "critical",
-        status: "review",
-        assignee: "Sara Hassan",
-        projectName: "User Management",
-        estimatedHours: 8,
-        actualHours: 10,
-        dueDate: "2025-09-16",
-        daysOverdue: 2,
-      },
-    ],
-    atRiskItems: [
-      {
-        id: "t3",
-        title: "Update API documentation",
-        type: "improvement",
-        priority: "medium",
-        status: "in-progress",
-        assignee: "Omar Khalil",
-        projectName: "API Gateway",
-        estimatedHours: 3,
-        actualHours: 2,
-        dueDate: "2025-09-20",
-        daysUntilDeadline: 2,
-      },
-    ],
-  };
 
   const allItems = useMemo(() => {
     if (!analytics) return [];
@@ -203,10 +123,11 @@ export default function TaskCompletionTracker({
         setLoading(true);
         setError(null);
 
-        if (useMockData) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          setAnalytics(mockAnalytics);
-        }
+        // Use real API
+        const data =
+          await developerQuickActionsService.getTaskCompletionAnalytics();
+
+        setAnalytics(data);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch task data",
@@ -218,21 +139,18 @@ export default function TaskCompletionTracker({
     };
 
     fetchData();
-  }, [useMockData, developerId]);
+  }, [developerId]);
 
   const refresh = async () => {
     setRefreshing(true);
     setError(null);
 
     try {
-      if (useMockData) {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setAnalytics(mockAnalytics);
-      }
-      // Add real API call logic here when needed
-      // const data = await fetchTaskCompletionData(developerId);
-      // setAnalytics(data);
+      // Use real API
+      const data =
+        await developerQuickActionsService.getTaskCompletionAnalytics();
+
+      setAnalytics(data);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to refresh task data",

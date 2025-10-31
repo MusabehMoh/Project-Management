@@ -45,23 +45,31 @@ export interface PullRequest {
   priority: "low" | "medium" | "high" | "critical";
 }
 
-export interface DeveloperQuickAction {
-  id: string;
-  type: "task_assignment" | "code_review" | "deployment" | "bug_fix";
-  title: string;
-  description: string;
-  priority: "low" | "medium" | "high" | "critical";
-  status: "pending" | "in-progress" | "completed";
-  assignedTo?: string;
-  dueDate: string;
-  project: string;
-  estimatedTime: string;
-  createdAt: string;
-  data: {
-    task?: DeveloperTask;
-    pullRequest?: PullRequest;
-    deployment?: any;
+export interface TaskCompletionAnalytics {
+  summary: {
+    totalTasks: number;
+    completedTasks: number;
+    onTimeCompleted: number;
+    onTimeRate: number;
+    avgDelayDays: number;
   };
+  overdueItems: TaskItem[];
+  atRiskItems: TaskItem[];
+}
+
+export interface TaskItem {
+  id: string;
+  title: string;
+  type: "feature" | "bug" | "improvement";
+  priority: "low" | "medium" | "high" | "critical";
+  status: "todo" | "in-progress" | "review" | "done";
+  assignee: string;
+  projectName: string;
+  estimatedHours: number;
+  actualHours: number;
+  dueDate: string;
+  daysOverdue?: number;
+  daysUntilDeadline?: number;
 }
 
 export interface AlmostCompletedTask {
@@ -231,11 +239,15 @@ class DeveloperQuickActionsService {
     }
   }
 
-  async getTeamAvailability(): Promise<any> {
-    const response = await apiClient.get("/developer-team/availability");
+  async getTaskCompletionAnalytics(): Promise<TaskCompletionAnalytics> {
+    const response = await apiClient.get<TaskCompletionAnalytics>(
+      "/developer-quick-actions/task-completion-analytics",
+    );
 
     if (!response.success) {
-      throw new Error(response.message || "Failed to fetch team availability");
+      throw new Error(
+        response.message || "Failed to fetch task completion analytics",
+      );
     }
 
     return response.data;

@@ -424,31 +424,114 @@ public class DeveloperQuickActionsController : ApiBaseController
     }
 
     /// <summary>
-    /// Assign reviewer to pull request
+    /// Get task completion analytics including overdue and at-risk items
     /// </summary>
-    [HttpPost("review")]
-    public async Task<IActionResult> AssignReviewer([FromBody] AssignReviewerRequest request)
+    [HttpGet("task-completion-analytics")]
+    public async Task<IActionResult> GetTaskCompletionAnalytics()
     {
         try
         {
-            if (request == null || string.IsNullOrEmpty(request.PullRequestId) || string.IsNullOrEmpty(request.ReviewerId))
+            // Get current user's department to filter tasks
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+
+            // Get all tasks for summary calculation
+            var allTasksQuery = _context.Tasks.AsQueryable();
+            if (currentUserDepartmentId.HasValue)
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Invalid request data"
-                });
+                allTasksQuery = allTasksQuery.Where(t => t.DepartmentId == currentUserDepartmentId.Value);
             }
 
-            // For now, this is a placeholder implementation
-            // In a real scenario, this would interact with a code repository service
-            // For this demo, we'll just return success
-            await System.Threading.Tasks.Task.CompletedTask; // Add await to satisfy compiler
+            var allTasks = await allTasksQuery
+                .Include(t => t.Assignments)
+                .ThenInclude(ta => ta.Employee)
+                .Include(t => t.ProjectRequirement)
+                .ThenInclude(pr => pr!.Project)
+                .ToListAsync();
 
-            return Ok(new
+            // Calculate summary statistics
+            var totalTasks = allTasks.Count;
+            var completedTasks = allTasks.Count(t => t.StatusId == TaskStatusEnum.Completed);
+            var onTimeCompleted = allTasks.Count(t => 
+                t.StatusId == TaskStatusEnum.Completed && 
+                t.ActualHours <= t.EstimatedHours);
+            var onTimeRate = totalTasks > 0 ? (int)Math.Round((double)onTimeCompleted / completedTasks * 100) : 0;
+            
+            // Calculate average delay days for overdue completed tasks
+            var overdueCompletedTasks = allTasks.Where(t => 
+                t.StatusId == TaskStatusEnum.Completed && 
+                t.ActualHours > t.EstimatedHours).ToList();
+            var avgDelayDays = overdueCompletedTasks.Any() 
+                ? overdueCompletedTasks.Average(t => (t.ActualHours - t.EstimatedHours) ?? 0)
+                : 0;
+
+            // Get overdue items (tasks past due date and not completed)
+            var overdueItems = allTasks
+                .Where(t => t.EndDate < DateTime.Now && t.StatusId != TaskStatusEnum.Completed)
+                .Select(t => new
+                {
+                    id = t.Id.ToString(),
+                    title = t.Name,
+                    type = "bug", // Default type, could be enhanced based on task type
+                    priority = t.PriorityId == Priority.High ? "high" :
+                              t.PriorityId == Priority.Medium ? "medium" : "low",
+                    status = t.StatusId == TaskStatusEnum.ToDo ? "todo" :
+                            t.StatusId == TaskStatusEnum.InProgress ? "in-progress" :
+                            t.StatusId == TaskStatusEnum.InReview ? "review" : "done",
+                    assignee = t.Assignments.FirstOrDefault() != null ?
+                        t.Assignments.FirstOrDefault()!.Employee!.FullName : "",
+                    projectName = t.ProjectRequirement != null && t.ProjectRequirement.Project != null ?
+                        t.ProjectRequirement.Project.ApplicationName : "",
+                    estimatedHours = (int)(t.EstimatedHours ?? 0),
+                    actualHours = (int)(t.ActualHours ?? 0),
+                    dueDate = t.EndDate.ToString("yyyy-MM-dd"),
+                    daysOverdue = (DateTime.Now - t.EndDate).Days
+                })
+                .OrderBy(t => t.daysOverdue)
+                .ToList();
+
+            // Get at-risk items (tasks due within 3 days and not completed)
+            var atRiskItems = allTasks
+                .Where(t => t.EndDate >= DateTime.Now &&
+                           t.EndDate <= DateTime.Now.AddDays(3) &&
+                           t.StatusId != TaskStatusEnum.Completed)
+                .Select(t => new
+                {
+                    id = t.Id.ToString(),
+                    title = t.Name,
+                    type = "feature", // Default type, could be enhanced based on task type
+                    priority = t.PriorityId == Priority.High ? "high" :
+                              t.PriorityId == Priority.Medium ? "medium" : "low",
+                    status = t.StatusId == TaskStatusEnum.ToDo ? "todo" :
+                            t.StatusId == TaskStatusEnum.InProgress ? "in-progress" :
+                            t.StatusId == TaskStatusEnum.InReview ? "review" : "done",
+                    assignee = t.Assignments.FirstOrDefault() != null ?
+                        t.Assignments.FirstOrDefault()!.Employee!.FullName : "",
+                    projectName = t.ProjectRequirement != null && t.ProjectRequirement.Project != null ?
+                        t.ProjectRequirement.Project.ApplicationName : "",
+                    estimatedHours = (int)(t.EstimatedHours ?? 0),
+                    actualHours = (int)(t.ActualHours ?? 0),
+                    dueDate = t.EndDate.ToString("yyyy-MM-dd"),
+                    daysUntilDeadline = (t.EndDate - DateTime.Now).Days
+                })
+                .OrderBy(t => t.daysUntilDeadline)
+                .ToList();            return Ok(new
             {
                 success = true,
-                message = "Reviewer assigned to pull request successfully"
+                data = new
+                {
+                    summary = new
+                    {
+                        totalTasks,
+                        completedTasks,
+                        onTimeCompleted,
+                        onTimeRate,
+                        avgDelayDays = Math.Round(avgDelayDays, 1)
+                    },
+                    overdueItems,
+                    atRiskItems
+                },
+                message = "Task completion analytics retrieved successfully"
             });
         }
         catch (Exception ex)
@@ -456,7 +539,7 @@ public class DeveloperQuickActionsController : ApiBaseController
             return StatusCode(500, new
             {
                 success = false,
-                message = "An error occurred while assigning reviewer",
+                message = "An error occurred while retrieving task completion analytics",
                 error = ex.Message
             });
         }

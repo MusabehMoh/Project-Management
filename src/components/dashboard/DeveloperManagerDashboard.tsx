@@ -109,7 +109,7 @@ export default function DeveloperManagerDashboard() {
       {/* Task Completion Only */}
       <div className="space-y-6">
         <div className="space-y-4">
-          <TaskCompletionTracker useMockData={true} />
+          <TaskCompletionTracker />
         </div>
       </div>
     </div>

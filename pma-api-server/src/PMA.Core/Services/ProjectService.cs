@@ -38,7 +38,7 @@ public class ProjectService : IProjectService
 
     public async System.Threading.Tasks.Task<Project?> GetProjectByIdAsync(int id)
     {
-        return await _projectRepository.GetProjectWithDetailsAsync(id);
+        return await _projectRepository.GetByIdAsync(id);
     }
 
     public async System.Threading.Tasks.Task<Project> CreateProjectAsync(Project project)
@@ -65,10 +65,20 @@ public class ProjectService : IProjectService
     public async System.Threading.Tasks.Task DeleteProjectAsync(int id)
     {
         var project = await _projectRepository.GetByIdAsync(id);
-        if (project != null)
+        if (project == null)
         {
-            await _projectRepository.DeleteAsync(project);
+            throw new KeyNotFoundException($"Project with ID {id} not found");
         }
+
+        // Check for dependencies before deletion
+        var dependencies = await _projectRepository.CheckProjectDependenciesAsync(id);
+        if (dependencies.Any())
+        {
+            var errorMessage = $"Cannot delete project. Project is referenced in: {string.Join(", ", dependencies)}";
+            throw new InvalidOperationException(errorMessage);
+        }
+
+        await _projectRepository.DeleteAsync(project);
     }
 
     public async System.Threading.Tasks.Task<IEnumerable<Project>> SearchProjectsAsync(string query, int? status = null, string? priority = null, int page = 1, int limit = 20)

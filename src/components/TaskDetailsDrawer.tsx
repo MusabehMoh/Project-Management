@@ -113,10 +113,10 @@ export default function TaskDetailsDrawer({
         attachment.id,
       );
       const previewUrl = window.URL.createObjectURL(blob);
-      
+
       // Open in new tab for preview instead of downloading
       window.open(previewUrl, "_blank");
-      
+
       // Clean up the URL after a delay to allow the tab to load
       setTimeout(() => {
         window.URL.revokeObjectURL(previewUrl);

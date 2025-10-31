@@ -12,6 +12,11 @@ import {
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { Info } from "lucide-react";
 import { today, getLocalTimeZone } from "@internationalized/date";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
+// Import RTL styles for ReactQuill
+import "../../pages/project-requirements.css";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -238,19 +243,27 @@ export default function TimelineCreateModal({
                   <label className="text-sm font-medium text-foreground">
                     {t("timeline.create.description")}
                   </label>
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: formData.description || "",
-                    }}
-                    contentEditable
-                    className="w-full min-h-[80px] p-3 border border-default-200 rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
-                    onInput={(e) =>
-                      setFormData({
-                        ...formData,
-                        description: e.currentTarget.innerHTML,
-                      })
-                    }
-                  />
+                  <div className="min-h-[120px]">
+                    <ReactQuill
+                      className={direction === "rtl" ? "rtl-editor" : ""}
+                      modules={{
+                        toolbar: [
+                          ["bold", "italic", "underline"],
+                          [{ list: "ordered" }, { list: "bullet" }],
+                          ["clean"],
+                        ],
+                      }}
+                      placeholder={t("timeline.create.descriptionPlaceholder")}
+                      style={{
+                        height: "100px",
+                      }}
+                      theme="snow"
+                      value={formData.description || ""}
+                      onChange={(value) =>
+                        handleInputChange("description", value)
+                      }
+                    />
+                  </div>
                 </div>
 
                 {!projectId && (

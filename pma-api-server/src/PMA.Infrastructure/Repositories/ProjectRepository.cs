@@ -141,6 +141,11 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
                 .ThenInclude(pa => pa.Analyst)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
+    public async Task<Project?> GetProjectAsync(int id)
+    {
+        return await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
 
     public async Task<IEnumerable<Project>> SearchProjectsAsync(string query, int? status = null, string? priority = null, int page = 1, int limit = 20)
     {
@@ -343,6 +348,45 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .FirstOrDefaultAsync(p => p.Id == projectId);
+    }
+
+    public async Task<List<string>> CheckProjectDependenciesAsync(int projectId)
+    {
+        var dependencies = new List<string>();
+
+        // Check Timelines
+        var timelinesCount = await _context.Timelines
+            .CountAsync(t => t.ProjectId == projectId);
+        if (timelinesCount > 0)
+        {
+            dependencies.Add($"{timelinesCount} Timeline(s)");
+        }
+
+        // Check ProjectRequirements
+        var requirementsCount = await _context.ProjectRequirements
+            .CountAsync(pr => pr.ProjectId == projectId);
+        if (requirementsCount > 0)
+        {
+            dependencies.Add($"{requirementsCount} Project Requirement(s)");
+        }
+
+        // Check Tasks (through ProjectRequirements)
+        var tasksCount = await _context.Tasks
+            .CountAsync(t => t.ProjectRequirement != null && t.ProjectRequirement.ProjectId == projectId);
+        if (tasksCount > 0)
+        {
+            dependencies.Add($"{tasksCount} Task(s)");
+        }
+
+        // Check DesignRequests (through Tasks)
+        var designRequestsCount = await _context.DesignRequests
+            .CountAsync(dr => dr.Task != null && dr.Task.ProjectRequirement != null && dr.Task.ProjectRequirement.ProjectId == projectId);
+        if (designRequestsCount > 0)
+        {
+            dependencies.Add($"{designRequestsCount} Design Request(s)");
+        }
+
+        return dependencies;
     }
 }
 
