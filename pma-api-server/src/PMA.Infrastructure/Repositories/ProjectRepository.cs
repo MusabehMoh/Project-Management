@@ -100,9 +100,13 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         // Apply filters first (without includes for count efficiency)
         if (!string.IsNullOrEmpty(search))
         {
+            var searchLower = search.ToLower();
             query = query.Where(p =>
-                p.ApplicationName.Contains(search) ||
-                p.Description.Contains(search)  );
+                p.ApplicationName.ToLower().Contains(searchLower) ||
+                (p.Description != null && p.Description.ToLower().Contains(searchLower)) ||
+                (p.ProjectOwnerEmployee != null && p.ProjectOwnerEmployee.FullName != null && p.ProjectOwnerEmployee.FullName.ToLower().Contains(searchLower)) ||
+                (p.OwningUnitEntity != null && p.OwningUnitEntity.Name != null && p.OwningUnitEntity.Name.ToLower().Contains(searchLower))
+            );
         }
 
         if (status.HasValue)
