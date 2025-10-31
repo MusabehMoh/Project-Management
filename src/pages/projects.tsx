@@ -1006,6 +1006,47 @@ export default function ProjectsPage() {
 
         {/* Projects Table */}
         <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t("projects.allProjects")}
+            </h2>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-default-600">
+                {t("common.show")}:
+              </span>
+              <Select
+                className="w-20"
+                disallowEmptySelection={true}
+                isOpen={isOptionOpen}
+                selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
+                size="sm"
+                onOpenChange={setIsOptionOpen}
+                onSelectionChange={(keys) => {
+                  const newSize = parseInt(Array.from(keys)[0] as string);
+
+                  handlePageSizeChange(newSize);
+                }}
+              >
+                {PAGE_SIZE_OPTIONS.map((opt) => (
+                  <SelectItem
+                    key={opt.toString()}
+                    textValue={opt.toString()}
+                    onPress={() => {
+                      setIsOptionOpen(false); // Force close when any item is clicked
+                    }}
+                  >
+                    {opt}
+                  </SelectItem>
+                ))}
+              </Select>
+              <span className="text-sm text-default-600">
+                {t("pagination.perPage")}
+              </span>
+            </div>
+          </div>
+
           {/* Project Name Filter */}
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             <Input
@@ -1081,47 +1122,6 @@ export default function ProjectsPage() {
                 }
               }}
             />
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 className="text-2xl font-semibold text-foreground">
-              {t("projects.allProjects")}
-            </h2>
-
-            {/* Page Size Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-default-600">
-                {t("common.show")}:
-              </span>
-              <Select
-                className="w-20"
-                disallowEmptySelection={true}
-                isOpen={isOptionOpen}
-                selectedKeys={[normalizePageSize(pageSize, 10).toString()]}
-                size="sm"
-                onOpenChange={setIsOptionOpen}
-                onSelectionChange={(keys) => {
-                  const newSize = parseInt(Array.from(keys)[0] as string);
-
-                  handlePageSizeChange(newSize);
-                }}
-              >
-                {PAGE_SIZE_OPTIONS.map((opt) => (
-                  <SelectItem
-                    key={opt.toString()}
-                    textValue={opt.toString()}
-                    onPress={() => {
-                      setIsOptionOpen(false); // Force close when any item is clicked
-                    }}
-                  >
-                    {opt}
-                  </SelectItem>
-                ))}
-              </Select>
-              <span className="text-sm text-default-600">
-                {t("pagination.perPage")}
-              </span>
-            </div>
           </div>
 
           <Card>
