@@ -26,7 +26,7 @@ public class QCQuickActionsController : ApiBaseController
     }
 
     /// <summary>
-    /// Get QC quick actions data including tasks that need review (completed by developers)
+    /// Get QC quick actions data including tasks that need QC assignment (developer tasks in preview, not yet assigned to QC)
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetQCQuickActions()
@@ -37,18 +37,30 @@ public class QCQuickActionsController : ApiBaseController
             var currentUser = await _userService.GetCurrentUserAsync();
             var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
 
-            // Get tasks that are in "In Review" status (completed by developers, awaiting QC)
-            var tasksNeedingReview = await _context.Tasks
-                .Where(t => t.StatusId == TaskStatusEnum.InReview)
+            // Get QC Department ID (assuming it's 2 based on the enum pattern)
+            const int QC_DEPARTMENT_ID = 2;
+
+            // Get task IDs that have no dependent tasks
+            var taskIdsWithNoDependents = await _context.Tasks
+                .Where(t => !_context.TaskDependencies.Any(dep => dep.TaskId == t.Id))
+                .Select(t => t.Id)
+                .ToListAsync();
+            var taskIdsWithNoDependentsSet = new HashSet<int>(taskIdsWithNoDependents);
+
+            // Get tasks that are in "In Review" status (completed by developers) 
+            // AND do NOT have a QC member assigned yet
+            var tasksNeedingQCAssignment = await _context.Tasks
+                .Where(t => t.StatusId == TaskStatusEnum.InReview && t.RoleType=="developer")
                 .Include(t => t.ProjectRequirement)
                     .ThenInclude(pr => pr!.Project)
                 .Include(t => t.Assignments)
-                    .ThenInclude(ta => ta.Employee)
+                    .ThenInclude(ta => ta.Employee) 
                 .Select(t => new
                 {
                     id = t.Id,
                     taskName = t.Name,
                     description = t.Description ?? "",
+                    typeId = t.TypeId,
                     projectId = t.ProjectRequirement != null ? t.ProjectRequirement.ProjectId : 0,
                     projectName = t.ProjectRequirement != null && t.ProjectRequirement.Project != null 
                         ? t.ProjectRequirement.Project.ApplicationName 
@@ -57,45 +69,65 @@ public class QCQuickActionsController : ApiBaseController
                     requirementName = t.ProjectRequirement != null ? t.ProjectRequirement.Name : "",
                     priority = t.PriorityId == Priority.High ? "high" : 
                               t.PriorityId == Priority.Medium ? "medium" : "low",
+                    priorityId = t.PriorityId,
                     statusId = t.StatusId,
                     completedDate = t.UpdatedAt,
-                    // Get primary developer (first assignment with IsPrimary = true, or just first assignment)
+                    startDate = t.StartDate,
+                    endDate = t.EndDate,
+                    // Get primary developer (developer who completed the task)
                     developer = t.Assignments
-                     
-                        .Select(ta => ta.Employee != null ? ta.Employee.FullName : "Unassigned")
-                        .FirstOrDefault() ?? 
-                        t.Assignments
-                        .Select(ta => ta.Employee != null ? ta.Employee.FullName : "Unassigned")
+                        .Where(ta => ta.Employee != null  ) // Development Department
+                        .Select(ta => ta.Employee!.FullName)
                         .FirstOrDefault() ?? "Unassigned",
+                    developerId = t.Assignments
+                        .Where(ta => ta.Employee != null  )
+                        .Select(ta => ta.Employee!.Id)
+                        .FirstOrDefault(),
                     estimatedHours = t.EstimatedHours ?? 0,
                     actualHours = t.ActualHours ?? 0,
-                    progress = t.Progress  
+                    progress = t.Progress,
+                    // Get all current assignees (developers)
+                    assignedMembers = t.Assignments
+                        .Where(ta => ta.Employee != null)
+                        .Select(ta => new
+                        {
+                            id = ta.Employee!.Id,
+                            name = ta.Employee.FullName 
+                        })
+                        .ToList()
                 })
                 .OrderBy(t => t.completedDate)
                 .ToListAsync();
 
             // Format the response
-            var formattedTasks = tasksNeedingReview.Select(t => new
+            var formattedTasks = tasksNeedingQCAssignment.Select(t => new
             {
                 t.id,
                 t.taskName,
                 t.description,
+                t.typeId,
                 t.projectId,
                 t.projectName,
                 t.requirementId,
                 t.requirementName,
+                hasNoDependentTasks = taskIdsWithNoDependentsSet.Contains(t.id),
                 t.priority,
+                t.priorityId,
                 t.statusId,
                 completedDate = t.completedDate.ToString("yyyy-MM-dd"),
+                startDate = t.startDate.ToString("yyyy-MM-dd"),
+                endDate = t.endDate.ToString("yyyy-MM-dd"),
                 t.developer,
+                t.developerId,
                 t.estimatedHours,
                 t.actualHours,
-                t.progress
+                t.progress,
+                t.assignedMembers
             }).ToList();
 
             var result = new
             {
-                tasksNeedingReview = formattedTasks,
+                tasksNeedingQCAssignment = formattedTasks,
                 totalCount = formattedTasks.Count
             };
 
@@ -109,113 +141,135 @@ public class QCQuickActionsController : ApiBaseController
     }
 
     /// <summary>
-    /// Approve a task (move from In Review to Completed)
+    /// Assign QC member(s) to a task - creates QC assignments for review
+    /// Same business logic as change-assignees but specifically for QC workflow
     /// </summary>
-    [HttpPost("{taskId}/approve")]
-    public async Task<IActionResult> ApproveTask(int taskId, [FromBody] ApproveTaskRequest? request)
+    [HttpPost("{taskId}/assign-qc")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> AssignQCToTask(int taskId, [FromBody] AssignQCRequest request)
     {
         try
         {
-            var task = await _context.Tasks.FindAsync(taskId);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { success = false, message = "Validation failed" });
+            }
+
+            // Validate that the task exists
+            var task = await _context.Tasks
+                .Include(t => t.Assignments)
+                .FirstOrDefaultAsync(t => t.Id == taskId);
+
             if (task == null)
             {
-                return NotFound($"Task with ID {taskId} not found");
+                return NotFound(new { success = false, message = "Task not found" });
             }
 
+            // Validate task is in correct status (In Review)
             if (task.StatusId != TaskStatusEnum.InReview)
             {
-                return BadRequest("Only tasks in 'In Review' status can be approved");
+                return BadRequest(new { success = false, message = "Only tasks in 'In Review' status can be assigned to QC" });
             }
 
-            // Update task status to Completed
-            task.StatusId = TaskStatusEnum.Completed;
-            task.Progress = 100;
-            task.UpdatedAt = DateTime.UtcNow;
-
-            // Create status history entry
-            var currentUser = await _userService.GetCurrentUserAsync();
-            var statusHistory = new PMA.Core.Entities.TaskStatusHistory
+            // Convert string IDs to integers with validation
+            var qcMemberIds = new List<int>();
+            foreach (var idStr in request.QCMemberIds)
             {
-                TaskId = taskId,
-                OldStatus = TaskStatusEnum.InReview,
-                NewStatus = TaskStatusEnum.Completed,
-                ChangedByPrsId = currentUser?.PrsId ?? 0,
-                Comment = request?.Comment ?? "Task approved by QC",
-                UpdatedAt = DateTime.UtcNow
-            };
+                if (int.TryParse(idStr, out int qcMemberId))
+                {
+                    qcMemberIds.Add(qcMemberId);
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = $"Invalid QC member ID format: {idStr}" });
+                }
+            }
 
-            _context.TaskStatusHistory.Add(statusHistory);
+            if (qcMemberIds.Count == 0)
+            {
+                return BadRequest(new { success = false, message = "At least one QC member must be selected" });
+            }
+
+            // Verify QC members exist and are in QC department
+            const int QC_DEPARTMENT_ID = 2;
+            var qcMembers = await _context.MawaredEmployees
+              
+                .Where(e => qcMemberIds.Contains(e.Id)  )
+                .ToListAsync();
+
+            if (qcMembers.Count != qcMemberIds.Count)
+            {
+                return BadRequest(new { success = false, message = "One or more selected members are not valid QC team members" });
+            }
+
+            // Update task dates if provided
+            if (request.StartDate.HasValue)
+            {
+                task.StartDate = request.StartDate.Value;
+            }
+
+            if (request.EndDate.HasValue)
+            {
+                task.EndDate = request.EndDate.Value;
+            }
+
+            // Create QC assignments (don't remove existing developer assignments)
+            foreach (var qcMemberId in qcMemberIds)
+            {
+                // Check if this QC member is already assigned
+                var existingAssignment = task.Assignments
+                    .FirstOrDefault(a => a.PrsId == qcMemberId);
+
+                if (existingAssignment == null)
+                {
+                    var newAssignment = new PMA.Core.Entities.TaskAssignment
+                    {
+                        TaskId = taskId,
+                        PrsId = qcMemberId, 
+                        AssignedAt = DateTime.UtcNow, 
+                    };
+
+                    _context.TaskAssignments.Add(newAssignment);
+                }
+            }
+
+            // Add audit log/comment if provided
+            if (!string.IsNullOrWhiteSpace(request.Notes))
+            {
+                // Create a status history entry to track the assignment
+                var currentUser = await _userService.GetCurrentUserAsync();
+                var statusHistory = new PMA.Core.Entities.TaskStatusHistory
+                {
+                    TaskId = taskId,
+                    OldStatus = task.StatusId,
+                    NewStatus = task.StatusId, // Status doesn't change, just logging the assignment
+                    ChangedByPrsId = currentUser?.PrsId ?? 0,
+                    Comment = $"QC Assignment: {request.Notes}",
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.TaskStatusHistory.Add(statusHistory);
+            }
+
             await _context.SaveChangesAsync();
 
-            return Success(new { message = "Task approved successfully", taskId });
+            return Success(new { message = "QC member(s) assigned successfully", taskId });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error approving task {TaskId}", taskId);
-            return Error<object>("An error occurred while approving the task", ex.Message);
-        }
-    }
-
-    /// <summary>
-    /// Request rework on a task (move from In Review to Rework)
-    /// </summary>
-    [HttpPost("{taskId}/request-rework")]
-    public async Task<IActionResult> RequestRework(int taskId, [FromBody] RequestReworkRequest request)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.Comment))
-            {
-                return BadRequest("Comment is required when requesting rework");
-            }
-
-            var task = await _context.Tasks.FindAsync(taskId);
-            if (task == null)
-            {
-                return NotFound($"Task with ID {taskId} not found");
-            }
-
-            if (task.StatusId != TaskStatusEnum.InReview)
-            {
-                return BadRequest("Only tasks in 'In Review' status can be sent for rework");
-            }
-
-            // Update task status to Rework
-            task.StatusId = TaskStatusEnum.Rework;
-            task.UpdatedAt = DateTime.UtcNow;
-
-            // Create status history entry
-            var currentUser = await _userService.GetCurrentUserAsync();
-            var statusHistory = new PMA.Core.Entities.TaskStatusHistory
-            {
-                TaskId = taskId,
-                OldStatus = TaskStatusEnum.InReview,
-                NewStatus = TaskStatusEnum.Rework,
-                ChangedByPrsId = currentUser?.PrsId ?? 0,
-                Comment = request.Comment,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.TaskStatusHistory.Add(statusHistory);
-            await _context.SaveChangesAsync();
-
-            return Success(new { message = "Rework requested successfully", taskId });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error requesting rework for task {TaskId}", taskId);
-            return Error<object>("An error occurred while requesting rework", ex.Message);
+            _logger.LogError(ex, "Error assigning QC to task {TaskId}", taskId);
+            return Error<object>("An error occurred while assigning QC member(s)", ex.Message);
         }
     }
 }
 
-// Request DTOs
-public class ApproveTaskRequest
+// Request DTO
+public class AssignQCRequest
 {
-    public string? Comment { get; set; }
-}
-
-public class RequestReworkRequest
-{
-    public string Comment { get; set; } = string.Empty;
+    public List<string> QCMemberIds { get; set; } = new List<string>();
+    public string? Notes { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 }

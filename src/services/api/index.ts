@@ -29,6 +29,7 @@ export { quickActionsService } from "./quickActionsService";
 export { projectRequirementsService } from "./projectRequirementsService";
 export { designRequestsService } from "./designRequestsService";
 export { designerWorkloadService } from "./designerWorkloadService";
+export { qcQuickActionsService } from "./qcQuickActionsService";
 
 // Requirement completion service
 export { requirementCompletionService } from "../requirementCompletionService";

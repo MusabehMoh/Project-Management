@@ -302,11 +302,7 @@ export default function RequirementDetailsDrawer({
                                     {t("common.preview")}
                                   </Button>
                                 )}
-                                {hasPermission({
-                                  actions: [
-                                    "requirements.attachments.download",
-                                  ],
-                                }) && (
+                                { (
                                   <Button
                                     color="primary"
                                     size="sm"

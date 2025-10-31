@@ -15,7 +15,7 @@ public class CreateTaskDto
 
     [MaxLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
     public string? Description { get; set; }
-
+    public string? RoleType { get; set; }
     [Required(ErrorMessage = "StartDate is required")]
     public DateTime StartDate { get; set; }
 

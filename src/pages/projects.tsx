@@ -1814,7 +1814,7 @@ export default function ProjectsPage() {
                       errorMessage={validationErrors.startDate}
                       isInvalid={!!validationErrors.startDate}
                       label={t("projects.startDate")}
-                      minValue={today(getLocalTimeZone()).add({ days: 1 })}
+                      minValue={today(getLocalTimeZone())}
                       value={formData.startDate}
                       onChange={(date) => {
                         setFormData({ ...formData, startDate: date });
@@ -1833,7 +1833,7 @@ export default function ProjectsPage() {
                       errorMessage={validationErrors.expectedCompletionDate}
                       isInvalid={!!validationErrors.expectedCompletionDate}
                       label={t("projects.expectedCompletion")}
-                      minValue={today(getLocalTimeZone()).add({ days: 1 })}
+                      minValue={today(getLocalTimeZone())}
                       value={formData.expectedCompletionDate}
                       onChange={(date) => {
                         setFormData({

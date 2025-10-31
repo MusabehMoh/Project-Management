@@ -1210,6 +1210,7 @@ const translations = {
     "task.create.createTask": "Create Task",
     "task.create.success": "Task created successfully",
     "task.create.failedToCreate": "Failed to create task",
+    "task.createTask": "Create Task",
     "task.createTaskHint": "Create a new task based on this developer task",
 
     "requirements.updated": "Updated",

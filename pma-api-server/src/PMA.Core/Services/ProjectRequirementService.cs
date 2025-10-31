@@ -280,16 +280,16 @@ public class ProjectRequirementService : IProjectRequirementService
             requirement.RequirementTask = task;
         }
 
-        // Update requirement status to "under development" if it was approved
-        if (requirement.Status == RequirementStatusEnum.Approved)
-        {
-            requirement.Status = RequirementStatusEnum.UnderDevelopment;
-        }
-
-        requirement.UpdatedAt = DateTime.Now;
-
         // Save the requirement (which will cascade save the task due to EF Core relationships)
         await _projectRequirementRepository.UpdateAsync(requirement);
+
+        // Update project status to UnderDevelopment after creating the task
+        if (requirement.Project != null)
+        {
+            requirement.Project.Status = ProjectStatus.UnderDevelopment;
+            requirement.Project.UpdatedAt = DateTime.Now;
+            await _projectRepository.UpdateAsync(requirement.Project);
+        }
 
         return task;
     }

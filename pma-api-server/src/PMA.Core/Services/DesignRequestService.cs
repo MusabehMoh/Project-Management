@@ -186,7 +186,8 @@ public class DesignRequestService : IDesignRequestService
                 ProjectRequirementId = originalTask.ProjectRequirementId,
                 SprintId = originalTask.SprintId,
                 EstimatedHours = originalTask.EstimatedHours,
-                Progress = 0,
+                Progress = 0, 
+                RoleType="Designer",
                 Notes = $"Created from original task ID: {originalTaskId}",
                 MemberIds = new List<int> { assignedToPrsId }
             };
