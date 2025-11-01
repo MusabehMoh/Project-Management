@@ -266,6 +266,20 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
         await _context.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Remove all task assignments for a specific task
+    /// Performance: Single database query to fetch and delete all assignments
+    /// </summary>
+    public async Task CleanupTaskAssignmentsAsync(int taskId)
+    {
+        var assignments = await _context.TaskAssignments
+            .Where(ta => ta.TaskId == taskId)
+            .ToListAsync();
+
+        _context.TaskAssignments.RemoveRange(assignments);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<IEnumerable<int>> GetTaskIdsWithNoDependentTasksAsync()
     {
         // Get all task IDs that are not referenced as DependsOnTaskId in TaskDependencies
@@ -469,6 +483,100 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
             _context.TaskAttachments.Remove(attachment);
             await _context.SaveChangesAsync();
         }
+    }
+
+    /// <summary>
+    /// Fetch multiple tasks by IDs in a single database call - eliminates N+1 query problem
+    /// </summary>
+    public async Task<IEnumerable<TaskEntity>> GetTasksByIdsAsync(IEnumerable<int> taskIds)
+    {
+        if (taskIds == null || !taskIds.Any())
+        {
+            return Enumerable.Empty<TaskEntity>();
+        }
+
+        return await _context.Tasks
+            .Where(t => taskIds.Contains(t.Id))
+            .Include(t => t.Assignments)
+            .Include(t => t.Dependencies_Relations)
+            .Include(t => t.Sprint)
+            .Include(t => t.DesignRequests)
+                .ThenInclude(dr => dr.AssignedToEmployee)
+            .Include(t => t.ProjectRequirement)
+                .ThenInclude(pr => pr!.Project)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Get dependent tasks in a single database query - eliminates separate dependency lookup
+    /// Returns only tasks that depend on the specified task ID
+    /// </summary>
+    public async Task<IEnumerable<TaskEntity>> GetDependentTasksAsync(int taskId)
+    {
+        return await _context.Tasks
+            .Where(t => _context.TaskDependencies
+                .Where(td => td.DependsOnTaskId == taskId)
+                .Select(td => td.TaskId)
+                .Contains(t.Id))
+            .Include(t => t.Assignments)
+            .Include(t => t.Dependencies_Relations)
+            .Include(t => t.Sprint)
+            .Include(t => t.DesignRequests)
+                .ThenInclude(dr => dr.AssignedToEmployee)
+            .Include(t => t.ProjectRequirement)
+                .ThenInclude(pr => pr!.Project)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Get prerequisite tasks in a single database query - eliminates separate dependency lookup
+    /// Returns only tasks that the specified task depends on
+    /// </summary>
+    public async Task<IEnumerable<TaskEntity>> GetPrerequisiteTasksAsync(int taskId)
+    {
+        return await _context.Tasks
+            .Where(t => _context.TaskDependencies
+                .Where(td => td.TaskId == taskId)
+                .Select(td => td.DependsOnTaskId)
+                .Contains(t.Id))
+            .Include(t => t.Assignments)
+            .Include(t => t.Dependencies_Relations)
+            .Include(t => t.Sprint)
+            .Include(t => t.DesignRequests)
+                .ThenInclude(dr => dr.AssignedToEmployee)
+            .Include(t => t.ProjectRequirement)
+                .ThenInclude(pr => pr!.Project)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Get all tasks for a project requirement in single query
+    /// Performance: Single DB call with no N+1 queries
+    /// </summary>
+    public async Task<IEnumerable<TaskEntity>> GetTasksByProjectRequirementIdAsync(int projectRequirementId)
+    {
+        return await _context.Tasks
+            .Where(t => t.ProjectRequirementId == projectRequirementId)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Get all requirements for a project with their completion status in single query
+    /// Performance: Single DB call checking requirement status directly
+    /// Returns: (RequirementId, Status, IsCompleted)
+    /// </summary>
+    public async Task<IEnumerable<(int RequirementId, int Status, bool IsCompleted)>> GetProjectRequirementsCompletionStatusAsync(int projectId)
+    {
+        return await _context.ProjectRequirements
+            .Where(pr => pr.ProjectId == projectId)
+            .AsNoTracking()
+            .Select(pr => new ValueTuple<int, int, bool>(
+                pr.Id,
+                (int)pr.Status,
+                pr.Status == Core.Enums.RequirementStatusEnum.Completed
+            ))
+            .ToListAsync();
     }
 }
 

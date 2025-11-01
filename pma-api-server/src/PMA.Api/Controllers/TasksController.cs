@@ -16,17 +16,23 @@ public class TasksController : ApiBaseController
     private readonly IMappingService _mappingService;
     private readonly IUserContextAccessor _userContextAccessor;
     private readonly IDesignRequestService _designRequestService;
+    private readonly IProjectRequirementService _projectRequirementService;
+    private readonly IProjectService _projectService;
 
     public TasksController(
         ITaskService taskService, 
         IMappingService mappingService, 
         IUserContextAccessor userContextAccessor,
-        IDesignRequestService designRequestService)
+        IDesignRequestService designRequestService,
+        IProjectRequirementService projectRequirementService,
+        IProjectService projectService)
     {
         _taskService = taskService;
         _mappingService = mappingService;
         _userContextAccessor = userContextAccessor;
         _designRequestService = designRequestService;
+        _projectRequirementService = projectRequirementService;
+        _projectService = projectService;
     }
 
     /// <summary>
@@ -36,24 +42,8 @@ public class TasksController : ApiBaseController
     {
         try
         {
-            // Find dependent tasks that are QC tasks
-            var taskDependencies = await _taskService.GetTaskDependenciesAsync(taskId);
-            var dependentTaskIds = taskDependencies
-                .Where(td => td.TaskId != taskId) // Tasks that depend on this task
-                .Select(td => td.TaskId)
-                .Distinct()
-                .ToList();
-
-            // Get the actual dependent task entities
-            var dependentTasks = new List<TaskEntity>();
-            foreach (var depTaskId in dependentTaskIds)
-            {
-                var depTask = await _taskService.GetTaskByIdAsync(depTaskId);
-                if (depTask != null)
-                {
-                    dependentTasks.Add(depTask);
-                }
-            }
+            // OPTIMIZED: Get dependent tasks in a single database query
+            var dependentTasks = (await _taskService.GetDependentTasksAsync(taskId)).ToList();
 
             // Handle different status transitions
             if (newStatus == Core.Enums.TaskStatus.InReview)
@@ -125,25 +115,9 @@ public class TasksController : ApiBaseController
     {
         try
         {
-            
+            // OPTIMIZED: Get prerequisite tasks in a single database query
+            var prerequisitesTasks = (await _taskService.GetPrerequisiteTasksAsync(taskId)).ToList();
 
-            // Find Prerequisites tasks that are QC tasks
-            var taskPrerequisites = await _taskService.GetTaskPrerequisitesAsync(taskId);
-            var PrerequisitesTaskIds = taskPrerequisites 
-                .Select(td => td.DependsOnTaskId)
-                .Distinct()
-                .ToList();
-
-            // Get the actual dependent task entities
-            var prerequisitesTasks = new List<TaskEntity>();
-            foreach (var preTaskId in PrerequisitesTaskIds)
-            {
-                var preTask = await _taskService.GetTaskByIdAsync(preTaskId);
-                if (preTask != null)
-                {
-                    prerequisitesTasks.Add(preTask);
-                }
-            }
             if (newStatus == Core.Enums.TaskStatus.InReview)
             {
                 // Developer task moved to In Review - unblock dependent QC tasks
@@ -344,11 +318,21 @@ public class TasksController : ApiBaseController
             {
                 await _taskService.UpdateTaskAssignmentsAsync(createdTask.Id, createTaskDto.MemberIds);
             }
+            var userContext = await _userContextAccessor.GetUserContextAsync();
 
+            if (!int.TryParse(userContext.PrsId, out var changedByPrsId))
+            {
+                return Error<object>("Invalid user identifier", status: 401);
+            }
             // Handle dependencies if provided
             if (createTaskDto.DepTaskIds != null && createTaskDto.DepTaskIds.Any())
             {
                 await _taskService.UpdateTaskDependenciesAsync(createdTask.Id, createTaskDto.DepTaskIds);
+                int depnedentTaskid = (int)createTaskDto.DepTaskIds[0];
+                Core.Enums.TaskStatus newStatus = (Core.Enums.TaskStatus) createTaskDto.StatusId;
+
+                var dependentUpdateResult = await HandleDependentTaskStatusUpdatesAsync(depnedentTaskid, newStatus, changedByPrsId);
+
             }
 
             // Map back to DTO for response
@@ -442,6 +426,20 @@ public class TasksController : ApiBaseController
                 if (dependentUpdateResult != null)
                 {
                     return dependentUpdateResult;
+                }
+            }
+
+            // Cascade status update: If task completed, update requirement and project statuses
+            if (updateTaskDto.StatusId == Core.Enums.TaskStatus.Completed)
+            {
+                try
+                {
+                    await _taskService.UpdateCascadingStatusAsync(updatedTask, _projectRequirementService, _projectService);
+                }
+                catch (Exception ex)
+                {
+                    // Log but don't fail the response - task status update succeeded
+                    System.Diagnostics.Debug.WriteLine($"Error updating cascading status: {ex.Message}");
                 }
             }
 
@@ -721,6 +719,20 @@ public class TasksController : ApiBaseController
                 if (dependentUpdateResult != null)
                 {
                     return dependentUpdateResult;
+                }
+            }
+
+            // Cascade status update: If task completed, update requirement and project statuses
+            if (updateStatusDto.StatusId == Core.Enums.TaskStatus.Completed)
+            {
+                try
+                {
+                    await _taskService.UpdateCascadingStatusAsync(updatedTask, _projectRequirementService, _projectService);
+                }
+                catch (Exception ex)
+                {
+                    // Log but don't fail the response - task status update succeeded
+                    System.Diagnostics.Debug.WriteLine($"Error updating cascading status: {ex.Message}");
                 }
             }
 

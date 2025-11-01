@@ -808,9 +808,7 @@ export default function TaskDetailsDrawer({
                   >
                     {t("requestedAlready")}
                   </Chip>
-                ) : selectedTask.roleType === "QC" ? (
-                  <div className="flex-1" />
-                ) : (
+                ) : selectedTask.roleType?.toLowerCase() === "developer" ? (
                   <Button
                     className="flex-1"
                     color="primary"
@@ -824,6 +822,8 @@ export default function TaskDetailsDrawer({
                   >
                     {t("requestDesign")}
                   </Button>
+                ) : (
+                  <div className="flex-1" />
                 )}
 
                 <Button

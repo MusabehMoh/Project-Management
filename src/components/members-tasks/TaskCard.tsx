@@ -447,9 +447,7 @@ export const TaskCard = ({
                       {t("requestedAlready")}
                     </Chip>
                   </div>
-                ) : task.roleType === "QC" ? (
-                  <div className="flex-1" />
-                ) : (
+                ) : task.roleType?.toLowerCase() === "developer" ? (
                   <Button
                     className="flex-1"
                     color="default"
@@ -466,6 +464,8 @@ export const TaskCard = ({
                   >
                     {t("requestDesign")}
                   </Button>
+                ) : (
+                  <div className="flex-1" />
                 )}
 
                 <Button

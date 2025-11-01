@@ -57,6 +57,11 @@ public interface ITaskService
     System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskDependenciesAsync(int taskId);
     System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskPrerequisitesAsync(int taskId);
     System.Threading.Tasks.Task CleanupTaskDependenciesAsync(int taskId);
+    
+    // Bulk fetch method to reduce N+1 queries
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByIdsAsync(IEnumerable<int> taskIds);
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetDependentTasksAsync(int taskId);
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetPrerequisiteTasksAsync(int taskId);
 
     // TaskStatusHistory methods
     System.Threading.Tasks.Task<TaskStatusHistory> CreateTaskStatusHistoryAsync(TaskStatusHistory taskStatusHistory);
@@ -72,6 +77,12 @@ public interface ITaskService
     System.Threading.Tasks.Task<TaskAttachment?> GetTaskAttachmentByIdAsync(int attachmentId);
     System.Threading.Tasks.Task<TaskAttachment> AddTaskAttachmentAsync(TaskAttachment attachment);
     System.Threading.Tasks.Task DeleteTaskAttachmentAsync(int attachmentId);
+
+    // Cascading status update methods
+    System.Threading.Tasks.Task UpdateCascadingStatusAsync(
+        TaskEntity completedTask,
+        IProjectRequirementService projectRequirementService,
+        IProjectService projectService);
 }
 
 public interface ISprintService

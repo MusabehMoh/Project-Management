@@ -8,6 +8,7 @@ import { getLocalTimeZone, today } from "@internationalized/date";
  * @param t - Translation function from useLanguage hook
  * @returns Validation result: true if valid, error message if invalid, null/undefined if required error
  */
+
 export const validateDateNotInPast = (
   value: DateValue | null,
   t: (key: string) => string,

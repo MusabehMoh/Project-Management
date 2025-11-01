@@ -34,7 +34,7 @@ import { useDeveloperQuickActions } from "@/hooks/useDeveloperQuickActionsV2";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
 import { useTeamSearch } from "@/hooks/useTeamSearch";
 import { MemberSearchResult } from "@/types/timeline";
-import { validateDateNotInPast } from "@/utils/validation";
+import { validateDateNotInPast } from "@/utils/dateValidation";
 
 // Animated Counter Component
 const AnimatedCounter = ({
@@ -809,7 +809,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
     }>({});
 
     const handleValidateDateNotInPast = (date: any) => {
-      return validateDateNotInPast(date);
+      return validateDateNotInPast(date, t);
     };
 
     const validateForm = () => {

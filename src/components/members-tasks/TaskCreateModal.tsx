@@ -14,6 +14,9 @@ import {
 } from "@heroui/modal";
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { Info } from "lucide-react";
+import { getLocalTimeZone, today } from "@internationalized/date";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MemberTask } from "@/types/membersTasks";
@@ -23,7 +26,7 @@ import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import useTaskSearch from "@/hooks/useTaskSearch";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
 import { validateDateNotInPast } from "@/utils/dateValidation";
-import { getLocalTimeZone, today } from "@internationalized/date";
+import { DepartmentIds } from "@/constants/departments";
 interface TaskCreateModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -38,7 +41,7 @@ export default function TaskCreateModal({
   loading = false,
   onTaskCreated,
 }: TaskCreateModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Wrapper function for validation that passes translation
   const handleValidateDateNotInPast = (
@@ -67,6 +70,7 @@ export default function TaskCreateModal({
     assignedMembers: [],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
   // Members/Tasks selection state
   const [employeeInputValue, setEmployeeInputValue] = useState<string>("");
@@ -83,7 +87,7 @@ export default function TaskCreateModal({
     loading: employeeSearchLoading,
     searchEmployees,
   } = useTeamSearchByDepartment({
-    departmentId: 5, // qc Department
+    departmentId: DepartmentIds.QUALITY_ASSURANCE, // qc Department
     minLength: 1,
     maxResults: 100,
     loadInitialResults: true, // Load all qc initially
@@ -138,6 +142,10 @@ export default function TaskCreateModal({
     if (!formData.description.trim()) {
       newErrors.description = t("validation.descriptionRequired");
     }
+    // Members validation
+    if (selectedMembers.length === 0) {
+      newErrors.members = t("validation.membersRequired");
+    }
     // Start date validation
     if (!formData.startDate) {
       newErrors.startDate = t("validation.startDateRequired");
@@ -186,15 +194,17 @@ export default function TaskCreateModal({
     if (!validateForm()) {
       return;
     }
+    setSaving(true);
     try {
       const taskData = {
         sprintId: parentTask.sprintId || null,
         timelineId: parentTask.timelineId || null,
+        departmentId: DepartmentIds.QUALITY_ASSURANCE.toString(),
+        projectRequirementId: parentTask.requirement?.id,
         name: formData.name,
         description: formData.description,
         startDate: formData.startDate!.toString(),
         endDate: formData.endDate!.toString(),
-        departmentId: "5",
         statusId: 1, // Default status for new tasks
         priorityId: formData.priority,
         progress: 0,
@@ -225,6 +235,8 @@ export default function TaskCreateModal({
     } catch {
       showErrorToast(t("task.create.failedToCreate"));
       setErrors({ general: t("task.create.failedToCreate") });
+    } finally {
+      setSaving(false);
     }
   };
   const handleClose = () => {
@@ -249,7 +261,7 @@ export default function TaskCreateModal({
     <Modal
       isOpen={isOpen}
       scrollBehavior="inside"
-      size="5xl"
+      size="3xl"
       onClose={handleClose}
       onOpenChange={onOpenChange}
     >
@@ -334,71 +346,53 @@ export default function TaskCreateModal({
                 <SelectItem key="2">{t("priority.medium")}</SelectItem>
                 <SelectItem key="3">{t("priority.high")}</SelectItem>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                {t("task.create.description")}
-              </label>
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: formData.description || "",
-                }}
-                contentEditable
-                className="w-full min-h-[80px] p-3 border border-default-200 rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"
-                onInput={(e) =>
-                  setFormData({
-                    ...formData,
-                    description: e.currentTarget.innerHTML,
-                  })
-                }
-              />
-            </div>
 
-            {/* Dependent Tasks selection */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                {t("timeline.selectPredecessors")}
-              </label>
-              <Select
-                isDisabled={true} // Parent task is pre-selected and disabled
-                isLoading={taskSearchLoading}
-                items={tasks}
-                label={t("timeline.selectPredecessors")}
-                placeholder={t("timeline.selectPredecessorsPlaceholder")}
-                selectedKeys={selectedTasks.map((task) => task.id.toString())}
-                selectionMode="multiple"
-                onSelectionChange={(keys) => {
-                  if (keys === "all") return;
+              {/* Dependent Tasks selection */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  {t("task.create.developerTask")}
+                </label>
+                <Select
+                  isDisabled={true} // Parent task is pre-selected and disabled
+                  isLoading={taskSearchLoading}
+                  items={tasks}
+                  placeholder={t("task.create.developerTaskPlaceholder")}
+                  selectedKeys={selectedTasks.map((task) => task.id.toString())}
+                  selectionMode="multiple"
+                  onSelectionChange={(keys) => {
+                    if (keys === "all") return;
 
-                  const selectedKeys = Array.from(keys);
-                  const newSelectedTasks = tasks.filter((task) =>
-                    selectedKeys.includes(task.id.toString()),
-                  );
+                    const selectedKeys = Array.from(keys);
+                    const newSelectedTasks = tasks.filter((task) =>
+                      selectedKeys.includes(task.id.toString()),
+                    );
 
-                  setSelectedTasks(newSelectedTasks);
-                }}
-              >
-                {(task) => (
-                  <SelectItem key={task.id.toString()} textValue={task.name}>
-                    <div className="flex items-center gap-3">
-                      <span className="flex flex-col">
-                        <span className="font-medium">{task.name}</span>
-                        <span className="text-xs text-default-500">
-                          {task.description || t("common.none")}
+                    setSelectedTasks(newSelectedTasks);
+                  }}
+                >
+                  {(task) => (
+                    <SelectItem key={task.id.toString()} textValue={task.name}>
+                      <div className="flex items-center gap-3">
+                        <span className="flex flex-col">
+                          <span className="font-medium">{task.name}</span>
+                          <span className="text-xs text-default-500">
+                            {task.description || t("common.none")}
+                          </span>
                         </span>
-                      </span>
-                    </div>
-                  </SelectItem>
-                )}
-              </Select>
+                      </div>
+                    </SelectItem>
+                  )}
+                </Select>
+              </div>
             </div>
 
             {/* Members selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium ">
                 {t("users.selectEmployee")}
+                <span className="text-danger">*</span>
               </label>
-              <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
+              <div className="flex flex-wrap gap-1 mb-2">
                 {selectedMembers.map((m) => (
                   <div
                     key={m.id}
@@ -426,7 +420,7 @@ export default function TaskCreateModal({
                 inputValue={employeeInputValue}
                 isLoading={employeeSearchLoading}
                 label={t("users.selectEmployee")}
-                menuTrigger="input"
+                menuTrigger="focus"
                 placeholder={t("users.searchEmployees")}
                 selectedKey={selectedEmployee?.id?.toString()}
                 size="sm"
@@ -483,17 +477,43 @@ export default function TaskCreateModal({
                   </AutocompleteItem>
                 ))}
               </Autocomplete>
+              {errors.members && (
+                <span className="text-sm text-danger">{errors.members}</span>
+              )}
             </div>
-
-            <div className="p-3 text-sm text-info bg-info-50 rounded-lg">
-              {t("task.create.qcAssignmentNote")}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                {t("task.create.description")}
+                <span className="text-danger">*</span>
+              </label>
+              <ReactQuill
+                className={language === "ar" ? "rtl-editor" : ""}
+                modules={{
+                  toolbar: [
+                    ["bold", "italic", "underline"],
+                    [{ list: "ordered" }, { list: "bullet" }],
+                    ["clean"],
+                  ],
+                }}
+                style={{
+                  height: "100px",
+                }}
+                theme="snow"
+                value={formData.description}
+                onChange={(value) => handleInputChange("description", value)}
+              />
+              {errors.description && (
+                <span className="text-sm text-danger">
+                  {errors.description}
+                </span>
+              )}
             </div>
           </div>
         </ModalBody>
         <ModalFooter>
           <Button
             color="danger"
-            isDisabled={loading}
+            isDisabled={loading || saving}
             variant="light"
             onPress={handleClose}
           >
@@ -501,8 +521,8 @@ export default function TaskCreateModal({
           </Button>
           <Button
             color="primary"
-            isDisabled={loading}
-            isLoading={loading}
+            isDisabled={loading || saving}
+            isLoading={saving}
             onPress={handleSave}
           >
             {t("task.createTask")}

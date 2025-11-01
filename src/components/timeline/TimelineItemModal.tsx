@@ -25,11 +25,13 @@ import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Department, MemberSearchResult, WorkItem } from "@/types/timeline";
-import useTeamSearch from "@/hooks/useTeamSearch";
+import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import useTaskSearch from "@/hooks/useTaskSearch";
 import { useTimelineFormHelpers } from "@/hooks/useTimelineFormHelpers";
 import { useTimelineFormValidation } from "@/hooks/useTimelineFormValidation";
 import { timelineService } from "@/services/api";
+import { DepartmentIds } from "@/constants/departments";
+import { showErrorToast } from "@/utils/toast";
 
 // Export types for use in create/edit modals
 export interface TimelineItemModalFormData {
@@ -173,10 +175,11 @@ export default function TimelineItemModal({
     employees,
     loading: employeeSearchLoading,
     searchEmployees,
-  } = useTeamSearch({
+  } = useTeamSearchByDepartment({
+    departmentId: formData.departmentId ? parseInt(formData.departmentId) : 0,
+    loadInitialResults: !!formData.departmentId,
     minLength: mode === "create" ? 1 : 0,
     maxResults: mode === "create" ? 20 : 100,
-    loadInitialResults: mode === "edit",
   });
 
   const { workItems: tasks, loading: taskSearchLoading } = useTaskSearch({
@@ -338,6 +341,23 @@ export default function TimelineItemModal({
   const handleSubmit = async () => {
     if (!validateForm(formData)) return;
 
+    // Check if Quality Assurance department is selected and validate predecessors are required
+    const departmentIdNum = parseInt(formData.departmentId) || 0;
+    const isQASelected = departmentIdNum === DepartmentIds.QUALITY_ASSURANCE;
+
+    if (isQASelected && selectedTasks.length === 0) {
+      showErrorToast(
+        t("timeline.validation.predecessorsRequired"),
+        t("timeline.validation.qaRequiresPredecessors"),
+      );
+      return;
+    }
+
+    if (isQASelected && selectedMembers.length === 0) {
+      showErrorToast(t("timeline.validation.employeesRequired"), "");
+      return;
+    }
+
     try {
       const payload: TimelineItemModalFormData = {
         name: formData.name,
@@ -447,14 +467,20 @@ export default function TimelineItemModal({
                       handleInputChange("departmentId", selected || "");
                     }}
                   >
-                    {departments.map((dept) => (
-                      <SelectItem
-                        key={dept.id.toString()}
-                        textValue={dept.name}
-                      >
-                        {dept.name}
-                      </SelectItem>
-                    ))}
+                    {departments
+                      .filter(
+                        (dept) =>
+                          Number(dept.id) === DepartmentIds.SOFTWARE_DEVELOPMENT ||
+                          Number(dept.id) === DepartmentIds.QUALITY_ASSURANCE,
+                      )
+                      .map((dept) => (
+                        <SelectItem
+                          key={dept.id.toString()}
+                          textValue={dept.name}
+                        >
+                          {dept.name}
+                        </SelectItem>
+                      ))}
                   </Select>
                 </div>
               )}
@@ -608,6 +634,10 @@ export default function TimelineItemModal({
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       {t("timeline.selectPredecessors")}
+                      {parseInt(formData.departmentId) ===
+                        DepartmentIds.QUALITY_ASSURANCE && (
+                        <span className="text-red-500">*</span>
+                      )}
                     </label>
                     <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
                       {selectedTasks.map((task) => (
@@ -687,6 +717,10 @@ export default function TimelineItemModal({
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       {t("users.selectEmployee")}
+                      {parseInt(formData.departmentId) ===
+                        DepartmentIds.QUALITY_ASSURANCE && (
+                        <span className="text-red-500">*</span>
+                      )}
                     </label>
                     <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
                       {selectedMembers.map((m) => (
@@ -717,7 +751,7 @@ export default function TimelineItemModal({
                         inputValue={employeeInputValue}
                         isLoading={employeeSearchLoading}
                         label={t("users.selectEmployee")}
-                        menuTrigger="input"
+                        menuTrigger="focus"
                         placeholder={t("users.searchEmployees")}
                         selectedKey={selectedEmployee?.id?.toString()}
                         size="sm"

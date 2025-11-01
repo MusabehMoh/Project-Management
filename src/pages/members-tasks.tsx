@@ -48,7 +48,7 @@ import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { usePermissions } from "@/hooks/usePermissions";
 import useTeamSearch from "@/hooks/useTeamSearch";
-import { validateDateNotInPast } from "@/utils/validation";
+import { validateDateNotInPast } from "@/utils/dateValidation";
 import { MemberSearchResult } from "@/types/timeline";
 import { membersTasksService } from "@/services/api/membersTasksService";
 import { tasksService } from "@/services/api/tasksService";

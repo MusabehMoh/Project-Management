@@ -621,6 +621,8 @@ const translations = {
     // Validation messages
     "validation.dateRequired": "Date is required",
     "validation.reasonRequired": "Reason is required",
+    "validation.descriptionRequired": "Description is required",
+    "validation.membersRequired": "At least one member must be selected",
     "validation.startDateWithinTimeline":
       "Start date must be within the timeline's date range",
     "validation.endDateWithinTimeline":
@@ -1228,6 +1230,8 @@ const translations = {
     "task.create.failedToCreate": "Failed to create task",
     "task.createTask": "Create Task",
     "task.createTaskHint": "Create a new task based on this developer task",
+    "task.create.developerTask": "Developer Task",
+    "task.create.developerTaskPlaceholder": "Select developer task...",
 
     "requirements.updated": "Updated",
     "requirements.uploadedOn": "Uploaded on",
@@ -1310,6 +1314,12 @@ const translations = {
     "validation.endDateRequired": "End date is required",
     "validation.endDateAfterStart": "End date must be after start date",
     "validation.departmentRequired": "Department is required",
+    "timeline.validation.predecessorsRequired": "Predecessors Required",
+    "timeline.validation.qaRequiresPredecessors":
+      "Quality Assurance department requires selecting predecessor tasks",
+    "timeline.validation.employeesRequired": "Employees Required",
+    "timeline.validation.qaRequiresEmployees":
+      "Quality Assurance department requires assigning employees",
 
     // User Management
     "users.title": "User Management",
@@ -2596,6 +2606,8 @@ const translations = {
     // Validation messages
     "validation.dateRequired": "التاريخ مطلوب",
     "validation.reasonRequired": "السبب مطلوب",
+    "validation.descriptionRequired": "الوصف مطلوب",
+    "validation.membersRequired": "يجب اختيار عضو واحد على الأقل",
     "developerDashboard.currentTasks": "المهام",
     "developerDashboard.status": "الحالة",
     "developerDashboard.status.available": "متاح",
@@ -2995,7 +3007,7 @@ const translations = {
     "requirements.selectPriority": "اختر الأولوية",
     "requirements.type": "نوع المتطلب",
     "requirements.expectedCompletion": "تاريخ الإنجاز المتوقع",
-    "requirements.attachments": "المرفقات",
+    "requirements.attachments": "مرفقات المتطلب",
     "requirements.status": "الحالة",
     "requirements.saveAsDraft": "حفظ",
     "requirements.requestApproval": "طلب الموافقة",
@@ -3182,6 +3194,8 @@ const translations = {
     "task.create.success": "تم إنشاء المهمة بنجاح",
     "task.create.failedToCreate": "فشل في إنشاء المهمة",
     "task.createTaskHint": "إنشاء مهمة جديدة بناءً على  مهمة المطور",
+    "task.create.developerTask": "مهمة المطور",
+    "task.create.developerTaskPlaceholder": "اختر مهمة المطور...",
 
     "requirements.updated": "تاريخ التحديث",
     "requirements.uploadedOn": "تم الرفع في",
@@ -3265,6 +3279,12 @@ const translations = {
     "validation.endDateWithinTimeline":
       "يجب أن يكون تاريخ النهاية ضمن نطاق تواريخ الجدول الزمني",
     "validation.departmentRequired": "القسم مطلوب",
+    "timeline.validation.predecessorsRequired": "المهام السابقة مطلوبة",
+    "timeline.validation.qaRequiresPredecessors":
+      "قسم ضمان الجودة يتطلب تحديد المهام السابقة",
+    "timeline.validation.employeesRequired": "رجاء اختر موظف ",
+    "timeline.validation.qaRequiresEmployees":
+      "قسم ضمان الجودة يتطلب تعيين الموظفين",
 
     // User Management
     "users.title": "إدارة المستخدمين",

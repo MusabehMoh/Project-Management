@@ -50,12 +50,24 @@ public class TaskService : ITaskService
         var task = await _taskRepository.GetByIdAsync(id);
         if (task != null)
         {
+            // Clean up assignments before deleting
+            await CleanupTaskAssignmentsAsync(id);
+            
             // Clean up dependencies before deleting the task
             await CleanupTaskDependenciesAsync(id);
             await _taskRepository.DeleteAsync(task);
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Clean up all task assignments for a specific task
+    /// Performance: Single database call to remove all assignments
+    /// </summary>
+    private async System.Threading.Tasks.Task CleanupTaskAssignmentsAsync(int taskId)
+    {
+        await _taskRepository.CleanupTaskAssignmentsAsync(taskId);
     }
 
     public async System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksBySprintAsync(int sprintId)
@@ -108,6 +120,30 @@ public class TaskService : ITaskService
         await _taskRepository.CleanupTaskDependenciesAsync(taskId);
     }
 
+    /// <summary>
+    /// Get multiple tasks by IDs in a single database call - reduces N+1 queries
+    /// </summary>
+    public async System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByIdsAsync(IEnumerable<int> taskIds)
+    {
+        return await _taskRepository.GetTasksByIdsAsync(taskIds);
+    }
+
+    /// <summary>
+    /// Get dependent tasks in a single query - eliminates separate dependency lookup
+    /// </summary>
+    public async System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetDependentTasksAsync(int taskId)
+    {
+        return await _taskRepository.GetDependentTasksAsync(taskId);
+    }
+
+    /// <summary>
+    /// Get prerequisite tasks in a single query - eliminates separate dependency lookup
+    /// </summary>
+    public async System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetPrerequisiteTasksAsync(int taskId)
+    {
+        return await _taskRepository.GetPrerequisiteTasksAsync(taskId);
+    }
+
     // TaskStatusHistory methods
     public async System.Threading.Tasks.Task<TaskStatusHistory> CreateTaskStatusHistoryAsync(TaskStatusHistory taskStatusHistory)
     {
@@ -155,6 +191,54 @@ public class TaskService : ITaskService
     public async System.Threading.Tasks.Task DeleteTaskAttachmentAsync(int attachmentId)
     {
         await _taskRepository.DeleteTaskAttachmentAsync(attachmentId);
+    }
+
+    /// <summary>
+    /// Cascade task completion status to project requirement and project
+    /// Performance optimized: Single query to get all requirements' completion status
+    /// Minimal DB calls: Only updates changed statuses
+    /// </summary>
+    public async System.Threading.Tasks.Task UpdateCascadingStatusAsync(
+        TaskEntity completedTask, 
+        IProjectRequirementService projectRequirementService,
+        IProjectService projectService)
+    {
+        // Exit early if task not completed or no requirement assigned
+        if (completedTask.StatusId != Core.Enums.TaskStatus.Completed || !completedTask.ProjectRequirementId.HasValue)
+            return;
+
+        var requirementId = completedTask.ProjectRequirementId.Value;
+        var requirement = await projectRequirementService.GetProjectRequirementByIdAsync(requirementId);
+        
+        if (requirement == null || requirement.Status == Core.Enums.RequirementStatusEnum.Completed)
+            return; // Already completed, no need to process
+
+        // OPTIMIZATION: Single query to get all tasks for this requirement
+        var requirementTasks = await _taskRepository.GetTasksByProjectRequirementIdAsync(requirementId);
+        
+        // Check if all tasks are completed
+        if (requirementTasks.All(t => t.StatusId == Core.Enums.TaskStatus.Completed))
+        {
+            // Update requirement status to Completed
+            requirement.Status = Core.Enums.RequirementStatusEnum.Completed;
+            await projectRequirementService.UpdateProjectRequirementAsync(requirement);
+
+            // OPTIMIZATION: Single query to get all requirements' completion status for the project
+            var projectRequirementsStatus = await _taskRepository.GetProjectRequirementsCompletionStatusAsync(requirement.ProjectId);
+            
+            // Check if all requirements are completed
+            if (projectRequirementsStatus.All(r => r.IsCompleted))
+            {
+                // Update project status to Production
+                var project = await projectService.GetProjectByIdAsync(requirement.ProjectId);
+                if (project != null && project.Status != Core.Enums.ProjectStatus.Production)
+                {
+                    project.Status = Core.Enums.ProjectStatus.Production;
+                    project.Progress = 100;
+                    await projectService.UpdateProjectAsync(project);
+                }
+            }
+        }
     }
 }
 

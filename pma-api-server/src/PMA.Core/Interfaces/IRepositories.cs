@@ -56,6 +56,14 @@ public interface ITaskRepository : IRepository<TaskEntity>
     System.Threading.Tasks.Task<IEnumerable<TaskDependency>> GetTaskPrerequisitesAsync(int taskId);
 
     System.Threading.Tasks.Task CleanupTaskDependenciesAsync(int taskId);
+    System.Threading.Tasks.Task CleanupTaskAssignmentsAsync(int taskId);
+    
+    // Bulk fetch methods to reduce N+1 queries
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByIdsAsync(IEnumerable<int> taskIds);
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetDependentTasksAsync(int taskId);
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetPrerequisiteTasksAsync(int taskId);
+    System.Threading.Tasks.Task<IEnumerable<TaskEntity>> GetTasksByProjectRequirementIdAsync(int projectRequirementId);
+    System.Threading.Tasks.Task<IEnumerable<(int RequirementId, int Status, bool IsCompleted)>> GetProjectRequirementsCompletionStatusAsync(int projectId);
     
     // Get tasks that have no other tasks depending on them
     System.Threading.Tasks.Task<IEnumerable<int>> GetTaskIdsWithNoDependentTasksAsync();
