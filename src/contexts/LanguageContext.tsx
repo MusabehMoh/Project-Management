@@ -1327,6 +1327,15 @@ const translations = {
     "users.addUser": "Add New User",
     "users.editUser": "Edit User",
     "users.deleteUser": "Delete User",
+    "users.impersonate": "Impersonate User",
+    "users.confirmImpersonate": "Confirm Impersonation",
+    "users.impersonateWarning":
+      "You are about to impersonate another user. You will see the system as they do.",
+    "users.impersonateNote":
+      "Your real identity is preserved in the system logs. All actions will be attributed to the impersonated user.",
+    "users.impersonateSuccess": "Successfully impersonating user",
+    "users.stopImpersonating": "Stop Impersonating",
+    "users.stopImpersonateSuccess": "Impersonation ended successfully",
     "users.userName": "Username",
     "users.fullName": "Full Name",
     "users.militaryNumber": "Military Number",
@@ -1434,6 +1443,14 @@ const translations = {
     "departments.members.removeError": "Failed to remove member",
     "departments.members.alreadyMember":
       "Employee is already a member of this department",
+    "departments.members.alreadyInOtherDepartment":
+      "Employee is already a member of another department. Employees can only belong to one department",
+    "departments.members.multiDepartmentViolation":
+      "This employee is already assigned to another department",
+    "departments.members.hasManagerialRole":
+      "Employees with managerial roles cannot be added as department members",
+    "departments.members.managerialRoleError":
+      "This user has an administrative or managerial role and cannot be added to a department",
 
     // Department Statistics
     "departments.stats.title": "Department Statistics",
@@ -3292,6 +3309,15 @@ const translations = {
     "users.addUser": "إضافة مستخدم جديد",
     "users.editUser": "تعديل المستخدم",
     "users.deleteUser": "حذف المستخدم",
+    "users.impersonate": "محاكاة مستخدم",
+    "users.confirmImpersonate": "تأكيد المحاكاة",
+    "users.impersonateWarning":
+      "أنت على وشك محاكاة مستخدم آخر. سترى النظام كما يراه هو.",
+    "users.impersonateNote":
+      "يتم الحفاظ على هويتك الحقيقية في سجلات النظام. سيتم نسب جميع الإجراءات للمستخدم الذي تحاكيه.",
+    "users.impersonateSuccess": "تمت محاكاة المستخدم بنجاح",
+    "users.stopImpersonating": "إيقاف المحاكاة",
+    "users.stopImpersonateSuccess": "تم إيقاف المحاكاة بنجاح",
     "users.userName": "اسم المستخدم",
     "users.fullName": "الاسم الكامل",
     "users.militaryNumber": "الرقم العسكري",
@@ -3399,6 +3425,14 @@ const translations = {
     "departments.members.removeSuccess": "تم إزالة العضو بنجاح",
     "departments.members.removeError": "فشل في إزالة العضو",
     "departments.members.alreadyMember": "الموظف عضو بالفعل في هذا القسم",
+    "departments.members.alreadyInOtherDepartment":
+      "الموظف عضو بالفعل في قسم آخر. لا يمكن للموظفين الانتماء لأكثر من قسم واحد",
+    "departments.members.multiDepartmentViolation":
+      "هذا الموظف مُعيّن بالفعل إلى قسم آخر",
+    "departments.members.hasManagerialRole":
+      "لا يمكن إضافة الموظفين الذين لديهم أدوار إدارية كأعضاء في القسم",
+    "departments.members.managerialRoleError":
+      "هذا المستخدم لديه دور إداري أو قيادي ولا يمكن إضافته إلى قسم",
 
     // Department Statistics
     "departments.stats.title": "إحصائيات الأقسام",

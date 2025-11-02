@@ -36,6 +36,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useUserContext } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useImpersonation } from "@/hooks/useImpersonation";
 // Import both logo versions
 import logoImageLight from "@/assets/ChatGPT Image Aug 13, 2025, 11_15_09 AM.png";
 import logoImageDark from "@/assets/whitemodlogo.png";
@@ -359,6 +360,7 @@ export const Navbar = () => {
     hasAnyRoleById,
   } = usePermissions();
   const { setUser } = useUserContext();
+  const { isImpersonating, stopImpersonation } = useImpersonation();
   const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } =
     useNotifications();
   const projectNavItems = getProjectNavItems(
@@ -416,6 +418,18 @@ export const Navbar = () => {
 
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onOpen]);
+
+  // Handle stop impersonation with full page refresh
+  const handleStopImpersonation = async () => {
+    try {
+      await stopImpersonation();
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
+    } catch {
+      // Silently handle error - impersonation stop failed but continue
+    }
+  };
 
   // Get user role name (first role if multiple)
   const userRole = currentUser?.roles?.[0]?.name || "";
@@ -718,6 +732,22 @@ export const Navbar = () => {
             <ThemeSwitch />
           </div>
         </NavbarItem>
+
+        {/* Stop Impersonation Button */}
+        {isImpersonating && (
+          <NavbarItem
+            className="animate-in slide-in-from-right duration-500"
+            style={{ animationDelay: "550ms" }}
+          >
+            <Button
+              className="bg-warning text-warning-foreground font-semibold"
+              size="sm"
+              onPress={handleStopImpersonation}
+            >
+              {t("users.stopImpersonating")}
+            </Button>
+          </NavbarItem>
+        )}
 
         {/* User Profile Dropdown */}
         <NavbarItem

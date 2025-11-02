@@ -5,6 +5,7 @@ using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
 using PMA.Api.Attributes;
+using PMA.Api.Services;
 
 namespace PMA.Api.Controllers;
 
@@ -15,12 +16,21 @@ public class UsersController : ApiBaseController
 {
     private readonly IUserService _userService;
     private readonly IEmployeeService _employeeService;
+    private readonly IImpersonationService _impersonationService;
+    private readonly IUserContextAccessor _userContextAccessor;
     private readonly ILogger<UsersController> _logger;
 
-    public UsersController(IUserService userService, IEmployeeService employeeService, ILogger<UsersController> logger)
+    public UsersController(
+        IUserService userService,
+        IEmployeeService employeeService,
+        IImpersonationService impersonationService,
+        IUserContextAccessor userContextAccessor,
+        ILogger<UsersController> logger)
     {
         _userService = userService;
         _employeeService = employeeService;
+        _impersonationService = impersonationService;
+        _userContextAccessor = userContextAccessor;
         _logger = logger;
     }
 
@@ -343,4 +353,140 @@ public class UsersController : ApiBaseController
             return Error<CurrentUserDto>("An error occurred while retrieving the current user", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Start impersonating a user (admin only)
+    /// </summary>
+    [HttpPost("impersonate")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(403)]
+    [RequirePermission("users.update")]
+    // [RequirePermission("users.impersonate")]
+    public async Task<IActionResult> StartImpersonation([FromBody] ImpersonateUserRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request?.UserNameToImpersonate))
+            {
+                return Error<object>("Username to impersonate is required");
+            }
+
+            // Get the real authenticated user
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.RealUserName))
+            {
+                return Error<object>("Not authenticated");
+            }
+
+            // Verify that the target user exists
+            var targetUser = await _userService.GetUserByUserNameAsync(request.UserNameToImpersonate);
+            if (targetUser == null)
+            {
+                return Error<object>($"User '{request.UserNameToImpersonate}' not found");
+            }
+
+            // Start impersonation session
+            await _impersonationService.StartImpersonationAsync(userContext.RealUserName, request.UserNameToImpersonate);
+
+            _logger.LogInformation("User {RealUserName} started impersonating {ImpersonatedUserName}",
+                userContext.RealUserName, request.UserNameToImpersonate);
+
+            var response = new ApiResponse<object>
+            {
+                Success = true,
+                Message = $"Now impersonating user '{request.UserNameToImpersonate}'"
+            };
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while starting impersonation. Target username: {TargetUserName}",
+                request?.UserNameToImpersonate);
+
+            return Error<object>("An error occurred while starting impersonation", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Stop impersonating a user
+    /// </summary>
+    [HttpPost("impersonate/stop")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)] 
+    //[RequirePermission("users.impersonate")]
+    public async Task<IActionResult> StopImpersonation()
+    {
+        try
+        {
+            // Get the real authenticated user
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.RealUserName))
+            {
+                return Error<object>("Not authenticated");
+            }
+
+            // Stop impersonation
+            await _impersonationService.StopImpersonationAsync(userContext.RealUserName);
+
+            _logger.LogInformation("User {RealUserName} stopped impersonating",
+                userContext.RealUserName);
+
+            var response = new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Impersonation stopped"
+            };
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while stopping impersonation");
+
+            return Error<object>("An error occurred while stopping impersonation", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get current impersonation status
+    /// </summary>
+    [HttpGet("impersonate/status")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetImpersonationStatus()
+    {
+        try
+        {
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!userContext.IsAuthenticated || string.IsNullOrWhiteSpace(userContext.RealUserName))
+            {
+                return Error<object>("Not authenticated");
+            }
+
+            var impersonation = await _impersonationService.GetImpersonationAsync(userContext.RealUserName);
+
+            var response = new
+            {
+                IsImpersonating = impersonation != null,
+                RealUserName = userContext.RealUserName,
+                ImpersonatedUserName = impersonation?.ImpersonatedUserName,
+                StartTime = impersonation?.StartTime
+            };
+
+            return Success(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving impersonation status");
+
+            return Error<object>("An error occurred while retrieving impersonation status", ex.Message);
+        }
+    }
+}
+
+/// <summary>
+/// Request model for impersonation
+/// </summary>
+public class ImpersonateUserRequest
+{
+    public string? UserNameToImpersonate { get; set; }
 }

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LookupDto } from "@/types/timeline";
@@ -17,47 +18,50 @@ export interface PriorityLookupOptions {
   refreshOnMount?: boolean;
 }
 
-export function usePriorityLookups(options: PriorityLookupOptions = {}) {
-  const [priorities, setPriorities] = useState<LookupDto[]>([]);
-  const [priorityOptions, setPriorityOptions] = useState<PriorityOptions[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function usePriorityLookups(_options: PriorityLookupOptions = {}) {
   const { language } = useLanguage();
 
-  const fetchPriorities = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
+  // Fetch priorities using React Query - automatic caching and deduplication
+  const {
+    data = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ["priorities"],
+    queryFn: async () => {
       const response = await lookupServiceInstance.getByCode("Priority");
 
       if (response.success) {
-        setPriorities(response.data);
-
-        // Convert to options format for UI components
-        const options = response.data
-          .filter((priority) => priority.isActive)
-          .map((priority: LookupDto) => ({
-            key: priority.code.toLowerCase(),
-            label: priority.name,
-            labelAr: priority.nameAr,
-            value: priority.value,
-            color: getPriorityColorFromValue(priority.value),
-          }))
-          .sort((a, b) => a.value - b.value);
-
-        setPriorityOptions(options);
-      } else {
-        setError(response.message || "Unknown error");
+        return response.data;
       }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch priorities",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+
+      throw new Error(response.message || "Unknown error");
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
+  });
+
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : "Failed to fetch priorities"
+    : null;
+  const priorities = data;
+
+  // Convert to options format for UI components
+  const priorityOptions = useMemo(() => {
+    return priorities
+      .filter((priority) => priority.isActive)
+      .map((priority: LookupDto) => ({
+        key: priority.code.toLowerCase(),
+        label: priority.name,
+        labelAr: priority.nameAr,
+        value: priority.value,
+        color: getPriorityColorFromValue(priority.value),
+      }))
+      .sort((a, b) => a.value - b.value);
+  }, [priorities]);
 
   const getPriorityByValue = useCallback(
     (value: number) => {
@@ -113,18 +117,12 @@ export function usePriorityLookups(options: PriorityLookupOptions = {}) {
     [getPriorityByValue],
   );
 
-  useEffect(() => {
-    if (options.refreshOnMount !== false) {
-      fetchPriorities();
-    }
-  }, [fetchPriorities, options.refreshOnMount]);
-
   return {
     priorities,
     priorityOptions,
     loading,
     error,
-    refetch: fetchPriorities,
+    refetch,
     getPriorityByValue,
     getPriorityByKey,
     getPriorityLabel,

@@ -76,6 +76,19 @@ export function translateBackendError(
     return t("departments.members.alreadyMember");
   }
 
+  // Handle "Employee is already a member of another department"
+  if (
+    errorMessage.includes("is already a member of another department") &&
+    errorMessage.includes("Employees can only belong to one department")
+  ) {
+    return t("departments.members.alreadyInOtherDepartment");
+  }
+
+  // Handle "has managerial roles and cannot be added"
+  if (errorMessage.includes("has managerial roles and cannot be added")) {
+    return t("departments.members.hasManagerialRole");
+  }
+
   // Return original message if no pattern matches
   return errorMessage;
 }

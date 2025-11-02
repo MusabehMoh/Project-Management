@@ -93,6 +93,13 @@ public class UserRepository : Repository<User>, IUserRepository
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 
+    public async Task<User?> GetUserWithRolesByPrsIdAsync(int prsId)
+    {
+        return await _context.Users
+            .Include("UserRoles.Role")
+            .FirstOrDefaultAsync(u => u.PrsId == prsId);
+    }
+
     public new async Task<User?> GetByIdAsync(int id)
     {
         return await _context.Users

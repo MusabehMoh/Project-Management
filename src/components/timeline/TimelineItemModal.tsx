@@ -350,11 +350,13 @@ export default function TimelineItemModal({
         t("timeline.validation.predecessorsRequired"),
         t("timeline.validation.qaRequiresPredecessors"),
       );
+
       return;
     }
 
     if (isQASelected && selectedMembers.length === 0) {
       showErrorToast(t("timeline.validation.employeesRequired"), "");
+
       return;
     }
 
@@ -470,7 +472,8 @@ export default function TimelineItemModal({
                     {departments
                       .filter(
                         (dept) =>
-                          Number(dept.id) === DepartmentIds.SOFTWARE_DEVELOPMENT ||
+                          Number(dept.id) ===
+                            DepartmentIds.SOFTWARE_DEVELOPMENT ||
                           Number(dept.id) === DepartmentIds.QUALITY_ASSURANCE,
                       )
                       .map((dept) => (

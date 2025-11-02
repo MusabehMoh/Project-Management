@@ -19,6 +19,7 @@ public interface IProjectService
     System.Threading.Tasks.Task<Project> SendProjectAsync(int projectId);
     System.Threading.Tasks.Task<IEnumerable<Project>> GetProjectsWithTimelinesAsync();
     System.Threading.Tasks.Task<Project?> GetProjectWithTimelinesAsync(int projectId);
+    System.Threading.Tasks.Task<bool> UpdateProjectStatusByRequirementsAsync(int projectId);
 }
 
 public interface IUserService

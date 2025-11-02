@@ -132,7 +132,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
     // Validate start date is not in the past
     if (formData.startDate) {
       const startDateValidation = handleValidateDateNotInPast(
-        parseDate(formData.startDate.substring(0, 10))
+        parseDate(formData.startDate.substring(0, 10)),
       );
 
       if (startDateValidation !== true) {
@@ -143,7 +143,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
     // Validate end date is not in the past
     if (formData.endDate) {
       const endDateValidation = handleValidateDateNotInPast(
-        parseDate(formData.endDate.substring(0, 10))
+        parseDate(formData.endDate.substring(0, 10)),
       );
 
       if (endDateValidation !== true) {

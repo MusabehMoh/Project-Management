@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using PMA.Core.Interfaces;
 using PMA.Core.Models;
+using System.Security.Principal;
 
 namespace PMA.Api.Services
 {
@@ -8,12 +9,17 @@ namespace PMA.Api.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IUserRepository _userRepository;
+        private readonly IImpersonationService _impersonationService;
         private UserContext? _cachedContext;
 
-        public UserContextAccessor(IHttpContextAccessor httpContextAccessor, IUserRepository userRepository)
+        public UserContextAccessor(
+            IHttpContextAccessor httpContextAccessor,
+            IUserRepository userRepository,
+            IImpersonationService impersonationService)
         {
             _httpContextAccessor = httpContextAccessor;
             _userRepository = userRepository;
+            _impersonationService = impersonationService;
         }
 
         public UserContext? Current => _cachedContext;
@@ -24,33 +30,66 @@ namespace PMA.Api.Services
                 return _cachedContext;
 
             var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext?.User?.Identity?.IsAuthenticated != true)
+            
+            // Get the Windows authenticated user
+            var realUserName = GetRealUserName(httpContext);
+            
+            if (string.IsNullOrWhiteSpace(realUserName))
             {
                 _cachedContext = UserContext.Anonymous;
                 return _cachedContext;
             }
 
-            var userName = ExtractUserName(httpContext.User.Identity.Name);
-            if (string.IsNullOrWhiteSpace(userName))
-            {
-                _cachedContext = UserContext.Anonymous;
-                return _cachedContext;
-            }
+            // Check if this user is currently impersonating
+            var impersonation = await _impersonationService.GetImpersonationAsync(realUserName);
+            var effectiveUserName = impersonation?.ImpersonatedUserName ?? realUserName;
 
-            var user = await _userRepository.GetByUserNameAsync(userName);
+            // Get the effective user from database
+            var user = await _userRepository.GetByUserNameAsync(effectiveUserName);
+            
             _cachedContext = new UserContext
             {
+                RealUserName = realUserName,
+                UserName = effectiveUserName,
                 PrsId = user?.PrsId.ToString() ?? string.Empty,
-                UserName = userName,
-                IsAuthenticated = true
+                IsAuthenticated = true,
+                IsImpersonating = impersonation != null
             };
 
             return _cachedContext;
         }
 
+        /// <summary>
+        /// Get the real Windows authenticated username
+        /// Supports both IIdentity.Name and WindowsIdentity
+        /// </summary>
+        private string? GetRealUserName(HttpContext? httpContext)
+        {
+            if (httpContext?.User?.Identity?.IsAuthenticated != true)
+                return null;
+
+            // Try to get from WindowsIdentity first (more reliable for Windows Auth)
+            var windowsIdentity = httpContext.User.Identity as WindowsIdentity;
+            if (windowsIdentity?.User != null)
+            {
+                var windowsName = ExtractUserName(windowsIdentity.Name);
+                if (!string.IsNullOrWhiteSpace(windowsName))
+                    return windowsName;
+            }
+
+            // Fallback to standard Identity.Name
+            var userName = ExtractUserName(httpContext.User.Identity.Name);
+            return userName;
+        }
+
+        /// <summary>
+        /// Extract username from domain\username format
+        /// </summary>
         private string? ExtractUserName(string? name)
         {
-            if (string.IsNullOrWhiteSpace(name)) return null;
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+            
             var idx = name.LastIndexOf('\\');
             return idx >= 0 && idx < name.Length - 1 ? name.Substring(idx + 1) : name;
         }

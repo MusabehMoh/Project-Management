@@ -15,19 +15,22 @@ public class ProjectService : IProjectService
     private readonly IUserService _userService;
     private readonly IUserContextAccessor _userContextAccessor;
     private readonly ILookupService _lookupService;
+    private readonly IProjectRequirementRepository _projectRequirementRepository;
 
     public ProjectService(
         IProjectRepository projectRepository, 
         INotificationService notificationService, 
         IUserService userService,
         IUserContextAccessor userContextAccessor,
-        ILookupService lookupService)
+        ILookupService lookupService,
+        IProjectRequirementRepository projectRequirementRepository)
     {
         _projectRepository = projectRepository;
         _notificationService = notificationService;
         _userService = userService;
         _userContextAccessor = userContextAccessor;
         _lookupService = lookupService;
+        _projectRequirementRepository = projectRequirementRepository;
     }
 
     public async System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null)
@@ -187,6 +190,82 @@ public class ProjectService : IProjectService
     public async System.Threading.Tasks.Task<Project?> GetProjectWithTimelinesAsync(int projectId)
     {
         return await _projectRepository.GetProjectWithTimelinesAsync(projectId);
+    }
+
+    /// <summary>
+    /// Updates project status based on requirement statuses and states.
+    /// Logic:
+    /// - If project has no requirements: No status change
+    /// - If first requirement is created: Project status changes to UnderStudy (2)
+    /// - If all requirements are completed: Project status changes to Production (5)
+    /// - If any requirement is NOT completed: Project status remains at current state or reverts to UnderDevelopment
+    /// </summary>
+    public async System.Threading.Tasks.Task<bool> UpdateProjectStatusByRequirementsAsync(int projectId)
+    {
+        try
+        {
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+            {
+                return false;
+            }
+
+            // Get all requirements for this project
+            var requirements = await _projectRequirementRepository.GetProjectRequirementsByProjectAsync(projectId);
+            var requirementsList = requirements.ToList();
+
+            // If no requirements exist, no status change needed
+            if (!requirementsList.Any())
+            {
+                return false;
+            }
+
+            var oldStatus = project.Status;
+
+            // Check if all requirements are completed
+            var allCompleted = requirementsList.All(r => r.Status == RequirementStatusEnum.Completed);
+
+            // Check if any requirement is not in completed or cancelled state
+            var anyIncomplete = requirementsList.Any(r => 
+                r.Status != RequirementStatusEnum.Completed && 
+                r.Status != RequirementStatusEnum.Cancelled);
+
+            // Check if any requirement is not in understdy or new
+            var anyUnderStudy = requirementsList.Any(r =>
+                r.Status == RequirementStatusEnum.New ||
+                r.Status == RequirementStatusEnum.ManagerReview ||
+                r.Status == RequirementStatusEnum.Approved);
+            if (allCompleted)
+            {
+                // All requirements are completed, set project to Production
+                project.Status = ProjectStatus.Production;
+                project.Progress = 100;
+            }
+            else if (anyUnderStudy)
+            {
+                // First requirement created, set project to UnderStudy
+                project.Status = ProjectStatus.UnderStudy;
+            }
+            else if (anyIncomplete && project.Status == ProjectStatus.Production)
+            {
+                // If we're in Production but have incomplete requirements, move back to UnderDevelopment
+                project.Status = ProjectStatus.UnderDevelopment;
+            }
+
+            // Update the project if status changed
+            if (oldStatus != project.Status)
+            {
+                project.UpdatedAt = DateTime.Now;
+                await _projectRepository.UpdateAsync(project);
+                return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
 

@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   Timeline,
   Sprint,
   Task,
   Subtask,
-  Department,
   TimelineFilters,
   CreateTimelineRequest,
   CreateSprintRequest,
@@ -22,7 +22,15 @@ export const useTimelines = (projectId?: number) => {
   const [selectedTimeline, setSelectedTimeline] = useState<Timeline | null>(
     null,
   );
-  const [departments, setDepartments] = useState<Department[]>([]);
+
+  // Fetch departments using React Query - automatic caching and deduplication
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => timelineService.getDepartments().then((res) => res.data),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000, // 60 minutes (formerly cacheTime)
+  });
+
   const [filters, setFilters] = useState<TimelineFilters>({
     departments: [],
     members: [],
@@ -93,15 +101,11 @@ export const useTimelines = (projectId?: number) => {
       setLoading(true);
       setError(null);
 
-      const [timelinesResponse, departmentsResponse] = await Promise.all([
-        projectId
-          ? timelineService.getProjectTimelines(projectId)
-          : Promise.resolve({ data: [] }),
-        timelineService.getDepartments(),
-      ]);
+      const timelinesResponse = await (projectId
+        ? timelineService.getProjectTimelines(projectId)
+        : Promise.resolve({ data: [] }));
 
       setTimelines(timelinesResponse.data || []);
-      setDepartments(departmentsResponse.data || []);
 
       // Keep the currently selected timeline if one exists; otherwise select the first.
       // Also realign the selectedTimeline reference to the freshly fetched object.

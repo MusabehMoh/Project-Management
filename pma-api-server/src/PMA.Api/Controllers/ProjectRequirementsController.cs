@@ -281,6 +281,8 @@ public class ProjectRequirementsController : ApiBaseController
     {
         try
         {
+            _logger.LogInformation("Creating requirement for project {ProjectId}", projectId);
+            
             var invalid = ValidateModelState();
             if (invalid != null) return invalid;
 
@@ -289,10 +291,21 @@ public class ProjectRequirementsController : ApiBaseController
             var projectRequirement = _mappingService.MapToProjectRequirement(createDto);
             var createdProjectRequirement = await _projectRequirementService
                 .CreateProjectRequirementAsync(projectRequirement);
+            
+            _logger.LogInformation("Requirement {RequirementId} created for project {ProjectId}", createdProjectRequirement.Id, projectId);
+            
+            // Update project status based on requirements
+            var statusUpdated = await _projectService.UpdateProjectStatusByRequirementsAsync(projectId);
+            if (statusUpdated)
+            {
+                _logger.LogInformation("Project {ProjectId} status updated after creating requirement", projectId);
+            }
+            
             return Success(createdProjectRequirement, message: "Project requirement created successfully");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error creating requirement for project {ProjectId}", projectId);
             return Error<ProjectRequirement>("An error occurred while creating the project requirement", ex.Message);
         }
     }
@@ -370,14 +383,34 @@ public class ProjectRequirementsController : ApiBaseController
         try
         {
             _logger.LogInformation("DELETE request received for project requirement with ID: {RequirementId}", id);
-            var result = await _projectRequirementService.DeleteProjectRequirementAsync(id);
-            if (!result)
+            
+            // Get the requirement first to know which project it belongs to
+            var requirement = await _projectRequirementService.GetProjectRequirementByIdAsync(id);
+            if (requirement == null)
             {
                 _logger.LogWarning("Project requirement with ID {RequirementId} not found", id);
                 return Error<object>("Project requirement not found", status: 404);
             }
-            _logger.LogInformation("Project requirement with ID {RequirementId} deleted successfully", id);
-          return NoContent();  
+            
+            var projectId = requirement.ProjectId;
+            _logger.LogInformation("Requirement {RequirementId} belongs to project {ProjectId}", id, projectId);
+            
+            var result = await _projectRequirementService.DeleteProjectRequirementAsync(id);
+            if (!result)
+            {
+                _logger.LogWarning("Project requirement with ID {RequirementId} not found during deletion", id);
+                return Error<object>("Project requirement not found", status: 404);
+            }
+            
+            // Update project status after requirement deletion
+            var statusUpdated = await _projectService.UpdateProjectStatusByRequirementsAsync(projectId);
+            if (statusUpdated)
+            {
+                _logger.LogInformation("Project {ProjectId} status updated after requirement deletion", projectId);
+            }
+            
+            _logger.LogInformation("Project requirement with ID {RequirementId} deleted successfully from project {ProjectId}", id, projectId);
+            return NoContent();  
         }
         catch (Exception ex)
         {

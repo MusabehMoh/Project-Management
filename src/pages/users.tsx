@@ -49,9 +49,11 @@ import {
   DeleteIcon,
   MoreVerticalIcon,
   SearchIcon,
+  UserIcon,
 } from "@/components/icons";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { useUsers, useRoles, useActions } from "@/hooks/useUsers";
+import { useImpersonation } from "@/hooks/useImpersonation";
 import { ApiError } from "@/services/api/client";
 import { translateBackendError } from "@/utils/errorTranslation";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
@@ -61,6 +63,7 @@ import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 export default function UsersPage() {
   const { t, language } = useLanguage();
   const { hasPermission } = usePermissions();
+  const { startImpersonation } = useImpersonation();
 
   // Toast helpers
   const toasts = createGeneralToasts(t);
@@ -77,6 +80,13 @@ export default function UsersPage() {
     isOpen: isActionsModalOpen,
     onOpen: onActionsModalOpen,
     onOpenChange: onActionsModalOpenChange,
+  } = useDisclosure();
+
+  // Impersonation modal
+  const {
+    isOpen: isImpersonationOpen,
+    onOpen: onImpersonationOpen,
+    onOpenChange: onImpersonationOpenChange,
   } = useDisclosure();
 
   // Use the users hook for data management
@@ -127,6 +137,10 @@ export default function UsersPage() {
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [isOptionOpen, setIsOptionOpen] = useState(false);
+
+  // Impersonation state
+  const [impersonatingUser, setImpersonatingUser] = useState<User | null>(null);
+  const [isImpersonating, setIsImpersonating] = useState(false);
 
   // Helper functions for role and action management
   const getSelectedRoleData = () => {
@@ -314,6 +328,11 @@ export default function UsersPage() {
     onDeleteOpen();
   };
 
+  const handleImpersonateUser = (user: User) => {
+    setImpersonatingUser(user);
+    onImpersonationOpen();
+  };
+
   const handleSaveUser = async () => {
     if (!selectedEmployee || !selectedRole) return;
 
@@ -416,7 +435,6 @@ export default function UsersPage() {
 
   // Filter handlers
   const handleSearch = (value: string) => {
-    console.log("🔍 Frontend search triggered with value:", value);
     // Use the new search field that searches both fullName and militaryNumber
     // Clear all other filters to avoid conflicts
     updateFilters({
@@ -468,6 +486,31 @@ export default function UsersPage() {
   const handlePageSizeChange = (newSize: number) => {
     // Always go to first page when page size changes
     loadUsers(1, newSize);
+  };
+
+  const handleConfirmImpersonation = async () => {
+    if (!impersonatingUser) return;
+
+    try {
+      setIsImpersonating(true);
+      await startImpersonation(impersonatingUser.userName);
+      toasts.createSuccess(t("users.impersonateSuccess"));
+      onImpersonationOpenChange();
+      setImpersonatingUser(null);
+      // Refresh the whole page after impersonation
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 500);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to start impersonation";
+
+      toasts.createError(errorMessage);
+    } finally {
+      setIsImpersonating(false);
+    }
   };
 
   return (
@@ -841,6 +884,20 @@ export default function UsersPage() {
                                   onPress={() => handleEditUser(user)}
                                 >
                                   {t("users.editUser")}
+                                </DropdownItem>
+                              ) : null}
+                              {hasPermission({
+                                actions: ["users.update"],
+                              }) ? (
+                                <DropdownItem
+                                  key="impersonate"
+                                  startContent={
+                                    <UserIcon className="h-4 w-4" />
+                                  }
+                                  textValue={t("users.impersonate")}
+                                  onPress={() => handleImpersonateUser(user)}
+                                >
+                                  {t("users.impersonate")}
                                 </DropdownItem>
                               ) : null}
                               {hasPermission({
@@ -1547,6 +1604,60 @@ export default function UsersPage() {
                     onPress={handleConfirmDelete}
                   >
                     {t("users.deleteUser")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* Impersonation Confirmation Modal */}
+        <Modal
+          isOpen={isImpersonationOpen}
+          onOpenChange={onImpersonationOpenChange}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  {t("users.confirmImpersonate")}
+                </ModalHeader>
+                <ModalBody>
+                  <p>{t("users.impersonateWarning")}</p>
+                  {impersonatingUser && (
+                    <div className="flex items-center gap-3 p-3 bg-warning-50 rounded-lg">
+                      <Avatar
+                        name={
+                          impersonatingUser.employee?.fullName ||
+                          impersonatingUser.userName
+                        }
+                        size="sm"
+                      />
+                      <div>
+                        <p className="font-semibold">
+                          {impersonatingUser.employee?.fullName ||
+                            impersonatingUser.userName}
+                        </p>
+                        <p className="text-small text-default-500">
+                          @{impersonatingUser.userName}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-small text-warning">
+                    {t("users.impersonateNote")}
+                  </p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="default" variant="light" onPress={onClose}>
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    color="warning"
+                    isLoading={isImpersonating}
+                    onPress={handleConfirmImpersonation}
+                  >
+                    {t("users.confirmImpersonate")}
                   </Button>
                 </ModalFooter>
               </>

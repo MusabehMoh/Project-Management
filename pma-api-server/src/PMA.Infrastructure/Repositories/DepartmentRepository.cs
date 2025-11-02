@@ -186,6 +186,16 @@ public class TeamRepository : Repository<Team>, ITeamRepository
 
         return employees;
     }
+
+    public async Task<IEnumerable<Team>> GetEmployeeOtherDepartmentsAsync(int prsId, int excludeDepartmentId)
+    {
+        return await _context.Teams
+            .Include(t => t.Department)
+            .Where(t => t.PrsId == prsId && 
+                   t.IsActive && 
+                   t.DepartmentId != excludeDepartmentId)
+            .ToListAsync();
+    }
 }
 
 

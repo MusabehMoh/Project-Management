@@ -227,6 +227,9 @@ builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
 // Register IHttpContextAccessor for accessing HttpContext in services
 builder.Services.AddHttpContextAccessor();
 
+// Register impersonation service (singleton for session management)
+builder.Services.AddSingleton<PMA.Api.Services.IImpersonationService, PMA.Api.Services.ImpersonationService>();
+
 // Register the new UserContext pattern (preferred approach)
 builder.Services.AddScoped<PMA.Core.Interfaces.IUserContextAccessor, PMA.Api.Services.UserContextAccessor>();
 

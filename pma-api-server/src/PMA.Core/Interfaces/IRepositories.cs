@@ -35,6 +35,7 @@ public interface IUserRepository : IRepository<User>
     System.Threading.Tasks.Task<User?> GetByUserNameAsync(string userName);
     System.Threading.Tasks.Task<User?> GetByPrsIdAsync(int prsId);
     System.Threading.Tasks.Task<User?> GetUserWithRolesAndActionsAsync(int id);
+    System.Threading.Tasks.Task<User?> GetUserWithRolesByPrsIdAsync(int prsId);
     System.Threading.Tasks.Task<IEnumerable<User>> GetUsersByDepartmentAsync(int departmentId);
     System.Threading.Tasks.Task<List<string>> CheckUserDependenciesAsync(int userId);
 }
@@ -134,6 +135,7 @@ public interface ITeamRepository : IRepository<Team>
     System.Threading.Tasks.Task<bool> RemoveTeamMemberAsync(int id);
     System.Threading.Tasks.Task<IEnumerable<Employee>> SearchEmployeesInTeamsAsync(string searchTerm);
     System.Threading.Tasks.Task<IEnumerable<Employee>> SearchEmployeesInDepartmentAsync(string searchTerm, int departmentId);
+    System.Threading.Tasks.Task<IEnumerable<Team>> GetEmployeeOtherDepartmentsAsync(int prsId, int excludeDepartmentId);
 }
 
 public interface IUnitRepository : IRepository<Unit>

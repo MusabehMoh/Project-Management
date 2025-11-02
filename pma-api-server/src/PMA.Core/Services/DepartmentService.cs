@@ -1,6 +1,7 @@
 using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
+using PMA.Core.Enums;
 using System.Threading.Tasks;
 
 namespace PMA.Core.Services;
@@ -10,15 +11,18 @@ public class DepartmentService : IDepartmentService
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ITeamRepository _teamRepository;
     private readonly IEmployeeService _employeeService;
+    private readonly IUserRepository _userRepository;
 
     public DepartmentService(
         IDepartmentRepository departmentRepository, 
         ITeamRepository teamRepository, 
-        IEmployeeService employeeService)
+        IEmployeeService employeeService,
+        IUserRepository userRepository)
     {
         _departmentRepository = departmentRepository;
         _teamRepository = teamRepository;
         _employeeService = employeeService;
+        _userRepository = userRepository;
     }
 
     public async System.Threading.Tasks.Task<Department?> GetDepartmentByIdAsync(int id)
@@ -105,11 +109,39 @@ public class DepartmentService : IDepartmentService
             {
                 throw new KeyNotFoundException("Employee not found");
             }
-            // Check if already a member
+            // Check if already a member of THIS department
             var existingTeams = await _teamRepository.GetTeamsByDepartmentAsync(departmentId);
             if (existingTeams.Teams.Any(t => t.PrsId == (int)prsId && t.IsActive))
             {
                 throw new InvalidOperationException("Employee is already a member of this department");
+            }
+
+            // Check if employee is already in ANY other department
+            var otherDepartments = await _teamRepository.GetEmployeeOtherDepartmentsAsync((int)prsId, departmentId);
+            if (otherDepartments.Any())
+            {
+                var otherDeptNames = string.Join(", ", otherDepartments.Select(t => t.Department?.Name).Distinct());
+                throw new InvalidOperationException($"Employee '{employee.FullName}' is already a member of another department ({otherDeptNames}). Employees can only belong to one department");
+            }
+
+            // Check if user has managerial roles
+            var userWithRoles = await _userRepository.GetUserWithRolesByPrsIdAsync((int)prsId);
+            if (userWithRoles?.UserRoles != null && userWithRoles.UserRoles.Any())
+            {
+                var managerialRoleIds = new[] 
+                { 
+                    (int)RoleCodes.Administrator,
+                    (int)RoleCodes.AnalystManager,
+                    (int)RoleCodes.DevelopmentManager,
+                    (int)RoleCodes.DesignerManager,
+                    (int)RoleCodes.QCManager
+                };
+
+                var hasManagerialRole = userWithRoles.UserRoles.Any(ur => managerialRoleIds.Contains(ur.RoleId));
+                if (hasManagerialRole)
+                {
+                    throw new InvalidOperationException($"Employee '{employee.FullName}' has managerial roles and cannot be added as a department member");
+                }
             } 
         }
 

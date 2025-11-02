@@ -4,7 +4,7 @@ public enum RoleCodes
 {
     Administrator = 1,
     AnalystManager = 2,
-    DevelopmentManager = 3,
-    QCManager = 4,
-    DesignerManager = 5
+    DevelopmentManager = 4,
+    QCManager = 6,
+    DesignerManager = 8
 }
