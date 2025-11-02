@@ -18,6 +18,7 @@ interface UseTaskActivityResult {
   history: TaskHistoryDto[];
   attachments: TaskAttachmentDto[];
   loading: boolean;
+  attachmentsLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
 }
@@ -30,22 +31,22 @@ export function useTaskActivity(
   const [history, setHistory] = useState<TaskHistoryDto[]>([]);
   const [attachments, setAttachments] = useState<TaskAttachmentDto[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [attachmentsLoading, setAttachmentsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTaskActivity = async () => {
     if (!taskId || !enabled) return;
 
     setLoading(true);
+    setAttachmentsLoading(true);
     setError(null);
 
     try {
-      // Fetch comments, history, and attachments in parallel
-      const [commentsResponse, historyResponse, attachmentsResponse] =
-        await Promise.all([
-          membersTasksService.getTaskComments(taskId),
-          membersTasksService.getTaskHistory(taskId),
-          membersTasksService.getTaskAttachments(taskId),
-        ]);
+      // Fetch fast data (comments and history) first
+      const [commentsResponse, historyResponse] = await Promise.all([
+        membersTasksService.getTaskComments(taskId),
+        membersTasksService.getTaskHistory(taskId),
+      ]);
 
       if (commentsResponse.success && commentsResponse.data) {
         setComments(commentsResponse.data);
@@ -55,16 +56,25 @@ export function useTaskActivity(
         setHistory(historyResponse.data);
       }
 
+      // Mark fast data as loaded
+      setLoading(false);
+
+      // Fetch attachments separately (slower)
+      const attachmentsResponse =
+        await membersTasksService.getTaskAttachments(taskId);
+
       if (attachmentsResponse.success && attachmentsResponse.data) {
         setAttachments(attachmentsResponse.data);
       }
+
+      setAttachmentsLoading(false);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch task activity";
 
       setError(errorMessage);
-    } finally {
       setLoading(false);
+      setAttachmentsLoading(false);
     }
   };
 
@@ -77,6 +87,7 @@ export function useTaskActivity(
     history,
     attachments,
     loading,
+    attachmentsLoading,
     error,
     refetch: fetchTaskActivity,
   };

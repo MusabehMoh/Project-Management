@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using PMA.Api.Config;
 using PMA.Core.Services;
 using PMA.Api.Utils;
+using System.Text.Json;
 using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 namespace PMA.Api.Controllers;
 
@@ -64,7 +65,48 @@ public class ProjectRequirementsController : ApiBaseController
         return Error<object>("Validation failed", errors, 400);
     }
 
+    /// <summary>
+    /// Parses a string payload of attachment identifiers coming from multipart form data.
+    /// Supports JSON arrays ("[1,2,3]") and comma-delimited values ("1,2,3").
+    /// Returns the normalized list of IDs along with a flag indicating whether the client supplied the value.
+    /// </summary>
+    private (List<int> AttachmentIds, bool Provided) ParseAttachmentIdList(string? rawIds)
+    {
+        if (rawIds is null)
+            return (new List<int>(), false);
+
+        if (string.IsNullOrWhiteSpace(rawIds))
+            return (new List<int>(), true);
+
+        // Attempt JSON parsing first (preferred contract)
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<List<int>>(rawIds);
+            if (parsed != null)
+            {
+                return (parsed
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .ToList(), true);
+            }
+        }
+        catch (JsonException)
+        {
+            // Fallback to comma-separated parsing if JSON parsing fails
+        }
+
+        var fallback = rawIds
+            .Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => int.TryParse(part, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        return (fallback, true);
+    }
+
     #endregion
+ 
 
     /// <summary>
     /// Get all project requirements with pagination and filtering
@@ -310,6 +352,7 @@ public class ProjectRequirementsController : ApiBaseController
         }
     }
 
+
     /// <summary>
     /// Update an existing project requirement
     /// </summary>
@@ -325,7 +368,7 @@ public class ProjectRequirementsController : ApiBaseController
             if (invalid != null) return invalid;
 
             var existingRequirement = await _projectRequirementService
-                .GetProjectRequirementByIdAsync(id);
+                .GetByIdAsync(id);
             if (existingRequirement == null)
                 return Error<ProjectRequirement>("Project requirement not found", null, 404);
 
@@ -339,6 +382,8 @@ public class ProjectRequirementsController : ApiBaseController
             return Error<ProjectRequirement>("An error occurred while updating the project requirement", ex.Message);
         }
     }
+
+     
 
     /// <summary>
     /// Update project requirement status
@@ -460,9 +505,7 @@ public class ProjectRequirementsController : ApiBaseController
         }
     }
 
-    /// <summary>
-    /// Get draft requirements (requirements in draft status)
-    /// </summary>
+    // Summary: Get draft requirements (requirements in draft status)
     //[HttpGet("draft-requirements")]
     //[ProducesResponseType(200)]
     //public async Task<IActionResult> GetDraftRequirements(
@@ -616,12 +659,19 @@ public class ProjectRequirementsController : ApiBaseController
     /// <summary>
     /// Upload one or multiple attachments for a specific requirement (multipart/form-data).
     /// Accepts either a single field named 'file' or multiple using 'files'.
+    /// Optionally accepts 'existingAttachmentIds' payload (JSON array or comma separated) to indicate which
+    /// previously uploaded attachment IDs should be retained. Any existing attachments not listed are removed.
     /// </summary>
     [HttpPost("requirements/{id}/attachments")]
     [ProducesResponseType(201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> UploadAttachments(int id, [FromForm] List<IFormFile>? files, [FromForm] IFormFile? file)
+    public async Task<IActionResult> UploadAttachments(
+        int id,
+        [FromForm] List<IFormFile>? files,
+        [FromForm] IFormFile? file,
+        [FromForm] string? existingAttachmentIds,
+        [FromForm] string? removeAttachmentIds)
     {
         try
         {
@@ -629,8 +679,6 @@ public class ProjectRequirementsController : ApiBaseController
             var incoming = new List<IFormFile>();
             if (files != null && files.Count > 0) incoming.AddRange(files);
             if (file != null) incoming.Add(file);
-            if (incoming.Count == 0)
-                return Error<object>("No files uploaded", status: 400);
 
             // Validate each file; collect first error only for simplicity
             foreach (var f in incoming)
@@ -640,16 +688,61 @@ public class ProjectRequirementsController : ApiBaseController
                     return Error<object>(error!, null, 400);
             }
 
-            // Use bulk service method (falls back to single additions internally)
-            var result = await _projectRequirementService.UploadAttachmentsAsync(id, incoming);
-            if (result == null || result.Count == 0)
-                return Error<object>("Project requirement not found or no files processed", null, 404);
+            var (keepIds, keepProvided) = ParseAttachmentIdList(existingAttachmentIds);
+            var (explicitRemoveIds, removeProvided) = ParseAttachmentIdList(removeAttachmentIds);
 
-            return Success(result, message: "Attachment(s) uploaded successfully");
+            if (incoming.Count == 0 && !keepProvided && !removeProvided)
+                return Error<object>("No files uploaded or attachment list provided", status: 400);
+
+            var removeIds = new List<int>();
+            if (removeProvided)
+            {
+                removeIds = explicitRemoveIds;
+            }
+            else if (keepProvided)
+            {
+                var requirement = await _projectRequirementService.GetProjectRequirementByIdAsync(id);
+                if (requirement == null)
+                    return Error<object>("Project requirement not found", null, 404);
+
+                var currentIds = requirement.Attachments?
+                    .Select(att => att.Id)
+                    .ToList() ?? new List<int>();
+
+                var keepSet = new HashSet<int>(keepIds);
+                removeIds = currentIds
+                    .Where(attId => !keepSet.Contains(attId))
+                    .ToList();
+            }
+
+            var updatedAttachments = await _projectRequirementService
+                .SyncAttachmentsAsync(id, incoming, removeIds);
+
+            if (updatedAttachments == null)
+                return Error<object>("Project requirement not found or no attachments processed", null, 404);
+
+            var keepLookup = new HashSet<int>(keepIds);
+            var newlyUploaded = updatedAttachments
+                .Where(att => !keepLookup.Contains(att.Id))
+                .ToList();
+
+            foreach (var attachment in updatedAttachments)
+            {
+                // Prevent circular references in serializer payloads
+                attachment.ProjectRequirement = null;
+            }
+
+            var response = new AttachmentUploadResultDto
+            {
+                Attachments = updatedAttachments.ToList(),
+                NewlyUploaded = newlyUploaded
+            };
+
+            return Success(response, message: "Attachment(s) processed successfully");
         }
         catch (Exception ex)
         {
-            return Error<object>("An error occurred while uploading the attachment(s)", ex.Message);
+            return Error<object>("An error occurred while processing the attachment(s)", ex.Message);
         }
     }
 
@@ -688,12 +781,8 @@ public class ProjectRequirementsController : ApiBaseController
             var fileResult = await _projectRequirementService.DownloadAttachmentAsync(id, attachmentId);
             if (fileResult == null)
                 return Error<byte[]>("Attachment not found", null, 404);
-            // Prefer PhysicalFile if we have a concrete path (range support & automatic headers)
-            if (!string.IsNullOrWhiteSpace(fileResult.FilePath) && System.IO.File.Exists(fileResult.FilePath))
-            {
-                return PhysicalFile(fileResult.FilePath, fileResult.ContentType, fileResult.FileName, enableRangeProcessing: true);
-            }
-            // Reset stream position defensively
+            
+            // Files are now stored in database as byte arrays, served via Stream
             if (fileResult.FileStream.CanSeek)
                 fileResult.FileStream.Position = 0;
             Response.ContentLength = fileResult.FileSize;
@@ -707,7 +796,12 @@ public class ProjectRequirementsController : ApiBaseController
 
     /// <summary>
     /// Bulk synchronize attachments for a requirement (add new files, remove specified attachment IDs) in a single request.
-    /// Multipart/form-data: files[] for new files, removeIds (comma separated) or JSON body part named 'removeIds'.
+    /// DEPRECATED: Use separate endpoints for better separation of concerns:
+    ///   - POST /requirements/{id}/attachments - Upload new files (multipart/form-data)
+    ///   - PATCH /requirements/{id}/attachments/list - Manage attachment list by ID (JSON body)
+    /// This endpoint remains for backward compatibility but combines file uploads with attachment management,
+    /// which violates the principle of separating file handling from metadata management.
+    /// Multipart/form-data: files[] for new files, removeIds (comma separated).
     /// </summary>
     [HttpPost("requirements/{id}/attachments/sync")]
     [ProducesResponseType(200)]
@@ -748,28 +842,7 @@ public class ProjectRequirementsController : ApiBaseController
         }
     }
 
-    /// <summary>
-    /// Get team workload performance - Redirect to TeamWorkloadController
-    /// This endpoint exists for backward compatibility with frontend services
-    /// </summary>
-    //[HttpGet("team-workload-performance")]
-    //[ProducesResponseType(200)]
-    //public IActionResult GetTeamWorkloadPerformance(
-    //    [FromQuery] int? departmentId = null,
-    //    [FromQuery] string? busyStatus = null,
-    //    [FromQuery] int page = 1,
-    //    [FromQuery] int limit = 10)
-    //{
-    //    // Redirect to the proper TeamWorkloadController endpoint
-    //    var queryParams = new List<string>();
-    //    if (departmentId.HasValue) queryParams.Add($"departmentId={departmentId}");
-    //    if (!string.IsNullOrEmpty(busyStatus)) queryParams.Add($"busyStatus={busyStatus}");
-    //    queryParams.Add($"page={page}");
-    //    queryParams.Add($"limit={limit}");
-        
-    //    var redirectUrl = $"/api/team-workload/performance?{string.Join("&", queryParams)}";
-    //    return Redirect(redirectUrl);
-    //}
+   
 
     /// <summary>
     /// Postpone a requirement and add record to status history

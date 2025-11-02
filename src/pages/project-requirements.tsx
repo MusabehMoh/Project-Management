@@ -97,7 +97,6 @@ interface RequirementFormData {
   priority: number; // Integer value matching backend enum
   type: number; // Integer value matching backend enum
   expectedCompletionDate: any;
-  attachments: string[];
   uploadedFiles: File[];
   existingAttachments: ProjectRequirementAttachment[];
 }
@@ -147,7 +146,6 @@ export default function ProjectRequirementsPage() {
     handlePageChange,
     refreshData,
     uploadAttachments,
-    deleteAttachment,
     downloadAttachment,
   } = useProjectRequirements({
     projectId: projectId ? parseInt(projectId) : undefined,
@@ -188,6 +186,8 @@ export default function ProjectRequirementsPage() {
     attachment: ProjectRequirementAttachment,
   ) => {
     try {
+      setFileOperationLoading(true);
+
       // For previewable files, get the blob URL
       const blob = await projectRequirementsService.downloadAttachment(
         selectedRequirement?.id || 0,
@@ -205,6 +205,8 @@ export default function ProjectRequirementsPage() {
         attachment.id,
         attachment.originalName,
       );
+    } finally {
+      setFileOperationLoading(false);
     }
   };
 
@@ -259,13 +261,14 @@ export default function ProjectRequirementsPage() {
   const [postponeReason, setPostponeReason] = useState<string>("");
   const [postponeLoading, setPostponeLoading] = useState(false);
   const [unpostponeLoading, setUnpostponeLoading] = useState(false);
+  const [fileOperationLoading, setFileOperationLoading] =
+    useState<boolean>(false);
   const [formData, setFormData] = useState<RequirementFormData>({
     name: "",
     description: "",
     priority: 0, // No default priority - user must select
     type: 0, // No default type - user must select
     expectedCompletionDate: null,
-    attachments: [],
     uploadedFiles: [],
     existingAttachments: [],
   });
@@ -273,6 +276,12 @@ export default function ProjectRequirementsPage() {
     Record<string, string>
   >({});
   const [hasFileUploadError, setHasFileUploadError] = useState<boolean>(false);
+  const [loadingAttachments, setLoadingAttachments] = useState<boolean>(false);
+  const [removedAttachmentIds, setRemovedAttachmentIds] = useState<number[]>(
+    [],
+  );
+  const [isSavingWithAttachments, setIsSavingWithAttachments] =
+    useState<boolean>(false);
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -399,13 +408,14 @@ export default function ProjectRequirementsPage() {
       priority: 0, // No default priority - user must select
       type: 0, // No default type - user must select
       expectedCompletionDate: null,
-      attachments: [],
       uploadedFiles: [],
       existingAttachments: [],
     });
     setValidationErrors({});
     setHasFileUploadError(false);
+    setLoadingAttachments(false);
     setSelectedRequirement(null);
+    setRemovedAttachmentIds([]);
   };
 
   const handleCreateRequirement = () => {
@@ -414,36 +424,51 @@ export default function ProjectRequirementsPage() {
   };
 
   const handleEditRequirement = (requirement: ProjectRequirement) => {
+    // Set selected requirement immediately from list
     setSelectedRequirement(requirement);
+    setLoadingAttachments(true);
 
-    // Safely parse the expected completion date
-    let parsedDate = null;
-
-    if (requirement.expectedCompletionDate) {
-      try {
-        // Backend returns ISO format: YYYY-MM-DDTHH:MM:SS
-        // Extract date part without timezone conversion
-        const dateStr = requirement.expectedCompletionDate as string;
-        const datePart = dateStr.split("T")[0]; // Get YYYY-MM-DD
-
-        parsedDate = parseDate(datePart);
-      } catch {
-        // Silently ignore date parsing errors
-      }
-    }
-
-    setFormData({
-      name: requirement.name,
-      description: requirement.description,
-      priority: requirement.priority,
-      type: requirement.type,
-      expectedCompletionDate: parsedDate,
-      attachments: [],
-      uploadedFiles: [],
-      existingAttachments: requirement.attachments || [],
-    });
     setValidationErrors({});
+
+    // Open modal immediately - don't wait for API
     onEditOpen();
+
+    // Fetch full requirement details with all fields in background
+    projectRequirementsService
+      .getRequirement(requirement.id)
+      .then((fullRequirement) => {
+        // Parse the expected completion date from API response
+        let parsedDate = null;
+
+        if (fullRequirement.expectedCompletionDate) {
+          try {
+            const dateStr = fullRequirement.expectedCompletionDate as string;
+            const datePart = dateStr.split("T")[0]; // Get YYYY-MM-DD
+
+            parsedDate = parseDate(datePart);
+          } catch {
+            // Silently ignore date parsing errors
+          }
+        }
+
+        // Update form data with complete API response
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          name: fullRequirement.name,
+          description: fullRequirement.description,
+          priority: fullRequirement.priority,
+          type: fullRequirement.type,
+          expectedCompletionDate: parsedDate,
+          existingAttachments: fullRequirement.attachments || [],
+        }));
+
+        setLoadingAttachments(false);
+      })
+      .catch(() => {
+        // Silently fail - modal is already open with basic data
+        // User can still work with what's displayed
+        setLoadingAttachments(false);
+      });
   };
 
   const handleDeleteRequirement = (requirement: ProjectRequirement) => {
@@ -457,16 +482,18 @@ export default function ProjectRequirementsPage() {
   ) => {
     if (!validateForm() || !projectId) return;
 
+    // Set loading state for attachment operations
+    setIsSavingWithAttachments(true);
+
     try {
       const requestData: CreateProjectRequirementRequest = {
-        projectId: parseInt(projectId),
+        projectId: parseInt(projectId, 10),
         name: formData.name,
         description: formData.description,
         priority: formData.priority,
         type: formData.type,
         expectedCompletionDate:
           formData.expectedCompletionDate?.toString() || "",
-        attachments: formData.attachments,
       };
 
       let savedRequirement: ProjectRequirement;
@@ -488,46 +515,66 @@ export default function ProjectRequirementsPage() {
         });
       }
 
-      // Determine removed attachment IDs (existing on requirement but not in kept list)
-      const removedAttachments: number[] =
-        selectedRequirement?.attachments
-          ?.filter(
-            (existing) =>
-              !formData.existingAttachments.find(
-                (kept) => kept.id === existing.id,
-              ),
-          )
-          .map((a) => a.id) || [];
-
-      // Try bulk sync (uploads + deletes). Falls back if endpoint unsupported.
-      const syncResult = await projectRequirementsService.syncAttachments(
-        savedRequirement.id,
-        formData.uploadedFiles,
-        removedAttachments,
+      const keepAttachmentIds = formData.existingAttachments.map(
+        (attachment) => attachment.id,
       );
+      const hasAttachmentUploads = formData.uploadedFiles.length > 0;
+      const originalAttachmentCount =
+        selectedRequirement?.attachments?.length ?? 0;
+      const hasAttachmentRemovals =
+        removedAttachmentIds.length > 0 ||
+        originalAttachmentCount > keepAttachmentIds.length;
 
-      if (syncResult === null) {
-        // Fallback path: legacy separate calls
-        if (formData.uploadedFiles.length > 0) {
-          await uploadAttachments(savedRequirement.id, formData.uploadedFiles);
-        }
-        for (const removedId of removedAttachments) {
-          await deleteAttachment(savedRequirement.id, removedId);
+      const attachmentErrors: string[] = [];
+
+      if (hasAttachmentUploads || hasAttachmentRemovals) {
+        try {
+          await uploadAttachments(
+            savedRequirement.id,
+            formData.uploadedFiles,
+            selectedRequirement ? keepAttachmentIds : undefined,
+            removedAttachmentIds,
+          );
+        } catch (error) {
+          const errorMsg =
+            error instanceof Error
+              ? error.message
+              : "Failed to process requirement attachments";
+
+          attachmentErrors.push(errorMsg);
         }
       }
 
       resetForm();
 
-      // Refresh the requirements list to get updated data with attachments
+      // Refresh the requirements list to get updated data with attachments AFTER all operations complete
       await refreshData();
+
+      // Show consolidated result message
+      if (attachmentErrors.length > 0) {
+        // Show warning if some attachments had issues but requirement was saved
+        showWarningToast(
+          t("requirements.partialSuccess") || "Partially Saved",
+          `Requirement saved, but: ${attachmentErrors.join("; ")}`,
+        );
+      } else {
+        // Show success if everything worked
+        showSuccessToast(t("requirements.saveSuccess") || "Saved Successfully");
+      }
 
       if (selectedRequirement) {
         onEditOpenChange();
       } else {
         onCreateOpenChange();
       }
-    } catch {
-      // Error saving requirement
+    } catch (error) {
+      const errorMsg =
+        error instanceof Error ? error.message : "Failed to save requirement";
+
+      showErrorToast(t("requirements.saveError") || "Error", errorMsg);
+    } finally {
+      // Clear the attachment saving state after all operations complete
+      setIsSavingWithAttachments(false);
     }
   };
 
@@ -780,10 +827,10 @@ export default function ProjectRequirementsPage() {
     // Wrap each paragraph in <p> tags
     const htmlDescription = paragraphs.map((para) => `<p>${para}</p>`).join("");
 
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       description: htmlDescription || `<p>${content}</p>`,
-    });
+    }));
 
     // Show success feedback
     showSuccessToast(
@@ -922,6 +969,8 @@ export default function ProjectRequirementsPage() {
         (att) => att.id !== attachmentId,
       ),
     }));
+    // Track the removed attachment ID
+    setRemovedAttachmentIds((prev) => [...prev, attachmentId]);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -1475,7 +1524,11 @@ export default function ProjectRequirementsPage() {
                                 ) : null}
                                 {hasPermission({
                                   actions: ["requirements.delete"],
-                                }) ? (
+                                }) &&
+                                requirement.status !==
+                                  REQUIREMENT_STATUS.UNDER_DEVELOPMENT &&
+                                requirement.status !==
+                                  REQUIREMENT_STATUS.COMPLETED ? (
                                   <DropdownItem
                                     key="delete"
                                     className="text-danger"
@@ -1524,9 +1577,16 @@ export default function ProjectRequirementsPage() {
         isOpen={isCreateOpen || isEditOpen}
         scrollBehavior="outside"
         size="4xl"
-        onOpenChange={
-          selectedRequirement ? onEditOpenChange : onCreateOpenChange
-        }
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            resetForm();
+          }
+          if (selectedRequirement) {
+            onEditOpenChange();
+          } else {
+            onCreateOpenChange();
+          }
+        }}
       >
         <ModalContent className="max-h-[90vh]">
           {(onClose) => (
@@ -1548,7 +1608,7 @@ export default function ProjectRequirementsPage() {
                       placeholder={t("requirements.requirementNamePlaceholder")}
                       value={formData.name}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, name: value })
+                        setFormData((prev) => ({ ...prev, name: value }))
                       }
                     />
                     <Select
@@ -1564,19 +1624,19 @@ export default function ProjectRequirementsPage() {
                           : []
                       }
                       onClear={() => {
-                        setFormData({
-                          ...formData,
+                        setFormData((prev) => ({
+                          ...prev,
                           priority: 0,
-                        });
+                        }));
                       }}
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
 
                         if (selectedKey) {
-                          setFormData({
-                            ...formData,
+                          setFormData((prev) => ({
+                            ...prev,
                             priority: parseInt(selectedKey),
-                          });
+                          }));
                         }
                       }}
                     >
@@ -1602,19 +1662,19 @@ export default function ProjectRequirementsPage() {
                         formData.type > 0 ? [formData.type.toString()] : []
                       }
                       onClear={() => {
-                        setFormData({
-                          ...formData,
+                        setFormData((prev) => ({
+                          ...prev,
                           type: 0,
-                        });
+                        }));
                       }}
                       onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0] as string;
 
                         if (selectedKey) {
-                          setFormData({
-                            ...formData,
+                          setFormData((prev) => ({
+                            ...prev,
                             type: parseInt(selectedKey),
-                          });
+                          }));
                         }
                       }}
                     >
@@ -1637,10 +1697,10 @@ export default function ProjectRequirementsPage() {
                       )}
                       value={formData.expectedCompletionDate}
                       onChange={(date) =>
-                        setFormData({
-                          ...formData,
+                        setFormData((prev) => ({
+                          ...prev,
                           expectedCompletionDate: date,
-                        })
+                        }))
                       }
                     />
                   </div>
@@ -1664,31 +1724,36 @@ export default function ProjectRequirementsPage() {
                         </Button>
                       </Tooltip>
                     </div>
-                    <div className="min-h-[240px]">
-                      <ReactQuill
-                        className={language === "ar" ? "rtl-editor" : ""}
-                        modules={{
-                          toolbar: [
-                            ["bold", "italic", "underline"],
-                            [{ list: "ordered" }, { list: "bullet" }],
-                            ["clean"],
-                          ],
-                        }}
-                        placeholder={t(
-                          "requirements.requirementDescriptionPlaceholder",
-                        )}
-                        style={{
-                          height: "200px",
-                          borderColor: validationErrors.description
-                            ? "#f31260"
-                            : undefined,
-                        }}
-                        theme="snow"
-                        value={formData.description}
-                        onChange={(value) =>
-                          setFormData({ ...formData, description: value })
-                        }
-                      />
+                    <div className="rounded-lg border border-default-200 overflow-hidden">
+                      <div style={{ height: "240px" }}>
+                        <ReactQuill
+                          className={language === "ar" ? "rtl-editor" : ""}
+                          modules={{
+                            toolbar: [
+                              ["bold", "italic", "underline"],
+                              [{ list: "ordered" }, { list: "bullet" }],
+                              ["clean"],
+                            ],
+                          }}
+                          placeholder={t(
+                            "requirements.requirementDescriptionPlaceholder",
+                          )}
+                          style={{
+                            height: "100%",
+                            borderColor: validationErrors.description
+                              ? "#f31260"
+                              : undefined,
+                          }}
+                          theme="snow"
+                          value={formData.description}
+                          onChange={(value) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              description: value,
+                            }))
+                          }
+                        />
+                      </div>
                     </div>
                     {validationErrors.description && (
                       <p className="text-tiny text-danger">
@@ -1742,71 +1807,107 @@ export default function ProjectRequirementsPage() {
                     <div className="space-y-4">
                       {/* Existing & New Attachments in Scrollable Area */}
                       <div className="max-h-64 overflow-y-auto space-y-2">
-                        {/* Existing Attachments */}
-                        {formData.existingAttachments.length > 0 && (
+                        {/* Loading Skeletons */}
+                        {loadingAttachments && selectedRequirement && (
                           <div className="space-y-2">
                             <h4 className="text-sm font-medium text-default-700 sticky top-0 bg-background py-1">
                               {t("requirements.existingAttachments")}
                             </h4>
-                            {formData.existingAttachments.map((attachment) => (
+                            {[1, 2, 3].map((i) => (
                               <div
-                                key={attachment.id}
+                                key={i}
                                 className="flex items-center justify-between p-2 bg-default-50 rounded-lg"
                               >
                                 <div className="flex items-center space-x-2 min-w-0 flex-1">
-                                  <FileText className="w-4 h-4 text-default-500 flex-shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-medium truncate">
-                                      {attachment.originalName}
-                                    </p>
-                                    <p className="text-xs text-default-500">
-                                      {formatFileSize(attachment.fileSize)}
-                                    </p>
+                                  <Skeleton className="w-4 h-4 rounded" />
+                                  <div className="min-w-0 flex-1 space-y-1">
+                                    <Skeleton className="h-3 w-32 rounded" />
+                                    <Skeleton className="h-2 w-20 rounded" />
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-1 flex-shrink-0">
-                                  <Button
-                                    isIconOnly
-                                    size="sm"
-                                    variant="light"
-                                    onPress={() =>
-                                      handleFilePreview(attachment)
-                                    }
-                                  >
-                                    <Eye className="w-3 h-3" />
-                                  </Button>
-                                  <Button
-                                    isIconOnly
-                                    size="sm"
-                                    variant="light"
-                                    onPress={() => {
-                                      downloadAttachment(
-                                        selectedRequirement?.id || 0,
-                                        attachment.id,
-                                        attachment.originalName,
-                                      );
-                                    }}
-                                  >
-                                    <Download className="w-3 h-3" />
-                                  </Button>
-                                  <Button
-                                    isIconOnly
-                                    color="danger"
-                                    size="sm"
-                                    variant="light"
-                                    onPress={() =>
-                                      handleRemoveExistingAttachment(
-                                        attachment.id,
-                                      )
-                                    }
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </Button>
+                                  <Skeleton className="w-6 h-6 rounded" />
+                                  <Skeleton className="w-6 h-6 rounded" />
+                                  <Skeleton className="w-6 h-6 rounded" />
                                 </div>
                               </div>
                             ))}
                           </div>
                         )}
+
+                        {/* Existing Attachments */}
+                        {!loadingAttachments &&
+                          formData.existingAttachments.length > 0 && (
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-medium text-default-700 sticky top-0 bg-background py-1">
+                                {t("requirements.existingAttachments")}
+                              </h4>
+                              {formData.existingAttachments.map(
+                                (attachment) => (
+                                  <div
+                                    key={attachment.id}
+                                    className="flex items-center justify-between p-2 bg-default-50 rounded-lg"
+                                  >
+                                    <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                      <FileText className="w-4 h-4 text-default-500 flex-shrink-0" />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-medium truncate">
+                                          {attachment.originalName}
+                                        </p>
+                                        <p className="text-xs text-default-500">
+                                          {formatFileSize(attachment.fileSize)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center space-x-1 flex-shrink-0">
+                                      <Button
+                                        isIconOnly
+                                        isLoading={fileOperationLoading}
+                                        size="sm"
+                                        variant="light"
+                                        onPress={() =>
+                                          handleFilePreview(attachment)
+                                        }
+                                      >
+                                        <Eye className="w-3 h-3" />
+                                      </Button>
+                                      <Button
+                                        isIconOnly
+                                        isLoading={fileOperationLoading}
+                                        size="sm"
+                                        variant="light"
+                                        onPress={() => {
+                                          setFileOperationLoading(true);
+                                          downloadAttachment(
+                                            selectedRequirement?.id || 0,
+                                            attachment.id,
+                                            attachment.originalName,
+                                          ).finally(() =>
+                                            setFileOperationLoading(false),
+                                          );
+                                        }}
+                                      >
+                                        <Download className="w-3 h-3" />
+                                      </Button>
+                                      <Button
+                                        isIconOnly
+                                        color="danger"
+                                        size="sm"
+                                        variant="light"
+                                        onPress={() =>
+                                          handleRemoveExistingAttachment(
+                                            attachment.id,
+                                          )
+                                        }
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          )}
 
                         {/* New Uploaded Files */}
                         {formData.uploadedFiles.length > 0 && (
@@ -1857,7 +1958,7 @@ export default function ProjectRequirementsPage() {
                 selectedRequirement.status === REQUIREMENT_STATUS.APPROVED ? (
                   <Button
                     color="primary"
-                    isLoading={loading}
+                    isLoading={loading || isSavingWithAttachments}
                     onPress={handleUpdateApprovedRequirement}
                   >
                     {t("common.update")}
@@ -1867,14 +1968,14 @@ export default function ProjectRequirementsPage() {
                   <>
                     <Button
                       color="default"
-                      isLoading={loading}
+                      isLoading={loading || isSavingWithAttachments}
                       onPress={() => handleSaveRequirement(true)}
                     >
                       {t("requirements.saveAsDraft")}
                     </Button>
                     <Button
                       color="primary"
-                      isLoading={loading}
+                      isLoading={loading || isSavingWithAttachments}
                       onPress={() => handleSaveRequirement(false)}
                     >
                       {t("requirements.requestApproval")}

@@ -408,7 +408,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                     isInvalid={!!errors.members ? true : false}
                     isLoading={employeeSearchLoading}
                     label={t("users.selectEmployee")}
-                    menuTrigger="input"
+                    menuTrigger="focus"
                     placeholder={t("users.searchEmployees")}
                     selectedKey={selectedEmployee?.id.toString()}
                     onInputChange={(value) => {

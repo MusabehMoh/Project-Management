@@ -486,6 +486,17 @@ public class TaskRepository : Repository<TaskEntity>, ITaskRepository
     }
 
     /// <summary>
+    /// Get attachment with full FileData for download operations
+    /// Used specifically for downloads where we need the binary file content
+    /// </summary>
+    public async Task<TaskAttachment?> GetAttachmentWithFileDataAsync(int attachmentId)
+    {
+        return await _context.TaskAttachments
+            .Where(ta => ta.Id == attachmentId)
+            .FirstOrDefaultAsync();
+    }
+
+    /// <summary>
     /// Fetch multiple tasks by IDs in a single database call - eliminates N+1 query problem
     /// </summary>
     public async Task<IEnumerable<TaskEntity>> GetTasksByIdsAsync(IEnumerable<int> taskIds)

@@ -4,6 +4,8 @@ using PMA.Core.Interfaces;
 using PMA.Core.DTOs;
 using PMA.Core.Enums;
 using PMA.Infrastructure.Data;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PMA.Infrastructure.Repositories;
 
@@ -19,7 +21,6 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Project)
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
-            .Include(pr => pr.Attachments) // Include attachments
             .Include(pr => pr.RequirementTask)
             .Include(pr => pr.Timeline)
             .AsQueryable();
@@ -61,8 +62,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
 
         var totalCount = await query.CountAsync();
         var projectRequirements = await query
-            .OrderBy(pr => pr.Priority)
-            .ThenBy(pr => pr.CreatedAt)
+            .OrderByDescending(pr => pr.CreatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
             .ToListAsync();
@@ -75,12 +75,10 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         return await _context.ProjectRequirements
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
-            .Include(pr => pr.Attachments)
             .Include(pr => pr.RequirementTask)
             .Include(pr => pr.Timeline)
             .Where(pr => pr.ProjectId == projectId)
-            .OrderBy(pr => pr.Priority)
-            .ThenBy(pr => pr.CreatedAt)
+            .OrderByDescending(pr => pr.CreatedAt) 
             .ToListAsync();
     }
 
@@ -89,7 +87,6 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         return await _context.ProjectRequirements
             .Include(pr => pr.Project)
             .Include(pr => pr.Creator)
-            .Include(pr => pr.Attachments)
             .Include(pr => pr.RequirementTask)
             .Where(pr => pr.AssignedAnalyst == analystId)
             .OrderBy(pr => pr.Priority)
@@ -99,7 +96,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
 
     public async Task<ProjectRequirement?> GetProjectRequirementWithDetailsAsync(int id)
     {
-        return await _context.ProjectRequirements
+        var requirement = await _context.ProjectRequirements
             .Include(pr => pr.Project)
                 .ThenInclude(p => p != null ? p.ProjectOwnerEmployee : null)
             .Include(pr => pr.Project)
@@ -108,13 +105,34 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
                 .ThenInclude(p => p != null ? p.OwningUnitEntity : null)
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
-            .Include(pr => pr.Attachments)
             .Include(pr => pr.RequirementTask)
                 .ThenInclude(t => t.Developer)
             .Include(pr => pr.RequirementTask)
                 .ThenInclude(t => t.Qc)
             .Include(pr => pr.Timeline)
             .FirstOrDefaultAsync(pr => pr.Id == id);
+
+        // Fetch attachments separately with Select projection to exclude FileData
+        // This avoids loading large byte arrays when only metadata is needed
+        if (requirement != null)
+        {
+            requirement.Attachments = await _context.ProjectRequirementAttachments
+                .Where(a => a.ProjectRequirementId == id)
+                .Select(a => new ProjectRequirementAttachment
+                {
+                    Id = a.Id,
+                    ProjectRequirementId = a.ProjectRequirementId,
+                    FileName = a.FileName,
+                    OriginalName = a.OriginalName,
+                    FileSize = a.FileSize,
+                    ContentType = a.ContentType,
+                    UploadedAt = a.UploadedAt
+                    // Exclude a.FileData to avoid loading large byte arrays
+                })
+                .ToListAsync();
+        }
+
+        return requirement;
     }
 
     public async Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId)
@@ -173,6 +191,38 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         };
     }
 
+    public async Task<ProjectRequirementAttachment?> GetAttachmentWithFileDataAsync(int attachmentId)
+    {
+        // Load attachment directly from database with full FileData included
+        return await _context.ProjectRequirementAttachments
+            .FirstOrDefaultAsync(a => a.Id == attachmentId);
+    }
+
+    public async Task<ProjectRequirementAttachment> AddAttachmentAsync(ProjectRequirementAttachment attachment)
+    {
+        _context.ProjectRequirementAttachments.Add(attachment);
+        await _context.SaveChangesAsync();
+        return attachment;
+    }
+
+    public async Task<List<ProjectRequirementAttachment>> GetAttachmentsMetadataAsync(int requirementId)
+    {
+        return await _context.ProjectRequirementAttachments
+            .Where(a => a.ProjectRequirementId == requirementId)
+            .OrderByDescending(a => a.UploadedAt)
+            .Select(a => new ProjectRequirementAttachment
+            {
+                Id = a.Id,
+                ProjectRequirementId = a.ProjectRequirementId,
+                FileName = a.FileName,
+                OriginalName = a.OriginalName,
+                FileSize = a.FileSize,
+                ContentType = a.ContentType,
+                UploadedAt = a.UploadedAt
+            })
+            .ToListAsync();
+    }
+
     public async System.Threading.Tasks.Task<bool> DeleteAttachmentAsync(int requirementId, int attachmentId)
     {
         try
@@ -184,7 +234,8 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             if (attachment == null)
                 return false;
 
-            // Remove the attachment entity from the database
+            // Files are stored as binary data (byte[]) in FileData column
+            // Removing the database record automatically deletes the file
             _context.ProjectRequirementAttachments.Remove(attachment);
             await _context.SaveChangesAsync();
 

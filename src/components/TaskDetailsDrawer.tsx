@@ -101,6 +101,65 @@ export default function TaskDetailsDrawer({
   // File upload state
   const [hasFileUploadError, setHasFileUploadError] = useState<boolean>(false);
   const [uploadingFiles, setUploadingFiles] = useState(false);
+
+  // Function to translate field names
+  const translateFieldName = (fieldName: string): string => {
+    const fieldNameLower = fieldName.toLowerCase();
+
+    // Map common field names to translation keys
+    const fieldTranslations: Record<string, string> = {
+      progress: "common.progress",
+      statusid: "common.status",
+      status: "common.status",
+      priority: "dashboard.priority",
+      priorityid: "dashboard.priority",
+      assignee: "common.assignee",
+      duedate: "common.dueDate",
+      startdate: "tasks.startDate",
+      enddate: "tasks.endDate",
+      description: "calendar.description",
+      name: "common.name",
+      title: "calendar.eventTitle",
+    };
+
+    // Return translated field name if available, otherwise return original
+    const translationKey = fieldTranslations[fieldNameLower];
+
+    return translationKey ? t(translationKey) : fieldName;
+  };
+
+  // Function to translate status values
+  const translateStatusValue = (value: string): string => {
+    if (!value) return value;
+
+    // Normalize the value by removing spaces and converting to lowercase
+    const valueLower = value.toLowerCase().replace(/\s+/g, "");
+
+    // Map status values to translation keys (handle various formats)
+    const statusTranslations: Record<string, string> = {
+      todo: "status.todo",
+      "to-do": "status.todo",
+      toDo: "status.todo",
+      inprogress: "teamDashboard.status.inProgress",
+      "in-progress": "teamDashboard.status.inProgress",
+      inProgress: "status.inProgress",
+      inreview: "teamDashboard.status.inReview",
+      "in-review": "teamDashboard.status.inReview",
+      inReview: "teamDashboard.status.inReview",
+      rework: "teamDashboard.status.rework",
+      completed: "status.completed",
+      blocked: "status.blocked",
+      onhold: "status.blocked", // Map "On Hold" to blocked
+      "on-hold": "status.blocked",
+      onHold: "status.blocked",
+    };
+
+    // Return translated status if available, otherwise return original
+    const translationKey = statusTranslations[valueLower];
+
+    return translationKey ? t(translationKey) : value;
+  };
+
   // Handle file preview with attachment data
   const handleFilePreview = async (
     attachment: ProjectRequirementAttachment,
@@ -284,7 +343,7 @@ export default function TaskDetailsDrawer({
                       name={selectedTask.assignedDesigner.fullName}
                       size="sm"
                     />
-                    <div className="flex flex-col">
+                    <div className="flex flex-col flex-1">
                       <span className="text-sm font-medium">
                         {selectedTask.assignedDesigner.gradeName}{" "}
                         {selectedTask.assignedDesigner.fullName}
@@ -292,6 +351,23 @@ export default function TaskDetailsDrawer({
                       <span className="text-xs text-default-500">
                         {selectedTask.assignedDesigner.militaryNumber}
                       </span>
+                      {/* Designer Task Status */}
+                      {selectedTask.designerTaskStatus && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-default-600">
+                            {t("tasks.designerTaskStatus")}:
+                          </span>
+                          <Chip
+                            color={getTaskStatusColor(
+                              selectedTask.designerTaskStatus,
+                            )}
+                            size="sm"
+                            variant="flat"
+                          >
+                            {getStatusText(selectedTask.designerTaskStatus)}
+                          </Chip>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -618,13 +694,14 @@ export default function TaskDetailsDrawer({
                               {item.items.map((change, index) => (
                                 <div key={index} className="text-sm">
                                   <span className="font-medium">
-                                    {change.fieldName}:
+                                    {translateFieldName(change.fieldName)}:
                                   </span>{" "}
                                   <span className="text-danger-600 line-through">
-                                    {change.oldValue || t("common.none")}
+                                    {translateStatusValue(change.oldValue) ||
+                                      t("common.none")}
                                   </span>{" "}
                                   <span className="text-success-600">
-                                    → {change.newValue}
+                                    → {translateStatusValue(change.newValue)}
                                   </span>
                                 </div>
                               ))}
@@ -709,16 +786,28 @@ export default function TaskDetailsDrawer({
                                 <p className="text-sm font-medium truncate">
                                   {attachment.originalName}
                                 </p>
-                                <div className="flex items-center gap-2 text-xs text-default-500">
-                                  <span>{attachment.createdByName}</span>
-                                  {attachment.uploadedAt && (
-                                    <span>
-                                      {formatDateTime(attachment.uploadedAt, {
-                                        showTime: false,
-                                        language: "en-US",
-                                      })}
+                                <div className="flex flex-col gap-1 mt-1">
+                                  <span className="text-xs font-medium text-default-500">
+                                    {attachment.createdByName}
+                                  </span>
+                                  <div className="flex items-center gap-3 text-xs text-default-400">
+                                    <span className="bg-default-100 dark:bg-default-200/20 px-2 py-1 rounded">
+                                      {(
+                                        (attachment.fileSize || 0) /
+                                        1024 /
+                                        1024
+                                      ).toFixed(2)}{" "}
+                                      MB
                                     </span>
-                                  )}
+                                    {attachment.uploadedAt && (
+                                      <span>
+                                        {formatDateTime(attachment.uploadedAt, {
+                                          showTime: false,
+                                          language: "en-US",
+                                        })}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>

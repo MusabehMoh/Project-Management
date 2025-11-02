@@ -42,6 +42,7 @@ import { useRequirementStatus } from "@/hooks/useRequirementStatus";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
 import { useFilePreview } from "@/hooks/useFilePreview";
+import { useRequirementDetails } from "@/hooks/useRequirementDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
 import { timelineService } from "@/services/api";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
@@ -360,8 +361,9 @@ export default function DevelopmentRequirementsPage() {
 
   // Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedRequirement, setSelectedRequirement] =
-    useState<ProjectRequirement | null>(null);
+  const [selectedRequirementId, setSelectedRequirementId] = useState<
+    number | undefined
+  >(undefined);
 
   // Task creation modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -371,6 +373,13 @@ export default function DevelopmentRequirementsPage() {
   const [selectedDesigner, setSelectedDesigner] =
     useState<MemberSearchResult | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+
+  // Fetch requirement details when drawer opens OR task modal is open
+  const { requirement: selectedRequirement } = useRequirementDetails({
+    requirementId:
+      isDrawerOpen || isTaskModalOpen ? selectedRequirementId : undefined,
+    enabled: isDrawerOpen || isTaskModalOpen,
+  });
   // Task description and dates
   const [taskDescription, setTaskDescription] = useState<string>("");
   // Developer dates
@@ -499,9 +508,28 @@ export default function DevelopmentRequirementsPage() {
     return !hasErrors;
   };
 
+  // Validate dates whenever selections or dates change
+  useEffect(() => {
+    if (isTaskModalOpen) {
+      validateAllDates();
+    }
+  }, [
+    selectedDeveloper,
+    selectedDesigner,
+    selectedQC,
+    developerStartDate,
+    developerEndDate,
+    designerStartDate,
+    designerEndDate,
+    qcStartDate,
+    qcEndDate,
+    isTaskModalOpen,
+    t, // Include t in dependencies since it's used in validation messages
+  ]);
+
   // Function to open drawer with requirement details
   const openRequirementDetails = (requirement: ProjectRequirement) => {
-    setSelectedRequirement(requirement);
+    setSelectedRequirementId(requirement.id);
     setIsDrawerOpen(true);
   };
 
@@ -529,7 +557,7 @@ export default function DevelopmentRequirementsPage() {
 
   // Function to open task creation modal
   const openTaskModal = async (requirement: ProjectRequirement) => {
-    setSelectedRequirement(requirement);
+    setSelectedRequirementId(requirement.id);
     setIsTaskModalOpen(true);
 
     // Clear any previous validation errors
@@ -758,7 +786,7 @@ export default function DevelopmentRequirementsPage() {
     setSelectedDeveloper(null);
     setSelectedQC(null);
     setSelectedDesigner(null);
-    setSelectedRequirement(null);
+    setSelectedRequirementId(undefined);
     setTaskDescription("");
     setDeveloperStartDate(null);
     setDeveloperEndDate(null);
@@ -1184,24 +1212,26 @@ export default function DevelopmentRequirementsPage() {
                       <label className="text-sm font-medium text-default-700">
                         {t("tasks.description")}
                       </label>
-                      <div className="min-h-[120px]">
-                        <ReactQuill
-                          className={language === "ar" ? "rtl-editor" : ""}
-                          modules={{
-                            toolbar: [
-                              ["bold", "italic", "underline"],
-                              [{ list: "ordered" }, { list: "bullet" }],
-                              ["clean"],
-                            ],
-                          }}
-                          placeholder={t("tasks.taskDescriptionPlaceholder")}
-                          style={{
-                            height: "100px",
-                          }}
-                          theme="snow"
-                          value={taskDescription || ""}
-                          onChange={setTaskDescription}
-                        />
+                      <div className="rounded-lg border border-default-200 overflow-hidden">
+                        <div style={{ height: "150px" }}>
+                          <ReactQuill
+                            className={language === "ar" ? "rtl-editor" : ""}
+                            modules={{
+                              toolbar: [
+                                ["bold", "italic", "underline"],
+                                [{ list: "ordered" }, { list: "bullet" }],
+                                ["clean"],
+                              ],
+                            }}
+                            placeholder={t("tasks.taskDescriptionPlaceholder")}
+                            style={{
+                              height: "100%",
+                            }}
+                            theme="snow"
+                            value={taskDescription || ""}
+                            onChange={setTaskDescription}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -1346,7 +1376,7 @@ export default function DevelopmentRequirementsPage() {
                         defaultFilter={() => true}
                         inputValue={qcInputValue}
                         isLoading={loadingQC}
-                        menuTrigger="input"
+                        menuTrigger="focus"
                         placeholder={t("tasks.selectQC")}
                         selectedKey={selectedQC?.id?.toString() || ""}
                         onInputChange={(value) => {
@@ -1482,7 +1512,12 @@ export default function DevelopmentRequirementsPage() {
                       <Button
                         color="primary"
                         isDisabled={
-                          !selectedDeveloper && !selectedQC && !selectedDesigner
+                          (!selectedDeveloper &&
+                            !selectedQC &&
+                            !selectedDesigner) ||
+                          dateValidationErrors.developer !== undefined ||
+                          dateValidationErrors.designer !== undefined ||
+                          dateValidationErrors.qc !== undefined
                         }
                         isLoading={isCreatingTask}
                         onPress={handleTaskSubmit}

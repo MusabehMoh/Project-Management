@@ -16,6 +16,9 @@ export { usePageTitle } from "./usePageTitle";
 // Export project details hook
 export { useProjectDetails } from "./useProjectDetails";
 
+// Export requirement details hook
+export { useRequirementDetails } from "./useRequirementDetails";
+
 // Export design requests hook
 export { useDesignRequests } from "./useDesignRequests";
 
@@ -25,6 +28,9 @@ export { useTeamSearchByDepartment } from "./useTeamSearchByDepartment";
 // Export designer workload hook
 export { useDesignerWorkload } from "./useDesignerWorkload";
 export { useTeamMembers } from "./useTeamMembers";
+
+// Export QC workload hook
+export { useQcWorkload } from "./useQcWorkload";
 
 // Export form suggestion hook (AI-powered)
 export { useFormSuggestion } from "./useFormSuggestion";

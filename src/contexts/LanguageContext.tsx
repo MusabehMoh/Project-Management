@@ -827,6 +827,25 @@ const translations = {
     "qcDashboard.teamPerformance": "QC Team Performance",
     "qcDashboard.performanceComingSoon":
       "QC team performance metrics coming soon",
+    "qcDashboard.qcMember": "QC Member",
+    "qcDashboard.workload": "Workload",
+    "qcDashboard.efficiency": "Efficiency",
+    "qcDashboard.currentTasks": "Tasks",
+    "qcDashboard.status": "Status",
+    "qcDashboard.searchQCMembers": "Search QC members...",
+    "qcDashboard.filterByStatus": "Filter by status",
+    "qcDashboard.busyUntil": "Busy until",
+    "qcDashboard.noQCMembersFound": "No QC Members Found",
+    "qcDashboard.noTeamMembers": "No Team Members",
+    "qcDashboard.noQCMembersFoundDescription":
+      "No QC members match your current filters. Try adjusting your search or filters.",
+    "qcDashboard.noTeamMembersDescription":
+      "No team members found in the quality control department.",
+    "qcDashboard.status.available": "Available",
+    "qcDashboard.status.Available": "Available",
+    "qcDashboard.status.light": "Light",
+    "qcDashboard.status.busy": "Busy",
+    "qcDashboard.status.overloaded": "Overloaded",
 
     // Quality Control
     "qualityControl.qcMember": "QC Member",
@@ -1160,6 +1179,7 @@ const translations = {
       "Requirement submitted for approval successfully",
     "requirements.uploadSuccess": "uploaded successfully",
     "requirements.uploadError": "Failed to upload file",
+    "requirements.attachmentListError": "Failed to update attachment list",
     "requirements.attachmentDeleteSuccess": "Attachment deleted successfully",
     "requirements.downloadSuccess": "File downloaded successfully",
     "requirements.createError": "Failed to create requirement",
@@ -1167,6 +1187,9 @@ const translations = {
     "requirements.deleteError": "Failed to delete requirement",
     "requirements.sendError": "Failed to send requirement",
     "requirements.loadError": "Failed to load requirements",
+    "requirements.saveSuccess": "Requirement saved successfully",
+    "requirements.saveError": "Failed to save requirement",
+    "requirements.partialSuccess": "Partially Saved",
     // Missing keys used by development-requirements page
     "requirements.description": "Description",
     "requirements.id": "ID",
@@ -1211,6 +1234,7 @@ const translations = {
     "tasks.type.adhoc": "Adhoc Task",
     "tasks.noAssociatedProject": "Not associated with a project",
     "tasks.assignedDesigner": "Assigned Designer",
+    "tasks.designerTaskStatus": "Designer Task Status",
     // Task create modal keys (English)
     "task.create.title": "Create Adhoc Task",
     "task.create.subtitle": "Create a new adhoc task for quality assurance",
@@ -2415,7 +2439,7 @@ const translations = {
     "status.active": "نشط",
     "status.completed": "مكتمل",
     "status.onHold": "معلق",
-    "status.todo": "للقيام",
+    "status.todo": "جديد",
     "status.inProgress": "قيد التنفيذ",
 
     // Priority
@@ -2762,8 +2786,8 @@ const translations = {
 
     // Team Member - Status
     "teamDashboard.status.pending": "في الانتظار",
-    "teamDashboard.status.inProgress": "قيد التنفيذ",
-    "teamDashboard.status.inReview": "قيد المراجعة",
+    "teamDashboard.status.inProgress": " جاري",
+    "teamDashboard.status.inReview": "قيد الاختبار",
     "teamDashboard.status.rework": "إعادة العمل",
     "teamDashboard.status.completed": "مكتمل",
     "teamDashboard.status.blocked": "معلق",
@@ -2816,6 +2840,25 @@ const translations = {
     "qcDashboard.teamPerformance": "أداء فريق مراقبة الجودة",
     "qcDashboard.performanceComingSoon":
       "قريبًا مقاييس أداء فريق مراقبة الجودة",
+    "qcDashboard.qcMember": "عضو مراقبة الجودة",
+    "qcDashboard.workload": "حمل العمل",
+    "qcDashboard.efficiency": "الكفاءة",
+    "qcDashboard.currentTasks": "المهام",
+    "qcDashboard.status": "الحالة",
+    "qcDashboard.searchQCMembers": "البحث عن أعضاء مراقبة الجودة...",
+    "qcDashboard.filterByStatus": "تصفية حسب الحالة",
+    "qcDashboard.busyUntil": "مشغول حتى",
+    "qcDashboard.noQCMembersFound": "لم يتم العثور على أعضاء مراقبة الجودة",
+    "qcDashboard.noTeamMembers": "لا يوجد أعضاء فريق",
+    "qcDashboard.noQCMembersFoundDescription":
+      "لا يوجد أعضاء مراقبة جودة يطابقون المرشحات الحالية. جرب تعديل البحث أو المرشحات.",
+    "qcDashboard.noTeamMembersDescription":
+      "لم يتم العثور على أعضاء فريق في قسم مراقبة الجودة.",
+    "qcDashboard.status.available": "متاح",
+    "qcDashboard.status.Available": "متاح",
+    "qcDashboard.status.light": "خفيف",
+    "qcDashboard.status.busy": "مشغول",
+    "qcDashboard.status.overloaded":"عمل زائد",
 
     // Quality Control
     "qualityControl.qcMember": "عضو مراقبة الجودة",
@@ -3142,6 +3185,7 @@ const translations = {
     "requirements.sendSuccess": "تم تقديم المتطلب للموافقة بنجاح",
     "requirements.uploadSuccess": "تم الرفع بنجاح",
     "requirements.uploadError": "فشل في رفع الملف",
+    "requirements.attachmentListError": "فشل في تحديث قائمة المرفقات",
     "requirements.attachmentDeleteSuccess": "تم حذف المرفق بنجاح",
     "requirements.downloadSuccess": "تم تحميل الملف بنجاح",
     "requirements.createError": "فشل في إنشاء المتطلب",
@@ -3149,6 +3193,9 @@ const translations = {
     "requirements.deleteError": "فشل في حذف المتطلب",
     "requirements.sendError": "فشل في إرسال المتطلب",
     "requirements.loadError": "فشل في تحميل المتطلبات",
+    "requirements.saveSuccess": "تم حفظ المتطلب بنجاح",
+    "requirements.saveError": "فشل في حفظ المتطلب",
+    "requirements.partialSuccess": "تم الحفظ جزئياً",
     // Missing keys used by development-requirements page (Arabic)
     "requirements.description": "الوصف",
     "requirements.id": "المعرّف",
@@ -3193,6 +3240,7 @@ const translations = {
     "tasks.type.adhoc": "مهمة عاجلة",
     "tasks.noAssociatedProject": "غير مرتبط بمشروع",
     "tasks.assignedDesigner": "المصمم المعين",
+    "tasks.designerTaskStatus": "حالة مهمة المصمم",
     // Task create modal keys (Arabic)
     "task.create.title": "إنشاء مهمة",
     "task.create.subtitle": "إنشاء مهمة جديدة لضمان الجودة",

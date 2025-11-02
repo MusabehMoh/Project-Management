@@ -1,6 +1,7 @@
 using PMA.Core.Entities;
 using PMA.Core.DTOs;
 using TaskEntity = PMA.Core.Entities.Task;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PMA.Core.Interfaces;
@@ -80,6 +81,7 @@ public interface ITaskRepository : IRepository<TaskEntity>
     // Attachment methods
     System.Threading.Tasks.Task<IEnumerable<TaskAttachment>> GetTaskAttachmentsAsync(int taskId);
     System.Threading.Tasks.Task<TaskAttachment?> GetTaskAttachmentByIdAsync(int attachmentId);
+    System.Threading.Tasks.Task<TaskAttachment?> GetAttachmentWithFileDataAsync(int attachmentId);
     System.Threading.Tasks.Task<TaskAttachment> AddTaskAttachmentAsync(TaskAttachment attachment);
     System.Threading.Tasks.Task DeleteTaskAttachmentAsync(int attachmentId);
 }
@@ -116,6 +118,9 @@ public interface IProjectRequirementRepository : IRepository<ProjectRequirement>
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByAnalystAsync(int analystId);
     System.Threading.Tasks.Task<ProjectRequirement?> GetProjectRequirementWithDetailsAsync(int id);
     System.Threading.Tasks.Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId);
+    System.Threading.Tasks.Task<ProjectRequirementAttachment?> GetAttachmentWithFileDataAsync(int attachmentId);
+    System.Threading.Tasks.Task<ProjectRequirementAttachment> AddAttachmentAsync(ProjectRequirementAttachment attachment);
+    System.Threading.Tasks.Task<List<ProjectRequirementAttachment>> GetAttachmentsMetadataAsync(int requirementId);
     System.Threading.Tasks.Task<bool> DeleteAttachmentAsync(int requirementId, int attachmentId);
 }
 

@@ -275,26 +275,30 @@ export default function TimelineCreateModal({
                   <label className="text-sm font-medium text-foreground">
                     {t("timeline.create.description")}
                   </label>
-                  <div className="min-h-[120px]">
-                    <ReactQuill
-                      className={direction === "rtl" ? "rtl-editor" : ""}
-                      modules={{
-                        toolbar: [
-                          ["bold", "italic", "underline"],
-                          [{ list: "ordered" }, { list: "bullet" }],
-                          ["clean"],
-                        ],
-                      }}
-                      placeholder={t("timeline.create.descriptionPlaceholder")}
-                      style={{
-                        height: "100px",
-                      }}
-                      theme="snow"
-                      value={formData.description || ""}
-                      onChange={(value) =>
-                        handleInputChange("description", value)
-                      }
-                    />
+                  <div className="rounded-lg border border-default-200 overflow-hidden">
+                    <div style={{ height: "150px" }}>
+                      <ReactQuill
+                        className={direction === "rtl" ? "rtl-editor" : ""}
+                        modules={{
+                          toolbar: [
+                            ["bold", "italic", "underline"],
+                            [{ list: "ordered" }, { list: "bullet" }],
+                            ["clean"],
+                          ],
+                        }}
+                        placeholder={t(
+                          "timeline.create.descriptionPlaceholder",
+                        )}
+                        style={{
+                          height: "100%",
+                        }}
+                        theme="snow"
+                        value={formData.description || ""}
+                        onChange={(value) =>
+                          handleInputChange("description", value)
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
 

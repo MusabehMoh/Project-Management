@@ -217,6 +217,7 @@ public interface IProjectRequirementService
 {
     System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> ProjectRequirements, int TotalCount)> GetProjectRequirementsAsync(int page, int limit, int? projectId = null, int? status = null, string? priority = null, string? search = null);
     System.Threading.Tasks.Task<ProjectRequirement?> GetProjectRequirementByIdAsync(int id);
+    System.Threading.Tasks.Task<ProjectRequirement?> GetByIdAsync(int id);
     System.Threading.Tasks.Task<ProjectRequirement> CreateProjectRequirementAsync(ProjectRequirement projectRequirement);
     System.Threading.Tasks.Task<ProjectRequirement> UpdateProjectRequirementAsync(ProjectRequirement projectRequirement);
     System.Threading.Tasks.Task<bool> DeleteProjectRequirementAsync(int id);
@@ -238,7 +239,8 @@ public interface IProjectRequirementService
     System.Threading.Tasks.Task<DTOs.FileDownloadResult?> DownloadAttachmentAsync(int requirementId, int attachmentId);
     // Bulk sync: add new files & remove specified attachment IDs in one operation
     System.Threading.Tasks.Task<IReadOnlyList<ProjectRequirementAttachment>?> SyncAttachmentsAsync(int requirementId, IEnumerable<IFormFile> newFiles, IEnumerable<int> removeIds);
-    // Status history methods
+    // Update attachment list: manage which attachments to keep/remove by ID only (no file uploads)
+     // Status history methods
     System.Threading.Tasks.Task<ProjectRequirementStatusHistory> CreateRequirementStatusHistoryAsync(ProjectRequirementStatusHistory statusHistory);
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirementStatusHistory>> GetRequirementStatusHistoryAsync(int requirementId);
 }

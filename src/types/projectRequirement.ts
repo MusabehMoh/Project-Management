@@ -42,7 +42,7 @@ export interface ProjectRequirementAttachment {
   projectRequirementId: number;
   fileName: string; // Physical file name (should be unique/hashed)
   originalName: string; // Original file name from user
-  filePath?: string; // Relative path to the file
+  fileData?: string; // Relative path to the file
   fileSize: number;
   contentType?: string; // MIME type
   uploadedAt: string;
@@ -125,7 +125,6 @@ export interface CreateProjectRequirementRequest {
   dueDate?: string;
   estimatedHours?: number;
   tags?: string[];
-  attachments?: string[];
   status?: number; // Add optional status field for integer values
 }
 
@@ -142,7 +141,6 @@ export interface UpdateProjectRequirementRequest {
   estimatedHours?: number;
   actualHours?: number;
   tags?: string[];
-  attachments?: string[];
 }
 
 export interface ProjectRequirementFilters {

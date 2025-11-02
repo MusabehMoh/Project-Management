@@ -347,9 +347,13 @@ public class MappingService : IMappingService
 
     /// <summary>
     /// Maps a create/update DTO to an existing or new ProjectRequirement entity.
+    /// CRITICAL: Preserves existing attachments during updates to prevent data loss.
     /// </summary>
     public ProjectRequirement MapToProjectRequirement(CreateProjectRequirementDto dto, ProjectRequirement? existing = null)
     {
+        // Store existing attachments before mapping (if updating)
+        var existingAttachments = existing?.Attachments;
+
         var entity = existing ?? new ProjectRequirement
         {
             CreatedAt = DateTime.Now
@@ -368,7 +372,7 @@ public class MappingService : IMappingService
         else if (existing == null)
         {
             entity.Status = RequirementStatusEnum.New;
-        }
+        } 
         
         entity.UpdatedAt = DateTime.Now;
         return entity;
@@ -417,7 +421,7 @@ public class MappingService : IMappingService
             ProjectRequirementId = attachment.ProjectRequirementId,
             FileName = attachment.FileName,
             OriginalName = attachment.OriginalName,
-            FilePath = attachment.FilePath,
+           // FileData = attachment.FileData,
             FileSize = attachment.FileSize,
             ContentType = attachment.ContentType,
             UploadedAt = attachment.UploadedAt

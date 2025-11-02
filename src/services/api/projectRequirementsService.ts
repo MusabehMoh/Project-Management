@@ -45,7 +45,14 @@ const ENDPOINTS = {
     `/project-requirements/requirements/${requirementId}/attachments/${attachmentId}`,
   DOWNLOAD_ATTACHMENT: (requirementId: number, attachmentId: number) =>
     `/project-requirements/requirements/${requirementId}/attachments/${attachmentId}/download`,
+  UPDATE_ATTACHMENT_LIST: (requirementId: number) =>
+    `/project-requirements/requirements/${requirementId}/attachments/list`,
 };
+
+export interface AttachmentUploadResponse {
+  attachments: ProjectRequirementAttachment[];
+  newlyUploaded: ProjectRequirementAttachment[];
+}
 
 class ProjectRequirementsService {
   /**
@@ -518,30 +525,43 @@ class ProjectRequirementsService {
   async uploadAttachments(
     requirementId: number,
     files: File[],
-  ): Promise<ProjectRequirementAttachment[]> {
-    if (files.length === 0) return [];
+    existingAttachmentIds?: number[],
+    removeAttachmentIds?: number[],
+  ): Promise<AttachmentUploadResponse> {
     const formData = new FormData();
-    // Use plural key matching new backend multi-file support.
 
-    for (const f of files) {
-      formData.append("files", f);
+    for (const file of files) {
+      formData.append("files", file);
     }
+
+    if (existingAttachmentIds !== undefined) {
+      // Provide the list of attachment IDs the client is keeping so the backend can safely prune removals
+      formData.append(
+        "existingAttachmentIds",
+        JSON.stringify(existingAttachmentIds),
+      );
+    }
+
+    if (removeAttachmentIds !== undefined) {
+      formData.append(
+        "removeAttachmentIds",
+        JSON.stringify(removeAttachmentIds),
+      );
+    }
+
     try {
-      const result = await apiClient.post<ProjectRequirementAttachment[]>(
+      const result = await apiClient.post<AttachmentUploadResponse>(
         ENDPOINTS.UPLOAD_ATTACHMENT(requirementId),
         formData,
       );
-      // When backend returns single object for legacy, normalize
-      const data = result.data as any;
 
-      if (Array.isArray(data)) return data;
-
-      if (data && typeof data === "object") return [data];
-
-      return [];
+      return {
+        attachments: result.data?.attachments ?? [],
+        newlyUploaded: result.data?.newlyUploaded ?? [],
+      };
     } catch (e: any) {
       throw new Error(
-        e?.message || "Failed to upload attachments in batch request",
+        e?.message || "Failed to process requirement attachments",
       );
     }
   }
@@ -549,6 +569,7 @@ class ProjectRequirementsService {
   /**
    * Sync attachments: upload new files & remove specified attachment IDs in one request.
    * Falls back silently if endpoint not supported.
+   * @deprecated Use uploadAttachments() and updateAttachmentList() separately for better separation of concerns.
    */
   async syncAttachments(
     requirementId: number,
@@ -556,8 +577,6 @@ class ProjectRequirementsService {
     removeIds: number[],
   ): Promise<ProjectRequirementAttachment[] | null> {
     // If nothing to do, short circuit
-    if (newFiles.length === 0 && removeIds.length === 0) return [];
-
     const formData = new FormData();
 
     for (const f of newFiles) {
@@ -577,6 +596,29 @@ class ProjectRequirementsService {
       // Endpoint might not exist (older backend); return null to allow fallback
       return null;
     }
+  }
+
+  /**
+   * Update attachment list for a requirement: keep/remove attachments by ID only (no file uploads).
+   * Best practice endpoint for managing attachment lifecycle separately from core requirement updates.
+   * Accepts JSON body with attachment IDs to keep or remove.
+   */
+  async updateAttachmentList(
+    requirementId: number,
+    dto: {
+      attachmentIdsToKeep?: number[];
+      removeAttachmentIds?: number[];
+    },
+  ): Promise<ProjectRequirementAttachment[]> {
+    const result = await apiClient.patch<ProjectRequirementAttachment[]>(
+      ENDPOINTS.UPDATE_ATTACHMENT_LIST(requirementId),
+      {
+        attachmentIdsToKeep: dto.attachmentIdsToKeep || [],
+        removeAttachmentIds: dto.removeAttachmentIds || [],
+      },
+    );
+
+    return result.data ?? [];
   }
 
   /**

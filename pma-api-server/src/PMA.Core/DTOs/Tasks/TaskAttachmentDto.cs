@@ -9,7 +9,6 @@ public class TaskAttachmentDto
     public int TaskId { get; set; }
     public string FileName { get; set; } = string.Empty;
     public string OriginalName { get; set; } = string.Empty;
-    public string? FilePath { get; set; }
     public long FileSize { get; set; }
     public string? ContentType { get; set; }
     public DateTime UploadedAt { get; set; }

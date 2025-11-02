@@ -102,21 +102,22 @@ const ANALYST_CONFIG: KanbanRoleConfig = {
 
 /**
  * Designer Team Member Configuration
- * Can work with: To Do (1), In Progress (2), In Review (3)
- * Similar workflow for design tasks
+ * Can work with: To Do (1), In Progress (2)
+ * Can view: Completed (5) - but cannot drag to it
+ * Restricted workflow for design tasks - cannot move to In Review or Completed
  */
 const DESIGNER_TEAM_MEMBER_CONFIG: KanbanRoleConfig = {
   roleId: RoleIds.DESIGNER_TEAM_MEMBER,
-  allowedStatuses: [1, 2, 3],
+  allowedStatuses: [1, 2, 5], // To Do, In Progress, and Completed (view only)
   allowedTransitions: {
-    from: [1, 2, 3],
-    to: [1, 2, 3],
+    from: [1, 2, 5], // Can view tasks from these statuses
+    to: [1, 2], // Can only drop to To Do and In Progress
   },
   canDragFrom: (statusId: number) => {
-    return [1, 2, 3].includes(statusId);
+    return [1, 2, 5].includes(statusId);
   },
   canDropTo: (statusId: number, fromStatusId: number) => {
-    const allowedStatuses = [1, 2, 3];
+    const allowedStatuses = [1, 2, 5]; // Cannot drop to In Review (3) or Completed (5)
 
     return (
       allowedStatuses.includes(statusId) &&

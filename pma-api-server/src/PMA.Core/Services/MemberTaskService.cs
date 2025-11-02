@@ -6,6 +6,7 @@ using TaskEntity = PMA.Core.Entities.Task;
 using Task = System.Threading.Tasks.Task;
 using PMA.Core.Enums;
 using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace PMA.Core.Services;
 
@@ -130,9 +131,14 @@ public class MemberTaskService : IMemberTaskService
         var taskIdsWithNoDependents = await _taskRepository.GetTaskIdsWithNoDependentTasksAsync();
         var taskIdsWithNoDependentsSet = new HashSet<int>(taskIdsWithNoDependents);
 
-        var memberTasks = allTasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet, taskIdsWithNoDependentsSet));
+        var memberTasksList = new List<TaskDto>();
+        foreach (var task in allTasks)
+        {
+            var taskDto = await MapTaskEntityToTaskDto(task, designRequestTaskIdSet, taskIdsWithNoDependentsSet);
+            memberTasksList.Add(taskDto);
+        }
 
-        return (memberTasks, allTotalCount);
+        return (memberTasksList, allTotalCount);
     }
 
     private bool IsRoleCode(string? roleCode, RoleCodes targetRole)
@@ -155,7 +161,7 @@ public class MemberTaskService : IMemberTaskService
                 parsedRole == RoleCodes.DesignerManager);
     }
 
-    private TaskDto MapTaskEntityToTaskDto(TaskEntity task, HashSet<int> designRequestTaskIds, HashSet<int>? taskIdsWithNoDependents = null)
+    private async Task<TaskDto> MapTaskEntityToTaskDto(TaskEntity task, HashSet<int> designRequestTaskIds, HashSet<int>? taskIdsWithNoDependents = null)
     {
         // Get all assigned members
         var assignedMembers = task.Assignments?.Select(a => new MemberSearchResultDto
@@ -170,8 +176,11 @@ public class MemberTaskService : IMemberTaskService
         }).ToList() ?? new List<MemberSearchResultDto>();
 
         // Get assigned designer from design request
-        var assignedDesigner = task.DesignRequests?.FirstOrDefault()?.AssignedToEmployee;
+        var designRequest = task.DesignRequests?.FirstOrDefault();
+        var assignedDesigner = designRequest?.AssignedToEmployee;
         MemberSearchResultDto? designerDto = null;
+        TaskEntity? designerTask = null;
+        
         if (assignedDesigner != null)
         {
             designerDto = new MemberSearchResultDto
@@ -184,6 +193,12 @@ public class MemberTaskService : IMemberTaskService
                 StatusId = assignedDesigner.StatusId,
                 Department = "" // Employee doesn't have direct department property
             };
+            
+            // Get designer task if DesignerTaskId exists
+            if (designRequest?.DesignerTaskId.HasValue == true)
+            {
+                designerTask = await _taskRepository.GetByIdAsync(designRequest.DesignerTaskId.Value);
+            }
         }
 
         // Get primary assignee (first assignee or null)
@@ -262,7 +277,9 @@ public class MemberTaskService : IMemberTaskService
             } : null,
             HasDesignRequest = designRequestTaskIds.Contains(task.Id),
             HasNoDependentTasks = taskIdsWithNoDependents?.Contains(task.Id) ?? false,
-            CompletedFromDeveloper = task.CompletedFromDeveloper
+            CompletedFromDeveloper = task.CompletedFromDeveloper,
+            DesignerTaskId = designerTask?.Id,
+            DesignerTaskStatus = designerTask?.StatusId
             //PrimaryAssignee = primaryAssignee
         };
     }
@@ -282,7 +299,7 @@ public class MemberTaskService : IMemberTaskService
             designRequestTaskIds.Add(id);
         }
 
-        return MapTaskEntityToTaskDto(task, designRequestTaskIds);
+        return await MapTaskEntityToTaskDto(task, designRequestTaskIds);
     }
 
     public async Task<TaskDto> CreateMemberTaskAsync(TaskDto memberTask)
@@ -320,7 +337,7 @@ public class MemberTaskService : IMemberTaskService
             designRequestTaskIds.Add(existingTask.Id);
         }
         
-        return MapTaskEntityToTaskDto(existingTask, designRequestTaskIds);
+        return await MapTaskEntityToTaskDto(existingTask, designRequestTaskIds);
     }
 
     public async Task<bool> DeleteMemberTaskAsync(int id)
@@ -338,7 +355,14 @@ public class MemberTaskService : IMemberTaskService
         var designRequestTaskIds = await _designRequestRepository.GetTaskIdsWithDesignRequestsAsync(taskIds);
         var designRequestTaskIdSet = new HashSet<int>(designRequestTaskIds);
         
-        return tasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet));
+        var taskDtos = new List<TaskDto>();
+        foreach (var task in tasks)
+        {
+            var taskDto = await MapTaskEntityToTaskDto(task, designRequestTaskIdSet);
+            taskDtos.Add(taskDto);
+        }
+        
+        return taskDtos;
     }
 
     public async Task<IEnumerable<TaskDto>> GetMemberTasksByAssigneeAsync(int assigneeId)
@@ -350,7 +374,14 @@ public class MemberTaskService : IMemberTaskService
         var designRequestTaskIds = await _designRequestRepository.GetTaskIdsWithDesignRequestsAsync(taskIds);
         var designRequestTaskIdSet = new HashSet<int>(designRequestTaskIds);
         
-        return tasks.Select(task => MapTaskEntityToTaskDto(task, designRequestTaskIdSet));
+        var taskDtos = new List<TaskDto>();
+        foreach (var task in tasks)
+        {
+            var taskDto = await MapTaskEntityToTaskDto(task, designRequestTaskIdSet);
+            taskDtos.Add(taskDto);
+        }
+        
+        return taskDtos;
     }
 
     public async Task<IEnumerable<MemberSearchResultDto>> GetTeamMembersAsync()
@@ -526,7 +557,6 @@ public class MemberTaskService : IMemberTaskService
                 TaskId = attachment.TaskId,
                 FileName = attachment.FileName,
                 OriginalName = attachment.OriginalName,
-                FilePath = attachment.FilePath,
                 FileSize = attachment.FileSize,
                 ContentType = attachment.ContentType,
                 UploadedAt = attachment.UploadedAt,
@@ -555,28 +585,21 @@ public class MemberTaskService : IMemberTaskService
             throw new InvalidOperationException("Task not found");
         }
 
-        // Create uploads directory if it doesn't exist
-        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "tasks");
-        Directory.CreateDirectory(uploadsPath);
-
-        // Generate unique filename
-        var fileExtension = Path.GetExtension(file.FileName);
-        var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
-        var filePath = Path.Combine(uploadsPath, uniqueFileName);
-
-        // Save file to disk
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        // Read file to byte array
+        byte[] fileData;
+        using (var memoryStream = new MemoryStream())
         {
-            await file.CopyToAsync(stream);
+            await file.CopyToAsync(memoryStream);
+            fileData = memoryStream.ToArray();
         }
 
-        // Create attachment entity
+        // Create attachment entity with FileData (not FilePath)
         var attachment = new TaskAttachment
         {
             TaskId = taskId,
-            FileName = uniqueFileName,
+            FileName = Path.GetFileName(file.FileName),
             OriginalName = file.FileName,
-            FilePath = filePath,
+            FileData = fileData,
             FileSize = file.Length,
             ContentType = file.ContentType,
             CreatedBy = userContext.UserName
@@ -593,7 +616,6 @@ public class MemberTaskService : IMemberTaskService
             TaskId = savedAttachment.TaskId,
             FileName = savedAttachment.FileName,
             OriginalName = savedAttachment.OriginalName,
-            FilePath = savedAttachment.FilePath,
             FileSize = savedAttachment.FileSize,
             ContentType = savedAttachment.ContentType,
             UploadedAt = savedAttachment.UploadedAt,
@@ -604,19 +626,16 @@ public class MemberTaskService : IMemberTaskService
 
     public async Task<(Stream? FileStream, string? FileName, string? ContentType)> DownloadTaskAttachmentAsync(int attachmentId)
     {
-        var attachment = await _taskRepository.GetTaskAttachmentByIdAsync(attachmentId);
-        if (attachment == null || string.IsNullOrEmpty(attachment.FilePath))
+        // Load attachment with FileData from database
+        var attachment = await _taskRepository.GetAttachmentWithFileDataAsync(attachmentId);
+        if (attachment == null || attachment.FileData == null || attachment.FileData.Length == 0)
         {
             return (null, null, null);
         }
 
-        if (!System.IO.File.Exists(attachment.FilePath))
-        {
-            return (null, null, null);
-        }
-
-        var fileStream = new FileStream(attachment.FilePath, FileMode.Open, FileAccess.Read);
-        return (fileStream, attachment.OriginalName, attachment.ContentType ?? "application/octet-stream");
+        // Create memory stream from FileData byte array
+        var memoryStream = new MemoryStream(attachment.FileData);
+        return (memoryStream, attachment.OriginalName, attachment.ContentType ?? "application/octet-stream");
     }
 
     public async Task<bool> DeleteTaskAttachmentAsync(int attachmentId)
@@ -627,12 +646,7 @@ public class MemberTaskService : IMemberTaskService
             return false;
         }
 
-        // Delete file from disk if it exists
-        if (!string.IsNullOrEmpty(attachment.FilePath) && System.IO.File.Exists(attachment.FilePath))
-        {
-            System.IO.File.Delete(attachment.FilePath);
-        }
-
+        // Delete from database only (FileData is stored in database, no file system cleanup needed)
         await _taskRepository.DeleteTaskAttachmentAsync(attachmentId);
         return true;
     }

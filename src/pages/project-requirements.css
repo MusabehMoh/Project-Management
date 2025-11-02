@@ -1,7 +1,34 @@
+/* ReactQuill Container - Prevents Overflow */
+.ql-container {
+  position: relative;
+  z-index: 1;
+  height: calc(100% - 42px) !important; /* Subtract toolbar height */
+}
+
+.ql-editor {
+  height: 100% !important;
+  overflow-y: auto !important;
+  max-height: none !important;
+}
+
+.ql-toolbar {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.ql-picker {
+  position: relative !important;
+}
+
+.ql-picker-options {
+  position: absolute !important;
+  z-index: 1000 !important;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .rtl-editor .ql-editor {
-  /* Increase min height for the editor content area */
-  min-height: 120px; /* adjust as needed */
-  height: auto;
   direction: rtl; /* set right-to-left text direction */
   text-align: right; /* ensure text aligns to the right */
 }

@@ -141,8 +141,8 @@ public class TaskAttachment
     [MaxLength(255)]
     public string OriginalName { get; set; } = string.Empty;
 
-    [MaxLength(500)]
-    public string? FilePath { get; set; }
+    [Required]
+    public byte[] FileData { get; set; } = Array.Empty<byte>();
 
     [Required]
     public long FileSize { get; set; }

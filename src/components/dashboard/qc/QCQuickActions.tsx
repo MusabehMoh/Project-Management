@@ -8,7 +8,6 @@ import { Alert } from "@heroui/alert";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Tooltip } from "@heroui/tooltip";
-import { Progress } from "@heroui/progress";
 import { RefreshCw, AlertTriangle, CheckCircle, Plus } from "lucide-react";
 
 import { useLanguage, Direction } from "@/contexts/LanguageContext";
@@ -281,187 +280,84 @@ export default function QCQuickActions({
                     <CustomAlert
                       key={task.id}
                       className="mb-3"
+                      classNames={{
+                        title: direction === "rtl" ? "text-right" : "text-left",
+                      }}
                       color="warning"
                       direction={direction}
-                      title={task.taskName}
-                    >
-                      <div className="space-y-2 text-sm">
-                        {/* Description */}
-                        {task.description && (
-                          <div className="text-default-600 text-xs leading-relaxed">
-                            {task.description}
-                          </div>
-                        )}
-
-                        {/* Task Type */}
-                        <div className="flex items-center gap-2">
-                          <Chip
-                            color={
-                              task.typeId === 1
-                                ? "primary"
-                                : task.typeId === 2
-                                  ? "secondary"
-                                  : "warning"
-                            }
-                            size="sm"
-                            variant="bordered"
-                          >
-                            {task.typeId === 1
-                              ? t("tasks.type.timeline")
-                              : task.typeId === 2
-                                ? t("tasks.type.changeRequest")
-                                : t("tasks.type.adhoc")}
-                          </Chip>
-                          <Chip
-                            color={
-                              task.priority === "high"
-                                ? "danger"
-                                : task.priority === "medium"
-                                  ? "warning"
-                                  : "default"
-                            }
-                            size="sm"
-                            variant="flat"
-                          >
-                            {t(`priority.${task.priority}`)}
-                          </Chip>
-                        </div>
-
-                        {/* Progress */}
-                        {task.progress !== undefined && (
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-default-500">
-                                {t("taskProgress")}
-                              </span>
-                              <span className="text-xs font-medium">
-                                {task.progress}%
-                              </span>
-                            </div>
-                            <Progress
+                      title={
+                        <div className="flex items-center justify-between gap-2">
+                          <span>{task.taskName}</span>
+                          <div className="flex items-center gap-2">
+                            <Chip
                               color={
-                                task.progress >= 80
-                                  ? "success"
-                                  : task.progress >= 60
-                                    ? "primary"
-                                    : task.progress >= 40
-                                      ? "warning"
-                                      : "danger"
+                                task.typeId === 1
+                                  ? "primary"
+                                  : task.typeId === 2
+                                    ? "secondary"
+                                    : "warning"
                               }
                               size="sm"
-                              value={task.progress}
-                            />
+                              variant="bordered"
+                            >
+                              {task.typeId === 1
+                                ? t("tasks.type.timeline")
+                                : task.typeId === 2
+                                  ? t("tasks.type.changeRequest")
+                                  : t("tasks.type.adhoc")}
+                            </Chip>
+                            <Chip
+                              color={
+                                task.priority === "high"
+                                  ? "danger"
+                                  : task.priority === "medium"
+                                    ? "warning"
+                                    : "default"
+                              }
+                              size="sm"
+                              variant="flat"
+                            >
+                              {t(`priority.${task.priority}`)}
+                            </Chip>
                           </div>
-                        )}
-
-                        {/* Dates */}
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          {task.startDate && (
-                            <div>
-                              <span className="text-default-500">
-                                {t("startDate")}:{" "}
-                              </span>
-                              <span className="font-medium text-default-700">
-                                {task.startDate}
-                              </span>
-                            </div>
-                          )}
-                          {task.endDate && (
-                            <div>
-                              <span className="text-default-500">
-                                {t("endDate")}:{" "}
-                              </span>
-                              <span className="font-medium text-default-700">
-                                {task.endDate}
-                              </span>
-                            </div>
-                          )}
                         </div>
-
+                      }
+                    >
+                      <div className="space-y-3 text-sm">
                         {/* Project & Requirement */}
-                        <div className="pt-2 border-t border-default-200 space-y-1">
-                          <div className="text-xs">
-                            <span className="text-default-500 font-medium">
-                              {t("common.project")}:{" "}
-                            </span>
-                            <span className="text-default-700">
-                              {task.projectName}
-                            </span>
-                          </div>
-                          <div className="text-xs">
-                            <span className="text-default-500 font-medium">
-                              {t("requirements.requirement")}:{" "}
-                            </span>
-                            <span className="text-default-700">
-                              {task.requirementName}
-                            </span>
-                          </div>
-                          <div className="text-xs">
-                            <span className="text-default-500 font-medium">
-                              {t("common.developer")}:{" "}
-                            </span>
-                            <span className="text-default-700">
-                              {task.developer}
-                            </span>
-                          </div>
-                          {task.completedDate && (
-                            <div className="text-xs">
-                              <span className="text-default-500 font-medium">
-                                {t("common.completedDate")}:{" "}
-                              </span>
-                              <span className="text-default-700">
-                                {task.completedDate}
-                              </span>
-                            </div>
-                          )}
+                        <div className="text-xs">
+                          <span className="text-default-500 font-medium">
+                            {t("common.project")}:{" "}
+                          </span>
+                          <span className="text-default-700">
+                            {task.projectName}
+                          </span>
+                          <span className="text-default-500 font-medium mx-2">
+                            • {t("requirements.requirement")}:{" "}
+                          </span>
+                          <span className="text-default-700">
+                            {task.requirementName}
+                          </span>
                         </div>
 
                         <Divider className="bg-default-200 my-3" />
 
-                        <div className="flex gap-2">
-                          {task.hasNoDependentTasks ? (
-                            <Tooltip content={t("task.createTaskHint")}>
-                              <Button
-                                className="flex-1"
-                                color="primary"
-                                size="sm"
-                                startContent={<Plus className="w-4 h-4" />}
-                                variant="solid"
-                                onPress={() => {
-                                  setSelectedTaskForCreate(task);
-                                  setIsCreateModalOpen(true);
-                                }}
-                              >
-                                {t("task.createTask")}
-                              </Button>
-                            </Tooltip>
-                          ) : (
-                            <>
-                              <Button
-                                className="shadow-small"
-                                color="success"
-                                size="sm"
-                                variant="bordered"
-                                onPress={() => {
-                                  // Handle approve action - TODO: Implement actual API call
-                                }}
-                              >
-                                {t("qcDashboard.approveTask")}
-                              </Button>
-                              <Button
-                                className="shadow-small"
-                                color="danger"
-                                size="sm"
-                                variant="bordered"
-                                onPress={() => {
-                                  // Handle reject/rework action - TODO: Implement actual API call
-                                }}
-                              >
-                                {t("qcDashboard.requestRework")}
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                        {/* Create Task Button */}
+                        <Tooltip content={t("task.createTaskHint")}>
+                          <Button
+                            className="w-full"
+                            color="primary"
+                            size="sm"
+                            startContent={<Plus className="w-4 h-4" />}
+                            variant="solid"
+                            onPress={() => {
+                              setSelectedTaskForCreate(task);
+                              setIsCreateModalOpen(true);
+                            }}
+                          >
+                            {t("task.createTask")}
+                          </Button>
+                        </Tooltip>
                       </div>
                     </CustomAlert>
                   ))}

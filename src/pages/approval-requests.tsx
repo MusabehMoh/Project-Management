@@ -32,6 +32,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { useRequirementStatus } from "@/hooks/useRequirementStatus";
 import { useFilePreview } from "@/hooks/useFilePreview";
+import { useRequirementDetails } from "@/hooks/useRequirementDetails";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { FilePreview } from "@/components/FilePreview";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
@@ -362,9 +363,16 @@ export default function ApprovalRequestsPage() {
 
   // Drawer state for requirement details
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedRequirement, setSelectedRequirement] =
-    useState<ProjectRequirement | null>(null);
+  const [selectedRequirementId, setSelectedRequirementId] = useState<
+    number | undefined
+  >(undefined);
   const [isOptionOpen, setIsOptionOpen] = useState(false);
+
+  // Fetch requirement details when drawer opens
+  const { requirement: selectedRequirement } = useRequirementDetails({
+    requirementId: isDrawerOpen ? selectedRequirementId : undefined,
+    enabled: isDrawerOpen,
+  });
 
   // Approval modal state
   const {
@@ -378,7 +386,7 @@ export default function ApprovalRequestsPage() {
 
   // Function to open drawer with requirement details
   const openRequirementDetails = (requirement: ProjectRequirement) => {
-    setSelectedRequirement(requirement);
+    setSelectedRequirementId(requirement.id);
     setIsDrawerOpen(true);
   };
 
@@ -407,10 +415,9 @@ export default function ApprovalRequestsPage() {
 
       // Refresh requirements data
       refreshData();
-    } catch (error) {
+    } catch {
       // Show error toast
       showErrorToast(t("requirements.approveError"));
-      console.error("Error approving requirement:", error);
     } finally {
       setIsApproving(false);
     }

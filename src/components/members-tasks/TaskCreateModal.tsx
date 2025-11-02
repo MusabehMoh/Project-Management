@@ -486,22 +486,28 @@ export default function TaskCreateModal({
                 {t("task.create.description")}
                 <span className="text-danger">*</span>
               </label>
-              <ReactQuill
-                className={language === "ar" ? "rtl-editor" : ""}
-                modules={{
-                  toolbar: [
-                    ["bold", "italic", "underline"],
-                    [{ list: "ordered" }, { list: "bullet" }],
-                    ["clean"],
-                  ],
-                }}
-                style={{
-                  height: "100px",
-                }}
-                theme="snow"
-                value={formData.description}
-                onChange={(value) => handleInputChange("description", value)}
-              />
+              <div className="rounded-lg border border-default-200 overflow-hidden">
+                <div style={{ height: "150px" }}>
+                  <ReactQuill
+                    className={language === "ar" ? "rtl-editor" : ""}
+                    modules={{
+                      toolbar: [
+                        ["bold", "italic", "underline"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        ["clean"],
+                      ],
+                    }}
+                    style={{
+                      height: "100%",
+                    }}
+                    theme="snow"
+                    value={formData.description}
+                    onChange={(value) =>
+                      handleInputChange("description", value)
+                    }
+                  />
+                </div>
+              </div>
               {errors.description && (
                 <span className="text-sm text-danger">
                   {errors.description}

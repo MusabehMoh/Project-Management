@@ -3,6 +3,8 @@ using PMA.Core.Entities;
 using PMA.Core.Interfaces;
 using PMA.Core.Enums;
 using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PMA.Core.Services;
@@ -14,7 +16,6 @@ public class ProjectRequirementService : IProjectRequirementService
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IUserContextAccessor _userContextAccessor;
     private readonly IUserService _userService;
-    private readonly IAppPathProvider _pathProvider;
     private readonly IProjectRequirementStatusHistoryRepository _statusHistoryRepository;
 
     public ProjectRequirementService(
@@ -23,7 +24,6 @@ public class ProjectRequirementService : IProjectRequirementService
         IEmployeeRepository employeeRepository,
         IUserContextAccessor userContextAccessor,
         IUserService userService,
-        IAppPathProvider pathProvider,
         IProjectRequirementStatusHistoryRepository statusHistoryRepository)
     {
         _projectRequirementRepository = projectRequirementRepository;
@@ -31,7 +31,6 @@ public class ProjectRequirementService : IProjectRequirementService
         _employeeRepository = employeeRepository;
         _userContextAccessor = userContextAccessor;
         _userService = userService;
-        _pathProvider = pathProvider;
         _statusHistoryRepository = statusHistoryRepository;
     }
 
@@ -46,6 +45,11 @@ public class ProjectRequirementService : IProjectRequirementService
         return await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(id);
     }
 
+    public async Task<ProjectRequirement?> GetByIdAsync(int id)
+    {
+        // Use GetProjectRequirementWithDetailsAsync to include attachments
+        return await _projectRequirementRepository.GetByIdAsync(id);
+    }
     public async Task<ProjectRequirement> CreateProjectRequirementAsync(ProjectRequirement projectRequirement)
     {
         projectRequirement.CreatedAt = DateTime.Now;
@@ -69,21 +73,14 @@ public class ProjectRequirementService : IProjectRequirementService
             if (projectRequirement == null)
                 return false;
 
-            // Delete all associated attachments first (physical files and database records)
+            // Delete all associated attachments (only database records, files are stored in DB)
             if (projectRequirement.Attachments != null && projectRequirement.Attachments.Any())
             {
                 foreach (var attachment in projectRequirement.Attachments.ToList())
                 {
                     try
                     {
-                        // Delete physical file
-                        var physicalPath = ResolvePhysicalPath(attachment.FilePath);
-                        if (physicalPath != null && File.Exists(physicalPath))
-                        {
-                            File.Delete(physicalPath);
-                        }
-
-                        // Delete attachment from database
+                        // Delete attachment from database (no file system cleanup needed)
                         await _projectRequirementRepository.DeleteAttachmentAsync(id, attachment.Id);
                     }
                     catch
@@ -308,31 +305,27 @@ public class ProjectRequirementService : IProjectRequirementService
 
         try
         {
-            // Generate unique filename to avoid conflicts
-            var fileExtension = Path.GetExtension(file.FileName);
-            var uniqueFileName = $"{Guid.NewGuid()}" + fileExtension;
-
-            // Use provided web root path (best practice) for static file compatibility
-            var physicalDirectory = Path.Combine(_pathProvider.WebRootPath, "uploads", "requirements", requirementId.ToString());
-            Directory.CreateDirectory(physicalDirectory);
-
-            var physicalPath = Path.Combine(physicalDirectory, uniqueFileName);
-
-            await using (var stream = new FileStream(physicalPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            // Read file to byte array - CRITICAL: Capture data BEFORE stream disposal
+            byte[] fileData;
+            using (var memoryStream = new MemoryStream())
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(memoryStream);
+                // Get array while stream is still open and valid
+                fileData = memoryStream.ToArray();
             }
 
-            // Store a relative path (from content root) for portability
-            var relativePathForDb = Path.Combine("uploads", "requirements", requirementId.ToString(), uniqueFileName)
-                .Replace('\\', '/');
+            // Verify file data was actually read (not empty)
+            if (fileData == null || fileData.Length == 0)
+            {
+                throw new Exception("Failed to read file data - file appears to be empty");
+            }
 
             var attachment = new ProjectRequirementAttachment
             {
                 ProjectRequirementId = requirementId,
-                FileName = uniqueFileName,
+                FileName = file.FileName,
                 OriginalName = file.FileName,
-                FilePath = relativePathForDb,
+                FileData = fileData,
                 FileSize = file.Length,
                 ContentType = file.ContentType,
                 UploadedAt = DateTime.Now
@@ -363,22 +356,27 @@ public class ProjectRequirementService : IProjectRequirementService
             if (file == null || file.Length == 0) continue;
             try
             {
-                var ext = Path.GetExtension(file.FileName);
-                var uniqueFileName = $"{Guid.NewGuid()}" + ext;
-                var physicalDirectory = Path.Combine(_pathProvider.WebRootPath, "uploads", "requirements", requirementId.ToString());
-                Directory.CreateDirectory(physicalDirectory);
-                var physicalPath = Path.Combine(physicalDirectory, uniqueFileName);
-                await using (var stream = new FileStream(physicalPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                // Read file to byte array - CRITICAL: Capture data BEFORE stream disposal
+                byte[] fileData;
+                using (var memoryStream = new MemoryStream())
                 {
-                    await file.CopyToAsync(stream);
+                    await file.CopyToAsync(memoryStream);
+                    // Get array while stream is still open and valid
+                    fileData = memoryStream.ToArray();
                 }
-                var relativePathForDb = Path.Combine("uploads", "requirements", requirementId.ToString(), uniqueFileName).Replace('\\', '/');
+                
+                // Verify file data was actually read (not empty)
+                if (fileData == null || fileData.Length == 0)
+                {
+                    continue; // Skip files that failed to read
+                }
+
                 var attachment = new ProjectRequirementAttachment
                 {
                     ProjectRequirementId = requirementId,
-                    FileName = uniqueFileName,
+                    FileName = file.FileName,
                     OriginalName = file.FileName,
-                    FilePath = relativePathForDb,
+                    FileData = fileData, // Assign captured byte array
                     FileSize = file.Length,
                     ContentType = file.ContentType,
                     UploadedAt = DateTime.Now
@@ -386,9 +384,10 @@ public class ProjectRequirementService : IProjectRequirementService
                 requirement.Attachments.Add(attachment);
                 uploaded.Add(attachment);
             }
-            catch
+            catch (Exception ex)
             {
-                // skip individual file failure
+                // Skip individual file failure but log it
+                System.Diagnostics.Debug.WriteLine($"Error uploading attachment {file?.FileName}: {ex.Message}");
             }
         }
 
@@ -405,22 +404,7 @@ public class ProjectRequirementService : IProjectRequirementService
     {
         try
         {
-            var requirement = await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(requirementId);
-            if (requirement?.Attachments == null)
-                return false;
-
-            var attachment = requirement.Attachments.FirstOrDefault(a => a.Id == attachmentId);
-            if (attachment == null)
-                return false;
-
-            // Resolve physical path before attempting deletion (supports relative & legacy absolute)
-            var deletePhysical = ResolvePhysicalPath(attachment.FilePath);
-            if (deletePhysical != null && File.Exists(deletePhysical))
-            {
-                File.Delete(deletePhysical);
-            }
-
-            // Use repository method to properly delete the attachment from database
+            // Delete attachment directly from database without loading full requirement
             return await _projectRequirementRepository.DeleteAttachmentAsync(requirementId, attachmentId);
         }
         catch
@@ -433,25 +417,16 @@ public class ProjectRequirementService : IProjectRequirementService
     {
         try
         {
-            var requirement = await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(requirementId);
-            if (requirement?.Attachments == null)
+            // Load attachment directly from database with FileData included
+            var attachment = await _projectRequirementRepository.GetAttachmentWithFileDataAsync(attachmentId);
+            
+            if (attachment == null || attachment.FileData == null || attachment.FileData.Length == 0)
                 return null;
 
-            var attachment = requirement.Attachments.FirstOrDefault(a => a.Id == attachmentId);
-            if (attachment == null)
-                return null;
+            // Convert byte array to MemoryStream
+            var fileStream = new MemoryStream(attachment.FileData);
 
-            // Resolve physical path (support legacy absolute path, stored path beginning with wwwroot, or new relative path)
-            var physicalPath = ResolvePhysicalPath(attachment.FilePath);
-            if (physicalPath == null)
-                return null;
-
-            if (!File.Exists(physicalPath))
-                return null;
-
-            var fs = new FileStream(physicalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-            // Infer MIME if missing or generic (lightweight mapping to keep Core project free of ASP.NET deps)
+            // Infer MIME if missing or generic
             string contentType = attachment.ContentType ?? "application/octet-stream";
             if (string.IsNullOrWhiteSpace(contentType) || contentType == "application/octet-stream")
             {
@@ -474,21 +449,12 @@ public class ProjectRequirementService : IProjectRequirementService
                 };
             }
 
-            var actualLength = new FileInfo(physicalPath).Length;
-            // Optionally could log mismatch with attachment.FileSize
-            if (attachment.FileSize != actualLength)
-            {
-                // We won't fail; trust disk
-                attachment.FileSize = actualLength;
-            }
-
             return new DTOs.FileDownloadResult
             {
-                FileStream = fs,
+                FileStream = fileStream,
                 ContentType = contentType,
                 FileName = attachment.OriginalName,
-                FileSize = attachment.FileSize,
-                FilePath = physicalPath
+                FileSize = attachment.FileSize
             };
         }
         catch
@@ -507,114 +473,72 @@ public class ProjectRequirementService : IProjectRequirementService
     /// <returns>Updated immutable list of attachments or null if requirement not found.</returns>
     public async Task<IReadOnlyList<ProjectRequirementAttachment>?> SyncAttachmentsAsync(int requirementId, IEnumerable<IFormFile> newFiles, IEnumerable<int> removeIds)
     {
-        var requirement = await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(requirementId);
-        if (requirement == null)
-            return null;
-
-        requirement.Attachments ??= new List<ProjectRequirementAttachment>();
-
         // Normalize inputs
         var removeSet = new HashSet<int>(removeIds ?? Enumerable.Empty<int>());
 
-        // Remove attachments (and underlying physical files) whose IDs are specified
-        if (removeSet.Count > 0 && requirement.Attachments.Count > 0)
+        // Remove attachments whose IDs are specified
+        if (removeSet.Count > 0)
         {
-            var toRemove = requirement.Attachments.Where(a => removeSet.Contains(a.Id)).ToList();
-            foreach (var att in toRemove)
+            foreach (var attachmentId in removeSet)
             {
                 try
                 {
-                    // Delete physical file
-                    var physicalPath = ResolvePhysicalPath(att.FilePath);
-                    if (physicalPath != null && File.Exists(physicalPath))
-                    {
-                        File.Delete(physicalPath);
-                    }
-                    
-                    // Delete from database using repository method
-                    await _projectRequirementRepository.DeleteAttachmentAsync(requirementId, att.Id);
+                    await _projectRequirementRepository.DeleteAttachmentAsync(requirementId, attachmentId);
                 }
                 catch
                 {
-                    // Swallow individual deletion errors to allow rest of sync to continue
+                    // Ignore individual deletion failures to continue processing other attachments
                 }
             }
-            
-            // Refresh the requirement to get updated attachments list after deletions
-            requirement = await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(requirementId);
-            if (requirement == null)
-                return null;
-            
-            requirement.Attachments ??= new List<ProjectRequirementAttachment>();
         }
 
-        // Add new files
+        // Add new files directly
         foreach (var file in newFiles ?? Enumerable.Empty<IFormFile>())
         {
-            if (file == null || file.Length == 0) continue;
+            if (file == null || file.Length == 0)
+            {
+                continue;
+            }
+
             try
             {
-                var extension = Path.GetExtension(file.FileName);
-                var uniqueFileName = $"{Guid.NewGuid()}" + extension;
-                var physicalDirectory = Path.Combine(_pathProvider.WebRootPath, "uploads", "requirements", requirementId.ToString());
-                Directory.CreateDirectory(physicalDirectory);
-                var physicalPath = Path.Combine(physicalDirectory, uniqueFileName);
-                await using (var stream = new FileStream(physicalPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                byte[] fileData;
+                using (var memoryStream = new MemoryStream())
                 {
-                    await file.CopyToAsync(stream);
+                    await file.CopyToAsync(memoryStream);
+                    fileData = memoryStream.ToArray();
                 }
-                var relativePathForDb = Path.Combine("uploads", "requirements", requirementId.ToString(), uniqueFileName).Replace('\\', '/');
 
-                requirement.Attachments.Add(new ProjectRequirementAttachment
+                if (fileData.Length == 0)
+                {
+                    continue;
+                }
+
+                var attachment = new ProjectRequirementAttachment
                 {
                     ProjectRequirementId = requirementId,
-                    FileName = uniqueFileName,
+                    FileName = file.FileName,
                     OriginalName = file.FileName,
-                    FilePath = relativePathForDb,
+                    FileData = fileData,
                     FileSize = file.Length,
                     ContentType = file.ContentType,
-                    UploadedAt = DateTime.Now
-                });
+                    UploadedAt = DateTime.Now,
+                };
+
+                await _projectRequirementRepository.AddAttachmentAsync(attachment);
             }
-            catch
+            catch (Exception ex)
             {
-                // Skip failed file but continue others
+                System.Diagnostics.Debug.WriteLine($"Error syncing attachment {file?.FileName}: {ex.Message}");
             }
         }
 
-        requirement.UpdatedAt = DateTime.Now;
-        await _projectRequirementRepository.UpdateAsync(requirement);
-
-        // Return a snapshot (read-only copy) of attachments
-        return requirement.Attachments.ToList().AsReadOnly();
+        // Return updated attachment list without reloading requirement entity
+        var updatedAttachments = await _projectRequirementRepository.GetAttachmentsMetadataAsync(requirementId);
+        return updatedAttachments.AsReadOnly();
     }
 
-    /// <summary>
-    /// Resolve a stored attachment path to an absolute on-disk path avoiding duplicate wwwroot segments.
-    /// </summary>
-    /// <param name="storedPath">Path persisted in DB (may be null, relative like 'uploads/...', or include 'wwwroot/...', or absolute).</param>
-    /// <returns>Absolute physical path or null if cannot be resolved.</returns>
-    private string? ResolvePhysicalPath(string? storedPath)
-    {
-        if (string.IsNullOrWhiteSpace(storedPath)) return null;
-
-        // Absolute path already
-        if (Path.IsPathRooted(storedPath)) return storedPath;
-
-        // Normalise slashes
-        var normalized = storedPath.Replace('\\', '/').TrimStart('/');
-
-    var contentRoot = _pathProvider.ContentRootPath; // project root
-
-        // If the path already starts with wwwroot/, just append to content root
-        if (normalized.StartsWith("wwwroot/", StringComparison.OrdinalIgnoreCase))
-        {
-            return Path.Combine(contentRoot, normalized.Replace('/', Path.DirectorySeparatorChar));
-        }
-
-        // Otherwise assume it is relative to wwwroot (our current storage strategy: uploads/...)
-        return Path.Combine(_pathProvider.WebRootPath, normalized.Replace('/', Path.DirectorySeparatorChar));
-    }
+     
 
     private bool IsRoleCode(string? roleCode, RoleCodes targetRole)
     {

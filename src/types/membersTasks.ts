@@ -13,6 +13,8 @@ export interface MemberTask {
   department: Department;
   assignedMembers: MemberSearchResult[]; // Multiple assignees array
   assignedDesigner?: MemberSearchResult; // Designer assigned from design request
+  designerTaskId?: number; // ID of the designer's task in the DesignRequest
+  designerTaskStatus?: number; // Status of the designer's task
   primaryAssignee?: MemberSearchResult; // Main responsible person
   memberIds: number[]; // For API filtering
   project: { id: string; applicationName: string };

@@ -777,6 +777,22 @@ public class TasksController : ApiBaseController
                 });
             }
 
+            // If designer task exists and is completed, return false flags
+            if (designRequest.DesignerTaskId.HasValue)
+            {
+                var designerTask = await _taskService.GetTaskByIdAsync(designRequest.DesignerTaskId.Value);
+                if (designerTask != null && designerTask.StatusId == Core.Enums.TaskStatus.Completed)
+                {
+                    return Success(new DesignRequestCheckDto
+                    {
+                        HasDesignRequest = false,
+                        DesignRequestId = designRequest.Id,
+                        HasDesignerTask = false,
+                        DesignerTaskId = designRequest.DesignerTaskId
+                    });
+                }
+            }
+
             return Success(new DesignRequestCheckDto
             {
                 HasDesignRequest = true,

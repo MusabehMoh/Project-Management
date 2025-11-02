@@ -233,6 +233,8 @@ export function useProjectRequirements({
 
   /**
    * Create a new requirement
+   * CRITICAL: Does NOT reload data - caller must call refreshData() after all attachment operations complete
+   * This allows attachment uploads/removals to complete before data refresh
    */
   const createRequirement = useCallback(
     async (data: CreateProjectRequirementRequest) => {
@@ -243,8 +245,8 @@ export function useProjectRequirements({
         const newRequirement =
           await projectRequirementsService.createRequirement(projectId, data);
 
-        // Reload the requirements list to get fresh data with proper pagination
-        await Promise.all([loadRequirements(), loadStats()]);
+        // NOTE: Do NOT reload data here - attachment operations happen after this
+        // The caller (handleSaveRequirement) will call refreshData() after all attachments are processed
         addToast({
           title: "Success",
           description: t("requirements.createSuccess"),
@@ -266,11 +268,13 @@ export function useProjectRequirements({
         setLoading(false);
       }
     },
-    [projectId, loadRequirements, loadStats],
+    [projectId, t],
   );
 
   /**
    * Update an existing requirement
+   * CRITICAL: Does NOT reload data - caller must call refreshData() after all attachment operations complete
+   * This allows attachment uploads/removals to complete before data refresh
    */
   const updateRequirement = useCallback(
     async (requirementId: number, data: UpdateProjectRequirementRequest) => {
@@ -281,14 +285,6 @@ export function useProjectRequirements({
             requirementId,
             data,
           );
-
-        // Reload the requirements list to get fresh data with proper pagination
-        await Promise.all([loadRequirements(), loadStats()]);
-        addToast({
-          title: "Success",
-          description: t("requirements.updateSuccess"),
-          color: "success",
-        });
 
         return updatedRequirement;
       } catch (err) {
@@ -305,7 +301,7 @@ export function useProjectRequirements({
         setLoading(false);
       }
     },
-    [loadRequirements, loadStats],
+    [t],
   );
 
   /**
@@ -482,53 +478,39 @@ export function useProjectRequirements({
 
   /**
    * Upload attachments for a requirement
+   * CRITICAL: Does NOT set loading state - caller manages loading state for entire operation
+   * Silently updates local state to reflect new attachments without UI flickering
    */
   const uploadAttachments = useCallback(
-    async (requirementId: number, files: File[]) => {
-      if (files.length === 0) return [];
-
-      setLoading(true);
+    async (
+      requirementId: number,
+      files: File[],
+      existingAttachmentIds?: number[],
+      removeAttachmentIds?: number[],
+    ) => {
       try {
-        const uploadedAttachments =
+        const { attachments } =
           await projectRequirementsService.uploadAttachments(
             requirementId,
             files,
+            existingAttachmentIds,
+            removeAttachmentIds,
           );
 
-        // Update the requirement in the local state to include new attachments
         setRequirements((prev) =>
           prev.map((req) =>
             req.id === requirementId
               ? {
                   ...req,
-                  attachments: [
-                    ...(req.attachments || []),
-                    ...uploadedAttachments,
-                  ],
+                  attachments,
                 }
               : req,
           ),
         );
 
-        addToast({
-          title: "Success",
-          description: `${uploadedAttachments.length} file(s) ${t("requirements.uploadSuccess")}`,
-          color: "success",
-        });
-
-        return uploadedAttachments;
+        return attachments;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to upload files";
-
-        addToast({
-          title: "Error",
-          description: errorMessage,
-          color: "danger",
-        });
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
     [],

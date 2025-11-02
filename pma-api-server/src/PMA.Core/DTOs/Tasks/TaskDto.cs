@@ -35,6 +35,10 @@ public class TaskDto
     public List<int> MemberIds { get; set; } = new List<int>();
     public List<MemberSearchResultDto> AssignedMembers { get; set; } = new List<MemberSearchResultDto>();
     public MemberSearchResultDto? AssignedDesigner { get; set; }
+    
+    // Designer task information
+    public int? DesignerTaskId { get; set; }
+    public TaskStatusEnum? DesignerTaskStatus { get; set; }
 
     public List<int> DepTaskIds { get; set; } = new List<int>();
     public bool HasDesignRequest { get; set; }

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
 import QCQuickActions from "./qc/QCQuickActions";
-import ApprovedRequirements from "./ApprovedRequirements";
 import DeveloperCalendar from "./calendar";
+import QCWorkloadPerformance from "./qc/QCWorkloadPerformance";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import ModernQuickStats from "@/components/dashboard/ModernQuickStats";
@@ -42,19 +42,13 @@ export default function QualityControlManagerDashboard() {
       {/* Quick Stats */}
       <ModernQuickStats />
 
-      {/* Quick Actions and Pending Tasks Section */}
-      <div className="flex flex-col lg:flex-row gap-6 mb-6">
-        <div className="lg:w-[70%] space-y-4">
-          <QCQuickActions
-            key={refreshKey}
-            autoRefresh={true}
-            onAssignQC={handleAssignQC}
-          />
-        </div>
-
-        <div className="lg:w-[30%] space-y-4">
-          <ApprovedRequirements />
-        </div>
+      {/* Quick Actions Section */}
+      <div className="mb-6">
+        <QCQuickActions
+          key={refreshKey}
+          autoRefresh={true}
+          onAssignQC={handleAssignQC}
+        />
       </div>
 
       {/* QC Team Performance and Calendar */}
@@ -63,10 +57,7 @@ export default function QualityControlManagerDashboard() {
           <h2 className="text-2xl font-semibold text-foreground">
             {t("qcDashboard.teamPerformance")}
           </h2>
-          {/* TODO: Add QC Team Performance component similar to DeveloperWorkloadPerformance */}
-          <div className="p-8 text-center text-default-500">
-            {t("qcDashboard.performanceComingSoon")}
-          </div>
+          <QCWorkloadPerformance />
         </div>
 
         <div className="space-y-4">

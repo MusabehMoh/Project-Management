@@ -3,7 +3,7 @@ import type {
   ProjectRequirementAttachment,
 } from "@/types/projectRequirement";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -68,6 +68,11 @@ export default function RequirementDetailsDrawer({
   const { t } = useLanguage();
   const { hasPermission } = usePermissions();
 
+  // Loading state for attachment operations
+  const [loadingAttachmentId, setLoadingAttachmentId] = useState<number | null>(
+    null,
+  );
+
   // File preview hook
   const { previewState, previewFile, closePreview, downloadCurrentFile } =
     useFilePreview({
@@ -93,6 +98,7 @@ export default function RequirementDetailsDrawer({
   ) => {
     if (!requirement) return;
 
+    setLoadingAttachmentId(attachment.id);
     try {
       const blob = await projectRequirementsService.downloadAttachment(
         requirement.id,
@@ -116,6 +122,8 @@ export default function RequirementDetailsDrawer({
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         });
+    } finally {
+      setLoadingAttachmentId(null);
     }
   };
 
@@ -205,16 +213,14 @@ export default function RequirementDetailsDrawer({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h4 className="text-sm font-medium text-default-600 mb-1">
-                        {t("requirements.id")}
-                      </h4>
-                      <p className="text-sm">{requirement.id}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-default-600 mb-1">
                         {t("requirements.type")}
                       </h4>
                       <p className="text-sm">
-                        {t(`requirements.type.${requirement.type}`) || "N/A"}
+                        {requirement.type === 1
+                          ? t("requirements.new")
+                          : requirement.type === 2
+                            ? t("requirements.changeRequest")
+                            : "N/A"}
                       </p>
                     </div>
                     <div>
@@ -224,16 +230,6 @@ export default function RequirementDetailsDrawer({
                       <p className="text-sm">
                         {requirement.createdAt
                           ? formatDate(requirement.createdAt)
-                          : "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-default-600 mb-1">
-                        {t("requirements.updated")}
-                      </h4>
-                      <p className="text-sm">
-                        {requirement.updatedAt
-                          ? formatDate(requirement.updatedAt)
                           : "N/A"}
                       </p>
                     </div>
@@ -292,6 +288,10 @@ export default function RequirementDetailsDrawer({
                                     )) && (
                                   <Button
                                     color="default"
+                                    isDisabled={loadingAttachmentId !== null}
+                                    isLoading={
+                                      loadingAttachmentId === attachment.id
+                                    }
                                     size="sm"
                                     startContent={<Eye className="w-4 h-4" />}
                                     variant="light"
@@ -305,12 +305,17 @@ export default function RequirementDetailsDrawer({
                                 {
                                   <Button
                                     color="primary"
+                                    isDisabled={loadingAttachmentId !== null}
+                                    isLoading={
+                                      loadingAttachmentId === attachment.id
+                                    }
                                     size="sm"
                                     startContent={
                                       <Download className="w-4 h-4" />
                                     }
                                     variant="light"
                                     onPress={async () => {
+                                      setLoadingAttachmentId(attachment.id);
                                       try {
                                         const blob =
                                           await projectRequirementsService.downloadAttachment(
@@ -329,6 +334,8 @@ export default function RequirementDetailsDrawer({
                                         document.body.removeChild(a);
                                       } catch {
                                         // Handle download error silently
+                                      } finally {
+                                        setLoadingAttachmentId(null);
                                       }
                                     }}
                                   >
