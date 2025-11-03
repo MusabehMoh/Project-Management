@@ -64,10 +64,7 @@ import useTeamSearch from "@/hooks/useTeamSearch";
 import { Project, ProjectFormData } from "@/types/project";
 import { usePageTitle } from "@/hooks";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
-import {
-  validateDateNotInPast,
-  validateExpectedCompletionDate,
-} from "@/utils/dateValidation";
+import { isDateFormatValid } from "@/utils/dateValidation";
 
 export default function ProjectsPage() {
   const { t, language } = useLanguage();
@@ -395,38 +392,71 @@ export default function ProjectsPage() {
       errors.description = t("projects.validation.descriptionRequired");
     }
 
-    // Validate start date is not in the past
-    const dateValidation = handleValidateDateNotInPast(formData.startDate);
+    // Check start date format first
+    const startDateFormatError = handleCheckDateFormat(formData.startDate);
 
-    if (typeof dateValidation === "string") {
-      errors.startDate = dateValidation;
+    if (startDateFormatError) {
+      errors.startDate = startDateFormatError;
     }
+    // else {
+    //   // Validate start date is not in the past only if format is valid
+    //   const dateValidation = handleValidateDateNotInPast(formData.startDate);
 
-    // Validate expected completion date
-    const expectedCompletionValidation = handleValidateExpectedCompletionDate(
+    //   if (typeof dateValidation === "string") {
+    //     errors.startDate = dateValidation;
+    //   }
+    // }
+
+    // Check expected completion date format first
+    const expectedDateFormatError = handleCheckDateFormat(
       formData.expectedCompletionDate,
     );
 
-    if (typeof expectedCompletionValidation === "string") {
-      errors.expectedCompletionDate = expectedCompletionValidation;
+    if (expectedDateFormatError) {
+      errors.expectedCompletionDate = expectedDateFormatError;
     }
+
+    // Validate expected completion date is after start date
+    if (
+      formData.startDate &&
+      formData.expectedCompletionDate &&
+      !startDateFormatError &&
+      !expectedDateFormatError
+    ) {
+      const startDateObj = new Date(formData.startDate.toString());
+      const completionDateObj = new Date(
+        formData.expectedCompletionDate.toString(),
+      );
+
+      if (completionDateObj <= startDateObj) {
+        errors.expectedCompletionDate = t(
+          "projects.validation.expectedCompletionAfterStart",
+        );
+      }
+    }
+    //  else {
+    //   // Validate expected completion date only if format is valid
+    //   const expectedCompletionValidation = handleValidateExpectedCompletionDate(
+    //     formData.expectedCompletionDate,
+    //   );
+
+    //   if (typeof expectedCompletionValidation === "string") {
+    //     errors.expectedCompletionDate = expectedCompletionValidation;
+    //   }
+    // }
 
     setValidationErrors(errors);
 
     return Object.keys(errors).length === 0;
   };
 
-  // Wrapper functions for validation that pass translation and form data
-  const handleValidateDateNotInPast = (
-    value: DateValue | null,
-  ): string | true | null | undefined => {
-    return validateDateNotInPast(value, t);
-  };
+  // Check date format validity separately
+  const handleCheckDateFormat = (value: DateValue | null): string | null => {
+    if (!isDateFormatValid(value)) {
+      return t("common.validation.dateFormatInvalid");
+    }
 
-  const handleValidateExpectedCompletionDate = (
-    value: DateValue | null,
-  ): string | true | null | undefined => {
-    return validateExpectedCompletionDate(value, formData.startDate, t);
+    return null;
   };
 
   const getStatusColor = (status: number) => {
@@ -649,6 +679,7 @@ export default function ProjectsPage() {
         });
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error sending project for review:", error);
       addToast({
         title: t("common.unexpectedError") || "An unexpected error occurred",

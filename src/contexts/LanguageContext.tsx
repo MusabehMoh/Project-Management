@@ -211,6 +211,8 @@ const translations = {
     "common.validation.dateRequired": "Date is required",
     "common.validation.dateCannotBeInPast": "Date cannot be in the past",
     "common.validation.dateNotInPast": "Date cannot be in the past",
+    "common.validation.dateFormatInvalid":
+      "Please enter a complete date (year must be 4 digits)",
 
     // Requirement Overview
     "dashboard.requirementOverview": "Requirement Overview",
@@ -2139,6 +2141,8 @@ const translations = {
     "common.validation.dateRequired": "التاريخ مطلوب",
     "common.validation.dateCannotBeInPast": "لا يمكن أن يكون التاريخ في الماضي",
     "common.validation.dateNotInPast": "لا يمكن أن يكون التاريخ في الماضي",
+    "common.validation.dateFormatInvalid":
+      "يرجى إدخال تاريخ كامل (يجب أن تكون السنة 4 أرقام)",
     "pipeline.initiatePlanning": "بدء التخطيط",
     "pipeline.reviewRequirements": "مراجعة المتطلبات",
     "pipeline.resourceAllocation": "تخصيص الموارد",
@@ -2858,7 +2862,7 @@ const translations = {
     "qcDashboard.status.Available": "متاح",
     "qcDashboard.status.light": "خفيف",
     "qcDashboard.status.busy": "مشغول",
-    "qcDashboard.status.overloaded":"عمل زائد",
+    "qcDashboard.status.overloaded": "عمل زائد",
 
     // Quality Control
     "qualityControl.qcMember": "عضو مراقبة الجودة",
@@ -3055,7 +3059,7 @@ const translations = {
     "requirements.assignedProjects": "المشاريع المكلفة",
     "requirements.projectRequirements": "متطلبات المشروع",
     "requirements.pendingRequirements": "المتطلبات المعلقة",
-    "requirements.noDraftRequirements": "لا توجد متطلبات مسودة",
+    "requirements.noDraftRequirements": "لا توجد متطلبات ",
     "requirements.noDraftRequirementsDesc": "تم معالجة جميع المتطلبات",
     "requirements.newRequirement": "متطلب جديد",
     "requirements.editRequirement": "تحرير المتطلب",
