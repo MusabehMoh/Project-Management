@@ -740,8 +740,10 @@ export const Navbar = () => {
             style={{ animationDelay: "550ms" }}
           >
             <Button
-              className="bg-warning text-warning-foreground font-semibold"
+              className="text-danger"
+              color="danger"
               size="sm"
+              variant="flat"
               onPress={handleStopImpersonation}
             >
               {t("users.stopImpersonating")}
