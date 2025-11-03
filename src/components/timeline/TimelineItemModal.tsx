@@ -159,6 +159,7 @@ export default function TimelineItemModal({
     timelineStartDate: timelineData?.startDate,
     timelineEndDate: timelineData?.endDate,
     validateTimelineRange: true,
+    itemType: type,
   });
 
   // Members/Tasks selection state

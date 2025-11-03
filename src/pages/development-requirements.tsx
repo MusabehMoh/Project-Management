@@ -1248,7 +1248,7 @@ export default function DevelopmentRequirementsPage() {
                         defaultFilter={() => true}
                         inputValue={developerInputValue}
                         isLoading={loadingDevelopers}
-                        menuTrigger="focus"
+                        menuTrigger="manual"
                         placeholder={t("tasks.selectDeveloper")}
                         selectedKey={selectedDeveloper?.id?.toString() || ""}
                         onInputChange={(value) => {
@@ -1322,7 +1322,7 @@ export default function DevelopmentRequirementsPage() {
 
                     {/* Developer Dates */}
                     {selectedDeveloper && (
-                      <div className="space-y-2">
+                      <div className="space-y-2 mt-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <DatePicker
                             label={t("tasks.startDate")}

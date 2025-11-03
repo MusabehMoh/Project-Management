@@ -31,6 +31,7 @@ export interface ValidationOptions {
   timelineStartDate?: string;
   timelineEndDate?: string;
   validateTimelineRange?: boolean;
+  itemType?: "timeline" | "sprint" | "requirement" | "task" | "subtask";
 }
 
 /**
@@ -59,6 +60,7 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
     timelineStartDate,
     timelineEndDate,
     validateTimelineRange = true,
+    itemType = "task",
   } = options;
 
   const validateForm = useCallback(
@@ -141,9 +143,10 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
         }
       }
 
-      // Timeline date range validation
+      // Timeline date range validation - only for task and sprint types
       if (
         validateTimelineRange &&
+        (itemType === "task" || itemType === "sprint") &&
         timelineStartDate &&
         timelineEndDate &&
         formData.startDate &&
@@ -197,6 +200,7 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
       timelineStartDate,
       timelineEndDate,
       validateTimelineRange,
+      itemType,
     ],
   );
 
