@@ -889,110 +889,106 @@ export default function DevelopmentRequirementsPage() {
         </div>
 
         {/* Filters and Search */}
-        <Card>
-          <CardBody>
-            <div className="flex flex-col md:flex-row gap-4 items-end">
-              <Input
-                className="md:w-120"
-                placeholder={t("requirements.searchRequirements")}
-                startContent={<Search className="w-4 h-4" />}
-                value={searchTerm}
-                onValueChange={setSearchTerm}
-              />
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <Input
+            className="md:w-120"
+            placeholder={t("requirements.searchRequirements")}
+            startContent={<Search className="w-4 h-4" />}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+          />
 
-              <Select
-                className="md:w-90"
-                placeholder={t("taskPlan.filterByProject")}
-                selectedKeys={
-                  filters.projectId ? [String(filters.projectId)] : []
-                }
-                onSelectionChange={(keys) => {
-                  const val = Array.from(keys)[0] as string;
+          <Select
+            className="md:w-90"
+            placeholder={t("taskPlan.filterByProject")}
+            selectedKeys={
+              filters.projectId ? [String(filters.projectId)] : []
+            }
+            onSelectionChange={(keys) => {
+              const val = Array.from(keys)[0] as string;
 
-                  setProjectFilter(val ? Number(val) : undefined);
-                }}
-              >
-                <SelectItem key="">{t("taskPlan.allProjects")}</SelectItem>
-                <>
-                  {projects?.map((p: AssignedProject) => (
-                    <SelectItem key={String(p.id)}>
-                      {p.applicationName}
-                    </SelectItem>
-                  ))}
-                </>
-              </Select>
+              setProjectFilter(val ? Number(val) : undefined);
+            }}
+          >
+            <SelectItem key="">{t("taskPlan.allProjects")}</SelectItem>
+            <>
+              {projects?.map((p: AssignedProject) => (
+                <SelectItem key={String(p.id)}>
+                  {p.applicationName}
+                </SelectItem>
+              ))}
+            </>
+          </Select>
 
-              <Select
-                className="md:w-43"
-                items={[
-                  { value: "", label: t("requirements.allStatuses") },
-                  ...(statuses || []).map((status) => ({
-                    value: status.value.toString(),
-                    label: language === "ar" ? status.nameAr : status.nameEn,
-                  })),
-                ]}
-                placeholder={t("requirements.filterByStatus")}
-                selectedKeys={
-                  statusFilter !== null ? [statusFilter.toString()] : []
-                }
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
+          <Select
+            className="md:w-43"
+            items={[
+              { value: "", label: t("requirements.allStatuses") },
+              ...(statuses || []).map((status) => ({
+                value: status.value.toString(),
+                label: language === "ar" ? status.nameAr : status.nameEn,
+              })),
+            ]}
+            placeholder={t("requirements.filterByStatus")}
+            selectedKeys={
+              statusFilter !== null ? [statusFilter.toString()] : []
+            }
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
 
-                  setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
-                }}
-              >
-                {(item) => (
-                  <SelectItem key={item.value}>{item.label}</SelectItem>
-                )}
-              </Select>
-
-              <Select
-                className="md:w-43"
-                items={[
-                  { value: "", label: t("requirements.allPriorities") },
-                  ...priorityOptions.map((p) => ({
-                    value: p.value.toString(),
-                    label: language === "ar" ? p.labelAr : p.label,
-                  })),
-                ]}
-                placeholder={t("requirements.filterByPriority")}
-                selectedKeys={priorityFilter ? [priorityFilter.toString()] : []}
-                onSelectionChange={(keys) => {
-                  const selectedKey = Array.from(keys)[0] as string;
-
-                  setPriorityFilter(selectedKey || "");
-                }}
-              >
-                {(item) => (
-                  <SelectItem key={item.value}>{item.label}</SelectItem>
-                )}
-              </Select>
-
-              {/* Grid-only view (no toggle) */}
-            </div>
-
-            {/* Clear Filters - New Row */}
-            {hasActiveFilters && (
-              <div className="flex items-center gap-2 mt-2">
-                <Button
-                  color="secondary"
-                  size="sm"
-                  startContent={<X size={16} />}
-                  variant="flat"
-                  onPress={resetFilters}
-                >
-                  {t("requirements.clearFilters")}
-                </Button>
-                <span className="text-sm text-default-500">
-                  {t("requirements.requirementsFound").replace(
-                    "{count}",
-                    totalRequirements.toString(),
-                  )}
-                </span>
-              </div>
+              setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
+            }}
+          >
+            {(item) => (
+              <SelectItem key={item.value}>{item.label}</SelectItem>
             )}
-          </CardBody>
-        </Card>
+          </Select>
+
+          <Select
+            className="md:w-43"
+            items={[
+              { value: "", label: t("requirements.allPriorities") },
+              ...priorityOptions.map((p) => ({
+                value: p.value.toString(),
+                label: language === "ar" ? p.labelAr : p.label,
+              })),
+            ]}
+            placeholder={t("requirements.filterByPriority")}
+            selectedKeys={priorityFilter ? [priorityFilter.toString()] : []}
+            onSelectionChange={(keys) => {
+              const selectedKey = Array.from(keys)[0] as string;
+
+              setPriorityFilter(selectedKey || "");
+            }}
+          >
+            {(item) => (
+              <SelectItem key={item.value}>{item.label}</SelectItem>
+            )}
+          </Select>
+
+          {/* Grid-only view (no toggle) */}
+        </div>
+
+        {/* Clear Filters - New Row */}
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2">
+            <Button
+              color="secondary"
+              size="sm"
+              startContent={<X size={16} />}
+              variant="flat"
+              onPress={resetFilters}
+            >
+              {t("requirements.clearFilters")}
+            </Button>
+            <span className="text-sm text-default-500">
+              {t("requirements.requirementsFound").replace(
+                "{count}",
+                totalRequirements.toString(),
+              )}
+            </span>
+          </div>
+        )}
 
         {/* Pagination Controls */}
         {requirements.length > 0 && (
