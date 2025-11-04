@@ -59,6 +59,7 @@ import { translateBackendError } from "@/utils/errorTranslation";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
 import { usePageTitle } from "@/hooks";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
+import { APP_CONFIG } from "@/config/environment";
 
 export default function UsersPage() {
   const { t, language } = useLanguage();
@@ -499,7 +500,7 @@ export default function UsersPage() {
       setImpersonatingUser(null);
       // Refresh the whole page after impersonation
       setTimeout(() => {
-        window.location.href = "/";
+        window.location.href = APP_CONFIG.basename;
       }, 500);
     } catch (error) {
       const errorMessage =
