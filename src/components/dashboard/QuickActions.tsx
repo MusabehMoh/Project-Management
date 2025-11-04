@@ -598,7 +598,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
                         );
                       }}
                     >
-                      {analyst.fullName}
+                      {` ${analyst.gradeName} - ${analyst.fullName}`}
                     </Chip>
                   ))}
                 </div>

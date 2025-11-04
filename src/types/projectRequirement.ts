@@ -58,6 +58,7 @@ export interface RequirementTask {
   qcName?: string;
   designerId?: number;
   designerName?: string;
+  gradeName?: string;
   controllerId?: number;
   controllerName?: string;
   description?: string;

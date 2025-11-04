@@ -589,9 +589,6 @@ export default function DesignerQuickActions() {
                               <span className="text-sm font-medium">
                                 {designer.gradeName} {designer.fullName}
                               </span>
-                              <span className="text-xs text-default-500">
-                                {designer.militaryNumber}
-                              </span>
                             </div>
                           </AutocompleteItem>
                         )}

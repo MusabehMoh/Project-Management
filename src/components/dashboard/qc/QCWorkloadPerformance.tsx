@@ -437,7 +437,7 @@ export default function QCWorkloadPerformance({
                             handleQCMemberClick(qcMember.prsId, qcMember.qcName)
                           }
                         >
-                          {qcMember.qcName}
+                          {qcMember.gradeName} {qcMember.qcName}
                         </Button>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {qcMember.skills &&

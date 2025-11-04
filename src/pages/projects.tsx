@@ -306,7 +306,7 @@ export default function ProjectsPage() {
 
   // Handle analyst selection (multiple)
   const handleAnalystSelect = (analyst: MemberSearchResult) => {
-    // Check if analyst is already selected
+    // Check if analyst is already selected - more robust check
     const isAlreadySelected = selectedAnalysts.some(
       (selected) => selected.id === analyst.id,
     );
@@ -1375,16 +1375,18 @@ export default function ProjectsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span>
-                              {project.projectOwnerEmployee?.fullName ||
-                                t("common.none")}
+                              {project.projectOwnerEmployee
+                                ? `${project.projectOwnerEmployee.gradeName} ${project.projectOwnerEmployee.fullName}`
+                                : t("common.none")}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span>
-                              {project.alternativeOwnerEmployee?.fullName ||
-                                t("common.none")}
+                              {project.alternativeOwnerEmployee
+                                ? `${project.alternativeOwnerEmployee.gradeName} ${project.alternativeOwnerEmployee.fullName}`
+                                : t("common.none")}
                             </span>
                           </div>
                         </TableCell>
@@ -1570,7 +1572,12 @@ export default function ProjectsPage() {
                       inputValue={ownerInputValue}
                       isInvalid={!!validationErrors.projectOwner}
                       isLoading={ownerSearchLoading}
-                      items={ownerEmployees}
+                      items={[
+                        ...(selectedOwner ? [selectedOwner] : []),
+                        ...ownerEmployees.filter(
+                          (e) => e.id !== (selectedOwner?.id ?? -1),
+                        ),
+                      ]}
                       label={t("projects.projectOwner")}
                       menuTrigger="input"
                       placeholder={t("projects.searchByName")}
@@ -1598,7 +1605,13 @@ export default function ProjectsPage() {
                       }}
                       onSelectionChange={(key) => {
                         if (key) {
-                          const selectedEmployee = ownerEmployees.find(
+                          const candidates = [
+                            ...(selectedOwner ? [selectedOwner] : []),
+                            ...ownerEmployees.filter(
+                              (e) => e.id !== (selectedOwner?.id ?? -1),
+                            ),
+                          ];
+                          const selectedEmployee = candidates.find(
                             (e) => e.id.toString() === key,
                           );
 
@@ -1620,7 +1633,12 @@ export default function ProjectsPage() {
                         }
                       }}
                     >
-                      {ownerEmployees.map((employee) => (
+                      {[
+                        ...(selectedOwner ? [selectedOwner] : []),
+                        ...ownerEmployees.filter(
+                          (e) => e.id !== (selectedOwner?.id ?? -1),
+                        ),
+                      ].map((employee) => (
                         <AutocompleteItem
                           key={employee.id.toString()}
                           textValue={`${employee.gradeName} ${employee.fullName}`}
@@ -1651,7 +1669,14 @@ export default function ProjectsPage() {
                       isClearable
                       inputValue={alternativeOwnerInputValue}
                       isLoading={alternativeOwnerSearchLoading}
-                      items={alternativeOwnerEmployees}
+                      items={[
+                        ...(selectedAlternativeOwner
+                          ? [selectedAlternativeOwner]
+                          : []),
+                        ...alternativeOwnerEmployees.filter(
+                          (e) => e.id !== (selectedAlternativeOwner?.id ?? -1),
+                        ),
+                      ]}
                       label={t("projects.alternativeOwner")}
                       menuTrigger="input"
                       placeholder={t("projects.searchByName")}
@@ -1672,10 +1697,18 @@ export default function ProjectsPage() {
                       }}
                       onSelectionChange={(key) => {
                         if (key) {
-                          const selectedEmployee =
-                            alternativeOwnerEmployees.find(
-                              (e) => e.id.toString() === key,
-                            );
+                          const candidates = [
+                            ...(selectedAlternativeOwner
+                              ? [selectedAlternativeOwner]
+                              : []),
+                            ...alternativeOwnerEmployees.filter(
+                              (e) =>
+                                e.id !== (selectedAlternativeOwner?.id ?? -1),
+                            ),
+                          ];
+                          const selectedEmployee = candidates.find(
+                            (e) => e.id.toString() === key,
+                          );
 
                           if (selectedEmployee) {
                             handleAlternativeOwnerSelect(selectedEmployee);
@@ -1688,7 +1721,14 @@ export default function ProjectsPage() {
                         }
                       }}
                     >
-                      {alternativeOwnerEmployees.map((employee) => (
+                      {[
+                        ...(selectedAlternativeOwner
+                          ? [selectedAlternativeOwner]
+                          : []),
+                        ...alternativeOwnerEmployees.filter(
+                          (e) => e.id !== (selectedAlternativeOwner?.id ?? -1),
+                        ),
+                      ].map((employee) => (
                         <AutocompleteItem
                           key={employee.id.toString()}
                           textValue={`${employee.gradeName} ${employee.fullName}`}
@@ -1722,7 +1762,12 @@ export default function ProjectsPage() {
                         className="max-w-full"
                         inputValue={analystInputValue}
                         isLoading={analystSearchLoading}
-                        items={analystEmployees}
+                        items={[
+                          ...selectedAnalysts,
+                          ...analystEmployees.filter((e) =>
+                            selectedAnalysts.every((s) => s.id !== e.id),
+                          ),
+                        ]}
                         label={t("projects.selectAnalysts")}
                         placeholder={t("projects.searchAnalysts")}
                         onInputChange={(value) => {
@@ -1736,7 +1781,13 @@ export default function ProjectsPage() {
                         }}
                         onSelectionChange={(key) => {
                           if (key) {
-                            const selectedEmployee = analystEmployees.find(
+                            const candidates = [
+                              ...selectedAnalysts,
+                              ...analystEmployees.filter((e) =>
+                                selectedAnalysts.every((s) => s.id !== e.id),
+                              ),
+                            ];
+                            const selectedEmployee = candidates.find(
                               (e) => e.id.toString() === key,
                             );
 
@@ -1746,7 +1797,12 @@ export default function ProjectsPage() {
                           }
                         }}
                       >
-                        {analystEmployees.map((employee) => (
+                        {[
+                          ...selectedAnalysts,
+                          ...analystEmployees.filter((e) =>
+                            selectedAnalysts.every((s) => s.id !== e.id),
+                          ),
+                        ].map((employee) => (
                           <AutocompleteItem
                             key={employee.id.toString()}
                             textValue={`${employee.gradeName} ${employee.fullName}`}
@@ -1950,6 +2006,8 @@ export default function ProjectsPage() {
                     <div className="md:col-span-2">
                       <Input
                         isRequired
+                        errorMessage={validationErrors.description}
+                        isInvalid={!!validationErrors.description}
                         label={t("projects.description")}
                         placeholder={t("projects.description")}
                         value={formData.description}

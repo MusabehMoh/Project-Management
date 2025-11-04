@@ -375,7 +375,8 @@ export default function RequirementDetailsDrawer({
                                 {t("tasks.qcMember")}
                               </h4>
                               <p className="text-sm">
-                                {requirement.task.qcName ||
+                                {requirement.task.gradeName +
+                                  requirement.task.qcName ||
                                   `QC ID: ${requirement.task.qcId}`}
                               </p>
                             </div>

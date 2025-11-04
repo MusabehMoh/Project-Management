@@ -71,7 +71,7 @@ public class ProjectsController : ApiBaseController
     {
         try
         {
-            var project = await _projectService.GetProjectByIdAsync(id);
+            var project = await _projectService.GetProjectWithDetailsAsync(id);
 
             if (project == null)
             {
@@ -205,7 +205,7 @@ public class ProjectsController : ApiBaseController
                 return Error<object>("Validation failed: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)), status: 400);
             }
 
-            var existingProject = await _projectService.GetProjectByIdAsync(id);
+            var existingProject = await _projectService.GetProjectWithDetailsAsync(id);
             if (existingProject == null)
             {
                 return Error<object>("Project not found", status: 404);
@@ -217,15 +217,9 @@ public class ProjectsController : ApiBaseController
             // Update the project
             await _projectService.UpdateProjectAsync(existingProject);
 
-            // Get the updated project and map to DTO
-            var updatedProject = await _projectService.GetProjectByIdAsync(id);
-            if (updatedProject == null)
-            {
-                return Error<object>("Project not found after update", status: 404);
-            }
-            var projectDto = _mappingService.MapToProjectDto(updatedProject);
+        
 
-            return Success(projectDto, message: "Project updated successfully");
+            return Success(existingProject, message: "Project updated successfully");
         }
         catch (Exception ex)
         {

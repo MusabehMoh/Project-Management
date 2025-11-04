@@ -21,6 +21,7 @@ export interface SystemAttachmentContent {
 }
 
 export interface SystemDeveloper {
+  gradeName: ReactNode;
   id: number;
   systemId: number;
   developerId: number;

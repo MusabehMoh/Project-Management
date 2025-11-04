@@ -518,7 +518,7 @@ const DeveloperQuickActions: React.FC<DeveloperQuickActionsProps> = ({
                         );
                       }}
                     >
-                      {developer.fullName}
+                      {developer.gradeName} {developer.fullName}
                     </Chip>
                   ))}
                 </div>

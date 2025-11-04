@@ -879,7 +879,6 @@ export default function DevelopmentRequirementsPage() {
         <div className="flex flex-col gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Code className="w-6 h-6" />
               {t("requirements.approvedRequirements")}
             </h1>
             <p className="text-default-500">
@@ -901,9 +900,7 @@ export default function DevelopmentRequirementsPage() {
           <Select
             className="md:w-90"
             placeholder={t("taskPlan.filterByProject")}
-            selectedKeys={
-              filters.projectId ? [String(filters.projectId)] : []
-            }
+            selectedKeys={filters.projectId ? [String(filters.projectId)] : []}
             onSelectionChange={(keys) => {
               const val = Array.from(keys)[0] as string;
 
@@ -913,9 +910,7 @@ export default function DevelopmentRequirementsPage() {
             <SelectItem key="">{t("taskPlan.allProjects")}</SelectItem>
             <>
               {projects?.map((p: AssignedProject) => (
-                <SelectItem key={String(p.id)}>
-                  {p.applicationName}
-                </SelectItem>
+                <SelectItem key={String(p.id)}>{p.applicationName}</SelectItem>
               ))}
             </>
           </Select>
@@ -939,9 +934,7 @@ export default function DevelopmentRequirementsPage() {
               setStatusFilter(selectedKey ? parseInt(selectedKey) : null);
             }}
           >
-            {(item) => (
-              <SelectItem key={item.value}>{item.label}</SelectItem>
-            )}
+            {(item) => <SelectItem key={item.value}>{item.label}</SelectItem>}
           </Select>
 
           <Select
@@ -961,9 +954,7 @@ export default function DevelopmentRequirementsPage() {
               setPriorityFilter(selectedKey || "");
             }}
           >
-            {(item) => (
-              <SelectItem key={item.value}>{item.label}</SelectItem>
-            )}
+            {(item) => <SelectItem key={item.value}>{item.label}</SelectItem>}
           </Select>
 
           {/* Grid-only view (no toggle) */}
@@ -1405,7 +1396,7 @@ export default function DevelopmentRequirementsPage() {
                           >
                             <div className="flex flex-col">
                               <span className="text-sm font-medium">
-                                {qcMember.fullName}
+                                {qcMember.gradeName} {qcMember.fullName}
                               </span>
                               <span className="text-xs text-default-500">
                                 {qcMember.militaryNumber} - {qcMember.gradeName}
@@ -1417,7 +1408,7 @@ export default function DevelopmentRequirementsPage() {
                       {selectedQC && (
                         <div className="mt-2 flex items-center gap-2">
                           <Chip color="secondary" size="sm" variant="flat">
-                            {selectedQC.fullName}
+                            {selectedQC.gradeName} {selectedQC.fullName}
                           </Chip>
                           <Button
                             isIconOnly

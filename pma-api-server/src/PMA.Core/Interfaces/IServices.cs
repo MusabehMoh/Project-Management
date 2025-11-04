@@ -11,6 +11,7 @@ public interface IProjectService
 {
     System.Threading.Tasks.Task<(IEnumerable<Project> Projects, int TotalCount)> GetProjectsAsync(int page, int limit, string? search = null, int? status = null, string? priority = null);
     System.Threading.Tasks.Task<Project?> GetProjectByIdAsync(int id);
+    System.Threading.Tasks.Task<Project?> GetProjectWithDetailsAsync(int id);
     System.Threading.Tasks.Task<Project> CreateProjectAsync(Project project);
     System.Threading.Tasks.Task UpdateProjectAsync(Project project);
     System.Threading.Tasks.Task DeleteProjectAsync(int id);

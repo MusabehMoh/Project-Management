@@ -238,22 +238,34 @@ public class MappingService : IMappingService
 
         if (updateDto.Analysts != null)
         {
-            // Clear existing ProjectAnalyst relationships
-            project.ProjectAnalysts?.Clear();
-            if (project.ProjectAnalysts == null)
+            // Clear existing ProjectAnalyst relationships more explicitly
+            if (project.ProjectAnalysts != null)
+            {
+                // Mark existing analysts for deletion
+                var existingAnalysts = project.ProjectAnalysts.ToList();
+                foreach (var existing in existingAnalysts)
+                {
+                    project.ProjectAnalysts.Remove(existing);
+                }
+            }
+            else
+            {
                 project.ProjectAnalysts = new List<ProjectAnalyst>();
+            }
 
             // Add new ProjectAnalyst relationships
             foreach (var analystId in updateDto.Analysts)
             {
-                project.ProjectAnalysts.Add(new ProjectAnalyst
+                // Avoid duplicates
+                if (!project.ProjectAnalysts.Any(pa => pa.AnalystId == analystId))
                 {
-                    ProjectId = project.Id,
-                    AnalystId = analystId
-                });
+                    project.ProjectAnalysts.Add(new ProjectAnalyst
+                    {
+                        ProjectId = project.Id,
+                        AnalystId = analystId
+                    });
+                }
             }
-            
-       
         }
 
         if (updateDto.StartDate.HasValue)

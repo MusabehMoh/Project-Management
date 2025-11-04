@@ -1,5 +1,3 @@
-import type { DepartmentMember } from "@/types/department";
-
 import { useState } from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Input } from "@heroui/input";
@@ -38,15 +36,15 @@ export default function MyTeamPage() {
   // QC Manager (6) → QC Dept (4)
   const getDepartmentIdFromRole = (): number | null => {
     if (!user?.roles || user.roles.length === 0) return null;
-    
+
     const roleId = user.roles[0].id; // Use first role's ID
     const roleToDepMap: Record<number, number> = {
-      2: 1,  // Analyst Manager → Analyst Department
-      4: 2,  // Development Manager → Development Department
-      6: 4,  // QC Manager → QC Department
-      8: 3,  // Designer Manager → Design Department
+      2: 1, // Analyst Manager → Analyst Department
+      4: 2, // Development Manager → Development Department
+      6: 4, // QC Manager → QC Department
+      8: 3, // Designer Manager → Design Department
     };
-    
+
     return roleToDepMap[roleId] || null;
   };
 
@@ -57,12 +55,7 @@ export default function MyTeamPage() {
     members,
     loading: membersLoading,
     totalPages,
-  } = useDepartmentMembers(
-    departmentId || 0,
-    currentPage,
-    10,
-    searchTerm,
-  );
+  } = useDepartmentMembers(departmentId || 0, currentPage, 10, searchTerm);
 
   return (
     <div className="space-y-4">
@@ -86,7 +79,6 @@ export default function MyTeamPage() {
 
       <Card>
         <CardBody>
-
           {/* Members Table - EXACT SAME AS DEPARTMENTS PAGE */}
           {membersLoading ? (
             <Table aria-label="Loading team members table">
@@ -158,9 +150,7 @@ export default function MyTeamPage() {
                     </TableCell>
                     <TableCell>
                       <span
-                        className={
-                          language === "ar" ? "text-right block" : ""
-                        }
+                        className={language === "ar" ? "text-right block" : ""}
                         dir={language === "ar" ? "rtl" : "ltr"}
                       >
                         {member.user.militaryNumber}
@@ -168,9 +158,7 @@ export default function MyTeamPage() {
                     </TableCell>
                     <TableCell>
                       <span
-                        className={
-                          language === "ar" ? "text-right block" : ""
-                        }
+                        className={language === "ar" ? "text-right block" : ""}
                         dir={language === "ar" ? "rtl" : "ltr"}
                       >
                         {member.user.gradeName}

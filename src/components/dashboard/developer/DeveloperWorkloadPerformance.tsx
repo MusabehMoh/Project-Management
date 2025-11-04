@@ -511,7 +511,7 @@ export default function DeveloperWorkloadPerformance({
                             )
                           }
                         >
-                          {developer.developerName}
+                          {developer.gradeName} {developer.developerName}
                         </Button>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {developer.skills.slice(0, 2).map((skill) => (

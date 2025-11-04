@@ -785,6 +785,7 @@ export function ProjectDetailsModal({
                                 className={`${language === "ar" ? "text-right" : "text-left"}`}
                               >
                                 <p className="font-medium text-foreground">
+                                  {developer.gradeName}{" "}
                                   {developer.developerName}
                                 </p>
                                 <p className="text-sm text-default-500">

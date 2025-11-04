@@ -44,6 +44,11 @@ public class ProjectService : IProjectService
         return await _projectRepository.GetByIdAsync(id);
     }
 
+    public async System.Threading.Tasks.Task<Project?> GetProjectWithDetailsAsync(int id)
+    {
+        return await _projectRepository.GetProjectWithDetailsAsync(id);
+    }
+
     public async System.Threading.Tasks.Task<Project> CreateProjectAsync(Project project)
     {
         // Use the new UserContext pattern to get current user info

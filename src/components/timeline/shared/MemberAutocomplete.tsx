@@ -77,7 +77,9 @@ export function MemberAutocomplete({
             key={member.id}
             className="flex items-center gap-2 rounded-full bg-default-200 px-2 py-1 text-xs"
           >
-            <span>{member.fullName}</span>
+            <span>
+              {member.gradeName} {member.fullName}
+            </span>
             <button
               className="text-danger"
               onClick={() => onMemberRemove(member.id)}
@@ -110,7 +112,9 @@ export function MemberAutocomplete({
           >
             <span className="flex items-center gap-2">
               <span className="flex flex-col">
-                <span className="text-sm font-medium">{employee.fullName}</span>
+                <span className="text-sm font-medium">
+                  {employee.gradeName} {employee.fullName}
+                </span>
                 {employee.userName && (
                   <span className="text-xs text-default-500">
                     {employee.userName}

@@ -511,7 +511,7 @@ export default function DepartmentsPage() {
                               />
                               <div>
                                 <div className="font-medium">
-                                  {member.user.fullName}
+                                  {member.user.gradeName} {member.user.fullName}
                                 </div>
                                 <div className="text-sm text-default-500">
                                   @{member.user.userName}
@@ -658,17 +658,14 @@ export default function DepartmentsPage() {
                       {employees.map((employee) => (
                         <AutocompleteItem
                           key={employee.id.toString()}
-                          textValue={`${employee.fullName} (${employee.militaryNumber})`}
+                          textValue={`${employee.gradeName} (${employee.fullName})`}
                         >
                           <div
                             className={`flex flex-col ${language === "ar" ? "text-right" : ""}`}
                             dir={language === "ar" ? "rtl" : "ltr"}
                           >
                             <span className="font-medium">
-                              {employee.fullName}
-                            </span>
-                            <span className="text-small text-default-500">
-                              {employee.militaryNumber} • {employee.gradeName}
+                              {employee.gradeName} {employee.fullName}
                             </span>
                           </div>
                         </AutocompleteItem>
