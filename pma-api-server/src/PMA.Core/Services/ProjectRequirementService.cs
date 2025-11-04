@@ -145,6 +145,11 @@ public class ProjectRequirementService : IProjectRequirementService
         return await _projectRequirementRepository.GetProjectRequirementStatsAsync(projectId);
     }
 
+    public async Task<RequirementOverviewDto> GetRequirementOverviewAsync()
+    {
+        return await _projectRequirementRepository.GetRequirementOverviewAsync();
+    }
+
     public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetDevelopmentRequirementsAsync(int page, int limit)
     {
         // Get requirements with status "Under Development" (assuming status 3)

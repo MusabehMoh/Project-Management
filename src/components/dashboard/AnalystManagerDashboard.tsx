@@ -129,7 +129,7 @@ export default function AnalystManagerDashboard() {
 
             {/* Requirement Overview Section */}
             <div className="space-y-4">
-              <RequirementOverview useMockData={true} />
+              <RequirementOverview />
             </div>
           </div>
         </div>

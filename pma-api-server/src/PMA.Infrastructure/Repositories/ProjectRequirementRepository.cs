@@ -191,6 +191,53 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         };
     }
 
+    public async Task<RequirementOverviewDto> GetRequirementOverviewAsync()
+    {
+        var today = DateTime.Today;
+        var thirtyDaysAgo = today.AddDays(-30);
+        var sixtyDaysAgo = today.AddDays(-60);
+
+        // Query all requirements once
+        var allRequirements = _context.ProjectRequirements.AsQueryable();
+
+        // New Requirements (status: New only)
+        var newRequirementsCount = await allRequirements
+            .Where(pr => pr.Status == RequirementStatusEnum.New)
+            .CountAsync();
+
+        // Ongoing Requirements (status: UnderDevelopment or UnderTesting)
+        var ongoingRequirementsCount = await allRequirements
+            .Where(pr => pr.Status == RequirementStatusEnum.UnderDevelopment ||
+                         pr.Status == RequirementStatusEnum.UnderTesting)
+            .CountAsync();
+
+        // Active Requirements (all except Completed, Cancelled, Postponed)
+        var activeRequirements = await allRequirements
+            .Where(pr => pr.Status != RequirementStatusEnum.Completed &&
+                         pr.Status != RequirementStatusEnum.Cancelled &&
+                         pr.Status != RequirementStatusEnum.Postponed)
+            .CountAsync();
+
+        // Pending Approvals (status: ManagerReview)
+        var pendingApprovals = await allRequirements
+            .Where(pr => pr.Status == RequirementStatusEnum.ManagerReview)
+            .CountAsync();
+
+        return new RequirementOverviewDto
+        {
+            NewRequirements = new NewRequirementsDto
+            {
+                Count = newRequirementsCount
+            },
+            OngoingRequirements = new OngoingRequirementsDto
+            {
+                Count = ongoingRequirementsCount
+            },
+            ActiveRequirements = activeRequirements,
+            PendingApprovals = pendingApprovals
+        };
+    }
+
     public async Task<ProjectRequirementAttachment?> GetAttachmentWithFileDataAsync(int attachmentId)
     {
         // Load attachment directly from database with full FileData included

@@ -31,6 +31,7 @@ export { designRequestsService } from "./designRequestsService";
 export { designerWorkloadService } from "./designerWorkloadService";
 export { qcWorkloadService } from "./qcWorkloadService";
 export { qcQuickActionsService } from "./qcQuickActionsService";
+export { requirementOverviewService } from "./requirementOverviewService";
 
 // Requirement completion service
 export { requirementCompletionService } from "../requirementCompletionService";

@@ -19,6 +19,9 @@ export { useProjectDetails } from "./useProjectDetails";
 // Export requirement details hook
 export { useRequirementDetails } from "./useRequirementDetails";
 
+// Export requirement overview hook
+export { useRequirementOverview } from "./useRequirementOverview";
+
 // Export design requests hook
 export { useDesignRequests } from "./useDesignRequests";
 
