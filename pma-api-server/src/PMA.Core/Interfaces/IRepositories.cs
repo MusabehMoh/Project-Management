@@ -134,7 +134,7 @@ public interface IDepartmentRepository : IRepository<Department>
 
 public interface ITeamRepository : IRepository<Team>
 {
-    System.Threading.Tasks.Task<(IEnumerable<Team> Teams, int TotalCount)> GetTeamsByDepartmentAsync(int departmentId, int page = 1, int limit = 10);
+    System.Threading.Tasks.Task<(IEnumerable<Team> Teams, int TotalCount)> GetTeamsByDepartmentAsync(int departmentId, int page = 1, int limit = 10, string? search = null);
     System.Threading.Tasks.Task<Team?> GetTeamByIdAsync(int id);
     System.Threading.Tasks.Task<Team> AddTeamMemberAsync(Team team);
     System.Threading.Tasks.Task UpdateTeamMemberAsync(Team team);
@@ -161,6 +161,7 @@ public interface IRoleRepository : IRepository<Role>
     System.Threading.Tasks.Task<(IEnumerable<Role> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null);
     System.Threading.Tasks.Task<IEnumerable<Role>> GetActiveRolesAsync();
     System.Threading.Tasks.Task<Role?> GetRoleWithActionsAsync(int id);
+    System.Threading.Tasks.Task<IEnumerable<Role>> GetRolesByDepartmentAsync(int departmentId);
 }
 
 public interface IActionRepository : IRepository<Permission>

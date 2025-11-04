@@ -85,6 +85,13 @@ export class DepartmentService {
     return apiClient.get<DepartmentStats>(`${this.baseUrl}/stats`);
   }
 
+  /**
+   * Get current user's department
+   */
+  async getCurrentUserDepartment(): Promise<ApiResponse<Department>> {
+    return apiClient.get<Department>(`${this.baseUrl}/current-user`);
+  }
+
   // Member Management Methods
 
   /**
@@ -94,11 +101,16 @@ export class DepartmentService {
     departmentId: number,
     page: number = 1,
     limit: number = 20,
+    search?: string,
   ): Promise<ApiResponse<DepartmentMember[]>> {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
+
+    if (search && search.trim()) {
+      params.append("search", search.trim());
+    }
 
     return apiClient.get<DepartmentMember[]>(
       `${this.baseUrl}/${departmentId}/members?${params}`,
@@ -109,10 +121,11 @@ export class DepartmentService {
    * Add a member to a department
    */
   async addDepartmentMember(
+    departmentId: number,
     request: AddDepartmentMemberRequest,
   ): Promise<ApiResponse<DepartmentMember>> {
     return apiClient.post<DepartmentMember>(
-      `${this.baseUrl}/${request.departmentId}/members`,
+      `${this.baseUrl}/${departmentId}/members`,
       request,
     );
   }

@@ -30,7 +30,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { SearchIcon } from "@/components/icons";
+import { SearchIcon, UsersIcon } from "@/components/icons";
 import { GlobalSearchModal } from "@/components/GlobalSearchModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useUserContext } from "@/contexts/UserContext";
@@ -154,12 +154,14 @@ const ManagementDropdown = ({
   t,
   isAdmin,
   hasPermission,
+  hasAnyRoleById,
   navigate,
   currentPath,
 }: {
   t: (key: string) => string;
   isAdmin: () => boolean;
   hasPermission: (permissions: any) => boolean;
+  hasAnyRoleById: (roleIds: number[]) => boolean;
   navigate: (path: string) => void;
   currentPath: string;
 }) => {
@@ -173,13 +175,23 @@ const ManagementDropdown = ({
     hasPermission({
       actions: ["departments.read"],
     });
+  
+  // Department Members access - only for manager roles
+  const hasDepartmentMembersAccess =
+    isAdmin() ||
+    hasAnyRoleById([
+      RoleIds.ANALYST_DEPARTMENT_MANAGER,
+      RoleIds.DEVELOPMENT_MANAGER,
+      RoleIds.QUALITY_CONTROL_MANAGER,
+      RoleIds.DESIGNER_MANAGER,
+    ]);
 
-  // Don't render if user has no access to either
-  if (!hasUsersAccess && !hasDepartmentsAccess) {
+  // Don't render if user has no access to any management features
+  if (!hasUsersAccess && !hasDepartmentsAccess && !hasDepartmentMembersAccess) {
     return null;
   }
 
-  const isActive = currentPath === "/users" || currentPath === "/departments";
+  const isActive = currentPath === "/users" || currentPath === "/departments" || currentPath === "/department-members";
 
   return (
     <Dropdown
@@ -251,6 +263,20 @@ const ManagementDropdown = ({
             onPress={() => navigate("/departments")}
           >
             {t("nav.departmentManagement")}
+          </DropdownItem>
+        ) : null}
+        {hasDepartmentMembersAccess ? (
+          <DropdownItem
+            key="department-members"
+            className={clsx(
+              "transition-all duration-200",
+              currentPath === "/department-members" && "bg-primary/10 text-primary",
+            )}
+            startContent={<UsersIcon size={16} />}
+            textValue="Department Members"
+            onPress={() => navigate("/department-members")}
+          >
+            {t("nav.departmentMembers")}
           </DropdownItem>
         ) : null}
       </DropdownMenu>
@@ -589,6 +615,7 @@ export const Navbar = () => {
           >
             <ManagementDropdown
               currentPath={currentPath}
+              hasAnyRoleById={hasAnyRoleById}
               hasPermission={hasPermission}
               isAdmin={isAdmin}
               navigate={navigate}
