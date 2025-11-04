@@ -7,6 +7,7 @@ export const APP_CONFIG = {
   description:
     import.meta.env.VITE_APP_DESCRIPTION || "Project Management System",
   environment: import.meta.env.MODE || "development",
+  basename: (window as any).PMA_CONFIG?.basename || import.meta.env.BASE_URL || "/",
 } as const;
 
 // API Configuration

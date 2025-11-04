@@ -37,6 +37,7 @@ import { useUserContext } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useImpersonation } from "@/hooks/useImpersonation";
+import { APP_CONFIG } from "@/config/environment";
 // Import both logo versions
 import logoImageLight from "@/assets/ChatGPT Image Aug 13, 2025, 11_15_09 AM.png";
 import logoImageDark from "@/assets/whitemodlogo.png";
@@ -424,7 +425,7 @@ export const Navbar = () => {
     try {
       await stopImpersonation();
       setTimeout(() => {
-        window.location.href = "/";
+        window.location.href = APP_CONFIG.basename;
       }, 500);
     } catch {
       // Silently handle error - impersonation stop failed but continue
