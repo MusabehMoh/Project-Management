@@ -484,6 +484,25 @@ public class ProjectRequirementsController : ApiBaseController
     }
 
     /// <summary>
+    /// Get requirement overview for dashboard
+    /// </summary>
+    [HttpGet("overview")]
+    [ProducesResponseType(200)]
+    public async Task<IActionResult> GetRequirementOverview()
+    {
+        try
+        {
+            var overview = await _projectRequirementService.GetRequirementOverviewAsync();
+            return Success(overview);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving requirement overview");
+            return Error<RequirementOverviewDto>("An error occurred while retrieving requirement overview", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Get development requirements (requirements ready for development)
     /// </summary>
     [HttpGet("development-requirements")]

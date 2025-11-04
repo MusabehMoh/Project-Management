@@ -2,60 +2,26 @@ import React from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Progress } from "@heroui/progress";
+import { Skeleton } from "@heroui/skeleton";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-
-// Mock data for requirements overview - replace with real data in production
-const mockRequirementsData = {
-  newRequirements: {
-    count: 12,
-    total: 20, // For percentage calculation
-    increasedBy: 4, // Compared to previous period
-  },
-  ongoingRequirements: {
-    count: 18,
-    total: 30, // For percentage calculation
-    increasedBy: -2, // Negative means decreased
-  },
-  activeRequirements: 32,
-  pendingApprovals: 7,
-};
+import { useRequirementOverview } from "@/hooks";
 
 interface RequirementOverviewProps {
-  useMockData?: boolean;
+  useMockData?: boolean; // Kept for backward compatibility but ignored
 }
 
-export const RequirementOverview: React.FC<RequirementOverviewProps> = ({
-  useMockData = true, // Set to true for development, should be false in production
-}) => {
+export const RequirementOverview: React.FC<RequirementOverviewProps> = () => {
   const { t, language } = useLanguage();
+  const { data, loading, error } = useRequirementOverview();
 
-  // In a real implementation, fetch data from your API
-  // For now, we'll use mock data
-  const data = useMockData
-    ? mockRequirementsData
-    : {
-        newRequirements: { count: 0, total: 0, increasedBy: 0 },
-        ongoingRequirements: { count: 0, total: 0, increasedBy: 0 },
-        activeRequirements: 0,
-        pendingApprovals: 0,
-      };
-
-  // Calculate percentages
-  const newRequirementsPercentage =
-    data.newRequirements.total > 0
-      ? Math.round(
-          (data.newRequirements.count / data.newRequirements.total) * 100,
-        )
-      : 0;
-
-  const ongoingRequirementsPercentage =
-    data.ongoingRequirements.total > 0
-      ? Math.round(
-          (data.ongoingRequirements.count / data.ongoingRequirements.total) *
-            100,
-        )
-      : 0;
+  // Use real data from API
+  const requirementsData = data || {
+    newRequirements: { count: 0 },
+    ongoingRequirements: { count: 0 },
+    activeRequirements: 0,
+    pendingApprovals: 0,
+  };
 
   return (
     <div dir={language === "ar" ? "rtl" : "ltr"}>
@@ -67,81 +33,62 @@ export const RequirementOverview: React.FC<RequirementOverviewProps> = ({
         </CardHeader>
 
         <CardBody className="px-4 py-3">
+          {loading ? (
+            /* Loading skeleton */
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div>
+                  <Skeleton className="h-4 w-3/4 rounded-md mb-2" />
+                  <Skeleton className="h-2 w-full rounded-full" />
+                </div>
+                <div>
+                  <Skeleton className="h-4 w-3/4 rounded-md mb-2" />
+                  <Skeleton className="h-2 w-full rounded-full" />
+                </div>
+              </div>
+              <div className="border-l border-default-200 pl-4 flex flex-col justify-center">
+                <div className="text-center mb-3">
+                  <Skeleton className="h-4 w-20 mx-auto rounded-md mb-2" />
+                  <Skeleton className="h-8 w-16 mx-auto rounded-md" />
+                </div>
+                <Divider />
+                <div className="text-center mt-3">
+                  <Skeleton className="h-4 w-24 mx-auto rounded-md mb-2" />
+                  <Skeleton className="h-8 w-12 mx-auto rounded-md" />
+                </div>
+              </div>
+            </div>
+          ) : error ? (
+            /* Error state */
+            <div className="text-center py-4 text-danger">
+              <p className="text-sm">{error}</p>
+            </div>
+          ) : (
+            /* Data display */
           <div
             className="grid grid-cols-2 gap-4"
             dir={language === "ar" ? "rtl" : "ltr"}
           >
             {/* Left column - vertical graphs */}
             <div className="space-y-4">
-              {/* New Requirements */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium">
-                    {t("requirements.new")}
-                  </span>
-                  <span className="text-sm text-default-600">
-                    {data.newRequirements.count}/{data.newRequirements.total}
-                  </span>
-                </div>
-                <div
-                  className="flex items-center"
-                  style={{
-                    flexDirection: language === "ar" ? "row-reverse" : "row",
-                  }}
-                >
-                  <Progress
-                    aria-label="New Requirements"
-                    className="flex-1"
-                    color="success"
-                    showValueLabel={false}
-                    size="sm"
-                    value={newRequirementsPercentage}
-                  />
-                  <div className="mx-2 text-xs whitespace-nowrap">
-                    <span
-                      className={`font-medium ${data.newRequirements.increasedBy >= 0 ? "text-success" : "text-danger"}`}
-                    >
-                      {data.newRequirements.increasedBy >= 0 ? "+" : ""}
-                      {data.newRequirements.increasedBy}
-                    </span>
-                  </div>
-                </div>
+              {/* New Requirements - Simple count display */}
+              <div className="text-center py-2">
+                <p className="text-sm font-medium mb-1">
+                  {t("requirements.new")}
+                </p>
+                <p className="text-3xl font-bold text-success">
+                  {requirementsData.newRequirements.count}
+                </p>
               </div>
 
-              {/* Ongoing Requirements */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium">
-                    {t("requirements.ongoing")}
-                  </span>
-                  <span className="text-sm text-default-600">
-                    {data.ongoingRequirements.count}/
-                    {data.ongoingRequirements.total}
-                  </span>
-                </div>
-                <div
-                  className="flex items-center"
-                  style={{
-                    flexDirection: language === "ar" ? "row-reverse" : "row",
-                  }}
-                >
-                  <Progress
-                    aria-label="Ongoing Requirements"
-                    className="flex-1"
-                    color="warning"
-                    showValueLabel={false}
-                    size="sm"
-                    value={ongoingRequirementsPercentage}
-                  />
-                  <div className="mx-2 text-xs whitespace-nowrap">
-                    <span
-                      className={`font-medium ${data.ongoingRequirements.increasedBy >= 0 ? "text-success" : "text-danger"}`}
-                    >
-                      {data.ongoingRequirements.increasedBy >= 0 ? "+" : ""}
-                      {data.ongoingRequirements.increasedBy}
-                    </span>
-                  </div>
-                </div>
+              {/* Ongoing Requirements - Simple count display */}
+              <div className="text-center py-2">
+                <p className="text-sm font-medium mb-1">
+                  {t("requirements.ongoing")}
+                </p>
+                <p className="text-3xl font-bold text-warning">
+                  {requirementsData.ongoingRequirements.count}
+                </p>
               </div>
             </div>
 
@@ -155,7 +102,7 @@ export const RequirementOverview: React.FC<RequirementOverviewProps> = ({
                   {t("requirements.active")}
                 </p>
                 <p className="text-2xl font-bold text-primary">
-                  {data.activeRequirements}
+                  {requirementsData.activeRequirements}
                 </p>
               </div>
 
@@ -167,11 +114,12 @@ export const RequirementOverview: React.FC<RequirementOverviewProps> = ({
                   {t("requirements.pendingApprovals")}
                 </p>
                 <p className="text-2xl font-bold text-warning">
-                  {data.pendingApprovals}
+                  {requirementsData.pendingApprovals}
                 </p>
               </div>
             </div>
           </div>
+          )}
         </CardBody>
       </Card>
     </div>

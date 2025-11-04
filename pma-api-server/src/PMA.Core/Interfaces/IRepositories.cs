@@ -118,6 +118,7 @@ public interface IProjectRequirementRepository : IRepository<ProjectRequirement>
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByAnalystAsync(int analystId);
     System.Threading.Tasks.Task<ProjectRequirement?> GetProjectRequirementWithDetailsAsync(int id);
     System.Threading.Tasks.Task<ProjectRequirementStatsDto> GetProjectRequirementStatsAsync(int projectId);
+    System.Threading.Tasks.Task<RequirementOverviewDto> GetRequirementOverviewAsync();
     System.Threading.Tasks.Task<ProjectRequirementAttachment?> GetAttachmentWithFileDataAsync(int attachmentId);
     System.Threading.Tasks.Task<ProjectRequirementAttachment> AddAttachmentAsync(ProjectRequirementAttachment attachment);
     System.Threading.Tasks.Task<List<ProjectRequirementAttachment>> GetAttachmentsMetadataAsync(int requirementId);
