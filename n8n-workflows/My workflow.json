@@ -1,0 +1,256 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-suggest-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8da50782-cc42-479b-a798-bffa66d1fc81",
+      "name": "Webhook - Agent Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        124
+      ],
+      "webhookId": "ai-suggest-agent-form"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and prepare request data\nconst body = $input.item.json.body;\nconst context = body.context || '';\nconst response = body.response || '';\nconst field = body.field || '';\nconst previousValues = body.previousValues || {};\nconst sessionId = body.sessionId || 'default-session';\nconst saveToMemory = body.saveToMemory || false;\n\n// Check if this is a memory-only save (from streaming)\nif (saveToMemory && response) {\n  // This is a post-streaming memory save\n  return {\n    json: {\n      isMemoryOnly: true,\n      sessionId: sessionId,\n      userMessage: context,\n      assistantMessage: response,\n      field: field\n    }\n  };\n}\n\n// Normal flow - generate response\nlet chatInput = context;\n\n// Add project information only on first message\nif (Object.keys(previousValues).length > 0) {\n  chatInput += '\\n\\nمعلومات المشروع:\\n';\n  for (const [key, value] of Object.entries(previousValues)) {\n    if (value) {\n      chatInput += `- ${key}: ${value}\\n`;\n    }\n  }\n}\n\nreturn {\n  json: {\n    isMemoryOnly: false,\n    chatInput: chatInput,\n    sessionId: sessionId,\n    originalContext: context,\n    field: field,\n    previousValues: previousValues\n  }\n};"
+      },
+      "id": "6c84f593-11fe-43a2-aa5e-5fab23ee8943",
+      "name": "Check Request Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        124
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isMemoryOnly }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "6380d7c0-f285-41cc-8165-986ca51c052f",
+      "name": "Route Request",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        124
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Save conversation to memory only\nconst data = $input.item.json;\n\nreturn {\n  json: {\n    success: true,\n    data: {\n      saved: true,\n      sessionId: data.sessionId\n    },\n    message: 'Conversation saved to memory'\n  }\n};"
+      },
+      "id": "64a5d591-7321-4701-9884-e102282b692f",
+      "name": "Memory Only Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "أنت محلل متطلبات برمجية خبير متخصص في كتابة متطلبات تقنية احترافية. يمكنك التحدث مع المستخدم لفهم احتياجاته بشكل أفضل.\n\nقواعد الرد:\n1. إذا سألك المستخدم سؤالاً أو طلب توضيحاً، أجب بشكل مهذب ومفيد دون تكرار الترحيب في كل مرة\n2. إذا طلب منك كتابة وصف تقني، اكتبه مباشرة دون مقدمات\n3. عند كتابة الوصف التقني:\n   - استخدم 3-5 جمل متماسكة\n   - ركز على: الهدف، الوظائف الأساسية، المعايير التقنية (APIs, قواعد البيانات، frameworks)، معايير الأداء\n   - استخدم مصطلحات تقنية دقيقة\n   - لا تكتب عناوين أو أرقام أو نقاط\n   - ابدأ مباشرة بالوصف دون كتابة \"الوصف:\" أو \"المتطلب:\"\n4. اكتب بالعربية الفصحى إذا كان السياق بالعربية، وبالإنجليزية إذا كان بالإنجليزية\n5. تذكر المحادثة السابقة واستخدمها لتحسين الوصف - لا تكرر نفس المعلومات\n6. يمكنك طلب معلومات إضافية إذا كان السياق غير واضح\n7. لا تكرر الترحيب في كل رد - فقط في الرسالة الأولى"
+        }
+      },
+      "id": "ea8c48a3-9df4-4713-bde1-12552685b102",
+      "name": "AI Agent - Requirements Analyst",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        64,
+        248
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:8b",
+        "options": {
+          "temperature": 0.5,
+          "numPredict": 400
+        }
+      },
+      "id": "c1751797-b944-4ce9-97af-8b382cfc214e",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        72,
+        472
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "vcGyfU3q5Xyjzz1N",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "99e9a70c-e70e-4527-aee2-5ee92d49fa89",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        472
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract agent response\nconst agentOutput = $input.item.json;\nconst preparedInput = $('Check Request Type').item.json;\n\n// Get the suggestion text from agent output\nlet suggestion = '';\nif (typeof agentOutput.output === 'string') {\n  suggestion = agentOutput.output.trim();\n} else if (agentOutput.text) {\n  suggestion = agentOutput.text.trim();\n} else {\n  suggestion = JSON.stringify(agentOutput);\n}\n\n// Clean up common unwanted prefixes\nconst prefixesToRemove = [\n  'Description:', 'وصف:', '\"', \"'\", 'Task Description:', 'وصف المهمة:',\n  'Here is', \"Here's\", 'إليك', 'الوصف:'\n];\n\nfor (const prefix of prefixesToRemove) {\n  if (suggestion.toLowerCase().startsWith(prefix.toLowerCase())) {\n    suggestion = suggestion.substring(prefix.length).trim();\n  }\n}\n\n// Remove trailing quotes\nif (suggestion.endsWith('\"') || suggestion.endsWith(\"'\")) {\n  suggestion = suggestion.slice(0, -1).trim();\n}\nif (suggestion.startsWith('\"') || suggestion.startsWith(\"'\")) {\n  suggestion = suggestion.substring(1).trim();\n}\n\n// Format response\nreturn {\n  json: {\n    success: true,\n    data: {\n      suggestion: suggestion,\n      confidence: 0.9,\n      metadata: {\n        field: preparedInput.field,\n        context: preparedInput.originalContext,\n        model: 'llama3.1:8b',\n        agentType: 'langchain-agent-with-memory',\n        sessionId: preparedInput.sessionId,\n        timestamp: new Date().toISOString()\n      }\n    },\n    message: 'Suggestion generated successfully'\n  }\n};"
+      },
+      "id": "bf5d4e20-0f2f-42bd-a09d-0b4973fb4096",
+      "name": "Format Agent Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        248
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "3c613828-f722-4448-b975-d6a11f2fe074",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        640,
+        124
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Agent Request": {
+      "main": [
+        [
+          {
+            "node": "Check Request Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Request Type": {
+      "main": [
+        [
+          {
+            "node": "Route Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Request": {
+      "main": [
+        [
+          {
+            "node": "Memory Only Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory Only Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Requirements Analyst": {
+      "main": [
+        [
+          {
+            "node": "Format Agent Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent - Requirements Analyst",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Agent Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6f1594fe-205a-4a8a-a83b-f05f99ea9016",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ffc73478f886a6ccff09f9555fb5701b25ef14f93101b41ad939bc92bb59495f"
+  },
+  "id": "X1Lzu1x8cFfNuL9u",
+  "tags": []
+}

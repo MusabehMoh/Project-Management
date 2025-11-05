@@ -210,6 +210,18 @@ export default function ProjectRequirementsPage() {
     }
   };
 
+  // Handle preview for newly uploaded files (before save)
+  const handleNewFilePreview = async (file: File) => {
+    try {
+      // Create a temporary URL for the file
+      const url = window.URL.createObjectURL(file);
+      await previewFile(file.name, url, file.size);
+    } catch (error) {
+      console.error("Error previewing file:", error);
+      showErrorToast(t("requirements.previewError"));
+    }
+  };
+
   // Modal states
   const {
     isOpen: isCreateOpen,
@@ -818,18 +830,41 @@ export default function ProjectRequirementsPage() {
 
   // Use AI suggestion in description field
   const handleUseAISuggestion = (content: string) => {
-    // Split content by double line breaks (empty lines between paragraphs)
-    const paragraphs = content
-      .split(/\n\s*\n/) // Split by one or more empty lines
-      .map((para) => para.trim())
-      .filter((para) => para.length > 0);
+    // Clean the content first - trim whitespace
+    const cleanContent = content.trim();
+    
+    // Split into paragraphs based on line breaks
+    let paragraphs: string[] = [];
+    
+    // Strategy 1: Split by two or more newlines (blank lines between paragraphs)
+    if (cleanContent.match(/\n\s*\n/)) {
+      paragraphs = cleanContent
+        .split(/\n\s*\n+/)
+        .map((para) => para.trim())
+        .filter((para) => para.length > 0);
+    }
+    // Strategy 2: Split by single newlines (each line is a paragraph)
+    else if (cleanContent.includes('\n')) {
+      paragraphs = cleanContent
+        .split(/\n/)
+        .map((para) => para.trim())
+        .filter((para) => para.length > 0);
+    }
+    // Strategy 3: Single paragraph
+    else {
+      paragraphs = [cleanContent];
+    }
 
-    // Wrap each paragraph in <p> tags
-    const htmlDescription = paragraphs.map((para) => `<p>${para}</p>`).join("");
+    // Build HTML with proper paragraph structure for ReactQuill
+    // Each paragraph wrapped in <p> tags with proper spacing
+    const htmlDescription = paragraphs
+      .map((para) => `<p>${para}</p>`)
+      .join('');
 
+    // Set the formatted HTML in the form
     setFormData((prev) => ({
       ...prev,
-      description: htmlDescription || `<p>${content}</p>`,
+      description: htmlDescription,
     }));
 
     // Show success feedback
@@ -1931,15 +1966,30 @@ export default function ProjectRequirementsPage() {
                                     </p>
                                   </div>
                                 </div>
-                                <Button
-                                  isIconOnly
-                                  color="danger"
-                                  size="sm"
-                                  variant="light"
-                                  onPress={() => handleRemoveFile(index)}
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                  <Tooltip content={t("common.preview")}>
+                                    <Button
+                                      isIconOnly
+                                      color="primary"
+                                      size="sm"
+                                      variant="light"
+                                      onPress={() => handleNewFilePreview(file)}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </Tooltip>
+                                  <Tooltip content={t("common.remove")}>
+                                    <Button
+                                      isIconOnly
+                                      color="danger"
+                                      size="sm"
+                                      variant="light"
+                                      onPress={() => handleRemoveFile(index)}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  </Tooltip>
+                                </div>
                               </div>
                             ))}
                           </div>

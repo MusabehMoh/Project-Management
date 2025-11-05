@@ -224,6 +224,29 @@
 }
 
 /* ===================================
+   RTL TABS FIX
+   =================================== */
+
+/* Fix HeroUI Tabs indicator position in RTL mode */
+/* When using flex-row-reverse, we need to adjust the cursor transform calculation */
+[data-slot="tabList"].flex-row-reverse [data-slot="cursor"] {
+  /* Negate the translateX and adjust for RTL */
+  right: auto !important;
+}
+
+/* Override the inline style transform for RTL tabs */
+[data-slot="tabList"].flex-row-reverse[data-slots="tabList"] {
+  direction: rtl;
+}
+
+/* Force recalculation of cursor position for RTL */
+.rtl-cursor[data-slot="cursor"] {
+  /* The transform will be overridden by inline styles, so we need to use !important */
+  /* But we need to preserve the translateX value while flipping it */
+  transform-origin: center !important;
+}
+
+/* ===================================
    PRINT STYLES
    =================================== */
 

@@ -942,9 +942,17 @@ export default function TimelinePage() {
           </Card>
         ) : (
           <div className="space-y-6">
-            {/* View Tabs */}
+            {/* View Tabs - RTL Support */}
             <Tabs
               className="w-full"
+              classNames={
+                language === "ar"
+                  ? {
+                      tabList: "flex-row-reverse",
+                      cursor: "rtl-cursor",
+                    }
+                  : undefined
+              }
               selectedKey={view.type}
               onSelectionChange={(key) =>
                 handleViewChange({ type: key as "gantt" | "tree" | "timeline" })
@@ -952,7 +960,7 @@ export default function TimelinePage() {
             >
               <Tab key="gantt" title={t("timeline.ganttView")} />
               <Tab key="tree" title={t("timeline.treeView")} />
-            </Tabs>{" "}
+            </Tabs>
             {/* Timeline Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main View */}
