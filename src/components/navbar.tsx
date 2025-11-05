@@ -30,7 +30,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { SearchIcon } from "@/components/icons";
+import { SearchIcon, UsersIcon } from "@/components/icons";
 import { GlobalSearchModal } from "@/components/GlobalSearchModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useUserContext } from "@/contexts/UserContext";
@@ -154,12 +154,14 @@ const ManagementDropdown = ({
   t,
   isAdmin,
   hasPermission,
+  hasAnyRoleById,
   navigate,
   currentPath,
 }: {
   t: (key: string) => string;
   isAdmin: () => boolean;
   hasPermission: (permissions: any) => boolean;
+  hasAnyRoleById: (roleIds: number[]) => boolean;
   navigate: (path: string) => void;
   currentPath: string;
 }) => {
@@ -173,21 +175,13 @@ const ManagementDropdown = ({
     hasPermission({
       actions: ["departments.read"],
     });
-  const hasCompanyEmployeesAccess =
-    isAdmin() ||
-    hasPermission({
-      actions: ["departments.read"],
-    });
 
   // Don't render if user has no access to either
-  if (!hasUsersAccess && !hasDepartmentsAccess && !hasCompanyEmployeesAccess) {
+  if (!hasUsersAccess && !hasDepartmentsAccess) {
     return null;
   }
 
-  const isActive =
-    currentPath === "/users" ||
-    currentPath === "/departments" ||
-    currentPath === "/company-employees";
+  const isActive = currentPath === "/users" || currentPath === "/departments";
 
   return (
     <Dropdown
@@ -259,21 +253,6 @@ const ManagementDropdown = ({
             onPress={() => navigate("/departments")}
           >
             {t("nav.departmentManagement")}
-          </DropdownItem>
-        ) : null}
-        {hasCompanyEmployeesAccess ? (
-          <DropdownItem
-            key="company-employees"
-            className={clsx(
-              "transition-all duration-200",
-              currentPath === "/company-employees" &&
-                "bg-primary/10 text-primary",
-            )}
-            startContent={<Building2 size={16} />}
-            textValue="Company Employees"
-            onPress={() => navigate("/company-employees")}
-          >
-            {t("nav.companyEmployees")}
           </DropdownItem>
         ) : null}
       </DropdownMenu>
@@ -612,6 +591,7 @@ export const Navbar = () => {
           >
             <ManagementDropdown
               currentPath={currentPath}
+              hasAnyRoleById={hasAnyRoleById}
               hasPermission={hasPermission}
               isAdmin={isAdmin}
               navigate={navigate}

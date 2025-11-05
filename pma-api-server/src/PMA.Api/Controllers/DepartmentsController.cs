@@ -16,11 +16,13 @@ namespace PMA.Api.Controllers;
 public class DepartmentsController : ApiBaseController
 {
     private readonly IDepartmentService _departmentService;
+    private readonly IUserService _userService;
     private readonly ILogger<DepartmentsController> _logger;
 
-    public DepartmentsController(IDepartmentService departmentService, ILogger<DepartmentsController> logger)
+    public DepartmentsController(IDepartmentService departmentService, IUserService userService, ILogger<DepartmentsController> logger)
     {
         _departmentService = departmentService;
+        _userService = userService;
         _logger = logger;
     }
 
@@ -162,7 +164,7 @@ public class DepartmentsController : ApiBaseController
     [HttpGet("{id}/members")]
     [ProducesResponseType(200)]
     [ProducesResponseType(404)]
-    public async Task<IActionResult> GetDepartmentMembers(int id, [FromQuery] int page = 1, [FromQuery] int limit = 10)
+    public async Task<IActionResult> GetDepartmentMembers(int id, [FromQuery] int page = 1, [FromQuery] int limit = 10, [FromQuery] string? search = null)
     {
         try
         {
@@ -171,7 +173,7 @@ public class DepartmentsController : ApiBaseController
             if (department == null)
                 return NotFound(Error<TeamMemberDto>("Department not found", null, 404));
 
-            var (members, totalCount) = await _departmentService.GetDepartmentMembersAsync(id, page, limit);
+            var (members, totalCount) = await _departmentService.GetDepartmentMembersAsync(id, page, limit, search);
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
             return Success(members, pagination);
@@ -194,7 +196,7 @@ public class DepartmentsController : ApiBaseController
     {
         try
         {
-            var member = await _departmentService.AddDepartmentMemberAsync(id, request.PrsId, request.UserName, request.FullName);
+            var member = await _departmentService.AddDepartmentMemberAsync(id, request.PrsId, request.UserName ?? "", request.FullName ?? "");
             return Success(member);
         }
         catch (KeyNotFoundException ex)
@@ -294,6 +296,44 @@ public class DepartmentsController : ApiBaseController
         {
             _logger.LogError(ex, "Error occurred while retrieving all departments. StackTrace: {StackTrace}", ex.StackTrace);
             return Error<IEnumerable<object>>("Internal server error", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get current user's department
+    /// </summary>
+    [HttpGet("current-user")]
+    [ProducesResponseType(typeof(ApiResponse<DepartmentDto>), 200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetCurrentUserDepartment()
+    {
+        try
+        {
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+
+            if (!currentUserDepartmentId.HasValue)
+                return NotFound(Error<DepartmentDto>("User is not assigned to any department", null, 404));
+
+            var department = await _departmentService.GetDepartmentByIdAsync(currentUserDepartmentId.Value);
+            if (department == null)
+                return NotFound(Error<DepartmentDto>("Department not found", null, 404));
+
+            var (members, memberCount) = await _departmentService.GetDepartmentMembersAsync(department.Id, 1, int.MaxValue);
+            var dto = new DepartmentDto 
+            { 
+                Id = department.Id, 
+                Name = department.Name, 
+                IsActive = department.IsActive, 
+                MemberCount = members.Count()
+            };
+
+            return Success(dto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving current user's department.");
+            return Error<DepartmentDto>("An error occurred while retrieving the current user's department", ex.Message);
         }
     }
 }

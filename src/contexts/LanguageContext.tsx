@@ -13,7 +13,7 @@ interface LanguageContextType {
   language: Language;
   direction: Direction;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -50,6 +50,7 @@ const translations = {
     "nav.tasks": "Tasks",
     "nav.teamTasks": "Team Tasks",
     "nav.departments": "Departments",
+    "nav.departmentMembers": "Department Members",
     "nav.management": "Management",
     "nav.userManagement": "User Management",
     "nav.departmentManagement": "Department Management",
@@ -1524,6 +1525,32 @@ const translations = {
     "departments.members.managerialRoleError":
       "This user has an administrative or managerial role and cannot be added to a department",
 
+    // Department Members Page (Current User's Department)
+    "departmentMembers.title": "My Department Members",
+    "departmentMembers.subtitle": "View and manage members in your department",
+    "departmentMembers.subtitleWithDepartment": "Members in {department} Department",
+    "departmentMembers.searchPlaceholder": "Search members...",
+    "departmentMembers.addMember": "Add Member",
+    "departmentMembers.removeMember": "Remove Member",
+    "departmentMembers.fullName": "Full Name",
+    "departmentMembers.userName": "Username",
+    "departmentMembers.militaryNumber": "Military Number",
+    "departmentMembers.gradeName": "Grade",
+    "departmentMembers.joinDate": "Joined Date",
+    "departmentMembers.actions": "Actions",
+    "departmentMembers.noMembersFound": "No members found",
+    "departmentMembers.noDepartmentAssigned": "You are not assigned to any department",
+    "departmentMembers.searchEmployee": "Search Employee",
+    "departmentMembers.selectEmployee": "Select an employee",
+    "departmentMembers.manualEntry": "Manual Entry",
+    "departmentMembers.orSwitch": "or switch to",
+    "departmentMembers.confirmRemove": "Confirm Remove Member",
+    "departmentMembers.confirmRemoveMessage": "Are you sure you want to remove {member} from the department?",
+    "departmentMembers.addSuccess": "Member added successfully",
+    "departmentMembers.addError": "Failed to add member",
+    "departmentMembers.removeSuccess": "Member removed successfully",
+    "departmentMembers.removeError": "Failed to remove member",
+
     // Department Statistics
     "departments.stats.title": "Department Statistics",
     "departments.stats.totalDepartments": "Total Departments",
@@ -2133,6 +2160,7 @@ const translations = {
     "nav.tasks": "المهام",
     "nav.teamTasks": "مهام الفريق",
     "nav.departments": "الأقسام",
+    "nav.departmentMembers": "أعضاء القسم",
     "nav.management": "الإدارة",
     "nav.userManagement": "إدارة المستخدمين",
     "nav.departmentManagement": "إدارة الأقسام",
@@ -3575,6 +3603,32 @@ const translations = {
     "departments.members.managerialRoleError":
       "هذا المستخدم لديه دور إداري أو قيادي ولا يمكن إضافته إلى قسم",
 
+    // Department Members Page (Current User's Department)
+    "departmentMembers.title": "أعضاء قسمي",
+    "departmentMembers.subtitle": "عرض وإدارة الأعضاء في قسمك",
+    "departmentMembers.subtitleWithDepartment": "الأعضاء في  {department}",
+    "departmentMembers.searchPlaceholder": "البحث في الأعضاء...",
+    "departmentMembers.addMember": "إضافة عضو",
+    "departmentMembers.removeMember": "إزالة العضو",
+    "departmentMembers.fullName": "الاسم الكامل",
+    "departmentMembers.userName": "اسم المستخدم",
+    "departmentMembers.militaryNumber": "الرقم العسكري",
+    "departmentMembers.gradeName": "الرتبة",
+    "departmentMembers.joinDate": "تاريخ الانضمام",
+    "departmentMembers.actions": "الإجراءات",
+    "departmentMembers.noMembersFound": "لا توجد أعضاء",
+    "departmentMembers.noDepartmentAssigned": "لست مُعيناً لأي قسم",
+    "departmentMembers.searchEmployee": "البحث عن موظف",
+    "departmentMembers.selectEmployee": "اختر موظفاً",
+    "departmentMembers.manualEntry": "إدخال يدوي",
+    "departmentMembers.orSwitch": "أو التبديل إلى",
+    "departmentMembers.confirmRemove": "تأكيد إزالة العضو",
+    "departmentMembers.confirmRemoveMessage": "هل أنت متأكد من إزالة {member} من القسم؟",
+    "departmentMembers.addSuccess": "تم إضافة العضو بنجاح",
+    "departmentMembers.addError": "فشل في إضافة العضو",
+    "departmentMembers.removeSuccess": "تم إزالة العضو بنجاح",
+    "departmentMembers.removeError": "فشل في إزالة العضو",
+
     // Department Statistics
     "departments.stats.title": "إحصائيات الأقسام",
     "departments.stats.totalDepartments": "إجمالي الأقسام",
@@ -4160,12 +4214,23 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang;
   };
 
-  const t = (key: string): string => {
-    return (
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    let translation =
       translations[language][
         key as keyof (typeof translations)[typeof language]
-      ] || key
-    );
+      ] || key;
+
+    // Handle parameter interpolation
+    if (params && typeof translation === "string") {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        translation = translation.replace(
+          new RegExp(`\\{${paramKey}\\}`, "g"),
+          String(paramValue),
+        );
+      });
+    }
+
+    return translation;
   };
 
   useEffect(() => {

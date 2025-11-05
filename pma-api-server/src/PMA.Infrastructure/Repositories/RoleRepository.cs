@@ -14,7 +14,7 @@ public class RoleRepository : Repository<Role>, IRoleRepository
 
     public async Task<(IEnumerable<Role> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null)
     {
-        var query = _context.Roles.Include(w => w.RoleActions).ThenInclude(x => x.Permission).AsQueryable();
+        var query = _context.Roles.Include(w => w.RoleActions!)!.ThenInclude(x => x.Permission).AsQueryable();
 
         if (isActive.HasValue)
         {
@@ -42,9 +42,19 @@ public class RoleRepository : Repository<Role>, IRoleRepository
     public async Task<Role?> GetRoleWithActionsAsync(int id)
     {
         return await _context.Roles
-            .Include(r => r.RoleActions)
+            .Include(r => r.RoleActions!)!
                 .ThenInclude(ra => ra.Permission)
             .FirstOrDefaultAsync(r => r.Id == id);
+    }
+
+    public async Task<IEnumerable<Role>> GetRolesByDepartmentAsync(int departmentId)
+    {
+        return await _context.Roles
+            .Include(r => r.RoleActions!)!
+                .ThenInclude(ra => ra.Permission)
+            .Where(r => r.DepartmentId == departmentId && r.IsActive)
+            .OrderBy(r => r.RoleOrder)
+            .ToListAsync();
     }
 }
 

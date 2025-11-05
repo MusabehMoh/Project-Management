@@ -75,12 +75,22 @@ public class TeamRepository : Repository<Team>, ITeamRepository
     {
     }
 
-    public async Task<(IEnumerable<Team> Teams, int TotalCount)> GetTeamsByDepartmentAsync(int departmentId, int page = 1, int limit = 10)
+    public async Task<(IEnumerable<Team> Teams, int TotalCount)> GetTeamsByDepartmentAsync(int departmentId, int page = 1, int limit = 10, string? search = null)
     {
         var query = _context.Teams
             .Include(t => t.Employee)
             .Include(t => t.Department)
             .Where(t => t.DepartmentId == departmentId && t.IsActive);
+
+        // Apply search filter if search term is provided
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(t => t.IsActive &&
+               (t.Employee != null && (t.Employee.UserName.Contains(search) ||
+                t.Employee.FullName.Contains(search))) ||
+               (t.UserName != null && t.UserName.Contains(search)) ||
+               (t.FullName != null && t.FullName.Contains(search)));
+        }
 
         var totalCount = await query.CountAsync();
         var teams = await query

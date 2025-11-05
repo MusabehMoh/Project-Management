@@ -14,6 +14,7 @@ import ProjectsPage from "@/pages/projects";
 import UsersPage from "@/pages/users";
 import CompanyEmployeesPage from "@/pages/company-employees";
 import DepartmentsPage from "@/pages/departments";
+import DepartmentMembersPage from "@/pages/department-members";
 import RequirementsPage from "@/pages/requirements";
 import ProjectRequirementsPage from "@/pages/project-requirements";
 import DevelopmentRequirementsPage from "@/pages/development-requirements";
@@ -57,6 +58,7 @@ function App() {
         <Route element={<UsersPage />} path="users" />
         <Route element={<CompanyEmployeesPage />} path="company-employees" />
         <Route element={<DepartmentsPage />} path="departments" />
+        <Route element={<DepartmentMembersPage />} path="department-members" />
         <Route element={<ProfilePage />} path="profile" />
         <Route element={<TimelinePage />} path="timeline" />
         <Route element={<MembersTasksPage />} path="tasks" />

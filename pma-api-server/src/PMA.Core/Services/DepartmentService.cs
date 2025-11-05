@@ -12,17 +12,23 @@ public class DepartmentService : IDepartmentService
     private readonly ITeamRepository _teamRepository;
     private readonly IEmployeeService _employeeService;
     private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
+    private readonly IRoleService _roleService;
 
     public DepartmentService(
         IDepartmentRepository departmentRepository, 
         ITeamRepository teamRepository, 
         IEmployeeService employeeService,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IUserService userService,
+        IRoleService roleService)
     {
         _departmentRepository = departmentRepository;
         _teamRepository = teamRepository;
         _employeeService = employeeService;
         _userRepository = userRepository;
+        _userService = userService;
+        _roleService = roleService;
     }
 
     public async System.Threading.Tasks.Task<Department?> GetDepartmentByIdAsync(int id)
@@ -65,14 +71,14 @@ public class DepartmentService : IDepartmentService
         return false;
     }
 
-    public async Task<(IEnumerable<TeamMemberDto> Members, int TotalCount)> GetDepartmentMembersAsync(int departmentId, int page = 1, int limit = 10)
+    public async Task<(IEnumerable<TeamMemberDto> Members, int TotalCount)> GetDepartmentMembersAsync(int departmentId, int page = 1, int limit = 10, string? search = null)
     {
-        var (teams, totalCount) = await _teamRepository.GetTeamsByDepartmentAsync(departmentId, page, limit);
+        var (teams, totalCount) = await _teamRepository.GetTeamsByDepartmentAsync(departmentId, page, limit,search);
         var memberDtos = new List<TeamMemberDto>();
 
         foreach (var team in teams)
         {
-            var employee = team.PrsId != null ? await _employeeService.GetEmployeeByIdAsync((int)team.PrsId) : new EmployeeDto() { FullName = team.FullName, UserName = team.UserName };
+            var employee = team.PrsId != null ? await _employeeService.GetEmployeeByIdAsync((int)team.PrsId) : new EmployeeDto() { FullName = team.FullName ?? "", UserName = team.UserName ?? "" };
         ;
             var memberDto = new TeamMemberDto
             {
@@ -81,8 +87,8 @@ public class DepartmentService : IDepartmentService
                 PrsId = team.PrsId, 
                 JoinDate = team.JoinDate,
                 IsActive = team.IsActive,
-                FullName = team.FullName,
-                UserName = team.UserName,
+                FullName = team.FullName ?? "",
+                UserName = team.UserName ?? "",
                 User = employee 
             };
             memberDtos.Add(memberDto);
@@ -109,6 +115,7 @@ public class DepartmentService : IDepartmentService
             {
                 throw new KeyNotFoundException("Employee not found");
             }
+            
             // Check if already a member of THIS department
             var existingTeams = await _teamRepository.GetTeamsByDepartmentAsync(departmentId);
             if (existingTeams.Teams.Any(t => t.PrsId == (int)prsId && t.IsActive))
@@ -162,13 +169,19 @@ public class DepartmentService : IDepartmentService
 
         var addedTeam = await _teamRepository.AddTeamMemberAsync(team);
 
+        // Create user after team member is successfully added
+        if (prsId != null && prsId >= 0)
+        {
+            await CreateUserForDepartmentMemberAsync((int)prsId, departmentId, userName, fullName);
+        }
+
         return new TeamMemberDto
         {
             Id = addedTeam.Id,
             DepartmentId = addedTeam.DepartmentId,
             PrsId = addedTeam.PrsId,
-            UserName= addedTeam.UserName,
-            FullName= addedTeam.FullName,   
+            UserName= addedTeam.UserName ?? "",
+            FullName= addedTeam.FullName ?? "",   
             JoinDate = addedTeam.JoinDate,
             IsActive = addedTeam.IsActive
         };
@@ -217,8 +230,16 @@ public class DepartmentService : IDepartmentService
             throw new InvalidOperationException($"لا يمكن إزالة العضو. العضو مرتبط بي: {string.Join("، ", dependencies)}");
         }
 
-        // Direct call to repository - no duplicate department validation needed
-        return await _teamRepository.RemoveTeamMemberAsync(memberId);
+        // Remove team member first
+        var memberRemoved = await _teamRepository.RemoveTeamMemberAsync(memberId);
+        
+        // If member removal was successful and has PrsId, delete related user
+        if (memberRemoved && teamMember.PrsId != null)
+        {
+            await DeleteUserForDepartmentMemberAsync(teamMember.PrsId.Value);
+        }
+
+        return memberRemoved;
     }
 
     private async Task<List<string>> CheckMemberDependenciesAsync(int? prsId)
@@ -257,6 +278,114 @@ public class DepartmentService : IDepartmentService
             GradeName = e.GradeName,
             StatusId = e.StatusId
         });
+    }
+
+    /// <summary>
+    /// Creates a user for a department member if one doesn't already exist.
+    /// This function can be commented out to disable automatic user creation.
+    /// </summary>
+    /// <param name="prsId">Personnel ID</param>
+    /// <param name="departmentId">Department ID</param>
+    /// <param name="userName">Username</param>
+    /// <param name="fullName">Full name</param>
+    private async System.Threading.Tasks.Task CreateUserForDepartmentMemberAsync(int prsId, int departmentId, string userName, string fullName)
+    {
+        // Check if user already exists for this PrsId
+        var existingUser = await _userService.GetUserByPrsIdAsync(prsId);
+        
+        // If user doesn't exist, create a new user
+        if (existingUser == null)
+        {
+            // Get employee data
+            var employee = await _employeeService.GetEmployeeByIdAsync(prsId);
+            if (employee == null)
+            {
+                return; // Skip user creation if employee not found
+            }
+
+            // Get roles for this department
+            var departmentRoles = await _roleService.GetRolesByDepartmentAsync(departmentId);
+            
+            // Exclude manager roles from department roles
+            var managerialRoleIds = new[] 
+            { 
+                (int)RoleCodes.Administrator,
+                (int)RoleCodes.AnalystManager,
+                (int)RoleCodes.DevelopmentManager,
+                (int)RoleCodes.DesignerManager,
+                (int)RoleCodes.QCManager
+            };
+            
+            // Filter out managerial roles - only assign non-managerial roles to department members
+            var nonManagerialRoles = departmentRoles.Where(r => !managerialRoleIds.Contains(r.Id)).ToList();
+            
+            // Create new user
+            var newUser = new User
+            {
+                UserName = string.IsNullOrEmpty(userName) ? employee.UserName ?? $"user_{prsId}" : userName,
+                PrsId = prsId,
+                IsActive = true,
+                FullName = employee.FullName,
+                MilitaryNumber = employee.MilitaryNumber,
+                GradeName = employee.GradeName,
+                DepartmentId = departmentId,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            // Create the user
+            var createdUser = await _userService.CreateUserAsync(newUser);
+
+            // Assign roles to the user (only non-managerial roles)
+            if (nonManagerialRoles.Any())
+            {
+                var roleIds = nonManagerialRoles.Select(r => r.Id).ToList();
+                await _userService.AssignRolesToUserAsync(createdUser.Id, roleIds);
+
+                // Assign actions from roles to the user
+                var allActionIds = new List<int>();
+                foreach (var role in nonManagerialRoles)
+                {
+                    if (role.Actions != null)
+                    {
+                        allActionIds.AddRange(role.Actions.Select(a => a.Id));
+                    }
+                }
+
+                if (allActionIds.Any())
+                {
+                    // Remove duplicates
+                    var uniqueActionIds = allActionIds.Distinct().ToList();
+                    await _userService.AssignActionsToUserAsync(createdUser.Id, uniqueActionIds);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Deletes a user associated with a department member when the member is removed.
+    /// This function can be commented out to disable automatic user deletion.
+    /// </summary>
+    /// <param name="prsId">Personnel ID</param>
+    private async System.Threading.Tasks.Task DeleteUserForDepartmentMemberAsync(int prsId)
+    {
+        try
+        {
+            // Check if user exists for this PrsId
+            var existingUser = await _userService.GetUserByPrsIdAsync(prsId);
+            
+            if (existingUser != null)
+            {
+                // Delete the user
+                await _userService.DeleteUserAsync(existingUser.Id);
+            }
+        }
+        catch (Exception)
+        {
+            // Log the error but don't throw - member removal should still succeed
+            // You might want to add proper logging here
+            // _logger.LogWarning(ex, "Failed to delete user for PrsId {PrsId} during member removal", prsId);
+        }
     }
 }
 

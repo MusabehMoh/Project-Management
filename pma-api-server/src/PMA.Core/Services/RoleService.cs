@@ -32,13 +32,14 @@ public class RoleService : IRoleService
         var createdRole = await _roleRepository.AddAsync(role);
         
         // Map back to DTO for response
-        return _mappingService.MapToRoleDto(createdRole);
+        var roleDto2 = _mappingService.MapToRoleDto(createdRole);
+        return roleDto2 ?? throw new InvalidOperationException("Failed to create role");
     }
 
     public async Task<(IEnumerable<RoleDto> Roles, int TotalCount)> GetRolesAsync(int page, int limit, bool? isActive = null)
     {
         var (roles, totalCount) = await _roleRepository.GetRolesAsync(page, limit, isActive);
-        var roleDtos = roles.Select(r => _mappingService.MapToRoleDto(r));
+        var roleDtos = roles.Select(r => _mappingService.MapToRoleDto(r)).Where(dto => dto != null).Cast<RoleDto>();
         return (roleDtos, totalCount);
     }
 
@@ -56,7 +57,8 @@ public class RoleService : IRoleService
         await _roleRepository.UpdateAsync(role);
         
         // Return updated DTO
-        return _mappingService.MapToRoleDto(role);
+        var updatedDto = _mappingService.MapToRoleDto(role);
+        return updatedDto ?? throw new InvalidOperationException("Failed to update role");
     }
 
     public async Task<bool> DeleteRoleAsync(int id)
@@ -73,13 +75,19 @@ public class RoleService : IRoleService
     public async System.Threading.Tasks.Task<IEnumerable<RoleDto>> GetActiveRolesAsync()
     {
         var roles = await _roleRepository.GetActiveRolesAsync();
-        return roles.Select(r => _mappingService.MapToRoleDto(r));
+        return roles.Select(r => _mappingService.MapToRoleDto(r)).Where(dto => dto != null).Cast<RoleDto>();
     }
 
     public async System.Threading.Tasks.Task<RoleDto?> GetRoleWithActionsAsync(int id)
     {
         var role = await _roleRepository.GetRoleWithActionsAsync(id);
         return role != null ? _mappingService.MapToRoleDto(role) : null;
+    }
+
+    public async System.Threading.Tasks.Task<IEnumerable<RoleDto>> GetRolesByDepartmentAsync(int departmentId)
+    {
+        var roles = await _roleRepository.GetRolesByDepartmentAsync(departmentId);
+        return roles.Select(r => _mappingService.MapToRoleDto(r)).Where(dto => dto != null).Cast<RoleDto>();
     }
 }
 

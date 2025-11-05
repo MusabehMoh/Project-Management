@@ -32,6 +32,9 @@ export { useTeamSearchByDepartment } from "./useTeamSearchByDepartment";
 export { useDesignerWorkload } from "./useDesignerWorkload";
 export { useTeamMembers } from "./useTeamMembers";
 
+// Export current user department members hook
+export { useCurrentUserDepartmentMembers } from "./useCurrentUserDepartmentMembers";
+
 // Export QC workload hook
 export { useQcWorkload } from "./useQcWorkload";
 
