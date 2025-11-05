@@ -156,7 +156,7 @@ public class UserService : IUserService
         // Get user from repository using the username from UserContext
         var user = await _userRepository.GetByUserNameAsync(userContext.UserName);
 
-        if (user == null)
+        if (user == null || !user.IsActive)
             return null;
 
         var currentUserDto = MapToCurrentUserDto(user);

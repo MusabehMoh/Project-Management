@@ -2,14 +2,16 @@
 NODE_ENV=qc
 
 # API Configuration  //52246
-VITE_API_URL=https://
-VITE_WS_URL=https://localhost:52246/notificationHub
+VITE_API_URL=https://dnet3.qa.dev.dir/pmaapi/api
+VITE_WS_URL=https://dnet3.qa.dev.dir/pmaapi/notificationHub
 VITE_USE_MOCK_API=false
 
 # Application Configuration
 VITE_APP_NAME=Project Management Application
 VITE_APP_VERSION=1.0.0
 
+BASE_URL=/pmaweb
+VITE_BASE_PATH=/pmaweb/
 # Logging
 VITE_ENABLE_CONSOLE_LOGS=true
 

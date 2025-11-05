@@ -495,7 +495,7 @@ export default function UsersPage() {
     try {
       setIsImpersonating(true);
       await startImpersonation(impersonatingUser.userName);
-      toasts.createSuccess(t("users.impersonateSuccess"));
+  
       onImpersonationOpenChange();
       setImpersonatingUser(null);
       // Refresh the whole page after impersonation
@@ -829,20 +829,22 @@ export default function UsersPage() {
                       <TableCell>{user.employee?.gradeName || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {user.roles?.slice(0, 1).map(
-                            (
-                              role, // Show only primary role
-                            ) => (
-                              <Chip
-                                key={role.id}
-                                color="primary"
-                                size="sm"
-                                variant="flat"
-                              >
-                                {role.name}
-                              </Chip>
-                            ),
-                          )}
+                          {user.roles && user.roles.length > 0
+                            ? user.roles.slice(0, 1).map(
+                                (
+                                  role, // Show only primary role
+                                ) => (
+                                  <Chip
+                                    key={role.id}
+                                    color="primary"
+                                    size="sm"
+                                    variant="flat"
+                                  >
+                                    {role.name}
+                                  </Chip>
+                                ),
+                              )
+                            : null}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -889,7 +891,10 @@ export default function UsersPage() {
                               ) : null}
                               {hasPermission({
                                 actions: ["users.update"],
-                              }) ? (
+                              }) &&
+                              user.isActive &&
+                              user.roles &&
+                              user.roles.length > 0 ? (
                                 <DropdownItem
                                   key="impersonate"
                                   startContent={

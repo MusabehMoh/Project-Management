@@ -33,7 +33,6 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { SearchIcon, UsersIcon } from "@/components/icons";
 import { GlobalSearchModal } from "@/components/GlobalSearchModal";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useUserContext } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useImpersonation } from "@/hooks/useImpersonation";
@@ -167,7 +166,7 @@ const ManagementDropdown = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Check if user has access to either users or departments
+  // Check if user has access to management features
   const hasUsersAccess =
     isAdmin() || hasPermission({ actions: ["users.read"] });
   const hasDepartmentsAccess =
@@ -175,13 +174,36 @@ const ManagementDropdown = ({
     hasPermission({
       actions: ["departments.read"],
     });
+  const hasDepartmentMembersAccess = hasAnyRoleById([
+ 
+    RoleIds.ANALYST_DEPARTMENT_MANAGER,
+    RoleIds.DEVELOPMENT_MANAGER,
+    RoleIds.QUALITY_CONTROL_MANAGER,
+    RoleIds.DESIGNER_MANAGER,
+  ]);
+  const hasCompanyEmployeesAccess = hasAnyRoleById([
+ 
+    RoleIds.ANALYST_DEPARTMENT_MANAGER,
+    RoleIds.DEVELOPMENT_MANAGER,
+    RoleIds.QUALITY_CONTROL_MANAGER,
+    RoleIds.DESIGNER_MANAGER,
+  ]);
 
-  // Don't render if user has no access to either
-  if (!hasUsersAccess && !hasDepartmentsAccess) {
+  // Don't render if user has no access to any management features
+  if (
+    !hasUsersAccess &&
+    !hasDepartmentsAccess &&
+    !hasDepartmentMembersAccess &&
+    !hasCompanyEmployeesAccess
+  ) {
     return null;
   }
 
-  const isActive = currentPath === "/users" || currentPath === "/departments";
+  const isActive =
+    currentPath === "/users" ||
+    currentPath === "/departments" ||
+    currentPath === "/department-members" ||
+    currentPath === "/company-employees";
 
   return (
     <Dropdown
@@ -239,6 +261,36 @@ const ManagementDropdown = ({
             onPress={() => navigate("/users")}
           >
             {t("nav.userManagement")}
+          </DropdownItem>
+        ) : null}
+        {hasDepartmentMembersAccess ? (
+          <DropdownItem
+            key="department-members"
+            className={clsx(
+              "transition-all duration-200",
+              currentPath === "/department-members" &&
+                "bg-primary/10 text-primary",
+            )}
+            startContent={<UsersIcon size={16} />}
+            textValue="Department Members"
+            onPress={() => navigate("/department-members")}
+          >
+            {t("nav.departmentMembers")}
+          </DropdownItem>
+        ) : null}
+        {hasCompanyEmployeesAccess ? (
+          <DropdownItem
+            key="company-employees"
+            className={clsx(
+              "transition-all duration-200",
+              currentPath === "/company-employees" &&
+                "bg-primary/10 text-primary",
+            )}
+            startContent={<Building2 size={16} />}
+            textValue="Company Employees"
+            onPress={() => navigate("/company-employees")}
+          >
+            {t("nav.companyEmployees")}
           </DropdownItem>
         ) : null}
         {hasDepartmentsAccess ? (
@@ -362,7 +414,6 @@ export const Navbar = () => {
     isAdmin,
     hasAnyRoleById,
   } = usePermissions();
-  const { setUser } = useUserContext();
   const { isImpersonating, stopImpersonation } = useImpersonation();
   const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } =
     useNotifications();
@@ -797,137 +848,6 @@ export const Navbar = () => {
             />
           </div>
         </NavbarItem>
-        {/* <NavbarItem
-          className="animate-in slide-in-from-right duration-500"
-          style={{ animationDelay: "600ms" }}
-        >
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <div className="transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer">
-                <UserComponent
-                  as="button"
-                  avatarProps={{
-                    size: "sm",
-                    name: currentUser.fullName,
-                    className:
-                      "transition-all duration-300 hover:ring-2 hover:ring-primary/50",
-                  }}
-                  className="transition-all duration-300"
-                  description={
-                    userRole
-                      ? `${currentUser.gradeName} • ${userRole}`
-                      : currentUser.gradeName
-                  }
-                  name={currentUser.fullName}
-                />
-              </div>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Profile Actions"
-              className="animate-in slide-in-from-top-2 duration-300"
-              variant="flat"
-            >
-              <DropdownSection
-                showDivider
-                title={`${currentUser.gradeName} ${currentUser.fullName}`}
-              >
-                <DropdownItem
-                  key="profile"
-                  className="transition-all duration-200 hover:bg-primary/10"
-                  description={`${currentUser.militaryNumber} | ${currentUser.department}${userRole ? ` | ${userRole}` : ""}`}
-                  startContent={
-                    <User
-                      className="transition-colors duration-200"
-                      size={16}
-                    />
-                  }
-                  textValue="Profile"
-                  onPress={() => navigate("/profile")}
-                >
-                  {t("user.profile")}
-                </DropdownItem>
-                <DropdownItem
-                  key="logout"
-                  className="text-danger transition-all duration-200 hover:bg-danger/10"
-                  color="danger"
-                  description={t("user.logoutDesc")}
-                  startContent={
-                    <LogOut
-                      className="transition-colors duration-200"
-                      size={16}
-                    />
-                  }
-                  onPress={async () => {
-                    try {
-                      // Get current app URL
-                      const currentUrl = window.location.origin;
-
-                      // Clear local storage first
-                      localStorage.removeItem("authToken");
-                      localStorage.removeItem("currentUser");
-                      sessionStorage.removeItem("authToken");
-
-                      // Clear user context
-                      setUser(null);
-
-                      // Open app in new window
-                      const newWindow = window.open(currentUrl, "_blank");
-
-                      if (newWindow) {
-                        // Focus the new window
-                        newWindow.focus();
-
-                        // Show instructions for private browsing
-                        const userAgent = navigator.userAgent.toLowerCase();
-                        let shortcut = "Ctrl+Shift+N"; // Chrome default
-
-                        if (userAgent.includes("firefox")) {
-                          shortcut = "Ctrl+Shift+P";
-                        } else if (
-                          userAgent.includes("safari") &&
-                          !userAgent.includes("chrome")
-                        ) {
-                          shortcut = "Cmd+Shift+N";
-                        } else if (userAgent.includes("edge")) {
-                          shortcut = "Ctrl+Shift+N";
-                        }
-
-                        // Optional: Show a toast or alert with instructions
-                        setTimeout(() => {
-                          if (
-                            window.confirm(
-                              `${t("user.privateWindowTip") || "Tip: For complete privacy, press"} ${shortcut} ${t("user.privateWindowTip2") || "to open in private/incognito mode."}\n\n${t("user.closeCurrentWindow") || "Would you like to close this window?"}`
-                            )
-                          ) {
-                            window.close();
-                          }
-                        }, 1000);
-                      } else {
-                        // Fallback if popup was blocked
-                        alert(
-                          t("user.popupBlocked") ||
-                            "Popup blocked. Please allow popups and try again, or manually open a private window."
-                        );
-                      }
-
-                      // Navigate current window to login page as fallback
-                      navigate("/");
-
-                      // Optional: Call logout API endpoint
-                      // await authService.logout();
-                    } catch (error) {
-                      console.error("Logout error:", error);
-                      // Still navigate even if logout call fails
-                      navigate("/");
-                    }
-                  }}
-                >
-                  {t("user.logout")}
-                </DropdownItem>
-              </DropdownSection>
-            </DropdownMenu>
-          </Dropdown>
-        </NavbarItem> */}
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -1054,14 +974,55 @@ export const Navbar = () => {
             </NavbarMenuItem>
           )}
 
-          {(isAdmin() ||
-            hasPermission({
-              actions: ["departments.read"],
-            })) && (
+          {/* Department Members - Managerial roles only */}
+          {hasAnyRoleById([
+            RoleIds.ADMINISTRATOR,
+            RoleIds.ANALYST_DEPARTMENT_MANAGER,
+            RoleIds.DEVELOPMENT_MANAGER,
+            RoleIds.QUALITY_CONTROL_MANAGER,
+            RoleIds.DESIGNER_MANAGER,
+          ]) && (
             <NavbarMenuItem
               className="animate-in slide-in-from-left duration-500"
               style={{
                 animationDelay: `${(projectNavItems.length + 3) * 100}ms`,
+              }}
+            >
+              <Link
+                className={clsx(
+                  "transition-all duration-300 hover:scale-105 active:scale-95",
+                  "hover:text-primary font-medium",
+                  currentPath === "/department-members" &&
+                    "border-l-2 border-primary pl-2",
+                )}
+                color={
+                  currentPath === "/department-members"
+                    ? "primary"
+                    : "foreground"
+                }
+                href="/department-members"
+                size="lg"
+                onClick={(e) => handleNav(e, "/department-members")}
+              >
+                <div className="flex items-center gap-2">
+                  <UsersIcon size={16} />
+                  {t("nav.departmentMembers")}
+                </div>
+              </Link>
+            </NavbarMenuItem>
+          )}
+
+          {hasAnyRoleById([
+            RoleIds.ADMINISTRATOR,
+            RoleIds.ANALYST_DEPARTMENT_MANAGER,
+            RoleIds.DEVELOPMENT_MANAGER,
+            RoleIds.QUALITY_CONTROL_MANAGER,
+            RoleIds.DESIGNER_MANAGER,
+          ]) && (
+            <NavbarMenuItem
+              className="animate-in slide-in-from-left duration-500"
+              style={{
+                animationDelay: `${(projectNavItems.length + 4) * 100}ms`,
               }}
             >
               <Link
@@ -1091,7 +1052,7 @@ export const Navbar = () => {
           <NavbarMenuItem
             className="flex flex-row gap-2 items-center animate-in slide-in-from-left duration-500"
             style={{
-              animationDelay: `${(projectNavItems.length + 4) * 100}ms`,
+              animationDelay: `${(projectNavItems.length + 5) * 100}ms`,
             }}
           >
             <div className="transition-all duration-300 hover:scale-110 active:scale-95">
