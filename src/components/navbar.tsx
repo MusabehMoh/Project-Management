@@ -173,13 +173,21 @@ const ManagementDropdown = ({
     hasPermission({
       actions: ["departments.read"],
     });
+  const hasCompanyEmployeesAccess =
+    isAdmin() ||
+    hasPermission({
+      actions: ["departments.read"],
+    });
 
   // Don't render if user has no access to either
-  if (!hasUsersAccess && !hasDepartmentsAccess) {
+  if (!hasUsersAccess && !hasDepartmentsAccess && !hasCompanyEmployeesAccess) {
     return null;
   }
 
-  const isActive = currentPath === "/users" || currentPath === "/departments";
+  const isActive =
+    currentPath === "/users" ||
+    currentPath === "/departments" ||
+    currentPath === "/company-employees";
 
   return (
     <Dropdown
@@ -251,6 +259,21 @@ const ManagementDropdown = ({
             onPress={() => navigate("/departments")}
           >
             {t("nav.departmentManagement")}
+          </DropdownItem>
+        ) : null}
+        {hasCompanyEmployeesAccess ? (
+          <DropdownItem
+            key="company-employees"
+            className={clsx(
+              "transition-all duration-200",
+              currentPath === "/company-employees" &&
+                "bg-primary/10 text-primary",
+            )}
+            startContent={<Building2 size={16} />}
+            textValue="Company Employees"
+            onPress={() => navigate("/company-employees")}
+          >
+            {t("nav.companyEmployees")}
           </DropdownItem>
         ) : null}
       </DropdownMenu>
@@ -1051,10 +1074,44 @@ export const Navbar = () => {
             </NavbarMenuItem>
           )}
 
+          {(isAdmin() ||
+            hasPermission({
+              actions: ["departments.read"],
+            })) && (
+            <NavbarMenuItem
+              className="animate-in slide-in-from-left duration-500"
+              style={{
+                animationDelay: `${(projectNavItems.length + 3) * 100}ms`,
+              }}
+            >
+              <Link
+                className={clsx(
+                  "transition-all duration-300 hover:scale-105 active:scale-95",
+                  "hover:text-primary font-medium",
+                  currentPath === "/company-employees" &&
+                    "border-l-2 border-primary pl-2",
+                )}
+                color={
+                  currentPath === "/company-employees"
+                    ? "primary"
+                    : "foreground"
+                }
+                href="/company-employees"
+                size="lg"
+                onClick={(e) => handleNav(e, "/company-employees")}
+              >
+                <div className="flex items-center gap-2">
+                  <Building2 size={16} />
+                  {t("nav.companyEmployees")}
+                </div>
+              </Link>
+            </NavbarMenuItem>
+          )}
+
           <NavbarMenuItem
             className="flex flex-row gap-2 items-center animate-in slide-in-from-left duration-500"
             style={{
-              animationDelay: `${(projectNavItems.length + 3) * 100}ms`,
+              animationDelay: `${(projectNavItems.length + 4) * 100}ms`,
             }}
           >
             <div className="transition-all duration-300 hover:scale-110 active:scale-95">

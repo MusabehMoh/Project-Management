@@ -173,12 +173,14 @@ builder.Services.AddScoped<ILookupRepository, LookupRepository>();
 builder.Services.AddScoped<ITimelineRepository, TimelineRepository>();
 builder.Services.AddScoped<ICalendarEventRepository, CalendarEventRepository>();
 builder.Services.AddScoped<IDesignRequestRepository, DesignRequestRepository>();
+builder.Services.AddScoped<ICompanyEmployeeRepository, CompanyEmployeeRepository>();
 //builder.Services.AddScoped<IMemberTaskRepository, MemberTaskRepository>();
 
 // Register services
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<ICompanyEmployeeService, CompanyEmployeeService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<IRequirementService, RequirementService>();

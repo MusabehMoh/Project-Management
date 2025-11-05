@@ -56,3 +56,6 @@ export type {
   TimelineFormData,
   ValidationOptions,
 } from "./useTimelineFormValidation";
+
+// Export company employees hook
+export { useCompanyEmployees } from "./useCompanyEmployees";

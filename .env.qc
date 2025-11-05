@@ -1,8 +1,8 @@
 # Production Environment Configuration
-NODE_ENV=production
+NODE_ENV=qc
 
 # API Configuration  //52246
-VITE_API_URL=https://commona:52246/api 
+VITE_API_URL=https://
 VITE_WS_URL=https://localhost:52246/notificationHub
 VITE_USE_MOCK_API=false
 
