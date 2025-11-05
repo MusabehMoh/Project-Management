@@ -8,7 +8,7 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vitejs.dev/config/
 export default defineConfig({
   // Base path for deployment - set to "/" for root, or "/pmaweb/" for subdirectory
-  base: "/pmaweb/",
+  base: "/",
 
   plugins: [react(), tsconfigPaths(), tailwindcss()],
 
