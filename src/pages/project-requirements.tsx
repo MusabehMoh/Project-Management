@@ -210,6 +210,18 @@ export default function ProjectRequirementsPage() {
     }
   };
 
+  // Handle preview for newly uploaded files (before save)
+  const handleNewFilePreview = async (file: File) => {
+    try {
+      // Create a temporary URL for the file
+      const url = window.URL.createObjectURL(file);
+      await previewFile(file.name, url, file.size);
+    } catch (error) {
+      console.error("Error previewing file:", error);
+      showErrorToast(t("requirements.previewError"));
+    }
+  };
+
   // Modal states
   const {
     isOpen: isCreateOpen,
@@ -1954,15 +1966,30 @@ export default function ProjectRequirementsPage() {
                                     </p>
                                   </div>
                                 </div>
-                                <Button
-                                  isIconOnly
-                                  color="danger"
-                                  size="sm"
-                                  variant="light"
-                                  onPress={() => handleRemoveFile(index)}
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                  <Tooltip content={t("common.preview")}>
+                                    <Button
+                                      isIconOnly
+                                      color="primary"
+                                      size="sm"
+                                      variant="light"
+                                      onPress={() => handleNewFilePreview(file)}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </Tooltip>
+                                  <Tooltip content={t("common.remove")}>
+                                    <Button
+                                      isIconOnly
+                                      color="danger"
+                                      size="sm"
+                                      variant="light"
+                                      onPress={() => handleRemoveFile(index)}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
+                                  </Tooltip>
+                                </div>
                               </div>
                             ))}
                           </div>
