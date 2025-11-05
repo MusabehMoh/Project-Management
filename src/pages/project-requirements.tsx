@@ -81,6 +81,7 @@ import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { usePageTitle } from "@/hooks";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
+import { API_CONFIG } from "@/services/api/client";
 import {
   showWarningToast,
   showSuccessToast,
@@ -732,12 +733,14 @@ export default function ProjectRequirementsPage() {
           systemPrompt += `\n- ${t("requirements.requirementName")}: ${formData.name}`;
       }
 
-      // Call Ollama streaming API directly
-      const response = await fetch("http://localhost:11434/api/chat", {
+      // Call backend proxy to Ollama (solves mixed content HTTPS/HTTP issue)
+      // Use base URL from environment configuration
+      const apiBaseUrl = API_CONFIG.BASE_URL.replace(/\/api$/, ""); // Remove /api suffix if present
+      const response = await fetch(`${apiBaseUrl}/api/AI/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "llama3.1:8b",
+          model: "", // Empty string - backend will use default model from appsettings
           messages: [{ role: "system", content: systemPrompt }, ...messages],
           stream: true,
           options: {
