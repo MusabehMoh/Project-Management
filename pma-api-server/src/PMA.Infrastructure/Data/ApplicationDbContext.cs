@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Project> Projects { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Employee> MawaredEmployees { get; set; }
+    public DbSet<CompanyEmployee> CompanyEmployees { get; set; }
     public DbSet<TaskEntity> Tasks { get; set; }
     public DbSet<SubTask> SubTasks { get; set; }
     public DbSet<Sprint> Sprints { get; set; }

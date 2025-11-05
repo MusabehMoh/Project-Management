@@ -1,17 +1,17 @@
-# Development Environment Variables
-NODE_ENV=development
+# Production Environment Configuration
+NODE_ENV=qc
 
-BASE_URL=/
-VITE_BASE_PATH=/
 # API Configuration  //52246
-VITE_API_URL=http://localhost:52246/api 
-VITE_WS_URL=ws://localhost:52246/notificationHub
+VITE_API_URL=https://dnet3.qa.dev.dir/pmaapi/api
+VITE_WS_URL=https://dnet3.qa.dev.dir/pmaapi/notificationHub
 VITE_USE_MOCK_API=false
 
 # Application Configuration
 VITE_APP_NAME=Project Management Application
 VITE_APP_VERSION=1.0.0
 
+BASE_URL=/pmaweb
+VITE_BASE_PATH=/pmaweb/
 # Logging
 VITE_ENABLE_CONSOLE_LOGS=true
 

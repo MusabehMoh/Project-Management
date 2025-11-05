@@ -105,15 +105,32 @@ class ApiClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorData: any = {};
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        
+        try {
+          // Try to parse as JSON first
+          const responseText = await response.text();
+          
+          if (responseText) {
+            try {
+              errorData = JSON.parse(responseText);
+              // Handle structured error responses
+              errorMessage =
+                errorData.error ||
+                errorData.message ||
+                errorData.title ||
+                errorMessage;
+            } catch {
+              // If not valid JSON, treat as plain text error message
+              errorMessage = responseText;
+            }
+          }
+        } catch {
+          // If reading response fails, use default message
+        }
 
-        throw new ApiError(
-          errorData.error ||
-            errorData.message ||
-            `HTTP ${response.status}: ${response.statusText}`,
-          response.status,
-          errorData,
-        );
+        throw new ApiError(errorMessage, response.status, errorData);
       }
 
       // Handle 204 No Content responses

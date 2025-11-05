@@ -12,6 +12,7 @@ import BlogPage from "@/pages/blog";
 import AboutPage from "@/pages/about";
 import ProjectsPage from "@/pages/projects";
 import UsersPage from "@/pages/users";
+import CompanyEmployeesPage from "@/pages/company-employees";
 import DepartmentsPage from "@/pages/departments";
 import DepartmentMembersPage from "@/pages/department-members";
 import RequirementsPage from "@/pages/requirements";
@@ -55,6 +56,7 @@ function App() {
         />
         <Route element={<ApprovalRequestsPage />} path="approval-requests" />
         <Route element={<UsersPage />} path="users" />
+        <Route element={<CompanyEmployeesPage />} path="company-employees" />
         <Route element={<DepartmentsPage />} path="departments" />
         <Route element={<DepartmentMembersPage />} path="department-members" />
         <Route element={<ProfilePage />} path="profile" />
