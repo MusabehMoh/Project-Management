@@ -107,7 +107,7 @@ public class DepartmentService : IDepartmentService
             throw new KeyNotFoundException("Department not found");
         } 
         
-        if (prsId!=null && prsId >= 0)
+        if (prsId!=null)
         {
             // Check if employee exists
             var employee = await _employeeService.GetEmployeeByIdAsync((int)prsId);
@@ -170,7 +170,7 @@ public class DepartmentService : IDepartmentService
         var addedTeam = await _teamRepository.AddTeamMemberAsync(team);
 
         // Create user after team member is successfully added
-        if (prsId != null && prsId >= 0)
+        if (prsId != null)
         {
             await CreateUserForDepartmentMemberAsync((int)prsId, departmentId, userName, fullName);
         }

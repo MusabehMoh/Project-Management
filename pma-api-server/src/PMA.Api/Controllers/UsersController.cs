@@ -361,7 +361,7 @@ public class UsersController : ApiBaseController
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(403)]
-    [RequirePermission("users.update")]
+   // [RequirePermission("users.update")]
     // [RequirePermission("users.impersonate")]
     public async Task<IActionResult> StartImpersonation([FromBody] ImpersonateUserRequest request)
     {

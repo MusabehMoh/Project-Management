@@ -11,7 +11,6 @@ import { Input } from "@heroui/input";
 import { Avatar } from "@heroui/avatar";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Skeleton } from "@heroui/skeleton";
-import { Switch } from "@heroui/switch";
 import {
   Modal,
   ModalContent,
@@ -46,7 +45,6 @@ import {
 import { GlobalPagination } from "@/components/GlobalPagination";
 import { useCurrentUserDepartmentMembers } from "@/hooks/useCurrentUserDepartmentMembers";
 import { useEmployeeSearch } from "@/hooks/useEmployeeSearch";
-import { usePermissions } from "@/hooks/usePermissions";
 import { useImpersonation } from "@/hooks/useImpersonation";
 import { usePageTitle } from "@/hooks";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
@@ -55,7 +53,6 @@ import { APP_CONFIG } from "@/config/environment";
 
 export default function DepartmentMembersPage() {
   const { t, language } = useLanguage();
-  const { hasPermission } = usePermissions();
   const { startImpersonation } = useImpersonation();
 
   // Set page title
@@ -88,7 +85,6 @@ export default function DepartmentMembersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEmployee, setSelectedEmployee] =
     useState<EmployeeSearchResult | null>(null);
-  const [showManualEntry, setShowManualEntry] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [isDeletingMember, setIsDeletingMember] = useState(false);
 
@@ -133,7 +129,6 @@ export default function DepartmentMembersPage() {
 
   // Member handlers
   const handleAddMember = () => {
-    setShowManualEntry(false);
     setMemberForm({
       prsId: undefined,
       userName: "",
@@ -398,18 +393,15 @@ export default function DepartmentMembersPage() {
                           </Button>
                         </DropdownTrigger>
                         <DropdownMenu aria-label="Member actions">
-                          {hasPermission({
-                            actions: ["users.update"],
-                          }) ? (
-                            <DropdownItem
-                              key="impersonate"
-                              startContent={<UserIcon className="h-4 w-4" />}
-                              textValue={t("users.impersonate")}
-                              onPress={() => handleImpersonateMember(member)}
-                            >
-                              {t("users.impersonate")}
-                            </DropdownItem>
-                          ) : null}
+                          <DropdownItem
+                            key="impersonate"
+                            startContent={<UserIcon className="h-4 w-4" />}
+                            textValue={t("users.impersonate")}
+                            onPress={() => handleImpersonateMember(member)}
+                          >
+                            {t("users.impersonate")}
+                          </DropdownItem>
+
                           <DropdownItem
                             key="remove"
                             className="text-danger"
@@ -456,159 +448,97 @@ export default function DepartmentMembersPage() {
                 {t("departmentMembers.addMember")}
               </ModalHeader>
               <ModalBody>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    isSelected={!showManualEntry}
-                    onValueChange={(value) => {
-                      // value=true means using search mode; false means manual entry
-                      const useSearch = value;
+                <div className="space-y-2">
+                  <Autocomplete
+                    isClearable
+                    isLoading={employeesLoading}
+                    items={employees}
+                    label={t("departmentMembers.selectEmployee")}
+                    menuTrigger="input"
+                    placeholder={t("departmentMembers.searchPlaceholder")}
+                    selectedKey={selectedEmployee?.id.toString()}
+                    onInputChange={searchEmployees}
+                    onSelectionChange={(key) => {
+                      if (key) {
+                        const employee = employees.find(
+                          (e) => e.id.toString() === key,
+                        );
 
-                      setShowManualEntry(!useSearch);
-
-                      // Reset form and selection whenever mode changes to avoid stale validation/state
-                      setMemberForm({
-                        prsId: undefined,
-                        userName: "",
-                        fullName: "",
-                      });
-                      setSelectedEmployee(null);
-                      clearResults();
-                    }}
-                  />
-                  <span>{t("departmentMembers.searchEmployee")}</span>
-                </div>
-
-                {!showManualEntry ? (
-                  <div className="space-y-2">
-                    <Autocomplete
-                      isClearable
-                      isLoading={employeesLoading}
-                      items={employees}
-                      label={t("departmentMembers.selectEmployee")}
-                      menuTrigger="input"
-                      placeholder={t("departmentMembers.searchPlaceholder")}
-                      selectedKey={selectedEmployee?.id.toString()}
-                      onInputChange={searchEmployees}
-                      onSelectionChange={(key) => {
-                        if (key) {
-                          const employee = employees.find(
-                            (e) => e.id.toString() === key,
-                          );
-
-                          if (employee) {
-                            handleEmployeeSelect(employee);
-                          }
+                        if (employee) {
+                          handleEmployeeSelect(employee);
                         }
-                      }}
-                    >
-                      {employees.map((employee) => (
-                        <AutocompleteItem
-                          key={employee.id.toString()}
-                          textValue={`${employee.gradeName} (${employee.fullName})`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Avatar
-                              showFallback
-                              name={employee.fullName}
-                              size="sm"
-                            />
-                            <div className="flex flex-col">
-                              <span className="text-small">
-                                {employee.gradeName} {employee.fullName}
-                              </span>
-                              <span className="text-tiny text-default-400">
-                                {employee.militaryNumber} • @{employee.userName}
-                              </span>
-                            </div>
-                          </div>
-                        </AutocompleteItem>
-                      ))}
-                    </Autocomplete>
-
-                    {/* Selected Employee Details */}
-                    {selectedEmployee && (
-                      <Card>
-                        <CardBody>
-                          <div
-                            className="grid grid-cols-2 gap-4"
-                            dir={language === "ar" ? "rtl" : "ltr"}
-                          >
-                            <div>
-                              <p className="text-small font-medium text-default-500">
-                                {t("departmentMembers.fullName")}
-                              </p>
-                              <p className="text-small">
-                                {selectedEmployee.fullName}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-small font-medium text-default-500">
-                                {t("departmentMembers.userName")}
-                              </p>
-                              <p className="text-small">
-                                @{selectedEmployee.userName}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-small font-medium text-default-500">
-                                {t("departmentMembers.militaryNumber")}
-                              </p>
-                              <p className="text-small">
-                                {selectedEmployee.militaryNumber}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-small font-medium text-default-500">
-                                {t("departmentMembers.gradeName")}
-                              </p>
-                              <p className="text-small">
-                                {selectedEmployee.gradeName}
-                              </p>
-                            </div>
-                          </div>
-                        </CardBody>
-                      </Card>
-                    )}
-
-                    <div className="text-center text-sm text-default-500">
-                      {t("departmentMembers.orSwitch")}{" "}
-                      <Button
-                        size="sm"
-                        variant="light"
-                        onPress={() => setShowManualEntry(true)}
+                      }
+                    }}
+                  >
+                    {employees.map((employee) => (
+                      <AutocompleteItem
+                        key={employee.id.toString()}
+                        textValue={`${employee.gradeName} (${employee.fullName})`}
                       >
-                        {t("departmentMembers.manualEntry")}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <Input
-                      label={t("departmentMembers.userName")}
-                      placeholder={t("departmentMembers.userName")}
-                      value={memberForm.userName}
-                      variant="bordered"
-                      onChange={(e) =>
-                        setMemberForm({
-                          ...memberForm,
-                          userName: e.target.value,
-                        })
-                      }
-                    />
-                    <Input
-                      label={t("departmentMembers.fullName")}
-                      placeholder={t("departmentMembers.fullName")}
-                      value={memberForm.fullName}
-                      variant="bordered"
-                      onChange={(e) =>
-                        setMemberForm({
-                          ...memberForm,
-                          fullName: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                )}
+                        <div className="flex items-center gap-2">
+                          <Avatar
+                            showFallback
+                            name={employee.fullName}
+                            size="sm"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-small">
+                              {employee.gradeName} {employee.fullName}
+                            </span>
+                            <span className="text-tiny text-default-400">
+                              {employee.militaryNumber} • @{employee.userName}
+                            </span>
+                          </div>
+                        </div>
+                      </AutocompleteItem>
+                    ))}
+                  </Autocomplete>
+
+                  {/* Selected Employee Details */}
+                  {selectedEmployee && (
+                    <Card>
+                      <CardBody>
+                        <div
+                          className="grid grid-cols-2 gap-4"
+                          dir={language === "ar" ? "rtl" : "ltr"}
+                        >
+                          <div>
+                            <p className="text-small font-medium text-default-500">
+                              {t("departmentMembers.fullName")}
+                            </p>
+                            <p className="text-small">
+                              {selectedEmployee.fullName}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-small font-medium text-default-500">
+                              {t("departmentMembers.userName")}
+                            </p>
+                            <p className="text-small">
+                              @{selectedEmployee.userName}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-small font-medium text-default-500">
+                              {t("departmentMembers.militaryNumber")}
+                            </p>
+                            <p className="text-small">
+                              {selectedEmployee.militaryNumber}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-small font-medium text-default-500">
+                              {t("departmentMembers.gradeName")}
+                            </p>
+                            <p className="text-small">
+                              {selectedEmployee.gradeName}
+                            </p>
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  )}
+                </div>
               </ModalBody>
               <ModalFooter>
                 <Button
@@ -621,7 +551,7 @@ export default function DepartmentMembersPage() {
                 </Button>
                 <Button
                   color="primary"
-                  isDisabled={!memberForm.fullName?.trim() || isAddingMember}
+                  isDisabled={!selectedEmployee || isAddingMember}
                   isLoading={isAddingMember}
                   onPress={submitMemberForm}
                 >

@@ -267,8 +267,11 @@ export const useDepartmentMembers = (
     try {
       setError(null);
 
-      const response = await departmentService.addDepartmentMember(request);
-      // const response = await departmentService.addDepartmentMember(request); // Use for real API
+      const response = await departmentService.addDepartmentMember(
+        request.departmentId,
+        request,
+      );
+      // const response = await departmentService.addDepartmentMember(request.departmentId, request); // Use for real API
 
       if (response.success) {
         await fetchMembers(); // Refresh the list
