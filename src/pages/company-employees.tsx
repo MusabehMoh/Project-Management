@@ -5,7 +5,7 @@ import type {
   UpdateCompanyEmployeeRequest,
 } from "@/types/companyEmployee";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   Avatar,
   Button,
@@ -320,19 +320,11 @@ export default function CompanyEmployeesPage() {
     }
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = useCallback((dateString?: string) => {
     if (!dateString) return "-";
 
     return dateString.split("T")[0] || "";
-  };
-
-  const columns = [
-    { key: "userName", label: t("companyEmployees.userName") },
-    { key: "fullName", label: t("companyEmployees.fullName") },
-    { key: "gradeName", label: t("companyEmployees.gradeName") },
-    { key: "createdAt", label: t("companyEmployees.createdAt") },
-    { key: "actions", label: t("companyEmployees.actions") },
-  ];
+  }, []);
 
   return (
     <>
@@ -526,13 +518,15 @@ export default function CompanyEmployeesPage() {
               <Table
                 aria-label={t("companyEmployees.title")}
               >
-                <TableHeader columns={columns}>
-                  {(column) => (
-                    <TableColumn key={column.key}>{column.label}</TableColumn>
-                  )}
+                <TableHeader>
+                  <TableColumn>{t("companyEmployees.userName")}</TableColumn>
+                  <TableColumn>{t("companyEmployees.fullName")}</TableColumn>
+                  <TableColumn>{t("companyEmployees.gradeName")}</TableColumn>
+                  <TableColumn>{t("companyEmployees.createdAt")}</TableColumn>
+                  <TableColumn>{t("companyEmployees.actions")}</TableColumn>
                 </TableHeader>
-                <TableBody items={companyEmployees}>
-                  {(employee) => (
+                <TableBody>
+                  {companyEmployees.map((employee) => (
                     <TableRow key={employee.id}>
                       <TableCell>
                         <div
@@ -594,7 +588,7 @@ export default function CompanyEmployeesPage() {
                         </Dropdown>
                       </TableCell>
                     </TableRow>
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             )}
