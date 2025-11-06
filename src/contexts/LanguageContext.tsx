@@ -1151,7 +1151,7 @@ const translations = {
     "requirements.project": "Project",
     "requirements.completed": "Completed",
     // AI Suggestions
-    "requirements.aiSuggest": "AI Suggestion",
+    "requirements.aiSuggest": "Smart Analyst",
     "requirements.aiPromptDescription":
       "Describe what you need and AI will generate a detailed requirement description for you.",
     "requirements.aiContinuePrompt":
@@ -3236,7 +3236,7 @@ const translations = {
     "requirements.project": "المشروع",
     "requirements.completed": "مكتمل",
     // AI Suggestions - Arabic
-    "requirements.aiSuggest": "اقتراح بالذكاء الاصطناعي",
+    "requirements.aiSuggest": "المحلل الذكي",
     "requirements.aiPromptDescription":
       "صِف ما تحتاجه وسيقوم الذكاء الاصطناعي بإنشاء وصف تفصيلي للمتطلب من أجلك.",
     "requirements.aiContinuePrompt": "استمر في المحادثة أو قم بتحسين المتطلب:",
