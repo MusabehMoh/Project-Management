@@ -5,6 +5,7 @@ import type {
 } from "@/types/projectRequirement";
 
 import { useState, useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -686,9 +687,13 @@ export default function ProjectRequirementsPage() {
       };
 
       // Add user message to conversation immediately
-      const updatedHistory = [...conversationHistory, userMessage];
+      setConversationHistory(prev => [...prev, userMessage]);
 
-      setConversationHistory(updatedHistory);
+      // Clear input
+      setAIPromptText("");
+
+      // Small delay to ensure user message renders first
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       // Create a placeholder for streaming response
       const streamingMessage = {
@@ -697,13 +702,12 @@ export default function ProjectRequirementsPage() {
         timestamp: Date.now(),
       };
 
-      setConversationHistory([...updatedHistory, streamingMessage]);
-
-      // Clear input
-      setAIPromptText("");
+      setConversationHistory(prev => [...prev, streamingMessage]);
 
       // Build conversation history for Ollama
-      const messages = updatedHistory.map((msg) => ({
+      // Get all messages except the empty streaming placeholder we just added
+      const allPreviousMessages = conversationHistory.concat(userMessage);
+      const messages = allPreviousMessages.map((msg) => ({
         role: msg.role,
         content: msg.content,
       }));
@@ -758,37 +762,93 @@ export default function ProjectRequirementsPage() {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullResponse = "";
+      let buffer = ""; // Buffer for incomplete JSON chunks
+      let displayBuffer = ""; // Buffer for accumulating characters before display
+      const CHARS_PER_UPDATE = 3; // Accumulate 3 chars before updating (creates visible effect)
+
+      console.log("🚀 Starting stream reading...");
 
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
 
-          if (done) break;
+          if (done) {
+            console.log("✅ Stream complete. Total length:", fullResponse.length);
+            break;
+          }
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split("\n").filter((line) => line.trim());
+          // Decode chunk and add to buffer
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          // Split by newlines but keep incomplete lines in buffer
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || ""; // Keep last incomplete line in buffer
 
           for (const line of lines) {
+            if (!line.trim()) continue; // Skip empty lines
+
             try {
               const json = JSON.parse(line);
 
               if (json.message?.content) {
-                fullResponse += json.message.content;
+                const newContent = json.message.content;
+                fullResponse += newContent;
+                displayBuffer += newContent;
+                
+                console.log("📝 Chunk received:", newContent, "Total:", fullResponse.length);
 
-                // Update streaming message in real-time
-                setConversationHistory([
-                  ...updatedHistory,
-                  {
-                    ...streamingMessage,
-                    content: fullResponse,
-                  },
-                ]);
+                // Update every N characters for more visible streaming
+                if (displayBuffer.length >= CHARS_PER_UPDATE) {
+                  displayBuffer = ""; // Reset display buffer
+                  
+                  // Update UI
+                  setConversationHistory((prev) => {
+                    const withoutLast = prev.slice(0, -1);
+                    return [
+                      ...withoutLast,
+                      {
+                        ...streamingMessage,
+                        content: fullResponse,
+                      },
+                    ];
+                  });
+                  
+                  // Small delay to make updates visible
+                  await new Promise(resolve => setTimeout(resolve, 10))
+                }
               }
             } catch (e) {
+              console.warn("Failed to parse streaming chunk:", line.substring(0, 100), e);
               // Skip invalid JSON lines
             }
           }
         }
+
+        // Process any remaining buffer
+        if (buffer.trim()) {
+          try {
+            const json = JSON.parse(buffer);
+            if (json.message?.content) {
+              fullResponse += json.message.content;
+            }
+          } catch (e) {
+            console.warn("Failed to parse final buffer:", buffer, e);
+          }
+        }
+
+        // Final update with complete response
+        console.log("🎉 Final update with complete response");
+        setConversationHistory((prev) => {
+          const withoutLast = prev.slice(0, -1);
+          return [
+            ...withoutLast,
+            {
+              ...streamingMessage,
+              content: fullResponse,
+            },
+          ];
+        });
       }
 
       // After streaming completes, save to n8n for memory

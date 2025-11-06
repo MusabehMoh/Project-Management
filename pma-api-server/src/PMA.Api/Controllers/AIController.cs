@@ -103,10 +103,16 @@ namespace PMA.Api.Controllers
                 Response.Headers.CacheControl = "no-cache";
                 Response.Headers.Append("X-Accel-Buffering", "no"); // Disable nginx buffering
 
-                // Stream the response back to client
+                // Stream the response back to client with immediate flushing
                 await using var stream = await response.Content.ReadAsStreamAsync();
-                await stream.CopyToAsync(Response.Body);
-                await Response.Body.FlushAsync();
+                var buffer = new byte[1024]; // Small buffer for faster streaming
+                int bytesRead;
+                
+                while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    await Response.Body.WriteAsync(buffer, 0, bytesRead);
+                    await Response.Body.FlushAsync(); // Flush immediately for true streaming
+                }
             }
             catch (HttpRequestException ex)
             {
