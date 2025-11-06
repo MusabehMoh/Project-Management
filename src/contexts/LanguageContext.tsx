@@ -733,6 +733,8 @@ const translations = {
     "teamDashboard.kanban.taskCompleted": "Task completed successfully!",
     "teamDashboard.kanban.taskCompleteFailed": "Failed to complete task",
     "teamDashboard.kanban.updateFailed": "Failed to update task status",
+    "teamDashboard.kanban.statusUpdated": "Task status updated successfully",
+    "teamDashboard.kanban.statusUpdateFailed": "Failed to update task status",
     "teamDashboard.kanban.designRequestWarning": "Design Request Warning",
     "teamDashboard.kanban.designRequestNoDesignerMessage":
       "This task has a design request that has not been assigned to a designer yet. Proceeding will delete the design request.",
@@ -2824,6 +2826,8 @@ const translations = {
     "teamDashboard.kanban.taskCompleted": "تم إكمال المهمة بنجاح!",
     "teamDashboard.kanban.taskCompleteFailed": "فشل إكمال المهمة",
     "teamDashboard.kanban.updateFailed": "فشل تحديث حالة المهمة",
+    "teamDashboard.kanban.statusUpdated": "تم تحديث حالة المهمة بنجاح",
+    "teamDashboard.kanban.statusUpdateFailed": "فشل تحديث حالة المهمة",
     "teamDashboard.kanban.designRequestWarning": "تحذير طلب التصميم",
     "teamDashboard.kanban.designRequestNoDesignerMessage":
       "هذه المهمة تحتوي على طلب تصميم لم يتم تعيينه لمصمم بعد. المتابعة ستؤدي إلى حذف طلب التصميم.",
