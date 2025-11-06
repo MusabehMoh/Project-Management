@@ -523,7 +523,6 @@ export default function CompanyEmployeesPage() {
               </div>
             ) : (
               <Table
-                isHeaderSticky
                 aria-label={t("companyEmployees.title")}
               >
                 <TableHeader columns={columns}>
