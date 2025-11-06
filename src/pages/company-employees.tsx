@@ -34,7 +34,6 @@ import {
 import {
   Edit,
   Eye,
-  MoreHorizontal,
   Plus,
   RefreshCw,
   Search,
@@ -43,6 +42,7 @@ import {
 } from "lucide-react";
 
 import { GlobalPagination } from "@/components/GlobalPagination";
+import { MoreVerticalIcon } from "@/components/icons";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCompanyEmployees } from "@/hooks";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
@@ -550,7 +550,7 @@ export default function CompanyEmployeesPage() {
                         <Dropdown>
                           <DropdownTrigger>
                             <Button isIconOnly size="sm" variant="light">
-                              <MoreHorizontal className="w-4 h-4" />
+                              <MoreVerticalIcon size={16} />
                             </Button>
                           </DropdownTrigger>
                           <DropdownMenu aria-label="Employee actions">
