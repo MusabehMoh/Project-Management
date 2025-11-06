@@ -437,16 +437,14 @@ export const TaskCard = ({
               /* actions for members */
               <div className="flex gap-2">
                 {task.hasDesignRequest ? (
-                  <div className="flex-1 flex items-center justify-center">
-                    <Chip
-                      color="success"
-                      size="sm"
-                      startContent={<CheckCircle className="w-3 h-3" />}
-                      variant="flat"
-                    >
-                      {t("requestedAlready")}
-                    </Chip>
-                  </div>
+                  <Chip
+                    color="success"
+                    size="sm"
+                    startContent={<CheckCircle className="w-3 h-3" />}
+                    variant="flat"
+                  >
+                    {t("requestedAlready")}
+                  </Chip>
                 ) : task.roleType?.toLowerCase() === "developer" ? (
                   <Button
                     className="flex-1"
@@ -464,9 +462,7 @@ export const TaskCard = ({
                   >
                     {t("requestDesign")}
                   </Button>
-                ) : (
-                  <div className="flex-1" />
-                )}
+                ) : null}
 
                 <Button
                   className="flex-1"

@@ -889,7 +889,6 @@ export default function TaskDetailsDrawer({
               <div className="flex gap-3">
                 {selectedTask.hasDesignRequest ? (
                   <Chip
-                    className="flex-1"
                     color="success"
                     size="md"
                     startContent={<CheckCircle className="w-4 h-4" />}
@@ -911,9 +910,7 @@ export default function TaskDetailsDrawer({
                   >
                     {t("requestDesign")}
                   </Button>
-                ) : (
-                  <div className="flex-1" />
-                )}
+                ) : null}
 
                 <Button
                   className="flex-1"
