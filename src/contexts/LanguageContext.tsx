@@ -733,6 +733,8 @@ const translations = {
     "teamDashboard.kanban.taskCompleted": "Task completed successfully!",
     "teamDashboard.kanban.taskCompleteFailed": "Failed to complete task",
     "teamDashboard.kanban.updateFailed": "Failed to update task status",
+    "teamDashboard.kanban.statusUpdated": "Task status updated successfully",
+    "teamDashboard.kanban.statusUpdateFailed": "Failed to update task status",
     "teamDashboard.kanban.designRequestWarning": "Design Request Warning",
     "teamDashboard.kanban.designRequestNoDesignerMessage":
       "This task has a design request that has not been assigned to a designer yet. Proceeding will delete the design request.",
@@ -1149,7 +1151,7 @@ const translations = {
     "requirements.project": "Project",
     "requirements.completed": "Completed",
     // AI Suggestions
-    "requirements.aiSuggest": "AI Suggestion",
+    "requirements.aiSuggest": "Smart Analyst",
     "requirements.aiPromptDescription":
       "Describe what you need and AI will generate a detailed requirement description for you.",
     "requirements.aiContinuePrompt":
@@ -1435,6 +1437,9 @@ const translations = {
     "companyEmployees.searchEmployees":
       "Search employees by name, username, grade, or military number...",
     "companyEmployees.noEmployeesFound": "No employees found",
+    "companyEmployees.noEmployees": "No employees yet",
+    "companyEmployees.tryDifferentSearch": "Try a different search term",
+    "companyEmployees.addFirstEmployee": "Add your first employee to get started",
     "companyEmployees.confirmDelete": "Confirm Delete Employee",
     "companyEmployees.deleteConfirmMessage":
       "Are you sure you want to delete this employee?",
@@ -2826,6 +2831,8 @@ const translations = {
     "teamDashboard.kanban.taskCompleted": "تم إكمال المهمة بنجاح!",
     "teamDashboard.kanban.taskCompleteFailed": "فشل إكمال المهمة",
     "teamDashboard.kanban.updateFailed": "فشل تحديث حالة المهمة",
+    "teamDashboard.kanban.statusUpdated": "تم تحديث حالة المهمة بنجاح",
+    "teamDashboard.kanban.statusUpdateFailed": "فشل تحديث حالة المهمة",
     "teamDashboard.kanban.designRequestWarning": "تحذير طلب التصميم",
     "teamDashboard.kanban.designRequestNoDesignerMessage":
       "هذه المهمة تحتوي على طلب تصميم لم يتم تعيينه لمصمم بعد. المتابعة ستؤدي إلى حذف طلب التصميم.",
@@ -3234,7 +3241,7 @@ const translations = {
     "requirements.project": "المشروع",
     "requirements.completed": "مكتمل",
     // AI Suggestions - Arabic
-    "requirements.aiSuggest": "اقتراح بالذكاء الاصطناعي",
+    "requirements.aiSuggest": "المحلل الذكي",
     "requirements.aiPromptDescription":
       "صِف ما تحتاجه وسيقوم الذكاء الاصطناعي بإنشاء وصف تفصيلي للمتطلب من أجلك.",
     "requirements.aiContinuePrompt": "استمر في المحادثة أو قم بتحسين المتطلب:",
@@ -3521,6 +3528,9 @@ const translations = {
     "companyEmployees.searchEmployees":
       "البحث عن الموظفين بالاسم أو اسم المستخدم أو الرتبة أو الرقم العسكري...",
     "companyEmployees.noEmployeesFound": "لم يتم العثور على موظفين",
+    "companyEmployees.noEmployees": "لا يوجد موظفين بعد",
+    "companyEmployees.tryDifferentSearch": "جرب مصطلح بحث مختلف",
+    "companyEmployees.addFirstEmployee": "أضف موظفك الأول للبدء",
     "companyEmployees.confirmDelete": "تأكيد حذف الموظف",
     "companyEmployees.deleteConfirmMessage": "هل أنت متأكد من حذف هذا الموظف؟",
     "companyEmployees.fillEmployeeDetails": "املأ تفاصيل الموظف أدناه",

@@ -153,6 +153,9 @@ builder.Services.AddMemoryCache(options =>
     options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
 }); 
 
+// Register HttpClient for AI proxy
+builder.Services.AddHttpClient();
+
 // Register repositories
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();

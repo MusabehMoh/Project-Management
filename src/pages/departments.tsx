@@ -511,7 +511,7 @@ export default function DepartmentsPage() {
                                   {member.user.gradeName} {member.user.fullName}
                                 </div>
                                 <div className="text-sm text-default-500">
-                                  @{member.user.userName}
+                                  {member.user.userName}
                                 </div>
                               </div>
                             </div>

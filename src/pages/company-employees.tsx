@@ -5,8 +5,9 @@ import type {
   UpdateCompanyEmployeeRequest,
 } from "@/types/companyEmployee";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
+  Avatar,
   Button,
   Card,
   CardBody,
@@ -34,7 +35,6 @@ import {
 import {
   Edit,
   Eye,
-  MoreHorizontal,
   Plus,
   RefreshCw,
   Search,
@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 
 import { GlobalPagination } from "@/components/GlobalPagination";
+import { MoreVerticalIcon } from "@/components/icons";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCompanyEmployees } from "@/hooks";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
@@ -69,7 +70,7 @@ export default function CompanyEmployeesPage() {
     createCompanyEmployee,
     updateCompanyEmployee,
     deleteCompanyEmployee,
-  } = useCompanyEmployees({ initialLimit: 20 });
+  } = useCompanyEmployees({ initialLimit: 10 });
 
   // Modal states
   const {
@@ -319,19 +320,11 @@ export default function CompanyEmployeesPage() {
     }
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = useCallback((dateString?: string) => {
     if (!dateString) return "-";
 
     return dateString.split("T")[0] || "";
-  };
-
-  const columns = [
-    { key: "userName", label: t("companyEmployees.userName") },
-    { key: "fullName", label: t("companyEmployees.fullName") },
-    { key: "gradeName", label: t("companyEmployees.gradeName") },
-    { key: "createdAt", label: t("companyEmployees.createdAt") },
-    { key: "actions", label: t("companyEmployees.actions") },
-  ];
+  }, []);
 
   return (
     <>
@@ -523,26 +516,36 @@ export default function CompanyEmployeesPage() {
               </div>
             ) : (
               <Table
-                isHeaderSticky
                 aria-label={t("companyEmployees.title")}
-                classNames={{
-                  wrapper: "max-h-[600px]",
-                }}
               >
-                <TableHeader columns={columns}>
-                  {(column) => (
-                    <TableColumn key={column.key}>{column.label}</TableColumn>
-                  )}
+                <TableHeader>
+                  <TableColumn>{t("companyEmployees.userName")}</TableColumn>
+                  <TableColumn>{t("companyEmployees.fullName")}</TableColumn>
+                  <TableColumn>{t("companyEmployees.gradeName")}</TableColumn>
+                  <TableColumn>{t("companyEmployees.createdAt")}</TableColumn>
+                  <TableColumn>{t("companyEmployees.actions")}</TableColumn>
                 </TableHeader>
-                <TableBody items={companyEmployees}>
-                  {(employee) => (
+                <TableBody>
+                  {companyEmployees.map((employee) => (
                     <TableRow key={employee.id}>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-default-400" />
-                          <span className="font-medium">
-                            {employee.userName || "-"}
-                          </span>
+                        <div
+                          className={`flex items-center gap-2 ${language === "ar" ? "text-right" : ""}`}
+                          dir={language === "ar" ? "rtl" : "ltr"}
+                        >
+                          <Avatar
+                            showFallback
+                            name={employee.fullName}
+                            size="sm"
+                          />
+                          <div>
+                            <div className="font-medium">
+                              {employee.gradeName} {employee.fullName}
+                            </div>
+                            <div className="text-sm text-default-500">
+                              {employee.userName || "-"}
+                            </div>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -554,7 +557,7 @@ export default function CompanyEmployeesPage() {
                         <Dropdown>
                           <DropdownTrigger>
                             <Button isIconOnly size="sm" variant="light">
-                              <MoreHorizontal className="w-4 h-4" />
+                              <MoreVerticalIcon size={16} />
                             </Button>
                           </DropdownTrigger>
                           <DropdownMenu aria-label="Employee actions">
@@ -585,7 +588,7 @@ export default function CompanyEmployeesPage() {
                         </Dropdown>
                       </TableCell>
                     </TableRow>
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             )}
@@ -756,86 +759,90 @@ export default function CompanyEmployeesPage() {
               <>
                 <ModalHeader className="flex flex-col gap-1">
                   {t("companyEmployees.viewEmployee")}
-                  <p className="text-sm text-default-600 font-normal">
-                    {selectedEmployee?.fullName}
-                  </p>
                 </ModalHeader>
-                <ModalBody className="gap-4">
+                <ModalBody className="gap-4 pb-6">
                   {selectedEmployee && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-default-600">
-                          {t("companyEmployees.id")}
-                        </label>
-                        <p className="text-base font-medium">
-                          {selectedEmployee.id}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-default-600">
-                          {t("companyEmployees.userName")}
-                        </label>
-                        <p className="text-base font-medium">
-                          {selectedEmployee.userName || "-"}
-                        </p>
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="text-sm font-medium text-default-600">
-                          {t("companyEmployees.fullName")}
-                        </label>
-                        <p className="text-base font-medium">
-                          {selectedEmployee.fullName}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-default-600">
-                          {t("companyEmployees.gradeName")}
-                        </label>
-                        <p className="text-base font-medium">
-                          {selectedEmployee.gradeName || "-"}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-default-600">
-                          {t("companyEmployees.createdAt")}
-                        </label>
-                        <p className="text-base font-medium">
-                          {formatDate(selectedEmployee.createdAt)}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-default-600">
-                          {t("companyEmployees.updatedAt")}
-                        </label>
-                        <p className="text-base font-medium">
-                          {formatDate(selectedEmployee.updatedAt)}
-                        </p>
-                      </div>
-                      {selectedEmployee.createdBy && (
+                    <div className="space-y-4">
+                      {/* Employee Name Header */}
+                      <div className="flex items-center gap-3 pb-4 border-b border-default-200">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                          <User className="h-6 w-6 text-primary" />
+                        </div>
                         <div>
-                          <label className="text-sm font-medium text-default-600">
-                            {t("companyEmployees.createdBy")}
-                          </label>
-                          <p className="text-base font-medium">
-                            {selectedEmployee.createdBy}
+                          <h3 className="text-lg font-semibold">
+                            {selectedEmployee.fullName}
+                          </h3>
+                          <p className="text-sm text-default-500">
+                            {selectedEmployee.userName || "-"}
                           </p>
                         </div>
-                      )}
-                      {selectedEmployee.updatedBy && (
-                        <div>
-                          <label className="text-sm font-medium text-default-600">
-                            {t("companyEmployees.updatedBy")}
-                          </label>
-                          <p className="text-base font-medium">
-                            {selectedEmployee.updatedBy}
-                          </p>
+                      </div>
+
+                      {/* Employee Information Grid */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between py-2 border-b border-default-100">
+                          <span className="text-sm text-default-600">
+                            {t("companyEmployees.id")}
+                          </span>
+                          <span className="text-sm font-medium">
+                            {selectedEmployee.id}
+                          </span>
                         </div>
-                      )}
+
+                        <div className="flex items-center justify-between py-2 border-b border-default-100">
+                          <span className="text-sm text-default-600">
+                            {t("companyEmployees.gradeName")}
+                          </span>
+                          <span className="text-sm font-medium">
+                            {selectedEmployee.gradeName || "-"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-2 border-b border-default-100">
+                          <span className="text-sm text-default-600">
+                            {t("companyEmployees.createdAt")}
+                          </span>
+                          <span className="text-sm font-medium">
+                            {formatDate(selectedEmployee.createdAt)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between py-2 border-b border-default-100">
+                          <span className="text-sm text-default-600">
+                            {t("companyEmployees.updatedAt")}
+                          </span>
+                          <span className="text-sm font-medium">
+                            {formatDate(selectedEmployee.updatedAt)}
+                          </span>
+                        </div>
+
+                        {selectedEmployee.createdBy && (
+                          <div className="flex items-center justify-between py-2 border-b border-default-100">
+                            <span className="text-sm text-default-600">
+                              {t("companyEmployees.createdBy")}
+                            </span>
+                            <span className="text-sm font-medium">
+                              {selectedEmployee.createdBy}
+                            </span>
+                          </div>
+                        )}
+
+                        {selectedEmployee.updatedBy && (
+                          <div className="flex items-center justify-between py-2">
+                            <span className="text-sm text-default-600">
+                              {t("companyEmployees.updatedBy")}
+                            </span>
+                            <span className="text-sm font-medium">
+                              {selectedEmployee.updatedBy}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </ModalBody>
                 <ModalFooter>
-                  <Button variant="light" onPress={onClose}>
+                  <Button color="primary" onPress={onClose}>
                     {t("common.close")}
                   </Button>
                 </ModalFooter>

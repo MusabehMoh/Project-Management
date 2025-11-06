@@ -383,9 +383,7 @@ export const TaskCard = ({
         <div className="mt-3 pt-3 border-t border-divider">
           <div className="flex flex-col gap-2">
             {task.completedFromDeveloper && (
-              <div
-                className={`flex items-center ${language === "ar" ? "justify-start" : "justify-start"}`}
-              >
+              <div className="flex items-center">
                 <Chip
                   color="primary"
                   size="sm"
@@ -398,7 +396,7 @@ export const TaskCard = ({
             )}
             {isTeamManager ? (
               /* actions for team managers */
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 {task.hasNoDependentTasks && isQcManager ? (
                   <Tooltip content={t("task.createTaskHint")}>
                     <Button
@@ -435,18 +433,16 @@ export const TaskCard = ({
               </div>
             ) : (
               /* actions for members */
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 {task.hasDesignRequest ? (
-                  <div className="flex-1 flex items-center justify-center">
-                    <Chip
-                      color="success"
-                      size="sm"
-                      startContent={<CheckCircle className="w-3 h-3" />}
-                      variant="flat"
-                    >
-                      {t("requestedAlready")}
-                    </Chip>
-                  </div>
+                  <Chip
+                    color="success"
+                    size="sm"
+                    startContent={<CheckCircle className="w-3 h-3" />}
+                    variant="flat"
+                  >
+                    {t("requestedAlready")}
+                  </Chip>
                 ) : task.roleType?.toLowerCase() === "developer" ? (
                   <Button
                     className="flex-1"
@@ -464,9 +460,7 @@ export const TaskCard = ({
                   >
                     {t("requestDesign")}
                   </Button>
-                ) : (
-                  <div className="flex-1" />
-                )}
+                ) : null}
 
                 <Button
                   className="flex-1"

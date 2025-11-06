@@ -4,7 +4,7 @@ import type {
   UpdateCompanyEmployeeRequest,
 } from "@/types/companyEmployee";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import { companyEmployeeService } from "@/services/api/companyEmployeeService";
 
@@ -52,6 +52,7 @@ export function useCompanyEmployees(
   const [totalCount, setTotalCount] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
   const [pageSize, setPageSize] = useState<number>(initialLimit);
+  const isInitialMount = useRef(true);
 
   const fetchCompanyEmployees = useCallback(
     async (page: number, search: string, limit: number) => {
@@ -174,6 +175,12 @@ export function useCompanyEmployees(
 
   // Search effect with debouncing - only for search query changes
   useEffect(() => {
+    // Skip the search effect on initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       setCurrentPage(1);
       // Call the service directly to avoid dependency issues
