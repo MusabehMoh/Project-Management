@@ -869,7 +869,7 @@ export default function TaskDetailsDrawer({
           {/* buttons */}
           <div className="mt-3 pt-3 flex flex-col gap-3">
             {selectedTask && isTeamManager ? (
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-center">
                 <Button
                   className="flex-1"
                   color="default"
@@ -886,7 +886,7 @@ export default function TaskDetailsDrawer({
               </div>
             ) : selectedTask ? (
               /* Member */
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-center">
                 {selectedTask.hasDesignRequest ? (
                   <Chip
                     color="success"
