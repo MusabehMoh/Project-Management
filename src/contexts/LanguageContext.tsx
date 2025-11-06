@@ -1348,6 +1348,8 @@ const translations = {
     "timeline.validation.employeesRequired": "Employees Required",
     "timeline.validation.qaRequiresEmployees":
       "Quality Assurance department requires assigning employees",
+    "timeline.validation.taskRequiresEmployee":
+      "Tasks require assigning at least one employee",
 
     // User Management
     "users.title": "User Management",
@@ -2407,7 +2409,7 @@ const translations = {
     "dashboard.underReview": "قيد المراجعة",
     "dashboard.analysisInProgress": "التحليل قيد التقدم",
     "dashboard.awaitingDev": "في انتظار البرمجة",
-    "dashboard.teamWorkload": "عبء العمل للفريق",
+    "dashboard.teamWorkload": " أداء العمل للفريق",
     "dashboard.teamWorkloadPerformance": "عبء العمل والأداء للفريق",
     "dashboard.quickActions": "الإجراءات السريعة",
     "dashboard.quickActionsSubtitle":
@@ -3429,6 +3431,8 @@ const translations = {
     "timeline.validation.employeesRequired": "رجاء اختر موظف ",
     "timeline.validation.qaRequiresEmployees":
       "قسم ضمان الجودة يتطلب تعيين الموظفين",
+    "timeline.validation.taskRequiresEmployee":
+      "المهام تتطلب تعيين موظف واحد على الأقل",
 
     // User Management
     "users.title": "إدارة المستخدمين",
@@ -3762,7 +3766,7 @@ const translations = {
     "timeline.selectTimelineDescription":
       "اختر جدولاً زمنياً من القائمة المنسدلة أعلاه لعرض تفاصيله.",
     "timeline.ganttView": "عرض غانت",
-    "timeline.treeView": "العرض الشجري",
+    "timeline.treeView": "العرض  الهرمي",
     "timeline.details": "التفاصيل",
     "timeline.timelineFilters": "مرشحات المخطط الزمني",
     "timeline.clearAll": "مسح الكل",

@@ -15,7 +15,7 @@ window.PMA_CONFIG = {
   apiUrl: "http://localhost:52246/api",
   
   // WebSocket URL for real-time features
-  wsUrl: "ws://localhost:52246/notificationHub",
+  wsUrl: "http://localhost:52246/notificationHub",
   
   // Enable/disable SignalR real-time updates
   enableSignalR: true,

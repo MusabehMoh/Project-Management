@@ -22,6 +22,9 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
             .Include(pr => pr.RequirementTask)
+                .ThenInclude(rt => rt.Developer)
+            .Include(pr => pr.RequirementTask)
+                .ThenInclude(rt => rt.Qc)
             .Include(pr => pr.Timeline)
             .AsQueryable();
 
@@ -76,6 +79,9 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Creator)
             .Include(pr => pr.Analyst)
             .Include(pr => pr.RequirementTask)
+                .ThenInclude(rt => rt.Developer)
+            .Include(pr => pr.RequirementTask)
+                .ThenInclude(rt => rt.Qc)
             .Include(pr => pr.Timeline)
             .Where(pr => pr.ProjectId == projectId)
             .OrderByDescending(pr => pr.CreatedAt) 
@@ -88,6 +94,9 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Project)
             .Include(pr => pr.Creator)
             .Include(pr => pr.RequirementTask)
+                .ThenInclude(rt => rt.Developer)
+            .Include(pr => pr.RequirementTask)
+                .ThenInclude(rt => rt.Qc)
             .Where(pr => pr.AssignedAnalyst == analystId)
             .OrderBy(pr => pr.Priority)
             .ThenBy(pr => pr.ExpectedCompletionDate)
@@ -291,6 +300,26 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         catch
         {
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Directly insert a RequirementTask entity without loading the full requirement context.
+    /// This is more efficient than loading the entire requirement with all its details.
+    /// </summary>
+    /// <param name="task">The RequirementTask entity to add</param>
+    /// <returns>The added RequirementTask with its generated Id</returns>
+    public async System.Threading.Tasks.Task<RequirementTask> AddRequirementTaskAsync(RequirementTask task)
+    {
+        try
+        {
+            _context.RequirementTasks.Add(task);
+            await _context.SaveChangesAsync();
+            return task;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Error adding requirement task for requirement {task.ProjectRequirementId}", ex);
         }
     }
 }

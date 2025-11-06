@@ -278,7 +278,7 @@ export const useQuickActions = (
     [actions],
   );
 
-  const hasActionsAvailable = actions.length > 0;
+  const hasActionsAvailable = actions.length > 0 || availableMembers.length > 0;
   const priorityActions = actions.filter(
     (action) => action.priority === "high",
   );

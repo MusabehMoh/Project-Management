@@ -50,6 +50,8 @@ public class ProjectRequirementService : IProjectRequirementService
         // Use GetProjectRequirementWithDetailsAsync to include attachments
         return await _projectRequirementRepository.GetByIdAsync(id);
     }
+
+ 
     public async Task<ProjectRequirement> CreateProjectRequirementAsync(ProjectRequirement projectRequirement)
     {
         projectRequirement.CreatedAt = DateTime.Now;
@@ -214,8 +216,9 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<RequirementTask?> CreateRequirementTaskAsync(int requirementId, CreateRequirementTaskDto taskDto)
     {
-        var requirement = await _projectRequirementRepository.GetProjectRequirementWithDetailsAsync(requirementId);
-        if (requirement == null)
+        // Validate that the requirement exists (lightweight check without loading full details)
+        var requirementExists = await _projectRequirementRepository.ExistsAsync(requirementId);
+        if (!requirementExists)
             return null;
 
         // Validate dates for each role if both are provided
@@ -237,63 +240,28 @@ public class ProjectRequirementService : IProjectRequirementService
             throw new ArgumentException("Designer end date must be after start date");
         }
 
-        // Check if task already exists for this requirement
-        RequirementTask task;
-        
-        if (requirement.RequirementTask != null)
+        // Create the RequirementTask entity directly without loading full requirement
+        var task = new RequirementTask
         {
-            // Update existing task
-            task = requirement.RequirementTask;
-            task.DeveloperId = taskDto.DeveloperId;
-            task.QcId = taskDto.QcId;
-            task.DesignerId = taskDto.DesignerId;
-            task.Description = taskDto.Description;
-            task.DeveloperStartDate = taskDto.DeveloperStartDate;
-            task.DeveloperEndDate = taskDto.DeveloperEndDate;
-            task.QcStartDate = taskDto.QcStartDate;
-            task.QcEndDate = taskDto.QcEndDate;
-            task.DesignerStartDate = taskDto.DesignerStartDate;
-            task.DesignerEndDate = taskDto.DesignerEndDate;
-            task.UpdatedAt = DateTime.Now;
-        }
-        else
-        {
-            // Create a new task associated with the requirement
-            task = new RequirementTask
-            {
-                ProjectRequirementId = requirementId,
-                DeveloperId = taskDto.DeveloperId,
-                QcId = taskDto.QcId,
-                DesignerId = taskDto.DesignerId,
-                Description = taskDto.Description,
-                DeveloperStartDate = taskDto.DeveloperStartDate,
-                DeveloperEndDate = taskDto.DeveloperEndDate,
-                QcStartDate = taskDto.QcStartDate,
-                QcEndDate = taskDto.QcEndDate,
-                DesignerStartDate = taskDto.DesignerStartDate,
-                DesignerEndDate = taskDto.DesignerEndDate,
-                Status = "not-started",
-                CreatedBy = 1, // This should be the current user ID
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
-            };
+            ProjectRequirementId = requirementId,
+            DeveloperId = taskDto.DeveloperId,
+            QcId = taskDto.QcId,
+            DesignerId = taskDto.DesignerId,
+            Description = taskDto.Description,
+            DeveloperStartDate = taskDto.DeveloperStartDate,
+            DeveloperEndDate = taskDto.DeveloperEndDate,
+            QcStartDate = taskDto.QcStartDate,
+            QcEndDate = taskDto.QcEndDate,
+            DesignerStartDate = taskDto.DesignerStartDate,
+            DesignerEndDate = taskDto.DesignerEndDate,
+            Status = "not-started",
+            CreatedBy = 1, // This should be the current user ID from UserContext
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
 
-            // Add the task to the requirement's tasks collection
-            requirement.RequirementTask = task;
-        }
-
-        // Save the requirement (which will cascade save the task due to EF Core relationships)
-        await _projectRequirementRepository.UpdateAsync(requirement);
-
-        // Update project status to UnderDevelopment after creating the task
-        if (requirement.Project != null)
-        {
-            requirement.Project.Status = ProjectStatus.UnderDevelopment;
-            requirement.Project.UpdatedAt = DateTime.Now;
-            await _projectRepository.UpdateAsync(requirement.Project);
-        }
-
-        return task;
+        // Insert the task directly to database without loading requirement context
+        return await _projectRequirementRepository.AddRequirementTaskAsync(task);
     }
 
     public async Task<ProjectRequirementAttachment?> UploadAttachmentAsync(int requirementId, object fileObj)

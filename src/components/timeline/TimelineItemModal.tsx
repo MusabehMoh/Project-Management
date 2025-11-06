@@ -22,6 +22,8 @@ import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Avatar } from "@heroui/avatar";
 import { Slider } from "@heroui/slider";
 import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Department, MemberSearchResult, WorkItem } from "@/types/timeline";
@@ -218,6 +220,7 @@ export default function TimelineItemModal({
 
     // Load members
     if (initialValues?.memberIds && initialValues.memberIds.length > 0) {
+      debugger
       if (initialValues?.members && initialValues.members.length > 0) {
         setSelectedMembers(initialValues.members);
       } else {
@@ -357,6 +360,16 @@ export default function TimelineItemModal({
 
     if (isQASelected && selectedMembers.length === 0) {
       showErrorToast(t("timeline.validation.employeesRequired"), "");
+
+      return;
+    }
+
+    // For tasks, employees are always required
+    if (type === "task" && selectedMembers.length === 0) {
+      showErrorToast(
+        t("timeline.validation.employeesRequired"),
+        t("timeline.validation.taskRequiresEmployee"),
+      );
 
       return;
     }
@@ -620,109 +633,124 @@ export default function TimelineItemModal({
               <label className="block text-sm font-medium mb-1">
                 {t("timeline.detailsPanel.description")}
               </label>
-              <Textarea
-                minRows={2}
-                placeholder={`Enter ${type} description`}
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-              />
+              <div className="rounded-lg border border-default-200 overflow-hidden">
+                <div style={{ height: "200px" }}>
+                  <ReactQuill
+                    className={language === "ar" ? "rtl-editor" : ""}
+                    modules={{
+                      toolbar: [
+                        ["bold", "italic", "underline"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        ["clean"],
+                      ],
+                    }}
+                    placeholder={`Enter ${type} description`}
+                    style={{
+                      height: "100%",
+                    }}
+                    theme="snow"
+                    value={formData.description}
+                    onChange={(value) =>
+                      handleInputChange("description", value)
+                    }
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Members and Dependent Tasks Section */}
             {shouldShowMembersAndTasks && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Dependent Tasks selection */}
-                {(type === "requirement" || type === "task") && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      {t("timeline.selectPredecessors")}
-                      {parseInt(formData.departmentId) ===
-                        DepartmentIds.QUALITY_ASSURANCE && (
+                {/* Dependent Tasks selection - Only show for QC department */}
+                {(type === "requirement" || type === "task") &&
+                  parseInt(formData.departmentId) ===
+                    DepartmentIds.QUALITY_ASSURANCE && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        {t("timeline.selectPredecessors")}
                         <span className="text-red-500">*</span>
-                      )}
-                    </label>
-                    <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
-                      {selectedTasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="flex items-center gap-2 rounded-full bg-default-200 px-2 py-1 text-xs"
-                        >
-                          <span>{task.name}</span>
-                          <button
-                            className="text-danger"
-                            onClick={() =>
-                              setSelectedTasks((prev) =>
-                                prev.filter((x) => x.id !== task.id),
-                              )
-                            }
+                      </label>
+                      <div className="flex flex-wrap gap-1 mb-2 min-h-[24px]">
+                        {selectedTasks.map((task) => (
+                          <div
+                            key={task.id}
+                            className="flex items-center gap-2 rounded-full bg-default-200 px-2 py-1 text-xs"
                           >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <Select
-                      disallowEmptySelection={false}
-                      isLoading={taskSearchLoading}
-                      items={tasks.filter(
-                        (task) =>
-                          !selectedTasks.some((st) => st.id === task.id),
-                      )}
-                      placeholder={t("timeline.selectPredecessorsPlaceholder")}
-                      selectionMode={mode === "create" ? "multiple" : "single"}
-                      onSelectionChange={(keys) => {
-                        if (mode === "create") {
-                          if (keys === "all") return;
-                          const selectedKeys = Array.from(keys);
-                          const newSelectedTasks = tasks.filter((task) =>
-                            selectedKeys.includes(task.id.toString()),
-                          );
-
-                          setSelectedTasks(newSelectedTasks);
-                        } else {
-                          if (keys === "all") return;
-                          const selectedKeys = Array.from(keys);
-
-                          if (selectedKeys.length === 0) return;
-                          const key = selectedKeys[0];
-                          const found = tasks.find(
-                            (t) => t.id.toString() === key,
-                          );
-
-                          if (found) {
-                            setSelectedTasks((prev) => [...prev, found]);
-                          }
-                        }
-                      }}
-                    >
-                      {(task) => (
-                        <SelectItem
-                          key={task.id.toString()}
-                          textValue={task.name}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="flex flex-col">
-                              <span className="font-medium">{task.name}</span>
-                              <span className="text-xs text-default-500">
-                                {task.description || t("common.none")}
-                              </span>
-                            </span>
+                            <span>{task.name}</span>
+                            <button
+                              className="text-danger"
+                              onClick={() =>
+                                setSelectedTasks((prev) =>
+                                  prev.filter((x) => x.id !== task.id),
+                                )
+                              }
+                            >
+                              ×
+                            </button>
                           </div>
-                        </SelectItem>
-                      )}
-                    </Select>
-                  </div>
-                )}
+                        ))}
+                      </div>
+                      <Select
+                        disallowEmptySelection={false}
+                        isLoading={taskSearchLoading}
+                        items={tasks.filter(
+                          (task) =>
+                            !selectedTasks.some((st) => st.id === task.id),
+                        )}
+                        placeholder={t("timeline.selectPredecessorsPlaceholder")}
+                        selectionMode={mode === "create" ? "multiple" : "single"}
+                        onSelectionChange={(keys) => {
+                          if (mode === "create") {
+                            if (keys === "all") return;
+                            const selectedKeys = Array.from(keys);
+                            const newSelectedTasks = tasks.filter((task) =>
+                              selectedKeys.includes(task.id.toString()),
+                            );
+
+                            setSelectedTasks(newSelectedTasks);
+                          } else {
+                            if (keys === "all") return;
+                            const selectedKeys = Array.from(keys);
+
+                            if (selectedKeys.length === 0) return;
+                            const key = selectedKeys[0];
+                            const found = tasks.find(
+                              (t) => t.id.toString() === key,
+                            );
+
+                            if (found) {
+                              setSelectedTasks((prev) => [...prev, found]);
+                            }
+                          }
+                        }}
+                      >
+                        {(task) => (
+                          <SelectItem
+                            key={task.id.toString()}
+                            textValue={task.name}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="flex flex-col">
+                                <span className="font-medium">{task.name}</span>
+                                <span className="text-xs text-default-500">
+                                  {task.description || t("common.none")}
+                                </span>
+                              </span>
+                            </div>
+                          </SelectItem>
+                        )}
+                      </Select>
+                    </div>
+                  )}
 
                 {/* Members selection */}
                 {(type === "task" || type === "requirement") && (
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       {t("users.selectEmployee")}
-                      {parseInt(formData.departmentId) ===
-                        DepartmentIds.QUALITY_ASSURANCE && (
+                      {(type === "task" ||
+                        parseInt(formData.departmentId) ===
+                          DepartmentIds.QUALITY_ASSURANCE) && (
                         <span className="text-red-500">*</span>
                       )}
                     </label>

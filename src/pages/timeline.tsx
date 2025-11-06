@@ -1002,6 +1002,7 @@ export default function TimelinePage() {
                         onUpdateSprint={handleUpdateSprint}
                         onUpdateSubtask={updateSubtask}
                         onUpdateTask={handleUpdateTask}
+                        onUpdateTimeline={updateTimeline}
                       />
                     )}
                   </CardBody>

@@ -71,6 +71,7 @@ interface TimelineTreeViewProps {
   onCreateSprint: (data: CreateSprintRequest) => Promise<Sprint | null>;
   onCreateTask: (data: CreateTaskRequest) => Promise<Task | null>;
   onCreateSubtask?: (data: CreateSubtaskRequest) => Promise<Subtask | null>;
+  onUpdateTimeline: (data: any) => Promise<Timeline | null>;
   onUpdateSprint: (data: UpdateSprintRequest) => Promise<Sprint | null>;
   onUpdateTask: (data: UpdateTaskRequest) => Promise<Task | null>;
   onUpdateSubtask?: (data: UpdateSubtaskRequest) => Promise<Subtask | null>;
@@ -94,6 +95,7 @@ export default function TimelineTreeView({
   onCreateSprint,
   onCreateTask,
   onCreateSubtask,
+  onUpdateTimeline,
   onUpdateSprint: _onUpdateSprint,
   onUpdateTask: _onUpdateTask,
   onUpdateSubtask: _onUpdateSubtask,
@@ -454,6 +456,7 @@ export default function TimelineTreeView({
     debugger;
     setEditModalType(type);
     setEditingItem(item);
+    
     setEditModalInitialValues({
       name: item.name || "",
       description: item.description || "",
@@ -481,7 +484,13 @@ export default function TimelineTreeView({
     if (!editingItem) return;
 
     try {
-      if (editModalType === "sprint") {
+      if (editModalType === "timeline") {
+        await onUpdateTimeline({
+          id: editingItem.id,
+          ...formData,
+        });
+        toasts.onTimelineUpdateSuccess();
+      } else if (editModalType === "sprint") {
         await _onUpdateSprint({
           id: editingItem.id,
           // Preserve the sprint's timeline association explicitly during update

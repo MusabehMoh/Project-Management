@@ -123,6 +123,9 @@ public interface IProjectRequirementRepository : IRepository<ProjectRequirement>
     System.Threading.Tasks.Task<ProjectRequirementAttachment> AddAttachmentAsync(ProjectRequirementAttachment attachment);
     System.Threading.Tasks.Task<List<ProjectRequirementAttachment>> GetAttachmentsMetadataAsync(int requirementId);
     System.Threading.Tasks.Task<bool> DeleteAttachmentAsync(int requirementId, int attachmentId);
+    
+    // RequirementTask methods
+    System.Threading.Tasks.Task<RequirementTask> AddRequirementTaskAsync(RequirementTask task);
 }
 
 public interface IDepartmentRepository : IRepository<Department>

@@ -16,7 +16,7 @@ import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { addToast } from "@heroui/toast";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import { RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -285,7 +285,50 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   }
 
   if (!hasActionsAvailable) {
-    return null;
+    return (
+      <Card
+        className={`${className} border-default-200`}
+        dir={direction}
+        shadow="sm"
+      >
+        <CardHeader className="flex items-center justify-between pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-foreground">
+                {t("dashboard.myActions") || "My Actions"}
+              </h3>
+            </div>
+            <p className="text-sm text-default-500 mt-1">
+              {t("dashboard.myActionsSubtitle") ||
+                "Assign projects that need your attention"}
+            </p>
+          </div>
+          <Button
+            isIconOnly
+            className="text-default-400 hover:text-default-600"
+            disabled={refreshing}
+            size="sm"
+            variant="light"
+            onPress={refresh}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </CardHeader>
+
+        <Divider className="bg-default-200" />
+
+        <CardBody className="py-8">
+          <div className="flex flex-col items-center justify-center text-center">
+            <CheckCircle className="w-16 h-16 text-success opacity-60 mb-4" />
+            <p className="text-default-500 text-sm">
+              {t("qcDashboard.noActions")}
+            </p>
+          </div>
+        </CardBody>
+      </Card>
+    );
   }
 
   const handleAssign = async () => {

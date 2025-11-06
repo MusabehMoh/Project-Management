@@ -75,6 +75,10 @@ export interface RequirementTask {
   createdAt: string;
   updatedAt: string;
   createdBy: number;
+  // Navigation properties - full Employee objects returned from backend
+  developer?: Employee;
+  qc?: Employee;
+  designer?: Employee;
 }
 
 export interface CreateRequirementTaskRequest {

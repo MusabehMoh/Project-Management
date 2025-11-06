@@ -232,12 +232,17 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
+            // Get current user's department for filtering
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+            
             // Apply RGIS business logic: Get available team members with no active tasks or project assignments
             var availableMembers = await _context.Teams
                 .Where(t => t.IsActive)
                 .Include(t => t.Employee)
                 .Include(t => t.Department)
                 .Where(t => t.Employee != null && t.Employee.StatusId == 1) // Active employees only
+                .Where(t => currentUserDepartmentId == null || t.DepartmentId == currentUserDepartmentId.Value) // Filter by current user's department
                 .Where(t => !_context.TaskAssignments
                     .Any(ta => ta.PrsId == t.PrsId && 
                                ta.Task != null && 
@@ -326,7 +331,7 @@ public class QuickActionsController : ApiBaseController
             var departmentWorkload = departmentsWithTeams
                 .Select(dt =>
                 {
-                    var teamMemberIds = dt.Teams.Select(t => t.PrsId).ToList();
+                    var teamMemberIds = dt.Teams.Where(t => t.PrsId.HasValue).Select(t => t.PrsId.Value).ToList();
                     var teamTaskData = taskAssignmentsByEmployee.Where(ta => teamMemberIds.Contains(ta.EmployeeId)).ToList();
 
                     var totalTasks = teamTaskData.Sum(ta => ta.TotalTasks);
@@ -376,6 +381,18 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
+            // Get current user's department for filtering
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+            
+            // Get team member PrsIds for current department (if department filtering is needed)
+            var departmentTeamPrsIds = currentUserDepartmentId.HasValue 
+                ? await _context.Teams
+                    .Where(t => t.DepartmentId == currentUserDepartmentId.Value && t.IsActive && t.PrsId.HasValue)
+                    .Select(t => t.PrsId.Value)
+                    .ToListAsync()
+                : new List<int>();
+            
             var stats = new
             {
                 // Active projects (all projects except Production and Delayed)
@@ -384,15 +401,19 @@ public class QuickActionsController : ApiBaseController
                                p.Status != ProjectStatus.Delayed)
                     .CountAsync(),
                 
-                // Total tasks (all tasks except Completed and OnHold)
+                // Total tasks (filtered by department through task assignments)
                 totalTasks = await _context.Tasks
                     .Where(t => t.StatusId != Core.Enums.TaskStatus.Completed && 
                                t.StatusId != Core.Enums.TaskStatus.Blocked)
+                    .Where(t => currentUserDepartmentId == null || 
+                               t.Assignments.Any(a => departmentTeamPrsIds.Contains(a.PrsId)))
                     .CountAsync(),
                 
-                // Active project requirements (all project requirements except Completed)
+                // Active project requirements (filtered by department through analyst)
                 activeProjectRequirements = await _context.ProjectRequirements
                     .Where(pr => pr.Status != RequirementStatusEnum.Completed)
+                    .Where(pr => currentUserDepartmentId == null || 
+                               (pr.Analyst != null && departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == pr.Analyst.Id))))
                     .CountAsync(),
                 
                 // Team members count - get from current user's department
@@ -417,6 +438,8 @@ public class QuickActionsController : ApiBaseController
                 
                 pendingRequirements = await _context.ProjectRequirements
                     .Where(pr => pr.Status == RequirementStatusEnum.New || pr.Status == RequirementStatusEnum.ManagerReview)
+                    .Where(pr => currentUserDepartmentId == null || 
+                               (pr.Creator != null && departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == pr.Creator.Id))))
                     .CountAsync(),
                 
                 overdueProjects = await _context.Projects
@@ -427,11 +450,14 @@ public class QuickActionsController : ApiBaseController
                 availableAnalysts = await _context.Users
                     .Where(u => _context.UserRoles.Any(ur => ur.UserId == u.Id && 
                                ur.Role != null && ur.Role.Name.Contains("Analyst")))
+                    .Where(u => currentUserDepartmentId == null || departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == u.Id)))
                     .CountAsync(),
                 
                 tasksNeedingAssignment = await _context.Tasks
                     .Where(t => !_context.TaskAssignments.Any(ta => ta.TaskId == t.Id) &&
-                               t.StatusId != Core.Enums.TaskStatus.Completed  )
+                               t.StatusId != Core.Enums.TaskStatus.Completed)
+                    .Where(t => currentUserDepartmentId == null || 
+                               t.Assignments.Any(a => departmentTeamPrsIds.Contains(a.PrsId)))
                     .CountAsync()
             };
 
@@ -461,16 +487,32 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
+            // Get current user's department for filtering
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+            
+            // Get team member PrsIds for current department (if department filtering is needed)
+            var departmentTeamPrsIds = currentUserDepartmentId.HasValue 
+                ? await _context.Teams
+                    .Where(t => t.DepartmentId == currentUserDepartmentId.Value && t.IsActive && t.PrsId.HasValue)
+                    .Select(t => t.PrsId.Value)
+                    .ToListAsync()
+                : new List<int>();
+            
             // Get stats
             var stats = new
             {
                 pendingRequirements = await _context.ProjectRequirements
                     .Where(pr => pr.Status == RequirementStatusEnum.New || pr.Status == RequirementStatusEnum.ManagerReview)
+                    .Where(pr => currentUserDepartmentId == null || 
+                               (pr.Creator != null && departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == pr.Creator.Id))))
                     .CountAsync(),
                 
                 unassignedTasks = await _context.Tasks
                     .Where(t => !_context.TaskAssignments.Any(ta => ta.TaskId == t.Id) &&
                                t.StatusId != Core.Enums.TaskStatus.Completed)
+                    .Where(t => currentUserDepartmentId == null || 
+                               t.Assignments.Any(a => departmentTeamPrsIds.Contains(a.PrsId)))
                     .CountAsync(),
                 
                 unassignedProjects = await _context.Projects
@@ -638,16 +680,32 @@ public class QuickActionsController : ApiBaseController
             // This endpoint essentially does the same as GetQuickActions
             // but could be used to force a refresh of cached data
             
+            // Get current user's department for filtering
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+            
+            // Get team member PrsIds for current department (if department filtering is needed)
+            var departmentTeamPrsIds = currentUserDepartmentId.HasValue 
+                ? await _context.Teams
+                    .Where(t => t.DepartmentId == currentUserDepartmentId.Value && t.IsActive && t.PrsId.HasValue)
+                    .Select(t => t.PrsId.Value)
+                    .ToListAsync()
+                : new List<int>();
+            
             // Get stats
             var stats = new
             {
                 pendingRequirements = await _context.ProjectRequirements
                     .Where(pr => pr.Status == RequirementStatusEnum.New || pr.Status == RequirementStatusEnum.ManagerReview)
+                    .Where(pr => currentUserDepartmentId == null || 
+                               (pr.Creator != null && departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == pr.Creator.Id))))
                     .CountAsync(),
                 
                 unassignedTasks = await _context.Tasks
                     .Where(t => !_context.TaskAssignments.Any(ta => ta.TaskId == t.Id) &&
                                t.StatusId != Core.Enums.TaskStatus.Completed)
+                    .Where(t => currentUserDepartmentId == null || 
+                               t.Assignments.Any(a => departmentTeamPrsIds.Contains(a.PrsId)))
                     .CountAsync(),
                 
                 unassignedProjects = await _context.Projects
@@ -660,6 +718,8 @@ public class QuickActionsController : ApiBaseController
                 
                 pendingApprovals = await _context.ProjectRequirements
                     .Where(pr => pr.Status == RequirementStatusEnum.ManagerReview)
+                    .Where(pr => currentUserDepartmentId == null || 
+                               (pr.Creator != null && departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == pr.Creator.Id))))
                     .CountAsync(),
                 
                 overdueItems = await _context.Projects
@@ -812,6 +872,18 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
+            // Get current user's department for filtering
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+            
+            // Get team member PrsIds for current department (if department filtering is needed)
+            var departmentTeamPrsIds = currentUserDepartmentId.HasValue 
+                ? await _context.Teams
+                    .Where(t => t.DepartmentId == currentUserDepartmentId.Value && t.IsActive && t.PrsId.HasValue)
+                    .Select(t => t.PrsId.Value)
+                    .ToListAsync()
+                : new List<int>();
+            
             var overdueItems = new List<object>();
 
             // Overdue projects
@@ -832,12 +904,14 @@ public class QuickActionsController : ApiBaseController
 
             overdueItems.AddRange(overdueProjects);
 
-            // Overdue tasks
+            // Overdue tasks - filter by department through task assignments
             var overdueTasks = await _context.Tasks
                 .Where(t => t.EndDate < DateTime.Now &&
                            t.StatusId != Core.Enums.TaskStatus.Completed)
                 .Include(t => t.Assignments)
                 .ThenInclude(a => a.Employee)
+                .Where(t => currentUserDepartmentId == null || 
+                           t.Assignments.Any(a => departmentTeamPrsIds.Contains(a.PrsId)))
                 .ToListAsync();
 
             var overdueTasksFormatted = overdueTasks.Select(t => new
@@ -854,13 +928,15 @@ public class QuickActionsController : ApiBaseController
 
             overdueItems.AddRange(overdueTasksFormatted);
 
-            // Overdue requirements
+            // Overdue requirements - filter by department through analyst
             var overdueRequirementsQuery = await _context.ProjectRequirements
                 .Where(pr => pr.ExpectedCompletionDate < DateTime.Now &&
                            pr.Status != RequirementStatusEnum.Completed &&
                            pr.Status != RequirementStatusEnum.Cancelled)
                 .Include(pr => pr.Analyst)
                 .Include(pr => pr.Project)
+                .Where(pr => currentUserDepartmentId == null || 
+                           (pr.Analyst != null && departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == pr.Analyst.Id))))
                 .ToListAsync();
 
             var overdueRequirements = overdueRequirementsQuery.Select(pr => new
@@ -904,13 +980,27 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
+            // Get current user's department for filtering
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+            
+            // Get team member PrsIds for current department (if department filtering is needed)
+            var departmentTeamPrsIds = currentUserDepartmentId.HasValue 
+                ? await _context.Teams
+                    .Where(t => t.DepartmentId == currentUserDepartmentId.Value && t.IsActive && t.PrsId.HasValue)
+                    .Select(t => t.PrsId.Value)
+                    .ToListAsync()
+                : new List<int>();
+            
             var pendingApprovals = new List<object>();
 
-            // Pending requirement approvals
+            // Pending requirement approvals - filter by department through creator
             var pendingRequirements = await _context.ProjectRequirements
                 .Where(pr => pr.Status == RequirementStatusEnum.ManagerReview)
                 .Include(pr => pr.Creator)
                 .Include(pr => pr.Project)
+                .Where(pr => currentUserDepartmentId == null || 
+                           (pr.Creator != null && departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == pr.Creator.Id))))
                 .ToListAsync();
 
             var formattedPendingRequirements = pendingRequirements.Select(pr => new
@@ -957,8 +1047,21 @@ public class QuickActionsController : ApiBaseController
     {
         try
         {
+            // Get current user's department for filtering
+            var currentUser = await _userService.GetCurrentUserAsync();
+            var currentUserDepartmentId = currentUser?.Roles?.FirstOrDefault()?.Department?.Id;
+            
+            // Get team member PrsIds for current department (if department filtering is needed)
+            var departmentTeamPrsIds = currentUserDepartmentId.HasValue 
+                ? await _context.Teams
+                    .Where(t => t.DepartmentId == currentUserDepartmentId.Value && t.IsActive && t.PrsId.HasValue)
+                    .Select(t => t.PrsId.Value)
+                    .ToListAsync()
+                : new List<int>();
+            
             var users = await _context.Users
                 .Where(u => _context.UserRoles.Any(ur => ur.UserId == u.Id))
+                .Where(u => currentUserDepartmentId == null || departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == u.Id))) // Filter by current user's department
                 .ToListAsync();
 
             var teamMembers = new List<object>();

@@ -100,7 +100,7 @@ export default function TimelineDetailsPanel({
       priorityId: item.priorityId || 2,
       progress: item.progress || 0,
       notes: item.notes || "",
-      members: item.members || [],
+      members: item.assignedMembers || [],
       depTasks: item.depTasks || item.dependencies || [],
       // Use the IDs from the backend if available, otherwise derive from objects
       memberIds:
@@ -162,6 +162,7 @@ export default function TimelineDetailsPanel({
 
   // Find the selected item
   const currentItem = useMemo(() => {
+    
     if (!selectedItem) {
       return timeline;
     }

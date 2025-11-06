@@ -2,7 +2,6 @@ import type {
   ProjectRequirement,
   AssignedProject,
   CreateRequirementTaskRequest,
-  ProjectRequirementAttachment,
 } from "@/types/projectRequirement";
 import type { MemberSearchResult } from "@/types/timeline";
 import type { CreateTimelineRequest } from "@/types/timeline";
@@ -27,7 +26,6 @@ import { DatePicker } from "@heroui/date-picker";
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { Search, Calendar, Code, Eye, Plus, Edit, X, Info } from "lucide-react";
 import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
-
 // Import ReactQuill for rich text editing
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -44,7 +42,6 @@ import { usePageTitle } from "@/hooks";
 import { useFilePreview } from "@/hooks/useFilePreview";
 import { useRequirementDetails } from "@/hooks/useRequirementDetails";
 import { projectRequirementsService } from "@/services/api/projectRequirementsService";
-import { timelineService } from "@/services/api";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
@@ -272,56 +269,24 @@ export default function DevelopmentRequirementsPage() {
     useRequirementStatus();
 
   // File preview hook
-  const { previewState, previewFile, closePreview, downloadCurrentFile } =
-    useFilePreview({
-      downloadFunction: (requirementId, attachmentId, filename) =>
-        projectRequirementsService
-          .downloadAttachment(requirementId, attachmentId)
-          .then((blob) => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-          }),
-    });
-
-  // Handle file preview with attachment data
-  const handleFilePreview = async (
-    attachment: ProjectRequirementAttachment,
-  ) => {
-    try {
-      // For previewable files, get the blob URL
-      const blob = await projectRequirementsService.downloadAttachment(
-        selectedRequirement?.id || 0,
-        attachment.id,
-      );
-
-      // Create URL for preview
-      const url = window.URL.createObjectURL(blob);
-
-      await previewFile(attachment.originalName, url, attachment.fileSize);
-    } catch {
-      // If preview fails, just download the file
-      await projectRequirementsService
-        .downloadAttachment(selectedRequirement?.id || 0, attachment.id)
+  const { previewState, closePreview, downloadCurrentFile } = useFilePreview({
+    downloadFunction: (requirementId, attachmentId, filename) =>
+      projectRequirementsService
+        .downloadAttachment(requirementId, attachmentId)
         .then((blob) => {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
 
           a.href = url;
-          a.download = attachment.originalName;
+          a.download = filename;
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
-        });
-    }
-  };
+        }),
+  });
+
+  // Note: file preview and download handlers are provided by useFilePreview hook
 
   // Helper function to get status color using RequirementStatus lookup
   const getStatusColor = (status: number) => {
@@ -370,8 +335,6 @@ export default function DevelopmentRequirementsPage() {
   const [selectedDeveloper, setSelectedDeveloper] =
     useState<MemberSearchResult | null>(null);
   const [selectedQC, setSelectedQC] = useState<MemberSearchResult | null>(null);
-  const [selectedDesigner, setSelectedDesigner] =
-    useState<MemberSearchResult | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Fetch requirement details when drawer opens OR task modal is open
@@ -388,18 +351,13 @@ export default function DevelopmentRequirementsPage() {
   // QC dates
   const [qcStartDate, setQcStartDate] = useState<any>(null);
   const [qcEndDate, setQcEndDate] = useState<any>(null);
-  // Designer dates
-  const [designerStartDate, setDesignerStartDate] = useState<any>(null);
-  const [designerEndDate, setDesignerEndDate] = useState<any>(null);
   // Controlled input values for Autocomplete components (needed by HeroUI Autocomplete)
   const [developerInputValue, setDeveloperInputValue] = useState<string>("");
   const [qcInputValue, setQcInputValue] = useState<string>("");
-  const [designerInputValue, setDesignerInputValue] = useState<string>("");
 
   // Date validation error states
   const [dateValidationErrors, setDateValidationErrors] = useState<{
     developer?: string;
-    designer?: string;
     qc?: string;
   }>({});
 
@@ -455,7 +413,7 @@ export default function DevelopmentRequirementsPage() {
   };
 
   const validateAllDates = (): boolean => {
-    const errors: { developer?: string; designer?: string; qc?: string } = {};
+    const errors: { developer?: string; qc?: string } = {};
     let hasErrors = false;
 
     // Validate developer dates - required if developer is selected
@@ -468,21 +426,6 @@ export default function DevelopmentRequirementsPage() {
 
         if (error) {
           errors.developer = error;
-          hasErrors = true;
-        }
-      }
-    }
-
-    // Validate designer dates - required if designer is selected
-    if (selectedDesigner) {
-      if (!designerStartDate || !designerEndDate) {
-        errors.designer = t("tasks.validation.bothDatesRequired");
-        hasErrors = true;
-      } else {
-        const error = validateDateRange(designerStartDate, designerEndDate);
-
-        if (error) {
-          errors.designer = error;
           hasErrors = true;
         }
       }
@@ -515,12 +458,9 @@ export default function DevelopmentRequirementsPage() {
     }
   }, [
     selectedDeveloper,
-    selectedDesigner,
     selectedQC,
     developerStartDate,
     developerEndDate,
-    designerStartDate,
-    designerEndDate,
     qcStartDate,
     qcEndDate,
     isTaskModalOpen,
@@ -533,27 +473,7 @@ export default function DevelopmentRequirementsPage() {
     setIsDrawerOpen(true);
   };
 
-  // Helper function to fetch member details by ID
-  const fetchMemberById = async (
-    memberId: number,
-  ): Promise<MemberSearchResult | null> => {
-    try {
-      const response = await timelineService.getAllDepartmentEmployees();
-
-      if (response.success && response.data) {
-        const member = response.data.find((emp) => emp.id === memberId);
-
-        return member || null;
-      }
-
-      return null;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error fetching member details:", error);
-
-      return null;
-    }
-  };
+  // Removed fetchMemberById: we use backend data from approved-requirements to prefill selections
 
   // Function to open task creation modal
   const openTaskModal = async (requirement: ProjectRequirement) => {
@@ -568,23 +488,32 @@ export default function DevelopmentRequirementsPage() {
 
     // If task exists, pre-populate the form
     if (requirement.requirementTask) {
-      // Fetch real developer details instead of creating mock objects
-      const existingDev = requirement.requirementTask.developerId
-        ? await fetchMemberById(requirement.requirementTask.developerId)
-        : null;
+      // Use full developer and QC objects returned from backend
+      // Backend now returns requirementTask.developer and requirementTask.qc as complete Employee entities
+      if (requirement.requirementTask.developer) {
+        setSelectedDeveloper({
+          id: requirement.requirementTask.developer.id,
+          userName: requirement.requirementTask.developer.userName,
+          militaryNumber: requirement.requirementTask.developer.militaryNumber,
+          fullName: requirement.requirementTask.developer.fullName,
+          gradeName: requirement.requirementTask.developer.gradeName || "",
+          statusId: 0,
+          department: "Development",
+        });
+      }
 
-      const existingQC = requirement.requirementTask.qcId
-        ? await fetchMemberById(requirement.requirementTask.qcId)
-        : null;
-
-      const existingDesigner = requirement.requirementTask.designerId
-        ? await fetchMemberById(requirement.requirementTask.designerId)
-        : null;
-
-      setSelectedDeveloper(existingDev);
-      setSelectedQC(existingQC);
-      setSelectedDesigner(existingDesigner);
-
+      if (requirement.requirementTask.qc) {
+        setSelectedQC({
+          id: requirement.requirementTask.qc.id,
+          userName: requirement.requirementTask.qc.userName,
+          militaryNumber: requirement.requirementTask.qc.militaryNumber,
+          fullName: requirement.requirementTask.qc.fullName,
+          gradeName: requirement.requirementTask.qc.gradeName || "",
+          statusId: 0,
+          department: "QC",
+        });
+      }
+ 
       // Pre-populate task-specific fields
       setTaskDescription(
         requirement.requirementTask.description ||
@@ -617,37 +546,27 @@ export default function DevelopmentRequirementsPage() {
           ? parseDate(requirement.requirementTask.qcEndDate.split("T")[0])
           : null,
       );
-      setDesignerStartDate(
-        requirement.requirementTask.designerStartDate
-          ? parseDate(
-              requirement.requirementTask.designerStartDate.split("T")[0],
-            )
-          : null,
-      );
-      setDesignerEndDate(
-        requirement.requirementTask.designerEndDate
-          ? parseDate(requirement.requirementTask.designerEndDate.split("T")[0])
-          : null,
-      );
 
-      // Clear input values since we have pre-selected values
-      setDeveloperInputValue("");
-      setQcInputValue("");
-      setDesignerInputValue("");
+      // Prefill input display with selected names so the selection is visible
+      const devDisplay = selectedDeveloper
+        ? `${selectedDeveloper.gradeName} ${selectedDeveloper.fullName}`
+        : "";
+      const qcDisplay = selectedQC
+        ? `${selectedQC.gradeName} ${selectedQC.fullName}`
+        : "";
+
+      setDeveloperInputValue(devDisplay);
+      setQcInputValue(qcDisplay);
     } else {
       // Reset all fields for new tasks
       setSelectedDeveloper(null);
       setSelectedQC(null);
-      setSelectedDesigner(null);
       setDeveloperStartDate(null);
       setDeveloperEndDate(null);
       setQcStartDate(null);
       setQcEndDate(null);
-      setDesignerStartDate(null);
-      setDesignerEndDate(null);
       setDeveloperInputValue("");
       setQcInputValue("");
-      setDesignerInputValue("");
     }
   };
 
@@ -720,14 +639,11 @@ export default function DevelopmentRequirementsPage() {
         requirementId: selectedRequirement.id,
         developerId: selectedDeveloper?.id,
         qcId: selectedQC?.id,
-        designerId: selectedDesigner?.id,
         description: taskDescription,
         developerStartDate: developerStartDate?.toString(),
         developerEndDate: developerEndDate?.toString(),
         qcStartDate: qcStartDate?.toString(),
         qcEndDate: qcEndDate?.toString(),
-        designerStartDate: designerStartDate?.toString(),
-        designerEndDate: designerEndDate?.toString(),
       };
 
       const isUpdate = Boolean(selectedRequirement.requirementTask);
@@ -756,10 +672,8 @@ export default function DevelopmentRequirementsPage() {
       setIsTaskModalOpen(false);
       setSelectedDeveloper(null);
       setSelectedQC(null);
-      setSelectedDesigner(null);
       setDeveloperInputValue("");
       setQcInputValue("");
-      setDesignerInputValue("");
 
       // Refresh requirements data to get updated task info
       refreshData();
@@ -785,18 +699,14 @@ export default function DevelopmentRequirementsPage() {
     setIsTaskModalOpen(false);
     setSelectedDeveloper(null);
     setSelectedQC(null);
-    setSelectedDesigner(null);
     setSelectedRequirementId(undefined);
     setTaskDescription("");
     setDeveloperStartDate(null);
     setDeveloperEndDate(null);
     setQcStartDate(null);
     setQcEndDate(null);
-    setDesignerStartDate(null);
-    setDesignerEndDate(null);
     setDeveloperInputValue("");
     setQcInputValue("");
-    setDesignerInputValue("");
     setDateValidationErrors({});
   };
 
@@ -1478,7 +1388,7 @@ export default function DevelopmentRequirementsPage() {
                   </div>
                 </ModalBody>
                 <ModalFooter className="flex flex-col gap-2 flex-shrink-0">
-                  {!selectedDeveloper && !selectedQC && !selectedDesigner && (
+                  {!selectedDeveloper && !selectedQC && (
                     <p className="text-xs text-danger text-center w-full">
                       {t("tasks.selectAtLeastOne")}
                     </p>
@@ -1499,11 +1409,8 @@ export default function DevelopmentRequirementsPage() {
                       <Button
                         color="primary"
                         isDisabled={
-                          (!selectedDeveloper &&
-                            !selectedQC &&
-                            !selectedDesigner) ||
+                          (!selectedDeveloper && !selectedQC) ||
                           dateValidationErrors.developer !== undefined ||
-                          dateValidationErrors.designer !== undefined ||
                           dateValidationErrors.qc !== undefined
                         }
                         isLoading={isCreatingTask}
