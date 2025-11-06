@@ -69,7 +69,7 @@ export default function CompanyEmployeesPage() {
     createCompanyEmployee,
     updateCompanyEmployee,
     deleteCompanyEmployee,
-  } = useCompanyEmployees({ initialLimit: 20 });
+  } = useCompanyEmployees({ initialLimit: 10 });
 
   // Modal states
   const {
@@ -525,9 +525,6 @@ export default function CompanyEmployeesPage() {
               <Table
                 isHeaderSticky
                 aria-label={t("companyEmployees.title")}
-                classNames={{
-                  wrapper: "max-h-[600px]",
-                }}
               >
                 <TableHeader columns={columns}>
                   {(column) => (
