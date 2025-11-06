@@ -1435,6 +1435,9 @@ const translations = {
     "companyEmployees.searchEmployees":
       "Search employees by name, username, grade, or military number...",
     "companyEmployees.noEmployeesFound": "No employees found",
+    "companyEmployees.noEmployees": "No employees yet",
+    "companyEmployees.tryDifferentSearch": "Try a different search term",
+    "companyEmployees.addFirstEmployee": "Add your first employee to get started",
     "companyEmployees.confirmDelete": "Confirm Delete Employee",
     "companyEmployees.deleteConfirmMessage":
       "Are you sure you want to delete this employee?",
@@ -3521,6 +3524,9 @@ const translations = {
     "companyEmployees.searchEmployees":
       "البحث عن الموظفين بالاسم أو اسم المستخدم أو الرتبة أو الرقم العسكري...",
     "companyEmployees.noEmployeesFound": "لم يتم العثور على موظفين",
+    "companyEmployees.noEmployees": "لا يوجد موظفين بعد",
+    "companyEmployees.tryDifferentSearch": "جرب مصطلح بحث مختلف",
+    "companyEmployees.addFirstEmployee": "أضف موظفك الأول للبدء",
     "companyEmployees.confirmDelete": "تأكيد حذف الموظف",
     "companyEmployees.deleteConfirmMessage": "هل أنت متأكد من حذف هذا الموظف؟",
     "companyEmployees.fillEmployeeDetails": "املأ تفاصيل الموظف أدناه",
