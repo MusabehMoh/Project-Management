@@ -2628,6 +2628,20 @@ export default function ProjectRequirementsPage() {
         isOpen={isExcalidrawOpen}
         size="5xl"
         onOpenChange={(open) => setIsExcalidrawOpen(open)}
+        classNames={{
+          wrapper: "transform-none",
+          base: "transform-none",
+          header: "transform-none",
+          body: "transform-none",
+          footer: "transform-none",
+          backdrop: "transform-none",
+          closeButton: "transform-none",
+        }}
+        motionProps={{
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          exit: { opacity: 0 },
+        }}
       >
         <ModalContent className="max-w-[90vw]">
           {(onClose) => (
