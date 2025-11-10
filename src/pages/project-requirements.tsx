@@ -266,6 +266,8 @@ export default function ProjectRequirementsPage() {
 
   // Excalidraw Modal state
   const [isExcalidrawOpen, setIsExcalidrawOpen] = useState(false);
+  // Force remount to reset any internal dialogs (like clear-canvas confirm)
+  const [excalidrawSessionKey, setExcalidrawSessionKey] = useState(0);
   const excalidrawRef = useRef<any>(null);
 
   // Guard against any external library changing the app direction
@@ -2627,7 +2629,15 @@ export default function ProjectRequirementsPage() {
       <Modal
         isOpen={isExcalidrawOpen}
         size="5xl"
-        onOpenChange={(open) => setIsExcalidrawOpen(open)}
+        onOpenChange={(open) => {
+          setIsExcalidrawOpen(open);
+          if (!open) {
+            // reset internal state when closing so dialogs don't persist
+            excalidrawRef.current = null;
+            setTimeout(() => setExcalidrawSessionKey((k) => k + 1), 0);
+          }
+        }}
+        isDismissable={false}
         classNames={{
           wrapper: "transform-none",
           base: "transform-none",
@@ -2653,6 +2663,7 @@ export default function ProjectRequirementsPage() {
                 {/* Isolate Excalidraw direction to avoid impacting the app */}
                 <div dir="ltr" style={{ height: "620px", width: "100%" }}>
                   <Excalidraw
+                    key={`excalidraw-${excalidrawSessionKey}`}
                     excalidrawAPI={(api) => {
                       excalidrawRef.current = api;
                     }}
