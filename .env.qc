@@ -27,6 +27,7 @@ VITE_LLM_USE_N8N=true
 
 # n8n webhook URL (when USE_N8N=true)
 VITE_LLM_N8N_WEBHOOK_URL=http://180.140.112.120:5678/webhook/ai-suggest-agent
+VITE_LLM_N8N_AGENT_WEBHOOK_URL=http://180.140.112.120:5678/webhook/ai-suggest-agent
 
 #http://localhost:5678/webhook/ai-suggest-agent
 
