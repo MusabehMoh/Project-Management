@@ -46,6 +46,7 @@ import { Skeleton } from "@heroui/skeleton";
 import { DatePicker } from "@heroui/date-picker";
 import { Tooltip } from "@heroui/tooltip";
 import { ScrollShadow } from "@heroui/scroll-shadow";
+import { useTheme } from "@heroui/use-theme";
 import {
   Plus,
   Search,
@@ -111,6 +112,9 @@ export default function ProjectRequirementsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  const { theme } = useTheme();
+    const [isDarkApp, setIsDarkApp] = useState(false);
+
 
   // Wrapper function for validation that passes translation
   const handleValidateDateNotInPast = (
@@ -121,6 +125,28 @@ export default function ProjectRequirementsPage() {
 
   // Fetch project details
   const { projectName } = useProjectDetails({ projectId });
+
+  useEffect(() => {
+    
+    const html = document.documentElement;
+    const computeDark = () =>
+      theme === "dark" ||
+      html.classList.contains("dark") ||
+      html.getAttribute("data-theme") === "dark";
+
+    const next = computeDark();
+
+    setIsDarkApp(next);
+
+    const observer = new MutationObserver(() => setIsDarkApp(computeDark()));
+
+    observer.observe(html, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, [theme]);
 
   // Set page title
   usePageTitle("requirements.projectRequirements");
@@ -2667,6 +2693,7 @@ export default function ProjectRequirementsPage() {
                     excalidrawAPI={(api) => {
                       excalidrawRef.current = api;
                     }}
+                    theme={isDarkApp ? "dark" : "light"}
                   />
                 </div>
               </ModalBody>
