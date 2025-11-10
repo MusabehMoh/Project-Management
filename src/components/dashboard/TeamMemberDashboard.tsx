@@ -23,8 +23,10 @@ import { useTaskStatusLookups } from "@/hooks/useTaskLookups";
 import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { tasksService } from "@/services/api/tasksService";
-import { showSuccessToast, showErrorToast } from "@/utils/toast";
+import { membersTasksService } from "@/services/api/membersTasksService";
+import { showSuccessToast, showErrorToast, showWarningToast } from "@/utils/toast";
 import { isTransitionAllowed } from "@/utils/kanbanRoleConfig";
+import { getFileUploadConfig } from "@/config/environment";
 
 export default function TeamMemberDashboard() {
   const { t, language } = useLanguage();
@@ -43,6 +45,11 @@ export default function TeamMemberDashboard() {
   const [notes, setNotes] = useState("");
   const [modalError, setModalError] = useState(false);
   const [changeStatusLoading, setChangeStatusLoading] = useState(false);
+
+  // Delete Attachment Modal state
+  const [isDeleteAttachmentModalOpen, setIsDeleteAttachmentModalOpen] = useState(false);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null);
+  const [deleteAttachmentLoading, setDeleteAttachmentLoading] = useState(false);
 
   // Get filtered status options based on user role
   const filteredStatusOptions = React.useMemo(() => {
@@ -168,6 +175,155 @@ export default function TeamMemberDashboard() {
     }
   };
 
+  // Handle file upload to task
+  const handleTaskFileUpload = async (taskId: number, files: File[]) => {
+    const { maxFileSizeMB, allowedFileTypes } = getFileUploadConfig();
+    const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
+
+    // Arrays to collect rejected files
+    const emptyFiles: string[] = [];
+    const oversizedFiles: string[] = [];
+    const invalidTypeFiles: string[] = [];
+
+    const validFiles = files.filter((file) => {
+      // Check for empty files
+      if (file.size === 0) {
+        emptyFiles.push(file.name);
+        return false;
+      }
+
+      // Check file size
+      if (file.size > maxFileSizeBytes) {
+        oversizedFiles.push(file.name);
+        return false;
+      }
+
+      // Check file type
+      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+      if (!fileExtension || !allowedFileTypes.includes(fileExtension)) {
+        invalidTypeFiles.push(file.name);
+        return false;
+      }
+
+      return true;
+    });
+
+    // Show warnings for rejected files
+    if (emptyFiles.length > 0) {
+      showWarningToast(
+        t("requirements.validation.fileEmptyError"),
+        emptyFiles.join(", ")
+      );
+    }
+    if (oversizedFiles.length > 0) {
+      showWarningToast(
+        t("requirements.validation.filesSizeTooLarge"),
+        oversizedFiles.join(", ")
+      );
+    }
+    if (invalidTypeFiles.length > 0) {
+      showWarningToast(
+        t("requirements.validation.fileTypeNotAllowed")
+          .replace("{0}", invalidTypeFiles[0])
+          .replace("{1}", allowedFileTypes.join(", ")),
+        invalidTypeFiles.join(", ")
+      );
+    }
+
+    if (validFiles.length === 0) return;
+
+    // Upload valid files
+    let uploadedCount = 0;
+    for (const file of validFiles) {
+      try {
+        const result = await membersTasksService.uploadTaskAttachment(taskId, file);
+        if (result.success) {
+          uploadedCount++;
+          showSuccessToast(t("requirements.uploadSuccess"));
+        } else {
+          showErrorToast(t("requirements.uploadError"));
+        }
+      } catch (error) {
+        console.error("Upload failed:", error);
+        showErrorToast(t("requirements.uploadError"));
+      }
+    }
+
+    // Refresh drawer if any files were uploaded successfully
+    if (uploadedCount > 0) {
+      const currentTask = selectedTask;
+      setIsDrawerOpen(false);
+      setTimeout(() => {
+        setSelectedTask(currentTask);
+        setIsDrawerOpen(true);
+      }, 100);
+    }
+  };
+
+  // Handle file delete
+  const handleTaskFileDelete = async (attachment: any) => {
+    setAttachmentToDelete(attachment);
+    setIsDeleteAttachmentModalOpen(true);
+  };
+
+  // Confirm delete attachment
+  const confirmDeleteAttachment = async () => {
+    if (!attachmentToDelete) return;
+
+    setDeleteAttachmentLoading(true);
+    try {
+      const result = await membersTasksService.deleteTaskAttachment(attachmentToDelete.id);
+      if (result.success) {
+        showSuccessToast(t("taskDetails.attachmentDeleted"));
+        setIsDeleteAttachmentModalOpen(false);
+        setAttachmentToDelete(null);
+        // Close and reopen drawer to trigger refetch of attachments
+        const currentTask = selectedTask;
+        setIsDrawerOpen(false);
+        setTimeout(() => {
+          setSelectedTask(currentTask);
+          setIsDrawerOpen(true);
+        }, 100);
+      } else {
+        showErrorToast(t("taskDetails.deleteAttachmentError"));
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+      showErrorToast(t("taskDetails.deleteAttachmentError"));
+    } finally {
+      setDeleteAttachmentLoading(false);
+    }
+  };
+
+  // Handle file download
+  const handleTaskFileDownload = async (attachment: any) => {
+    try {
+      const blob = await membersTasksService.downloadTaskAttachment(attachment.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = attachment.originalName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+      showErrorToast(t("taskDetails.downloadAttachmentError"));
+    }
+  };
+
+  // Handle file preview - For now, download the file instead
+  // TODO: Implement proper preview modal like in members-tasks page
+  const handleTaskFilePreview = async (attachment: any) => {
+    try {
+      await handleTaskFileDownload(attachment);
+    } catch (error) {
+      console.error("Preview failed:", error);
+      showErrorToast(t("taskDetails.previewAttachmentError"));
+    }
+  };
+
   // Helper function to get status text
   const getStatusText = (status: number) => {
     return getStatusLabel(status.toString());
@@ -219,10 +375,10 @@ export default function TeamMemberDashboard() {
         selectedTask={selectedTask}
         onChangeAssignees={() => {}}
         onChangeStatus={handleChangeStatus}
-        onFileDelete={async () => {}}
-        onFileDownload={async () => {}}
-        onFilePreview={async () => {}}
-        onFileUpload={async () => {}}
+        onFileDelete={handleTaskFileDelete}
+        onFileDownload={handleTaskFileDownload}
+        onFilePreview={handleTaskFilePreview}
+        onFileUpload={handleTaskFileUpload}
         onOpenChange={setIsDrawerOpen}
         onRequestDesign={() => {}}
       />
@@ -313,6 +469,49 @@ export default function TeamMemberDashboard() {
                   onPress={handleChangeStatusSubmit}
                 >
                   {t("confirm")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Attachment Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteAttachmentModalOpen}
+        size="md"
+        onOpenChange={setIsDeleteAttachmentModalOpen}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {t("taskDetails.confirmDeleteAttachment").replace(
+                  "{fileName}",
+                  attachmentToDelete?.originalName || ""
+                )}
+              </ModalHeader>
+
+              <ModalBody>
+                <p className="text-default-600">
+                  {t("taskDetails.deleteAttachmentMessage")}
+                </p>
+              </ModalBody>
+
+              <ModalFooter>
+                <Button
+                  color="default"
+                  variant="light"
+                  onPress={onClose}
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  color="danger"
+                  isLoading={deleteAttachmentLoading}
+                  onPress={confirmDeleteAttachment}
+                >
+                  {t("taskDetails.deleteAttachment")}
                 </Button>
               </ModalFooter>
             </>

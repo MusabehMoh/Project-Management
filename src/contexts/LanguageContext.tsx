@@ -2031,6 +2031,9 @@ const translations = {
     "taskDetails.noAttachments": "No attachments yet",
     "taskDetails.confirmDeleteAttachment":
       "Are you sure you want to delete the attachment '{fileName}'?",
+    "taskDetails.deleteAttachmentMessage":
+      "This action cannot be undone. The attachment will be permanently removed from the task.",
+    "taskDetails.deleteAttachment": "Delete Attachment",
     "taskDetails.attachmentDeleted": "Attachment deleted successfully",
     "taskDetails.attachmentDeleteError": "Failed to delete attachment",
     priority: "Priority",
@@ -4109,6 +4112,9 @@ const translations = {
     "taskDetails.noAttachments": "لا توجد مرفقات بعد",
     "taskDetails.confirmDeleteAttachment":
       "هل أنت متأكد من أنك تريد حذف المرفق '{fileName}'؟",
+    "taskDetails.deleteAttachmentMessage":
+      "لا يمكن التراجع عن هذا الإجراء. سيتم حذف المرفق نهائياً من المهمة.",
+    "taskDetails.deleteAttachment": "حذف المرفق",
     "taskDetails.attachmentDeleted": "تم حذف المرفق بنجاح",
     "taskDetails.attachmentDeleteError": "فشل في حذف المرفق",
     priority: "الأولوية",

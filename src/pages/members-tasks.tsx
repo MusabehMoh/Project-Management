@@ -300,6 +300,7 @@ export default function MembersTasksPage() {
     }
 
     // Upload valid files
+    let uploadedCount = 0;
     for (const file of validFiles) {
       try {
         const result = await membersTasksService.uploadTaskAttachment(
@@ -308,6 +309,7 @@ export default function MembersTasksPage() {
         );
 
         if (result.success) {
+          uploadedCount++;
           showSuccessToast(t("requirements.uploadSuccess"));
         } else {
           showErrorToast(t("requirements.uploadError"));
@@ -317,36 +319,52 @@ export default function MembersTasksPage() {
         showErrorToast(t("requirements.uploadError"));
       }
     }
+
+    // Refresh drawer if any files were uploaded successfully
+    if (uploadedCount > 0) {
+      const currentTask = selectedTask;
+      setIsDrawerOpen(false);
+      setTimeout(() => {
+        setSelectedTask(currentTask);
+        setIsDrawerOpen(true);
+      }, 100);
+    }
   };
 
   const handleTaskFileDelete = async (attachment: any) => {
-    const confirmMessage = t("taskDetails.confirmDeleteAttachment").replace(
-      "{fileName}",
-      attachment.originalName,
-    );
-    const confirmed = window.confirm(confirmMessage);
+    setAttachmentToDelete(attachment);
+    setIsDeleteAttachmentModalOpen(true);
+  };
 
-    if (!confirmed) return;
+  // Confirm delete attachment
+  const confirmDeleteAttachment = async () => {
+    if (!attachmentToDelete) return;
 
+    setDeleteAttachmentLoading(true);
     try {
       const result = await membersTasksService.deleteTaskAttachment(
-        attachment.id,
+        attachmentToDelete.id,
       );
 
       if (result.success) {
         showSuccessToast(t("taskDetails.attachmentDeleted"));
-        // Refresh the task details to update the attachments list
-        if (selectedTask) {
-          // Trigger a refresh of the task details drawer
-          setIsDrawerOpen(false);
-          setTimeout(() => setIsDrawerOpen(true), 100);
-        }
+        setIsDeleteAttachmentModalOpen(false);
+        setAttachmentToDelete(null);
+        // Close and reopen drawer to trigger refetch of attachments
+        const currentTask = selectedTask;
+        setIsDrawerOpen(false);
+        setTimeout(() => {
+          setSelectedTask(currentTask);
+          setIsDrawerOpen(true);
+        }, 100);
       } else {
         showErrorToast(t("taskDetails.attachmentDeleteError"));
       }
     } catch (error) {
       console.error("Attachment deletion failed:", error);
       showErrorToast(t("taskDetails.attachmentDeleteError"));
+    } finally {
+      setDeleteAttachmentLoading(false);
     }
   };
 
@@ -419,6 +437,11 @@ export default function MembersTasksPage() {
   const [assigneeModalError, setAssigneeModalError] = useState(false);
   const [startDateError, setStartDateError] = useState<string | null>(null);
   const [endDateError, setEndDateError] = useState<string | null>(null);
+
+  // Delete Attachment Modal state
+  const [isDeleteAttachmentModalOpen, setIsDeleteAttachmentModalOpen] = useState(false);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null);
+  const [deleteAttachmentLoading, setDeleteAttachmentLoading] = useState(false);
 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus | null>(null);
 
@@ -1953,6 +1976,49 @@ export default function MembersTasksPage() {
                     onPress={handleConfirmDesignRequestAction}
                   >
                     {t("common.confirm")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* Delete Attachment Confirmation Modal */}
+        <Modal
+          isOpen={isDeleteAttachmentModalOpen}
+          size="md"
+          onOpenChange={setIsDeleteAttachmentModalOpen}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  {t("taskDetails.confirmDeleteAttachment").replace(
+                    "{fileName}",
+                    attachmentToDelete?.originalName || ""
+                  )}
+                </ModalHeader>
+
+                <ModalBody>
+                  <p className="text-default-600">
+                    {t("taskDetails.deleteAttachmentMessage")}
+                  </p>
+                </ModalBody>
+
+                <ModalFooter>
+                  <Button
+                    color="default"
+                    variant="light"
+                    onPress={onClose}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    color="danger"
+                    isLoading={deleteAttachmentLoading}
+                    onPress={confirmDeleteAttachment}
+                  >
+                    {t("taskDetails.deleteAttachment")}
                   </Button>
                 </ModalFooter>
               </>
