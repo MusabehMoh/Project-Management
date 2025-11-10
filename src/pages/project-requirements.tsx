@@ -268,6 +268,43 @@ export default function ProjectRequirementsPage() {
   const [isExcalidrawOpen, setIsExcalidrawOpen] = useState(false);
   const excalidrawRef = useRef<any>(null);
 
+  // Guard against any external library changing the app direction
+  useEffect(() => {
+    if (!isExcalidrawOpen) return;
+    const expectedDir = language === "ar" ? "rtl" : "ltr";
+    const htmlEl = document.documentElement as HTMLElement;
+    const bodyEl = document.body as HTMLElement;
+    const rootEl = document.getElementById("root") as HTMLElement | null;
+
+    const setDirSafely = (el: HTMLElement | null) => {
+      if (!el) return;
+      if (el.getAttribute("dir") !== expectedDir) {
+        el.setAttribute("dir", expectedDir);
+      }
+    };
+
+    setDirSafely(htmlEl);
+    setDirSafely(bodyEl);
+    setDirSafely(rootEl);
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mut of mutations) {
+        if (mut.type === "attributes" && mut.attributeName === "dir") {
+          const target = mut.target as HTMLElement;
+          if (target.getAttribute("dir") !== expectedDir) {
+            target.setAttribute("dir", expectedDir);
+          }
+        }
+      }
+    });
+
+    [htmlEl, bodyEl, rootEl].forEach((el) => {
+      if (el) observer.observe(el, { attributes: true, attributeFilter: ["dir"] });
+    });
+
+    return () => observer.disconnect();
+  }, [isExcalidrawOpen, language]);
+
   // Ref for auto-scrolling conversation
   const conversationEndRef = useRef<HTMLDivElement>(null);
 
@@ -2589,17 +2626,18 @@ export default function ProjectRequirementsPage() {
       {/* Excalidraw Drawing Modal */}
       <Modal
         isOpen={isExcalidrawOpen}
-        size="3xl"
+        size="5xl"
         onOpenChange={(open) => setIsExcalidrawOpen(open)}
       >
-        <ModalContent>
+        <ModalContent className="max-w-[90vw]">
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
                 {language === "ar" ? "رسم مخطط توضيحي" : "Draw Diagram"}
               </ModalHeader>
               <ModalBody className="p-0">
-                <div style={{ height: "520px", width: "100%" }}>
+                {/* Isolate Excalidraw direction to avoid impacting the app */}
+                <div dir="ltr" style={{ height: "620px", width: "100%" }}>
                   <Excalidraw
                     excalidrawAPI={(api) => {
                       excalidrawRef.current = api;

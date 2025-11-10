@@ -202,6 +202,25 @@
   will-change: transform;
 }
 
+/* ===================================
+   EXTERNAL LIB OVERRIDES
+   =================================== */
+/* Prevent external libraries (e.g., Excalidraw CSS) from altering the app's
+   global font. We explicitly re-assert our app fonts for both LTR and RTL.
+   Using high-specificity selectors and !important to win over global styles. */
+html[dir="rtl"], body[dir="rtl"], #root[dir="rtl"] {
+  font-family: "Noto Kufi Arabic", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+}
+
+html[dir="ltr"], body[dir="ltr"], #root[dir="ltr"] {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+}
+
+/* Keep Excalidraw UI contained: do not propagate its font to the rest of the app */
+.excalidraw {
+  font-family: inherit; /* use the app's font for UI labels */
+}
+
 .pause-animation:hover {
   animation-play-state: paused;
 }
