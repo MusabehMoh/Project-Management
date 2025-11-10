@@ -238,13 +238,13 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      {t("timeline.treeView.name")}{" "}
+                      {t("tasks.taskName")}{" "}
                       <span className="text-danger">*</span>
                     </label>
                     <Input
                       errorMessage={errors.name}
                       isInvalid={!!errors.name}
-                      placeholder={t("timeline.treeView.name")}
+                      placeholder={t("tasks.taskName")}
                       value={formData.name}
                       onChange={(e) =>
                         handleInputChange("name", e.target.value)

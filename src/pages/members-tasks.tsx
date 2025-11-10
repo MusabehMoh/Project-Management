@@ -1484,6 +1484,13 @@ export default function MembersTasksPage() {
                       value={selectedTask?.name ?? ""}
                     />
 
+                    {/* Priority */}
+                    <Input
+                      readOnly
+                      label={t("requirements.priority")}
+                      value={getPriorityLabel(selectedTask?.priorityId ?? 0)}
+                    />
+
                     {/* Current Assignees Display */}
                     {selectedTask?.assignedMembers &&
                       selectedTask.assignedMembers.length > 0 && (
