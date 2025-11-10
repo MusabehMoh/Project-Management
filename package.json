@@ -15,6 +15,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.0",
     "@heroui/accordion": "^2.2.21",
     "@heroui/autocomplete": "^2.3.26",
     "@heroui/avatar": "^2.2.20",

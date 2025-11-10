@@ -30,6 +30,10 @@ import { Select, SelectItem } from "@heroui/select";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./project-requirements.css";
+import { Excalidraw } from "@excalidraw/excalidraw";
+import { exportToBlob } from "@excalidraw/excalidraw";
+// Excalidraw styles (required for toolbar and UI to appear)
+import "@excalidraw/excalidraw/index.css";
 import {
   Modal,
   ModalContent,
@@ -259,6 +263,10 @@ export default function ProjectRequirementsPage() {
   const [conversationHistory, setConversationHistory] = useState<
     Array<{ role: "user" | "assistant"; content: string; timestamp: number }>
   >([]);
+
+  // Excalidraw Modal state
+  const [isExcalidrawOpen, setIsExcalidrawOpen] = useState(false);
+  const excalidrawRef = useRef<any>(null);
 
   // Ref for auto-scrolling conversation
   const conversationEndRef = useRef<HTMLDivElement>(null);
@@ -939,6 +947,53 @@ export default function ProjectRequirementsPage() {
 
     // Close the modal
     setIsAIPromptOpen(false);
+  };
+
+  // Save Excalidraw drawing as image
+  const handleSaveExcalidrawDrawing = async () => {
+    if (!excalidrawRef.current) return;
+
+    try {
+      const elements = excalidrawRef.current.getSceneElements();
+      const appState = excalidrawRef.current.getAppState();
+      
+      if (elements.length === 0) {
+        showWarningToast(
+          language === "ar" ? "تحذير" : "Warning",
+          language === "ar" ? "الرسم فارغ! قم برسم شيء أولاً." : "Drawing is empty! Please draw something first."
+        );
+        return;
+      }
+
+      const blob = await exportToBlob({
+        elements,
+        appState,
+        files: excalidrawRef.current.getFiles(),
+      });
+
+      // Convert blob to File
+      const timestamp = Date.now();
+      const file = new File([blob], `diagram-${timestamp}.png`, { type: "image/png" });
+
+      // Add to uploaded files
+      setFormData((prev) => ({
+        ...prev,
+        uploadedFiles: [...prev.uploadedFiles, file],
+      }));
+
+      showSuccessToast(
+        language === "ar" ? "تم حفظ المخطط" : "Diagram Saved",
+        language === "ar" ? "تم إضافة المخطط إلى المرفقات" : "Diagram added to attachments"
+      );
+
+      setIsExcalidrawOpen(false);
+    } catch (error) {
+      console.error("Error saving Excalidraw drawing:", error);
+      showErrorToast(
+        language === "ar" ? "خطأ" : "Error",
+        language === "ar" ? "فشل في حفظ المخطط" : "Failed to save diagram"
+      );
+    }
   };
 
   // ...start development removed
@@ -1810,17 +1865,32 @@ export default function ProjectRequirementsPage() {
                         {t("requirements.requirementDescription")}{" "}
                         <span className="text-danger">*</span>
                       </label>
-                      <Tooltip content={t("requirements.aiSuggest")}>
-                        <Button
-                          isIconOnly
-                          color="secondary"
-                          size="sm"
-                          variant="flat"
-                          onPress={() => setIsAIPromptOpen(true)}
-                        >
-                          <Sparkles className="w-4 h-4" />
-                        </Button>
-                      </Tooltip>
+                      <div className="flex gap-2">
+                        <Tooltip content={language === "ar" ? "أداة الرسم والمخططات" : "Drawing & Diagram Tool"}>
+                          <Button
+                            isIconOnly
+                            color="primary"
+                            size="sm"
+                            variant="flat"
+                            onPress={() => setIsExcalidrawOpen(true)}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+                            </svg>
+                          </Button>
+                        </Tooltip>
+                        <Tooltip content={t("requirements.aiSuggest")}>
+                          <Button
+                            isIconOnly
+                            color="secondary"
+                            size="sm"
+                            variant="flat"
+                            onPress={() => setIsAIPromptOpen(true)}
+                          >
+                            <Sparkles className="w-4 h-4" />
+                          </Button>
+                        </Tooltip>
+                      </div>
                     </div>
                     <div className="rounded-lg border border-default-200 overflow-hidden">
                       <div style={{ height: "240px" }}>
@@ -2509,6 +2579,40 @@ export default function ProjectRequirementsPage() {
               <ModalFooter className="border-t border-default-200 px-6 py-4">
                 <Button variant="flat" onPress={onClose}>
                   {t("common.close")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Excalidraw Drawing Modal */}
+      <Modal
+        isOpen={isExcalidrawOpen}
+        size="3xl"
+        onOpenChange={(open) => setIsExcalidrawOpen(open)}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {language === "ar" ? "رسم مخطط توضيحي" : "Draw Diagram"}
+              </ModalHeader>
+              <ModalBody className="p-0">
+                <div style={{ height: "520px", width: "100%" }}>
+                  <Excalidraw
+                    excalidrawAPI={(api) => {
+                      excalidrawRef.current = api;
+                    }}
+                  />
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="flat" onPress={onClose}>
+                  {t("common.cancel")}
+                </Button>
+                <Button color="primary" onPress={handleSaveExcalidrawDrawing}>
+                  {language === "ar" ? "حفظ المخطط" : "Save Drawing"}
                 </Button>
               </ModalFooter>
             </>
