@@ -1607,12 +1607,6 @@ export default function MembersTasksPage() {
                               <span className="text-sm text-default-500">
                                 {employee.militaryNumber || ""}
                               </span>
-                              <span className="text-xs text-default-400">
-                                @{employee.userName || ""}
-                              </span>
-                              <span className="text-xs text-default-400">
-                                @{employee.department || ""}
-                              </span>
                             </div>
                           </div>
                         </AutocompleteItem>
