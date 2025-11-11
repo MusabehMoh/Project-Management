@@ -46,6 +46,11 @@ export default function TeamMemberDashboard() {
   const [modalError, setModalError] = useState(false);
   const [changeStatusLoading, setChangeStatusLoading] = useState(false);
 
+  // Request Design Modal state
+  const [isRequestDesignModalOpen, setIsRequestDesignModalOpen] = useState(false);
+  const [isRequestDesignConfirmModalOpen, setIsRequestDesignConfirmModalOpen] = useState(false);
+  const [requestDesignLoading, setRequestDesignLoading] = useState(false);
+
   // Delete Attachment Modal state
   const [isDeleteAttachmentModalOpen, setIsDeleteAttachmentModalOpen] = useState(false);
   const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null);
@@ -114,6 +119,54 @@ export default function TeamMemberDashboard() {
     setIsChangeStatusModalOpen(true);
     setModalError(false);
     setNotes("");
+  };
+
+  // Handle request design button click
+  const handleRequestDesign = (task: MemberTask) => {
+    if (isDrawerOpen) setIsDrawerOpen(false);
+    setSelectedTask(task);
+    setIsRequestDesignModalOpen(true);
+    setModalError(false);
+    setNotes("");
+  };
+
+  // Handle request design submit
+  const handleRequestDesignSubmit = () => {
+    // Close the first modal and open the confirmation modal
+    setIsRequestDesignModalOpen(false);
+    setIsRequestDesignConfirmModalOpen(true);
+  };
+
+  // Handle request design confirm
+  const handleRequestDesignConfirm = async () => {
+    if (!selectedTask) return;
+
+    setRequestDesignLoading(true);
+    setModalError(false);
+
+    try {
+      const result = await membersTasksService.requestDesign(
+        selectedTask.id,
+        notes || "",
+      );
+
+      if (result.success) {
+        showSuccessToast(t("toast.designRequestedSuccess"));
+        setIsRequestDesignConfirmModalOpen(false);
+        setNotes("");
+        // Refresh the kanban board
+        setRefreshKey(prev => prev + 1);
+      } else {
+        setModalError(true);
+        showErrorToast(t("common.error"), result.message || t("common.unexpectedError"));
+      }
+    } catch (error) {
+      console.error("Error requesting design:", error);
+      setModalError(true);
+      showErrorToast(t("common.error"), t("common.unexpectedError"));
+    } finally {
+      setRequestDesignLoading(false);
+    }
   };
 
   // Handle change status submit
@@ -380,8 +433,127 @@ export default function TeamMemberDashboard() {
         onFilePreview={handleTaskFilePreview}
         onFileUpload={handleTaskFileUpload}
         onOpenChange={setIsDrawerOpen}
-        onRequestDesign={() => {}}
+        onRequestDesign={handleRequestDesign}
       />
+
+      {/* Request Design Modal */}
+      <Modal
+        isOpen={isRequestDesignModalOpen}
+        scrollBehavior="inside"
+        size="md"
+        onOpenChange={setIsRequestDesignModalOpen}
+      >
+        <ModalContent>
+          {(_onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {t("requestDesign")}
+                {modalError && (
+                  <p className="text-sm text-danger font-normal">
+                    {t("common.unexpectedError")}
+                  </p>
+                )}
+              </ModalHeader>
+
+              <ModalBody>
+                <Input
+                  readOnly
+                  label={t("tasks.taskName")}
+                  value={selectedTask?.name ?? ""}
+                />
+
+                <Textarea
+                  label={t("timeline.treeView.notes")}
+                  placeholder={t("timeline.treeView.notes")}
+                  value={notes}
+                  onChange={(e: any) => setNotes(e.target.value)}
+                />
+              </ModalBody>
+
+              <ModalFooter>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={() => setIsRequestDesignModalOpen(false)}
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button color="primary" onPress={handleRequestDesignSubmit}>
+                  {t("confirm")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Request Design Confirmation Modal */}
+      <Modal
+        isOpen={isRequestDesignConfirmModalOpen}
+        scrollBehavior="inside"
+        size="md"
+        onOpenChange={setIsRequestDesignConfirmModalOpen}
+      >
+        <ModalContent>
+          {(_onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {t("requestDesign")} - {t("confirm")}
+                {modalError && (
+                  <p className="text-sm text-danger font-normal">
+                    {t("common.unexpectedError")}
+                  </p>
+                )}
+              </ModalHeader>
+
+              <ModalBody>
+                <div className="space-y-4">
+                  <div className="p-3 bg-warning-50 dark:bg-warning-100/10 border border-warning-200 rounded-lg">
+                    <p className="text-sm text-warning-700 dark:text-warning-600">
+                      {t("requestDesignConfirmation")}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                      {t("tasks.taskName")}:
+                    </p>
+                    <p className="text-sm text-default-600">
+                      {selectedTask?.name || ""}
+                    </p>
+                  </div>
+
+                  {notes && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">
+                        {t("timeline.treeView.notes")}:
+                      </p>
+                      <p className="text-sm text-default-600">{notes}</p>
+                    </div>
+                  )}
+                </div>
+              </ModalBody>
+
+              <ModalFooter>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={() => setIsRequestDesignConfirmModalOpen(false)}
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={requestDesignLoading}
+                  onPress={handleRequestDesignConfirm}
+                >
+                  {t("confirm")}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
 
       {/* Change Status Modal */}
       <Modal
