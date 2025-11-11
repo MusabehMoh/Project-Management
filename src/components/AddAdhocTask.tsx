@@ -389,7 +389,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                             </span>
 
                             <span className="text-xs text-default-400">
-                              @{employee.department || t("common.none")}
+                              {employee.militaryNumber || "N/A"}
                             </span>
                           </div>
                         </div>
