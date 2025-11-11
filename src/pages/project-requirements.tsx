@@ -67,6 +67,7 @@ import {
   Check,
   Clock,
   Play,
+  Info,
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
@@ -820,10 +821,8 @@ export default function ProjectRequirementsPage() {
           model: "", // Empty string - backend will use default model from appsettings
           messages: [{ role: "system", content: systemPrompt }, ...messages],
           stream: true,
-          options: {
-            temperature: 0.5,
-            num_predict: 400,
-          },
+          temperature: 0.5,
+          max_tokens: 400,
         }),
       });
 
@@ -831,15 +830,13 @@ export default function ProjectRequirementsPage() {
         throw new Error("Failed to generate AI suggestion");
       }
 
-      // Read streaming response
+      // Read SSE streaming response (OpenAI format)
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let fullResponse = "";
-      let buffer = ""; // Buffer for incomplete JSON chunks
-      let displayBuffer = ""; // Buffer for accumulating characters before display
-      const CHARS_PER_UPDATE = 3; // Accumulate 3 chars before updating (creates visible effect)
+      let buffer = ""; // Buffer for incomplete SSE chunks
 
-      console.log("🚀 Starting stream reading...");
+      console.log("🚀 Starting SSE stream reading...");
 
       if (reader) {
         while (true) {
@@ -854,28 +851,28 @@ export default function ProjectRequirementsPage() {
           const chunk = decoder.decode(value, { stream: true });
           buffer += chunk;
 
-          // Split by newlines but keep incomplete lines in buffer
+          // Split by SSE format (data: prefix, double newline for message boundary)
           const lines = buffer.split("\n");
-          buffer = lines.pop() || ""; // Keep last incomplete line in buffer
+          buffer = ""; // Reset buffer
 
           for (const line of lines) {
-            if (!line.trim()) continue; // Skip empty lines
+            if (!line.trim() || line.trim() === "data: [DONE]") continue;
 
-            try {
-              const json = JSON.parse(line);
+            // SSE format: "data: {...}"
+            if (line.startsWith("data: ")) {
+              const jsonStr = line.substring(6); // Remove "data: " prefix
+              
+              try {
+                const json = JSON.parse(jsonStr);
 
-              if (json.message?.content) {
-                const newContent = json.message.content;
-                fullResponse += newContent;
-                displayBuffer += newContent;
+                // OpenAI format: { choices: [{ delta: { content: "text" } }] }
+                const content = json.choices?.[0]?.delta?.content;
                 
-                console.log("📝 Chunk received:", newContent, "Total:", fullResponse.length);
+                if (content) {
+                  fullResponse += content;
+                  console.log("📝 Chunk received:", content, "Total:", fullResponse.length);
 
-                // Update every N characters for more visible streaming
-                if (displayBuffer.length >= CHARS_PER_UPDATE) {
-                  displayBuffer = ""; // Reset display buffer
-                  
-                  // Update UI
+                  // Update UI for each chunk (OpenAI sends smaller chunks)
                   setConversationHistory((prev) => {
                     const withoutLast = prev.slice(0, -1);
                     return [
@@ -888,25 +885,13 @@ export default function ProjectRequirementsPage() {
                   });
                   
                   // Small delay to make updates visible
-                  await new Promise(resolve => setTimeout(resolve, 10))
+                  await new Promise(resolve => setTimeout(resolve, 10));
                 }
+              } catch (e) {
+                console.warn("Failed to parse SSE chunk:", line.substring(0, 100), e);
+                // Skip invalid JSON lines
               }
-            } catch (e) {
-              console.warn("Failed to parse streaming chunk:", line.substring(0, 100), e);
-              // Skip invalid JSON lines
             }
-          }
-        }
-
-        // Process any remaining buffer
-        if (buffer.trim()) {
-          try {
-            const json = JSON.parse(buffer);
-            if (json.message?.content) {
-              fullResponse += json.message.content;
-            }
-          } catch (e) {
-            console.warn("Failed to parse final buffer:", buffer, e);
           }
         }
 
@@ -1672,6 +1657,45 @@ export default function ProjectRequirementsPage() {
                                 </Button>
                               </DropdownTrigger>
                               <DropdownMenu>
+                                {/* Check if any actions are available */}
+                                {(() => {
+                                  const canEdit = hasPermission({ actions: ["requirements.update"] }) &&
+                                    requirement.status !== REQUIREMENT_STATUS.UNDER_DEVELOPMENT &&
+                                    requirement.status !== REQUIREMENT_STATUS.UNDER_TESTING &&
+                                    requirement.status !== REQUIREMENT_STATUS.COMPLETED;
+                                  
+                                  const canSend = requirement.status === REQUIREMENT_STATUS.NEW &&
+                                    hasPermission({ actions: ["requirements.send"] });
+                                  
+                                  const canPostpone = (requirement.status === REQUIREMENT_STATUS.NEW ||
+                                    requirement.status === REQUIREMENT_STATUS.MANAGER_REVIEW ||
+                                    requirement.status === REQUIREMENT_STATUS.APPROVED);
+                                  
+                                  const canUnpostpone = requirement.status === REQUIREMENT_STATUS.POSTPONED;
+                                  
+                                  const canDelete = hasPermission({ actions: ["requirements.delete"] }) &&
+                                    requirement.status !== REQUIREMENT_STATUS.UNDER_DEVELOPMENT &&
+                                    requirement.status !== REQUIREMENT_STATUS.COMPLETED;
+                                  
+                                  const hasAnyAction = canEdit || canSend || canPostpone || canUnpostpone || canDelete;
+                                  
+                                  // If no actions available, show a helpful message
+                                  if (!hasAnyAction) {
+                                    return (
+                                      <DropdownItem
+                                        key="no-actions"
+                                        isReadOnly
+                                        className="cursor-default opacity-60"
+                                        startContent={<Info className="w-4 h-4" />}
+                                      >
+                                        {t("requirements.noActionsAvailable")}
+                                      </DropdownItem>
+                                    );
+                                  }
+                                  
+                                  return null;
+                                })()}
+                                
                                 {hasPermission({
                                   actions: ["requirements.update"],
                                 }) &&

@@ -56,7 +56,7 @@ namespace PMA.Api.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task Chat([FromBody] OllamaChatRequest request)
+        public async Task Chat([FromBody] OpenAIChatRequest request)
         {
             try
             {
@@ -70,21 +70,23 @@ namespace PMA.Api.Controllers
                     request.Model = defaultModel;
                 }
                 
-                _logger.LogInformation("Proxying chat request to Ollama at {OllamaUrl} using model {Model}", 
+                _logger.LogInformation("Proxying OpenAI-compatible chat request to Ollama at {OllamaUrl} using model {Model}", 
                     ollamaUrl, request.Model);
 
                 var httpClient = _httpClientFactory.CreateClient();
                 httpClient.Timeout = TimeSpan.FromMinutes(5); // Longer timeout for AI responses
 
-                // Serialize request to JSON
+                // Serialize request to JSON (OpenAI format)
                 var jsonContent = JsonSerializer.Serialize(request, new JsonSerializerOptions
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
                 });
 
-                var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{ollamaUrl}/api/chat")
+                // Use OpenAI-compatible endpoint
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{ollamaUrl}/v1/chat/completions")
                 {
-                    Content = new StringContent(jsonContent, Encoding.UTF8, "application/json")
+                    Content = new StringContent(jsonContent, Encoding.UTF8, new MediaTypeHeaderValue("application/json"))
                 };
 
                 // Send request with streaming
@@ -98,9 +100,10 @@ namespace PMA.Api.Controllers
                     return;
                 }
 
-                // Set response headers for streaming
-                Response.ContentType = "application/x-ndjson";
+                // Set response headers for SSE streaming (OpenAI format)
+                Response.ContentType = "text/event-stream";
                 Response.Headers.CacheControl = "no-cache";
+                Response.Headers.Connection = "keep-alive";
                 Response.Headers.Append("X-Accel-Buffering", "no"); // Disable nginx buffering
 
                 // Stream the response back to client with immediate flushing
@@ -173,25 +176,20 @@ namespace PMA.Api.Controllers
         }
     }
 
-    // DTOs for Ollama API
-    public class OllamaChatRequest
+    // DTOs for OpenAI-compatible API (used by Ollama's /v1/chat/completions endpoint)
+    public class OpenAIChatRequest
     {
         public string Model { get; set; } = "llama3.1:8b";
-        public List<OllamaMessage> Messages { get; set; } = new();
+        public List<OpenAIMessage> Messages { get; set; } = new();
         public bool Stream { get; set; } = true;
-        public OllamaOptions? Options { get; set; }
+        public double Temperature { get; set; } = 0.5;
+        public int? Max_Tokens { get; set; } = 400;
     }
 
-    public class OllamaMessage
+    public class OpenAIMessage
     {
         public string Role { get; set; } = "";
         public string Content { get; set; } = "";
-    }
-
-    public class OllamaOptions
-    {
-        public double Temperature { get; set; } = 0.5;
-        public int Num_Predict { get; set; } = 400;
     }
 
     // DTO for n8n memory save
