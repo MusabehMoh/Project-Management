@@ -924,27 +924,24 @@ export default function ProjectRequirementsPage() {
         });
       }
 
-      // After streaming completes, save to n8n for memory
+      // After streaming completes, save to n8n for memory via backend proxy
       try {
-        await fetch(
-          import.meta.env.VITE_LLM_N8N_AGENT_WEBHOOK_URL ||
-            "http://localhost:5678/webhook/ai-suggest-agent",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              context: userMessage.content,
-              response: fullResponse,
-              sessionId: aiSessionId,
-              saveToMemory: true, // Flag to indicate memory-only save
-              field: t("requirements.requirementDescription"),
-              previousValues: {
-                [t("requirements.requirementName")]: formData.name,
-                [t("common.project")]: projectName || "",
-              },
-            }),
-          },
-        );
+        // Use backend proxy to avoid mixed content HTTPS/HTTP issue
+        await fetch(`${apiBaseUrl}/api/AI/save-memory`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            context: userMessage.content,
+            response: fullResponse,
+            sessionId: aiSessionId,
+            saveToMemory: true, // Flag to indicate memory-only save
+            field: t("requirements.requirementDescription"),
+            previousValues: {
+              [t("requirements.requirementName")]: formData.name,
+              [t("common.project")]: projectName || "",
+            },
+          }),
+        });
       } catch (memoryError) {
         console.warn("Failed to save to n8n memory:", memoryError);
         // Don't throw - streaming already succeeded

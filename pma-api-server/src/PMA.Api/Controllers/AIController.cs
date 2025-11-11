@@ -127,6 +127,50 @@ namespace PMA.Api.Controllers
                 await Response.WriteAsync($"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpPost("save-memory")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> SaveToN8nMemory([FromBody] N8nMemoryRequest request)
+        {
+            try
+            {
+                // Get n8n webhook URL from configuration
+                var n8nWebhookUrl = _configuration["N8n:AgentWebhookUrl"] ?? "http://localhost:5678/webhook/ai-suggest-agent";
+                
+                _logger.LogInformation("Saving conversation to n8n memory at {N8nUrl}", n8nWebhookUrl);
+
+                var httpClient = _httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(30);
+
+                // Serialize request to JSON
+                var jsonContent = JsonSerializer.Serialize(request, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, n8nWebhookUrl)
+                {
+                    Content = new StringContent(jsonContent, Encoding.UTF8, new MediaTypeHeaderValue("application/json"))
+                };
+
+                var response = await httpClient.SendAsync(httpRequest);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("n8n webhook returned error: {StatusCode}", response.StatusCode);
+                    // Don't fail the request - memory save is optional
+                }
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to save to n8n memory (non-critical)");
+                // Return success anyway - memory save is optional
+                return Ok(new { success = true });
+            }
+        }
     }
 
     // DTOs for Ollama API
@@ -148,5 +192,16 @@ namespace PMA.Api.Controllers
     {
         public double Temperature { get; set; } = 0.5;
         public int Num_Predict { get; set; } = 400;
+    }
+
+    // DTO for n8n memory save
+    public class N8nMemoryRequest
+    {
+        public string Context { get; set; } = "";
+        public string Response { get; set; } = "";
+        public string SessionId { get; set; } = "";
+        public bool SaveToMemory { get; set; } = true;
+        public string Field { get; set; } = "";
+        public Dictionary<string, string>? PreviousValues { get; set; }
     }
 }
