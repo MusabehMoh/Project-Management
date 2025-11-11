@@ -453,8 +453,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                     {employees.map((employee) => (
                       <AutocompleteItem
                         key={employee.id.toString()}
-                        // Include username, military number, and department to improve matching
-                        textValue={`${employee.gradeName} ${employee.fullName} ${employee.userName} ${employee.militaryNumber} ${employee.department}`}
+                        textValue={`${employee.gradeName || ''} ${employee.fullName || ''}`.trim()}
                       >
                         <div className="flex items-center gap-3">
                           <Avatar
@@ -468,9 +467,6 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                             </span>
                             <span className="text-sm text-default-500">
                               {employee.militaryNumber || "N/A"}
-                            </span>
-                            <span className="text-xs text-default-400">
-                              @{employee.userName || t("common.none")}
                             </span>
                           </div>
                         </div>
