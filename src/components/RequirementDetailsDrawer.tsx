@@ -142,36 +142,59 @@ export default function RequirementDetailsDrawer({
             <>
               <DrawerHeader className="flex flex-col gap-1">
                 <h2 className="text-xl font-semibold">{requirement.name}</h2>
-                <div className="flex items-center gap-2">
-                  <Chip
-                    color={getStatusColor(requirement.status)}
-                    size="sm"
-                    variant="flat"
-                  >
-                    {getStatusText(requirement.status)}
-                  </Chip>
-                  <Chip
-                    color={getPriorityColor(requirement.priority)}
-                    size="sm"
-                    variant="flat"
-                  >
-                    {getPriorityLabel(requirement.priority) ||
-                      t(`requirements.priority.${requirement.priority}`)}
-                  </Chip>
-                  {requirement.type && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+                  {/* Status */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-default-500 font-medium">
+                      {t("requirements.status")}
+                    </span>
                     <Chip
-                      color={
-                        convertTypeToString(requirement.type) === "new"
-                          ? "success"
-                          : "warning"
-                      }
+                      color={getStatusColor(requirement.status)}
                       size="sm"
                       variant="flat"
+                      className="w-fit"
                     >
-                      {convertTypeToString(requirement.type) === "new"
-                        ? t("requirements.new")
-                        : t("requirements.changeRequest")}
+                      {getStatusText(requirement.status)}
                     </Chip>
+                  </div>
+                  
+                  {/* Priority */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-default-500 font-medium">
+                      {t("requirements.priority")}
+                    </span>
+                    <Chip
+                      color={getPriorityColor(requirement.priority)}
+                      size="sm"
+                      variant="flat"
+                      className="w-fit"
+                    >
+                      {getPriorityLabel(requirement.priority) ||
+                        t(`requirements.priority.${requirement.priority}`)}
+                    </Chip>
+                  </div>
+                  
+                  {/* Type */}
+                  {requirement.type && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-default-500 font-medium">
+                        {t("requirements.type")}
+                      </span>
+                      <Chip
+                        color={
+                          convertTypeToString(requirement.type) === "new"
+                            ? "success"
+                            : "warning"
+                        }
+                        size="sm"
+                        variant="flat"
+                        className="w-fit"
+                      >
+                        {convertTypeToString(requirement.type) === "new"
+                          ? t("requirements.new")
+                          : t("requirements.changeRequest")}
+                      </Chip>
+                    </div>
                   )}
                 </div>
               </DrawerHeader>
