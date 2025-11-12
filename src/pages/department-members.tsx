@@ -358,7 +358,7 @@ export default function DepartmentMembersPage() {
                         />
                         <div>
                           <div className="font-medium">
-                            {member.user.gradeName} {member.user.fullName}
+                           {member.user.fullName}
                           </div>
                           <div className="text-sm text-default-500">
                             {member.user.userName}

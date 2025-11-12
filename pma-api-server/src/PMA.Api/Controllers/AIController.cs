@@ -33,9 +33,18 @@ namespace PMA.Api.Controllers
             try
             {
                 var ollamaUrl = _configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
+                var apiKey = _configuration["Ollama:ApiKey"]; // Get API key from config
                 var httpClient = _httpClientFactory.CreateClient();
                 
-                var response = await httpClient.GetAsync($"{ollamaUrl}/api/tags");
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{ollamaUrl}/api/tags");
+                
+                // Add API key header if configured (for OpenWebUI authentication)
+                if (!string.IsNullOrEmpty(apiKey))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                }
+                
+                var response = await httpClient.SendAsync(request);
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -62,6 +71,7 @@ namespace PMA.Api.Controllers
             {
                 // Get Ollama configuration from appsettings
                 var ollamaUrl = _configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
+                var apiKey = _configuration["Ollama:ApiKey"]; // Get API key from config
                 var defaultModel = _configuration["Ollama:DefaultModel"] ?? "llama3.1:8b";
                 
                 // Use default model if not specified in request
@@ -74,6 +84,8 @@ namespace PMA.Api.Controllers
                     ollamaUrl, request.Model);
 
                 var httpClient = _httpClientFactory.CreateClient();
+
+
                 httpClient.Timeout = TimeSpan.FromMinutes(5); // Longer timeout for AI responses
 
                 // Serialize request to JSON (OpenAI format)
@@ -88,6 +100,12 @@ namespace PMA.Api.Controllers
                 {
                     Content = new StringContent(jsonContent, Encoding.UTF8, new MediaTypeHeaderValue("application/json"))
                 };
+
+                // Add API key header if configured (for OpenWebUI authentication)
+                if (!string.IsNullOrEmpty(apiKey))
+                {
+                    httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                }
 
                 // Send request with streaming
                 var response = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead);
