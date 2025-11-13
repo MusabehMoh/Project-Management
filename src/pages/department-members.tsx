@@ -35,6 +35,8 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 
+import { X } from "lucide-react";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   DeleteIcon,
@@ -273,6 +275,19 @@ export default function DepartmentMembersPage() {
       <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
         <Input
           className="sm:max-w-xs"
+          endContent={
+            searchTerm && (
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                onPress={() => setSearchTerm("")}
+              >
+                <X size={16} />
+              </Button>
+            )
+          }
+          isClearable={false}
           placeholder={t("departmentMembers.searchPlaceholder")}
           startContent={<SearchIcon size={18} />}
           value={searchTerm}
