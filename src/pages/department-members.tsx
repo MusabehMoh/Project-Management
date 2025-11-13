@@ -12,6 +12,7 @@ import { Avatar } from "@heroui/avatar";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Skeleton } from "@heroui/skeleton";
 import { Select, SelectItem } from "@heroui/select";
+import { Tooltip } from "@heroui/tooltip";
 import {
   Modal,
   ModalContent,
@@ -34,6 +35,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
+import { RefreshCw, User } from "lucide-react";
 
 import { X } from "lucide-react";
 
@@ -273,26 +275,41 @@ export default function DepartmentMembersPage() {
 
       {/* Actions Bar */}
       <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
-        <Input
-          className="sm:max-w-xs"
-          endContent={
-            searchTerm && (
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                onPress={() => setSearchTerm("")}
-              >
-                <X size={16} />
-              </Button>
-            )
-          }
-          isClearable={false}
-          placeholder={t("departmentMembers.searchPlaceholder")}
-          startContent={<SearchIcon size={18} />}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          {/* Search */}
+          <Input
+            className="sm:max-w-xs"
+            endContent={
+              searchTerm && (
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onPress={() => setSearchTerm("")}
+                >
+                  <X size={16} />
+                </Button>
+              )
+            }
+            isClearable={false}
+            placeholder={t("departmentMembers.searchPlaceholder")}
+            startContent={<SearchIcon size={18} />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          {/* Refresh Button */}
+          <Tooltip content={t("common.refresh")}>
+            <Button
+              isIconOnly
+              isLoading={membersLoading}
+              variant="bordered"
+              onPress={refetch}
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </Tooltip>
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
           {/* Page Size Selector */}
@@ -394,8 +411,35 @@ export default function DepartmentMembersPage() {
               {t("departmentMembers.noDepartmentAssigned")}
             </div>
           ) : members.length === 0 ? (
-            <div className="text-center p-8 text-default-500">
-              {t("departmentMembers.noMembersFound")}
+            <div className="flex justify-center items-center py-12">
+              <div className="text-center space-y-4">
+                <User
+                  className="mx-auto text-default-400"
+                  height={64}
+                  width={64}
+                />
+                <div>
+                  <h3 className="text-lg font-semibold text-default-700">
+                    {searchTerm
+                      ? t("departmentMembers.noMembersFound")
+                      : t("departmentMembers.noMembers")}
+                  </h3>
+                  <p className="text-default-500 mt-1">
+                    {searchTerm
+                      ? t("departmentMembers.tryDifferentSearch")
+                      : t("departmentMembers.addFirstMember")}
+                  </p>
+                </div>
+                {!searchTerm && (
+                  <Button
+                    color="primary"
+                    startContent={<PlusIcon size={16} />}
+                    onPress={handleAddMember}
+                  >
+                    {t("departmentMembers.addMember")}
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <Table aria-label="Department members table">
