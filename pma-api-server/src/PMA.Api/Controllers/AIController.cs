@@ -95,8 +95,8 @@ namespace PMA.Api.Controllers
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
                 });
 
-                // Use OpenAI-compatible endpoint
-                var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{ollamaUrl}/v1/chat/completions")
+                // Use chat completions endpoint (production uses /api/chat/completions)
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{ollamaUrl}/api/chat/completions")
                 {
                     Content = new StringContent(jsonContent, Encoding.UTF8, new MediaTypeHeaderValue("application/json"))
                 };
