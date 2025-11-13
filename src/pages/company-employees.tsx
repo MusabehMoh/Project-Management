@@ -40,6 +40,7 @@ import {
   Search,
   Trash2,
   User,
+  X,
 } from "lucide-react";
 
 import { GlobalPagination } from "@/components/GlobalPagination";
@@ -346,6 +347,19 @@ export default function CompanyEmployeesPage() {
               {/* Search */}
               <Input
                 className="w-full sm:w-80"
+                endContent={
+                  searchQuery && (
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onPress={() => setSearchQuery("")}
+                    >
+                      <X size={16} />
+                    </Button>
+                  )
+                }
+                isClearable={false}
                 placeholder={t("companyEmployees.searchEmployees")}
                 startContent={<Search className="text-default-400" size={18} />}
                 value={searchQuery}
