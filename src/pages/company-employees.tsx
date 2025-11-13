@@ -445,7 +445,7 @@ export default function CompanyEmployeesPage() {
           {!loading && totalCount > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-default-500">
-                {t("companyEmployees.employeesFound").replace(
+                {t("common.itemsFound").replace(
                   "{count}",
                   totalCount.toString(),
                 )}

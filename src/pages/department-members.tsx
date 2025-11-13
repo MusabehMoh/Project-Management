@@ -362,6 +362,18 @@ export default function DepartmentMembersPage() {
         </div>
       </div>
 
+      {/* Stats */}
+      {!membersLoading && totalCount > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-default-500">
+            {t("common.itemsFound").replace(
+              "{count}",
+              totalCount.toString(),
+            )}
+          </span>
+        </div>
+      )}
+
       {/* Members Table */}
       <Card>
         <CardBody className="p-0">
