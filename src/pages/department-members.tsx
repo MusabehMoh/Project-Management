@@ -11,6 +11,7 @@ import { Input } from "@heroui/input";
 import { Avatar } from "@heroui/avatar";
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Skeleton } from "@heroui/skeleton";
+import { Select, SelectItem } from "@heroui/select";
 import {
   Modal,
   ModalContent,
@@ -50,6 +51,7 @@ import { usePageTitle } from "@/hooks";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
 import { translateBackendError } from "@/utils/errorTranslation";
 import { APP_CONFIG } from "@/config/environment";
+import { PAGE_SIZE_OPTIONS } from "@/constants/pagination";
 
 export default function DepartmentMembersPage() {
   const { t, language } = useLanguage();
@@ -93,6 +95,9 @@ export default function DepartmentMembersPage() {
     useState<DepartmentMember | null>(null);
   const [isImpersonating, setIsImpersonating] = useState(false);
 
+  // Page size state
+  const [isOptionOpen, setIsOptionOpen] = useState(false);
+
   // Form state for adding members
   const [memberForm, setMemberForm] = useState<
     Partial<AddDepartmentMemberRequest>
@@ -108,8 +113,11 @@ export default function DepartmentMembersPage() {
     loading: membersLoading,
     error,
     totalPages,
+    totalCount,
     departmentName,
     departmentId,
+    pageSize,
+    setPageSize,
     addMember,
     removeMember,
     refetch,
@@ -271,13 +279,55 @@ export default function DepartmentMembersPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        <Button
-          color="primary"
-          startContent={<PlusIcon size={16} />}
-          onPress={handleAddMember}
-        >
-          {t("departmentMembers.addMember")}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select
+              aria-label={t("pagination.itemsPerPage")}
+              className="w-20"
+              isOpen={isOptionOpen}
+              selectedKeys={[pageSize.toString()]}
+              size="sm"
+              onClose={() => setIsOptionOpen(false)}
+              onOpenChange={setIsOptionOpen}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0] as string;
+                if (selectedKey) {
+                  setPageSize(parseInt(selectedKey));
+                  setCurrentPage(1);
+                  setIsOptionOpen(false);
+                }
+              }}
+            >
+              {PAGE_SIZE_OPTIONS.map((val) => {
+                return (
+                  <SelectItem
+                    key={val.toString()}
+                    textValue={val.toString()}
+                    onPress={() => {
+                      setIsOptionOpen(false);
+                    }}
+                  >
+                    {val}
+                  </SelectItem>
+                );
+              })}
+            </Select>
+            <span className="text-sm text-default-600">
+              {t("pagination.perPage")}
+            </span>
+          </div>
+
+          {/* Add Member Button */}
+          <Button
+            className="w-full sm:w-auto"
+            color="primary"
+            startContent={<PlusIcon size={16} />}
+            onPress={handleAddMember}
+          >
+            {t("departmentMembers.addMember")}
+          </Button>
+        </div>
       </div>
 
       {/* Members Table */}
@@ -423,12 +473,15 @@ export default function DepartmentMembersPage() {
       </Card>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center">
+      {totalCount > pageSize && (
+        <div className="flex justify-center py-6">
           <GlobalPagination
+            className="w-full max-w-md"
             currentPage={currentPage}
-            pageSize={10}
-            totalItems={0}
+            isLoading={membersLoading}
+            pageSize={pageSize}
+            showInfo={true}
+            totalItems={totalCount}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />

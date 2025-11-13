@@ -80,4 +80,10 @@ export interface ApiResponse<T> {
   totalCount?: number;
   totalPages?: number;
   currentPage?: number;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }

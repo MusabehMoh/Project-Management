@@ -15,6 +15,8 @@ interface UseCurrentUserDepartmentMembersResult {
   totalCount: number;
   departmentName: string | null;
   departmentId: number | null;
+  pageSize: number;
+  setPageSize: (size: number) => void;
   addMember: (request: AddDepartmentMemberRequest) => Promise<void>;
   removeMember: (memberId: number) => Promise<void>;
   refetch: () => Promise<void>;
@@ -22,7 +24,7 @@ interface UseCurrentUserDepartmentMembersResult {
 
 export const useCurrentUserDepartmentMembers = (
   page: number = 1,
-  limit: number = 10,
+  initialLimit: number = 10,
   search?: string,
 ): UseCurrentUserDepartmentMembersResult => {
   const [members, setMembers] = useState<DepartmentMember[]>([]);
@@ -31,6 +33,7 @@ export const useCurrentUserDepartmentMembers = (
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(page);
+  const [pageSize, setPageSize] = useState<number>(initialLimit);
   const [departmentName, setDepartmentName] = useState<string | null>(null);
   const [departmentId, setDepartmentId] = useState<number | null>(null);
 
@@ -63,14 +66,16 @@ export const useCurrentUserDepartmentMembers = (
       const membersResponse = await departmentService.getDepartmentMembers(
         userDepartment.id,
         currentPage,
-        limit,
+        pageSize,
         search,
       );
 
       if (membersResponse.success) {
         setMembers(membersResponse.data);
-        setTotalCount(membersResponse.totalCount || 0);
-        setTotalPages(membersResponse.totalPages || 0);
+        // Get pagination info from the pagination object
+        const paginationInfo = membersResponse.pagination;
+        setTotalCount(paginationInfo?.total || 0);
+        setTotalPages(paginationInfo?.totalPages || 0);
       } else {
         setError(
           membersResponse.message || "Failed to fetch department members",
@@ -89,7 +94,7 @@ export const useCurrentUserDepartmentMembers = (
   useEffect(() => {
     setCurrentPage(page);
     fetchMembers();
-  }, [page, limit, search]);
+  }, [page, pageSize, search]);
 
   // Add member function
   const addMember = async (request: AddDepartmentMemberRequest) => {
@@ -122,6 +127,10 @@ export const useCurrentUserDepartmentMembers = (
     await fetchMembers();
   };
 
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+  };
+
   return {
     members,
     loading,
@@ -130,6 +139,8 @@ export const useCurrentUserDepartmentMembers = (
     totalCount,
     departmentName,
     departmentId,
+    pageSize,
+    setPageSize: handlePageSizeChange,
     addMember,
     removeMember,
     refetch: fetchMembers,
