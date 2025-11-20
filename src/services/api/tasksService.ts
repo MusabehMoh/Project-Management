@@ -10,6 +10,14 @@ export class TasksService {
   private baseUrl = "/Tasks";
 
   /**
+   * Get task by ID
+   * @param taskId - The task ID
+   */
+  async getTaskById(taskId: number): Promise<ApiResponse<any>> {
+    return apiClient.get<any>(`${this.baseUrl}/${taskId}`);
+  }
+
+  /**
    * Update task status using PATCH endpoint
    * This creates a task status history record and updates the task
    * @param taskId - The task ID

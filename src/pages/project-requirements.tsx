@@ -68,11 +68,13 @@ import {
   Clock,
   Play,
   Info,
+  Network,
 } from "lucide-react";
 import { parseDate } from "@internationalized/date";
 
 import { FilePreview } from "@/components/FilePreview";
 import { GlobalPagination } from "@/components/GlobalPagination";
+import AIDiagramGenerator from "@/components/AIDiagramGenerator";
 import {
   convertTypeToString,
   REQUIREMENT_STATUS,
@@ -290,6 +292,9 @@ export default function ProjectRequirementsPage() {
   const [conversationHistory, setConversationHistory] = useState<
     Array<{ role: "user" | "assistant"; content: string; timestamp: number }>
   >([]);
+
+  // AI Diagram Generator state
+  const [isDiagramModalOpen, setIsDiagramModalOpen] = useState(false);
 
   // Excalidraw Modal state
   const [isExcalidrawOpen, setIsExcalidrawOpen] = useState(false);
@@ -1251,20 +1256,23 @@ export default function ProjectRequirementsPage() {
               </div>
             </div>
 
-            {/* Add Requirement Button */}
-            {hasPermission({
-              actions: ["requirements.create"],
-            }) ? (
-              <Button
-                className="sm:min-w-fit"
-                color="primary"
-                size="lg"
-                startContent={<Plus className="w-4 h-4" />}
-                onPress={handleCreateRequirement}
-              >
-                {t("requirements.addRequirement")}
-              </Button>
-            ) : null}
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              {/* Add Requirement Button */}
+              {hasPermission({
+                actions: ["requirements.create"],
+              }) ? (
+                <Button
+                  className="sm:min-w-fit"
+                  color="primary"
+                  size="lg"
+                  startContent={<Plus className="w-4 h-4" />}
+                  onPress={handleCreateRequirement}
+                >
+                  {t("requirements.addRequirement")}
+                </Button>
+              ) : null}
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -1952,6 +1960,17 @@ export default function ProjectRequirementsPage() {
                         <span className="text-danger">*</span>
                       </label>
                       <div className="flex gap-2">
+                        <Tooltip content={t("requirements.generateDiagram") || "Generate AI Diagram"}>
+                          <Button
+                            isIconOnly
+                            color="success"
+                            size="sm"
+                            variant="flat"
+                            onPress={() => setIsDiagramModalOpen(true)}
+                          >
+                            <Network className="w-4 h-4" />
+                          </Button>
+                        </Tooltip>
                         <Tooltip content={language === "ar" ? "أداة الرسم والمخططات" : "Drawing & Diagram Tool"}>
                           <Button
                             isIconOnly
@@ -2730,6 +2749,152 @@ export default function ProjectRequirementsPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* AI Diagram Generator Modal */}
+      <AIDiagramGenerator
+        isOpen={isDiagramModalOpen}
+        onClose={() => setIsDiagramModalOpen(false)}
+        context={(() => {
+          // Build intelligent context based on current page state
+          const parts = [];
+          
+          // Project info
+          parts.push(`Project: "${projectName}"`);
+          
+          // If editing/creating a requirement, include its details at the top
+          if (selectedRequirement || formData.name) {
+            parts.push(`\n\n=== Current Requirement ===`);
+            
+            const reqName = formData.name || selectedRequirement?.name || "Untitled";
+            parts.push(`\nName: ${reqName}`);
+            
+            // Get description from ReactQuill editor
+            if (formData.description) {
+              // Strip HTML tags for cleaner context
+              const descText = formData.description
+                .replace(/<[^>]*>/g, " ") // Remove HTML tags
+                .replace(/&nbsp;/g, " ")   // Replace &nbsp;
+                .replace(/\s+/g, " ")       // Normalize whitespace
+                .trim();
+              
+              if (descText) {
+                parts.push(`\nDescription: ${descText.substring(0, 300)}${descText.length > 300 ? "..." : ""}`);
+              }
+            }
+            
+            // Get status name
+            if (formData.status > 0) {
+              try {
+                const statusName = getRequirementStatusName(formData.status);
+                if (statusName) parts.push(`\nStatus: ${statusName}`);
+              } catch (e) {
+                console.error("Status lookup failed:", e);
+              }
+            }
+            
+            // Get priority name
+            if (formData.priority > 0) {
+              try {
+                const priorityName = getPriorityLabel(formData.priority);
+                if (priorityName) parts.push(`\nPriority: ${priorityName}`);
+              } catch (e) {
+                console.error("Priority lookup failed:", e);
+              }
+            }
+            
+            // Get type name
+            if (formData.type > 0) {
+              try {
+                const typeName = convertTypeToString(formData.type);
+                if (typeName) parts.push(`\nType: ${typeName}`);
+              } catch (e) {
+                console.error("Type lookup failed:", e);
+              }
+            }
+            
+            // Expected completion date
+            if (formData.expectedCompletionDate) {
+              parts.push(`\nExpected Completion: ${formData.expectedCompletionDate.toString()}`);
+            }
+            
+            parts.push(`\n=== End Current Requirement ===\n`);
+          }
+          
+          // Requirements summary
+          if (stats && stats.total > 0) {
+            const summary = [];
+            if (stats.draft > 0) summary.push(`${stats.draft} draft`);
+            if (stats.approved > 0) summary.push(`${stats.approved} approved`);
+            if (stats.rejected > 0) summary.push(`${stats.rejected} rejected`);
+            if (stats.pending > 0) summary.push(`${stats.pending} pending`);
+            
+            parts.push(`\nTotal: ${stats.total} requirements (${summary.join(", ")})`);
+          }
+          
+          // List actual requirements with clean formatting
+          if (requirements.length > 0) {
+            parts.push(`\n\nOther requirements on this page:`);
+            
+            requirements.forEach((req, index) => {
+              // Skip the current requirement being edited
+              if (selectedRequirement && req.id === selectedRequirement.id) {
+                return;
+              }
+              
+              // Get status name from lookup
+              let statusName = "New";
+              try {
+                const lookupStatus = getRequirementStatusName(req.status);
+                if (lookupStatus) statusName = lookupStatus;
+              } catch (e) {
+                console.error("Status lookup failed for", req.status, ":", e);
+              }
+              
+              // Get priority name from lookup
+              let priorityName = "Medium";
+              try {
+                const lookupPriority = getPriorityLabel(req.priority);
+                if (lookupPriority) priorityName = lookupPriority;
+              } catch (e) {
+                console.error("Priority lookup failed for", req.priority, ":", e);
+              }
+              
+              // Get type name
+              let typeName = "Feature";
+              try {
+                const lookupType = convertTypeToString(req.type);
+                if (lookupType) typeName = lookupType;
+              } catch (e) {
+                console.error("Type lookup failed for", req.type, ":", e);
+              }
+              
+              // Clean requirement name (remove special characters that break Mermaid)
+              const cleanName = req.name
+                .replace(/['"]/g, "") // Remove quotes
+                .replace(/[\n\r]/g, " ") // Replace newlines with space
+                .trim();
+              
+              parts.push(
+                `\n${index + 1}. ${cleanName} - ${statusName}, ${priorityName} priority, ${typeName} type`
+              );
+            });
+          }
+          
+          // Additional context
+          if (searchTerm) {
+            parts.push(`\n\nSearch filter: "${searchTerm}"`);
+          }
+          
+          return parts.join("");
+        })()}
+        contextTitle={
+          selectedRequirement 
+            ? `${t("requirements.editRequirement")}: ${formData.name || selectedRequirement.name}` 
+            : formData.name 
+              ? `${t("requirements.newRequirement")}: ${formData.name}`
+              : projectName || t("requirements.projectRequirements")
+        }
+      />
     </>
   );
 }

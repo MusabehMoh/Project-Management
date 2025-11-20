@@ -87,6 +87,7 @@ interface TimelineTreeViewProps {
   filters: TimelineFilters;
   selectedItem?: string;
   loading?: boolean;
+  highlightTaskId?: string;
 }
 
 export default function TimelineTreeView({
@@ -108,6 +109,7 @@ export default function TimelineTreeView({
   filters,
   selectedItem,
   loading = false,
+  highlightTaskId,
 }: TimelineTreeViewProps) {
   const { t, direction, language } = useLanguage();
   const { hasPermission } = usePermissions();
@@ -167,6 +169,7 @@ export default function TimelineTreeView({
   const [quickSearch, setQuickSearch] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const activeScrollRef = useRef<HTMLElement | null>(null);
+  const hasAutoSelectedTask = useRef(false);
 
   // Move task modal state
   const [isMoveTaskModalOpen, setIsMoveTaskModalOpen] = useState(false);
@@ -234,6 +237,51 @@ export default function TimelineTreeView({
   useEffect(() => {
     setExpandedItems(new Set([safeTimelineTreeId]));
   }, [safeTimelineTreeId, timeline.id, timeline.name]);
+
+  // Auto-expand and scroll to highlighted task
+  useEffect(() => {
+    if (!highlightTaskId || !timeline || hasAutoSelectedTask.current) return;
+
+    // Find the task in the timeline
+    let foundTask: Task | null = null;
+    let parentSprint: Sprint | null = null;
+
+    for (const sprint of timeline.sprints || []) {
+      const task = sprint.tasks?.find((t) => String(t.id) === highlightTaskId);
+      if (task) {
+        foundTask = task;
+        parentSprint = sprint;
+        break;
+      }
+    }
+
+    if (foundTask && parentSprint) {
+      // Mark as auto-selected so it only happens once
+      hasAutoSelectedTask.current = true;
+
+      // Expand timeline and sprint
+      setExpandedItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(safeTimelineTreeId);
+        newSet.add(parentSprint!.treeId || `sprint-${parentSprint!.id}`);
+        return newSet;
+      });
+
+      // Select and scroll to task after a short delay to allow DOM to update
+      setTimeout(() => {
+        const taskTreeId = foundTask!.treeId || `task-${foundTask!.id}`;
+        onItemSelect(taskTreeId, "task");
+
+        // Scroll to the task element
+        setTimeout(() => {
+          const taskElement = document.querySelector(`[data-tree-id="${taskTreeId}"]`);
+          if (taskElement) {
+            taskElement.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 100);
+      }, 300);
+    }
+  }, [highlightTaskId, timeline, safeTimelineTreeId, onItemSelect]);
 
   // Color legend component
   const renderColorLegend = () => (
@@ -1107,6 +1155,7 @@ export default function TimelineTreeView({
       className={`${direction === "rtl" ? "mr-8" : "ml-8"} group`}
       data-filtered={isTaskFiltered(task) ? "true" : undefined}
       data-task-id={task.id.toString()}
+      data-tree-id={task.treeId}
     >
       <div
         className={`p-3 ${direction === "rtl" ? "border-r-4" : "border-l-4"} cursor-pointer hover:bg-default-50 transition-colors ${

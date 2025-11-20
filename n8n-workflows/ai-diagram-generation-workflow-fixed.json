@@ -1,0 +1,179 @@
+{
+  "name": "AI Diagram Generation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-diagram",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Diagram Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "ai-diagram-generate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body;\nconst diagramType = body.diagramType || 'flowchart';\nconst userPrompt = body.prompt || '';\nconst context = body.context || '';\n\nconst arabicRegex = /[\\u0600-\\u06FF]/;\nconst isArabic = arabicRegex.test(userPrompt) || arabicRegex.test(context);\n\nconst examples = {\n  flowchart: 'flowchart TD\\n    A[Start] --> B{Decision}\\n    B -->|Yes| C[Action]\\n    C --> D[End]',\n  sequence: 'sequenceDiagram\\n    User->>System: Request\\n    System-->>User: Response',\n  gantt: 'gantt\\n    title Project Timeline\\n    dateFormat YYYY-MM-DD\\n    section Phase 1\\n    Task A :done, taskA, 2024-01-01, 5d\\n    Task B :active, taskB, after taskA, 3d\\n    section Phase 2\\n    Task C :taskC, after taskB, 4d',\n  class: 'classDiagram\\n    class User {\\n        +String name\\n        +login()\\n    }',\n  state: 'stateDiagram-v2\\n    [*] --> Active\\n    Active --> [*]',\n  er: 'erDiagram\\n    USER ||--o{ ORDER : places',\n  journey: 'journey\\n    title Journey\\n    section Start\\n      Task: 5: User',\n  mindmap: 'mindmap\\n  root((Main))\\n    Branch1\\n    Branch2'\n};\n\nconst example = examples[diagramType] || examples.flowchart;\n\nlet systemPrompt = '';\nlet userMessage = '';\n\nif (isArabic) {\n  systemPrompt = 'أنت خبير Mermaid. أنشئ كود صحيح فقط بدون شرح.\\n\\nقواعد مهمة:\\n1. معرف العقدة: حرف بسيط (A, B, R1)\\n2. النص: داخل أقواس [النص هنا]\\n3. لا تستخدم أقواس متداخلة\\n4. المشروع في الأعلى متصل بكل المتطلبات\\n\\nمثال صحيح:\\nP[المشروع] --> R1[متطلب 1]\\nP --> R2[متطلب 2]\\n\\nنوع: ' + diagramType + '\\nمثال:\\n' + example;\n  userMessage = 'السياق: ' + context + '\\n\\nالمطلوب: ' + userPrompt + '\\n\\nالكود:';\n} else {\n  systemPrompt = 'You are a Mermaid diagram expert. Generate ONLY valid Mermaid code with NO explanations.\\n\\nCRITICAL SYNTAX RULES:\\n1. Node ID: Simple alphanumeric only (A, B, C, R1, R2, REQ1)\\n2. Node label: Text inside ONE pair of brackets [Label Text Here]\\n3. NEVER nest brackets - [text [more]] is INVALID\\n4. Separate ID from label: NodeID[Label Text]\\n5. No quotes in node definitions\\n6. DO NOT MIX diagram syntaxes - gantt uses sections and task lines, NOT arrows\\n\\nCORRECT Examples:\\nFlowchart: R1[requirement nasser] --> R2[requirement ahmed]\\nGantt: section Phase\\n    Task Name :done, taskId, 2024-01-01, 5d\\n\\nINCORRECT (will cause parse errors):\\nC[R1[requirement nasser]] ❌ nested brackets\\nR1[[requirement]] ❌ double brackets\\n\"R1\"[text] ❌ quotes in ID\\nGantt with arrows ❌ P --> R1 is flowchart syntax, NOT gantt\\n\\nFor GANTT charts:\\n- Use section for grouping\\n- Format: TaskName :status, taskId, startDate, duration\\n- Status: done, active, or blank\\n- NO arrows, NO --> syntax\\n- Example:\\n  gantt\\n    title Timeline\\n    dateFormat YYYY-MM-DD\\n    section Group 1\\n    Req A :done, reqA, 2024-01-01, 3d\\n    Req B :active, reqB, after reqA, 2d\\n\\nFor FLOWCHART with project requirements:\\n- Put project node at TOP\\n- Connect project to ALL requirements\\n- Example: P[Project Name] --> R1[Req 1]; P --> R2[Req 2]; P --> R3[Req 3]\\n\\nType: ' + diagramType + '\\nExample:\\n' + example + '\\n\\nRemember: Match syntax to diagram type!';\n  userMessage = 'Context: ' + context + '\\n\\nRequest: ' + userPrompt + '\\n\\nGenerate valid Mermaid code:';\n}\n\nconst finalPrompt = systemPrompt + '\\n\\n' + userMessage;\n\nreturn {\n  json: {\n    model: 'qwen2.5-coder:7b',\n    prompt: finalPrompt,\n    stream: false,\n    options: {\n      temperature: 0.2,\n      top_p: 0.9,\n      top_k: 50,\n      num_predict: 600,\n      repeat_penalty: 1.15\n    },\n    originalRequest: {\n      diagramType: diagramType,\n      userPrompt: userPrompt,\n      context: context,\n      detectedLanguage: isArabic ? 'ar' : 'en'\n    }\n  }\n};"
+      },
+      "id": "build-diagram-prompt",
+      "name": "Build Diagram Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{ $json.model }}"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "name": "stream",
+              "value": "={{ $json.stream }}"
+            },
+            {
+              "name": "options",
+              "value": "={{ $json.options }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "call-ollama",
+      "name": "Call Ollama API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ollamaResponse = $input.item.json;\nconst originalRequest = $('Build Diagram Prompt').item.json.originalRequest;\n\nlet mermaidCode = ollamaResponse.response || '';\n\nmermaidCode = mermaidCode.replace(/```mermaid\\n?/g, '');\nmermaidCode = mermaidCode.replace(/```\\n?/g, '');\nmermaidCode = mermaidCode.trim();\n\nconst validDiagramTypes = ['flowchart', 'sequenceDiagram', 'gantt', 'classDiagram', 'stateDiagram', 'erDiagram', 'journey', 'mindmap'];\nconst hasValidStart = validDiagramTypes.some(type => mermaidCode.toLowerCase().startsWith(type.toLowerCase()));\n\nif (!hasValidStart && mermaidCode) {\n  const typeMap = {\n    'flowchart': 'flowchart TD',\n    'sequence': 'sequenceDiagram',\n    'gantt': 'gantt',\n    'class': 'classDiagram',\n    'state': 'stateDiagram-v2',\n    'er': 'erDiagram',\n    'journey': 'journey',\n    'mindmap': 'mindmap'\n  };\n  const prefix = typeMap[originalRequest.diagramType] || 'flowchart TD';\n  mermaidCode = prefix + '\\n' + mermaidCode;\n}\n\nlet confidence = 0.75;\nif (mermaidCode.length > 50 && hasValidStart) {\n  confidence = 0.9;\n}\nif (mermaidCode.includes('-->') || mermaidCode.includes('->>') || mermaidCode.includes(':|')) {\n  confidence = Math.min(confidence + 0.05, 0.95);\n}\n\nreturn {\n  json: {\n    success: true,\n    data: {\n      suggestion: mermaidCode,\n      confidence: confidence,\n      metadata: {\n        diagramType: originalRequest.diagramType,\n        generatedAt: new Date().toISOString(),\n        model: 'llama3.1:8b',\n        tokensUsed: ollamaResponse.eval_count || 0\n      }\n    },\n    message: 'Diagram generated successfully'\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const error = $input.item.json.error || 'Unknown error occurred';\n\nreturn {\n  json: {\n    success: false,\n    data: null,\n    message: 'Failed to generate diagram: ' + error\n  }\n};"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-error",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 500]
+    }
+  ],
+  "connections": {
+    "Webhook - Diagram Request": {
+      "main": [
+        [
+          {
+            "node": "Build Diagram Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Diagram Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call Ollama API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Ollama API": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-11-17T00:00:00.000Z",
+  "versionId": "1"
+}

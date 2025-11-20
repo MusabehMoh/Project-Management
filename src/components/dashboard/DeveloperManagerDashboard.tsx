@@ -6,6 +6,9 @@ import ApprovedRequirements from "./ApprovedRequirements";
 import TaskCompletionTracker from "./developer/TaskCompletionTracker";
 import DHtmlGanttChart from "./developer/DHtmlGanttChart";
 import DeveloperCalendar from "./calendar";
+import { Button } from "@heroui/button";
+import { Modal, ModalContent, ModalHeader, ModalBody } from "@heroui/modal";
+import { Maximize2 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { developerQuickActionsService } from "@/services/api/developerQuickActionsService";
@@ -15,6 +18,8 @@ import { showSuccessToast, showErrorToast } from "@/utils/toast";
 export default function DeveloperManagerDashboard() {
   const { t, language } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isTeamPerformanceModalOpen, setIsTeamPerformanceModalOpen] = useState(false);
+  const [isProjectTimelineModalOpen, setIsProjectTimelineModalOpen] = useState(false);
 
   // Handle task assignment
   const handleAssignDeveloper = async (task: any, developerId: string) => {
@@ -84,9 +89,19 @@ export default function DeveloperManagerDashboard() {
       {/* Developer Workload and Calendar */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">
-            {t("developerDashboard.teamWorkload")}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-foreground">
+              {t("developerDashboard.teamWorkload")}
+            </h2>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              onPress={() => setIsTeamPerformanceModalOpen(true)}
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
           <DeveloperWorkloadPerformance />
         </div>
 
@@ -100,10 +115,22 @@ export default function DeveloperManagerDashboard() {
 
       {/* Full Width Project Timeline Section */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-foreground">
-          {t("developerDashboard.projectTimeline")}
-        </h2>
-        <DHtmlGanttChart height="400px" />
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold text-foreground">
+            {t("developerDashboard.projectTimeline")}
+          </h2>
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            onPress={() => setIsProjectTimelineModalOpen(true)}
+          >
+            <Maximize2 className="w-4 h-4" />
+          </Button>
+        </div>
+        {!isProjectTimelineModalOpen && (
+          <DHtmlGanttChart height="400px" />
+        )}
       </div>
 
       {/* Task Completion Only */}
@@ -112,6 +139,52 @@ export default function DeveloperManagerDashboard() {
           <TaskCompletionTracker />
         </div>
       </div>
+
+      {/* Team Performance Modal */}
+      <Modal 
+        isOpen={isTeamPerformanceModalOpen} 
+        onClose={() => setIsTeamPerformanceModalOpen(false)}
+        size="5xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h2 className="text-2xl font-semibold">
+              {t("developerDashboard.teamWorkload")}
+            </h2>
+          </ModalHeader>
+          <ModalBody className="py-6">
+            <DeveloperWorkloadPerformance />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* Project Timeline Modal */}
+      {isProjectTimelineModalOpen && (
+        <Modal 
+          isOpen={isProjectTimelineModalOpen} 
+          onClose={() => setIsProjectTimelineModalOpen(false)}
+          size="full"
+          scrollBehavior="outside"
+          classNames={{
+            base: "m-0 sm:m-0",
+            wrapper: "items-center justify-center"
+          }}
+        >
+          <ModalContent>
+            <ModalHeader>
+              <h2 className="text-2xl font-semibold">
+                {t("developerDashboard.projectTimeline")}
+              </h2>
+            </ModalHeader>
+            <ModalBody className="py-6">
+              <div className="h-[calc(100vh-120px)]">
+                <DHtmlGanttChart height="100%" />
+              </div>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
     </div>
   );
 }

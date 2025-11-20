@@ -141,5 +141,19 @@
   border-color: hsl(var(--nextui-border)) !important;
 }
 
+/* Highlight animation for task navigation */
+@keyframes highlightFade {
+  0% {
+    background-color: hsl(var(--nextui-primary) / 0.3);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.highlight-flash {
+  animation: highlightFade 1.5s ease-out forwards;
+}
+
 /* Import custom CSS overrides */
 @import "./custom.css";

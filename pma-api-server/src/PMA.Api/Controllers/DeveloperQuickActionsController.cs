@@ -455,7 +455,7 @@ public class DeveloperQuickActionsController : ApiBaseController
             var onTimeCompleted = allTasks.Count(t => 
                 t.StatusId == TaskStatusEnum.Completed && 
                 t.ActualHours <= t.EstimatedHours);
-            var onTimeRate = totalTasks > 0 ? (int)Math.Round((double)onTimeCompleted / completedTasks * 100) : 0;
+            var onTimeRate = completedTasks > 0 ? (int)Math.Round((double)onTimeCompleted / completedTasks * 100) : 0;
             
             // Calculate average delay days for overdue completed tasks
             var overdueCompletedTasks = allTasks.Where(t => 

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -67,6 +68,7 @@ export default function TaskCompletionTracker({
   developerId,
 }: TaskCompletionTrackerProps) {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 3;
@@ -295,11 +297,11 @@ export default function TaskCompletionTracker({
               className="mb-2"
               color="success"
               size="sm"
-              value={analytics.summary.onTimeRate}
+              value={Math.max(0, Math.min(100, analytics.summary.onTimeRate || 0))}
             />
             <div className="flex justify-between text-xs text-default-500">
               <span>
-                {analytics.summary.onTimeRate}%{" "}
+                {Math.max(0, Math.min(100, analytics.summary.onTimeRate || 0))}%{" "}
                 {t("developerDashboard.onTime") || "on time"}
               </span>
               {analytics.summary.avgDelayDays > 0 && (
@@ -332,7 +334,11 @@ export default function TaskCompletionTracker({
                 </TableHeader>
                 <TableBody>
                   {paginatedItems.map((item) => (
-                    <TableRow key={`${item.type}-${item.id}`}>
+                    <TableRow 
+                      key={`${item.type}-${item.id}`}
+                      className="cursor-pointer hover:bg-default-100"
+                      onClick={() => navigate(`/timeline?taskId=${item.id}`)}
+                    >
                       <TableCell>
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">

@@ -14,7 +14,7 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/modal";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -34,6 +34,7 @@ import TimelineDetailsPanel from "@/components/timeline/TimelineDetailsPanel";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import TimelineFilters from "@/components/timeline/TimelineFilters";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
+import AllProjectsOverview from "@/components/timeline/AllProjectsOverview";
 // Import skeleton components
 import TimelineTreeSkeleton from "@/components/timeline/skeletons/TimelineTreeSkeleton";
 import TimelineGanttSkeleton from "@/components/timeline/skeletons/TimelineGanttSkeleton";
@@ -48,6 +49,7 @@ export default function TimelinePage() {
   const timelineId = searchParams.get("timelineId")
     ? parseInt(searchParams.get("timelineId")!)
     : undefined;
+  const taskId = searchParams.get("taskId") || undefined;
   const [selectedProjectId, setSelectedProjectId] = useState<
     number | undefined
   >(projectId);
@@ -310,6 +312,47 @@ export default function TimelinePage() {
       loadProjectsWithTimelineInfo();
     }
   }, [projects.length, loadProjectsWithTimelineInfo]); // ✅ Remove selectedProjectId dependency
+
+  // Auto-select project and timeline based on taskId parameter
+  useEffect(() => {
+    if (!taskId || !projects || projects.length === 0) return;
+
+    const fetchTaskAndSelectProject = async () => {
+      try {
+        // Fetch task details
+        const taskResponse = await timelineService.getTaskById(parseInt(taskId));
+        if (taskResponse.success && taskResponse.data) {
+          const task = taskResponse.data;
+          // Task has sprintId, sprint has timelineId
+          if (task.sprintId) {
+            // Fetch sprint to get timelineId
+            const sprintResponse = await timelineService.getSprintById(task.sprintId);
+            if (sprintResponse.success && sprintResponse.data) {
+              const sprint = sprintResponse.data;
+              if (sprint.timelineId) {
+                // Fetch timeline to get projectId
+                const timelineResponse = await timelineService.getTimelineById(sprint.timelineId);
+                if (timelineResponse.success && timelineResponse.data) {
+                  const timeline = timelineResponse.data;
+                  // Set projectId and timelineId in URL params
+                  setSearchParams({
+                    projectId: timeline.projectId.toString(),
+                    timelineId: sprint.timelineId.toString(),
+                    taskId: taskId,
+                  });
+                  setSelectedProjectId(timeline.projectId);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching task details:", error);
+      }
+    };
+
+    fetchTaskAndSelectProject();
+  }, [taskId, projects, setSearchParams]);
 
   // Auto-select timeline when data loads and we have a selected project
   useEffect(() => {
@@ -710,6 +753,19 @@ export default function TimelinePage() {
           </div>
 
           <div className="flex gap-2">
+            {/* Back to Overview button - shows when project is selected */}
+            {selectedProjectId && (
+              <Button
+                startContent={<ArrowLeft className="w-4 h-4" />}
+                variant="bordered"
+                onPress={() => {
+                  // Navigate back to overview - pass current selection via state
+                  window.location.href = `/timeline?restore=${selectedProjectId}${selectedTimeline ? `-${selectedTimeline.id}` : ''}`;
+                }}
+              >
+                {t("common.back")}
+              </Button>
+            )}
             {/* <Button
               color="primary"
               isDisabled={loading}
@@ -895,7 +951,10 @@ export default function TimelinePage() {
         )}
 
         {/* Main Content */}
-        {timelines.length === 0 ? (
+        {!selectedProjectId && !projectsLoading ? (
+          // Show all projects overview when no project is selected
+          <AllProjectsOverview projects={projects} />
+        ) : timelines.length === 0 ? (
           <Card>
             <CardBody className="text-center py-12">
               <div className="space-y-4">
@@ -1003,6 +1062,7 @@ export default function TimelinePage() {
                         onUpdateSubtask={updateSubtask}
                         onUpdateTask={handleUpdateTask}
                         onUpdateTimeline={updateTimeline}
+                        highlightTaskId={taskId}
                       />
                     )}
                   </CardBody>

@@ -24,6 +24,23 @@ interface LLMSuggestionResponse {
   confidence: number;
 }
 
+interface DiagramGenerationRequest {
+  diagramType: string;
+  prompt: string;
+  context?: string;
+}
+
+interface DiagramGenerationResponse {
+  suggestion: string; // Mermaid code
+  confidence: number;
+  metadata?: {
+    diagramType: string;
+    generatedAt: string;
+    model: string;
+    tokensUsed: number;
+  };
+}
+
 interface OllamaGenerateRequest {
   model: string;
   prompt: string;
@@ -52,12 +69,15 @@ const LLM_CONFIG = {
   n8nWebhookUrl:
     import.meta.env.VITE_LLM_N8N_WEBHOOK_URL ||
     "http://localhost:5678/webhook/ai-suggest-agent",
+  n8nDiagramWebhookUrl:
+    import.meta.env.VITE_LLM_N8N_DIAGRAM_WEBHOOK_URL ||
+    "http://localhost:5678/webhook/ai-diagram",
   // Direct Ollama config (fallback)
   baseUrl: import.meta.env.VITE_LLM_API_URL || "http://localhost:11434",
   model: import.meta.env.VITE_LLM_MODEL || "mistral:7b-instruct",
   temperature: 0.3, // Lower = more consistent/deterministic
   maxTokens: 150,
-  timeout: 15000, // 15 second timeout (n8n + Ollama needs more time)
+  timeout: 20000, // 20 second timeout (diagrams may take longer)
 };
 
 export const llmService = {
@@ -193,6 +213,169 @@ export const llmService = {
       clearTimeout(timeoutId);
       throw error;
     }
+  },
+
+  /**
+   * Generate diagram using AI
+   */
+  async generateDiagram(
+    request: DiagramGenerationRequest,
+  ): Promise<ApiResponse<DiagramGenerationResponse>> {
+    try {
+      // Check if LLM is enabled
+      if (import.meta.env.VITE_LLM_ENABLED !== "true") {
+        return {
+          success: false,
+          message: "LLM service is disabled",
+          data: null,
+        };
+      }
+
+      // Use n8n workflow for diagram generation
+      if (LLM_CONFIG.useN8N) {
+        return await this.generateDiagramViaN8N(request);
+      } else {
+        return await this.generateDiagramViaOllama(request);
+      }
+    } catch (error) {
+      console.error("Error generating diagram:", error);
+
+      if (error instanceof Error && error.name === "AbortError") {
+        return {
+          success: false,
+          message: "Request timeout - Diagram generation took too long",
+          data: null,
+        };
+      }
+
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to generate diagram",
+        data: null,
+      };
+    }
+  },
+
+  /**
+   * Generate diagram via n8n workflow
+   */
+  async generateDiagramViaN8N(
+    request: DiagramGenerationRequest,
+  ): Promise<ApiResponse<DiagramGenerationResponse>> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), LLM_CONFIG.timeout);
+
+    try {
+      const response = await fetch(LLM_CONFIG.n8nDiagramWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          diagramType: request.diagramType,
+          prompt: request.prompt,
+          context: request.context || "",
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`n8n diagram workflow error: ${response.statusText}`);
+      }
+
+      const data: ApiResponse<DiagramGenerationResponse> = await response.json();
+
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  },
+
+  /**
+   * Generate diagram directly via Ollama (fallback)
+   */
+  async generateDiagramViaOllama(
+    request: DiagramGenerationRequest,
+  ): Promise<ApiResponse<DiagramGenerationResponse>> {
+    const prompt = this.buildDiagramPrompt(request);
+
+    const ollamaRequest: OllamaGenerateRequest = {
+      model: "llama3.1:8b",
+      prompt,
+      stream: false,
+      options: {
+        temperature: 0.3,
+        top_p: 0.85,
+        max_tokens: 500,
+      },
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), LLM_CONFIG.timeout);
+
+    try {
+      const response = await fetch(`${LLM_CONFIG.baseUrl}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ollamaRequest),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.statusText}`);
+      }
+
+      const data: OllamaGenerateResponse = await response.json();
+
+      // Clean Mermaid code
+      let mermaidCode = data.response.trim();
+      mermaidCode = mermaidCode.replace(/```mermaid\n?/g, "");
+      mermaidCode = mermaidCode.replace(/```\n?/g, "");
+
+      return {
+        success: true,
+        data: {
+          suggestion: mermaidCode,
+          confidence: 0.85,
+          metadata: {
+            diagramType: request.diagramType,
+            generatedAt: new Date().toISOString(),
+            model: "llama3.1:8b",
+            tokensUsed: data.eval_count || 0,
+          },
+        },
+        message: "Diagram generated successfully",
+      };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  },
+
+  /**
+   * Build diagram generation prompt
+   */
+  buildDiagramPrompt(request: DiagramGenerationRequest): string {
+    const { diagramType, prompt, context } = request;
+
+    return `Generate valid Mermaid.js code for a ${diagramType} diagram.
+
+Context: ${context}
+User Request: ${prompt}
+
+IMPORTANT:
+- Output ONLY Mermaid code
+- No explanations or markdown
+- Use correct ${diagramType} syntax
+- Ensure code is immediately renderable
+
+Generate:`;
   },
 
   /**

@@ -168,6 +168,27 @@ export class TimelineApiService {
   }
 
   /**
+   * Get timeline by ID (numeric)
+   */
+  async getTimelineById(id: number): Promise<ApiResponse<Timeline>> {
+    return this.getTimeline(id.toString());
+  }
+
+  /**
+   * Get sprint by ID
+   */
+  async getSprintById(id: number): Promise<ApiResponse<Sprint>> {
+    return apiClient.get<Sprint>(`/sprints/${id}`);
+  }
+
+  /**
+   * Get task by ID
+   */
+  async getTaskById(id: number): Promise<ApiResponse<Task>> {
+    return apiClient.get<Task>(ENDPOINTS.TASK_BY_ID(id.toString()));
+  }
+
+  /**
    * Update timeline
    */
   async updateTimeline(

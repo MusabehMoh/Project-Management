@@ -1,0 +1,200 @@
+{
+  "name": "AI Diagram Generation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-diagram",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Diagram Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "ai-diagram-generate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract request data\nconst body = $input.item.json.body;\nconst diagramType = body.diagramType || 'flowchart';\nconst userPrompt = body.prompt || '';\nconst context = body.context || '';\n\n// Detect if prompt is in Arabic\nconst arabicRegex = /[\\u0600-\\u06FF]/;\nconst isArabic = arabicRegex.test(userPrompt) || arabicRegex.test(context);\n\n// Mermaid syntax examples for each diagram type\nconst examples = {\n  flowchart: `flowchart TD\n    A[Start] --> B{Decision?}\n    B -->|Yes| C[Action 1]\n    B -->|No| D[Action 2]\n    C --> E[End]\n    D --> E`,\n  \n  sequence: `sequenceDiagram\n    participant User\n    participant System\n    participant Database\n    User->>System: Request\n    System->>Database: Query\n    Database-->>System: Result\n    System-->>User: Response`,\n  \n  gantt: `gantt\n    title Project Timeline\n    dateFormat YYYY-MM-DD\n    section Phase 1\n    Task 1 :done, t1, 2024-01-01, 30d\n    Task 2 :active, t2, after t1, 20d\n    section Phase 2\n    Task 3 :t3, after t2, 25d`,\n  \n  class: `classDiagram\n    class User {\n        +String username\n        +String email\n        +login()\n        +logout()\n    }\n    class Admin {\n        +manageUsers()\n    }\n    User <|-- Admin`,\n  \n  state: `stateDiagram-v2\n    [*] --> Idle\n    Idle --> Processing: Start\n    Processing --> Success: Complete\n    Processing --> Failed: Error\n    Success --> [*]\n    Failed --> Idle: Retry`,\n  \n  er: `erDiagram\n    USER ||--o{ ORDER : places\n    ORDER ||--|{ LINE-ITEM : contains\n    USER {\n        int userId PK\n        string name\n        string email\n    }\n    ORDER {\n        int orderId PK\n        int userId FK\n        date orderDate\n    }`,\n  \n  journey: `journey\n    title User Registration Journey\n    section Sign Up\n      Visit website: 5: User\n      Fill form: 3: User\n      Submit: 4: User\n    section Verification\n      Receive email: 5: System\n      Click link: 5: User\n      Account active: 5: System`,\n  \n  mindmap: `mindmap\n  root((Project))\n    Planning\n      Requirements\n      Timeline\n      Resources\n    Development\n      Backend\n      Frontend\n      Testing\n    Deployment\n      Staging\n      Production`\n};\n\nconst example = examples[diagramType] || examples.flowchart;\n\n// Build comprehensive prompt\nlet systemPrompt = '';\nlet userMessage = '';\n\nif (isArabic) {\n  systemPrompt = `أنت خبير في إنشاء مخططات Mermaid.js. مهمتك إنشاء كود Mermaid صحيح نحوياً وقابل للتنفيذ فوراً.\n\nقواعد مهمة:\n1. أنشئ كود Mermaid فقط - بدون شرح أو نص إضافي\n2. استخدم بناء الجملة الصحيح لنوع المخطط المطلوب\n3. استخدم أسماء عقد وصفية بالإنجليزية (Mermaid لا يدعم العربية في الأسماء)\n4. تأكد من أن الكود قابل للعرض مباشرة\n5. لا تضف علامات \\`\\`\\` أو تنسيق markdown\n\nنوع المخطط: ${diagramType}\n\nمثال للبناء الصحيح:\n${example}\n\nالآن أنشئ مخططاً مماثلاً بناءً على طلب المستخدم.`;\n  \n  userMessage = `السياق: ${context}\\n\\nالمطلوب: ${userPrompt}\\n\\nأنشئ كود Mermaid كاملاً وصحيحاً (بدون شرح):`;\n} else {\n  systemPrompt = `You are an expert at creating Mermaid.js diagrams. Your task is to generate syntactically correct, immediately executable Mermaid code.
+
+Critical Rules:
+1. Output ONLY Mermaid code - no explanations or extra text
+2. Use correct syntax for the requested diagram type
+3. Use SIMPLE alphanumeric node IDs (A, B, C, REQ1, REQ2, etc)
+4. Node labels must be in square brackets [Label Text] or quotes "Label Text"
+5. Avoid special characters in node IDs - use only letters and numbers
+6. Ensure code is directly renderable without errors
+7. Do NOT add ``` code fences or markdown formatting
+8. Test your syntax mentally before outputting
+
+Diagram Type: ${diagramType}
+
+Example of correct syntax:
+${example}
+
+IMPORTANT: When listing items from context, use simple node IDs like R1, R2, R3 or A, B, C.
+Bad: "requirement nasser 2" as node ID
+Good: R1["requirement nasser 2"] or R1[Requirement nasser 2]
+
+Now create a similar diagram based on the user's request.`;\n  \n  userMessage = `Context: ${context}\\n\\nRequest: ${userPrompt}\\n\\nGenerate complete, valid Mermaid code (no explanation):`;\n}\n\n// Build final prompt for Ollama\nconst finalPrompt = `${systemPrompt}\\n\\n${userMessage}`;\n\n// Return structured data for Ollama\nreturn {\n  json: {\n    model: 'llama3.1:8b',\n    prompt: finalPrompt,\n    stream: false,\n    options: {\n      temperature: 0.3,      // Lower for more consistent syntax\n      top_p: 0.85,\n      top_k: 40,\n      num_predict: 500,      // Diagrams can be longer\n      repeat_penalty: 1.1,\n      frequency_penalty: 0.3,\n      presence_penalty: 0.2\n    },\n    originalRequest: {\n      diagramType,\n      userPrompt,\n      context,\n      detectedLanguage: isArabic ? 'ar' : 'en'\n    }\n  }\n};"
+      },
+      "id": "build-diagram-prompt",
+      "name": "Build Diagram Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{ $json.model }}"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "name": "stream",
+              "value": "={{ $json.stream }}"
+            },
+            {
+              "name": "options",
+              "value": "={{ $json.options }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "call-ollama",
+      "name": "Call Ollama API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract Ollama response\nconst ollamaResponse = $input.item.json;\nconst originalRequest = $('Build Diagram Prompt').item.json.originalRequest;\n\n// Clean the response to get pure Mermaid code\nlet mermaidCode = ollamaResponse.response || '';\n\n// Remove markdown code fences if present\nmermaidCode = mermaidCode.replace(/```mermaid\\n?/g, '');\nmermaidCode = mermaidCode.replace(/```\\n?/g, '');\nmermaidCode = mermaidCode.trim();\n\n// Validate that we have actual Mermaid code\nconst validDiagramTypes = ['flowchart', 'sequenceDiagram', 'gantt', 'classDiagram', 'stateDiagram', 'erDiagram', 'journey', 'mindmap'];\nconst hasValidStart = validDiagramTypes.some(type => mermaidCode.toLowerCase().startsWith(type.toLowerCase()));\n\nif (!hasValidStart && mermaidCode) {\n  // If no diagram type prefix, add it based on request\n  const typeMap = {\n    'flowchart': 'flowchart TD',\n    'sequence': 'sequenceDiagram',\n    'gantt': 'gantt',\n    'class': 'classDiagram',\n    'state': 'stateDiagram-v2',\n    'er': 'erDiagram',\n    'journey': 'journey',\n    'mindmap': 'mindmap'\n  };\n  const prefix = typeMap[originalRequest.diagramType] || 'flowchart TD';\n  mermaidCode = `${prefix}\\n${mermaidCode}`;\n}\n\n// Calculate confidence based on code quality\nlet confidence = 0.75;\nif (mermaidCode.length > 50 && hasValidStart) {\n  confidence = 0.9;\n}\nif (mermaidCode.includes('-->') || mermaidCode.includes('->>') || mermaidCode.includes(':|')) {\n  confidence = Math.min(confidence + 0.05, 0.95);\n}\n\n// Return formatted response matching ApiResponse structure\nreturn {\n  json: {\n    success: true,\n    data: {\n      suggestion: mermaidCode,\n      confidence: confidence,\n      metadata: {\n        diagramType: originalRequest.diagramType,\n        generatedAt: new Date().toISOString(),\n        model: 'llama3.1:8b',\n        tokensUsed: ollamaResponse.eval_count || 0\n      }\n    },\n    message: 'Diagram generated successfully'\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle error case\nconst error = $input.item.json.error || 'Unknown error occurred';\n\nreturn {\n  json: {\n    success: false,\n    data: null,\n    message: `Failed to generate diagram: ${error}`\n  }\n};"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-error",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 500]
+    }
+  ],
+  "connections": {
+    "Webhook - Diagram Request": {
+      "main": [
+        [
+          {
+            "node": "Build Diagram Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Diagram Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call Ollama API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Ollama API": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-11-17T00:00:00.000Z",
+  "versionId": "1"
+}
