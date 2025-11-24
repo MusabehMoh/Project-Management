@@ -47,7 +47,7 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<ProjectRequirement?> GetByIdAsync(int id)
     {
-        // Use GetProjectRequirementWithDetailsAsync to include attachments
+      
         return await _projectRequirementRepository.GetByIdAsync(id);
     }
 

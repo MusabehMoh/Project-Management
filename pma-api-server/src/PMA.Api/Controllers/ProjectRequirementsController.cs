@@ -400,7 +400,7 @@ public class ProjectRequirementsController : ApiBaseController
             if (invalid != null) return invalid;
 
             var existingRequirement = await _projectRequirementService
-                .GetProjectRequirementByIdAsync(id);
+                .GetByIdAsync(id);
             if (existingRequirement == null)
                 return Error<ProjectRequirement>("Project requirement not found", null, 404);
 
@@ -878,7 +878,7 @@ public class ProjectRequirementsController : ApiBaseController
             if (invalid != null) return invalid;
 
             var existingRequirement = await _projectRequirementService
-                .GetProjectRequirementByIdAsync(id);
+                .GetByIdAsync(id);
             if (existingRequirement == null)
                 return Error<ProjectRequirement>("Project requirement not found", null, 404);
 
@@ -944,7 +944,7 @@ public class ProjectRequirementsController : ApiBaseController
         try
         {
             var existingRequirement = await _projectRequirementService
-                .GetProjectRequirementByIdAsync(id);
+                .GetByIdAsync(id);
             if (existingRequirement == null)
                 return Error<ProjectRequirement>("Project requirement not found", null, 404);
 
