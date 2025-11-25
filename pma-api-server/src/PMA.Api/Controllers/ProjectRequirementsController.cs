@@ -1,13 +1,15 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using PMA.Api.Services;
-using PMA.Core.DTOs;
-using PMA.Core.Entities;
-using PMA.Core.Interfaces;
-using PMA.Core.Enums;
 using Microsoft.Extensions.Options;
 using PMA.Api.Config;
-using PMA.Core.Services;
+using PMA.Api.Services;
 using PMA.Api.Utils;
+using PMA.Core.DTOs;
+using PMA.Core.Entities;
+using PMA.Core.Enums;
+using PMA.Core.Interfaces;
+using PMA.Core.Models;
+using PMA.Core.Services;
 using System.Text.Json;
 using TaskStatusEnum = PMA.Core.Enums.TaskStatus;
 namespace PMA.Api.Controllers;
@@ -302,7 +304,18 @@ public class ProjectRequirementsController : ApiBaseController
             var invalid = ValidateModelState();
             if (invalid != null) return invalid;
 
-            var projectRequirement = _mappingService.MapToProjectRequirement(createDto);
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!int.TryParse(userContext.PrsId, out var createdBy))
+            {
+                return Error<string>("Invalid user identifier", null, 401);
+            }
+            // Parse PrsId to int
+            if (!int.TryParse(userContext.PrsId, out var SentBy))
+            {
+                return Error<string>("Invalid user identifier", null, 401);
+            }
+            createDto.SentBy= SentBy;
+            var projectRequirement = _mappingService.MapToProjectRequirement(createDto, createdBy);
             var createdProjectRequirement = await _projectRequirementService
                 .CreateProjectRequirementAsync(projectRequirement);
             return Success(createdProjectRequirement, message: "Project requirement created successfully");
@@ -330,7 +343,15 @@ public class ProjectRequirementsController : ApiBaseController
 
             // Ensure the projectId from route overrides body
             createDto.ProjectId = projectId;
-            var projectRequirement = _mappingService.MapToProjectRequirement(createDto);
+
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!int.TryParse(userContext.PrsId, out var createdBy))
+            {
+                return Error<string>("Invalid user identifier", null, 401);
+            }
+         
+            createDto.SentBy = createdBy;
+            var projectRequirement = _mappingService.MapToProjectRequirement(createDto, createdBy);
             var createdProjectRequirement = await _projectRequirementService
                 .CreateProjectRequirementAsync(projectRequirement);
             
@@ -372,7 +393,14 @@ public class ProjectRequirementsController : ApiBaseController
             if (existingRequirement == null)
                 return Error<ProjectRequirement>("Project requirement not found", null, 404);
 
-            existingRequirement = _mappingService.MapToProjectRequirement(updateDto, existingRequirement);
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            // Parse PrsId to int
+            if (!int.TryParse(userContext.PrsId, out var SentBy))
+            {
+                return Error<string>("Invalid user identifier", null, 401);
+            }
+            updateDto.SentBy = SentBy;
+            existingRequirement = _mappingService.MapToProjectRequirement(updateDto, existingRequirement.CreatedBy, existingRequirement);
             var updatedProjectRequirement = await _projectRequirementService
                 .UpdateProjectRequirementAsync(existingRequirement);
             return Success(updatedProjectRequirement);
@@ -624,7 +652,14 @@ public class ProjectRequirementsController : ApiBaseController
     {
         try
         {
-            var result = await _projectRequirementService.SendRequirementAsync(id);
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+           
+            // Parse PrsId to int
+            if (!int.TryParse(userContext.PrsId, out var SentBy))
+            {
+                return Error<string>("Invalid user identifier", null, 401);
+            }
+            var result = await _projectRequirementService.SendRequirementAsync(id,  SentBy);
             if (!result)
                 return Error<ProjectRequirement>("Project requirement not found", null, 404);
             return Success("Requirement sent successfully");

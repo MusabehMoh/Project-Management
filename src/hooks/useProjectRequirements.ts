@@ -247,12 +247,8 @@ export function useProjectRequirements({
 
         // NOTE: Do NOT reload data here - attachment operations happen after this
         // The caller (handleSaveRequirement) will call refreshData() after all attachments are processed
-        addToast({
-          title: "Success",
-          description: t("requirements.createSuccess"),
-          color: "success",
-        });
-
+        // NOTE: Do NOT show toast here - the caller will show consolidated success/error message
+        
         return newRequirement;
       } catch (err) {
         const errorMessage =
@@ -286,6 +282,7 @@ export function useProjectRequirements({
             data,
           );
 
+        // NOTE: Do NOT show toast here - the caller will show consolidated success/error message
         return updatedRequirement;
       } catch (err) {
         const errorMessage =

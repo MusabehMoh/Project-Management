@@ -28,7 +28,7 @@ public interface IMappingService
     void CreateProjectAnalysts(Project project, int[]? analystIds);
     
     // Project Requirement mapping methods
-    ProjectRequirement MapToProjectRequirement(CreateProjectRequirementDto dto, ProjectRequirement? existing = null);
+    ProjectRequirement MapToProjectRequirement(CreateProjectRequirementDto dto, int createdBy, ProjectRequirement? existing = null);
     
     // Timeline mapping methods
     TimelineDto? MapToTimelineDto(Timeline? timeline);

@@ -149,31 +149,31 @@ export default function RequirementDetailsDrawer({
                       {t("requirements.status")}
                     </span>
                     <Chip
+                      className="w-fit"
                       color={getStatusColor(requirement.status)}
                       size="sm"
                       variant="flat"
-                      className="w-fit"
                     >
                       {getStatusText(requirement.status)}
                     </Chip>
                   </div>
-                  
+
                   {/* Priority */}
                   <div className="flex flex-col gap-1">
                     <span className="text-xs text-default-500 font-medium">
                       {t("requirements.priority")}
                     </span>
                     <Chip
+                      className="w-fit"
                       color={getPriorityColor(requirement.priority)}
                       size="sm"
                       variant="flat"
-                      className="w-fit"
                     >
                       {getPriorityLabel(requirement.priority) ||
                         t(`requirements.priority.${requirement.priority}`)}
                     </Chip>
                   </div>
-                  
+
                   {/* Type */}
                   {requirement.type && (
                     <div className="flex flex-col gap-1">
@@ -181,6 +181,7 @@ export default function RequirementDetailsDrawer({
                         {t("requirements.type")}
                       </span>
                       <Chip
+                        className="w-fit"
                         color={
                           convertTypeToString(requirement.type) === "new"
                             ? "success"
@@ -188,7 +189,6 @@ export default function RequirementDetailsDrawer({
                         }
                         size="sm"
                         variant="flat"
-                        className="w-fit"
                       >
                         {convertTypeToString(requirement.type) === "new"
                           ? t("requirements.new")
@@ -256,6 +256,17 @@ export default function RequirementDetailsDrawer({
                           : "N/A"}
                       </p>
                     </div>
+                    {requirement.sender && (
+                      <div>
+                        <h4 className="text-sm font-medium text-default-600 mb-1">
+                          {t("requirements.sentBy")}
+                        </h4>
+                        <p className="text-sm">
+                          {requirement.sender.gradeName}{" "}
+                          {requirement.sender.fullName}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Attachments */}

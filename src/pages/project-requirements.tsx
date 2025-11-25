@@ -116,8 +116,7 @@ export default function ProjectRequirementsPage() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { theme } = useTheme();
-    const [isDarkApp, setIsDarkApp] = useState(false);
-
+  const [isDarkApp, setIsDarkApp] = useState(false);
 
   // Wrapper function for validation that passes translation
   const handleValidateDateNotInPast = (
@@ -130,7 +129,6 @@ export default function ProjectRequirementsPage() {
   const { projectName } = useProjectDetails({ projectId });
 
   useEffect(() => {
-    
     const html = document.documentElement;
     const computeDark = () =>
       theme === "dark" ||
@@ -333,7 +331,8 @@ export default function ProjectRequirementsPage() {
     });
 
     [htmlEl, bodyEl, rootEl].forEach((el) => {
-      if (el) observer.observe(el, { attributes: true, attributeFilter: ["dir"] });
+      if (el)
+        observer.observe(el, { attributes: true, attributeFilter: ["dir"] });
     });
 
     return () => observer.disconnect();
@@ -766,13 +765,13 @@ export default function ProjectRequirementsPage() {
       };
 
       // Add user message to conversation immediately
-      setConversationHistory(prev => [...prev, userMessage]);
+      setConversationHistory((prev) => [...prev, userMessage]);
 
       // Clear input
       setAIPromptText("");
 
       // Small delay to ensure user message renders first
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Create a placeholder for streaming response
       const streamingMessage = {
@@ -781,7 +780,7 @@ export default function ProjectRequirementsPage() {
         timestamp: Date.now(),
       };
 
-      setConversationHistory(prev => [...prev, streamingMessage]);
+      setConversationHistory((prev) => [...prev, streamingMessage]);
 
       // Build conversation history for Ollama
       // Get all messages except the empty streaming placeholder we just added
@@ -848,7 +847,10 @@ export default function ProjectRequirementsPage() {
           const { done, value } = await reader.read();
 
           if (done) {
-            console.log("✅ Stream complete. Total length:", fullResponse.length);
+            console.log(
+              "✅ Stream complete. Total length:",
+              fullResponse.length,
+            );
             break;
           }
 
@@ -866,16 +868,21 @@ export default function ProjectRequirementsPage() {
             // SSE format: "data: {...}"
             if (line.startsWith("data: ")) {
               const jsonStr = line.substring(6); // Remove "data: " prefix
-              
+
               try {
                 const json = JSON.parse(jsonStr);
 
                 // OpenAI format: { choices: [{ delta: { content: "text" } }] }
                 const content = json.choices?.[0]?.delta?.content;
-                
+
                 if (content) {
                   fullResponse += content;
-                  console.log("📝 Chunk received:", content, "Total:", fullResponse.length);
+                  console.log(
+                    "📝 Chunk received:",
+                    content,
+                    "Total:",
+                    fullResponse.length,
+                  );
 
                   // Update UI for each chunk (OpenAI sends smaller chunks)
                   setConversationHistory((prev) => {
@@ -888,12 +895,16 @@ export default function ProjectRequirementsPage() {
                       },
                     ];
                   });
-                  
+
                   // Small delay to make updates visible
-                  await new Promise(resolve => setTimeout(resolve, 10));
+                  await new Promise((resolve) => setTimeout(resolve, 10));
                 }
               } catch (e) {
-                console.warn("Failed to parse SSE chunk:", line.substring(0, 100), e);
+                console.warn(
+                  "Failed to parse SSE chunk:",
+                  line.substring(0, 100),
+                  e,
+                );
                 // Skip invalid JSON lines
               }
             }
@@ -955,10 +966,10 @@ export default function ProjectRequirementsPage() {
   const handleUseAISuggestion = (content: string) => {
     // Clean the content first - trim whitespace
     const cleanContent = content.trim();
-    
+
     // Split into paragraphs based on line breaks
     let paragraphs: string[] = [];
-    
+
     // Strategy 1: Split by two or more newlines (blank lines between paragraphs)
     if (cleanContent.match(/\n\s*\n/)) {
       paragraphs = cleanContent
@@ -967,7 +978,7 @@ export default function ProjectRequirementsPage() {
         .filter((para) => para.length > 0);
     }
     // Strategy 2: Split by single newlines (each line is a paragraph)
-    else if (cleanContent.includes('\n')) {
+    else if (cleanContent.includes("\n")) {
       paragraphs = cleanContent
         .split(/\n/)
         .map((para) => para.trim())
@@ -980,9 +991,7 @@ export default function ProjectRequirementsPage() {
 
     // Build HTML with proper paragraph structure for ReactQuill
     // Each paragraph wrapped in <p> tags with proper spacing
-    const htmlDescription = paragraphs
-      .map((para) => `<p>${para}</p>`)
-      .join('');
+    const htmlDescription = paragraphs.map((para) => `<p>${para}</p>`).join("");
 
     // Set the formatted HTML in the form
     setFormData((prev) => ({
@@ -1008,11 +1017,13 @@ export default function ProjectRequirementsPage() {
     try {
       const elements = excalidrawRef.current.getSceneElements();
       const appState = excalidrawRef.current.getAppState();
-      
+
       if (elements.length === 0) {
         showWarningToast(
           language === "ar" ? "تحذير" : "Warning",
-          language === "ar" ? "الرسم فارغ! قم برسم شيء أولاً." : "Drawing is empty! Please draw something first."
+          language === "ar"
+            ? "الرسم فارغ! قم برسم شيء أولاً."
+            : "Drawing is empty! Please draw something first.",
         );
         return;
       }
@@ -1025,7 +1036,9 @@ export default function ProjectRequirementsPage() {
 
       // Convert blob to File
       const timestamp = Date.now();
-      const file = new File([blob], `diagram-${timestamp}.png`, { type: "image/png" });
+      const file = new File([blob], `diagram-${timestamp}.png`, {
+        type: "image/png",
+      });
 
       // Add to uploaded files
       setFormData((prev) => ({
@@ -1035,7 +1048,9 @@ export default function ProjectRequirementsPage() {
 
       showSuccessToast(
         language === "ar" ? "تم حفظ المخطط" : "Diagram Saved",
-        language === "ar" ? "تم إضافة المخطط إلى المرفقات" : "Diagram added to attachments"
+        language === "ar"
+          ? "تم إضافة المخطط إلى المرفقات"
+          : "Diagram added to attachments",
       );
 
       setIsExcalidrawOpen(false);
@@ -1043,7 +1058,7 @@ export default function ProjectRequirementsPage() {
       console.error("Error saving Excalidraw drawing:", error);
       showErrorToast(
         language === "ar" ? "خطأ" : "Error",
-        language === "ar" ? "فشل في حفظ المخطط" : "Failed to save diagram"
+        language === "ar" ? "فشل في حفظ المخطط" : "Failed to save diagram",
       );
     }
   };
@@ -1667,26 +1682,52 @@ export default function ProjectRequirementsPage() {
                               <DropdownMenu>
                                 {/* Check if any actions are available */}
                                 {(() => {
-                                  const canEdit = hasPermission({ actions: ["requirements.update"] }) &&
-                                    requirement.status !== REQUIREMENT_STATUS.UNDER_DEVELOPMENT &&
-                                    requirement.status !== REQUIREMENT_STATUS.UNDER_TESTING &&
-                                    requirement.status !== REQUIREMENT_STATUS.COMPLETED;
-                                  
-                                  const canSend = requirement.status === REQUIREMENT_STATUS.NEW &&
-                                    hasPermission({ actions: ["requirements.send"] });
-                                  
-                                  const canPostpone = (requirement.status === REQUIREMENT_STATUS.NEW ||
-                                    requirement.status === REQUIREMENT_STATUS.MANAGER_REVIEW ||
-                                    requirement.status === REQUIREMENT_STATUS.APPROVED);
-                                  
-                                  const canUnpostpone = requirement.status === REQUIREMENT_STATUS.POSTPONED;
-                                  
-                                  const canDelete = hasPermission({ actions: ["requirements.delete"] }) &&
-                                    requirement.status !== REQUIREMENT_STATUS.UNDER_DEVELOPMENT &&
-                                    requirement.status !== REQUIREMENT_STATUS.COMPLETED;
-                                  
-                                  const hasAnyAction = canEdit || canSend || canPostpone || canUnpostpone || canDelete;
-                                  
+                                  const canEdit =
+                                    hasPermission({
+                                      actions: ["requirements.update"],
+                                    }) &&
+                                    requirement.status !==
+                                      REQUIREMENT_STATUS.UNDER_DEVELOPMENT &&
+                                    requirement.status !==
+                                      REQUIREMENT_STATUS.UNDER_TESTING &&
+                                    requirement.status !==
+                                      REQUIREMENT_STATUS.COMPLETED;
+
+                                  const canSend =
+                                    requirement.status ===
+                                      REQUIREMENT_STATUS.NEW &&
+                                    hasPermission({
+                                      actions: ["requirements.send"],
+                                    });
+
+                                  const canPostpone =
+                                    requirement.status ===
+                                      REQUIREMENT_STATUS.NEW ||
+                                    requirement.status ===
+                                      REQUIREMENT_STATUS.MANAGER_REVIEW ||
+                                    requirement.status ===
+                                      REQUIREMENT_STATUS.APPROVED;
+
+                                  const canUnpostpone =
+                                    requirement.status ===
+                                    REQUIREMENT_STATUS.POSTPONED;
+
+                                  const canDelete =
+                                    hasPermission({
+                                      actions: ["requirements.delete"],
+                                    }) &&
+                                    requirement.status !==
+                                      REQUIREMENT_STATUS.UNDER_DEVELOPMENT &&
+                                    requirement.status !==
+                                      REQUIREMENT_STATUS.COMPLETED;
+
+                                  const hasAnyAction =
+                                    canEdit ||
+                                    canSend ||
+                                    canPostpone ||
+                                    canUnpostpone ||
+                                    canDelete;
+
                                   // If no actions available, show a helpful message
                                   if (!hasAnyAction) {
                                     return (
@@ -1694,16 +1735,18 @@ export default function ProjectRequirementsPage() {
                                         key="no-actions"
                                         isReadOnly
                                         className="cursor-default opacity-60"
-                                        startContent={<Info className="w-4 h-4" />}
+                                        startContent={
+                                          <Info className="w-4 h-4" />
+                                        }
                                       >
                                         {t("requirements.noActionsAvailable")}
                                       </DropdownItem>
                                     );
                                   }
-                                  
+
                                   return null;
                                 })()}
-                                
+
                                 {hasPermission({
                                   actions: ["requirements.update"],
                                 }) &&
@@ -1960,7 +2003,12 @@ export default function ProjectRequirementsPage() {
                         <span className="text-danger">*</span>
                       </label>
                       <div className="flex gap-2">
-                        <Tooltip content={t("requirements.generateDiagram") || "Generate AI Diagram"}>
+                        <Tooltip
+                          content={
+                            t("requirements.generateDiagram") ||
+                            "Generate AI Diagram"
+                          }
+                        >
                           <Button
                             isIconOnly
                             color="success"
@@ -1971,7 +2019,13 @@ export default function ProjectRequirementsPage() {
                             <Network className="w-4 h-4" />
                           </Button>
                         </Tooltip>
-                        <Tooltip content={language === "ar" ? "أداة الرسم والمخططات" : "Drawing & Diagram Tool"}>
+                        <Tooltip
+                          content={
+                            language === "ar"
+                              ? "أداة الرسم والمخططات"
+                              : "Drawing & Diagram Tool"
+                          }
+                        >
                           <Button
                             isIconOnly
                             color="primary"
@@ -1979,8 +2033,19 @@ export default function ProjectRequirementsPage() {
                             variant="flat"
                             onPress={() => setIsExcalidrawOpen(true)}
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"
+                              />
                             </svg>
                           </Button>
                         </Tooltip>
@@ -2757,31 +2822,34 @@ export default function ProjectRequirementsPage() {
         context={(() => {
           // Build intelligent context based on current page state
           const parts = [];
-          
+
           // Project info
           parts.push(`Project: "${projectName}"`);
-          
+
           // If editing/creating a requirement, include its details at the top
           if (selectedRequirement || formData.name) {
             parts.push(`\n\n=== Current Requirement ===`);
-            
-            const reqName = formData.name || selectedRequirement?.name || "Untitled";
+
+            const reqName =
+              formData.name || selectedRequirement?.name || "Untitled";
             parts.push(`\nName: ${reqName}`);
-            
+
             // Get description from ReactQuill editor
             if (formData.description) {
               // Strip HTML tags for cleaner context
               const descText = formData.description
                 .replace(/<[^>]*>/g, " ") // Remove HTML tags
-                .replace(/&nbsp;/g, " ")   // Replace &nbsp;
-                .replace(/\s+/g, " ")       // Normalize whitespace
+                .replace(/&nbsp;/g, " ") // Replace &nbsp;
+                .replace(/\s+/g, " ") // Normalize whitespace
                 .trim();
-              
+
               if (descText) {
-                parts.push(`\nDescription: ${descText.substring(0, 300)}${descText.length > 300 ? "..." : ""}`);
+                parts.push(
+                  `\nDescription: ${descText.substring(0, 300)}${descText.length > 300 ? "..." : ""}`,
+                );
               }
             }
-            
+
             // Get status name
             if (formData.status > 0) {
               try {
@@ -2791,7 +2859,7 @@ export default function ProjectRequirementsPage() {
                 console.error("Status lookup failed:", e);
               }
             }
-            
+
             // Get priority name
             if (formData.priority > 0) {
               try {
@@ -2801,7 +2869,7 @@ export default function ProjectRequirementsPage() {
                 console.error("Priority lookup failed:", e);
               }
             }
-            
+
             // Get type name
             if (formData.type > 0) {
               try {
@@ -2811,15 +2879,17 @@ export default function ProjectRequirementsPage() {
                 console.error("Type lookup failed:", e);
               }
             }
-            
+
             // Expected completion date
             if (formData.expectedCompletionDate) {
-              parts.push(`\nExpected Completion: ${formData.expectedCompletionDate.toString()}`);
+              parts.push(
+                `\nExpected Completion: ${formData.expectedCompletionDate.toString()}`,
+              );
             }
-            
+
             parts.push(`\n=== End Current Requirement ===\n`);
           }
-          
+
           // Requirements summary
           if (stats && stats.total > 0) {
             const summary = [];
@@ -2827,70 +2897,83 @@ export default function ProjectRequirementsPage() {
             if (stats.approved > 0) summary.push(`${stats.approved} approved`);
             if (stats.rejected > 0) summary.push(`${stats.rejected} rejected`);
             if (stats.pending > 0) summary.push(`${stats.pending} pending`);
-            
-            parts.push(`\nTotal: ${stats.total} requirements (${summary.join(", ")})`);
+
+            parts.push(
+              `\nTotal: ${stats.total} requirements (${summary.join(", ")})`,
+            );
           }
-          
+
           // List actual requirements with clean formatting
           if (requirements.length > 0) {
             parts.push(`\n\nOther requirements on this page:`);
-            
+
             requirements.forEach((req, index) => {
               // Skip the current requirement being edited
               if (selectedRequirement && req.id === selectedRequirement.id) {
                 return;
               }
-              
+
+              // Skip requirements with missing data
+              if (!req || !req.name) {
+                return;
+              }
+
               // Get status name from lookup
               let statusName = "New";
+
               try {
                 const lookupStatus = getRequirementStatusName(req.status);
+
                 if (lookupStatus) statusName = lookupStatus;
-              } catch (e) {
-                console.error("Status lookup failed for", req.status, ":", e);
+              } catch {
+                // Use default status name
               }
-              
+
               // Get priority name from lookup
               let priorityName = "Medium";
+
               try {
                 const lookupPriority = getPriorityLabel(req.priority);
+
                 if (lookupPriority) priorityName = lookupPriority;
-              } catch (e) {
-                console.error("Priority lookup failed for", req.priority, ":", e);
+              } catch {
+                // Use default priority name
               }
-              
+
               // Get type name
               let typeName = "Feature";
+
               try {
                 const lookupType = convertTypeToString(req.type);
+
                 if (lookupType) typeName = lookupType;
-              } catch (e) {
-                console.error("Type lookup failed for", req.type, ":", e);
+              } catch {
+                // Use default type name
               }
-              
+
               // Clean requirement name (remove special characters that break Mermaid)
               const cleanName = req.name
                 .replace(/['"]/g, "") // Remove quotes
                 .replace(/[\n\r]/g, " ") // Replace newlines with space
                 .trim();
-              
+
               parts.push(
-                `\n${index + 1}. ${cleanName} - ${statusName}, ${priorityName} priority, ${typeName} type`
+                `\n${index + 1}. ${cleanName} - ${statusName}, ${priorityName} priority, ${typeName} type`,
               );
             });
           }
-          
+
           // Additional context
           if (searchTerm) {
             parts.push(`\n\nSearch filter: "${searchTerm}"`);
           }
-          
+
           return parts.join("");
         })()}
         contextTitle={
-          selectedRequirement 
-            ? `${t("requirements.editRequirement")}: ${formData.name || selectedRequirement.name}` 
-            : formData.name 
+          selectedRequirement
+            ? `${t("requirements.editRequirement")}: ${formData.name || selectedRequirement.name}`
+            : formData.name
               ? `${t("requirements.newRequirement")}: ${formData.name}`
               : projectName || t("requirements.projectRequirements")
         }

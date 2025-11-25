@@ -9,6 +9,7 @@ export interface ProjectRequirement {
   type: number; // 1=New, 2=ChangeRequest (matches RequirementType enum)
   status: number; // 1=New, 2=UnderStudy, 3=UnderDevelopment, 4=UnderTesting, 5=Completed, 6=Approved (matches RequirementStatusEnum)
   createdBy: number;
+  sentBy?: number;
   assignedTo?: number;
   assignedAnalyst?: number;
   createdAt: string;
@@ -34,6 +35,13 @@ export interface ProjectRequirement {
     owningUnit: string;
     analysts?: string; // Display names for analysts (comma-separated)
     analystIds?: number[]; // Actual IDs for analysts
+  };
+  // Sender information for display
+  sender?: {
+    id: number;
+    fullName: string;
+    gradeName: string;
+    userName: string;
   };
 }
 

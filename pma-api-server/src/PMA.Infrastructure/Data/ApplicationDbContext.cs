@@ -93,6 +93,13 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ChangeGroup>()
             .HasIndex(cg => cg.ChangedAt)
             .HasDatabaseName("IX_ChangeGroup_ChangedAt");
+
+        // Configure ProjectRequirement Sender relationship
+        modelBuilder.Entity<ProjectRequirement>()
+            .HasOne(pr => pr.Sender)
+            .WithMany()
+            .HasForeignKey(pr => pr.SentBy)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 
     /// <summary>

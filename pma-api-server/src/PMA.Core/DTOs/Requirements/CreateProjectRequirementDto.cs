@@ -9,4 +9,5 @@ public class CreateProjectRequirementDto
     public int Type { get; set; }
     public DateTime? ExpectedCompletionDate { get; set; }
     public int? Status { get; set; }
+    public int? SentBy { get; set; }
 }

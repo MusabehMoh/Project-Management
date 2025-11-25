@@ -998,6 +998,7 @@ public class QuickActionsController : ApiBaseController
             var pendingRequirements = await _context.ProjectRequirements
                 .Where(pr => pr.Status == RequirementStatusEnum.ManagerReview)
                 .Include(pr => pr.Creator)
+                .Include(pr => pr.Sender)
                 .Include(pr => pr.Project)
                 .Where(pr => currentUserDepartmentId == null || 
                            (pr.Creator != null && departmentTeamPrsIds.Any(prsId => _context.Teams.Any(t => t.PrsId == prsId && t.Employee.Id == pr.Creator.Id))))

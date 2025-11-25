@@ -1228,6 +1228,8 @@ const translations = {
     "requirements.description": "Description",
     "requirements.id": "ID",
     "requirements.created": "Created",
+    "requirements.sentBy": "Sent by",
+    "requirements.sentBy": "Sent by",
     "common.viewDetails": "View Details",
     // Task creation keys
     "tasks.createTask": "Create Task",
@@ -3421,6 +3423,7 @@ const translations = {
     "requirements.description": "الوصف",
     "requirements.id": "المعرّف",
     "requirements.created": "تاريخ الإنشاء",
+    "requirements.sentBy": "أرسل بواسطة",
     "common.viewDetails": "عرض التفاصيل",
     // Task creation keys (Arabic)
     "tasks.createTask": "إنشاء مهمة",
