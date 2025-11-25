@@ -229,6 +229,13 @@ const RequirementCard = ({
             <span>
               {t("requirements.created")}: {formatDate(requirement.createdAt)}
             </span>
+            {requirement.sender && <span className="text-default-400">•</span>}
+            {requirement.sender && (
+              <span>
+                {t("requirements.sentBy")}: {requirement.sender.gradeName}{" "}
+                {requirement.sender.fullName}
+              </span>
+            )}
           </div>
         </div>
 

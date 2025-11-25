@@ -179,7 +179,7 @@ public class ProjectRequirementService : IProjectRequirementService
         return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, (int)RequirementStatusEnum.Approved, priority, search,null);
     }
 
-    public async Task<bool> SendRequirementAsync(int id)
+    public async Task<bool> SendRequirementAsync(int id, int SentBy)
     {
         // Logic to send requirement for approval or processing
         var requirement = await _projectRequirementRepository.GetByIdAsync(id);
@@ -187,8 +187,9 @@ public class ProjectRequirementService : IProjectRequirementService
             return false;
 
         // Update status to "Under Study" (assuming status 2)
-        requirement.Status = (RequirementStatusEnum)2;
+        requirement.Status = RequirementStatusEnum.ManagerReview;
         requirement.UpdatedAt = DateTime.Now;
+        requirement.SentBy= SentBy;
         await _projectRequirementRepository.UpdateAsync(requirement);
         return true;
     }

@@ -35,6 +35,7 @@ public class ProjectRequirement
     public RequirementStatusEnum Status { get; set; } = RequirementStatusEnum.New;
 
     public int CreatedBy { get; set; }
+    public int? SentBy { get; set; }
     public int? AssignedAnalyst { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
@@ -43,6 +44,7 @@ public class ProjectRequirement
     // Navigation properties
     public virtual Project? Project { get; set; }
     public virtual User? Creator { get; set; }
+    public virtual Employee? Sender { get; set; }
     public virtual User? Analyst { get; set; }
     public virtual ICollection<ProjectRequirementAttachment> Attachments { get; set; } = new List<ProjectRequirementAttachment>();
     public virtual RequirementTask? RequirementTask { get; set; }

@@ -20,6 +20,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         var query = _context.ProjectRequirements
             .Include(pr => pr.Project)
             .Include(pr => pr.Creator)
+            .Include(pr => pr.Sender)
             .Include(pr => pr.Analyst)
             .Include(pr => pr.RequirementTask)
                 .ThenInclude(rt => rt.Developer)
@@ -75,17 +76,95 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
 
     public async Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByProjectAsync(int projectId)
     {
-        return await _context.ProjectRequirements
-            .Include(pr => pr.Creator)
-            .Include(pr => pr.Analyst)
-            .Include(pr => pr.RequirementTask)
-                .ThenInclude(rt => rt.Developer)
-            .Include(pr => pr.RequirementTask)
-                .ThenInclude(rt => rt.Qc)
-            .Include(pr => pr.Timeline)
+        // Ultra-optimized approach: Use multiple targeted queries instead of complex joins
+        
+        // 1. Get basic requirements data first
+        var basicRequirements = await _context.ProjectRequirements
             .Where(pr => pr.ProjectId == projectId)
-            .OrderByDescending(pr => pr.CreatedAt) 
+            .OrderByDescending(pr => pr.CreatedAt)
             .ToListAsync();
+
+        if (!basicRequirements.Any())
+            return basicRequirements;
+
+        var requirementIds = basicRequirements.Select(r => r.Id).ToList();
+        
+        // 2. Load Project data (single query for all requirements of same project)
+        var project = await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+
+        // 3. Load Users in batches (Creator, Analyst)
+        var userIds = new List<int>();
+        userIds.AddRange(basicRequirements.Where(r => r.CreatedBy > 0).Select(r => r.CreatedBy));
+        userIds.AddRange(basicRequirements.Where(r => r.AssignedAnalyst.HasValue).Select(r => r.AssignedAnalyst!.Value));
+        
+        var users = userIds.Any() 
+            ? await _context.Users.Where(u => userIds.Contains(u.PrsId)).ToDictionaryAsync(u => u.PrsId)
+            : new Dictionary<int, User>();
+
+        // Load Employees for Sender (SentBy references Employee.Id)
+        var employeeIds = basicRequirements.Where(r => r.SentBy.HasValue).Select(r => r.SentBy!.Value).ToList();
+        var employees = employeeIds.Any()
+            ? await _context.MawaredEmployees.Where(e => employeeIds.Contains(e.Id)).ToDictionaryAsync(e => e.Id)
+            : new Dictionary<int, Employee>();
+
+        // 4. Load RequirementTasks with related data
+        var tasks = await _context.RequirementTasks
+            .Include(rt => rt.Developer)
+            .Include(rt => rt.Qc)
+            .Where(rt => requirementIds.Contains(rt.ProjectRequirementId))
+            .ToDictionaryAsync(rt => rt.ProjectRequirementId);
+
+        // 5. Load Timelines
+        var timelines = await _context.Timelines
+            .Where(t => requirementIds.Contains(t.Id))
+            .ToDictionaryAsync(t => t.Id);
+
+        // 6. Load attachment metadata (without FileData)
+        var attachments = await _context.ProjectRequirementAttachments
+            .Where(a => requirementIds.Contains(a.ProjectRequirementId))
+            .Select(a => new ProjectRequirementAttachment
+            {
+                Id = a.Id,
+                ProjectRequirementId = a.ProjectRequirementId,
+                FileName = a.FileName,
+                OriginalName = a.OriginalName,
+                FileSize = a.FileSize,
+                ContentType = a.ContentType,
+                UploadedAt = a.UploadedAt
+            })
+            .ToListAsync();
+
+        var attachmentGroups = attachments.GroupBy(a => a.ProjectRequirementId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // 7. Manually populate navigation properties
+        foreach (var requirement in basicRequirements)
+        {
+            requirement.Project = project;
+            
+            if (users.TryGetValue(requirement.CreatedBy, out var creator))
+                requirement.Creator = creator;
+            
+            if (requirement.SentBy.HasValue && employees.TryGetValue(requirement.SentBy.Value, out var sender))
+                requirement.Sender = sender;
+                
+            if (requirement.AssignedAnalyst.HasValue && users.TryGetValue(requirement.AssignedAnalyst.Value, out var analyst))
+                requirement.Analyst = analyst;
+
+            if (tasks.TryGetValue(requirement.Id, out var task))
+                requirement.RequirementTask = task;
+
+            if (timelines.TryGetValue(requirement.Id, out var timeline))
+                requirement.Timeline = timeline;
+
+            if (attachmentGroups.TryGetValue(requirement.Id, out var reqAttachments))
+                requirement.Attachments = reqAttachments;
+            else
+                requirement.Attachments = new List<ProjectRequirementAttachment>();
+        }
+
+        return basicRequirements;
     }
 
     public async Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByAnalystAsync(int analystId)
@@ -93,6 +172,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         return await _context.ProjectRequirements
             .Include(pr => pr.Project)
             .Include(pr => pr.Creator)
+            .Include(pr => pr.Sender)
             .Include(pr => pr.RequirementTask)
                 .ThenInclude(rt => rt.Developer)
             .Include(pr => pr.RequirementTask)
@@ -113,6 +193,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             .Include(pr => pr.Project)
                 .ThenInclude(p => p != null ? p.OwningUnitEntity : null)
             .Include(pr => pr.Creator)
+            .Include(pr => pr.Sender)
             .Include(pr => pr.Analyst)
             .Include(pr => pr.RequirementTask)
                 .ThenInclude(t => t.Developer)
