@@ -1,6 +1,6 @@
 import type { MemberTask } from "@/types/membersTasks";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
@@ -23,6 +23,7 @@ import {
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTaskStatusLookups } from "@/hooks/useTaskLookups";
+import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { tasksService } from "@/services/api";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
@@ -68,6 +69,7 @@ export default function MembersTasksKanban({
     getStatusLabel,
     getStatusColor,
   } = useTaskStatusLookups();
+  const { getPriorityLabel, getPriorityColor } = usePriorityLookups();
   const [columns, setColumns] = useState<KanbanColumn[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [draggedTask, setDraggedTask] = useState<MemberTask | null>(null);
@@ -81,6 +83,31 @@ export default function MembersTasksKanban({
     x: number;
     y: number;
   } | null>(null);
+
+  // Refs to preserve scroll positions
+  const scrollRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
+  const scrollPositions = useRef<Map<number, number>>(new Map());
+
+  // Save scroll positions before update
+  const saveScrollPositions = () => {
+    scrollRefs.current.forEach((element, columnId) => {
+      if (element) {
+        scrollPositions.current.set(columnId, element.scrollTop);
+      }
+    });
+  };
+
+  // Restore scroll positions after update
+  const restoreScrollPositions = () => {
+    requestAnimationFrame(() => {
+      scrollPositions.current.forEach((scrollTop, columnId) => {
+        const element = scrollRefs.current.get(columnId);
+        if (element) {
+          element.scrollTop = scrollTop;
+        }
+      });
+    });
+  };
 
   // Get user's role IDs for permission checking
   const userRoleIds = useMemo(() => {
@@ -150,6 +177,15 @@ export default function MembersTasksKanban({
   // Update columns when tasks prop changes
   useEffect(() => {
     if (!statusesLoading && taskStatuses.length > 0 && tasks) {
+      // Don't update columns if we're in the middle of dragging or updating
+      // This prevents scroll reset during active operations
+      if (draggedTask || updatingTaskId || completingTaskId) {
+        return;
+      }
+
+      // Don't update if we just performed an API update (prevent scroll reset)
+      // Give 500ms for the parent to refetch and provide updated data
+
       let tasksToDisplay = tasks;
 
       // Filter tasks for Analyst role: Only show adhoc tasks (typeId = 3)
@@ -164,7 +200,12 @@ export default function MembersTasksKanban({
 
       const allColumns = initializeColumns(tasksToDisplay);
 
+      // Preserve scroll position before refreshing columns
+      saveScrollPositions();
       setColumns(allColumns);
+      setTimeout(() => {
+        restoreScrollPositions();
+      }, 30);
     }
   }, [tasks, statusesLoading, taskStatuses, userRoleIds]);
 
@@ -319,7 +360,7 @@ export default function MembersTasksKanban({
 
       showSuccessToast(t("teamDashboard.kanban.taskStatusUpdated"));
 
-      // Notify parent component if callback provided
+      // Update parent data immediately but track time to prevent useEffect from resetting UI
       if (onTaskUpdate) {
         onTaskUpdate();
       }
@@ -386,7 +427,7 @@ export default function MembersTasksKanban({
 
       showSuccessToast(t("teamDashboard.kanban.taskCompleted"));
 
-      // Notify parent component
+      // Update parent data immediately but track time to prevent useEffect from resetting UI
       if (onTaskUpdate) {
         onTaskUpdate();
       }
@@ -456,7 +497,8 @@ export default function MembersTasksKanban({
     );
   }
 
-  if (loading || statusesLoading) {
+  // Show skeletons only on initial load or when no data exists yet
+  if ((loading || statusesLoading) && (!tasks || tasks.length === 0)) {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -482,7 +524,6 @@ export default function MembersTasksKanban({
     <>
       <Card className="w-full">
         <CardHeader className="flex items-center gap-2">
-          <ListTodo className="w-5 h-5 text-primary" />
           <h3 className="text-lg font-semibold">
             {t("teamDashboard.kanban.title")}
           </h3>
@@ -534,6 +575,16 @@ export default function MembersTasksKanban({
 
                   {/* Tasks */}
                   <ScrollShadow
+                    key={`column-scroll-${column.id}`}
+                    ref={(el) => {
+                      if (el) {
+                        const scrollElement = el as any;
+                        const innerElement = scrollElement?.ref?.current;
+                        if (innerElement) {
+                          scrollRefs.current.set(column.id, innerElement);
+                        }
+                      }
+                    }}
                     className="flex-1 px-3 pb-3 space-y-2"
                     hideScrollBar
                     style={{ maxHeight: "500px" }}
@@ -548,7 +599,7 @@ export default function MembersTasksKanban({
                       return (
                         <div
                           key={task.id}
-                          className={`group bg-content2 rounded-lg p-3 cursor-pointer transition-all duration-500 ease-in-out ${
+                          className={`group bg-content1 dark:bg-content2 rounded-lg p-3 cursor-pointer transition-all duration-500 ease-in-out ${
                             canDrag ? "cursor-grab" : "cursor-default"
                           } ${
                             draggedTask?.id === task.id
@@ -620,17 +671,11 @@ export default function MembersTasksKanban({
                           <div className="flex items-center gap-2 mb-2">
                             <Flag className="w-3 h-3 text-default-400" />
                             <Chip
-                              color={
-                                task.priorityId === 3
-                                  ? "danger"
-                                  : task.priorityId === 2
-                                    ? "warning"
-                                    : "default"
-                              }
+                              color={getPriorityColor(task.priorityId) as any}
                               size="sm"
                               variant="flat"
                             >
-                              {t("common.priority")}
+                              {getPriorityLabel(task.priorityId)}
                             </Chip>
                           </div>
 

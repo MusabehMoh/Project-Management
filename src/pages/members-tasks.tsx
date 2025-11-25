@@ -105,7 +105,7 @@ export default function MembersTasksPage() {
   }, []);
 
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
-  const [viewType, setViewType] = useState<"grid" | "list" | "gantt" | "kanban">("grid");
+  const [viewType, setViewType] = useState<"grid" | "list" | "gantt" | "kanban">("kanban");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isOptionOpen, setIsOptionOpen] = useState(false);
   const { hasAnyRoleById, loading: userLoading, user } = usePermissions();
@@ -1260,7 +1260,7 @@ export default function MembersTasksPage() {
         {/* Pagination Controls - Moved below tabs */}
 
         {/* Controls */}
-        {loading ? (
+        {initialLoading ? (
           <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               {/* Skeleton for View Toggle */}
@@ -1284,7 +1284,7 @@ export default function MembersTasksPage() {
             <div className="flex items-center gap-4">
               {/* View Toggle */}
               <div className="flex items-center bg-content2 rounded-full p-1">
-                {(["grid", "list", "kanban", "gantt"] as const).map((type) => (
+                {(["kanban", "grid", "list", "gantt"] as const).map((type) => (
                   <Button
                     key={type}
                     className="rounded-full px-3"
@@ -1378,7 +1378,7 @@ export default function MembersTasksPage() {
         )}
 
         {/* Tasks */}
-        {loading ? (
+        {initialLoading ? (
           <TaskGridSkeleton />
         ) : (tasks?.length || 0) === 0 ? (
           <div className="flex items-center justify-center min-h-96">
