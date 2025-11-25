@@ -336,6 +336,7 @@ export default function DevelopmentRequirementsPage() {
     MemberSearchResult[]
   >([]);
   const [selectedQC, setSelectedQC] = useState<MemberSearchResult | null>(null);
+  const [selectedDesigner, setSelectedDesigner] = useState<MemberSearchResult | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Fetch requirement details when drawer opens OR task modal is open
@@ -352,14 +353,19 @@ export default function DevelopmentRequirementsPage() {
   // QC dates
   const [qcStartDate, setQcStartDate] = useState<any>(null);
   const [qcEndDate, setQcEndDate] = useState<any>(null);
+  // Designer dates
+  const [designerStartDate, setDesignerStartDate] = useState<any>(null);
+  const [designerEndDate, setDesignerEndDate] = useState<any>(null);
   // Controlled input values for Autocomplete components (needed by HeroUI Autocomplete)
   const [developerInputValue, setDeveloperInputValue] = useState<string>("");
   const [qcInputValue, setQcInputValue] = useState<string>("");
+  const [designerInputValue, setDesignerInputValue] = useState<string>("");
 
   // Date validation error states
   const [dateValidationErrors, setDateValidationErrors] = useState<{
     developer?: string;
     qc?: string;
+    designer?: string;
   }>({});
 
   // Timeline creation modal state
@@ -395,6 +401,17 @@ export default function DevelopmentRequirementsPage() {
     loadInitialResults: true, // Load all QC members initially
     initialResultsLimit: 100,
   });
+  const {
+    employees: designers,
+    loading: loadingDesigners,
+    searchEmployees: searchDesigners,
+  } = useTeamSearchByDepartment({
+    departmentId: 3, // Design Department
+    minLength: 1,
+    maxResults: 100,
+    loadInitialResults: true, // Load all designers initially
+    initialResultsLimit: 100,
+  });
 
   // Debug: log team search results to help diagnose autocomplete issues
   // Debug hooks intentionally left out to keep production linting clean.
@@ -414,7 +431,7 @@ export default function DevelopmentRequirementsPage() {
   };
 
   const validateAllDates = (): boolean => {
-    const errors: { developer?: string; qc?: string } = {};
+    const errors: { developer?: string; qc?: string; designer?: string } = {};
     let hasErrors = false;
 
     // Validate developer dates - required if developers are selected
@@ -442,6 +459,21 @@ export default function DevelopmentRequirementsPage() {
 
         if (error) {
           errors.qc = error;
+          hasErrors = true;
+        }
+      }
+    }
+
+    // Validate designer dates - required if designer is selected
+    if (selectedDesigner) {
+      if (!designerStartDate || !designerEndDate) {
+        errors.designer = t("tasks.validation.bothDatesRequired");
+        hasErrors = true;
+      } else {
+        const error = validateDateRange(designerStartDate, designerEndDate);
+
+        if (error) {
+          errors.designer = error;
           hasErrors = true;
         }
       }
@@ -560,6 +592,7 @@ export default function DevelopmentRequirementsPage() {
       // Reset all fields for new tasks
       setSelectedDevelopers([]);
       setSelectedQC(null);
+      setSelectedDesigner(null);
       // Set developer start date to today by default
       setDeveloperStartDate(today(getLocalTimeZone()));
       // Set developer end date to requirement's expected completion date by default
@@ -568,10 +601,25 @@ export default function DevelopmentRequirementsPage() {
           ? parseDate(requirement.expectedCompletionDate.split("T")[0])
           : null,
       );
-      setQcStartDate(null);
-      setQcEndDate(null);
+      // Set QC start date to today by default
+      setQcStartDate(today(getLocalTimeZone()));
+      // Set QC end date to requirement's expected completion date by default
+      setQcEndDate(
+        requirement.expectedCompletionDate
+          ? parseDate(requirement.expectedCompletionDate.split("T")[0])
+          : null,
+      );
+      // Set designer start date to today by default
+      setDesignerStartDate(today(getLocalTimeZone()));
+      // Set designer end date to requirement's expected completion date by default
+      setDesignerEndDate(
+        requirement.expectedCompletionDate
+          ? parseDate(requirement.expectedCompletionDate.split("T")[0])
+          : null,
+      );
       setDeveloperInputValue("");
       setQcInputValue("");
+      setDesignerInputValue("");
     }
   };
 
@@ -644,11 +692,14 @@ export default function DevelopmentRequirementsPage() {
         requirementId: selectedRequirement.id,
         developerIds: selectedDevelopers.map((d) => d.id),
         qcId: selectedQC?.id,
+        designerId: selectedDesigner?.id,
         description: taskDescription,
         developerStartDate: developerStartDate?.toString(),
         developerEndDate: developerEndDate?.toString(),
         qcStartDate: qcStartDate?.toString(),
         qcEndDate: qcEndDate?.toString(),
+        designerStartDate: designerStartDate?.toString(),
+        designerEndDate: designerEndDate?.toString(),
       };
 
       const isUpdate = Boolean(selectedRequirement.requirementTask);
@@ -677,8 +728,10 @@ export default function DevelopmentRequirementsPage() {
       setIsTaskModalOpen(false);
       setSelectedDevelopers([]);
       setSelectedQC(null);
+      setSelectedDesigner(null);
       setDeveloperInputValue("");
       setQcInputValue("");
+      setDesignerInputValue("");
 
       // Refresh requirements data to get updated task info
       refreshData();
@@ -704,14 +757,18 @@ export default function DevelopmentRequirementsPage() {
     setIsTaskModalOpen(false);
     setSelectedDevelopers([]);
     setSelectedQC(null);
+    setSelectedDesigner(null);
     setSelectedRequirementId(undefined);
     setTaskDescription("");
     setDeveloperStartDate(null);
     setDeveloperEndDate(null);
     setQcStartDate(null);
     setQcEndDate(null);
+    setDesignerStartDate(null);
+    setDesignerEndDate(null);
     setDeveloperInputValue("");
     setQcInputValue("");
+    setDesignerInputValue("");
     setDateValidationErrors({});
   };
 
@@ -1315,9 +1372,10 @@ export default function DevelopmentRequirementsPage() {
                           );
 
                           setSelectedQC(qc || null);
-                          // Clear input value after selection
+                          // Reset input and search to show all members
                           if (qc) {
                             setQcInputValue("");
+                            searchQC("");
                           }
                         }}
                       >
@@ -1338,18 +1396,15 @@ export default function DevelopmentRequirementsPage() {
                         ))}
                       </Autocomplete>
                       {selectedQC && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <Chip color="secondary" size="sm" variant="flat">
-                            {selectedQC.gradeName} {selectedQC.fullName}
-                          </Chip>
-                          <Button
-                            isIconOnly
-                            color="danger"
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <Chip
+                            color="primary"
                             size="sm"
-                            variant="light"
-                            onPress={() => {
+                            variant="flat"
+                            onClose={() => {
                               setSelectedQC(null);
                               setQcInputValue("");
+                              searchQC(""); // Reset search to show all QC members
                               setQcStartDate(null);
                               setQcEndDate(null);
                               // Clear validation errors for QC
@@ -1359,8 +1414,8 @@ export default function DevelopmentRequirementsPage() {
                               }));
                             }}
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
+                            {selectedQC.fullName}
+                          </Chip>
                         </div>
                       )}
                     </div>
@@ -1407,10 +1462,130 @@ export default function DevelopmentRequirementsPage() {
                         )}
                       </div>
                     )}
+
+                    {/* Designer Selection */}
+                    <div>
+                      <label className="text-sm font-medium text-default-700 mb-2 block">
+                        {t("tasks.designer")}
+                      </label>
+                      <Autocomplete
+                        defaultFilter={() => true}
+                        inputValue={designerInputValue}
+                        isLoading={loadingDesigners}
+                        menuTrigger="focus"
+                        placeholder={t("tasks.selectDesigner")}
+                        selectedKey={selectedDesigner?.id?.toString() || ""}
+                        onInputChange={(value) => {
+                          setDesignerInputValue(value);
+                          if (
+                            selectedDesigner &&
+                            value !==
+                              `${selectedDesigner.gradeName} ${selectedDesigner.fullName}`
+                          ) {
+                            setSelectedDesigner(null);
+                          }
+                          searchDesigners(value);
+                        }}
+                        onSelectionChange={(key) => {
+                          const designer = designers.find(
+                            (member) => member.id.toString() === String(key),
+                          );
+
+                          setSelectedDesigner(designer || null);
+                          // Reset input and search to show all members
+                          if (designer) {
+                            setDesignerInputValue("");
+                            searchDesigners("");
+                          }
+                        }}
+                      >
+                        {designers.map((designer) => (
+                          <AutocompleteItem
+                            key={designer.id.toString()}
+                            textValue={`${designer.gradeName} ${designer.fullName} ${designer.userName} ${designer.militaryNumber}`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {designer.gradeName} {designer.fullName}
+                              </span>
+                              <span className="text-xs text-default-500">
+                                {designer.militaryNumber} - {designer.gradeName}
+                              </span>
+                            </div>
+                          </AutocompleteItem>
+                        ))}
+                      </Autocomplete>
+                      {selectedDesigner && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <Chip
+                            color="primary"
+                            size="sm"
+                            variant="flat"
+                            onClose={() => {
+                              setSelectedDesigner(null);
+                              setDesignerInputValue("");
+                              searchDesigners(""); // Reset search to show all designers
+                              setDesignerStartDate(null);
+                              setDesignerEndDate(null);
+                              // Clear validation errors for designer
+                              setDateValidationErrors((prev) => ({
+                                ...prev,
+                                designer: undefined,
+                              }));
+                            }}
+                          >
+                            {selectedDesigner.fullName}
+                          </Chip>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Designer Dates */}
+                    {selectedDesigner && (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <DatePicker
+                            label={t("tasks.startDate")}
+                            minValue={today(getLocalTimeZone())}
+                            value={designerStartDate}
+                            onChange={(date) => {
+                              setDesignerStartDate(date);
+                              // Clear validation error when user changes date
+                              if (dateValidationErrors.designer) {
+                                setDateValidationErrors((prev) => ({
+                                  ...prev,
+                                  designer: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                          <DatePicker
+                            label={t("tasks.endDate")}
+                            minValue={today(getLocalTimeZone())}
+                            value={designerEndDate}
+                            onChange={(date) => {
+                              setDesignerEndDate(date);
+                              // Clear validation error when user changes date
+                              if (dateValidationErrors.designer) {
+                                setDateValidationErrors((prev) => ({
+                                  ...prev,
+                                  designer: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                        </div>
+                        {dateValidationErrors.designer && (
+                          <p className="text-xs text-danger mt-1">
+                            {dateValidationErrors.designer}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </ModalBody>
                 <ModalFooter className="flex flex-col gap-2 flex-shrink-0">
-                  {selectedDevelopers.length === 0 && !selectedQC && (
+                  {selectedDevelopers.length === 0 && !selectedQC && !selectedDesigner && (
                     <p className="text-xs text-danger text-center w-full">
                       {t("tasks.selectAtLeastOne")}
                     </p>
