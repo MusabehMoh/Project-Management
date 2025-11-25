@@ -84,24 +84,51 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
         ProjectRequirement requirement)
     {
         var createdTasks = new List<PMA.Core.Entities.Task>();
-        PMA.Core.Entities.Task? developerTask = null;
+        var developerTasks = new List<PMA.Core.Entities.Task>();
 
-        // Handle Developer reassignment
-        await HandleRoleReassignmentAsync(requirementId, "Developer", taskDto.DeveloperId);
-        if (taskDto.DeveloperId.HasValue)
+        // Handle multiple developers (DeveloperIds) or single developer (DeveloperId)
+        var developerIds = new List<int>();
+        
+        // Check for new multi-developer array first
+        if (taskDto.DeveloperIds != null && taskDto.DeveloperIds.Any())
         {
-            developerTask = await CreateOrUpdateTaskForRoleAsync(
-                requirementId, 
-                taskDto.DeveloperId.Value, 
-                "Developer", 
-                taskDto.DeveloperStartDate, 
-                taskDto.DeveloperEndDate,
-                TaskStatusEnum.ToDo,
-                taskDto.Description, 
-                requirement);
+            developerIds = taskDto.DeveloperIds;
+        }
+        // Fall back to single developer for backward compatibility
+        else if (taskDto.DeveloperId.HasValue)
+        {
+            developerIds.Add(taskDto.DeveloperId.Value);
+        }
+
+        // Create a task for each developer
+        if (developerIds.Any())
+        {
+            // Handle Developer reassignment - pass all developer IDs for cleanup
+            await CleanupUnassignedRoleTasksAsync(requirementId, "Developer", developerIds);
             
-            if (developerTask != null)
-                createdTasks.Add(developerTask);
+            foreach (var developerId in developerIds)
+            {
+                var developerTask = await CreateOrUpdateTaskForRoleAsync(
+                    requirementId, 
+                    developerId, 
+                    "Developer", 
+                    taskDto.DeveloperStartDate, 
+                    taskDto.DeveloperEndDate,
+                    TaskStatusEnum.ToDo,
+                    taskDto.Description, 
+                    requirement);
+                
+                if (developerTask != null)
+                {
+                    createdTasks.Add(developerTask);
+                    developerTasks.Add(developerTask);
+                }
+            }
+        }
+        else
+        {
+            // No developers assigned - cleanup all developer tasks
+            await CleanupAllRoleTasksAsync(requirementId, "Developer");
         }
 
         // Handle QC reassignment
@@ -122,10 +149,11 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
             {
                 createdTasks.Add(qcTask);
                 
-                // Create dependency: QC task depends on Developer task
-                if (developerTask != null)
+                // Create dependency: QC task depends on ALL Developer tasks
+                if (developerTasks.Any())
                 {
-                    await _taskService.UpdateTaskDependenciesAsync(qcTask.Id, new List<int> { developerTask.Id });
+                    var developerTaskIds = developerTasks.Select(t => t.Id).ToList();
+                    await _taskService.UpdateTaskDependenciesAsync(qcTask.Id, developerTaskIds);
                 }
             }
         }
