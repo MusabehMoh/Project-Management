@@ -14,7 +14,7 @@ import {
 } from "@heroui/dropdown";
 import { Select, SelectItem } from "@heroui/select";
 import { DatePicker } from "@heroui/date-picker";
-import { RefreshCw, Grid3X3, List, BarChart3 } from "lucide-react";
+import { RefreshCw, Grid3X3, List, BarChart3, Columns } from "lucide-react";
 import {
   Autocomplete,
   AutocompleteItem,
@@ -34,6 +34,7 @@ import { useLocation } from "react-router-dom";
 
 import { TaskCard } from "@/components/members-tasks/TaskCard";
 import { TaskListView } from "@/components/members-tasks/TaskListView";
+import MembersTasksKanban from "@/components/members-tasks/MembersTasksKanban";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { TaskGridSkeleton } from "@/components/members-tasks/TaskGridSkeleton";
 import { useMembersTasks } from "@/hooks/useMembersTasks";
@@ -104,7 +105,7 @@ export default function MembersTasksPage() {
   }, []);
 
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
-  const [viewType, setViewType] = useState<"grid" | "list" | "gantt">("grid");
+  const [viewType, setViewType] = useState<"grid" | "list" | "gantt" | "kanban">("kanban");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isOptionOpen, setIsOptionOpen] = useState(false);
   const { hasAnyRoleById, loading: userLoading, user } = usePermissions();
@@ -1259,7 +1260,7 @@ export default function MembersTasksPage() {
         {/* Pagination Controls - Moved below tabs */}
 
         {/* Controls */}
-        {loading ? (
+        {initialLoading ? (
           <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
               {/* Skeleton for View Toggle */}
@@ -1268,6 +1269,8 @@ export default function MembersTasksPage() {
                 {/* Grid button */}
                 <Skeleton className="h-8 w-16 rounded-full" />{" "}
                 {/* List button */}
+                <Skeleton className="h-8 w-16 rounded-full" />{" "}
+                {/* Kanban button */}
                 <Skeleton className="h-8 w-16 rounded-full" />{" "}
                 {/* Gantt button */}
               </div>
@@ -1281,7 +1284,7 @@ export default function MembersTasksPage() {
             <div className="flex items-center gap-4">
               {/* View Toggle */}
               <div className="flex items-center bg-content2 rounded-full p-1">
-                {(["grid", "list", "gantt"] as const).map((type) => (
+                {(["kanban", "grid", "list", "gantt"] as const).map((type) => (
                   <Button
                     key={type}
                     className="rounded-full px-3"
@@ -1292,6 +1295,8 @@ export default function MembersTasksPage() {
                         <Grid3X3 className="w-4 h-4" />
                       ) : type === "list" ? (
                         <List className="w-4 h-4" />
+                      ) : type === "kanban" ? (
+                        <Columns className="w-4 h-4" />
                       ) : (
                         <BarChart3 className="w-4 h-4" />
                       )
@@ -1373,7 +1378,7 @@ export default function MembersTasksPage() {
         )}
 
         {/* Tasks */}
-        {loading ? (
+        {initialLoading ? (
           <TaskGridSkeleton />
         ) : (tasks?.length || 0) === 0 ? (
           <div className="flex items-center justify-center min-h-96">
@@ -1435,6 +1440,16 @@ export default function MembersTasksPage() {
                   getStatusText={getStatusText}
                   tasks={tasks}
                   onTaskClick={handleTaskClick}
+                />
+              </div>
+            )}
+            {viewType === "kanban" && (
+              <div className="mb-8">
+                <MembersTasksKanban
+                  loading={loading}
+                  tasks={tasks}
+                  onTaskClick={handleTaskClick}
+                  onTaskUpdate={handleRefresh}
                 />
               </div>
             )}
