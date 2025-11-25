@@ -9,5 +9,7 @@ public enum RequirementStatusEnum
     UnderTesting = 5,
     Completed = 6,
     Postponed = 7,
-    Cancelled = 8
+    Cancelled = 8,
+    ReturnedToAnalyst = 9,
+    ReturnedToManager = 10
 }

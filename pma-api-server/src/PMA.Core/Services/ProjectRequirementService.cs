@@ -215,6 +215,52 @@ public class ProjectRequirementService : IProjectRequirementService
         return true;
     }
 
+    public async Task<bool> ReturnRequirementAsync(int id, string reason, int returnedBy)
+    {
+        var requirement = await _projectRequirementRepository.GetByIdAsync(id);
+        if (requirement == null)
+            return false;
+
+        var oldStatus = requirement.Status;
+        RequirementStatusEnum newStatus;
+
+        // Determine the return status based on current status
+        if (oldStatus == RequirementStatusEnum.ManagerReview)
+        {
+            // Analyst Manager returning to Analyst
+            newStatus = RequirementStatusEnum.ReturnedToAnalyst;
+        }
+        else if (oldStatus == RequirementStatusEnum.Approved)
+        {
+            // Developer Manager returning to Analyst Manager
+            newStatus = RequirementStatusEnum.ReturnedToManager;
+        }
+        else
+        {
+            // Invalid status for return operation
+            return false;
+        }
+
+        // Update requirement status
+        requirement.Status = newStatus;
+        requirement.UpdatedAt = DateTime.Now;
+        await _projectRequirementRepository.UpdateAsync(requirement);
+
+        // Create status history record with reason
+        var statusHistory = new ProjectRequirementStatusHistory
+        {
+            RequirementId = id,
+            FromStatus = (int)oldStatus,
+            ToStatus = (int)newStatus,
+            CreatedBy = returnedBy,
+            CreatedAt = DateTime.Now,
+            Reason = reason
+        };
+        await _statusHistoryRepository.AddAsync(statusHistory);
+
+        return true;
+    }
+
     public async Task<RequirementTask?> CreateRequirementTaskAsync(int requirementId, CreateRequirementTaskDto taskDto)
     {
         // Validate that the requirement exists (lightweight check without loading full details)

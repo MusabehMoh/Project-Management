@@ -22,8 +22,9 @@ import {
   useDisclosure,
   Tooltip,
   ScrollShadow,
+  Textarea,
 } from "@heroui/react";
-import { Search, Filter, X, Eye, Check } from "lucide-react";
+import { Search, Filter, X, Eye, Check, CornerUpLeft } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import LoadingLogo from "@/components/LoadingLogo";
@@ -152,6 +153,7 @@ const RequirementCard = ({
   requirement,
   onViewDetails,
   onApprove,
+  onReturn,
   getStatusColor,
   getStatusText,
   getPriorityColor,
@@ -162,6 +164,7 @@ const RequirementCard = ({
   requirement: ProjectRequirement;
   onViewDetails: (requirement: ProjectRequirement) => void;
   onApprove: (requirement: ProjectRequirement) => void;
+  onReturn: (requirement: ProjectRequirement) => void;
   getStatusColor: (
     status: number,
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
@@ -225,16 +228,19 @@ const RequirementCard = ({
             />
           </ScrollShadow>
 
-          <div className="flex items-center gap-2 text-xs text-default-500">
-            <span>
-              {t("requirements.created")}: {formatDate(requirement.createdAt)}
-            </span>
-            {requirement.sender && <span className="text-default-400">•</span>}
-            {requirement.sender && (
+          <div className="space-y-1 text-xs text-default-500">
+            <div className="flex items-center gap-2">
               <span>
-                {t("requirements.sentBy")}: {requirement.sender.gradeName}{" "}
-                {requirement.sender.fullName}
+                {t("requirements.created")}: {formatDate(requirement.createdAt)}
               </span>
+            </div>
+            {requirement.sender && (
+              <div className="flex items-center gap-2">
+                <span>
+                  {t("requirements.sentBy")}: {requirement.sender.gradeName}{" "}
+                  {requirement.sender.fullName}
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -252,8 +258,18 @@ const RequirementCard = ({
             </Button>
           </Tooltip>
 
-          {/* Approve button - only for users with permission */}
-          {
+          <div className="flex gap-2">
+            {/* Return button */}
+            <Button
+              size="sm"
+              variant="bordered"
+              onPress={() => onReturn(requirement)}
+            >
+              <CornerUpLeft className="text-warning" size={16} />
+              {t("requirements.return")}
+            </Button>
+
+            {/* Approve button */}
             <Button
               size="sm"
               variant="bordered"
@@ -262,7 +278,7 @@ const RequirementCard = ({
               <Check className="text-success" size={16} />
               {t("requirements.approve")}
             </Button>
-          }
+          </div>
         </div>
       </CardBody>
     </Card>
@@ -391,6 +407,17 @@ export default function ApprovalRequestsPage() {
     useState<ProjectRequirement | null>(null);
   const [isApproving, setIsApproving] = useState(false);
 
+  // Return modal state
+  const {
+    isOpen: isReturnModalOpen,
+    onOpen: onReturnModalOpen,
+    onOpenChange: onReturnModalOpenChange,
+  } = useDisclosure();
+  const [requirementToReturn, setRequirementToReturn] =
+    useState<ProjectRequirement | null>(null);
+  const [returnReason, setReturnReason] = useState<string>("");
+  const [isReturning, setIsReturning] = useState(false);
+
   // Function to open drawer with requirement details
   const openRequirementDetails = (requirement: ProjectRequirement) => {
     setSelectedRequirementId(requirement.id);
@@ -401,6 +428,13 @@ export default function ApprovalRequestsPage() {
   const openApprovalModal = (requirement: ProjectRequirement) => {
     setRequirementToApprove(requirement);
     onApprovalModalOpen();
+  };
+
+  // Function to open return modal
+  const openReturnModal = (requirement: ProjectRequirement) => {
+    setRequirementToReturn(requirement);
+    setReturnReason("");
+    onReturnModalOpen();
   };
 
   // Function to handle requirement approval
@@ -427,6 +461,35 @@ export default function ApprovalRequestsPage() {
       showErrorToast(t("requirements.approveError"));
     } finally {
       setIsApproving(false);
+    }
+  };
+
+  // Function to handle requirement return
+  const handleReturnSubmit = async () => {
+    if (!requirementToReturn || !returnReason.trim()) return;
+
+    setIsReturning(true);
+    try {
+      // Use the new return API method
+      await projectRequirementsService.returnRequirement(
+        requirementToReturn.id,
+        returnReason,
+      );
+
+      // Show success toast
+      showSuccessToast(t("requirements.returnSuccess"));
+
+      onReturnModalOpenChange();
+      setRequirementToReturn(null);
+      setReturnReason("");
+
+      // Refresh requirements data
+      refreshData();
+    } catch {
+      // Show error toast
+      showErrorToast(t("requirements.returnError"));
+    } finally {
+      setIsReturning(false);
     }
   };
 
@@ -643,6 +706,7 @@ export default function ApprovalRequestsPage() {
                 isHighlighted={highlightedRequirementId === requirement.id}
                 requirement={requirement}
                 onApprove={openApprovalModal}
+                onReturn={openReturnModal}
                 onViewDetails={openRequirementDetails}
               />
             ))}
@@ -714,6 +778,64 @@ export default function ApprovalRequestsPage() {
                   >
                     <Check size={16} />
                     {t("requirements.approve")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* Return Confirmation Modal */}
+        <Modal
+          isOpen={isReturnModalOpen}
+          size="md"
+          onOpenChange={onReturnModalOpenChange}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <CornerUpLeft className="w-5 h-5 text-warning" />
+                    {t("requirements.returnRequirement")}
+                  </div>
+                </ModalHeader>
+                <ModalBody>
+                  <div className="space-y-4">
+                    <p>
+                      {t("requirements.returnConfirmMessage").replace(
+                        "{name}",
+                        requirementToReturn?.name || "",
+                      )}
+                    </p>
+                    <div className="p-4 bg-warning-50 rounded-lg border border-warning-200">
+                      <p className="text-sm text-warning-800">
+                        {t("requirements.returnToAnalyst")}
+                      </p>
+                    </div>
+                    <Textarea
+                      isRequired
+                      label={t("requirements.returnReason")}
+                      minRows={3}
+                      placeholder={t("requirements.returnReasonPlaceholder")}
+                      value={returnReason}
+                      onChange={(e) => setReturnReason(e.target.value)}
+                    />
+                  </div>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="default" variant="flat" onPress={onClose}>
+                    {t("requirements.cancel")}
+                  </Button>
+                  <Button
+                    color="warning"
+                    isDisabled={!returnReason.trim()}
+                    isLoading={isReturning}
+                    variant="flat"
+                    onPress={handleReturnSubmit}
+                  >
+                    <CornerUpLeft size={16} />
+                    {t("requirements.return")}
                   </Button>
                 </ModalFooter>
               </>

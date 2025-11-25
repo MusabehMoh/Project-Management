@@ -1169,6 +1169,20 @@ const translations = {
       'This will change the status to "Approved" and make it available for development assignment.',
     "requirements.approveSuccess": "Requirement approved successfully",
     "requirements.approveError": "Failed to approve requirement",
+    "requirements.return": "Return",
+    "requirements.returnRequirement": "Return Requirement",
+    "requirements.returnReason": "Return Reason",
+    "requirements.returnReasonRequired": "Return reason is required",
+    "requirements.returnConfirmMessage":
+      'Are you sure you want to return the requirement "{name}"?',
+    "requirements.returnToAnalyst":
+      "This will return the requirement to the analyst for revision.",
+    "requirements.returnToManager":
+      "This will return the requirement to the analyst manager for re-review.",
+    "requirements.returnSuccess": "Requirement returned successfully",
+    "requirements.returnError": "Failed to return requirement",
+    "requirements.returnReasonPlaceholder":
+      "Please describe what needs to be changed or improved...",
     "requirements.noDevelopmentRequirements": "No requirements in development",
     "requirements.noDevelopmentRequirementsDesc":
       "There are currently no requirements marked as in development.",
@@ -1198,6 +1212,11 @@ const translations = {
     "requirementStatus.3": "Under Development",
     "requirementStatus.4": "Under Testing",
     "requirementStatus.5": "Completed",
+    "requirementStatus.6": "Rejected",
+    "requirementStatus.7": "Postponed",
+    "requirementStatus.8": "Cancelled",
+    "requirementStatus.9": "Returned to Analyst",
+    "requirementStatus.10": "Returned to Manager",
     "requirements.high": "High",
     "requirements.medium": "Medium",
     "requirements.low": "Low",
@@ -3366,6 +3385,20 @@ const translations = {
       'سيؤدي هذا إلى تغيير الحالة إلى "معتمد" وجعله متاحاً لمرحلة البرمجة.',
     "requirements.approveSuccess": "تمت الموافقة على المتطلب بنجاح",
     "requirements.approveError": "فشل في الموافقة على المتطلب",
+    "requirements.return": "إرجاع",
+    "requirements.returnRequirement": "إرجاع المتطلب",
+    "requirements.returnReason": "سبب الإرجاع",
+    "requirements.returnReasonRequired": "سبب الإرجاع مطلوب",
+    "requirements.returnConfirmMessage":
+      'هل أنت متأكد من أنك تريد إرجاع المتطلب "{name}"؟',
+    "requirements.returnToAnalyst":
+      "سيؤدي هذا إلى إرجاع المتطلب إلى المحلل لإجراء التعديلات.",
+    "requirements.returnToManager":
+      "سيؤدي هذا إلى إرجاع المتطلب إلى مدير المحللين لإعادة المراجعة.",
+    "requirements.returnSuccess": "تم إرجاع المتطلب بنجاح",
+    "requirements.returnError": "فشل في إرجاع المتطلب",
+    "requirements.returnReasonPlaceholder":
+      "يرجى وصف ما يحتاج إلى تغيير أو تحسين...",
     "requirements.noDevelopmentRequirements": "لا توجد متطلبات قيد البرمجة",
     "requirements.noDevelopmentRequirementsDesc":
       "لا توجد حالياً متطلبات موسومة بأنها قيد البرمجة.",
@@ -3394,6 +3427,11 @@ const translations = {
     "requirementStatus.3": "قيد البرمجة",
     "requirementStatus.4": "قيد الاختبار",
     "requirementStatus.5": "مكتمل",
+    "requirementStatus.6": "مرفوض",
+    "requirementStatus.7": "مؤجل",
+    "requirementStatus.8": "ملغي",
+    "requirementStatus.9": "معاد إلى المحلل",
+    "requirementStatus.10": "معاد إلى المدير",
     "requirements.high": "عالية",
     "requirements.medium": "متوسطة",
     "requirements.low": "منخفضة",

@@ -2036,28 +2036,7 @@ export default function ProjectsPage() {
                         }
                       />
                     </div>
-                    <Select
-                      isLoading={phasesLoading}
-                      label={t("projects.status")}
-                      placeholder={t("projects.status")}
-                      selectedKeys={
-                        formData.status ? [formData.status.toString()] : []
-                      }
-                      onSelectionChange={(keys) => {
-                        const selected = Array.from(keys)[0] as string;
-
-                        setFormData({
-                          ...formData,
-                          status: selected ? parseInt(selected) : 1,
-                        });
-                      }}
-                    >
-                      {phases.map((phase) => (
-                        <SelectItem key={phase.code.toString()}>
-                          {language === "ar" ? phase.nameAr : phase.nameEn}
-                        </SelectItem>
-                      ))}
-                    </Select>
+                 
                   </div>
                 )}
               </ModalBody>

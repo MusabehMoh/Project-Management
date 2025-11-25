@@ -643,6 +643,46 @@ public class ProjectRequirementsController : ApiBaseController
     }
 
     /// <summary>
+    /// Return a requirement to previous stage with reason
+    /// </summary>
+    [HttpPost("requirements/{id}/return")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> ReturnRequirement(int id, [FromBody] ReturnRequirementDto returnDto)
+    {
+        try
+        {
+            // Validate model state
+            var modelValidation = ValidateModelState();
+            if (modelValidation != null)
+                return modelValidation;
+
+            // Get current user context
+            var userContext = await _userContextAccessor.GetUserContextAsync();
+            if (!int.TryParse(userContext.PrsId, out var returnedBy))
+            {
+                return Error<string>("Invalid user identifier", null, 401);
+            }
+
+            // Call service to return requirement
+            var result = await _projectRequirementService.ReturnRequirementAsync(id, returnDto.Reason, returnedBy);
+            
+            if (!result)
+            {
+                return Error<ProjectRequirement>("Project requirement not found or invalid status for return operation", null, 404);
+            }
+
+            return Success("Requirement returned successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error returning requirement {RequirementId}", id);
+            return Error<string>("An error occurred while returning the requirement", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Send requirement for approval or processing
     /// </summary>
     [HttpPost("requirements/{id}/send")]

@@ -234,6 +234,7 @@ public interface IProjectRequirementService
     System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetPendingApprovalRequirementsAsync(int page, int limit, int? status = null, string? priority = null, string? search = null);
     System.Threading.Tasks.Task<bool> SendRequirementAsync(int id, int SentBy);
     System.Threading.Tasks.Task<bool> ApproveRequirementAsync(int id);
+    System.Threading.Tasks.Task<bool> ReturnRequirementAsync(int id, string reason, int returnedBy);
     System.Threading.Tasks.Task<RequirementTask?> CreateRequirementTaskAsync(int requirementId, CreateRequirementTaskDto taskDto);
     System.Threading.Tasks.Task<ProjectRequirementAttachment?> UploadAttachmentAsync(int requirementId, object file);
     // New bulk upload (does not remove existing attachments)
