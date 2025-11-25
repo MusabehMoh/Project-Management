@@ -265,7 +265,7 @@ const RequirementCard = ({
               variant="bordered"
               onPress={() => onReturn(requirement)}
             >
-              <CornerUpLeft className="text-warning" size={16} />
+              <CornerUpLeft className="text-danger" size={16} />
               {t("requirements.return")}
             </Button>
 
@@ -828,7 +828,7 @@ export default function ApprovalRequestsPage() {
                     {t("requirements.cancel")}
                   </Button>
                   <Button
-                    color="warning"
+                    color="danger"
                     isDisabled={!returnReason.trim()}
                     isLoading={isReturning}
                     variant="flat"

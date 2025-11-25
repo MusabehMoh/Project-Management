@@ -1179,6 +1179,8 @@ const translations = {
     "requirements.returnRequirement": "Return Requirement",
     "requirements.returnReason": "Return Reason",
     "requirements.returnReasonRequired": "Return reason is required",
+    "requirements.returnConfirmation":
+      "Are you sure you want to return this requirement? Please provide a reason for the return.",
     "requirements.returnConfirmMessage":
       'Are you sure you want to return the requirement "{name}"?',
     "requirements.returnToAnalyst":
@@ -2725,7 +2727,7 @@ const translations = {
     "common.pleaseWait": "يرجى الانتظار...",
     "common.noDataFound": "لا توجد بيانات",
     "common.unexpectedError": "حدث خطأ غير متوقع",
-    "common.AddAdhocTask": "إضافة مهمة عاجلة",
+    "common.AddAdhocTask": "إضافة مهمة ",
     "common.project": "المشروع",
     "common.projects": "المشاريع",
     "common.assignee": "المعين",
@@ -3401,6 +3403,8 @@ const translations = {
     "requirements.returnRequirement": "إرجاع المتطلب",
     "requirements.returnReason": "سبب الإرجاع",
     "requirements.returnReasonRequired": "سبب الإرجاع مطلوب",
+    "requirements.returnConfirmation":
+      "هل أنت متأكد من أنك تريد إرجاع هذا المتطلب؟ يرجى تقديم سبب للإرجاع.",
     "requirements.returnConfirmMessage":
       'هل أنت متأكد من أنك تريد إرجاع المتطلب "{name}"؟',
     "requirements.returnToAnalyst":
@@ -3477,7 +3481,7 @@ const translations = {
     "common.viewDetails": "عرض التفاصيل",
     // Task creation keys (Arabic)
     "tasks.createTask": "إنشاء مهمة",
-    "tasks.viewTask": "عرض المهمة",
+    "tasks.viewTask": "تعديل المهمة",
     "tasks.editTask": "تحرير المهمة",
     "tasks.taskName": "اسم المهمة",
     "tasks.currentAssignees": "الموظفون المعينون الحاليون",
@@ -3968,7 +3972,7 @@ const translations = {
       "هذا المشروع لا يحتوي على أي جداول زمنية بعد.",
     "timeline.noTimelinesGeneral":
       "اختر مشروعاً وأنشئ جدولك الزمني الأول للبدء.",
-    "timeline.createTimeline": "إنشاء جدول زمني",
+    "timeline.createTimeline": "إنشاء مخطط زمني",
     "timeline.viewTimeline": "عرض الجدول الزمني",
     "timeline.selectTimeline": "اختر جدولاً زمنياً",
     "timeline.selectTimelineDescription":
@@ -4048,7 +4052,7 @@ const translations = {
     "timeline.loadingFailed": "فشل تحميل البيانات",
 
     // Timeline Create Modal
-    "timeline.createModal.title": "إنشاء جدول زمني",
+    "timeline.createModal.title": "إنشاء مخطط زمني",
     "timeline.createModal.editTitle": "تحرير المخطط الزمني",
     "timeline.createModal.name": "اسم المخطط الزمني",
     "timeline.createModal.description": "الوصف",
@@ -4236,8 +4240,8 @@ const translations = {
     "timeline.filters.medium": "متوسطة",
     "timeline.filters.high": "عالية",
     "timeline.filters.critical": "حرجة",
-    "timeline.create.title": "إنشاء جدول زمني جديد",
-    "timeline.create.subtitle": "قم بإنشاء جدول زمني جديد لتنظيم مراحل مشروعك",
+    "timeline.create.title": "إنشاء مخطط زمني جديد",
+    "timeline.create.subtitle": "قم بإنشاء مخطط زمني جديد لتنظيم مراحل مشروعك",
     "timeline.create.timelineName": "اسم المخطط الزمني",
     "timeline.create.timelineNamePlaceholder": "أدخل اسم المخطط الزمني",
     "timeline.create.description": "الوصف",

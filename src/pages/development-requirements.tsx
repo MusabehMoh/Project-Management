@@ -182,50 +182,77 @@ const RequirementCard = ({
         </div>
 
         {/* Detail, Task, and Timeline Creation Buttons */}
-        <div className="flex items-center pt-2 gap-2 mt-auto">
-          {
-            <Button
-              className="flex-1"
-              color="default"
-              size="sm"
-              startContent={<Eye className="w-3 h-3 flex-shrink-0" />}
-              variant="faded"
-              onPress={() => onViewDetails(requirement)}
-            >
-              {t("common.viewDetails")}
-            </Button>
-          }
-
-          {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
-          {!requirement.timeline &&
-            hasPermission({
-              actions: ["requirements.tasks.create"],
-            }) && (
+        <div className="space-y-2 pt-2 mt-auto">
+          <div className="flex items-center gap-2">
+            {
               <Button
                 className="flex-1"
                 color="default"
                 size="sm"
-                startContent={
-                  requirement.requirementTask ? (
-                    <Edit className="w-3 h-3 flex-shrink-0" />
-                  ) : (
-                    <Plus className="w-3 h-3 flex-shrink-0" />
-                  )
-                }
+                startContent={<Eye className="w-3 h-3 flex-shrink-0" />}
                 variant="faded"
-                onPress={() => onCreateTask(requirement)}
+                onPress={() => onViewDetails(requirement)}
               >
-                {requirement.requirementTask
-                  ? t("tasks.viewTask")
-                  : t("tasks.createTask")}
+                {t("common.viewDetails")}
               </Button>
-            )}
+            }
+
+            {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
+            {!requirement.timeline &&
+              hasPermission({
+                actions: ["requirements.tasks.create"],
+              }) && (
+                <Button
+                  className="flex-1"
+                  color="default"
+                  size="sm"
+                  startContent={
+                    requirement.requirementTask ? (
+                      <Edit className="w-3 h-3 flex-shrink-0" />
+                    ) : (
+                      <Plus className="w-3 h-3 flex-shrink-0" />
+                    )
+                  }
+                  variant="faded"
+                  onPress={() => onCreateTask(requirement)}
+                >
+                  {requirement.requirementTask
+                    ? t("tasks.viewTask")
+                    : t("tasks.createTask")}
+                </Button>
+              )}
+
+            {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
+            {!requirement.requirementTask &&
+              hasPermission({
+                actions: ["requirements.timelines.create"],
+              }) && (
+                <Button
+                  className="flex-1"
+                  color="default"
+                  size="sm"
+                  startContent={
+                    requirement.timeline ? (
+                      <Edit className="w-3 h-3 flex-shrink-0" />
+                    ) : (
+                      <Plus className="w-3 h-3 flex-shrink-0" />
+                    )
+                  }
+                  variant="faded"
+                  onPress={() => onCreateTimeline(requirement)}
+                >
+                  {requirement.timeline
+                    ? t("timeline.viewTimeline")
+                    : t("timeline.createTimeline")}
+                </Button>
+              )}
+          </div>
 
           {/* Business Rule: Show Return button only for approved requirements */}
           {requirement.status === REQUIREMENT_STATUS.APPROVED && (
             <Button
-              className="flex-1"
-              color="warning"
+              className="w-full"
+              color="danger"
               size="sm"
               startContent={<CornerUpLeft className="w-3 h-3 flex-shrink-0" />}
               variant="faded"
@@ -234,31 +261,6 @@ const RequirementCard = ({
               {t("requirements.return")}
             </Button>
           )}
-
-          {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
-          {!requirement.requirementTask &&
-            hasPermission({
-              actions: ["requirements.timelines.create"],
-            }) && (
-              <Button
-                className="flex-1"
-                color="default"
-                size="sm"
-                startContent={
-                  requirement.timeline ? (
-                    <Edit className="w-3 h-3 flex-shrink-0" />
-                  ) : (
-                    <Plus className="w-3 h-3 flex-shrink-0" />
-                  )
-                }
-                variant="faded"
-                onPress={() => onCreateTimeline(requirement)}
-              >
-                {requirement.timeline
-                  ? t("timeline.viewTimeline")
-                  : t("timeline.createTimeline")}
-              </Button>
-            )}
         </div>
       </CardBody>
     </Card>
@@ -1771,7 +1773,7 @@ export default function DevelopmentRequirementsPage() {
                     {t("common.cancel")}
                   </Button>
                   <Button
-                    color="warning"
+                    color="danger"
                     isDisabled={!returnReason.trim()}
                     isLoading={isReturning}
                     startContent={<CornerUpLeft className="w-4 h-4" />}
