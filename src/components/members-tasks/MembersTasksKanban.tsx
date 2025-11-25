@@ -79,6 +79,9 @@ export default function MembersTasksKanban({
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [dragStartPos, setDragStartPos] = useState<{
     x: number;
     y: number;
@@ -203,6 +206,10 @@ export default function MembersTasksKanban({
       // Preserve scroll position before refreshing columns
       saveScrollPositions();
       setColumns(allColumns);
+      
+      // Reset completed task IDs when new tasks are loaded
+      setCompletedTaskIds(new Set());
+      
       setTimeout(() => {
         restoreScrollPositions();
       }, 30);
@@ -399,10 +406,16 @@ export default function MembersTasksKanban({
 
     try {
       setCompletingTaskId(task.id);
+      
+      // First, show the switch toggle animation
+      setCompletedTaskIds((prev) => new Set(prev).add(task.id));
+
+      // Wait 300ms to show the toggle animation before moving the card
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const comment = `${t("teamDashboard.kanban.markComplete")}`;
 
-      // Optimistic update
+      // Optimistic update - move card to completed column
       setColumns((prevColumns) =>
         prevColumns.map((col) => {
           if (col.id === columnId) {
@@ -436,6 +449,11 @@ export default function MembersTasksKanban({
       showErrorToast(t("teamDashboard.kanban.taskCompleteFailed"));
 
       // Revert optimistic update
+      setCompletedTaskIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(task.id);
+        return newSet;
+      });
       setColumns((prevColumns) =>
         prevColumns.map((col) => {
           if (col.id === 5) {
@@ -640,18 +658,21 @@ export default function MembersTasksKanban({
                               <div
                                 className={language === "ar" ? "order-first" : ""}
                               >
-                                <Switch
-                                  color="success"
-                                  isDisabled={completingTaskId === task.id}
-                                  size="sm"
-                                  startContent={
-                                    <CheckCircle className="w-3 h-3" />
-                                  }
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleQuickComplete(task, column.id);
-                                  }}
-                                />
+                                <Tooltip content={t("teamDashboard.kanban.markComplete")}>
+                                  <Switch
+                                    color="success"
+                                    isDisabled={completingTaskId === task.id}
+                                    isSelected={completedTaskIds.has(task.id)}
+                                    size="sm"
+                                    startContent={
+                                      <CheckCircle className="w-3 h-3" />
+                                    }
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      handleQuickComplete(task, column.id);
+                                    }}
+                                  />
+                                </Tooltip>
                               </div>
                             )}
                           </div>
