@@ -169,7 +169,7 @@ public class ProjectRequirementService : IProjectRequirementService
         // Get requirements with status NOT in "New" (1) or "ManagerReview" (2)
         // This returns all requirements that are approved or further in the process
         // Apply additional filters on top of the status filtering
-        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, status, priority, search, new[] { 1, 2,7 });
+        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, projectId, status, priority, search, new[] { (int)RequirementStatusEnum.New, (int)RequirementStatusEnum.ManagerReview, (int)RequirementStatusEnum.Postponed, (int)RequirementStatusEnum.Cancelled, (int)RequirementStatusEnum.ReturnedToAnalyst, (int)RequirementStatusEnum.ReturnedToManager });
     }
     public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetApprovedRequirementsAsync(int page, int limit, int? projectId = null, string? priority = null, string? search = null)
     {
@@ -196,10 +196,16 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<(IEnumerable<ProjectRequirement> Requirements, int TotalCount)> GetPendingApprovalRequirementsAsync(int page, int limit, int? status = null, string? priority = null, string? search = null)
     {
-        // Get requirements with status "ManagerReview" (2) - waiting for manager approval
-        // But allow overriding with the status parameter if provided
-        var filterStatus = status ?? (int)RequirementStatusEnum.ManagerReview;
-        return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, null, filterStatus, priority, search);
+        // Get requirements with status "ManagerReview" (2) or "ReturnedToManager" (7) - waiting for manager approval
+        // If status parameter is provided, use it; otherwise filter by both statuses
+        if (status.HasValue)
+        {
+            return await _projectRequirementRepository.GetProjectRequirementsAsync(page, limit, null, status.Value, priority, search);
+        }
+        
+        // Filter by both ManagerReview and ReturnedToManager statuses
+        var statuses = new[] { (int)RequirementStatusEnum.ManagerReview, (int)RequirementStatusEnum.ReturnedToManager };
+        return await _projectRequirementRepository.GetProjectRequirementsByStatusesAsync(page, limit, statuses, null, priority, search);
     }
 
     public async Task<bool> ApproveRequirementAsync(int id)

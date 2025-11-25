@@ -355,6 +355,9 @@ export default function DevelopmentRequirementsPage() {
     setProjectFilter,
   } = useApprovedRequirements({
     pageSize: 20,
+    initialFilters: {
+      status: REQUIREMENT_STATUS.APPROVED.toString(),
+    },
   });
 
   // Drawer state
@@ -427,7 +430,7 @@ export default function DevelopmentRequirementsPage() {
     departmentId: 2, // development Department
     minLength: 1,
     maxResults: 100,
-    loadInitialResults: true, // Load all developers initially
+    loadInitialResults: true, // Load all developers initially (used heavily)
     initialResultsLimit: 100,
   });
   const {
@@ -438,7 +441,8 @@ export default function DevelopmentRequirementsPage() {
     departmentId: 5, // QC Department
     minLength: 1,
     maxResults: 100,
-    loadInitialResults: true, // Load all QC members initially
+    // Only search when user types to avoid redundant q="" calls
+    loadInitialResults: false,
     initialResultsLimit: 100,
   });
   const {
@@ -449,7 +453,8 @@ export default function DevelopmentRequirementsPage() {
     departmentId: 3, // Design Department
     minLength: 1,
     maxResults: 100,
-    loadInitialResults: true, // Load all designers initially
+    // Only search when user types to avoid redundant q="" calls
+    loadInitialResults: false,
     initialResultsLimit: 100,
   });
 

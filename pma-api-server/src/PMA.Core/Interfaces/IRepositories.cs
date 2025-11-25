@@ -114,6 +114,7 @@ public interface IRequirementRepository : IRepository<Requirement>
 public interface IProjectRequirementRepository : IRepository<ProjectRequirement>
 {
     System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> ProjectRequirements, int TotalCount)> GetProjectRequirementsAsync(int page, int limit, int? projectId = null, int? status = null, string? priority = null, string? search = null, int[]? excludeStatuses = null);
+    System.Threading.Tasks.Task<(IEnumerable<ProjectRequirement> ProjectRequirements, int TotalCount)> GetProjectRequirementsByStatusesAsync(int page, int limit, int[] statuses, int? projectId = null, string? priority = null, string? search = null);
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByProjectAsync(int projectId);
     System.Threading.Tasks.Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByAnalystAsync(int analystId);
     System.Threading.Tasks.Task<ProjectRequirement?> GetProjectRequirementWithDetailsAsync(int id);
