@@ -40,7 +40,7 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
             }
 
             // Get the project requirement details
-            var requirement = await _projectRequirementService.GetProjectRequirementByIdAsync(requirementId);
+            var requirement = await _projectRequirementService.GetByIdAsync(requirementId);
             if (requirement == null)
             {
                 return new RequirementTaskResult
