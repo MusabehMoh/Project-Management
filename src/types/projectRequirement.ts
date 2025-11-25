@@ -84,6 +84,7 @@ export interface RequirementTask {
 export interface CreateRequirementTaskRequest {
   requirementId: number;
   developerId?: number;
+  developerIds?: number[];
   qcId?: number;
   designerId?: number;
   description?: string;

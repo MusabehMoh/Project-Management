@@ -1241,6 +1241,8 @@ const translations = {
     "tasks.selectDeveloper": "Search for developer...",
     "tasks.selectQC": "Search for QC member...",
     "tasks.selectDesigner": "Search for designer...",
+    "tasks.developersExpectedEndDateNote":
+      "All selected developers will work towards the requirement's expected end date shown above.",
     "tasks.description": "Description",
     "tasks.taskDescriptionPlaceholder": "Enter task description...",
     "tasks.startDate": "Start Date",
@@ -1248,6 +1250,10 @@ const translations = {
     "tasks.developerDates": "Developer Schedule",
     "tasks.designerDates": "Designer Schedule",
     "tasks.qcDates": "QC Schedule",
+    "tasks.sharedDatesNote":
+      "These dates will be applied to all selected developers.",
+    "tasks.expectedEndDateReference":
+      "This is the requirement's expected completion date for reference.",
     "tasks.assignmentNote":
       "Select at least one team member for this task. Each role is optional but at least one assignment is required.",
     "tasks.assignmentNoteInfo":
@@ -3428,6 +3434,8 @@ const translations = {
     "tasks.selectDeveloper": "البحث عن مطور...",
     "tasks.selectQC": "البحث عن مسؤول ضمان الجودة...",
     "tasks.selectDesigner": "البحث عن مصمم...",
+    "tasks.developersExpectedEndDateNote":
+      "سيعمل جميع المطورين المحددين نحو تاريخ الانتهاء المتوقع للمتطلب الموضح أعلاه.",
     "tasks.description": "الوصف",
     "tasks.taskDescriptionPlaceholder": "أدخل وصف المهمة...",
     "tasks.startDate": "تاريخ البداية",
@@ -3435,6 +3443,10 @@ const translations = {
     "tasks.developerDates": "جدولة المطور",
     "tasks.designerDates": "جدولة المصمم",
     "tasks.qcDates": "جدولة ضمان الجودة",
+    "tasks.sharedDatesNote":
+      "سيتم تطبيق هذه التواريخ على جميع المطورين المحددين.",
+    "tasks.expectedEndDateReference":
+      "هذا هو تاريخ الانتهاء المتوقع للمتطلب للإشارة.",
     "tasks.assignmentNote":
       "اختر عضو فريق واحد على الأقل لهذه المهمة. كل دور اختياري ولكن يجب تعيين واحد على الأقل.",
     "tasks.assignmentNoteInfo":

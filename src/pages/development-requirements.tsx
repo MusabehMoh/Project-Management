@@ -332,8 +332,9 @@ export default function DevelopmentRequirementsPage() {
 
   // Task creation modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [selectedDeveloper, setSelectedDeveloper] =
-    useState<MemberSearchResult | null>(null);
+  const [selectedDevelopers, setSelectedDevelopers] = useState<
+    MemberSearchResult[]
+  >([]);
   const [selectedQC, setSelectedQC] = useState<MemberSearchResult | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
@@ -345,7 +346,7 @@ export default function DevelopmentRequirementsPage() {
   });
   // Task description and dates
   const [taskDescription, setTaskDescription] = useState<string>("");
-  // Developer dates
+  // Developer dates (shared across all developers)
   const [developerStartDate, setDeveloperStartDate] = useState<any>(null);
   const [developerEndDate, setDeveloperEndDate] = useState<any>(null);
   // QC dates
@@ -416,8 +417,8 @@ export default function DevelopmentRequirementsPage() {
     const errors: { developer?: string; qc?: string } = {};
     let hasErrors = false;
 
-    // Validate developer dates - required if developer is selected
-    if (selectedDeveloper) {
+    // Validate developer dates - required if developers are selected
+    if (selectedDevelopers.length > 0) {
       if (!developerStartDate || !developerEndDate) {
         errors.developer = t("tasks.validation.bothDatesRequired");
         hasErrors = true;
@@ -457,7 +458,7 @@ export default function DevelopmentRequirementsPage() {
       validateAllDates();
     }
   }, [
-    selectedDeveloper,
+    selectedDevelopers,
     selectedQC,
     developerStartDate,
     developerEndDate,
@@ -491,7 +492,7 @@ export default function DevelopmentRequirementsPage() {
       // Use full developer and QC objects returned from backend
       // Backend now returns requirementTask.developer and requirementTask.qc as complete Employee entities
       if (requirement.requirementTask.developer) {
-        setSelectedDeveloper({
+        setSelectedDevelopers([{
           id: requirement.requirementTask.developer.id,
           userName: requirement.requirementTask.developer.userName,
           militaryNumber: requirement.requirementTask.developer.militaryNumber,
@@ -499,7 +500,7 @@ export default function DevelopmentRequirementsPage() {
           gradeName: requirement.requirementTask.developer.gradeName || "",
           statusId: 0,
           department: "Development",
-        });
+        }]);
       }
 
       if (requirement.requirementTask.qc) {
@@ -521,7 +522,7 @@ export default function DevelopmentRequirementsPage() {
           "",
       );
 
-      // Parse dates from existing task when available
+      // Parse developer dates from existing task when available
       setDeveloperStartDate(
         requirement.requirementTask.developerStartDate
           ? parseDate(
@@ -536,6 +537,8 @@ export default function DevelopmentRequirementsPage() {
             )
           : null,
       );
+
+      // Parse QC dates from existing task when available
       setQcStartDate(
         requirement.requirementTask.qcStartDate
           ? parseDate(requirement.requirementTask.qcStartDate.split("T")[0])
@@ -547,22 +550,24 @@ export default function DevelopmentRequirementsPage() {
           : null,
       );
 
-      // Prefill input display with selected names so the selection is visible
-      const devDisplay = selectedDeveloper
-        ? `${selectedDeveloper.gradeName} ${selectedDeveloper.fullName}`
-        : "";
+      // Prefill QC input display with selected name so the selection is visible
       const qcDisplay = selectedQC
         ? `${selectedQC.gradeName} ${selectedQC.fullName}`
         : "";
 
-      setDeveloperInputValue(devDisplay);
       setQcInputValue(qcDisplay);
     } else {
       // Reset all fields for new tasks
-      setSelectedDeveloper(null);
+      setSelectedDevelopers([]);
       setSelectedQC(null);
-      setDeveloperStartDate(null);
-      setDeveloperEndDate(null);
+      // Set developer start date to today by default
+      setDeveloperStartDate(today(getLocalTimeZone()));
+      // Set developer end date to requirement's expected completion date by default
+      setDeveloperEndDate(
+        requirement.expectedCompletionDate
+          ? parseDate(requirement.expectedCompletionDate.split("T")[0])
+          : null,
+      );
       setQcStartDate(null);
       setQcEndDate(null);
       setDeveloperInputValue("");
@@ -637,7 +642,7 @@ export default function DevelopmentRequirementsPage() {
     try {
       const taskData: CreateRequirementTaskRequest = {
         requirementId: selectedRequirement.id,
-        developerId: selectedDeveloper?.id,
+        developerIds: selectedDevelopers.map((d) => d.id),
         qcId: selectedQC?.id,
         description: taskDescription,
         developerStartDate: developerStartDate?.toString(),
@@ -670,7 +675,7 @@ export default function DevelopmentRequirementsPage() {
       }
 
       setIsTaskModalOpen(false);
-      setSelectedDeveloper(null);
+      setSelectedDevelopers([]);
       setSelectedQC(null);
       setDeveloperInputValue("");
       setQcInputValue("");
@@ -697,7 +702,7 @@ export default function DevelopmentRequirementsPage() {
   // Function to reset task modal
   const resetTaskModal = () => {
     setIsTaskModalOpen(false);
-    setSelectedDeveloper(null);
+    setSelectedDevelopers([]);
     setSelectedQC(null);
     setSelectedRequirementId(undefined);
     setTaskDescription("");
@@ -1149,81 +1154,82 @@ export default function DevelopmentRequirementsPage() {
                         defaultFilter={() => true}
                         inputValue={developerInputValue}
                         isLoading={loadingDevelopers}
-                        menuTrigger="manual"
                         placeholder={t("tasks.selectDeveloper")}
-                        selectedKey={selectedDeveloper?.id?.toString() || ""}
                         onInputChange={(value) => {
                           setDeveloperInputValue(value);
-                          // clear selection if input no longer matches selected
-                          if (
-                            selectedDeveloper &&
-                            value !==
-                              `${selectedDeveloper.gradeName} ${selectedDeveloper.fullName}`
-                          ) {
-                            setSelectedDeveloper(null);
-                          }
                           searchDevelopers(value);
                         }}
                         onSelectionChange={(key) => {
                           const developer = developers.find(
                             (dev) => dev.id.toString() === String(key),
                           );
-
-                          setSelectedDeveloper(developer || null);
-                          // Clear input value after selection
-                          if (developer) {
+                          if (
+                            developer &&
+                            !selectedDevelopers.find((d) => d.id === developer.id)
+                          ) {
+                            setSelectedDevelopers([
+                              ...selectedDevelopers,
+                              developer,
+                            ]);
                             setDeveloperInputValue("");
                           }
                         }}
                       >
-                        {developers.map((developer) => (
-                          <AutocompleteItem
-                            key={developer.id.toString()}
-                            textValue={`${developer.gradeName} ${developer.fullName} ${developer.userName} ${developer.militaryNumber}`}
-                          >
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">
-                                {developer.fullName}
-                              </span>
-                              <span className="text-xs text-default-500">
-                                {developer.militaryNumber} -{" "}
-                                {developer.gradeName}
-                              </span>
-                            </div>
-                          </AutocompleteItem>
-                        ))}
+                        {developers
+                          .filter(
+                            (dev) =>
+                              !selectedDevelopers.find((sd) => sd.id === dev.id),
+                          )
+                          .map((developer) => (
+                            <AutocompleteItem
+                              key={developer.id.toString()}
+                              textValue={`${developer.gradeName} ${developer.fullName} ${developer.userName} ${developer.militaryNumber}`}
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium">
+                                  {developer.fullName}
+                                </span>
+                                <span className="text-xs text-default-500">
+                                  {developer.militaryNumber} -{" "}
+                                  {developer.gradeName}
+                                </span>
+                              </div>
+                            </AutocompleteItem>
+                          ))}
                       </Autocomplete>
-                      {selectedDeveloper && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <Chip color="primary" size="sm" variant="flat">
-                            {selectedDeveloper.fullName}
-                          </Chip>
-                          <Button
-                            isIconOnly
-                            color="danger"
-                            size="sm"
-                            variant="light"
-                            onPress={() => {
-                              setSelectedDeveloper(null);
-                              setDeveloperInputValue("");
-                              setDeveloperStartDate(null);
-                              setDeveloperEndDate(null);
-                              // Clear validation errors for developer
-                              setDateValidationErrors((prev) => ({
-                                ...prev,
-                                developer: undefined,
-                              }));
-                            }}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
+                      {selectedDevelopers.length > 0 && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          {selectedDevelopers.map((developer) => (
+                            <Chip
+                              key={developer.id}
+                              color="primary"
+                              size="sm"
+                              variant="flat"
+                              onClose={() => {
+                                setSelectedDevelopers(
+                                  selectedDevelopers.filter(
+                                    (d) => d.id !== developer.id,
+                                  ),
+                                );
+                              }}
+                            >
+                              {developer.fullName}
+                            </Chip>
+                          ))}
                         </div>
                       )}
                     </div>
 
-                    {/* Developer Dates */}
-                    {selectedDeveloper && (
-                      <div className="space-y-2 mt-2">
+                    {/* Developer Dates - Applied to all selected developers */}
+                    {selectedDevelopers.length > 0 && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-default-700">
+                          {t("tasks.developerDates")}{" "}
+                          <span className="text-danger">*</span>
+                        </label>
+                        <p className="text-xs text-default-500 mb-2">
+                          {t("tasks.sharedDatesNote")}
+                        </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <DatePicker
                             label={t("tasks.startDate")}
@@ -1263,6 +1269,22 @@ export default function DevelopmentRequirementsPage() {
                         )}
                       </div>
                     )}
+
+                    {/* Expected End Date Display (Optional reference) */}
+                    {selectedDevelopers.length > 0 &&
+                      selectedRequirement?.expectedCompletionDate && (
+                        <div className="p-3 bg-default-50 dark:bg-default-100/20 rounded-lg border border-default-200">
+                          <p className="text-xs text-default-600">
+                            <span className="font-medium">
+                              {t("requirements.expectedCompletion")}:
+                            </span>{" "}
+                            {formatDate(selectedRequirement.expectedCompletionDate)}
+                          </p>
+                          <p className="text-xs text-default-500 mt-1">
+                            {t("tasks.expectedEndDateReference")}
+                          </p>
+                        </div>
+                      )}
 
                     {/* QC Selection */}
                     <div>
@@ -1388,7 +1410,7 @@ export default function DevelopmentRequirementsPage() {
                   </div>
                 </ModalBody>
                 <ModalFooter className="flex flex-col gap-2 flex-shrink-0">
-                  {!selectedDeveloper && !selectedQC && (
+                  {selectedDevelopers.length === 0 && !selectedQC && (
                     <p className="text-xs text-danger text-center w-full">
                       {t("tasks.selectAtLeastOne")}
                     </p>
@@ -1409,7 +1431,7 @@ export default function DevelopmentRequirementsPage() {
                       <Button
                         color="primary"
                         isDisabled={
-                          (!selectedDeveloper && !selectedQC) ||
+                          (selectedDevelopers.length === 0 && !selectedQC) ||
                           dateValidationErrors.developer !== undefined ||
                           dateValidationErrors.qc !== undefined
                         }

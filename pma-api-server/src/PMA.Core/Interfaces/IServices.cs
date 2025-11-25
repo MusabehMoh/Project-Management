@@ -280,6 +280,7 @@ public interface ICacheInvalidationService
 public class CreateRequirementTaskDto
 {
     public int? DeveloperId { get; set; }
+    public List<int>? DeveloperIds { get; set; }
     public int? QcId { get; set; }
     public int? DesignerId { get; set; }
     public string? Description { get; set; }
