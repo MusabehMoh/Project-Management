@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { Button } from "@heroui/button";
+import { Modal, ModalContent, ModalHeader, ModalBody } from "@heroui/modal";
+import { Maximize2 } from "lucide-react";
 
 import DeveloperQuickActions from "./developer/DeveloperQuickActions";
 import DeveloperWorkloadPerformance from "./developer/DeveloperWorkloadPerformance";
@@ -6,9 +9,6 @@ import ApprovedRequirements from "./ApprovedRequirements";
 import TaskCompletionTracker from "./developer/TaskCompletionTracker";
 import DHtmlGanttChart from "./developer/DHtmlGanttChart";
 import DeveloperCalendar from "./calendar";
-import { Button } from "@heroui/button";
-import { Modal, ModalContent, ModalHeader, ModalBody } from "@heroui/modal";
-import { Maximize2 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { developerQuickActionsService } from "@/services/api/developerQuickActionsService";
@@ -18,8 +18,10 @@ import { showSuccessToast, showErrorToast } from "@/utils/toast";
 export default function DeveloperManagerDashboard() {
   const { t, language } = useLanguage();
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isTeamPerformanceModalOpen, setIsTeamPerformanceModalOpen] = useState(false);
-  const [isProjectTimelineModalOpen, setIsProjectTimelineModalOpen] = useState(false);
+  const [isTeamPerformanceModalOpen, setIsTeamPerformanceModalOpen] =
+    useState(false);
+  const [isProjectTimelineModalOpen, setIsProjectTimelineModalOpen] =
+    useState(false);
 
   // Handle task assignment
   const handleAssignDeveloper = async (task: any, developerId: string) => {
@@ -128,9 +130,7 @@ export default function DeveloperManagerDashboard() {
             <Maximize2 className="w-4 h-4" />
           </Button>
         </div>
-        {!isProjectTimelineModalOpen && (
-          <DHtmlGanttChart height="400px" />
-        )}
+        {!isProjectTimelineModalOpen && <DHtmlGanttChart height="400px" />}
       </div>
 
       {/* Task Completion Only */}
@@ -141,11 +141,11 @@ export default function DeveloperManagerDashboard() {
       </div>
 
       {/* Team Performance Modal */}
-      <Modal 
-        isOpen={isTeamPerformanceModalOpen} 
-        onClose={() => setIsTeamPerformanceModalOpen(false)}
-        size="5xl"
+      <Modal
+        isOpen={isTeamPerformanceModalOpen}
         scrollBehavior="inside"
+        size="5xl"
+        onClose={() => setIsTeamPerformanceModalOpen(false)}
       >
         <ModalContent>
           <ModalHeader>
@@ -161,15 +161,15 @@ export default function DeveloperManagerDashboard() {
 
       {/* Project Timeline Modal */}
       {isProjectTimelineModalOpen && (
-        <Modal 
-          isOpen={isProjectTimelineModalOpen} 
-          onClose={() => setIsProjectTimelineModalOpen(false)}
-          size="full"
-          scrollBehavior="outside"
+        <Modal
           classNames={{
             base: "m-0 sm:m-0",
-            wrapper: "items-center justify-center"
+            wrapper: "items-center justify-center",
           }}
+          isOpen={isProjectTimelineModalOpen}
+          scrollBehavior="outside"
+          size="full"
+          onClose={() => setIsProjectTimelineModalOpen(false)}
         >
           <ModalContent>
             <ModalHeader>

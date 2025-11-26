@@ -495,7 +495,7 @@ export default function UsersPage() {
     try {
       setIsImpersonating(true);
       await startImpersonation(impersonatingUser.userName);
-  
+
       onImpersonationOpenChange();
       setImpersonatingUser(null);
       // Refresh the whole page after impersonation

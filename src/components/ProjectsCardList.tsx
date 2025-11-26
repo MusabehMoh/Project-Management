@@ -131,7 +131,10 @@ export default function ProjectsCardList({
               <div className="space-y-3">
                 {/* Header: Project Name & Status */}
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-lg font-semibold text-default-900 line-clamp-1 flex-1 text-right" dir="rtl">
+                  <h3
+                    className="text-lg font-semibold text-default-900 line-clamp-1 flex-1 text-right"
+                    dir="rtl"
+                  >
                     {project.name}
                   </h3>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -149,7 +152,7 @@ export default function ProjectsCardList({
                     </Chip>
                   </div>
                 </div>
-                
+
                 {/* Days Remaining */}
                 {daysRemaining >= 0 && project.statusId !== 3 && (
                   <div className="flex justify-end">
@@ -172,7 +175,7 @@ export default function ProjectsCardList({
                       </span>
                     </div>
                     <Progress
-                      value={project.progress}
+                      className="w-full"
                       color={
                         project.progress === 0
                           ? "default"
@@ -183,7 +186,7 @@ export default function ProjectsCardList({
                               : "danger"
                       }
                       size="sm"
-                      className="w-full"
+                      value={project.progress}
                     />
                   </div>
                 )}
@@ -204,9 +207,7 @@ export default function ProjectsCardList({
                   {project.taskCount !== undefined && (
                     <div className="flex items-center gap-1.5 text-default-600">
                       <ListTodo className="w-4 h-4" />
-                      <span className="font-medium">
-                        {project.taskCount}
-                      </span>
+                      <span className="font-medium">{project.taskCount}</span>
                       <span className="text-xs">
                         {language === "ar" ? "مهام" : "Tasks"}
                       </span>
@@ -254,10 +255,7 @@ export default function ProjectsCardList({
                             </div>
                           }
                         >
-                          <Avatar
-                            name={member.fullName}
-                            src={member.avatar}
-                          />
+                          <Avatar name={member.fullName} src={member.avatar} />
                         </Tooltip>
                       ))}
                     </AvatarGroup>

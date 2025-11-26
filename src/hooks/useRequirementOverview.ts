@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import { requirementOverviewService } from "@/services/api";
 import type { RequirementOverviewData } from "@/services/api/requirementOverviewService";
+
+import { useState, useEffect } from "react";
+
+import { requirementOverviewService } from "@/services/api";
 
 interface UseRequirementOverviewResult {
   data: RequirementOverviewData | null;
@@ -22,7 +24,8 @@ export function useRequirementOverview(): UseRequirementOverviewResult {
     setError(null);
 
     try {
-      const response = await requirementOverviewService.getRequirementOverview();
+      const response =
+        await requirementOverviewService.getRequirementOverview();
 
       if (response.success && response.data) {
         setData(response.data);
@@ -30,7 +33,10 @@ export function useRequirementOverview(): UseRequirementOverviewResult {
         setError(response.message || "Failed to fetch requirement overview");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch requirement overview";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch requirement overview";
 
       setError(errorMessage);
       console.error("Error fetching requirement overview:", err);

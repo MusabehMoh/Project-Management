@@ -11,11 +11,12 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
 
   // Configure output directory based on build mode
-  const outDir = mode === "qc" 
-    ? "C:\\PMA\\web-qc"
-    : mode === "production"
-    ? "C:\\PMA\\web-prod"
-    : "dist";
+  const outDir =
+    mode === "qc"
+      ? "C:\\PMA\\web-qc"
+      : mode === "production"
+        ? "C:\\PMA\\web-prod"
+        : "dist";
 
   return {
     // Base path for deployment - set to "/" for root, or "/pmaweb/" for subdirectory

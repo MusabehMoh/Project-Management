@@ -1,7 +1,6 @@
 import React from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Divider } from "@heroui/divider";
-import { Progress } from "@heroui/progress";
 import { Skeleton } from "@heroui/skeleton";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -65,60 +64,60 @@ export const RequirementOverview: React.FC<RequirementOverviewProps> = () => {
             </div>
           ) : (
             /* Data display */
-          <div
-            className="grid grid-cols-2 gap-4"
-            dir={language === "ar" ? "rtl" : "ltr"}
-          >
-            {/* Left column - vertical graphs */}
-            <div className="space-y-4">
-              {/* New Requirements - Simple count display */}
-              <div className="text-center py-2">
-                <p className="text-sm font-medium mb-1">
-                  {t("requirements.new")}
-                </p>
-                <p className="text-3xl font-bold text-success">
-                  {requirementsData.newRequirements.count}
-                </p>
-              </div>
-
-              {/* Ongoing Requirements - Simple count display */}
-              <div className="text-center py-2">
-                <p className="text-sm font-medium mb-1">
-                  {t("requirements.ongoing")}
-                </p>
-                <p className="text-3xl font-bold text-warning">
-                  {requirementsData.ongoingRequirements.count}
-                </p>
-              </div>
-            </div>
-
-            {/* Right column - count stats */}
             <div
-              className={`${language === "ar" ? "border-r pe-4" : "border-l ps-4"} border-default-200 flex flex-col justify-center`}
+              className="grid grid-cols-2 gap-4"
+              dir={language === "ar" ? "rtl" : "ltr"}
             >
-              {/* Active Requirements */}
-              <div className="text-center mb-3">
-                <p className="text-sm font-medium">
-                  {t("requirements.active")}
-                </p>
-                <p className="text-2xl font-bold text-primary">
-                  {requirementsData.activeRequirements}
-                </p>
+              {/* Left column - vertical graphs */}
+              <div className="space-y-4">
+                {/* New Requirements - Simple count display */}
+                <div className="text-center py-2">
+                  <p className="text-sm font-medium mb-1">
+                    {t("requirements.new")}
+                  </p>
+                  <p className="text-3xl font-bold text-success">
+                    {requirementsData.newRequirements.count}
+                  </p>
+                </div>
+
+                {/* Ongoing Requirements - Simple count display */}
+                <div className="text-center py-2">
+                  <p className="text-sm font-medium mb-1">
+                    {t("requirements.ongoing")}
+                  </p>
+                  <p className="text-3xl font-bold text-warning">
+                    {requirementsData.ongoingRequirements.count}
+                  </p>
+                </div>
               </div>
 
-              <Divider />
+              {/* Right column - count stats */}
+              <div
+                className={`${language === "ar" ? "border-r pe-4" : "border-l ps-4"} border-default-200 flex flex-col justify-center`}
+              >
+                {/* Active Requirements */}
+                <div className="text-center mb-3">
+                  <p className="text-sm font-medium">
+                    {t("requirements.active")}
+                  </p>
+                  <p className="text-2xl font-bold text-primary">
+                    {requirementsData.activeRequirements}
+                  </p>
+                </div>
 
-              {/* Pending Approvals */}
-              <div className="text-center mt-3">
-                <p className="text-sm font-medium">
-                  {t("requirements.pendingApprovals")}
-                </p>
-                <p className="text-2xl font-bold text-warning">
-                  {requirementsData.pendingApprovals}
-                </p>
+                <Divider />
+
+                {/* Pending Approvals */}
+                <div className="text-center mt-3">
+                  <p className="text-sm font-medium">
+                    {t("requirements.pendingApprovals")}
+                  </p>
+                  <p className="text-2xl font-bold text-warning">
+                    {requirementsData.pendingApprovals}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
           )}
         </CardBody>
       </Card>

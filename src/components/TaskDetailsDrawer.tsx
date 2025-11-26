@@ -883,9 +883,7 @@ export default function TaskDetailsDrawer({
                   variant="solid"
                   onPress={() => onChangeAssignees(selectedTask)}
                 >
-                  {isQCManager
-                    ? t("tasks.assignQC")
-                    : t("changeAssignees")}
+                  {isQCManager ? t("tasks.assignQC") : t("changeAssignees")}
                 </Button>
               </div>
             ) : selectedTask ? (

@@ -766,7 +766,8 @@ const translations = {
     "teamDashboard.kanban.statusChangedFrom": "Status changed from",
     "teamDashboard.kanban.to": "to",
     "teamDashboard.kanban.viaKanban": "via Kanban board",
-    "teamDashboard.kanban.taskStatusUpdated": "Task status updated successfully",
+    "teamDashboard.kanban.taskStatusUpdated":
+      "Task status updated successfully",
     "teamDashboard.kanban.errorUpdatingStatus": "Failed to update task status",
     "teamDashboard.kanban.errorLoadingTasks": "Failed to load tasks",
     "teamDashboard.kanban.designRequestWarning": "Design Request Warning",
@@ -1513,7 +1514,8 @@ const translations = {
     "companyEmployees.noEmployeesFound": "No employees found",
     "companyEmployees.noEmployees": "No employees yet",
     "companyEmployees.tryDifferentSearch": "Try a different search term",
-    "companyEmployees.addFirstEmployee": "Add your first employee to get started",
+    "companyEmployees.addFirstEmployee":
+      "Add your first employee to get started",
     "companyEmployees.confirmDelete": "Confirm Delete Employee",
     "companyEmployees.deleteConfirmMessage":
       "Are you sure you want to delete this employee?",
@@ -1609,7 +1611,8 @@ const translations = {
     // Department Members Page (Current User's Department)
     "departmentMembers.title": "My Department Members",
     "departmentMembers.subtitle": "View and manage members in your department",
-    "departmentMembers.subtitleWithDepartment": "Members in {department} Department",
+    "departmentMembers.subtitleWithDepartment":
+      "Members in {department} Department",
     "departmentMembers.searchPlaceholder": "Search members...",
     "departmentMembers.addMember": "Add Member",
     "departmentMembers.removeMember": "Remove Member",
@@ -1624,13 +1627,15 @@ const translations = {
     "departmentMembers.noMembers": "No Members",
     "departmentMembers.tryDifferentSearch": "Try a different search term",
     "departmentMembers.addFirstMember": "Add your first department member",
-    "departmentMembers.noDepartmentAssigned": "You are not assigned to any department",
+    "departmentMembers.noDepartmentAssigned":
+      "You are not assigned to any department",
     "departmentMembers.searchEmployee": "Search Employee",
     "departmentMembers.selectEmployee": "Select an employee",
     "departmentMembers.manualEntry": "Manual Entry",
     "departmentMembers.orSwitch": "or switch to",
     "departmentMembers.confirmRemove": "Confirm Remove Member",
-    "departmentMembers.confirmRemoveMessage": "Are you sure you want to remove {member} from the department?",
+    "departmentMembers.confirmRemoveMessage":
+      "Are you sure you want to remove {member} from the department?",
     "departmentMembers.addSuccess": "Member added successfully",
     "departmentMembers.addError": "Failed to add member",
     "departmentMembers.removeSuccess": "Member removed successfully",
@@ -3504,7 +3509,7 @@ const translations = {
     "common.viewDetails": "عرض التفاصيل",
     // Task creation keys (Arabic)
     "tasks.createTask": "إنشاء مهمة",
-    "tasks.assignQC": "تعيين مراقب جودة", 
+    "tasks.assignQC": "تعيين مراقب جودة",
     "tasks.viewTask": "تعديل المهمة",
     "tasks.editTask": "تحرير المهمة",
     "tasks.taskName": "اسم المهمة",
@@ -3861,7 +3866,8 @@ const translations = {
     "departmentMembers.manualEntry": "إدخال يدوي",
     "departmentMembers.orSwitch": "أو التبديل إلى",
     "departmentMembers.confirmRemove": "تأكيد إزالة العضو",
-    "departmentMembers.confirmRemoveMessage": "هل أنت متأكد من إزالة {member} من القسم؟",
+    "departmentMembers.confirmRemoveMessage":
+      "هل أنت متأكد من إزالة {member} من القسم؟",
     "departmentMembers.addSuccess": "تم إضافة العضو بنجاح",
     "departmentMembers.addError": "فشل في إضافة العضو",
     "departmentMembers.removeSuccess": "تم إزالة العضو بنجاح",
@@ -4135,8 +4141,7 @@ const translations = {
     "timeline.treeView.progressOnTrack": "51-75% (على المسار)",
     "timeline.treeView.progressExcellent": "76-100% (ممتاز)",
     "timeline.treeView.loadingTimeline": "جاري تحميل المخطط الزمني...",
-    "timeline.treeView.searchPlaceholder":
-      "البحث في السبرينتات والمتطلبات والمهام...",
+    "timeline.treeView.searchPlaceholder": "البحث في  المخطط الزمني والمهام...",
     "timeline.selectPredecessors": "اختيار المهام السابقة",
     "timeline.selectPredecessorsPlaceholder": "اختر المهام السابقة...",
     "timeline.treeView.filtered": "مفلتر",
@@ -4287,7 +4292,7 @@ const translations = {
       "إذا كان المتطلب معقدًا أو يتضمن عدة مكونات، ينبغي اتباع نهج منظم يعتمد على تقسيمه إلى سباقات (Sprints) ومهام (Tasks): تقسيم الجدول الزمني إلى سباقات يمكن إدارتها، بحيث يركز كل سباق على جزء محدد من المتطلب، ويُقسم هذا الجزء بدوره إلى مهام صغيرة وقابلة للتنفيذ والقياس، مما يتيح تتبع التقدم بدقة وتسليم قيمة جزئية في نهاية كل سباق.",
     "timeline.pageTitle": "المخطط الزمني للمشروع",
     "timeline.pageDescription":
-      "إدارة الجداول الزمنية للمشروع والسبرينتات والمتطلبات والمهام",
+      "إدارة الجداول الزمنية للمشروع  والمتطلبات والمهام",
 
     // Timeline Details Panel
     "timeline.detailsPanel.noItemSelected": "لم يتم اختيار عنصر",

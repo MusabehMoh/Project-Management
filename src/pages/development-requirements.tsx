@@ -372,7 +372,8 @@ export default function DevelopmentRequirementsPage() {
     MemberSearchResult[]
   >([]);
   const [selectedQC, setSelectedQC] = useState<MemberSearchResult | null>(null);
-  const [selectedDesigner, setSelectedDesigner] = useState<MemberSearchResult | null>(null);
+  const [selectedDesigner, setSelectedDesigner] =
+    useState<MemberSearchResult | null>(null);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   // Fetch requirement details when drawer opens OR task modal is open
@@ -576,15 +577,18 @@ export default function DevelopmentRequirementsPage() {
       // Use full developer and QC objects returned from backend
       // Backend now returns requirementTask.developer and requirementTask.qc as complete Employee entities
       if (requirement.requirementTask.developer) {
-        setSelectedDevelopers([{
-          id: requirement.requirementTask.developer.id,
-          userName: requirement.requirementTask.developer.userName,
-          militaryNumber: requirement.requirementTask.developer.militaryNumber,
-          fullName: requirement.requirementTask.developer.fullName,
-          gradeName: requirement.requirementTask.developer.gradeName || "",
-          statusId: 0,
-          department: "Development",
-        }]);
+        setSelectedDevelopers([
+          {
+            id: requirement.requirementTask.developer.id,
+            userName: requirement.requirementTask.developer.userName,
+            militaryNumber:
+              requirement.requirementTask.developer.militaryNumber,
+            fullName: requirement.requirementTask.developer.fullName,
+            gradeName: requirement.requirementTask.developer.gradeName || "",
+            statusId: 0,
+            department: "Development",
+          },
+        ]);
       }
 
       if (requirement.requirementTask.qc) {
@@ -598,7 +602,7 @@ export default function DevelopmentRequirementsPage() {
           department: "QC",
         });
       }
- 
+
       // Pre-populate task-specific fields
       setTaskDescription(
         requirement.requirementTask.description ||
@@ -816,7 +820,7 @@ export default function DevelopmentRequirementsPage() {
       );
 
       showSuccessToast(t("requirements.returnSuccess"));
-      
+
       // Close modals
       onClose();
       setIsReturnModalOpen(false);
@@ -1306,9 +1310,12 @@ export default function DevelopmentRequirementsPage() {
                           const developer = developers.find(
                             (dev) => dev.id.toString() === String(key),
                           );
+
                           if (
                             developer &&
-                            !selectedDevelopers.find((d) => d.id === developer.id)
+                            !selectedDevelopers.find(
+                              (d) => d.id === developer.id,
+                            )
                           ) {
                             setSelectedDevelopers([
                               ...selectedDevelopers,
@@ -1321,7 +1328,9 @@ export default function DevelopmentRequirementsPage() {
                         {developers
                           .filter(
                             (dev) =>
-                              !selectedDevelopers.find((sd) => sd.id === dev.id),
+                              !selectedDevelopers.find(
+                                (sd) => sd.id === dev.id,
+                              ),
                           )
                           .map((developer) => (
                             <AutocompleteItem
@@ -1421,7 +1430,9 @@ export default function DevelopmentRequirementsPage() {
                             <span className="font-medium">
                               {t("requirements.expectedCompletion")}:
                             </span>{" "}
-                            {formatDate(selectedRequirement.expectedCompletionDate)}
+                            {formatDate(
+                              selectedRequirement.expectedCompletionDate,
+                            )}
                           </p>
                           <p className="text-xs text-default-500 mt-1">
                             {t("tasks.expectedEndDateReference")}
@@ -1671,11 +1682,13 @@ export default function DevelopmentRequirementsPage() {
                   </div>
                 </ModalBody>
                 <ModalFooter className="flex flex-col gap-2 flex-shrink-0">
-                  {selectedDevelopers.length === 0 && !selectedQC && !selectedDesigner && (
-                    <p className="text-xs text-danger text-center w-full">
-                      {t("tasks.selectAtLeastOne")}
-                    </p>
-                  )}
+                  {selectedDevelopers.length === 0 &&
+                    !selectedQC &&
+                    !selectedDesigner && (
+                      <p className="text-xs text-danger text-center w-full">
+                        {t("tasks.selectAtLeastOne")}
+                      </p>
+                    )}
                   <div className="flex justify-end gap-2 w-full">
                     <Button
                       color="danger"

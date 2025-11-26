@@ -162,7 +162,6 @@ export default function TimelineDetailsPanel({
 
   // Find the selected item
   const currentItem = useMemo(() => {
-    
     if (!selectedItem) {
       return timeline;
     }

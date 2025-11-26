@@ -178,6 +178,7 @@ export function useCompanyEmployees(
     // Skip the search effect on initial mount
     if (isInitialMount.current) {
       isInitialMount.current = false;
+
       return;
     }
 

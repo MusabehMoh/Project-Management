@@ -5,7 +5,6 @@ import type {
 } from "@/types/projectRequirement";
 
 import { useState, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -248,6 +247,7 @@ export default function ProjectRequirementsPage() {
     try {
       // Create a temporary URL for the file
       const url = window.URL.createObjectURL(file);
+
       await previewFile(file.name, url, file.size);
     } catch (error) {
       console.error("Error previewing file:", error);
@@ -323,6 +323,7 @@ export default function ProjectRequirementsPage() {
       for (const mut of mutations) {
         if (mut.type === "attributes" && mut.attributeName === "dir") {
           const target = mut.target as HTMLElement;
+
           if (target.getAttribute("dir") !== expectedDir) {
             target.setAttribute("dir", expectedDir);
           }
@@ -856,10 +857,12 @@ export default function ProjectRequirementsPage() {
 
           // Decode chunk and add to buffer
           const chunk = decoder.decode(value, { stream: true });
+
           buffer += chunk;
 
           // Split by SSE format (data: prefix, double newline for message boundary)
           const lines = buffer.split("\n");
+
           buffer = ""; // Reset buffer
 
           for (const line of lines) {
@@ -887,6 +890,7 @@ export default function ProjectRequirementsPage() {
                   // Update UI for each chunk (OpenAI sends smaller chunks)
                   setConversationHistory((prev) => {
                     const withoutLast = prev.slice(0, -1);
+
                     return [
                       ...withoutLast,
                       {
@@ -915,6 +919,7 @@ export default function ProjectRequirementsPage() {
         console.log("🎉 Final update with complete response");
         setConversationHistory((prev) => {
           const withoutLast = prev.slice(0, -1);
+
           return [
             ...withoutLast,
             {
@@ -1025,6 +1030,7 @@ export default function ProjectRequirementsPage() {
             ? "الرسم فارغ! قم برسم شيء أولاً."
             : "Drawing is empty! Please draw something first.",
         );
+
         return;
       }
 
@@ -2042,9 +2048,9 @@ export default function ProjectRequirementsPage() {
                               xmlns="http://www.w3.org/2000/svg"
                             >
                               <path
+                                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"
                               />
                             </svg>
                           </Button>
@@ -2758,17 +2764,6 @@ export default function ProjectRequirementsPage() {
 
       {/* Excalidraw Drawing Modal */}
       <Modal
-        isOpen={isExcalidrawOpen}
-        size="5xl"
-        onOpenChange={(open) => {
-          setIsExcalidrawOpen(open);
-          if (!open) {
-            // reset internal state when closing so dialogs don't persist
-            excalidrawRef.current = null;
-            setTimeout(() => setExcalidrawSessionKey((k) => k + 1), 0);
-          }
-        }}
-        isDismissable={false}
         classNames={{
           wrapper: "transform-none",
           base: "transform-none",
@@ -2778,10 +2773,21 @@ export default function ProjectRequirementsPage() {
           backdrop: "transform-none",
           closeButton: "transform-none",
         }}
+        isDismissable={false}
+        isOpen={isExcalidrawOpen}
         motionProps={{
           initial: { opacity: 0 },
           animate: { opacity: 1 },
           exit: { opacity: 0 },
+        }}
+        size="5xl"
+        onOpenChange={(open) => {
+          setIsExcalidrawOpen(open);
+          if (!open) {
+            // reset internal state when closing so dialogs don't persist
+            excalidrawRef.current = null;
+            setTimeout(() => setExcalidrawSessionKey((k) => k + 1), 0);
+          }
         }}
       >
         <ModalContent className="max-w-[90vw]">
@@ -2817,8 +2823,6 @@ export default function ProjectRequirementsPage() {
 
       {/* AI Diagram Generator Modal */}
       <AIDiagramGenerator
-        isOpen={isDiagramModalOpen}
-        onClose={() => setIsDiagramModalOpen(false)}
         context={(() => {
           // Build intelligent context based on current page state
           const parts = [];
@@ -2832,6 +2836,7 @@ export default function ProjectRequirementsPage() {
 
             const reqName =
               formData.name || selectedRequirement?.name || "Untitled";
+
             parts.push(`\nName: ${reqName}`);
 
             // Get description from ReactQuill editor
@@ -2854,6 +2859,7 @@ export default function ProjectRequirementsPage() {
             if (formData.status > 0) {
               try {
                 const statusName = getRequirementStatusName(formData.status);
+
                 if (statusName) parts.push(`\nStatus: ${statusName}`);
               } catch (e) {
                 console.error("Status lookup failed:", e);
@@ -2864,6 +2870,7 @@ export default function ProjectRequirementsPage() {
             if (formData.priority > 0) {
               try {
                 const priorityName = getPriorityLabel(formData.priority);
+
                 if (priorityName) parts.push(`\nPriority: ${priorityName}`);
               } catch (e) {
                 console.error("Priority lookup failed:", e);
@@ -2874,6 +2881,7 @@ export default function ProjectRequirementsPage() {
             if (formData.type > 0) {
               try {
                 const typeName = convertTypeToString(formData.type);
+
                 if (typeName) parts.push(`\nType: ${typeName}`);
               } catch (e) {
                 console.error("Type lookup failed:", e);
@@ -2893,6 +2901,7 @@ export default function ProjectRequirementsPage() {
           // Requirements summary
           if (stats && stats.total > 0) {
             const summary = [];
+
             if (stats.draft > 0) summary.push(`${stats.draft} draft`);
             if (stats.approved > 0) summary.push(`${stats.approved} approved`);
             if (stats.rejected > 0) summary.push(`${stats.rejected} rejected`);
@@ -2977,6 +2986,8 @@ export default function ProjectRequirementsPage() {
               ? `${t("requirements.newRequirement")}: ${formData.name}`
               : projectName || t("requirements.projectRequirements")
         }
+        isOpen={isDiagramModalOpen}
+        onClose={() => setIsDiagramModalOpen(false)}
       />
     </>
   );

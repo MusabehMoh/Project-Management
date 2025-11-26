@@ -175,14 +175,12 @@ const ManagementDropdown = ({
       actions: ["departments.read"],
     });
   const hasDepartmentMembersAccess = hasAnyRoleById([
- 
     RoleIds.ANALYST_DEPARTMENT_MANAGER,
     RoleIds.DEVELOPMENT_MANAGER,
     RoleIds.QUALITY_CONTROL_MANAGER,
     RoleIds.DESIGNER_MANAGER,
   ]);
   const hasCompanyEmployeesAccess = hasAnyRoleById([
- 
     RoleIds.ANALYST_DEPARTMENT_MANAGER,
     RoleIds.DEVELOPMENT_MANAGER,
     RoleIds.QUALITY_CONTROL_MANAGER,

@@ -74,6 +74,7 @@ export const useCurrentUserDepartmentMembers = (
         setMembers(membersResponse.data);
         // Get pagination info from the pagination object
         const paginationInfo = membersResponse.pagination;
+
         setTotalCount(paginationInfo?.total || 0);
         setTotalPages(paginationInfo?.totalPages || 0);
       } else {

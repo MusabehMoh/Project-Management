@@ -14,7 +14,6 @@ import {
   Eye,
   RotateCcw,
   CheckCircle,
-  Clock,
   Flag,
   Calendar as CalendarIcon,
   Lock,
@@ -105,6 +104,7 @@ export default function MembersTasksKanban({
     requestAnimationFrame(() => {
       scrollPositions.current.forEach((scrollTop, columnId) => {
         const element = scrollRefs.current.get(columnId);
+
         if (element) {
           element.scrollTop = scrollTop;
         }
@@ -206,10 +206,10 @@ export default function MembersTasksKanban({
       // Preserve scroll position before refreshing columns
       saveScrollPositions();
       setColumns(allColumns);
-      
+
       // Reset completed task IDs when new tasks are loaded
       setCompletedTaskIds(new Set());
-      
+
       setTimeout(() => {
         restoreScrollPositions();
       }, 30);
@@ -406,7 +406,7 @@ export default function MembersTasksKanban({
 
     try {
       setCompletingTaskId(task.id);
-      
+
       // First, show the switch toggle animation
       setCompletedTaskIds((prev) => new Set(prev).add(task.id));
 
@@ -451,7 +451,9 @@ export default function MembersTasksKanban({
       // Revert optimistic update
       setCompletedTaskIds((prev) => {
         const newSet = new Set(prev);
+
         newSet.delete(task.id);
+
         return newSet;
       });
       setColumns((prevColumns) =>
@@ -581,7 +583,9 @@ export default function MembersTasksKanban({
                         {language === "ar" ? column.titleAr : column.title}
                       </Chip>
                       {!columnInfo.isVisible && (
-                        <Tooltip content={getRestrictionReason(columnInfo.reasonCode)}>
+                        <Tooltip
+                          content={getRestrictionReason(columnInfo.reasonCode)}
+                        >
                           <Lock className="w-4 h-4 text-danger" />
                         </Tooltip>
                       )}
@@ -598,13 +602,14 @@ export default function MembersTasksKanban({
                       if (el) {
                         const scrollElement = el as any;
                         const innerElement = scrollElement?.ref?.current;
+
                         if (innerElement) {
                           scrollRefs.current.set(column.id, innerElement);
                         }
                       }
                     }}
-                    className="flex-1 px-3 pb-3 space-y-2"
                     hideScrollBar
+                    className="flex-1 px-3 pb-3 space-y-2"
                     style={{ maxHeight: "500px" }}
                   >
                     {column.tasks.map((task) => {
@@ -656,9 +661,15 @@ export default function MembersTasksKanban({
                             </h4>
                             {canQuickComplete && isHovered && (
                               <div
-                                className={language === "ar" ? "order-first" : ""}
+                                className={
+                                  language === "ar" ? "order-first" : ""
+                                }
                               >
-                                <Tooltip content={t("teamDashboard.kanban.markComplete")}>
+                                <Tooltip
+                                  content={t(
+                                    "teamDashboard.kanban.markComplete",
+                                  )}
+                                >
                                   <Switch
                                     color="success"
                                     isDisabled={completingTaskId === task.id}

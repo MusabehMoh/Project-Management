@@ -453,7 +453,7 @@ const AddAdhocTask = ({ onSuccess }: AddAdhocTaskProps) => {
                     {employees.map((employee) => (
                       <AutocompleteItem
                         key={employee.id.toString()}
-                        textValue={`${employee.gradeName || ''} ${employee.fullName || ''}`.trim()}
+                        textValue={`${employee.gradeName || ""} ${employee.fullName || ""}`.trim()}
                       >
                         <div className="flex items-center gap-3">
                           <Avatar

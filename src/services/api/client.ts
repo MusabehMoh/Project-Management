@@ -74,8 +74,10 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     // Build URL with query parameters
     let url = `${this.baseURL}${endpoint}`;
+
     if (params && Object.keys(params).length > 0) {
       const queryString = new URLSearchParams();
+
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           queryString.append(key, String(value));
@@ -119,11 +121,11 @@ class ApiClient {
       if (!response.ok) {
         let errorData: any = {};
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        
+
         try {
           // Try to parse as JSON first
           const responseText = await response.text();
-          
+
           if (responseText) {
             try {
               errorData = JSON.parse(responseText);
@@ -174,7 +176,10 @@ class ApiClient {
   // Convenience methods
   async get<T>(
     endpoint: string,
-    options?: { headers?: Record<string, string>; params?: Record<string, any> },
+    options?: {
+      headers?: Record<string, string>;
+      params?: Record<string, any>;
+    },
   ): Promise<ApiResponse<T>> {
     return this.request<T>(
       endpoint,

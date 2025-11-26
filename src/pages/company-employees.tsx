@@ -5,7 +5,7 @@ import type {
   UpdateCompanyEmployeeRequest,
 } from "@/types/companyEmployee";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Avatar,
   Button,
@@ -165,7 +165,7 @@ export default function CompanyEmployeesPage() {
       };
 
       const newEmployee = await createCompanyEmployee(createData);
-      
+
       // If we got here, creation was successful
       if (newEmployee) {
         showSuccessToast(t("companyEmployees.createSuccess"));
@@ -177,7 +177,7 @@ export default function CompanyEmployeesPage() {
         // eslint-disable-next-line no-console
         console.error("Error creating employee:", err);
       }
-      
+
       // Extract error message from different possible structures
       let errorMessage = "";
 
@@ -233,7 +233,7 @@ export default function CompanyEmployeesPage() {
         selectedEmployee.id,
         updateData,
       );
-      
+
       // If we got here, update was successful
       if (updatedEmployee) {
         showSuccessToast(t("companyEmployees.updateSuccess"));
@@ -529,9 +529,7 @@ export default function CompanyEmployeesPage() {
                 </div>
               </div>
             ) : (
-              <Table
-                aria-label={t("companyEmployees.title")}
-              >
+              <Table aria-label={t("companyEmployees.title")}>
                 <TableHeader>
                   <TableColumn>{t("companyEmployees.userName")}</TableColumn>
                   <TableColumn>{t("companyEmployees.fullName")}</TableColumn>

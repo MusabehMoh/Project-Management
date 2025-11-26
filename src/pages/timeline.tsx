@@ -18,7 +18,7 @@ import {
 import { AlertCircle, RefreshCw, ArrowLeft, Search } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { 
+import {
   FilterIcon,
   RefreshIcon,
   BuildingIcon,
@@ -72,10 +72,11 @@ export default function TimelinePage() {
   const [pageSize] = useState(10);
   const [projectSearchInput, setProjectSearchInput] = useState(""); // User's input
   const [projectSearchQuery, setProjectSearchQuery] = useState(""); // Debounced search query sent to API
-  
+
   // Filter state for project cards
   const [projectStatusFilter, setProjectStatusFilter] = useState<string>("all"); // Status filter
-  const [projectProgressFilter, setProjectProgressFilter] = useState<string>("all"); // Progress filter
+  const [projectProgressFilter, setProjectProgressFilter] =
+    useState<string>("all"); // Progress filter
 
   // Debounce search input
   useEffect(() => {
@@ -169,8 +170,7 @@ export default function TimelinePage() {
     const fetchProjectsWithTimelinesAndTeam = async () => {
       setLoadingProjectsWithTeam(true);
       try {
-        const response =
-          await projectService.getProjectsWithTimelinesAndTeam();
+        const response = await projectService.getProjectsWithTimelinesAndTeam();
 
         if (response.success && response.data) {
           setProjectsWithTimelinesAndTeam(response.data);
@@ -440,20 +440,32 @@ export default function TimelinePage() {
     const fetchTaskAndSelectProject = async () => {
       try {
         // Fetch task details
-        const taskResponse = await timelineService.getTaskById(parseInt(taskId));
+        const taskResponse = await timelineService.getTaskById(
+          parseInt(taskId),
+        );
+
         if (taskResponse.success && taskResponse.data) {
           const task = taskResponse.data;
+
           // Task has sprintId, sprint has timelineId
           if (task.sprintId) {
             // Fetch sprint to get timelineId
-            const sprintResponse = await timelineService.getSprintById(task.sprintId);
+            const sprintResponse = await timelineService.getSprintById(
+              task.sprintId,
+            );
+
             if (sprintResponse.success && sprintResponse.data) {
               const sprint = sprintResponse.data;
+
               if (sprint.timelineId) {
                 // Fetch timeline to get projectId
-                const timelineResponse = await timelineService.getTimelineById(sprint.timelineId);
+                const timelineResponse = await timelineService.getTimelineById(
+                  sprint.timelineId,
+                );
+
                 if (timelineResponse.success && timelineResponse.data) {
                   const timeline = timelineResponse.data;
+
                   // Set projectId and timelineId in URL params
                   setSearchParams({
                     projectId: timeline.projectId.toString(),
@@ -562,8 +574,9 @@ export default function TimelinePage() {
     // Apply status filter
     if (projectStatusFilter !== "all") {
       const statusId = parseInt(projectStatusFilter);
+
       filteredProjects = filteredProjects.filter(
-        (project) => project.status === statusId
+        (project) => project.status === statusId,
       );
     }
 
@@ -571,9 +584,12 @@ export default function TimelinePage() {
     if (projectProgressFilter !== "all") {
       filteredProjects = filteredProjects.filter((project) => {
         const progress = project.progress || 0;
+
         if (projectProgressFilter === "not-started") return progress === 0;
-        if (projectProgressFilter === "in-progress") return progress > 0 && progress < 100;
+        if (projectProgressFilter === "in-progress")
+          return progress > 0 && progress < 100;
         if (projectProgressFilter === "completed") return progress === 100;
+
         return true;
       });
     }
@@ -923,7 +939,7 @@ export default function TimelinePage() {
                 variant="bordered"
                 onPress={() => {
                   // Navigate back to overview - pass current selection via state
-                  window.location.href = `/timeline?restore=${selectedProjectId}${selectedTimeline ? `-${selectedTimeline.id}` : ''}`;
+                  window.location.href = `/timeline?restore=${selectedProjectId}${selectedTimeline ? `-${selectedTimeline.id}` : ""}`;
                 }}
               >
                 {t("common.back")}
@@ -1077,37 +1093,7 @@ export default function TimelinePage() {
                   )}
                 </Select>
 
-                {selectedTimeline && (
-                  <div className="flex gap-2">
-                    <Chip size="sm" variant="flat">
-                      {selectedTimeline.sprints?.length || 0}{" "}
-                      {(selectedTimeline.sprints?.length || 0) !== 1
-                        ? t("timeline.sprints")
-                        : t("timeline.sprint")}
-                    </Chip>
-                    <Chip size="sm" variant="flat">
-                      {(selectedTimeline.sprints || []).reduce(
-                        (acc: number, sprint: any) => {
-                          // Count direct sprint tasks
-                          const directTasks = (sprint.tasks || []).length;
-
-                          // Count tasks in requirements structure
-                          const requirementTasks = (
-                            sprint.requirements || []
-                          ).reduce(
-                            (reqAcc: number, req: any) =>
-                              reqAcc + (req.tasks?.length || 0),
-                            0,
-                          );
-
-                          return acc + directTasks + requirementTasks;
-                        },
-                        0,
-                      )}{" "}
-                      {t("timeline.tasks")}
-                    </Chip>
-                  </div>
-                )}
+            
               </div>
             </CardHeader>
           </Card>
@@ -1123,22 +1109,27 @@ export default function TimelinePage() {
               <div className="flex items-center gap-3">
                 <Input
                   isClearable
-                  placeholder={language === "ar" ? "البحث عن مشروع..." : "Search for a project..."}
+                  className="max-w-md"
+                  classNames={{
+                    input: language === "ar" ? "text-right" : "",
+                    inputWrapper: "border border-default-200",
+                  }}
+                  placeholder={
+                    language === "ar"
+                      ? "البحث عن مشروع..."
+                      : "Search for a project..."
+                  }
                   startContent={<Search className="w-4 h-4 text-default-400" />}
                   value={projectSearchInput}
                   onClear={() => {
                     setProjectSearchInput("");
                   }}
                   onValueChange={setProjectSearchInput}
-                  classNames={{
-                    input: language === "ar" ? "text-right" : "",
-                    inputWrapper: "border border-default-200",
-                  }}
-                  className="max-w-md"
                 />
                 {projectSearchQuery && (
                   <span className="text-sm text-default-500">
-                    {projectsPagination?.total || 0} {language === "ar" ? "نتيجة" : "results"}
+                    {projectsPagination?.total || 0}{" "}
+                    {language === "ar" ? "نتيجة" : "results"}
                   </span>
                 )}
               </div>
@@ -1148,20 +1139,27 @@ export default function TimelinePage() {
                 {/* Status Filter */}
                 <Select
                   aria-label={t("projects.filterByStatus")}
-                  placeholder={t("projects.filterByStatus")}
+                  className="max-w-xs"
                   disallowEmptySelection={false}
-                  selectedKeys={projectStatusFilter !== "all" ? [projectStatusFilter] : []}
+                  placeholder={t("projects.filterByStatus")}
+                  selectedKeys={
+                    projectStatusFilter !== "all" ? [projectStatusFilter] : []
+                  }
+                  size="sm"
                   onSelectionChange={(keys) => {
                     const keysArray = Array.from(keys);
-                    const value = keysArray.length === 0 ? "all" : keysArray[0] as string;
+                    const value =
+                      keysArray.length === 0 ? "all" : (keysArray[0] as string);
+
                     setProjectStatusFilter(value);
                   }}
-                  className="max-w-xs"
-                  size="sm"
                 >
                   <SelectItem key="all">{t("common.all")}</SelectItem>
                   {phases.map((phase) => (
-                    <SelectItem key={phase.code.toString()} textValue={getProjectStatusName(phase.code)}>
+                    <SelectItem
+                      key={phase.code.toString()}
+                      textValue={getProjectStatusName(phase.code)}
+                    >
                       {getProjectStatusName(phase.code)}
                     </SelectItem>
                   ))}
@@ -1170,25 +1168,38 @@ export default function TimelinePage() {
                 {/* Progress Filter */}
                 <Select
                   aria-label={t("projects.filterByProgress")}
-                  placeholder={t("projects.filterByProgress")}
+                  className="max-w-xs"
                   disallowEmptySelection={false}
-                  selectedKeys={projectProgressFilter !== "all" ? [projectProgressFilter] : []}
+                  placeholder={t("projects.filterByProgress")}
+                  selectedKeys={
+                    projectProgressFilter !== "all"
+                      ? [projectProgressFilter]
+                      : []
+                  }
+                  size="sm"
                   onSelectionChange={(keys) => {
                     const keysArray = Array.from(keys);
-                    const value = keysArray.length === 0 ? "all" : keysArray[0] as string;
+                    const value =
+                      keysArray.length === 0 ? "all" : (keysArray[0] as string);
+
                     setProjectProgressFilter(value);
                   }}
-                  className="max-w-xs"
-                  size="sm"
                 >
                   <SelectItem key="all">{t("common.all")}</SelectItem>
-                  <SelectItem key="not-started">{t("projects.progress.notStarted")}</SelectItem>
-                  <SelectItem key="in-progress">{t("projects.progress.inProgress")}</SelectItem>
-                  <SelectItem key="completed">{t("projects.progress.completed")}</SelectItem>
+                  <SelectItem key="not-started">
+                    {t("projects.progress.notStarted")}
+                  </SelectItem>
+                  <SelectItem key="in-progress">
+                    {t("projects.progress.inProgress")}
+                  </SelectItem>
+                  <SelectItem key="completed">
+                    {t("projects.progress.completed")}
+                  </SelectItem>
                 </Select>
 
                 {/* Clear Filters Button */}
-                {(projectStatusFilter !== "all" || projectProgressFilter !== "all") && (
+                {(projectStatusFilter !== "all" ||
+                  projectProgressFilter !== "all") && (
                   <Button
                     size="sm"
                     variant="flat"
@@ -1203,7 +1214,9 @@ export default function TimelinePage() {
 
                 {/* Results Count */}
                 <span className="text-sm text-default-500">
-                  {t("common.showing")} {projectsCardData.length} {language === "ar" ? "من" : "of"} {projectsPagination?.total || 0}
+                  {t("common.showing")} {projectsCardData.length}{" "}
+                  {language === "ar" ? "من" : "of"}{" "}
+                  {projectsPagination?.total || 0}
                 </span>
               </div>
             </div>
@@ -1217,17 +1230,17 @@ export default function TimelinePage() {
                 setSearchParams({ projectId: project.id.toString() });
               }}
             />
-            
+
             {/* Pagination */}
             {projectsPagination && projectsPagination.totalPages > 1 && (
               <div className="flex justify-center mt-6">
                 <GlobalPagination
                   currentPage={currentPage}
-                  totalPages={projectsPagination.totalPages}
+                  isLoading={projectsLoading}
                   pageSize={pageSize}
                   totalItems={projectsPagination.total}
+                  totalPages={projectsPagination.totalPages}
                   onPageChange={setCurrentPage}
-                  isLoading={projectsLoading}
                 />
               </div>
             )}
@@ -1304,7 +1317,7 @@ export default function TimelinePage() {
               <div
                 className={view.showDetails ? "lg:col-span-2" : "lg:col-span-3"}
               >
-                <Card className="h-[600px]">
+                <Card>
                   <CardBody className="p-0">
                     {loading && selectedTimeline ? (
                       // Show skeleton when refreshing existing timeline
@@ -1317,6 +1330,7 @@ export default function TimelinePage() {
                       <DHTMLXGantt
                         projectId={selectedProjectId}
                         timeline={selectedTimeline}
+                        timelines={timelines}
                         onDeleteEntity={deleteEntity}
                         onUpdateEntity={updateEntity}
                       />
@@ -1324,23 +1338,19 @@ export default function TimelinePage() {
                       <TimelineTreeView
                         departments={departments}
                         filters={filters}
+                        highlightTaskId={taskId}
                         loading={loading}
                         selectedItem={view.selectedItem}
-                        timeline={selectedTimeline}
-                        onCreateSprint={handleCreateSprint}
+                        timelines={timelines}
                         onCreateSubtask={createSubtask}
                         onCreateTask={createTask}
-                        onDeleteSprint={deleteSprint}
                         onDeleteSubtask={deleteSubtask}
                         onDeleteTask={deleteTask}
                         onItemSelect={handleItemSelect}
                         onMoveTask={moveTask}
-                        onMoveTaskToSprint={moveTaskToSprint}
-                        onUpdateSprint={handleUpdateSprint}
                         onUpdateSubtask={updateSubtask}
                         onUpdateTask={handleUpdateTask}
                         onUpdateTimeline={updateTimeline}
-                        highlightTaskId={taskId}
                       />
                     )}
                   </CardBody>

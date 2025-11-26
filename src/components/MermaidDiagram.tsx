@@ -54,6 +54,7 @@ export default function MermaidDiagram({
 
         // Render the diagram
         const { svg: renderedSvg } = await mermaid.render(id, chart);
+
         setSvg(renderedSvg);
 
         // Insert the SVG into the DOM
@@ -62,7 +63,9 @@ export default function MermaidDiagram({
         }
       } catch (err) {
         console.error("Mermaid rendering error:", err);
-        setError(err instanceof Error ? err.message : "Failed to render diagram");
+        setError(
+          err instanceof Error ? err.message : "Failed to render diagram",
+        );
       } finally {
         setIsRendering(false);
       }
@@ -75,6 +78,7 @@ export default function MermaidDiagram({
     const blob = new Blob([svg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
+
     link.href = url;
     link.download = `${title || "diagram"}.svg`;
     document.body.appendChild(link);
@@ -88,12 +92,13 @@ export default function MermaidDiagram({
 
     // Get the SVG element
     const svgElement = mermaidRef.current.querySelector("svg");
+
     if (!svgElement) return;
 
     try {
       // Clone the SVG
       const clonedSvg = svgElement.cloneNode(true) as SVGElement;
-      
+
       // Get dimensions
       const bbox = svgElement.getBoundingClientRect();
       const width = bbox.width;
@@ -106,7 +111,7 @@ export default function MermaidDiagram({
 
       // Serialize SVG to string
       const svgString = new XMLSerializer().serializeToString(clonedSvg);
-      
+
       // Encode as base64 data URL
       const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
       const dataUrl = `data:image/svg+xml;base64,${svgBase64}`;
@@ -114,15 +119,17 @@ export default function MermaidDiagram({
       // Create canvas
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d", { willReadFrequently: false });
+
       if (!ctx) return;
 
       const scale = 2; // 2x for quality
+
       canvas.width = width * scale;
       canvas.height = height * scale;
 
       // Create and load image
       const img = new Image();
-      
+
       await new Promise<void>((resolve, reject) => {
         img.onload = () => {
           try {
@@ -130,7 +137,7 @@ export default function MermaidDiagram({
             ctx.scale(scale, scale);
             ctx.fillStyle = "white";
             ctx.fillRect(0, 0, width, height);
-            
+
             // Draw SVG
             ctx.drawImage(img, 0, 0, width, height);
             resolve();
@@ -138,28 +145,33 @@ export default function MermaidDiagram({
             reject(err);
           }
         };
-        
+
         img.onerror = reject;
         img.src = dataUrl;
       });
 
       // Convert to blob and download
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          console.error("Failed to create blob");
-          return;
-        }
-        
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${title || "diagram"}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, "image/png", 0.95);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            console.error("Failed to create blob");
 
+            return;
+          }
+
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+
+          link.href = url;
+          link.download = `${title || "diagram"}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        },
+        "image/png",
+        0.95,
+      );
     } catch (err) {
       console.error("Failed to convert SVG to PNG:", err);
     }
@@ -184,25 +196,31 @@ export default function MermaidDiagram({
             <div className="flex gap-2">
               <Button
                 size="sm"
+                startContent={
+                  copied ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )
+                }
                 variant="flat"
-                startContent={copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 onPress={handleCopyCode}
               >
                 {copied ? "Copied!" : "Copy Code"}
               </Button>
               <Button
-                size="sm"
-                variant="flat"
                 color="primary"
+                size="sm"
                 startContent={<Download className="w-4 h-4" />}
+                variant="flat"
                 onPress={handleDownloadPNG}
               >
                 Download PNG
               </Button>
               <Button
                 size="sm"
-                variant="flat"
                 startContent={<Download className="w-4 h-4" />}
+                variant="flat"
                 onPress={handleDownloadSVG}
               >
                 Download SVG
@@ -214,12 +232,14 @@ export default function MermaidDiagram({
       <CardBody>
         {isRendering && (
           <div className="flex items-center justify-center py-8">
-            <Spinner size="lg" label="Rendering diagram..." />
+            <Spinner label="Rendering diagram..." size="lg" />
           </div>
         )}
         {error && (
           <div className="p-4 bg-danger-50 border border-danger-200 rounded-lg">
-            <p className="text-sm text-danger-700 font-medium">Failed to render diagram</p>
+            <p className="text-sm text-danger-700 font-medium">
+              Failed to render diagram
+            </p>
             <p className="text-xs text-danger-600 mt-1">{error}</p>
           </div>
         )}

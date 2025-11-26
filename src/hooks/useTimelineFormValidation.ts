@@ -43,6 +43,7 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
   const [errors, setErrors] = useState<TimelineFormErrors>({});
 
   // Wrapper function for validation that passes translation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleValidateDateNotInPast = (
     value: any,
   ): string | true | null | undefined => {
@@ -91,31 +92,33 @@ export function useTimelineFormValidation(options: ValidationOptions = {}) {
       // Start date validation
       if (requireStartDate && !formData.startDate) {
         newErrors.startDate = t("validation.startDateRequired");
-      } else if (requireStartDate && formData.startDate) {
-        // Validate start date is not in the past
-        const startDateValidation = handleValidateDateNotInPast(
-          formData.startDate,
-        );
-
-        if (startDateValidation !== true) {
-          newErrors.startDate = t("common.validation.dateNotInPast");
-        }
       }
+      // Commented out: Past date validation disabled
+      // else if (requireStartDate && formData.startDate) {
+      //   // Validate start date is not in the past
+      //   const startDateValidation = handleValidateDateNotInPast(
+      //     formData.startDate,
+      //   );
+      //   if (startDateValidation !== true) {
+      //     newErrors.startDate = t("common.validation.dateNotInPast");
+      //   }
+      // }
 
       // End date validation
       if (requireEndDate) {
         if (!formData.endDate) {
           newErrors.endDate = t("validation.endDateRequired");
-        } else {
-          // Validate end date is not in the past
-          const endDateValidation = handleValidateDateNotInPast(
-            formData.endDate,
-          );
-
-          if (endDateValidation !== true) {
-            newErrors.endDate = t("common.validation.dateNotInPast");
-          }
         }
+        // Commented out: Past date validation disabled
+        // else {
+        //   // Validate end date is not in the past
+        //   const endDateValidation = handleValidateDateNotInPast(
+        //     formData.endDate,
+        //   );
+        //   if (endDateValidation !== true) {
+        //     newErrors.endDate = t("common.validation.dateNotInPast");
+        //   }
+        // }
       }
 
       // Check if end date is after start date (only if both dates exist and are valid)

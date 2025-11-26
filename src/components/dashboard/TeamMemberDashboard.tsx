@@ -11,7 +11,13 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
 
 import Calendar from "./calendar";
 import TeamKanbanBoard from "./team-member/TeamKanbanBoard";
@@ -24,7 +30,11 @@ import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { tasksService } from "@/services/api/tasksService";
 import { membersTasksService } from "@/services/api/membersTasksService";
-import { showSuccessToast, showErrorToast, showWarningToast } from "@/utils/toast";
+import {
+  showSuccessToast,
+  showErrorToast,
+  showWarningToast,
+} from "@/utils/toast";
 import { isTransitionAllowed } from "@/utils/kanbanRoleConfig";
 import { getFileUploadConfig } from "@/config/environment";
 
@@ -41,18 +51,24 @@ export default function TeamMemberDashboard() {
 
   // Change Status Modal state
   const [isChangeStatusModalOpen, setIsChangeStatusModalOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<{ id: number; label: string } | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<{
+    id: number;
+    label: string;
+  } | null>(null);
   const [notes, setNotes] = useState("");
   const [modalError, setModalError] = useState(false);
   const [changeStatusLoading, setChangeStatusLoading] = useState(false);
 
   // Request Design Modal state
-  const [isRequestDesignModalOpen, setIsRequestDesignModalOpen] = useState(false);
-  const [isRequestDesignConfirmModalOpen, setIsRequestDesignConfirmModalOpen] = useState(false);
+  const [isRequestDesignModalOpen, setIsRequestDesignModalOpen] =
+    useState(false);
+  const [isRequestDesignConfirmModalOpen, setIsRequestDesignConfirmModalOpen] =
+    useState(false);
   const [requestDesignLoading, setRequestDesignLoading] = useState(false);
 
   // Delete Attachment Modal state
-  const [isDeleteAttachmentModalOpen, setIsDeleteAttachmentModalOpen] = useState(false);
+  const [isDeleteAttachmentModalOpen, setIsDeleteAttachmentModalOpen] =
+    useState(false);
   const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null);
   const [deleteAttachmentLoading, setDeleteAttachmentLoading] = useState(false);
 
@@ -61,12 +77,14 @@ export default function TeamMemberDashboard() {
     if (!selectedTask || !user?.roles) return statusOptions;
 
     const currentStatusId = selectedTask.statusId;
-    const roleIds = user.roles.map(r => r.id);
+    const roleIds = user.roles.map((r) => r.id);
 
-    return statusOptions.filter(option => {
+    return statusOptions.filter((option) => {
       const targetStatusId = parseInt(option.key);
+
       // Always allow selecting the current status
       if (targetStatusId === currentStatusId) return true;
+
       // Check if transition is allowed
       return isTransitionAllowed(roleIds, currentStatusId, targetStatusId);
     });
@@ -155,10 +173,13 @@ export default function TeamMemberDashboard() {
         setIsRequestDesignConfirmModalOpen(false);
         setNotes("");
         // Refresh the kanban board
-        setRefreshKey(prev => prev + 1);
+        setRefreshKey((prev) => prev + 1);
       } else {
         setModalError(true);
-        showErrorToast(t("common.error"), result.message || t("common.unexpectedError"));
+        showErrorToast(
+          t("common.error"),
+          result.message || t("common.unexpectedError"),
+        );
       }
     } catch (error) {
       console.error("Error requesting design:", error);
@@ -192,7 +213,7 @@ export default function TeamMemberDashboard() {
         setIsChangeStatusModalOpen(false);
         setNotes("");
         // Refresh the kanban board
-        setRefreshKey(prev => prev + 1);
+        setRefreshKey((prev) => prev + 1);
       } else {
         setModalError(true);
         showErrorToast(t("teamDashboard.kanban.statusUpdateFailed"));
@@ -242,19 +263,23 @@ export default function TeamMemberDashboard() {
       // Check for empty files
       if (file.size === 0) {
         emptyFiles.push(file.name);
+
         return false;
       }
 
       // Check file size
       if (file.size > maxFileSizeBytes) {
         oversizedFiles.push(file.name);
+
         return false;
       }
 
       // Check file type
       const fileExtension = file.name.split(".").pop()?.toLowerCase();
+
       if (!fileExtension || !allowedFileTypes.includes(fileExtension)) {
         invalidTypeFiles.push(file.name);
+
         return false;
       }
 
@@ -265,13 +290,13 @@ export default function TeamMemberDashboard() {
     if (emptyFiles.length > 0) {
       showWarningToast(
         t("requirements.validation.fileEmptyError"),
-        emptyFiles.join(", ")
+        emptyFiles.join(", "),
       );
     }
     if (oversizedFiles.length > 0) {
       showWarningToast(
         t("requirements.validation.filesSizeTooLarge"),
-        oversizedFiles.join(", ")
+        oversizedFiles.join(", "),
       );
     }
     if (invalidTypeFiles.length > 0) {
@@ -279,7 +304,7 @@ export default function TeamMemberDashboard() {
         t("requirements.validation.fileTypeNotAllowed")
           .replace("{0}", invalidTypeFiles[0])
           .replace("{1}", allowedFileTypes.join(", ")),
-        invalidTypeFiles.join(", ")
+        invalidTypeFiles.join(", "),
       );
     }
 
@@ -287,9 +312,14 @@ export default function TeamMemberDashboard() {
 
     // Upload valid files
     let uploadedCount = 0;
+
     for (const file of validFiles) {
       try {
-        const result = await membersTasksService.uploadTaskAttachment(taskId, file);
+        const result = await membersTasksService.uploadTaskAttachment(
+          taskId,
+          file,
+        );
+
         if (result.success) {
           uploadedCount++;
           showSuccessToast(t("requirements.uploadSuccess"));
@@ -305,6 +335,7 @@ export default function TeamMemberDashboard() {
     // Refresh drawer if any files were uploaded successfully
     if (uploadedCount > 0) {
       const currentTask = selectedTask;
+
       setIsDrawerOpen(false);
       setTimeout(() => {
         setSelectedTask(currentTask);
@@ -325,13 +356,17 @@ export default function TeamMemberDashboard() {
 
     setDeleteAttachmentLoading(true);
     try {
-      const result = await membersTasksService.deleteTaskAttachment(attachmentToDelete.id);
+      const result = await membersTasksService.deleteTaskAttachment(
+        attachmentToDelete.id,
+      );
+
       if (result.success) {
         showSuccessToast(t("taskDetails.attachmentDeleted"));
         setIsDeleteAttachmentModalOpen(false);
         setAttachmentToDelete(null);
         // Close and reopen drawer to trigger refetch of attachments
         const currentTask = selectedTask;
+
         setIsDrawerOpen(false);
         setTimeout(() => {
           setSelectedTask(currentTask);
@@ -351,9 +386,12 @@ export default function TeamMemberDashboard() {
   // Handle file download
   const handleTaskFileDownload = async (attachment: any) => {
     try {
-      const blob = await membersTasksService.downloadTaskAttachment(attachment.id);
+      const blob = await membersTasksService.downloadTaskAttachment(
+        attachment.id,
+      );
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
+
       a.href = url;
       a.download = attachment.originalName;
       document.body.appendChild(a);
@@ -660,7 +698,7 @@ export default function TeamMemberDashboard() {
               <ModalHeader className="flex flex-col gap-1">
                 {t("taskDetails.confirmDeleteAttachment").replace(
                   "{fileName}",
-                  attachmentToDelete?.originalName || ""
+                  attachmentToDelete?.originalName || "",
                 )}
               </ModalHeader>
 
@@ -671,11 +709,7 @@ export default function TeamMemberDashboard() {
               </ModalBody>
 
               <ModalFooter>
-                <Button
-                  color="default"
-                  variant="light"
-                  onPress={onClose}
-                >
+                <Button color="default" variant="light" onPress={onClose}>
                   {t("common.cancel")}
                 </Button>
                 <Button

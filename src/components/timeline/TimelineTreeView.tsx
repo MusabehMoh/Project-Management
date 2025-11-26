@@ -52,7 +52,7 @@ import {
 } from "@/components/icons";
 
 interface TimelineTreeViewProps {
-  timeline: Timeline;
+  timelines: Timeline[]; // Changed from single timeline to array
   onItemSelect: (
     itemId: string,
     itemType: "timeline" | "task" | "subtask",
@@ -73,7 +73,7 @@ interface TimelineTreeViewProps {
 }
 
 export default function TimelineTreeView({
-  timeline,
+  timelines, // Now receiving array of timelines
   onItemSelect,
   onCreateTask,
   onCreateSubtask,
@@ -93,15 +93,10 @@ export default function TimelineTreeView({
   const { hasPermission } = usePermissions();
   const toasts = useTimelineToasts();
   const containerRef = useRef<HTMLDivElement>(null);
-  // Some backends may omit treeId immediately after creation; ensure a stable fallback
-  const safeTimelineTreeId = useMemo(() => {
-    const raw = (timeline as any)?.treeId;
-    // Prefer provided treeId; else fall back to a deterministic string using numeric id
 
-    return raw != null && raw !== ""
-      ? String(raw)
-      : `timeline-${String(timeline?.id ?? "0")}`;
-  }, [timeline?.treeId, timeline?.id]);
+  // Track expanded state for all timelines and their children
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
   const {
     getDepartmentColor,
     getDepartmentName,
@@ -113,9 +108,6 @@ export default function TimelineTreeView({
   // Use shared form helpers for consistent color/name mapping
   const { getStatusColor, getPriorityColor, getStatusName, getPriorityName } =
     useTimelineFormHelpers();
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(
-    new Set([safeTimelineTreeId]),
-  );
 
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -138,14 +130,15 @@ export default function TimelineTreeView({
 
   // Create modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createModalType, setCreateModalType] = useState<
-    "task" | "subtask"
-  >("task");
+  const [createModalType, setCreateModalType] = useState<"task" | "subtask">(
+    "task",
+  );
   const [createModalParentName, setCreateModalParentName] =
     useState<string>("");
   const [createParentId, setCreateParentId] = useState<string>("");
-  const [createModalInitialValues, setCreateModalInitialValues] =
-    useState<Partial<TimelineEditModalFormData>>({});
+  const [createModalInitialValues, setCreateModalInitialValues] = useState<
+    Partial<TimelineEditModalFormData>
+  >({});
   const [quickSearch, setQuickSearch] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -207,49 +200,68 @@ export default function TimelineTreeView({
     };
   }, [expandedItems]);
 
-  // Reset expanded state when timeline changes - force a clean reset
+  // Initialize expanded items when timelines change
   useEffect(() => {
-    setExpandedItems(new Set([safeTimelineTreeId]));
-  }, [safeTimelineTreeId, timeline.id, timeline.name]);
+    // Start with all timelines collapsed by default
+    setExpandedItems(new Set());
+  }, [timelines]);
 
   const activeScrollRef = useRef<HTMLElement | null>(null);
   const hasAutoSelectedTask = useRef(false);
 
-  // Auto-expand and scroll to highlighted task
+  // Auto-expand and scroll to highlighted task across all timelines
   useEffect(() => {
-    if (!highlightTaskId || !timeline || hasAutoSelectedTask.current) return;
+    if (
+      !highlightTaskId ||
+      timelines.length === 0 ||
+      hasAutoSelectedTask.current
+    )
+      return;
 
-    // Find the task in the timeline
-    const foundTask = (timeline.tasks || []).find(
-      (t) => String(t.id) === highlightTaskId,
-    );
+    // Find the task in any timeline
+    for (const timeline of timelines) {
+      const foundTask = (timeline.tasks || []).find(
+        (t: Task) => String(t.id) === highlightTaskId,
+      );
 
-    if (foundTask) {
-      // Mark as auto-selected so it only happens once
-      hasAutoSelectedTask.current = true;
+      if (foundTask) {
+        // Mark as auto-selected so it only happens once
+        hasAutoSelectedTask.current = true;
 
-      // Expand timeline
-      setExpandedItems((prev) => new Set([...prev, safeTimelineTreeId]));
+        // Get timeline tree ID
+        const raw = (timeline as any)?.treeId;
+        const timelineTreeId =
+          raw != null && raw !== ""
+            ? String(raw)
+            : `timeline-${String(timeline?.id ?? "0")}`;
 
-      // Select and scroll to task after a short delay to allow DOM to update
-      setTimeout(() => {
-        const taskTreeId = foundTask.treeId || `task-${foundTask.id}`;
+        // Expand timeline
+        setExpandedItems((prev) => new Set([...prev, timelineTreeId]));
 
-        onItemSelect(taskTreeId, "task");
-
-        // Scroll to the task element
+        // Select and scroll to task after a short delay to allow DOM to update
         setTimeout(() => {
-          const taskElement = document.querySelector(
-            `[data-tree-id="${taskTreeId}"]`,
-          );
+          const taskTreeId = foundTask.treeId || `task-${foundTask.id}`;
 
-          if (taskElement) {
-            taskElement.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        }, 100);
-      }, 300);
+          onItemSelect(taskTreeId, "task");
+
+          // Scroll to the task element
+          setTimeout(() => {
+            const taskElement = document.querySelector(
+              `[data-tree-id="${taskTreeId}"]`,
+            );
+
+            if (taskElement) {
+              taskElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
+          }, 100);
+        }, 300);
+        break; // Stop after finding the task
+      }
     }
-  }, [highlightTaskId, timeline, safeTimelineTreeId, onItemSelect]);
+  }, [highlightTaskId, timelines, onItemSelect]);
 
   // Color legend component
   const renderColorLegend = () => (
@@ -265,12 +277,7 @@ export default function TimelineTreeView({
               {t("timeline.treeView.timelineLabel")}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-2 bg-green-500 rounded" />
-            <span className="text-default-600">
-              {t("timeline.treeView.sprintsLabel")}
-            </span>
-          </div>
+        
           {/* Removed requirements level from legend */}
           <div className="flex items-center gap-2">
             <div className="w-4 h-2 bg-purple-500 rounded" />
@@ -280,7 +287,7 @@ export default function TimelineTreeView({
           </div>
         </div>
       </div>
-      <div>
+      {/* <div>
         <h4 className="text-sm font-medium mb-2 text-default-700">
           {t("timeline.treeView.progressColorLegend")}
         </h4>
@@ -310,62 +317,81 @@ export default function TimelineTreeView({
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 
-  // Filter data based on filters
-  const filteredTimeline = useMemo(() => {
-    if (
-      filters.departments.length === 0 &&
-      filters.members.length === 0 &&
-      filters.status.length === 0 &&
-      filters.priority.length === 0
-    ) {
-      return { ...timeline, tasks: timeline.tasks || [] };
+  // Filter all timelines based on filters
+  const filteredTimelines = useMemo(() => {
+    const hasActiveFilters =
+      filters.departments.length > 0 ||
+      filters.members.length > 0 ||
+      filters.status.length > 0 ||
+      filters.priority.length > 0;
+
+    // Sort timelines by createdAt (newest first)
+    const sortedTimelines = [...timelines].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+
+      return dateB - dateA; // Descending order (newest first)
+    });
+
+    if (!hasActiveFilters) {
+      return sortedTimelines.map((tl) => ({ ...tl, tasks: tl.tasks || [] }));
     }
 
-    const filteredTasks = (timeline.tasks || [])
-      .map((task) => {
-        const taskMatches =
-          (filters.departments.length === 0 ||
-            !task.departmentId ||
-            filters.departments.includes(task.departmentId.toString())) &&
-          (filters.members.length === 0 ||
-            !task.members ||
-            task.members.some((m) => filters.members.includes(m.id.toString()))) &&
-          (filters.status.length === 0 ||
-            filters.status.includes(task.statusId as any)) &&
-          (filters.priority.length === 0 ||
-            filters.priority.includes(task.priorityId as any));
+    return sortedTimelines
+      .map((timeline) => {
+        const filteredTasks = (timeline.tasks || [])
+          .map((task: Task) => {
+            const taskMatches =
+              (filters.departments.length === 0 ||
+                !task.departmentId ||
+                filters.departments.includes(task.departmentId.toString())) &&
+              (filters.members.length === 0 ||
+                !task.members ||
+                task.members.some((m: any) =>
+                  filters.members.includes(m.id.toString()),
+                )) &&
+              (filters.status.length === 0 ||
+                filters.status.includes(task.statusId as any)) &&
+              (filters.priority.length === 0 ||
+                filters.priority.includes(task.priorityId as any));
 
-        const filteredSubtasks = (task.subtasks || []).filter((subtask) => {
-          return (
-            (filters.departments.length === 0 ||
-              !subtask.departmentId ||
-              filters.departments.includes(subtask.departmentId.toString())) &&
-            (filters.members.length === 0 ||
-              !task.members ||
-              task.members.some((m) =>
-                filters.members.includes(m.id.toString()),
-              )) &&
-            (filters.status.length === 0 ||
-              filters.status.includes(task.statusId as any)) &&
-            (filters.priority.length === 0 ||
-              filters.priority.includes(task.priorityId as any))
-          );
-        });
+            const filteredSubtasks = (task.subtasks || []).filter(
+              (subtask: Subtask) => {
+                return (
+                  (filters.departments.length === 0 ||
+                    !subtask.departmentId ||
+                    filters.departments.includes(
+                      subtask.departmentId.toString(),
+                    )) &&
+                  (filters.members.length === 0 ||
+                    !task.members ||
+                    task.members.some((m: any) =>
+                      filters.members.includes(m.id.toString()),
+                    )) &&
+                  (filters.status.length === 0 ||
+                    filters.status.includes(task.statusId as any)) &&
+                  (filters.priority.length === 0 ||
+                    filters.priority.includes(task.priorityId as any))
+                );
+              },
+            );
 
-        if (taskMatches || filteredSubtasks.length > 0) {
-          return { ...task, subtasks: filteredSubtasks };
-        }
+            if (taskMatches || filteredSubtasks.length > 0) {
+              return { ...task, subtasks: filteredSubtasks };
+            }
 
-        return null;
+            return null;
+          })
+          .filter(Boolean) as Task[];
+
+        return { ...timeline, tasks: filteredTasks };
       })
-      .filter(Boolean) as Task[];
-
-    return { ...timeline, tasks: filteredTasks };
-  }, [timeline, filters]);
+      .filter((tl) => (tl.tasks || []).length > 0); // Only show timelines with filtered tasks
+  }, [timelines, filters]);
 
   // (Removed requirement filter helper – no requirement layer now)
 
@@ -401,14 +427,24 @@ export default function TimelineTreeView({
       filters.status.length > 0 ||
       filters.priority.length > 0;
 
-    if (hasActiveFilters && (filteredTimeline.tasks || []).length > 0) {
-      // Auto-expand all items that have matching children
-      const itemsToExpand = new Set([safeTimelineTreeId]); // Always expand timeline
+    if (hasActiveFilters && filteredTimelines.length > 0) {
+      // Auto-expand all timelines and items that have matching children
+      const itemsToExpand = new Set<string>();
 
-      (filteredTimeline.tasks || []).forEach((task) => {
-        itemsToExpand.add(task.treeId);
-        task.subtasks?.forEach((subtask) => {
-          itemsToExpand.add(subtask.treeId);
+      filteredTimelines.forEach((timeline) => {
+        const raw = (timeline as any)?.treeId;
+        const timelineTreeId =
+          raw != null && raw !== ""
+            ? String(raw)
+            : `timeline-${String(timeline?.id ?? "0")}`;
+
+        itemsToExpand.add(timelineTreeId);
+
+        (timeline.tasks || []).forEach((task: Task) => {
+          itemsToExpand.add(task.treeId);
+          task.subtasks?.forEach((subtask: Subtask) => {
+            itemsToExpand.add(subtask.treeId);
+          });
         });
       });
 
@@ -429,7 +465,7 @@ export default function TimelineTreeView({
         }
       }, 200); // Increased delay to ensure DOM is updated
     }
-  }, [filteredTimeline, filters, safeTimelineTreeId]);
+  }, [filteredTimelines, filters]);
 
   const toggleExpanded = (id: string) => {
     const newExpanded = new Set(expandedItems);
@@ -449,7 +485,7 @@ export default function TimelineTreeView({
     debugger;
     setEditModalType(type);
     setEditingItem(item);
-    
+
     setEditModalInitialValues({
       name: item.name || "",
       description: item.description || "",
@@ -485,11 +521,20 @@ export default function TimelineTreeView({
         toasts.onTimelineUpdateSuccess();
       } else if (editModalType === "task") {
         debugger;
+        // Find the timeline that contains this task
+        const taskTimeline = timelines.find((tl) =>
+          tl.tasks?.some((t) => t.id === editingItem.id),
+        );
+
         await _onUpdateTask({
           id: editingItem.id,
-          projectRequirementId: timeline.projectRequirementId,
+          projectRequirementId: taskTimeline?.projectRequirementId,
           // Use the task's timeline association directly
-          timelineId: (editingItem.timelineId ?? timeline.id).toString(),
+          timelineId: (
+            editingItem.timelineId ??
+            taskTimeline?.id ??
+            timelines[0]?.id
+          ).toString(),
           ...formData,
           statusId: formData.statusId,
           priorityId: formData.priorityId,
@@ -528,28 +573,37 @@ export default function TimelineTreeView({
   };
 
   const scrollToTask = (taskId: string) => {
-    let taskTreeId = "";
+    // Find task in any timeline
+    for (const timeline of timelines) {
+      const task = (timeline.tasks || []).find(
+        (t: Task) => t.id.toString() === taskId,
+      );
 
-    // Find task directly under timeline
-    const task = (timeline.tasks || []).find((t) => t.id.toString() === taskId);
+      if (task) {
+        const taskTreeId = task.treeId;
+        const raw = (timeline as any)?.treeId;
+        const timelineTreeId =
+          raw != null && raw !== ""
+            ? String(raw)
+            : `timeline-${String(timeline?.id ?? "0")}`;
 
-    if (task) {
-      taskTreeId = task.treeId;
-      // Expand timeline to show the task
-      setExpandedItems((prev) => new Set([...prev, safeTimelineTreeId]));
-      setTimeout(() => {
-        const element = document.querySelector(`[data-task-id="${taskId}"]`);
+        // Expand timeline to show the task
+        setExpandedItems((prev) => new Set([...prev, timelineTreeId]));
+        setTimeout(() => {
+          const element = document.querySelector(`[data-task-id="${taskId}"]`);
 
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-          onItemSelect(taskTreeId, "task");
-        }
-      }, 100);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            onItemSelect(taskTreeId, "task");
+          }
+        }, 100);
+        break;
+      }
     }
   };
 
   // Create a task directly under timeline
-  const handleCreateTask = () => {
+  const handleCreateTask = (timeline: Timeline) => {
     setCreateModalType("task");
     setCreateModalParentName(timeline.name);
     setCreateParentId(timeline.id.toString());
@@ -582,13 +636,27 @@ export default function TimelineTreeView({
   ) => {
     try {
       if (createModalType === "task") {
+        // Find the timeline that matches createParentId
+        const targetTimeline = timelines.find(
+          (tl) => tl.id.toString() === createParentId,
+        );
+
         await onCreateTask({
-          timelineId: timeline.id.toString(),
-          projectRequirementId: timeline.projectRequirementId,
+          timelineId: createParentId,
+          projectRequirementId: targetTimeline?.projectRequirementId,
           ...formData,
         });
+
         // Expand timeline to show new task
-        setExpandedItems((prev) => new Set(prev).add(safeTimelineTreeId));
+        if (targetTimeline) {
+          const raw = (targetTimeline as any)?.treeId;
+          const timelineTreeId =
+            raw != null && raw !== ""
+              ? String(raw)
+              : `timeline-${String(targetTimeline?.id ?? "0")}`;
+
+          setExpandedItems((prev) => new Set(prev).add(timelineTreeId));
+        }
         toasts.onTaskCreateSuccess();
       } else if (createModalType === "subtask" && onCreateSubtask) {
         await onCreateSubtask({
@@ -613,10 +681,7 @@ export default function TimelineTreeView({
     }
   };
 
-  const handleDelete = async (
-    id: string,
-    type: "task" | "subtask",
-  ) => {
+  const handleDelete = async (id: string, type: "task" | "subtask") => {
     if (!confirm(`${t("timeline.treeView.confirmDelete")} ${type}?`)) return;
 
     try {
@@ -672,156 +737,248 @@ export default function TimelineTreeView({
   // Removed move task between requirements feature – optional future enhancement for moving between sprints
 
   // Search component
-  const renderQuickSearch = () => (
-    <div className="mb-4">
-      <Input
-        isClearable
-        placeholder={t("timeline.treeView.searchPlaceholder")}
-        size="sm"
-        startContent={<SearchIcon className="w-4 h-4" />}
-        value={quickSearch}
-        onChange={(e) => setQuickSearch(e.target.value)}
-        onClear={() => setQuickSearch("")}
-      />
-      {quickSearch && (
-        <div className="mt-2 max-h-40 overflow-y-auto scrollbar-hide space-y-1 bg-default-50 rounded-lg p-2">
-          {(filteredTimeline.tasks || [])
-            .filter((task) => {
-              const q = quickSearch.toLowerCase();
+  const renderQuickSearch = () => {
+    const q = quickSearch.toLowerCase();
 
-              return (
-                task.name.toLowerCase().includes(q) ||
-                (task.subtasks || []).some((st) =>
-                  st.name.toLowerCase().includes(q),
-                )
-              );
-            })
-            .map((task) => (
-              <div key={task.id} className="text-xs">
-                <button
-                  className="w-full text-left p-2 hover:bg-default-100 rounded flex items-center gap-2"
-                  onClick={() => scrollToTask(task.id.toString())}
+    // Search results grouped by type
+    const timelineResults = filteredTimelines.filter(
+      (timeline) =>
+        timeline.name.toLowerCase().includes(q) ||
+        (timeline.description || "").toLowerCase().includes(q),
+    );
+
+    const taskResults = filteredTimelines.flatMap((timeline) =>
+      (timeline.tasks || [])
+        .filter(
+          (task: Task) =>
+            task.name.toLowerCase().includes(q) ||
+            (task.description || "").toLowerCase().includes(q) ||
+            (task.subtasks || []).some(
+              (st: Subtask) =>
+                st.name.toLowerCase().includes(q) ||
+                (st.description || "").toLowerCase().includes(q),
+            ),
+        )
+        .map((task: Task) => ({ timeline, task })),
+    );
+
+    const scrollToTimeline = (timelineId: number) => {
+      const timeline = timelines.find((tl) => tl.id === timelineId);
+
+      if (!timeline) return;
+
+      const raw = (timeline as any)?.treeId;
+      const timelineTreeId =
+        raw != null && raw !== ""
+          ? String(raw)
+          : `timeline-${String(timeline?.id ?? "0")}`;
+
+      // Expand timeline and scroll to it
+      setExpandedItems((prev) => new Set([...prev, timelineTreeId]));
+      setTimeout(() => {
+        const element = document.getElementById(`timeline-${timelineId}`);
+
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          onItemSelect(timelineTreeId, "timeline");
+        }
+      }, 100);
+    };
+
+    return (
+      <div className="mb-4">
+        <Input
+          isClearable
+          placeholder={t("timeline.treeView.searchPlaceholder")}
+          size="sm"
+          startContent={<SearchIcon className="w-4 h-4" />}
+          value={quickSearch}
+          onChange={(e) => setQuickSearch(e.target.value)}
+          onClear={() => setQuickSearch("")}
+        />
+        {quickSearch && (
+          <div className="mt-2 max-h-60 overflow-y-auto scrollbar-hide space-y-2 bg-default-50 rounded-lg p-2">
+            {/* Timeline results */}
+            {timelineResults.length > 0 && (
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-default-500 px-2">
+                  {t("timeline.treeView.timelineLabel")}s (
+                  {timelineResults.length})
+                </div>
+                {timelineResults.map((timeline) => (
+                  <button
+                    key={`timeline-${timeline.id}`}
+                    className="w-full text-left p-2 hover:bg-default-100 rounded flex items-center gap-2 text-xs"
+                    onClick={() => scrollToTimeline(timeline.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        scrollToTimeline(timeline.id);
+                      }
+                    }}
+                  >
+                    <div className="w-3 h-3 bg-blue-500 rounded" />
+                    <span className="font-medium">{timeline.name}</span>
+                    <span className="text-default-500">
+                      ({(timeline.tasks || []).length} {t("timeline.tasks")})
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Task results */}
+            {taskResults.length > 0 && (
+              <div className="space-y-1">
+                {timelineResults.length > 0 && <Divider className="my-2" />}
+                <div className="text-xs font-semibold text-default-500 px-2">
+                  {t("timeline.tasks")} ({taskResults.length})
+                </div>
+                {taskResults.map(({ timeline, task }) => (
+                  <button
+                    key={`task-${task.id}`}
+                    className="w-full text-left p-2 hover:bg-default-100 rounded flex items-center gap-2 text-xs"
+                    onClick={() => scrollToTask(task.id.toString())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        scrollToTask(task.id.toString());
+                      }
+                    }}
+                  >
+                    <div className="w-3 h-3 bg-purple-500 rounded" />
+                    <div className="flex-1">
+                      <div className="font-medium">{task.name}</div>
+                      <div className="text-default-400 text-[10px]">
+                        in {timeline.name}
+                      </div>
+                    </div>
+                    <span className="text-default-500">
+                      ({(task.subtasks || []).length} {t("timeline.subtasks")})
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* No results */}
+            {timelineResults.length === 0 && taskResults.length === 0 && (
+              <div className="text-center py-4 text-xs text-default-400">
+                {t("timeline.treeView.noSearchResults")}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderTimelineHeader = (timeline: Timeline) => {
+    const raw = (timeline as any)?.treeId;
+    const safeTimelineTreeId =
+      raw != null && raw !== ""
+        ? String(raw)
+        : `timeline-${String(timeline?.id ?? "0")}`;
+
+    return (
+      <div
+        className={`p-4 ${direction === "rtl" ? "border-r-4" : "border-l-4"} cursor-pointer hover:bg-default-50 transition-colors ${
+          selectedItem === safeTimelineTreeId ? "bg-primary-50" : ""
+        } border-blue-500`}
+        id={`timeline-${timeline.id}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          onItemSelect(safeTimelineTreeId, "timeline");
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onItemSelect(safeTimelineTreeId, "timeline");
+          }
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {(timeline.tasks || []).length > 0 && (
+                <div
+                  className="flex items-center justify-center w-6 h-6 hover:bg-default-100 rounded cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpanded(safeTimelineTreeId);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      scrollToTask(task.id.toString());
+                      e.stopPropagation();
+                      toggleExpanded(safeTimelineTreeId);
                     }
                   }}
                 >
-                  <div className="w-3 h-3 bg-purple-500 rounded" />
-                  <span className="font-medium">{task.name}</span>
-                  <span className="text-default-500">
-                    ({(task.subtasks || []).length} {t("timeline.subtasks")})
-                  </span>
-                </button>
+                  {expandedItems.has(safeTimelineTreeId) ? (
+                    <ChevronDownIcon className="w-4 h-4" />
+                  ) : (
+                    <ChevronRightIcon
+                      className={`w-4 h-4 ${direction === "rtl" ? "rotate-180" : ""}`}
+                    />
+                  )}
+                </div>
+              )}
+              {(timeline.tasks || []).length === 0 && <div className="w-6" />}
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">{timeline.name}</h3>
+              <p
+                dangerouslySetInnerHTML={{ __html: timeline.description || "" }}
+                className="text-sm text-default-600"
+              />
+              <div className="flex items-center flex-wrap gap-4 mt-2 text-xs text-default-500">
+                <span>
+                  {formatDateRange(timeline.startDate, timeline.endDate, {
+                    language,
+                    direction: direction === "rtl" ? "rtl" : "ltr",
+                  })}
+                </span>
+                <span>
+                  {(timeline.tasks || []).length} {t("timeline.tasks")}
+                </span>
               </div>
-            ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTimelineHeader = () => (
-    <div
-      className={`p-4 ${direction === "rtl" ? "border-r-4" : "border-l-4"} cursor-pointer hover:bg-default-50 transition-colors ${
-        selectedItem === safeTimelineTreeId ? "bg-primary-50" : ""
-      } border-blue-500`}
-      id={`timeline-${timeline.id}`}
-      role="button"
-      tabIndex={0}
-      onClick={() => {
-        onItemSelect(safeTimelineTreeId, "timeline");
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onItemSelect(safeTimelineTreeId, "timeline");
-        }
-      }}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            {(filteredTimeline.tasks || []).length > 0 && (
-              <div
-                className="flex items-center justify-center w-6 h-6 hover:bg-default-100 rounded cursor-pointer"
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleExpanded(safeTimelineTreeId);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleExpanded(safeTimelineTreeId);
-                  }
-                }}
-              >
-                {expandedItems.has(safeTimelineTreeId) ? (
-                  <ChevronDownIcon className="w-4 h-4" />
-                ) : (
-                  <ChevronRightIcon
-                    className={`w-4 h-4 ${direction === "rtl" ? "rotate-180" : ""}`}
-                  />
-                )}
-              </div>
-            )}
-            {(filteredTimeline.tasks || []).length === 0 && (
-              <div className="w-6" />
-            )}
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg">{timeline.name}</h3>
-            <p
-              dangerouslySetInnerHTML={{ __html: timeline.description || "" }}
-              className="text-sm text-default-600"
-            />
-            <div className="flex items-center flex-wrap gap-4 mt-2 text-xs text-default-500">
-              <span>
-                {formatDateRange(timeline.startDate, timeline.endDate, {
-                  language,
-                  direction: direction === "rtl" ? "rtl" : "ltr",
-                })}
-              </span>
-              <span>
-                {(filteredTimeline.tasks || []).length}{" "}
-                {t("timeline.tasks")}
-              </span>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {hasPermission({ actions: ["timelines.update"] }) && (
-            <Button
-              color="default"
-              size="sm"
-              startContent={<EditIcon />}
-              variant="light"
-              onClick={(e) => e.stopPropagation()}
-              onPress={() => handleOpenEditModal("timeline", timeline)}
-            >
-              {t("timeline.treeView.editModalTitle")}{" "}
-              {t("timeline.treeView.timelineLabel")}
-            </Button>
-          )}
-          {hasPermission({ actions: ["timelines.tasks.create"] }) && (
-            <Button
-              color="primary"
-              isLoading={loading}
-              size="sm"
-              startContent={<PlusIcon />}
-              onClick={(e) => e.stopPropagation()}
-              onPress={handleCreateTask}
-            >
-              {t("timeline.treeView.addTask")}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {hasPermission({ actions: ["timelines.update"] }) && (
+              <Button
+                color="default"
+                size="sm"
+                startContent={<EditIcon />}
+                variant="light"
+                onClick={(e) => e.stopPropagation()}
+                onPress={() => handleOpenEditModal("timeline", timeline)}
+              >
+                {t("timeline.treeView.editModalTitle")}{" "}
+                {t("timeline.treeView.timelineLabel")}
+              </Button>
+            )}
+            {hasPermission({ actions: ["timelines.tasks.create"] }) && (
+              <Button
+                color="primary"
+                isLoading={loading}
+                size="sm"
+                startContent={<PlusIcon />}
+                onClick={(e) => e.stopPropagation()}
+                onPress={() => handleCreateTask(timeline)}
+              >
+                {t("timeline.treeView.addTask")}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderTask = (task: Task) => (
     <div
@@ -1297,20 +1454,37 @@ export default function TimelineTreeView({
     <>
       <div
         ref={containerRef}
-        className={`h-full overflow-y-auto overflow-x-hidden relative scrollbar-hide ${direction === "rtl" ? "rtl" : "ltr"}`}
+        className={`relative ${direction === "rtl" ? "rtl" : "ltr"}`}
       >
-        <Card className="h-full">
+        <Card>
           <CardBody
             className={`p-4 ${direction === "rtl" ? "text-right" : "text-left"}`}
           >
             {renderColorLegend()}
             {renderQuickSearch()}
-            <div className="space-y-1 pb-8">
-              {renderTimelineHeader()}
-              {expandedItems.has(safeTimelineTreeId) &&
-                (filteredTimeline.tasks || []).map((task) =>
-                  renderTask(task),
-                )}
+            <div className="space-y-4 pb-8">
+              {filteredTimelines.map((timeline) => {
+                const raw = (timeline as any)?.treeId;
+                const timelineTreeId =
+                  raw != null && raw !== ""
+                    ? String(raw)
+                    : `timeline-${String(timeline?.id ?? "0")}`;
+
+                return (
+                  <div key={timeline.id}>
+                    {renderTimelineHeader(timeline)}
+                    {expandedItems.has(timelineTreeId) &&
+                      (timeline.tasks || []).map((task: Task) =>
+                        renderTask(task),
+                      )}
+                  </div>
+                );
+              })}
+              {filteredTimelines.length === 0 && (
+                <div className="text-center py-8 text-default-500">
+                  {t("timeline.treeView.noTimelinesFound")}
+                </div>
+              )}
             </div>
           </CardBody>
         </Card>
@@ -1324,7 +1498,7 @@ export default function TimelineTreeView({
         loading={loading}
         priorityOptions={PRIORITY_OPTIONS}
         statusOptions={STATUS_OPTIONS}
-        timelineId={timeline.id}
+        timelineId={editingItem?.id || timelines[0]?.id}
         type={editModalType}
         onClose={handleCloseEditModal}
         onSubmit={handleSubmitEdit}
@@ -1335,7 +1509,7 @@ export default function TimelineTreeView({
         isOpen={isCreateModalOpen}
         loading={loading}
         parentName={createModalParentName}
-        timelineId={timeline.id}
+        timelineId={parseInt(createParentId) || timelines[0]?.id}
         type={createModalType}
         onClose={handleCloseCreateModal}
         onSubmit={handleSubmitCreate}

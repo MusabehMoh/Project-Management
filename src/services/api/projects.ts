@@ -188,13 +188,14 @@ export class ProjectsApiService {
     >
   > {
     const params: any = { page, limit };
+
     if (search) {
       params.search = search;
     }
+
     return apiClient.get("/projects/with-timelines-and-team", { params });
   }
 }
 
 // Export singleton instance
 export const projectsApi = new ProjectsApiService();
-

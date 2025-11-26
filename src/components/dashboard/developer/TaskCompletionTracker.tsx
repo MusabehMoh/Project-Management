@@ -297,7 +297,10 @@ export default function TaskCompletionTracker({
               className="mb-2"
               color="success"
               size="sm"
-              value={Math.max(0, Math.min(100, analytics.summary.onTimeRate || 0))}
+              value={Math.max(
+                0,
+                Math.min(100, analytics.summary.onTimeRate || 0),
+              )}
             />
             <div className="flex justify-between text-xs text-default-500">
               <span>
@@ -334,7 +337,7 @@ export default function TaskCompletionTracker({
                 </TableHeader>
                 <TableBody>
                   {paginatedItems.map((item) => (
-                    <TableRow 
+                    <TableRow
                       key={`${item.type}-${item.id}`}
                       className="cursor-pointer hover:bg-default-100"
                       onClick={() => navigate(`/timeline?taskId=${item.id}`)}

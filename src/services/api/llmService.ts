@@ -251,9 +251,7 @@ export const llmService = {
       return {
         success: false,
         message:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate diagram",
+          error instanceof Error ? error.message : "Failed to generate diagram",
         data: null,
       };
     }
@@ -286,7 +284,8 @@ export const llmService = {
         throw new Error(`n8n diagram workflow error: ${response.statusText}`);
       }
 
-      const data: ApiResponse<DiagramGenerationResponse> = await response.json();
+      const data: ApiResponse<DiagramGenerationResponse> =
+        await response.json();
 
       return data;
     } catch (error) {
@@ -335,6 +334,7 @@ export const llmService = {
 
       // Clean Mermaid code
       let mermaidCode = data.response.trim();
+
       mermaidCode = mermaidCode.replace(/```mermaid\n?/g, "");
       mermaidCode = mermaidCode.replace(/```\n?/g, "");
 

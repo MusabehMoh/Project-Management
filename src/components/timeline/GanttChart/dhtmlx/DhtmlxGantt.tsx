@@ -28,6 +28,7 @@ import { MemberTask } from "@/types/membersTasks";
 const DHTMLXGantt: FC<{
   projectId?: number | undefined;
   timeline?: Timeline;
+  timelines?: Timeline[];
   tasks?: MemberTask[];
   loading?: boolean;
   isFullScreen?: boolean;
@@ -38,6 +39,7 @@ const DHTMLXGantt: FC<{
 }> = ({
   projectId,
   timeline,
+  timelines,
   tasks,
   loading = false,
   isFullScreen = false,
@@ -564,8 +566,11 @@ const DHTMLXGantt: FC<{
 
   useEffect(() => {
     if (!inited.current) return; // not ready yet
+    
+    // Generate signature based on all timelines or single timeline
     const sig = JSON.stringify({
-      timelineId: timeline?.id ?? null,
+      timelinesCount: timelines?.length ?? 0,
+      timelineIds: timelines?.map((t) => t.id) ?? [timeline?.id ?? null],
       tasks:
         tasks?.map((t) => ({
           id: t.id,
@@ -577,14 +582,70 @@ const DHTMLXGantt: FC<{
 
     if (sig === lastDataSig.current) return; // nothing changed
     lastDataSig.current = sig;
-    // console.debug("[Gantt] Writing data", { timeline: !!timeline, taskCount: tasks?.length });
 
     const data = { data: [] as any[], links: [] as any[] };
     const id = (p: string, n: string | number) => `${p}-${n}`;
 
-    console.log("Gantt writing data:  ");
+    console.log("Gantt writing data for timelines:", timelines?.length ?? 0);
 
-    if (timeline) {
+    // If we have multiple timelines, render all of them
+    if (timelines && timelines.length > 0) {
+      timelines.forEach((tl) => {
+        // Add timeline as parent
+        data.data.push({
+          id: `timeline-${tl.id}`,
+          text: tl.name,
+          description: tl.description ?? "",
+          start_date: formatDate(tl.startDate),
+          duration: daysBetween(tl.startDate, tl.endDate),
+          open: true,
+          type: "timeline",
+          color: "#3B82F6",
+          border: "#3B82F6",
+        });
+
+        // Process tasks for this timeline
+        tl.tasks?.forEach((task: Task) => {
+          const taskId = id("T", `${tl.id}-${task.id}`);
+
+          data.data.push({
+            id: taskId,
+            text: task.name,
+            description: task.description ?? "",
+            progress: task.progress,
+            start_date: formatDate(task.startDate),
+            duration: daysBetween(task.startDate, task.endDate),
+            parent: `timeline-${tl.id}`,
+            open: true,
+            type: "task",
+            color: "#8B5CF6",
+            border: "#8B5CF6",
+          });
+
+          // Process subtasks
+          task.subtasks?.forEach((sub: Subtask) => {
+            const subtaskId = id("U", `${tl.id}-${task.id}-${sub.id}`);
+
+            data.data.push({
+              id: subtaskId,
+              text: sub.name,
+              description: sub.description ?? "",
+              progress: sub.progress,
+              start_date: formatDate(sub.startDate || task.startDate),
+              duration: daysBetween(
+                sub.startDate || task.startDate,
+                sub.endDate || task.endDate,
+              ),
+              parent: taskId,
+              type: "subtask",
+              color: "#EAB308",
+              border: "#EAB308",
+            });
+          });
+        });
+      });
+    } else if (timeline) {
+      // Fallback to single timeline mode
       data.data.push({
         id: timeline.id,
         text: timeline.name,

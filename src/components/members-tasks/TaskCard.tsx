@@ -8,8 +8,6 @@ import { Switch } from "@heroui/switch";
 import { Tooltip } from "@heroui/tooltip";
 import { useState } from "react";
 
-import TaskCreateModal from "./TaskCreateModal";
-
 import { MemberTask } from "@/types/membersTasks";
 import { MemberSearchResult } from "@/types/timeline";
 import { useLanguage } from "@/contexts/LanguageContext";

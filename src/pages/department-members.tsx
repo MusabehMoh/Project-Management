@@ -36,7 +36,6 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 import { RefreshCw, User } from "lucide-react";
-
 import { X } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -324,6 +323,7 @@ export default function DepartmentMembersPage() {
               onOpenChange={setIsOptionOpen}
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0] as string;
+
                 if (selectedKey) {
                   setPageSize(parseInt(selectedKey));
                   setCurrentPage(1);
@@ -366,10 +366,7 @@ export default function DepartmentMembersPage() {
       {!membersLoading && totalCount > 0 && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-default-500">
-            {t("common.itemsFound").replace(
-              "{count}",
-              totalCount.toString(),
-            )}
+            {t("common.itemsFound").replace("{count}", totalCount.toString())}
           </span>
         </div>
       )}
@@ -479,7 +476,7 @@ export default function DepartmentMembersPage() {
                         />
                         <div>
                           <div className="font-medium">
-                           {member.user.fullName}
+                            {member.user.fullName}
                           </div>
                           <div className="text-sm text-default-500">
                             {member.user.userName}

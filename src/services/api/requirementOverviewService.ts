@@ -23,7 +23,9 @@ class RequirementOverviewService {
    * Get requirement overview statistics
    */
   async getRequirementOverview() {
-    return apiClient.get<RequirementOverviewData>("/project-requirements/overview");
+    return apiClient.get<RequirementOverviewData>(
+      "/project-requirements/overview",
+    );
   }
 }
 

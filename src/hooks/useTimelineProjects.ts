@@ -16,7 +16,9 @@ export const useTimelineProjects = () => {
   // Load projects from API with pagination
   const loadProjects = useCallback(
     async (page: number = 1, limit: number = 10, search?: string) => {
-      console.log(`🔄 Loading projects - Page: ${page}, Limit: ${limit}, Search: ${search || 'none'}`);
+      console.log(
+        `🔄 Loading projects - Page: ${page}, Limit: ${limit}, Search: ${search || "none"}`,
+      );
       setLoading(true);
       setError(null);
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
-import { RefreshCw, Grid, List } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { title } from "@/components/primitives";
