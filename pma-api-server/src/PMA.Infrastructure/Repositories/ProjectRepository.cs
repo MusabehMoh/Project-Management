@@ -415,12 +415,27 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
         return teamMembers.Cast<object>();
     }
 
-    public async Task<IEnumerable<ProjectWithTimelinesAndTeamDto>> GetProjectsWithTimelinesAndTeamAsync()
+    public async Task<(IEnumerable<ProjectWithTimelinesAndTeamDto> Projects, int TotalCount)> GetProjectsWithTimelinesAndTeamAsync(int page, int limit, string? search = null)
     {
-        // Get all projects with their timelines
-        var projectsWithTimelines = await _context.Projects
+        // Query all projects with their timelines
+        var query = _context.Projects
             .Include(p => p.Timelines)
-            .Where(p => p.Timelines != null && p.Timelines.Any())
+            .Where(p => p.Timelines != null && p.Timelines.Any());
+
+        // Apply search filter if provided
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(p => p.ApplicationName.ToLower().Contains(searchLower));
+        }
+
+        // Get total count before pagination
+        var totalCount = await query.CountAsync();
+
+        // Apply pagination
+        var projectsWithTimelines = await query
+            .Skip((page - 1) * limit)
+            .Take(limit)
             .ToListAsync();
 
         var result = new List<ProjectWithTimelinesAndTeamDto>();
@@ -444,6 +459,15 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
                 .Distinct()
                 .ToListAsync();
 
+            // Get timeline count
+            var timelineCount = project.Timelines?.Count ?? 0;
+
+            // Get task count for this project
+            var taskCount = await _context.Tasks
+                .Where(t => t.ProjectRequirement != null && 
+                            t.ProjectRequirement.ProjectId == project.Id)
+                .CountAsync();
+
             result.Add(new ProjectWithTimelinesAndTeamDto
             {
                 Id = project.Id,
@@ -453,12 +477,15 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
                 StartDate = project.StartDate,
                 ExpectedCompletionDate = project.ExpectedCompletionDate,
                 Budget = null, // Project entity doesn't have Budget property
+                Progress = project.Progress,
                 HasTimeline = project.Timelines != null && project.Timelines.Any(),
+                TimelineCount = timelineCount,
+                TaskCount = taskCount,
                 TeamMembers = teamMembers
             });
         }
 
-        return result;
+        return (result, totalCount);
     }
 
     private string GetStatusName(int statusId)

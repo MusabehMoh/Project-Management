@@ -70,8 +70,20 @@ class ApiClient {
     method: HttpMethod = HttpMethod.GET,
     data?: any,
     headers?: Record<string, string>,
+    params?: Record<string, any>,
   ): Promise<ApiResponse<T>> {
-    const url = `${this.baseURL}${endpoint}`;
+    // Build URL with query parameters
+    let url = `${this.baseURL}${endpoint}`;
+    if (params && Object.keys(params).length > 0) {
+      const queryString = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryString.append(key, String(value));
+        }
+      });
+      url = `${url}?${queryString.toString()}`;
+    }
+
     const requestHeaders = {
       ...this.defaultHeaders,
       ...this.getAuthHeader(),
@@ -162,9 +174,15 @@ class ApiClient {
   // Convenience methods
   async get<T>(
     endpoint: string,
-    headers?: Record<string, string>,
+    options?: { headers?: Record<string, string>; params?: Record<string, any> },
   ): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, HttpMethod.GET, undefined, headers);
+    return this.request<T>(
+      endpoint,
+      HttpMethod.GET,
+      undefined,
+      options?.headers,
+      options?.params,
+    );
   }
 
   async post<T>(

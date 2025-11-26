@@ -29,7 +29,7 @@ public interface IProjectRepository : IRepository<Project>
     System.Threading.Tasks.Task<Project?> GetProjectWithTimelinesAsync(int projectId);
     System.Threading.Tasks.Task<List<string>> CheckProjectDependenciesAsync(int projectId);
     System.Threading.Tasks.Task<IEnumerable<object>> GetProjectTeamMembersAsync(int projectId);
-    System.Threading.Tasks.Task<IEnumerable<ProjectWithTimelinesAndTeamDto>> GetProjectsWithTimelinesAndTeamAsync();
+    System.Threading.Tasks.Task<(IEnumerable<ProjectWithTimelinesAndTeamDto> Projects, int TotalCount)> GetProjectsWithTimelinesAndTeamAsync(int page, int limit, string? search = null);
 }
 
 public interface IUserRepository : IRepository<User>

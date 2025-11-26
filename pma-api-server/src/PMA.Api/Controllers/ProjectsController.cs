@@ -368,17 +368,31 @@ public class ProjectsController : ApiBaseController
     /// </summary>
     [HttpGet("with-timelines-and-team")]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProjectWithTimelinesAndTeamDto>>), 200)]
-    public async Task<IActionResult> GetProjectsWithTimelinesAndTeam()
+    public async Task<IActionResult> GetProjectsWithTimelinesAndTeam(
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 10,
+        [FromQuery] string? search = null)
     {
         try
         {
-            var projects = await _projectService.GetProjectsWithTimelinesAndTeamAsync();
+            _logger.LogInformation("📥 Received request - Page: {Page}, Limit: {Limit}, Search: {Search}", page, limit, search ?? "none");
             
-            return Success(projects, message: "Projects with timelines and team members retrieved successfully");
+            var (projects, totalCount) = await _projectService.GetProjectsWithTimelinesAndTeamAsync(page, limit, search);
+            
+            _logger.LogInformation("📊 Repository returned - Projects count: {Count}, Total: {Total}", projects.Count(), totalCount);
+            
+            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
+            var pagination = new PaginationInfo(page, limit, totalCount, totalPages);
+            
+            _logger.LogInformation("📤 Sending response - Page: {Page}, Limit: {Limit}, Total: {Total}, TotalPages: {TotalPages}", 
+                pagination.Page, pagination.Limit, pagination.Total, pagination.TotalPages);
+            
+            return Success(projects, pagination, message: "Projects with timelines and team members retrieved successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while retrieving projects with timelines and team members. StackTrace: {StackTrace}", ex.StackTrace);
+            _logger.LogError(ex, "Error occurred while retrieving projects with timelines and team members. Page: {Page}, Limit: {Limit}, Search: {Search}, StackTrace: {StackTrace}", 
+                page, limit, search ?? "none", ex.StackTrace);
             return Error<IEnumerable<ProjectWithTimelinesAndTeamDto>>("Internal server error", ex.Message);
         }
     }

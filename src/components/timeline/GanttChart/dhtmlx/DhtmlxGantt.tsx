@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/order
-import { Sprint, Subtask, Task, Timeline } from "@/types/timeline";
+import { Subtask, Task, Timeline } from "@/types/timeline";
 
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import gantt from "dhtmlx-gantt";
@@ -597,57 +597,41 @@ const DHTMLXGantt: FC<{
         border: "#3B82F6",
       });
 
-      timeline.sprints.forEach((sprint: Sprint) => {
-        const sid = id("S", sprint.id);
+      // Process tasks directly (no sprints in current structure)
+      timeline.tasks?.forEach((task: Task) => {
+        const rid = id("T", task.id);
 
         data.data.push({
-          id: sid,
-          text: sprint.name,
-          description: sprint.description ?? "",
-          start_date: formatDate(sprint.startDate),
-          duration: daysBetween(sprint.startDate, sprint.endDate),
-          open: true,
+          id: rid,
+          text: task.name,
+          description: task.description ?? "",
+          progress: task.progress,
+          start_date: formatDate(task.startDate),
+          duration: daysBetween(task.startDate, task.endDate),
           parent: timeline.id,
-          type: "sprint",
-          color: "#22C55E",
-          border: "#22C55E",
+          open: true,
+          type: "task",
+          color: "#8B5CF6",
+          border: "#8B5CF6",
         });
 
-        sprint.tasks.forEach((task: Task) => {
-          const rid = id("T", task.id);
+        task.subtasks?.forEach((sub: Subtask) => {
+          const tid = id("U", sub.id);
 
           data.data.push({
-            id: rid,
-            text: task.name,
-            description: task.description ?? "",
-            progress: task.progress,
-            start_date: formatDate(task.startDate),
-            duration: daysBetween(task.startDate, task.endDate),
-            parent: sid,
-            open: true,
-            type: "task",
-            color: "#8B5CF6",
-            border: "#8B5CF6",
-          });
-
-          task.subtasks?.forEach((sub: Subtask) => {
-            const tid = id("U", sub.id);
-
-            data.data.push({
-              id: tid,
-              text: sub.name,
-              description: sub.description ?? "",
-              progress: sub.progress,
-              start_date: formatDate(sub.startDate || task.startDate),
-              duration: daysBetween(
-                sub.startDate || task.startDate,
-                sub.endDate || task.endDate,
-              ),
-              parent: rid,
-              type: "subtask",
-              color: "#EAB308",
-              border: "#EAB308",
-            });
+            id: tid,
+            text: sub.name,
+            description: sub.description ?? "",
+            progress: sub.progress,
+            start_date: formatDate(sub.startDate || task.startDate),
+            duration: daysBetween(
+              sub.startDate || task.startDate,
+              sub.endDate || task.endDate,
+            ),
+            parent: rid,
+            type: "subtask",
+            color: "#EAB308",
+            border: "#EAB308",
           });
         });
       });
