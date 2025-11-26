@@ -269,11 +269,6 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<RequirementTask?> CreateRequirementTaskAsync(int requirementId, CreateRequirementTaskDto taskDto)
     {
-        // Validate that the requirement exists (lightweight check without loading full details)
-        var requirementExists = await _projectRequirementRepository.ExistsAsync(requirementId);
-        if (!requirementExists)
-            return null;
-
         // Validate dates for each role if both are provided
         if (taskDto.DeveloperStartDate.HasValue && taskDto.DeveloperEndDate.HasValue && 
             taskDto.DeveloperStartDate.Value > taskDto.DeveloperEndDate.Value)
@@ -291,6 +286,27 @@ public class ProjectRequirementService : IProjectRequirementService
             taskDto.DesignerStartDate.Value > taskDto.DesignerEndDate.Value)
         {
             throw new ArgumentException("Designer end date must be after start date");
+        }
+
+        // Check if a RequirementTask already exists for this requirement
+        var existingTask = await _projectRequirementRepository.GetRequirementTaskByRequirementIdAsync(requirementId);
+        if (existingTask != null)
+        {
+            // Update existing task with new values from taskDto
+            existingTask.DeveloperId = taskDto.DeveloperIds[0];
+            existingTask.QcId = taskDto.QcId;
+            existingTask.DesignerId = taskDto.DesignerId;
+            existingTask.Description = taskDto.Description;
+            existingTask.DeveloperStartDate = taskDto.DeveloperStartDate;
+            existingTask.DeveloperEndDate = taskDto.DeveloperEndDate;
+            existingTask.QcStartDate = taskDto.QcStartDate;
+            existingTask.QcEndDate = taskDto.QcEndDate;
+            existingTask.DesignerStartDate = taskDto.DesignerStartDate;
+            existingTask.DesignerEndDate = taskDto.DesignerEndDate;
+            existingTask.UpdatedAt = DateTime.Now;
+
+            await _projectRequirementRepository.UpdateRequirementTaskAsync(existingTask);
+            return existingTask;
         }
 
         // Create the RequirementTask entity directly without loading full requirement

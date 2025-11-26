@@ -129,6 +129,8 @@ public interface IProjectRequirementRepository : IRepository<ProjectRequirement>
     
     // RequirementTask methods
     System.Threading.Tasks.Task<RequirementTask> AddRequirementTaskAsync(RequirementTask task);
+    System.Threading.Tasks.Task<RequirementTask?> GetRequirementTaskByRequirementIdAsync(int requirementId);
+    System.Threading.Tasks.Task UpdateRequirementTaskAsync(RequirementTask task);
 }
 
 public interface IDepartmentRepository : IRepository<Department>

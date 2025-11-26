@@ -462,4 +462,25 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
             throw new InvalidOperationException($"Error adding requirement task for requirement {task.ProjectRequirementId}", ex);
         }
     }
+
+    /// <summary>
+    /// Get an existing RequirementTask by its ProjectRequirementId.
+    /// </summary>
+    /// <param name="requirementId">The ProjectRequirement ID to search for</param>
+    /// <returns>The RequirementTask if found, null otherwise</returns>
+    public async System.Threading.Tasks.Task<RequirementTask?> GetRequirementTaskByRequirementIdAsync(int requirementId)
+    {
+        return await _context.RequirementTasks
+            .FirstOrDefaultAsync(rt => rt.ProjectRequirementId == requirementId);
+    }
+
+    /// <summary>
+    /// Update an existing RequirementTask entity.
+    /// </summary>
+    /// <param name="task">The RequirementTask entity to update</param>
+    public async System.Threading.Tasks.Task UpdateRequirementTaskAsync(RequirementTask task)
+    {
+        _context.RequirementTasks.Update(task);
+        await _context.SaveChangesAsync();
+    }
 }
