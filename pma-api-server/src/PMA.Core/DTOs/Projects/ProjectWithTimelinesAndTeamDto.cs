@@ -9,7 +9,10 @@ public class ProjectWithTimelinesAndTeamDto
     public DateTime StartDate { get; set; }
     public DateTime? ExpectedCompletionDate { get; set; }
     public decimal? Budget { get; set; }
+    public int Progress { get; set; }
     public bool HasTimeline { get; set; }
+    public int TimelineCount { get; set; }
+    public int TaskCount { get; set; }
     public List<ProjectTeamMemberDto> TeamMembers { get; set; } = new List<ProjectTeamMemberDto>();
 }
 

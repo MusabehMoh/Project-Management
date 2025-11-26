@@ -159,7 +159,11 @@ export class ProjectsApiService {
   /**
    * Get all projects with timelines and their team members in a single call
    */
-  async getProjectsWithTimelinesAndTeam(): Promise<
+  async getProjectsWithTimelinesAndTeam(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Promise<
     ApiResponse<
       Array<{
         id: number;
@@ -169,7 +173,10 @@ export class ProjectsApiService {
         startDate: string;
         expectedCompletionDate: string | null;
         budget: number | null;
+        progress: number;
         hasTimeline: boolean;
+        timelineCount: number;
+        taskCount: number;
         teamMembers: Array<{
           id: number;
           fullName: string;
@@ -180,7 +187,11 @@ export class ProjectsApiService {
       }>
     >
   > {
-    return apiClient.get("/projects/with-timelines-and-team");
+    const params: any = { page, limit };
+    if (search) {
+      params.search = search;
+    }
+    return apiClient.get("/projects/with-timelines-and-team", { params });
   }
 }
 

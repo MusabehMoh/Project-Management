@@ -279,10 +279,10 @@ public class ProjectService : IProjectService
         return teamMembers;
     }
 
-    public async System.Threading.Tasks.Task<IEnumerable<ProjectWithTimelinesAndTeamDto>> GetProjectsWithTimelinesAndTeamAsync()
+    public async System.Threading.Tasks.Task<(IEnumerable<ProjectWithTimelinesAndTeamDto> Projects, int TotalCount)> GetProjectsWithTimelinesAndTeamAsync(int page, int limit, string? search = null)
     {
-        var projectsWithTeam = await _projectRepository.GetProjectsWithTimelinesAndTeamAsync();
-        return projectsWithTeam;
+        var (projects, totalCount) = await _projectRepository.GetProjectsWithTimelinesAndTeamAsync(page, limit, search);
+        return (projects, totalCount);
     }
 }
 

@@ -109,6 +109,13 @@ export interface ApiResponse<T> {
   };
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface ProjectFilters {
   status?: string;
   owningUnit?: number; // Numeric ID for owning unit filtering
@@ -137,4 +144,27 @@ export interface CreateProjectRequest {
 export interface UpdateProjectRequest extends Partial<CreateProjectRequest> {
   id: number;
   responsibleManagerId?: number | null;
+}
+
+export interface ProjectTeamMember {
+  id: number;
+  fullName: string;
+  gradeName: string;
+  militaryNumber: string;
+  avatar?: string | null;
+}
+
+export interface ProjectWithTimelinesAndTeam {
+  id: number;
+  applicationName: string;
+  status: number;
+  statusName: string;
+  startDate: string;
+  expectedCompletionDate: string | null;
+  budget: number | null;
+  progress: number;
+  hasTimeline: boolean;
+  timelineCount: number;
+  taskCount: number;
+  teamMembers: ProjectTeamMember[];
 }

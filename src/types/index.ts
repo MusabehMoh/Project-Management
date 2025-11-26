@@ -18,9 +18,12 @@ export type {
   ProjectFormData,
   ProjectStats,
   ApiResponse,
+  PaginationInfo,
   ProjectFilters,
   CreateProjectRequest,
   UpdateProjectRequest,
+  ProjectTeamMember,
+  ProjectWithTimelinesAndTeam,
 } from "./project";
 
 // Unit types (excluding ApiResponse to avoid conflicts)

@@ -3,9 +3,11 @@ import { Chip } from "@heroui/chip";
 import { Skeleton } from "@heroui/skeleton";
 import { Avatar, AvatarGroup } from "@heroui/avatar";
 import { Tooltip } from "@heroui/tooltip";
-import { Calendar } from "lucide-react";
+import { Progress } from "@heroui/progress";
+import { Calendar, FileText, ListTodo } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useProjectStatus } from "@/hooks/useProjectStatus";
 import { formatDateOnly } from "@/utils/dateFormatter";
 
 interface ProjectCardData {
@@ -23,6 +25,9 @@ interface ProjectCardData {
     avatar?: string;
   }>;
   budget?: number;
+  progress?: number;
+  timelineCount?: number;
+  taskCount?: number;
 }
 
 interface ProjectsCardListProps {
@@ -37,38 +42,32 @@ export default function ProjectsCardList({
   onProjectClick,
 }: ProjectsCardListProps) {
   const { t, language } = useLanguage();
+  const { getProjectStatusName, getProjectStatusColor } = useProjectStatus();
 
   const getStatusColor = (
     statusId: number,
   ): "default" | "primary" | "success" | "warning" | "danger" => {
-    switch (statusId) {
-      case 1: // Not Started
-        return "default";
-      case 2: // In Progress
-        return "primary";
-      case 3: // Completed
-        return "success";
-      case 4: // On Hold
-        return "warning";
-      case 5: // Cancelled
-        return "danger";
-      default:
-        return "default";
-    }
+    // Use the hook's color function which matches the projects page
+    return getProjectStatusColor(statusId) as
+      | "default"
+      | "primary"
+      | "success"
+      | "warning"
+      | "danger";
   };
 
   const getStatusIcon = (statusId: number) => {
     switch (statusId) {
-      case 1: // Not Started
+      case 1: // Under Study
         return "○";
-      case 2: // In Progress
-        return "◐";
-      case 3: // Completed
-        return "✓";
-      case 4: // On Hold
+      case 2: // Delayed
         return "⏸";
-      case 5: // Cancelled
-        return "✕";
+      case 3: // Under Review
+        return "◐";
+      case 4: // Under Development
+        return "◐";
+      case 5: // Production
+        return "✓";
       default:
         return "○";
     }
@@ -125,17 +124,17 @@ export default function ProjectsCardList({
           <Card
             key={project.id}
             isPressable
-            className="border border-default-200 hover:border-primary-400 transition-all duration-200 hover:shadow-lg"
+            className="border border-default-200 transition-all duration-200 hover:shadow-lg"
             onPress={() => onProjectClick?.(project)}
           >
             <CardBody className="p-4">
               <div className="space-y-3">
                 {/* Header: Project Name & Status */}
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-lg font-semibold text-default-900 line-clamp-1">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-lg font-semibold text-default-900 line-clamp-1 flex-1 text-right" dir="rtl">
                     {project.name}
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Chip
                       color={statusColor}
                       size="sm"
@@ -146,15 +145,73 @@ export default function ProjectsCardList({
                       }
                       variant="flat"
                     >
-                      {project.statusName}
+                      {getProjectStatusName(project.statusId)}
                     </Chip>
-                    {daysRemaining >= 0 && project.statusId !== 3 && (
-                      <span className="text-xs text-default-500">
-                        {daysRemaining}{" "}
-                        {language === "ar" ? "يوم متبقي" : "Days Remaining"}
-                      </span>
-                    )}
                   </div>
+                </div>
+                
+                {/* Days Remaining */}
+                {daysRemaining >= 0 && project.statusId !== 3 && (
+                  <div className="flex justify-end">
+                    <span className="text-xs text-default-500">
+                      {daysRemaining}{" "}
+                      {language === "ar" ? "يوم متبقي" : "Days Remaining"}
+                    </span>
+                  </div>
+                )}
+
+                {/* Progress Bar */}
+                {project.progress !== undefined && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-default-600 font-medium">
+                        {language === "ar" ? "التقدم" : "Progress"}
+                      </span>
+                      <span className="font-semibold text-default-700">
+                        {project.progress}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={project.progress}
+                      color={
+                        project.progress === 0
+                          ? "default"
+                          : project.progress >= 70
+                            ? "success"
+                            : project.progress >= 40
+                              ? "warning"
+                              : "danger"
+                      }
+                      size="sm"
+                      className="w-full"
+                    />
+                  </div>
+                )}
+
+                {/* Timeline and Task Counts */}
+                <div className="flex items-center gap-4 text-sm">
+                  {project.timelineCount !== undefined && (
+                    <div className="flex items-center gap-1.5 text-default-600">
+                      <FileText className="w-4 h-4" />
+                      <span className="font-medium">
+                        {project.timelineCount}
+                      </span>
+                      <span className="text-xs">
+                        {language === "ar" ? "جدول زمني" : "Timelines"}
+                      </span>
+                    </div>
+                  )}
+                  {project.taskCount !== undefined && (
+                    <div className="flex items-center gap-1.5 text-default-600">
+                      <ListTodo className="w-4 h-4" />
+                      <span className="font-medium">
+                        {project.taskCount}
+                      </span>
+                      <span className="text-xs">
+                        {language === "ar" ? "مهام" : "Tasks"}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Dates Section */}

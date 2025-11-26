@@ -1,31 +1,35 @@
 import { useState, useCallback } from "react";
 
-import { Project } from "@/types/project";
+import { ProjectWithTimelinesAndTeam, PaginationInfo } from "@/types";
 import { projectService } from "@/services/api";
-import { PaginationInfo } from "@/types/api";
 
 /**
- * Lightweight hook for timeline page - only loads projects data
- * Avoids unnecessary API calls to users, owning-units, and stats
+ * Lightweight hook for timeline page - only loads projects data with timeline and team info
+ * Includes pagination support for the projects overview cards
  */
 export const useTimelineProjects = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithTimelinesAndTeam[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
 
   // Load projects from API with pagination
   const loadProjects = useCallback(
-    async (page: number = 1, limit: number = 10) => {
+    async (page: number = 1, limit: number = 10, search?: string) => {
+      console.log(`🔄 Loading projects - Page: ${page}, Limit: ${limit}, Search: ${search || 'none'}`);
       setLoading(true);
       setError(null);
 
       try {
-        const response = await projectService.getProjects(
-          undefined,
+        const response = await projectService.getProjectsWithTimelinesAndTeam(
           page,
           limit,
+          search,
         );
+
+        console.log("📦 API Response:", response);
+        console.log("📊 Pagination:", response.pagination);
+        console.log("📋 Projects count:", response.data?.length);
 
         if (response.success && response.data) {
           setProjects(response.data);

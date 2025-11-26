@@ -6,6 +6,7 @@ import { Chip } from "@heroui/chip";
 import { Select, SelectItem } from "@heroui/select";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Divider } from "@heroui/divider";
+import { Input } from "@heroui/input";
 import {
   Modal,
   ModalContent,
@@ -14,10 +15,10 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/modal";
-import { AlertCircle, RefreshCw, ArrowLeft, Grid, List } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Search } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
+import { 
   FilterIcon,
   RefreshIcon,
   BuildingIcon,
@@ -26,6 +27,7 @@ import {
 import { useTimelines } from "@/hooks/useTimelines";
 import { useTimelineProjects } from "@/hooks/useTimelineProjects";
 import { usePageTitle } from "@/hooks";
+import { useProjectStatus } from "@/hooks/useProjectStatus";
 import { timelineService, projectService } from "@/services/api";
 import { TimelineView, Timeline } from "@/types/timeline";
 import { Project } from "@/types/project";
@@ -35,7 +37,6 @@ import TimelineDetailsPanel from "@/components/timeline/TimelineDetailsPanel";
 import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import TimelineFilters from "@/components/timeline/TimelineFilters";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
-import AllProjectsOverview from "@/components/timeline/AllProjectsOverview";
 import ProjectsCardList from "@/components/ProjectsCardList";
 // Import skeleton components
 import TimelineTreeSkeleton from "@/components/timeline/skeletons/TimelineTreeSkeleton";
@@ -45,6 +46,7 @@ import GlobalPagination from "@/components/GlobalPagination";
 
 export default function TimelinePage() {
   const { t, language } = useLanguage();
+  const { phases, getProjectStatusName } = useProjectStatus();
   const [searchParams, setSearchParams] = useSearchParams();
   const projectId = searchParams.get("projectId")
     ? parseInt(searchParams.get("projectId")!)
@@ -68,11 +70,22 @@ export default function TimelinePage() {
   // Pagination state (10 items per page for overview cards)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [projectSearchInput, setProjectSearchInput] = useState(""); // User's input
+  const [projectSearchQuery, setProjectSearchQuery] = useState(""); // Debounced search query sent to API
+  
+  // Filter state for project cards
+  const [projectStatusFilter, setProjectStatusFilter] = useState<string>("all"); // Status filter
+  const [projectProgressFilter, setProjectProgressFilter] = useState<string>("all"); // Progress filter
 
-  // Projects overview display mode
-  const [projectsViewMode, setProjectsViewMode] = useState<"list" | "cards">(
-    "list",
-  );
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setProjectSearchQuery(projectSearchInput);
+      setCurrentPage(1); // Reset to page 1 only when search actually executes
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [projectSearchInput]);
 
   // State for project team members
   const [projectTeamMembers, setProjectTeamMembers] = useState<
@@ -98,7 +111,10 @@ export default function TimelinePage() {
         startDate: string;
         expectedCompletionDate: string | null;
         budget: number | null;
+        progress: number;
         hasTimeline: boolean;
+        timelineCount: number;
+        taskCount: number;
         teamMembers: Array<{
           id: number;
           fullName: string;
@@ -136,8 +152,8 @@ export default function TimelinePage() {
 
   // Effect to load paginated projects for overview cards
   useEffect(() => {
-    loadProjects(currentPage, pageSize);
-  }, [currentPage, pageSize]); // Don't include loadProjects to avoid infinite loop
+    loadProjects(currentPage, pageSize, projectSearchQuery);
+  }, [currentPage, pageSize, projectSearchQuery, loadProjects]);
 
   // State for all projects with their timelines (including projects with no timelines)
   const [projectsWithTimelines, setProjectsWithTimelines] = useState<
@@ -151,8 +167,6 @@ export default function TimelinePage() {
   // Effect to fetch team members for projects with timelines (optimized single API call)
   useEffect(() => {
     const fetchProjectsWithTimelinesAndTeam = async () => {
-      if (projectsViewMode !== "cards") return;
-
       setLoadingProjectsWithTeam(true);
       try {
         const response =
@@ -180,7 +194,7 @@ export default function TimelinePage() {
     };
 
     fetchProjectsWithTimelinesAndTeam();
-  }, [projectsViewMode]); // Only fetch when switching to cards view
+  }, []); // Fetch on mount
 
   // Timeline state management - only run when projects are loaded and we have a selected project
   const {
@@ -541,46 +555,48 @@ export default function TimelinePage() {
   // Set page title
   usePageTitle("timeline.title");
 
-  // Prepare card data for projects with timelines
+  // Prepare card data for projects with timelines (with client-side filtering)
   const projectsCardData = useMemo(() => {
-    return paginatedProjects
-      .filter((project) => {
-        // Check if project has timelines by looking in projectsWithTimelines
-        const projectInfo = projectsWithTimelines.find(
-          (p) => p.project.id === project.id,
-        );
+    let filteredProjects = paginatedProjects;
 
-        return projectInfo && projectInfo.timelines.length > 0;
-      })
-      .map((project) => ({
-        id: project.id,
-        name: project.applicationName,
-        statusId: project.status,
-        statusName: getProjectStatusName(project.status),
-        startDate: project.startDate,
-        expectedEndDate: project.expectedCompletionDate,
-        budget: project.budget,
-        teamMembers: projectTeamMembers.get(project.id) || [],
-      }));
-  }, [paginatedProjects, projectsWithTimelines, projectTeamMembers]);
-
-  // Helper function to get status name
-  function getProjectStatusName(statusId: number): string {
-    switch (statusId) {
-      case 1:
-        return t("projects.status.notStarted");
-      case 2:
-        return t("projects.status.inProgress");
-      case 3:
-        return t("projects.status.completed");
-      case 4:
-        return t("projects.status.onHold");
-      case 5:
-        return t("projects.status.cancelled");
-      default:
-        return t("projects.status.notStarted");
+    // Apply status filter
+    if (projectStatusFilter !== "all") {
+      const statusId = parseInt(projectStatusFilter);
+      filteredProjects = filteredProjects.filter(
+        (project) => project.status === statusId
+      );
     }
-  }
+
+    // Apply progress filter
+    if (projectProgressFilter !== "all") {
+      filteredProjects = filteredProjects.filter((project) => {
+        const progress = project.progress || 0;
+        if (projectProgressFilter === "not-started") return progress === 0;
+        if (projectProgressFilter === "in-progress") return progress > 0 && progress < 100;
+        if (projectProgressFilter === "completed") return progress === 100;
+        return true;
+      });
+    }
+
+    return filteredProjects.map((project) => ({
+      id: project.id,
+      name: project.applicationName,
+      statusId: project.status,
+      statusName: project.statusName,
+      startDate: project.startDate,
+      expectedEndDate: project.expectedCompletionDate || "",
+      budget: project.budget ?? undefined,
+      progress: project.progress,
+      timelineCount: project.timelineCount,
+      taskCount: project.taskCount,
+      teamMembers: project.teamMembers.map((member: any) => ({
+        id: member.id,
+        fullName: member.fullName,
+        gradeName: member.gradeName,
+        avatar: member.avatar ?? undefined,
+      })),
+    }));
+  }, [paginatedProjects, projectStatusFilter, projectProgressFilter]);
 
   // UI state
   const [view, setView] = useState<TimelineView>({
@@ -1098,44 +1114,109 @@ export default function TimelinePage() {
         )}
 
         {/* Main Content */}
-        {!selectedProjectId && !projectsLoading ? (
+        {!selectedProjectId ? (
           // Show all projects overview when no project is selected
           <div className="space-y-4">
-            {/* View Toggle */}
-            <div className="flex justify-end gap-2">
-              <Button
-                isIconOnly
-                color={projectsViewMode === "list" ? "primary" : "default"}
-                size="sm"
-                variant={projectsViewMode === "list" ? "flat" : "light"}
-                onPress={() => setProjectsViewMode("list")}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-              <Button
-                isIconOnly
-                color={projectsViewMode === "cards" ? "primary" : "default"}
-                size="sm"
-                variant={projectsViewMode === "cards" ? "flat" : "light"}
-                onPress={() => setProjectsViewMode("cards")}
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col gap-3">
+              {/* Search Bar */}
+              <div className="flex items-center gap-3">
+                <Input
+                  isClearable
+                  placeholder={language === "ar" ? "البحث عن مشروع..." : "Search for a project..."}
+                  startContent={<Search className="w-4 h-4 text-default-400" />}
+                  value={projectSearchInput}
+                  onClear={() => {
+                    setProjectSearchInput("");
+                  }}
+                  onValueChange={setProjectSearchInput}
+                  classNames={{
+                    input: language === "ar" ? "text-right" : "",
+                    inputWrapper: "border border-default-200",
+                  }}
+                  className="max-w-md"
+                />
+                {projectSearchQuery && (
+                  <span className="text-sm text-default-500">
+                    {projectsPagination?.total || 0} {language === "ar" ? "نتيجة" : "results"}
+                  </span>
+                )}
+              </div>
+
+              {/* Filter Row */}
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Status Filter */}
+                <Select
+                  aria-label={t("projects.filterByStatus")}
+                  placeholder={t("projects.filterByStatus")}
+                  disallowEmptySelection={false}
+                  selectedKeys={projectStatusFilter !== "all" ? [projectStatusFilter] : []}
+                  onSelectionChange={(keys) => {
+                    const keysArray = Array.from(keys);
+                    const value = keysArray.length === 0 ? "all" : keysArray[0] as string;
+                    setProjectStatusFilter(value);
+                  }}
+                  className="max-w-xs"
+                  size="sm"
+                >
+                  <SelectItem key="all">{t("common.all")}</SelectItem>
+                  {phases.map((phase) => (
+                    <SelectItem key={phase.code.toString()} textValue={getProjectStatusName(phase.code)}>
+                      {getProjectStatusName(phase.code)}
+                    </SelectItem>
+                  ))}
+                </Select>
+
+                {/* Progress Filter */}
+                <Select
+                  aria-label={t("projects.filterByProgress")}
+                  placeholder={t("projects.filterByProgress")}
+                  disallowEmptySelection={false}
+                  selectedKeys={projectProgressFilter !== "all" ? [projectProgressFilter] : []}
+                  onSelectionChange={(keys) => {
+                    const keysArray = Array.from(keys);
+                    const value = keysArray.length === 0 ? "all" : keysArray[0] as string;
+                    setProjectProgressFilter(value);
+                  }}
+                  className="max-w-xs"
+                  size="sm"
+                >
+                  <SelectItem key="all">{t("common.all")}</SelectItem>
+                  <SelectItem key="not-started">{t("projects.progress.notStarted")}</SelectItem>
+                  <SelectItem key="in-progress">{t("projects.progress.inProgress")}</SelectItem>
+                  <SelectItem key="completed">{t("projects.progress.completed")}</SelectItem>
+                </Select>
+
+                {/* Clear Filters Button */}
+                {(projectStatusFilter !== "all" || projectProgressFilter !== "all") && (
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    onPress={() => {
+                      setProjectStatusFilter("all");
+                      setProjectProgressFilter("all");
+                    }}
+                  >
+                    {t("common.clearFilters")}
+                  </Button>
+                )}
+
+                {/* Results Count */}
+                <span className="text-sm text-default-500">
+                  {t("common.showing")} {projectsCardData.length} {language === "ar" ? "من" : "of"} {projectsPagination?.total || 0}
+                </span>
+              </div>
             </div>
 
-            {/* Projects Display */}
-            {projectsViewMode === "list" ? (
-              <AllProjectsOverview projects={paginatedProjects} />
-            ) : (
-              <ProjectsCardList
-                loading={projectsLoading}
-                projects={projectsCardData}
-                onProjectClick={(project) => {
-                  setSelectedProjectId(project.id);
-                  setSearchParams({ projectId: project.id.toString() });
-                }}
-              />
-            )}
+            {/* Projects Display - Cards Only */}
+            <ProjectsCardList
+              loading={projectsLoading}
+              projects={projectsCardData}
+              onProjectClick={(project) => {
+                setSelectedProjectId(project.id);
+                setSearchParams({ projectId: project.id.toString() });
+              }}
+            />
             
             {/* Pagination */}
             {projectsPagination && projectsPagination.totalPages > 1 && (
@@ -1144,7 +1225,7 @@ export default function TimelinePage() {
                   currentPage={currentPage}
                   totalPages={projectsPagination.totalPages}
                   pageSize={pageSize}
-                  totalItems={projectsPagination.totalCount}
+                  totalItems={projectsPagination.total}
                   onPageChange={setCurrentPage}
                   isLoading={projectsLoading}
                 />
