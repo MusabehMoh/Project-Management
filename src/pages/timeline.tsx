@@ -14,7 +14,7 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/modal";
-import { AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Grid, List } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -36,6 +36,7 @@ import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import TimelineFilters from "@/components/timeline/TimelineFilters";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import AllProjectsOverview from "@/components/timeline/AllProjectsOverview";
+import ProjectsCardList from "@/components/ProjectsCardList";
 // Import skeleton components
 import TimelineTreeSkeleton from "@/components/timeline/skeletons/TimelineTreeSkeleton";
 import TimelineGanttSkeleton from "@/components/timeline/skeletons/TimelineGanttSkeleton";
@@ -67,6 +68,47 @@ export default function TimelinePage() {
   // Pagination state (10 items per page for overview cards)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+
+  // Projects overview display mode
+  const [projectsViewMode, setProjectsViewMode] = useState<"list" | "cards">(
+    "list",
+  );
+
+  // State for project team members
+  const [projectTeamMembers, setProjectTeamMembers] = useState<
+    Map<
+      number,
+      Array<{
+        id: number;
+        fullName: string;
+        gradeName: string;
+        avatar?: string;
+      }>
+    >
+  >(new Map());
+
+  // State for projects with timelines and team (optimized single API call)
+  const [projectsWithTimelinesAndTeam, setProjectsWithTimelinesAndTeam] =
+    useState<
+      Array<{
+        id: number;
+        applicationName: string;
+        status: number;
+        statusName: string;
+        startDate: string;
+        expectedCompletionDate: string | null;
+        budget: number | null;
+        hasTimeline: boolean;
+        teamMembers: Array<{
+          id: number;
+          fullName: string;
+          gradeName: string;
+          militaryNumber: string;
+          avatar?: string | null;
+        }>;
+      }>
+    >([]);
+  const [loadingProjectsWithTeam, setLoadingProjectsWithTeam] = useState(false);
 
   // State for all projects (for select dropdown) - load directly from API
   const [allProjects, setAllProjects] = useState<Project[]>([]);
@@ -105,6 +147,40 @@ export default function TimelinePage() {
       loading: boolean;
     }>
   >([]);
+
+  // Effect to fetch team members for projects with timelines (optimized single API call)
+  useEffect(() => {
+    const fetchProjectsWithTimelinesAndTeam = async () => {
+      if (projectsViewMode !== "cards") return;
+
+      setLoadingProjectsWithTeam(true);
+      try {
+        const response =
+          await projectService.getProjectsWithTimelinesAndTeam();
+
+        if (response.success && response.data) {
+          setProjectsWithTimelinesAndTeam(response.data);
+
+          // Also populate the teamMembers map for backward compatibility
+          const teamMembersMap = new Map();
+
+          response.data.forEach((project) => {
+            teamMembersMap.set(project.id, project.teamMembers);
+          });
+          setProjectTeamMembers(teamMembersMap);
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching projects with timelines and team:",
+          error,
+        );
+      } finally {
+        setLoadingProjectsWithTeam(false);
+      }
+    };
+
+    fetchProjectsWithTimelinesAndTeam();
+  }, [projectsViewMode]); // Only fetch when switching to cards view
 
   // Timeline state management - only run when projects are loaded and we have a selected project
   const {
@@ -464,6 +540,47 @@ export default function TimelinePage() {
 
   // Set page title
   usePageTitle("timeline.title");
+
+  // Prepare card data for projects with timelines
+  const projectsCardData = useMemo(() => {
+    return paginatedProjects
+      .filter((project) => {
+        // Check if project has timelines by looking in projectsWithTimelines
+        const projectInfo = projectsWithTimelines.find(
+          (p) => p.project.id === project.id,
+        );
+
+        return projectInfo && projectInfo.timelines.length > 0;
+      })
+      .map((project) => ({
+        id: project.id,
+        name: project.applicationName,
+        statusId: project.status,
+        statusName: getProjectStatusName(project.status),
+        startDate: project.startDate,
+        expectedEndDate: project.expectedCompletionDate,
+        budget: project.budget,
+        teamMembers: projectTeamMembers.get(project.id) || [],
+      }));
+  }, [paginatedProjects, projectsWithTimelines, projectTeamMembers]);
+
+  // Helper function to get status name
+  function getProjectStatusName(statusId: number): string {
+    switch (statusId) {
+      case 1:
+        return t("projects.status.notStarted");
+      case 2:
+        return t("projects.status.inProgress");
+      case 3:
+        return t("projects.status.completed");
+      case 4:
+        return t("projects.status.onHold");
+      case 5:
+        return t("projects.status.cancelled");
+      default:
+        return t("projects.status.notStarted");
+    }
+  }
 
   // UI state
   const [view, setView] = useState<TimelineView>({
@@ -984,7 +1101,41 @@ export default function TimelinePage() {
         {!selectedProjectId && !projectsLoading ? (
           // Show all projects overview when no project is selected
           <div className="space-y-4">
-            <AllProjectsOverview projects={paginatedProjects} />
+            {/* View Toggle */}
+            <div className="flex justify-end gap-2">
+              <Button
+                isIconOnly
+                color={projectsViewMode === "list" ? "primary" : "default"}
+                size="sm"
+                variant={projectsViewMode === "list" ? "flat" : "light"}
+                onPress={() => setProjectsViewMode("list")}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                isIconOnly
+                color={projectsViewMode === "cards" ? "primary" : "default"}
+                size="sm"
+                variant={projectsViewMode === "cards" ? "flat" : "light"}
+                onPress={() => setProjectsViewMode("cards")}
+              >
+                <Grid className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Projects Display */}
+            {projectsViewMode === "list" ? (
+              <AllProjectsOverview projects={paginatedProjects} />
+            ) : (
+              <ProjectsCardList
+                loading={projectsLoading}
+                projects={projectsCardData}
+                onProjectClick={(project) => {
+                  setSelectedProjectId(project.id);
+                  setSearchParams({ projectId: project.id.toString() });
+                }}
+              />
+            )}
             
             {/* Pagination */}
             {projectsPagination && projectsPagination.totalPages > 1 && (

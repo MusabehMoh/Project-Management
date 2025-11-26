@@ -52,25 +52,29 @@ export default function AllProjectsOverview({ projects }: AllProjectsOverviewPro
 
       setLoading(true);
 
-      const projectsWithTimelines = await Promise.all(
-        projects.map(async (project) => {
-          try {
-            const response = await timelineService.getProjectTimelines(project.id);
-            const timelines = response.data || [];
+      try {
+        // Use optimized single API call to get all projects with timelines
+        const response = await timelineService.getProjectsWithTimelines();
+        
+        if (response.success && response.data) {
+          // Map the response data to match our component's structure
+          const projectsWithTimelines = projects.map((project) => {
+            const projectData = response.data.find((p: any) => p.projectId === project.id);
+            const timelines = projectData?.timelines || [];
             
             // Calculate stats
-            const totalSprints = timelines.reduce((acc, t) => acc + (t.sprints?.length || 0), 0);
-            const totalTasks = timelines.reduce((acc, t) => {
-              return acc + (t.sprints || []).reduce((sprintAcc, sprint) => {
+            const totalSprints = timelines.reduce((acc: number, t: any) => acc + (t.sprints?.length || 0), 0);
+            const totalTasks = timelines.reduce((acc: number, t: any) => {
+              return acc + (t.sprints || []).reduce((sprintAcc: number, sprint: any) => {
                 return sprintAcc + (sprint.tasks?.length || 0);
               }, 0);
             }, 0);
             
-            const allTasks = timelines.flatMap(t => 
-              (t.sprints || []).flatMap(s => s.tasks || [])
+            const allTasks = timelines.flatMap((t: any) => 
+              (t.sprints || []).flatMap((s: any) => s.tasks || [])
             );
             const avgProgress = allTasks.length > 0
-              ? Math.round(allTasks.reduce((acc, task) => acc + (task.progress || 0), 0) / allTasks.length)
+              ? Math.round(allTasks.reduce((acc: number, task: any) => acc + (task.progress || 0), 0) / allTasks.length)
               : 0;
 
             return {
@@ -79,20 +83,30 @@ export default function AllProjectsOverview({ projects }: AllProjectsOverviewPro
               loading: false,
               stats: { totalSprints, totalTasks, avgProgress },
             };
-          } catch (error) {
-            console.error(`Error loading timelines for project ${project.id}:`, error);
-            return {
-              project,
-              timelines: [],
-              loading: false,
-              stats: { totalSprints: 0, totalTasks: 0, avgProgress: 0 },
-            };
-          }
-        })
-      );
+          });
 
-      setProjectsData(projectsWithTimelines);
-      setLoading(false);
+          setProjectsData(projectsWithTimelines);
+        } else {
+          // Fallback to empty data
+          setProjectsData(projects.map(project => ({
+            project,
+            timelines: [],
+            loading: false,
+            stats: { totalSprints: 0, totalTasks: 0, avgProgress: 0 },
+          })));
+        }
+      } catch (error) {
+        console.error('Error loading all projects timelines:', error);
+        // Fallback to empty data
+        setProjectsData(projects.map(project => ({
+          project,
+          timelines: [],
+          loading: false,
+          stats: { totalSprints: 0, totalTasks: 0, avgProgress: 0 },
+        })));
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadAllProjectsTimelines();

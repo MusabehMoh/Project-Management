@@ -392,6 +392,93 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
 
         return dependencies;
     }
+
+    public async Task<IEnumerable<object>> GetProjectTeamMembersAsync(int projectId)
+    {
+        // Get distinct team members who have tasks in this project
+        var teamMembers = await _context.TaskAssignments
+            .Where(ta => ta.Task != null && 
+                         ta.Task.ProjectRequirement != null && 
+                         ta.Task.ProjectRequirement.ProjectId == projectId)
+            .Include(ta => ta.Employee)
+            .Select(ta => new
+            {
+                Id = ta.Employee!.Id,
+                FullName = ta.Employee.FullName,
+                GradeName = ta.Employee.GradeName,
+                MilitaryNumber = ta.Employee.MilitaryNumber,
+                Avatar = (string?)null // Can be populated if avatar field exists
+            })
+            .Distinct()
+            .ToListAsync();
+
+        return teamMembers.Cast<object>();
+    }
+
+    public async Task<IEnumerable<ProjectWithTimelinesAndTeamDto>> GetProjectsWithTimelinesAndTeamAsync()
+    {
+        // Get all projects with their timelines
+        var projectsWithTimelines = await _context.Projects
+            .Include(p => p.Timelines)
+            .Where(p => p.Timelines != null && p.Timelines.Any())
+            .ToListAsync();
+
+        var result = new List<ProjectWithTimelinesAndTeamDto>();
+
+        foreach (var project in projectsWithTimelines)
+        {
+            // Get team members for this project
+            var teamMembers = await _context.TaskAssignments
+                .Where(ta => ta.Task != null && 
+                             ta.Task.ProjectRequirement != null && 
+                             ta.Task.ProjectRequirement.ProjectId == project.Id)
+                .Include(ta => ta.Employee)
+                .Select(ta => new ProjectTeamMemberDto
+                {
+                    Id = ta.Employee!.Id,
+                    FullName = ta.Employee.FullName,
+                    GradeName = ta.Employee.GradeName,
+                    MilitaryNumber = ta.Employee.MilitaryNumber,
+                    Avatar = null // Can be populated if avatar field exists
+                })
+                .Distinct()
+                .ToListAsync();
+
+            result.Add(new ProjectWithTimelinesAndTeamDto
+            {
+                Id = project.Id,
+                ApplicationName = project.ApplicationName,
+                Status = (int)project.Status,
+                StatusName = GetStatusName((int)project.Status),
+                StartDate = project.StartDate,
+                ExpectedCompletionDate = project.ExpectedCompletionDate,
+                Budget = null, // Project entity doesn't have Budget property
+                HasTimeline = project.Timelines != null && project.Timelines.Any(),
+                TeamMembers = teamMembers
+            });
+        }
+
+        return result;
+    }
+
+    private string GetStatusName(int statusId)
+    {
+        return statusId switch
+        {
+            1 => "Not Started",
+            2 => "In Progress",
+            3 => "Completed",
+            4 => "On Hold",
+            5 => "Cancelled",
+            _ => "Unknown"
+        };
+    }
 }
+
+
+
+
+
+
 
 

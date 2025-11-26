@@ -272,7 +272,28 @@ public class ProjectService : IProjectService
             return false;
         }
     }
+
+    public async System.Threading.Tasks.Task<IEnumerable<object>> GetProjectTeamMembersAsync(int projectId)
+    {
+        var teamMembers = await _projectRepository.GetProjectTeamMembersAsync(projectId);
+        return teamMembers;
+    }
+
+    public async System.Threading.Tasks.Task<IEnumerable<ProjectWithTimelinesAndTeamDto>> GetProjectsWithTimelinesAndTeamAsync()
+    {
+        var projectsWithTeam = await _projectRepository.GetProjectsWithTimelinesAndTeamAsync();
+        return projectsWithTeam;
+    }
 }
+
+
+
+
+
+
+
+
+
 
 
 
