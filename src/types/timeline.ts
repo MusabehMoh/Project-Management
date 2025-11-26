@@ -7,24 +7,7 @@ export interface Timeline {
   description?: string;
   startDate: string;
   endDate: string;
-  sprints: Sprint[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface Sprint {
-  id: number;
-  treeId: string;
-  timelineId: number;
-  name: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  department: string;
-  duration: number; // in days
   tasks: Task[];
-  notes?: string;
-  departmentId?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -32,7 +15,7 @@ export interface Sprint {
 export interface Task {
   id: number;
   treeId: string;
-  sprintId: number;
+  timelineId: number;
   name: string;
   description?: string;
   startDate: string;
@@ -126,7 +109,7 @@ export interface TimelineView {
   type: "gantt" | "tree" | "timeline";
   showDetails: boolean;
   selectedItem?: string;
-  selectedItemType?: "timeline" | "sprint" | "task" | "subtask" | "requirement";
+  selectedItemType?: "timeline" | "task" | "subtask";
   filters: TimelineFilters;
 }
 
@@ -144,7 +127,7 @@ export interface TimelineFilters {
 
 export interface GanttBarData {
   id: string;
-  type: "timeline" | "sprint" | "task";
+  type: "timeline" | "task";
   parentId?: string;
   name: string;
   startDate: Date;
@@ -153,7 +136,7 @@ export interface GanttBarData {
   departmentId?: string | number;
   statusId: number;
   priorityId: number;
-  level: number; // 0 = timeline, 1 = sprint,  2 = task
+  level: number; // 0 = timeline, 1 = task
   isExpanded?: boolean;
   children?: GanttBarData[];
 }
@@ -163,16 +146,6 @@ export interface TimelineFormData {
   description?: string;
   startDate: any; // CalendarDate | null
   endDate: any; // CalendarDate | null
-}
-
-export interface SprintFormData {
-  name: string;
-  description?: string;
-  startDate: any; // CalendarDate | null
-  endDate: any; // CalendarDate | null
-  departmentId?: string;
-  resources?: string[];
-  notes?: string;
 }
 
 export interface RequirementFormData {
@@ -222,24 +195,8 @@ export interface UpdateTimelineRequest extends Partial<CreateTimelineRequest> {
   id: string;
 }
 
-export interface CreateSprintRequest {
-  timelineId: string;
-  name: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  departmentId?: string;
-  resources?: string[];
-  notes?: string;
-}
-
-export interface UpdateSprintRequest extends Partial<CreateSprintRequest> {
-  id: string;
-}
-
 export interface CreateTaskRequest {
-  sprintId: string | null;
-  timelineId: string | null;
+  timelineId: string;
   projectRequirementId?: number;
   name: string;
   description?: string;

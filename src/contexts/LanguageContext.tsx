@@ -1255,8 +1255,7 @@ const translations = {
     "requirements.description": "Description",
     "requirements.id": "ID",
     "requirements.created": "Created",
-    "requirements.sentBy": "Sent by",
-    "requirements.sentBy": "Sent by",
+    "requirements.sentBy": "Sent by", 
     "common.viewDetails": "View Details",
     // Task creation keys
     "tasks.createTask": "Create Task",

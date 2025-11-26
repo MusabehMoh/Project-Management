@@ -12,14 +12,6 @@ import {
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { Input } from "@heroui/input";
 import { Divider } from "@heroui/divider";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-} from "@heroui/modal";
-import { Select, SelectItem } from "@heroui/select";
 
 // (Removed unused imports related to requirements & modal move task feature)
 import TimelineEditModal, {
@@ -36,15 +28,12 @@ import { useTimelineToasts } from "@/hooks/useTimelineToasts";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   Timeline,
-  Sprint,
   Task,
   Subtask,
   Department,
   TimelineFilters,
-  CreateSprintRequest,
   CreateTaskRequest,
   CreateSubtaskRequest,
-  UpdateSprintRequest,
   UpdateTaskRequest,
   UpdateSubtaskRequest,
 } from "@/types/timeline";
@@ -66,23 +55,16 @@ interface TimelineTreeViewProps {
   timeline: Timeline;
   onItemSelect: (
     itemId: string,
-    itemType: "timeline" | "sprint" | "task" | "subtask",
+    itemType: "timeline" | "task" | "subtask",
   ) => void;
-  onCreateSprint: (data: CreateSprintRequest) => Promise<Sprint | null>;
   onCreateTask: (data: CreateTaskRequest) => Promise<Task | null>;
   onCreateSubtask?: (data: CreateSubtaskRequest) => Promise<Subtask | null>;
   onUpdateTimeline: (data: any) => Promise<Timeline | null>;
-  onUpdateSprint: (data: UpdateSprintRequest) => Promise<Sprint | null>;
   onUpdateTask: (data: UpdateTaskRequest) => Promise<Task | null>;
   onUpdateSubtask?: (data: UpdateSubtaskRequest) => Promise<Subtask | null>;
-  onDeleteSprint: (id: string) => Promise<boolean>;
   onDeleteTask: (id: string) => Promise<boolean>;
   onDeleteSubtask?: (id: string) => Promise<boolean>;
   onMoveTask?: (id: string, moveDays: number) => Promise<Task | null>;
-  onMoveTaskToSprint?: (
-    id: string,
-    targetSprintId: string,
-  ) => Promise<Task | null>;
   departments: Department[];
   filters: TimelineFilters;
   selectedItem?: string;
@@ -93,18 +75,14 @@ interface TimelineTreeViewProps {
 export default function TimelineTreeView({
   timeline,
   onItemSelect,
-  onCreateSprint,
   onCreateTask,
   onCreateSubtask,
   onUpdateTimeline,
-  onUpdateSprint: _onUpdateSprint,
   onUpdateTask: _onUpdateTask,
   onUpdateSubtask: _onUpdateSubtask,
-  onDeleteSprint,
   onDeleteTask,
   onDeleteSubtask,
   onMoveTask,
-  onMoveTaskToSprint,
   departments,
   filters,
   selectedItem,
@@ -142,7 +120,7 @@ export default function TimelineTreeView({
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editModalType, setEditModalType] = useState<
-    "timeline" | "sprint" | "task" | "subtask"
+    "timeline" | "task" | "subtask"
   >("timeline");
   const [editModalInitialValues, setEditModalInitialValues] =
     useState<TimelineEditModalFormData>({
@@ -161,19 +139,15 @@ export default function TimelineTreeView({
   // Create modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createModalType, setCreateModalType] = useState<
-    "sprint" | "task" | "subtask"
-  >("sprint");
+    "task" | "subtask"
+  >("task");
   const [createModalParentName, setCreateModalParentName] =
     useState<string>("");
   const [createParentId, setCreateParentId] = useState<string>("");
+  const [createModalInitialValues, setCreateModalInitialValues] =
+    useState<Partial<TimelineEditModalFormData>>({});
   const [quickSearch, setQuickSearch] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const activeScrollRef = useRef<HTMLElement | null>(null);
-  const hasAutoSelectedTask = useRef(false);
-
-  // Move task modal state
-  const [isMoveTaskModalOpen, setIsMoveTaskModalOpen] = useState(false);
-  const [taskToMove, setTaskToMove] = useState<Task | null>(null);
 
   // Popover custom move days (quick moves)
   const [popoverCustomDays, setPopoverCustomDays] = useState<string>("");
@@ -238,43 +212,37 @@ export default function TimelineTreeView({
     setExpandedItems(new Set([safeTimelineTreeId]));
   }, [safeTimelineTreeId, timeline.id, timeline.name]);
 
+  const activeScrollRef = useRef<HTMLElement | null>(null);
+  const hasAutoSelectedTask = useRef(false);
+
   // Auto-expand and scroll to highlighted task
   useEffect(() => {
     if (!highlightTaskId || !timeline || hasAutoSelectedTask.current) return;
 
     // Find the task in the timeline
-    let foundTask: Task | null = null;
-    let parentSprint: Sprint | null = null;
+    const foundTask = (timeline.tasks || []).find(
+      (t) => String(t.id) === highlightTaskId,
+    );
 
-    for (const sprint of timeline.sprints || []) {
-      const task = sprint.tasks?.find((t) => String(t.id) === highlightTaskId);
-      if (task) {
-        foundTask = task;
-        parentSprint = sprint;
-        break;
-      }
-    }
-
-    if (foundTask && parentSprint) {
+    if (foundTask) {
       // Mark as auto-selected so it only happens once
       hasAutoSelectedTask.current = true;
 
-      // Expand timeline and sprint
-      setExpandedItems((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(safeTimelineTreeId);
-        newSet.add(parentSprint!.treeId || `sprint-${parentSprint!.id}`);
-        return newSet;
-      });
+      // Expand timeline
+      setExpandedItems((prev) => new Set([...prev, safeTimelineTreeId]));
 
       // Select and scroll to task after a short delay to allow DOM to update
       setTimeout(() => {
-        const taskTreeId = foundTask!.treeId || `task-${foundTask!.id}`;
+        const taskTreeId = foundTask.treeId || `task-${foundTask.id}`;
+
         onItemSelect(taskTreeId, "task");
 
         // Scroll to the task element
         setTimeout(() => {
-          const taskElement = document.querySelector(`[data-tree-id="${taskTreeId}"]`);
+          const taskElement = document.querySelector(
+            `[data-tree-id="${taskTreeId}"]`,
+          );
+
           if (taskElement) {
             taskElement.scrollIntoView({ behavior: "smooth", block: "center" });
           }
@@ -354,69 +322,49 @@ export default function TimelineTreeView({
       filters.status.length === 0 &&
       filters.priority.length === 0
     ) {
-      return { ...timeline, sprints: timeline.sprints || [] };
+      return { ...timeline, tasks: timeline.tasks || [] };
     }
 
-    const filteredSprints = (timeline.sprints || [])
-      .map((sprint) => {
-        // Check if sprint matches filters
-        const sprintMatches =
-          filters.departments.length === 0 ||
-          !sprint.departmentId ||
-          filters.departments.includes(sprint.departmentId.toString());
+    const filteredTasks = (timeline.tasks || [])
+      .map((task) => {
+        const taskMatches =
+          (filters.departments.length === 0 ||
+            !task.departmentId ||
+            filters.departments.includes(task.departmentId.toString())) &&
+          (filters.members.length === 0 ||
+            !task.members ||
+            task.members.some((m) => filters.members.includes(m.id.toString()))) &&
+          (filters.status.length === 0 ||
+            filters.status.includes(task.statusId as any)) &&
+          (filters.priority.length === 0 ||
+            filters.priority.includes(task.priorityId as any));
 
-        const filteredTasks = (sprint.tasks || [])
-          .map((task) => {
-            const taskMatches =
-              (filters.departments.length === 0 ||
-                !task.departmentId ||
-                filters.departments.includes(task.departmentId.toString())) &&
-              (filters.members.length === 0 ||
-                !task.members ||
-                task.members.some((m) =>
-                  filters.members.includes(m.id.toString()),
-                )) &&
-              (filters.status.length === 0 ||
-                filters.status.includes(task.statusId as any)) &&
-              (filters.priority.length === 0 ||
-                filters.priority.includes(task.priorityId as any));
+        const filteredSubtasks = (task.subtasks || []).filter((subtask) => {
+          return (
+            (filters.departments.length === 0 ||
+              !subtask.departmentId ||
+              filters.departments.includes(subtask.departmentId.toString())) &&
+            (filters.members.length === 0 ||
+              !task.members ||
+              task.members.some((m) =>
+                filters.members.includes(m.id.toString()),
+              )) &&
+            (filters.status.length === 0 ||
+              filters.status.includes(task.statusId as any)) &&
+            (filters.priority.length === 0 ||
+              filters.priority.includes(task.priorityId as any))
+          );
+        });
 
-            const filteredTasks = (task.subtasks || []).filter((subtask) => {
-              return (
-                (filters.departments.length === 0 ||
-                  !subtask.departmentId ||
-                  filters.departments.includes(
-                    subtask.departmentId.toString(),
-                  )) &&
-                (filters.members.length === 0 ||
-                  !task.members ||
-                  task.members.some((m) =>
-                    filters.members.includes(m.id.toString()),
-                  )) &&
-                (filters.status.length === 0 ||
-                  filters.status.includes(task.statusId as any)) &&
-                (filters.priority.length === 0 ||
-                  filters.priority.includes(task.priorityId as any))
-              );
-            });
-
-            if (taskMatches || filteredTasks.length > 0) {
-              return { ...task, subtasks: filteredTasks };
-            }
-
-            return null;
-          })
-          .filter(Boolean) as Task[];
-
-        if (sprintMatches || filteredTasks.length > 0) {
-          return { ...sprint, tasks: filteredTasks };
+        if (taskMatches || filteredSubtasks.length > 0) {
+          return { ...task, subtasks: filteredSubtasks };
         }
 
         return null;
       })
-      .filter(Boolean) as Sprint[];
+      .filter(Boolean) as Task[];
 
-    return { ...timeline, sprints: filteredSprints };
+    return { ...timeline, tasks: filteredTasks };
   }, [timeline, filters]);
 
   // (Removed requirement filter helper – no requirement layer now)
@@ -453,17 +401,14 @@ export default function TimelineTreeView({
       filters.status.length > 0 ||
       filters.priority.length > 0;
 
-    if (hasActiveFilters && (filteredTimeline.sprints || []).length > 0) {
+    if (hasActiveFilters && (filteredTimeline.tasks || []).length > 0) {
       // Auto-expand all items that have matching children
       const itemsToExpand = new Set([safeTimelineTreeId]); // Always expand timeline
 
-      (filteredTimeline.sprints || []).forEach((sprint) => {
-        itemsToExpand.add(sprint.treeId);
-        sprint.tasks?.forEach((task) => {
-          itemsToExpand.add(task.treeId);
-          task.subtasks?.forEach((subtask) => {
-            itemsToExpand.add(subtask.treeId);
-          });
+      (filteredTimeline.tasks || []).forEach((task) => {
+        itemsToExpand.add(task.treeId);
+        task.subtasks?.forEach((subtask) => {
+          itemsToExpand.add(subtask.treeId);
         });
       });
 
@@ -471,7 +416,7 @@ export default function TimelineTreeView({
 
       // Auto-scroll to the first filtered result
       setTimeout(() => {
-        // Try to find the first filtered task or requirement
+        // Try to find the first filtered task
         const firstMatch = containerRef.current?.querySelector(
           '[data-filtered="true"]',
         );
@@ -498,7 +443,7 @@ export default function TimelineTreeView({
   };
 
   const handleOpenEditModal = (
-    type: "timeline" | "sprint" | "task" | "subtask",
+    type: "timeline" | "task" | "subtask",
     item: any,
   ) => {
     debugger;
@@ -538,21 +483,13 @@ export default function TimelineTreeView({
           ...formData,
         });
         toasts.onTimelineUpdateSuccess();
-      } else if (editModalType === "sprint") {
-        await _onUpdateSprint({
-          id: editingItem.id,
-          // Preserve the sprint's timeline association explicitly during update
-          timelineId: (editingItem.timelineId ?? timeline.id).toString(),
-          ...formData,
-        });
-        toasts.onSprintUpdateSuccess();
       } else if (editModalType === "task") {
         debugger;
         await _onUpdateTask({
           id: editingItem.id,
           projectRequirementId: timeline.projectRequirementId,
-          // Preserve the task's sprint association explicitly during update
-          sprintId: (editingItem.sprintId ?? editingItem.sprintId).toString(),
+          // Use the task's timeline association directly
+          timelineId: (editingItem.timelineId ?? timeline.id).toString(),
           ...formData,
           statusId: formData.statusId,
           priorityId: formData.priorityId,
@@ -570,9 +507,6 @@ export default function TimelineTreeView({
     } catch {
       // Show error toast based on type
       switch (editModalType) {
-        case "sprint":
-          toasts.onSprintUpdateError();
-          break;
         case "task":
           toasts.onTaskUpdateError();
           break;
@@ -593,37 +527,16 @@ export default function TimelineTreeView({
     if (el) el.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const scrollToSprint = (sprintId: string) => {
-    const element = document.getElementById(`sprint-${sprintId}`);
-
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-      // Ensure the sprint is expanded
-      if (!expandedItems.has(sprintId)) {
-        setExpandedItems((prev) => new Set([...prev, sprintId]));
-      }
-    }
-  };
-
-  // Removed scrollToRequirement – tasks are directly under sprints
-
   const scrollToTask = (taskId: string) => {
-    let sprintTreeId = "";
     let taskTreeId = "";
 
-    for (const sprint of timeline.sprints || []) {
-      const task = (sprint.tasks || []).find((t) => t.id.toString() === taskId);
+    // Find task directly under timeline
+    const task = (timeline.tasks || []).find((t) => t.id.toString() === taskId);
 
-      if (task) {
-        sprintTreeId = sprint.treeId;
-        taskTreeId = task.treeId;
-        break;
-      }
-    }
-    if (sprintTreeId && taskTreeId) {
-      setExpandedItems(
-        (prev) => new Set([...prev, safeTimelineTreeId, sprintTreeId]),
-      );
+    if (task) {
+      taskTreeId = task.treeId;
+      // Expand timeline to show the task
+      setExpandedItems((prev) => new Set([...prev, safeTimelineTreeId]));
       setTimeout(() => {
         const element = document.querySelector(`[data-task-id="${taskId}"]`);
 
@@ -635,22 +548,25 @@ export default function TimelineTreeView({
     }
   };
 
-  const handleCreateSprint = () => {
-    setCreateModalType("sprint");
+  // Create a task directly under timeline
+  const handleCreateTask = () => {
+    setCreateModalType("task");
     setCreateModalParentName(timeline.name);
     setCreateParentId(timeline.id.toString());
+    // Pre-fill with timeline data
+    setCreateModalInitialValues({
+      name: timeline.name,
+      startDate: timeline.startDate,
+      endDate: timeline.endDate,
+    });
     setIsCreateModalOpen(true);
   };
 
-  // Create a task directly under a sprint
-  const handleCreateTask = (sprintId: string) => {
-    const sprint = (timeline.sprints || []).find(
-      (s) => s.id.toString() === sprintId,
-    );
-
-    setCreateModalType("task");
-    setCreateModalParentName(sprint?.name || "Sprint");
-    setCreateParentId(sprintId);
+  // Create a subtask under a task
+  const handleCreateSubtask = (taskId: string, taskName: string) => {
+    setCreateModalType("subtask");
+    setCreateModalParentName(taskName);
+    setCreateParentId(taskId);
     setIsCreateModalOpen(true);
   };
 
@@ -658,29 +574,21 @@ export default function TimelineTreeView({
     setIsCreateModalOpen(false);
     setCreateParentId("");
     setCreateModalParentName("");
+    setCreateModalInitialValues({});
   };
 
   const handleSubmitCreate = async (
     formData: TimelineItemCreateModalFormData,
   ) => {
     try {
-      if (createModalType === "sprint") {
-        await onCreateSprint({
-          timelineId: timeline.id.toString(),
-          ...formData,
-        });
-        // Expand timeline to show new sprint
-        setExpandedItems((prev) => new Set(prev).add(safeTimelineTreeId));
-        toasts.onSprintCreateSuccess();
-      } else if (createModalType === "task") {
+      if (createModalType === "task") {
         await onCreateTask({
           timelineId: timeline.id.toString(),
           projectRequirementId: timeline.projectRequirementId,
-          sprintId: createParentId,
           ...formData,
         });
-        // Expand sprint to show new task
-        setExpandedItems((prev) => new Set(prev).add(createParentId));
+        // Expand timeline to show new task
+        setExpandedItems((prev) => new Set(prev).add(safeTimelineTreeId));
         toasts.onTaskCreateSuccess();
       } else if (createModalType === "subtask" && onCreateSubtask) {
         await onCreateSubtask({
@@ -692,9 +600,6 @@ export default function TimelineTreeView({
     } catch {
       // Show error toast based on type
       switch (createModalType) {
-        case "sprint":
-          toasts.onSprintCreateError();
-          break;
         case "task":
           toasts.onTaskCreateError();
           break;
@@ -708,66 +613,14 @@ export default function TimelineTreeView({
     }
   };
 
-  // Move task modal handlers
-  const handleOpenMoveTaskModal = (task: Task) => {
-    setTaskToMove(task);
-    setIsMoveTaskModalOpen(true);
-  };
-
-  const handleCloseMoveTaskModal = () => {
-    setIsMoveTaskModalOpen(false);
-    setTaskToMove(null);
-  };
-
-  const handleSubmitMoveTask = async (targetSprintId: string) => {
-    if (!taskToMove || !onMoveTaskToSprint) return;
-
-    try {
-      const result = await onMoveTaskToSprint(
-        taskToMove.id.toString(),
-        targetSprintId,
-      );
-
-      if (result) {
-        // Close modal immediately after successful move
-        handleCloseMoveTaskModal();
-
-        // Find the target sprint name for user feedback
-        const targetSprint = (timeline.sprints || []).find(
-          (s) => s.id.toString() === targetSprintId,
-        );
-
-        // Optional: Show a success message (you can implement this)
-        console.log(
-          `Task "${taskToMove.name}" moved to sprint "${targetSprint?.name}" successfully`,
-        );
-
-        // Small delay to allow the timeline to refresh, then expand target sprint
-        setTimeout(() => {
-          if (targetSprint) {
-            // Expand the target sprint to show the moved task
-            setExpandedItems((prev) => new Set([...prev, targetSprint.treeId]));
-          }
-        }, 100);
-      }
-    } catch (error) {
-      // Move failed - error handling can be added here
-      console.error("Failed to move task:", error);
-      throw error;
-    }
-  };
-
   const handleDelete = async (
     id: string,
-    type: "sprint" | "task" | "subtask",
+    type: "task" | "subtask",
   ) => {
     if (!confirm(`${t("timeline.treeView.confirmDelete")} ${type}?`)) return;
 
     try {
-      if (type === "sprint") {
-        await onDeleteSprint(id);
-        toasts.onSprintDeleteSuccess();
-      } else if (type === "task") {
+      if (type === "task") {
         await onDeleteTask(id);
         toasts.onTaskDeleteSuccess();
       } else if (type === "subtask") {
@@ -779,9 +632,6 @@ export default function TimelineTreeView({
     } catch {
       // Show error toast based on type
       switch (type) {
-        case "sprint":
-          toasts.onSprintDeleteError();
-          break;
         case "task":
           toasts.onTaskDeleteError();
           break;
@@ -835,60 +685,35 @@ export default function TimelineTreeView({
       />
       {quickSearch && (
         <div className="mt-2 max-h-40 overflow-y-auto scrollbar-hide space-y-1 bg-default-50 rounded-lg p-2">
-          {filteredTimeline.sprints
-            .filter((sprint) => {
+          {(filteredTimeline.tasks || [])
+            .filter((task) => {
               const q = quickSearch.toLowerCase();
 
               return (
-                sprint.name.toLowerCase().includes(q) ||
-                (sprint.tasks || []).some(
-                  (task) =>
-                    task.name.toLowerCase().includes(q) ||
-                    (task.subtasks || []).some((st) =>
-                      st.name.toLowerCase().includes(q),
-                    ),
+                task.name.toLowerCase().includes(q) ||
+                (task.subtasks || []).some((st) =>
+                  st.name.toLowerCase().includes(q),
                 )
               );
             })
-            .map((sprint) => (
-              <div key={sprint.id} className="text-xs">
+            .map((task) => (
+              <div key={task.id} className="text-xs">
                 <button
                   className="w-full text-left p-2 hover:bg-default-100 rounded flex items-center gap-2"
-                  onClick={() => scrollToSprint(sprint.id.toString())}
+                  onClick={() => scrollToTask(task.id.toString())}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      scrollToSprint(sprint.id.toString());
+                      scrollToTask(task.id.toString());
                     }
                   }}
                 >
-                  <div className="w-3 h-3 bg-green-500 rounded" />
-                  <span className="font-medium">{sprint.name}</span>
+                  <div className="w-3 h-3 bg-purple-500 rounded" />
+                  <span className="font-medium">{task.name}</span>
                   <span className="text-default-500">
-                    ({(sprint.tasks || []).length} {t("timeline.tasks")})
+                    ({(task.subtasks || []).length} {t("timeline.subtasks")})
                   </span>
                 </button>
-                {(sprint.tasks || [])
-                  .filter((task) =>
-                    task.name.toLowerCase().includes(quickSearch.toLowerCase()),
-                  )
-                  .slice(0, 3)
-                  .map((task) => (
-                    <button
-                      key={task.id}
-                      className={`${direction === "rtl" ? "mr-5" : "ml-5"} p-1 text-default-600 flex items-center gap-2 w-full text-left hover:bg-default-100 rounded`}
-                      onClick={() => scrollToTask(task.id.toString())}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          scrollToTask(task.id.toString());
-                        }
-                      }}
-                    >
-                      <div className="w-2 h-2 bg-purple-500 rounded" />
-                      <span>{task.name}</span>
-                    </button>
-                  ))}
               </div>
             ))}
         </div>
@@ -917,7 +742,7 @@ export default function TimelineTreeView({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            {(filteredTimeline.sprints || []).length > 0 && (
+            {(filteredTimeline.tasks || []).length > 0 && (
               <div
                 className="flex items-center justify-center w-6 h-6 hover:bg-default-100 rounded cursor-pointer"
                 role="button"
@@ -943,14 +768,14 @@ export default function TimelineTreeView({
                 )}
               </div>
             )}
-            {(filteredTimeline.sprints || []).length === 0 && (
+            {(filteredTimeline.tasks || []).length === 0 && (
               <div className="w-6" />
             )}
           </div>
           <div>
             <h3 className="font-semibold text-lg">{timeline.name}</h3>
             <p
-              dangerouslySetInnerHTML={{ __html: timeline.description }}
+              dangerouslySetInnerHTML={{ __html: timeline.description || "" }}
               className="text-sm text-default-600"
             />
             <div className="flex items-center flex-wrap gap-4 mt-2 text-xs text-default-500">
@@ -961,8 +786,8 @@ export default function TimelineTreeView({
                 })}
               </span>
               <span>
-                {(filteredTimeline.sprints || []).length}{" "}
-                {t("timeline.sprints")}
+                {(filteredTimeline.tasks || []).length}{" "}
+                {t("timeline.tasks")}
               </span>
             </div>
           </div>
@@ -981,16 +806,16 @@ export default function TimelineTreeView({
               {t("timeline.treeView.timelineLabel")}
             </Button>
           )}
-          {hasPermission({ actions: ["sprints.create"] }) && (
+          {hasPermission({ actions: ["timelines.tasks.create"] }) && (
             <Button
               color="primary"
               isLoading={loading}
               size="sm"
               startContent={<PlusIcon />}
               onClick={(e) => e.stopPropagation()}
-              onPress={handleCreateSprint}
+              onPress={handleCreateTask}
             >
-              {t("timeline.treeView.addSprint")}
+              {t("timeline.treeView.addTask")}
             </Button>
           )}
         </div>
@@ -998,157 +823,6 @@ export default function TimelineTreeView({
     </div>
   );
 
-  const renderSprint = (sprint: Sprint) => (
-    <div
-      key={sprint.id}
-      className={`${direction === "rtl" ? "mr-8" : "ml-8"}`}
-      data-filtered="true"
-      id={`sprint-${sprint.id}`}
-    >
-      <div
-        className={`p-3 ${direction === "rtl" ? "border-r-4" : "border-l-4"} cursor-pointer hover:bg-default-50 transition-colors ${
-          selectedItem === sprint.treeId ? "bg-primary-50" : ""
-        } border-green-500`}
-        role="button"
-        tabIndex={0}
-        onClick={() => {
-          onItemSelect(sprint.treeId, "sprint");
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onItemSelect(sprint.treeId, "sprint");
-          }
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              {(sprint.tasks || []).length > 0 && (
-                <div
-                  className="flex items-center justify-center w-6 h-6 hover:bg-default-100 rounded cursor-pointer"
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleExpanded(sprint.treeId);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      toggleExpanded(sprint.treeId);
-                    }
-                  }}
-                >
-                  {expandedItems.has(sprint.treeId) ? (
-                    <ChevronDownIcon className="w-4 h-4" />
-                  ) : (
-                    <ChevronRightIcon
-                      className={`w-4 h-4 ${direction === "rtl" ? "rotate-180" : ""}`}
-                    />
-                  )}
-                </div>
-              )}
-              {(sprint.tasks || []).length === 0 && <div className="w-6" />}
-            </div>
-            <div>
-              <h4 className="font-medium">{sprint.name}</h4>
-              <p
-                dangerouslySetInnerHTML={{ __html: sprint.description }}
-                className="text-sm text-default-600"
-              />
-              <div className="flex items-center flex-wrap gap-4 mt-1 text-xs text-default-500">
-                <span>
-                  {formatDateRange(sprint.startDate, sprint.endDate, {
-                    language,
-                    direction: direction === "rtl" ? "rtl" : "ltr",
-                  })}
-                </span>
-                <span>
-                  {sprint.duration} {t("timeline.detailsPanel.days")}
-                </span>
-                {sprint.departmentId && (
-                  <Chip
-                    size="sm"
-                    style={{
-                      backgroundColor: getDepartmentColor(sprint.departmentId),
-                      color: "white",
-                    }}
-                    variant="flat"
-                  >
-                    {getDepartmentName(sprint.departmentId)}
-                  </Chip>
-                )}
-                <span>
-                  {(sprint.tasks || []).length} {t("timeline.tasks")}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {hasPermission({ actions: ["timelines.tasks.create"] }) && (
-              <Button
-                color="primary"
-                isLoading={loading}
-                size="sm"
-                startContent={<PlusIcon />}
-                variant="light"
-                onClick={(e) => e.stopPropagation()}
-                onPress={() => handleCreateTask(sprint.id.toString())}
-              >
-                {t("timeline.treeView.addTask")}
-              </Button>
-            )}
-            {(hasPermission({ actions: ["sprints.update"] }) ||
-              hasPermission({ actions: ["sprints.delete"] })) && (
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    variant="light"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreVerticalIcon />
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  onAction={(key) => {
-                    if (key === "edit") {
-                      handleOpenEditModal("sprint", sprint);
-                    } else if (key === "delete") {
-                      handleDelete(sprint.id.toString(), "sprint");
-                    }
-                  }}
-                >
-                  {hasPermission({ actions: ["sprints.update"] }) && (
-                    <DropdownItem key="edit" startContent={<EditIcon />}>
-                      {t("timeline.treeView.editSprint")}
-                    </DropdownItem>
-                  )}
-                  {hasPermission({ actions: ["sprints.delete"] }) && (
-                    <DropdownItem
-                      key="delete"
-                      className="text-danger"
-                      color="danger"
-                      startContent={<DeleteIcon />}
-                    >
-                      {t("timeline.treeView.deleteSprint")}
-                    </DropdownItem>
-                  )}
-                </DropdownMenu>
-              </Dropdown>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {expandedItems.has(sprint.treeId) && (
-        <>{(sprint.tasks || []).map((task) => renderTask(task))}</>
-      )}
-    </div>
-  );
   const renderTask = (task: Task) => (
     <div
       key={task.id}
@@ -1317,7 +991,7 @@ export default function TimelineTreeView({
             <div>
               <h6 className="font-medium">{task.name}</h6>
               <p
-                dangerouslySetInnerHTML={{ __html: task.description }}
+                dangerouslySetInnerHTML={{ __html: task.description || "" }}
                 className="text-sm text-default-600"
               />
               <div className="flex items-center flex-wrap gap-4 mt-1 text-xs text-default-500">
@@ -1413,25 +1087,25 @@ export default function TimelineTreeView({
               onAction={(key) => {
                 if (key === "edit") {
                   handleOpenEditModal("task", task);
-                } else if (key === "move") {
-                  handleOpenMoveTaskModal(task);
                 } else if (key === "delete") {
                   handleDelete(task.id.toString(), "task");
+                } else if (key === "create-subtask") {
+                  handleCreateSubtask(task.id.toString(), task.name);
                 }
               }}
             >
+              {hasPermission({
+                actions: ["subtasks.create"],
+              }) && (
+                <DropdownItem key="create-subtask" startContent={<PlusIcon />}>
+                  {t("timeline.treeView.addSubtask")}
+                </DropdownItem>
+              )}
               {hasPermission({
                 actions: ["timelines.tasks.update"],
               }) && (
                 <DropdownItem key="edit" startContent={<EditIcon />}>
                   {t("timeline.treeView.editTask")}
-                </DropdownItem>
-              )}
-              {hasPermission({
-                actions: ["timelines.tasks.move"],
-              }) && (
-                <DropdownItem key="move" startContent={<MoveIcon />}>
-                  {t("timeline.treeView.moveTaskToSprint")}
                 </DropdownItem>
               )}
               {hasPermission({
@@ -1634,8 +1308,8 @@ export default function TimelineTreeView({
             <div className="space-y-1 pb-8">
               {renderTimelineHeader()}
               {expandedItems.has(safeTimelineTreeId) &&
-                (filteredTimeline.sprints || []).map((sprint) =>
-                  renderSprint(sprint),
+                (filteredTimeline.tasks || []).map((task) =>
+                  renderTask(task),
                 )}
             </div>
           </CardBody>
@@ -1657,6 +1331,7 @@ export default function TimelineTreeView({
       />
       <TimelineItemCreateModal
         departments={departments}
+        initialValues={createModalInitialValues}
         isOpen={isCreateModalOpen}
         loading={loading}
         parentName={createModalParentName}
@@ -1665,99 +1340,6 @@ export default function TimelineTreeView({
         onClose={handleCloseCreateModal}
         onSubmit={handleSubmitCreate}
       />
-
-      {/* Move Task Modal */}
-      <Modal
-        isOpen={isMoveTaskModalOpen}
-        size="2xl"
-        onClose={handleCloseMoveTaskModal}
-      >
-        <ModalContent>
-          <ModalHeader>
-            <div className="flex items-center gap-2">
-              <MoveIcon className="w-5 h-5" />
-              <span>{t("timeline.treeView.moveTaskToSprint")}</span>
-            </div>
-          </ModalHeader>
-          <ModalBody>
-            {taskToMove && (
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium mb-2">
-                    {t("timeline.treeView.currentTask")}
-                  </h4>
-                  <Card className="border-2 border-blue-200">
-                    <CardBody className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="font-semibold">{taskToMove.name}</h5>
-                          <p className="text-sm text-default-600">
-                            {t("timeline.treeView.currentSprint")}:{" "}
-                            {
-                              (timeline.sprints || []).find(
-                                (s) => s.id === taskToMove.sprintId,
-                              )?.name
-                            }
-                          </p>
-                        </div>
-                        <Chip color="primary" size="sm">
-                          {t("timeline.task")}
-                        </Chip>
-                      </div>
-                    </CardBody>
-                  </Card>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">
-                    {t("timeline.treeView.selectTargetSprint")}
-                  </h4>
-                  <Select
-                    placeholder={t("timeline.treeView.selectSprint")}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-
-                      if (selected) {
-                        handleSubmitMoveTask(selected);
-                      }
-                    }}
-                  >
-                    {(timeline.sprints || [])
-                      .filter((sprint) => sprint.id !== taskToMove.sprintId)
-                      .map((sprint) => (
-                        <SelectItem key={sprint.id.toString()}>
-                          <div>
-                            <div className="font-medium">{sprint.name}</div>
-                            <div className="text-xs text-default-500">
-                              {formatDateRange(
-                                sprint.startDate,
-                                sprint.endDate,
-                                {
-                                  language,
-                                  direction:
-                                    direction === "rtl" ? "rtl" : "ltr",
-                                },
-                              )}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                  </Select>
-                </div>
-              </div>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              color="default"
-              variant="light"
-              onPress={handleCloseMoveTaskModal}
-            >
-              {t("common.cancel")}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </>
   );
 }

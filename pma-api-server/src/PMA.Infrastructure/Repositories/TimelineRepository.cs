@@ -12,15 +12,18 @@ public class TimelineRepository : Repository<Timeline>, ITimelineRepository
     {
     }
 
-    // Override GetByIdAsync to include related sprints and tasks
+    // Override GetByIdAsync to include related tasks and subtasks (removed Sprint layer)
     public new async Task<Timeline?> GetByIdAsync(int id)
     {
         return await _context.Timelines
             .Include(t => t.Project)
             .Include(t => t.ProjectRequirement)
-            .Include(t => t.Sprints)
-                .ThenInclude(s => s.Tasks) 
-
+            .Include(t => t.Tasks!) 
+            .Include(t => t.Tasks!)
+                .ThenInclude(task => task.Assignments)
+                    .ThenInclude(a => a.Employee)
+            .Include(t => t.Tasks!)
+                .ThenInclude(task => task.DependentTasks)
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
@@ -29,8 +32,7 @@ public class TimelineRepository : Repository<Timeline>, ITimelineRepository
         var query = _context.Timelines
             .Include(t => t.Project)
             .Include(t => t.ProjectRequirement)
-            .Include(t => t.Sprints)
-            .ThenInclude(s => s.Tasks) 
+            .Include(t => t.Tasks!) 
             .AsQueryable();
 
         if (projectId.HasValue)
@@ -53,8 +55,7 @@ public class TimelineRepository : Repository<Timeline>, ITimelineRepository
         return await _context.Timelines
             .Include(t => t.Project)
             .Include(t => t.ProjectRequirement)
-            .Include(t => t.Sprints)
-             .ThenInclude(s => s.Tasks) 
+            .Include(t => t.Tasks!) 
             .Where(t => t.ProjectId == projectId)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();

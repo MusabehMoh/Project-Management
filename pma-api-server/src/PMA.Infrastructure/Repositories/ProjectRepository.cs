@@ -341,14 +341,14 @@ public class ProjectRepository : Repository<Project>, IProjectRepository
     {
         return await _context.Projects
             .Include(p => p.Timelines!)
-                .ThenInclude(t => t.Sprints!)
-                    .ThenInclude(s => s.Tasks!)
-                        .ThenInclude(task => task.Assignments)
-                            .ThenInclude(e=>e.Employee)
+                .ThenInclude(t => t.Tasks!)
+                    .ThenInclude(task => task.Assignments)
+                        .ThenInclude(e => e.Employee)
             .Include(p => p.Timelines!)
-                .ThenInclude(t => t.Sprints!)
-                    .ThenInclude(s => s.Tasks!)
-                        .ThenInclude(task => task.DependentTasks)
+                .ThenInclude(t => t.Tasks!)
+                    .ThenInclude(task => task.DependentTasks)
+            .Include(p => p.Timelines!)
+                .ThenInclude(t => t.Tasks!) 
             .Include(p => p.ProjectOwnerEmployee)
             .Include(p => p.OwningUnitEntity)
             .FirstOrDefaultAsync(p => p.Id == projectId);

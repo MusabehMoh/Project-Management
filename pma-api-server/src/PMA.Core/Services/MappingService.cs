@@ -572,6 +572,7 @@ public class MappingService : IMappingService
 
     /// <summary>
     /// Maps a Timeline entity to TimelineWithSprintsDto with generated treeId
+    /// Now maps tasks directly under timeline (removed Sprint layer)
     /// </summary>
     public TimelineWithSprintsDto? MapToTimelineWithSprintsDto(Timeline? timeline)
     {
@@ -590,7 +591,8 @@ public class MappingService : IMappingService
             EndDate = timeline.EndDate,
             CreatedAt = timeline.CreatedAt,
             UpdatedAt = timeline.UpdatedAt,
-            Sprints = timeline.Sprints?.Select(MapToSprintDto).Where(s => s != null).Select(s => s!).ToList() ?? new List<SprintDto>()
+            // Map tasks directly from timeline (tasks already have timelineId)
+            Tasks = timeline.Tasks?.Select(MapToTaskDto).Where(t => t != null).Select(t => t!).ToList() ?? new List<TaskDto>()
         };
     }
 

@@ -19,6 +19,7 @@ interface TimelineItemCreateModalProps {
   loading?: boolean;
   parentName?: string;
   timelineId?: number;
+  initialValues?: Partial<TimelineItemCreateModalFormData>;
 }
 
 export default function TimelineItemCreateModal({
@@ -30,10 +31,12 @@ export default function TimelineItemCreateModal({
   loading = false,
   parentName,
   timelineId,
+  initialValues,
 }: TimelineItemCreateModalProps) {
   return (
     <TimelineItemModal
       departments={departments}
+      initialValues={initialValues as any}
       isOpen={isOpen}
       loading={loading}
       mode="create"

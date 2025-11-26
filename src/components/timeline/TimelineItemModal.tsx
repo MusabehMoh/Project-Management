@@ -117,21 +117,21 @@ export default function TimelineItemModal({
   };
 
   const getInitialFormData = (): LocalFormData => {
-    if (mode === "edit" && initialValues) {
+    if (initialValues) {
       return {
-        name: initialValues.name,
-        description: initialValues.description,
+        name: initialValues.name || "",
+        description: initialValues.description || "",
         startDate: initialValues.startDate
           ? parseDate(initialValues.startDate.substring(0, 10))
           : null,
         endDate: initialValues.endDate
           ? parseDate(initialValues.endDate.substring(0, 10))
           : null,
-        departmentId: initialValues.departmentId,
-        statusId: initialValues.statusId,
-        priorityId: initialValues.priorityId,
-        progress: initialValues.progress,
-        notes: initialValues.notes,
+        departmentId: initialValues.departmentId || "",
+        statusId: initialValues.statusId || 1,
+        priorityId: initialValues.priorityId || 2,
+        progress: initialValues.progress || 0,
+        notes: initialValues.notes || "",
       };
     }
 
@@ -220,7 +220,7 @@ export default function TimelineItemModal({
 
     // Load members
     if (initialValues?.memberIds && initialValues.memberIds.length > 0) {
-      debugger
+      debugger;
       if (initialValues?.members && initialValues.members.length > 0) {
         setSelectedMembers(initialValues.members);
       } else {
@@ -510,7 +510,6 @@ export default function TimelineItemModal({
                 errorMessage={errors.startDate}
                 isInvalid={!!errors.startDate}
                 label={`${t("timeline.detailsPanel.startDate")} ${mode === "create" ? "*" : ""}`}
-                minValue={today(getLocalTimeZone())}
                 value={formData.startDate}
                 onChange={(date) => handleInputChange("startDate", date)}
               />
@@ -519,7 +518,6 @@ export default function TimelineItemModal({
                 errorMessage={errors.endDate}
                 isInvalid={!!errors.endDate}
                 label={`${t("timeline.detailsPanel.endDate")} ${mode === "create" ? "*" : ""}`}
-                minValue={today(getLocalTimeZone())}
                 value={formData.endDate}
                 onChange={(date) => handleInputChange("endDate", date)}
               />
@@ -697,8 +695,12 @@ export default function TimelineItemModal({
                           (task) =>
                             !selectedTasks.some((st) => st.id === task.id),
                         )}
-                        placeholder={t("timeline.selectPredecessorsPlaceholder")}
-                        selectionMode={mode === "create" ? "multiple" : "single"}
+                        placeholder={t(
+                          "timeline.selectPredecessorsPlaceholder",
+                        )}
+                        selectionMode={
+                          mode === "create" ? "multiple" : "single"
+                        }
                         onSelectionChange={(keys) => {
                           if (mode === "create") {
                             if (keys === "all") return;

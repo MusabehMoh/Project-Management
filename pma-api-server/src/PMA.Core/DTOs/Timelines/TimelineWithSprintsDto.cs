@@ -2,5 +2,6 @@ namespace PMA.Core.DTOs;
 
 public class TimelineWithSprintsDto : TimelineDto
 {
-    public List<SprintDto> Sprints { get; set; } = new List<SprintDto>();
+    // Changed from Sprints to Tasks - now Timeline contains Tasks directly
+    public List<TaskDto> Tasks { get; set; } = new List<TaskDto>();
 }
