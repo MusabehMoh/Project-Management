@@ -19,6 +19,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { MemberTask } from "@/types/membersTasks";
 import { MemberSearchResult } from "@/types/timeline";
 import { timelineApiService } from "@/services/api/timelineService";
@@ -27,6 +28,7 @@ import useTaskSearch from "@/hooks/useTaskSearch";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
 import { validateDateNotInPast } from "@/utils/dateValidation";
 import { DepartmentIds } from "@/constants/departments";
+import { RoleIds } from "@/constants/roles";
 interface TaskCreateModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,6 +44,8 @@ export default function TaskCreateModal({
   onTaskCreated,
 }: TaskCreateModalProps) {
   const { t, language } = useLanguage();
+  const { hasAnyRoleById } = usePermissions();
+  const isQCManager = hasAnyRoleById([RoleIds.QUALITY_CONTROL_MANAGER]);
 
   // Wrapper function for validation that passes translation
   const handleValidateDateNotInPast = (
@@ -268,7 +272,9 @@ export default function TaskCreateModal({
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold">{t("task.create.title")}</h2>
+            <h2 className="text-xl font-semibold">
+              {isQCManager ? t("tasks.assignQC") : t("task.create.title")}
+            </h2>
             <Popover placement="bottom">
               <PopoverTrigger>
                 <Button

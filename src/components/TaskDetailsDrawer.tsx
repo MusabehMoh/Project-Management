@@ -214,6 +214,8 @@ export default function TaskDetailsDrawer({
     1, // ADMINISTRATOR
   ]);
 
+  const isQCManager = hasAnyRoleById([6]); // QUALITY_CONTROL_MANAGER
+
   // Handle comment submission
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !selectedTask) return;
@@ -881,7 +883,9 @@ export default function TaskDetailsDrawer({
                   variant="solid"
                   onPress={() => onChangeAssignees(selectedTask)}
                 >
-                  {t("changeAssignees")}
+                  {isQCManager
+                    ? t("tasks.assignQC")
+                    : t("changeAssignees")}
                 </Button>
               </div>
             ) : selectedTask ? (

@@ -409,7 +409,7 @@ export const TaskCard = ({
                         handleCreateTaskClick();
                       }}
                     >
-                      {t("task.createTask")}
+                      {t("tasks.assignQC")}
                     </Button>
                   </Tooltip>
                 ) : (

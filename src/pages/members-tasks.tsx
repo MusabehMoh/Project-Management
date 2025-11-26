@@ -105,10 +105,15 @@ export default function MembersTasksPage() {
   }, []);
 
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
-  const [viewType, setViewType] = useState<"grid" | "list" | "gantt" | "kanban">("kanban");
+  const { hasAnyRoleById, loading: userLoading, user } = usePermissions();
+  
+  // QC Manager should not see Kanban view - default to grid instead
+  const isQCManager = hasAnyRoleById([RoleIds.QUALITY_CONTROL_MANAGER]);
+  const [viewType, setViewType] = useState<"grid" | "list" | "gantt" | "kanban">(
+    isQCManager ? "grid" : "kanban"
+  );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isOptionOpen, setIsOptionOpen] = useState(false);
-  const { hasAnyRoleById, loading: userLoading, user } = usePermissions();
 
   // Add state for full requirement details
   const [fullRequirement, setFullRequirement] =
@@ -533,7 +538,7 @@ export default function MembersTasksPage() {
   }, [selectedTask, statusOptions, userRoleIds]);
 
   const handleValidateDateNotInPast = (date: any) => {
-    return validateDateNotInPast(date);
+    return validateDateNotInPast(date, t);
   };
 
   const handleChangeAssigneesSubmit = async () => {
@@ -1284,29 +1289,31 @@ export default function MembersTasksPage() {
             <div className="flex items-center gap-4">
               {/* View Toggle */}
               <div className="flex items-center bg-content2 rounded-full p-1">
-                {(["kanban", "grid", "list", "gantt"] as const).map((type) => (
-                  <Button
-                    key={type}
-                    className="rounded-full px-3"
-                    color={viewType === type ? "primary" : "default"}
-                    size="sm"
-                    startContent={
-                      type === "grid" ? (
-                        <Grid3X3 className="w-4 h-4" />
-                      ) : type === "list" ? (
-                        <List className="w-4 h-4" />
-                      ) : type === "kanban" ? (
-                        <Columns className="w-4 h-4" />
-                      ) : (
-                        <BarChart3 className="w-4 h-4" />
-                      )
-                    }
-                    variant={viewType === type ? "solid" : "light"}
-                    onPress={() => setViewType(type)}
-                  >
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </Button>
-                ))}
+                {(["kanban", "grid", "list", "gantt"] as const)
+                  .filter((type) => !(isQCManager && type === "kanban")) // Hide Kanban for QC Manager
+                  .map((type) => (
+                    <Button
+                      key={type}
+                      className="rounded-full px-3"
+                      color={viewType === type ? "primary" : "default"}
+                      size="sm"
+                      startContent={
+                        type === "grid" ? (
+                          <Grid3X3 className="w-4 h-4" />
+                        ) : type === "list" ? (
+                          <List className="w-4 h-4" />
+                        ) : type === "kanban" ? (
+                          <Columns className="w-4 h-4" />
+                        ) : (
+                          <BarChart3 className="w-4 h-4" />
+                        )
+                      }
+                      variant={viewType === type ? "solid" : "light"}
+                      onPress={() => setViewType(type)}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Button>
+                  ))}
               </div>
 
               <span className="text-sm text-foreground-600">
@@ -1443,7 +1450,7 @@ export default function MembersTasksPage() {
                 />
               </div>
             )}
-            {viewType === "kanban" && (
+            {viewType === "kanban" && !isQCManager && (
               <div className="mb-8">
                 <MembersTasksKanban
                   loading={loading}

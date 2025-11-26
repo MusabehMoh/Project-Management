@@ -751,7 +751,7 @@ export default function DepartmentMembersPage() {
                         {impersonatingMember.user.fullName}
                       </p>
                       <p className="text-small text-default-500">
-                        @{impersonatingMember.user.userName}
+                        {impersonatingMember.user.userName}
                       </p>
                     </div>
                   </div>
