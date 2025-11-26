@@ -74,6 +74,65 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         return (projectRequirements, totalCount);
     }
 
+    public async Task<(IEnumerable<ProjectRequirement> ProjectRequirements, int TotalCount)> GetProjectRequirementsByStatusesAsync(int page, int limit, int[] statuses, int? projectId = null, string? priority = null, string? search = null)
+    {
+        var query = _context.ProjectRequirements
+            .Include(pr => pr.Project)
+            .Include(pr => pr.Creator)
+            .Include(pr => pr.Sender)
+            .Include(pr => pr.Analyst)
+            .Include(pr => pr.RequirementTask)
+                .ThenInclude(rt => rt.Developer)
+            .Include(pr => pr.RequirementTask)
+                .ThenInclude(rt => rt.Qc)
+            .Include(pr => pr.Timeline)
+            .AsQueryable();
+
+        // Filter by multiple statuses
+        if (statuses != null && statuses.Length > 0)
+        {
+            var statusEnums = statuses
+                .Where(s => Enum.IsDefined(typeof(RequirementStatusEnum), s))
+                .Select(s => (RequirementStatusEnum)s)
+                .ToList();
+            
+            if (statusEnums.Any())
+            {
+                query = query.Where(pr => statusEnums.Contains(pr.Status));
+            }
+        }
+
+        if (projectId.HasValue)
+        {
+            query = query.Where(pr => pr.ProjectId == projectId.Value);
+        }
+
+        if (!string.IsNullOrEmpty(priority))
+        {
+            if (Enum.TryParse<RequirementPriority>(priority, true, out var priorityEnum))
+            {
+                query = query.Where(pr => pr.Priority == priorityEnum);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(pr => 
+                pr.Name.Contains(search) || 
+                (pr.Description != null && pr.Description.Contains(search)) ||
+                (pr.Project != null && pr.Project.ApplicationName.Contains(search)));
+        }
+
+        var totalCount = await query.CountAsync();
+        var projectRequirements = await query
+            .OrderByDescending(pr => pr.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
+
+        return (projectRequirements, totalCount);
+    }
+
     public async Task<IEnumerable<ProjectRequirement>> GetProjectRequirementsByProjectAsync(int projectId)
     {
         // Ultra-optimized approach: Use multiple targeted queries instead of complex joins

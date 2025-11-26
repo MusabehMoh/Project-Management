@@ -33,6 +33,8 @@ const ENDPOINTS = {
     "/project-requirements/pending-approval-requirements",
   APPROVE_REQUIREMENT: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/approve`,
+  RETURN_REQUIREMENT: (requirementId: number) =>
+    `/project-requirements/requirements/${requirementId}/return`,
   POSTPONE_REQUIREMENT: (requirementId: number) =>
     `/project-requirements/requirements/${requirementId}/postpone`,
   UNPOSTPONE_REQUIREMENT: (requirementId: number) =>
@@ -483,6 +485,18 @@ class ProjectRequirementsService {
    */
   async approveRequirement(requirementId: number): Promise<void> {
     await apiClient.post<void>(ENDPOINTS.APPROVE_REQUIREMENT(requirementId));
+  }
+
+  /**
+   * Return a requirement to previous stage with reason
+   */
+  async returnRequirement(
+    requirementId: number,
+    reason: string,
+  ): Promise<void> {
+    await apiClient.post<void>(ENDPOINTS.RETURN_REQUIREMENT(requirementId), {
+      reason,
+    });
   }
 
   /**

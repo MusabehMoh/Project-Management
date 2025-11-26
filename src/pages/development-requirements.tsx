@@ -24,7 +24,18 @@ import {
 import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { DatePicker } from "@heroui/date-picker";
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
-import { Search, Calendar, Code, Eye, Plus, Edit, X, Info } from "lucide-react";
+import { Textarea } from "@heroui/input";
+import {
+  Search,
+  Calendar,
+  Code,
+  Eye,
+  Plus,
+  Edit,
+  X,
+  Info,
+  CornerUpLeft,
+} from "lucide-react";
 import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 // Import ReactQuill for rich text editing
 import ReactQuill from "react-quill";
@@ -47,7 +58,11 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import { REQUIREMENT_STATUS } from "@/constants/projectRequirements";
-import { createTimelineToasts } from "@/utils/toast";
+import {
+  createTimelineToasts,
+  showSuccessToast,
+  showErrorToast,
+} from "@/utils/toast";
 
 // Format date helper
 const formatDate = (dateString: string) => {
@@ -64,6 +79,7 @@ const RequirementCard = ({
   onViewDetails,
   onCreateTask,
   onCreateTimeline,
+  onReturn,
   getStatusColor,
   getStatusText,
   getPriorityColor,
@@ -76,6 +92,7 @@ const RequirementCard = ({
   onViewDetails: (requirement: ProjectRequirement) => void;
   onCreateTask: (requirement: ProjectRequirement) => void;
   onCreateTimeline: (requirement: ProjectRequirement) => void;
+  onReturn: (requirement: ProjectRequirement) => void;
   getStatusColor: (
     status: number,
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
@@ -165,69 +182,85 @@ const RequirementCard = ({
         </div>
 
         {/* Detail, Task, and Timeline Creation Buttons */}
-        <div className="flex items-center pt-2 gap-2 mt-auto">
-          {
+        <div className="space-y-2 pt-2 mt-auto">
+          <div className="flex items-center gap-2">
+            {
+              <Button
+                className="flex-1"
+                color="default"
+                size="sm"
+                startContent={<Eye className="w-3 h-3 flex-shrink-0" />}
+                variant="faded"
+                onPress={() => onViewDetails(requirement)}
+              >
+                {t("common.viewDetails")}
+              </Button>
+            }
+
+            {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
+            {!requirement.timeline &&
+              hasPermission({
+                actions: ["requirements.tasks.create"],
+              }) && (
+                <Button
+                  className="flex-1"
+                  color="default"
+                  size="sm"
+                  startContent={
+                    requirement.requirementTask ? (
+                      <Edit className="w-3 h-3 flex-shrink-0" />
+                    ) : (
+                      <Plus className="w-3 h-3 flex-shrink-0" />
+                    )
+                  }
+                  variant="faded"
+                  onPress={() => onCreateTask(requirement)}
+                >
+                  {requirement.requirementTask
+                    ? t("tasks.viewTask")
+                    : t("tasks.createTask")}
+                </Button>
+              )}
+
+            {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
+            {!requirement.requirementTask &&
+              hasPermission({
+                actions: ["requirements.timelines.create"],
+              }) && (
+                <Button
+                  className="flex-1"
+                  color="default"
+                  size="sm"
+                  startContent={
+                    requirement.timeline ? (
+                      <Edit className="w-3 h-3 flex-shrink-0" />
+                    ) : (
+                      <Plus className="w-3 h-3 flex-shrink-0" />
+                    )
+                  }
+                  variant="faded"
+                  onPress={() => onCreateTimeline(requirement)}
+                >
+                  {requirement.timeline
+                    ? t("timeline.viewTimeline")
+                    : t("timeline.createTimeline")}
+                </Button>
+              )}
+          </div>
+
+          {/* Business Rule: Show Return button only for approved requirements */}
+          {requirement.status === REQUIREMENT_STATUS.APPROVED && (
             <Button
-              className="flex-1"
-              color="default"
+              className="w-full"
+              color="danger"
               size="sm"
-              startContent={<Eye className="w-3 h-3 flex-shrink-0" />}
+              startContent={<CornerUpLeft className="w-3 h-3 flex-shrink-0" />}
               variant="faded"
-              onPress={() => onViewDetails(requirement)}
+              onPress={() => onReturn(requirement)}
             >
-              {t("common.viewDetails")}
+              {t("requirements.return")}
             </Button>
-          }
-
-          {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
-          {!requirement.timeline &&
-            hasPermission({
-              actions: ["requirements.tasks.create"],
-            }) && (
-              <Button
-                className="flex-1"
-                color="default"
-                size="sm"
-                startContent={
-                  requirement.requirementTask ? (
-                    <Edit className="w-3 h-3 flex-shrink-0" />
-                  ) : (
-                    <Plus className="w-3 h-3 flex-shrink-0" />
-                  )
-                }
-                variant="faded"
-                onPress={() => onCreateTask(requirement)}
-              >
-                {requirement.requirementTask
-                  ? t("tasks.viewTask")
-                  : t("tasks.createTask")}
-              </Button>
-            )}
-
-          {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
-          {!requirement.requirementTask &&
-            hasPermission({
-              actions: ["requirements.timelines.create"],
-            }) && (
-              <Button
-                className="flex-1"
-                color="default"
-                size="sm"
-                startContent={
-                  requirement.timeline ? (
-                    <Edit className="w-3 h-3 flex-shrink-0" />
-                  ) : (
-                    <Plus className="w-3 h-3 flex-shrink-0" />
-                  )
-                }
-                variant="faded"
-                onPress={() => onCreateTimeline(requirement)}
-              >
-                {requirement.timeline
-                  ? t("timeline.viewTimeline")
-                  : t("timeline.createTimeline")}
-              </Button>
-            )}
+          )}
         </div>
       </CardBody>
     </Card>
@@ -322,6 +355,9 @@ export default function DevelopmentRequirementsPage() {
     setProjectFilter,
   } = useApprovedRequirements({
     pageSize: 20,
+    initialFilters: {
+      status: REQUIREMENT_STATUS.APPROVED.toString(),
+    },
   });
 
   // Drawer state
@@ -374,6 +410,13 @@ export default function DevelopmentRequirementsPage() {
     useState<ProjectRequirement | null>(null);
   const [isOptionOpen, setIsOptionOpen] = useState(false);
 
+  // Return modal state
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [requirementToReturn, setRequirementToReturn] =
+    useState<ProjectRequirement | null>(null);
+  const [returnReason, setReturnReason] = useState<string>("");
+  const [isReturning, setIsReturning] = useState(false);
+
   // Timeline hook for creating timelines
   const { createTimeline, loading: timelineLoading } = useTimeline({
     skipProjectsFetch: true, // Projects already loaded
@@ -387,7 +430,7 @@ export default function DevelopmentRequirementsPage() {
     departmentId: 2, // development Department
     minLength: 1,
     maxResults: 100,
-    loadInitialResults: true, // Load all developers initially
+    loadInitialResults: true, // Load all developers initially (used heavily)
     initialResultsLimit: 100,
   });
   const {
@@ -398,7 +441,8 @@ export default function DevelopmentRequirementsPage() {
     departmentId: 5, // QC Department
     minLength: 1,
     maxResults: 100,
-    loadInitialResults: true, // Load all QC members initially
+    // Only search when user types to avoid redundant q="" calls
+    loadInitialResults: false,
     initialResultsLimit: 100,
   });
   const {
@@ -409,7 +453,8 @@ export default function DevelopmentRequirementsPage() {
     departmentId: 3, // Design Department
     minLength: 1,
     maxResults: 100,
-    loadInitialResults: true, // Load all designers initially
+    // Only search when user types to avoid redundant q="" calls
+    loadInitialResults: false,
     initialResultsLimit: 100,
   });
 
@@ -504,6 +549,13 @@ export default function DevelopmentRequirementsPage() {
   const openRequirementDetails = (requirement: ProjectRequirement) => {
     setSelectedRequirementId(requirement.id);
     setIsDrawerOpen(true);
+  };
+
+  // Function to open return modal
+  const openReturnModal = (requirement: ProjectRequirement) => {
+    setRequirementToReturn(requirement);
+    setReturnReason("");
+    setIsReturnModalOpen(true);
   };
 
   // Removed fetchMemberById: we use backend data from approved-requirements to prefill selections
@@ -752,6 +804,37 @@ export default function DevelopmentRequirementsPage() {
     }
   };
 
+  // Function to handle requirement return
+  const handleReturnSubmit = async (onClose: () => void) => {
+    if (!requirementToReturn || !returnReason.trim()) return;
+
+    setIsReturning(true);
+    try {
+      await projectRequirementsService.returnRequirement(
+        requirementToReturn.id,
+        returnReason,
+      );
+
+      showSuccessToast(t("requirements.returnSuccess"));
+      
+      // Close modals
+      onClose();
+      setIsReturnModalOpen(false);
+      setIsTaskModalOpen(false);
+      setRequirementToReturn(null);
+      setReturnReason("");
+
+      // Refresh requirements data
+      refreshData();
+    } catch (error) {
+      showErrorToast(t("requirements.returnError"));
+      // eslint-disable-next-line no-console
+      console.error("Error returning requirement:", error);
+    } finally {
+      setIsReturning(false);
+    }
+  };
+
   // Function to reset task modal
   const resetTaskModal = () => {
     setIsTaskModalOpen(false);
@@ -776,7 +859,9 @@ export default function DevelopmentRequirementsPage() {
 
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<number | null>(
+    REQUIREMENT_STATUS.APPROVED,
+  );
   const [priorityFilter, setPriorityFilter] = useState<string>("");
 
   // Update filters when search/filter states change (with debouncing)
@@ -1074,6 +1159,7 @@ export default function DevelopmentRequirementsPage() {
                   requirement={requirement}
                   onCreateTask={openTaskModal}
                   onCreateTimeline={openTimelineModal}
+                  onReturn={openReturnModal}
                   onViewDetails={openRequirementDetails}
                 />
               ))}
@@ -1646,6 +1732,65 @@ export default function DevelopmentRequirementsPage() {
           onClose={closePreview}
           onDownload={downloadCurrentFile}
         />
+
+        {/* Return Requirement Modal */}
+        <Modal
+          isOpen={isReturnModalOpen}
+          size="lg"
+          onOpenChange={(open) => {
+            setIsReturnModalOpen(open);
+            if (!open) {
+              setRequirementToReturn(null);
+              setReturnReason("");
+            }
+          }}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex items-center gap-2">
+                  <CornerUpLeft className="w-5 h-5 text-warning" />
+                  <span>{t("requirements.returnRequirement")}</span>
+                </ModalHeader>
+                <ModalBody>
+                  <p className="text-default-600 mb-4">
+                    {t("requirements.returnConfirmation")}
+                  </p>
+                  <Textarea
+                    isRequired
+                    label={t("requirements.returnReason")}
+                    maxRows={6}
+                    minRows={3}
+                    placeholder={t("requirements.returnReasonPlaceholder")}
+                    value={returnReason}
+                    onChange={(e) => setReturnReason(e.target.value)}
+                  />
+                </ModalBody>
+                <ModalFooter>
+                  <Button
+                    variant="light"
+                    onPress={() => {
+                      onClose();
+                      setRequirementToReturn(null);
+                      setReturnReason("");
+                    }}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    color="danger"
+                    isDisabled={!returnReason.trim()}
+                    isLoading={isReturning}
+                    startContent={<CornerUpLeft className="w-4 h-4" />}
+                    onPress={() => handleReturnSubmit(onClose)}
+                  >
+                    {t("requirements.return")}
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       </div>
     </>
   );

@@ -1180,6 +1180,22 @@ const translations = {
       'This will change the status to "Approved" and make it available for development assignment.',
     "requirements.approveSuccess": "Requirement approved successfully",
     "requirements.approveError": "Failed to approve requirement",
+    "requirements.return": "Return",
+    "requirements.returnRequirement": "Return Requirement",
+    "requirements.returnReason": "Return Reason",
+    "requirements.returnReasonRequired": "Return reason is required",
+    "requirements.returnConfirmation":
+      "Are you sure you want to return this requirement? Please provide a reason for the return.",
+    "requirements.returnConfirmMessage":
+      'Are you sure you want to return the requirement "{name}"?',
+    "requirements.returnToAnalyst":
+      "This will return the requirement to the analyst for revision.",
+    "requirements.returnToManager":
+      "This will return the requirement to the analyst manager for re-review.",
+    "requirements.returnSuccess": "Requirement returned successfully",
+    "requirements.returnError": "Failed to return requirement",
+    "requirements.returnReasonPlaceholder":
+      "Please describe what needs to be changed or improved...",
     "requirements.noDevelopmentRequirements": "No requirements in development",
     "requirements.noDevelopmentRequirementsDesc":
       "There are currently no requirements marked as in development.",
@@ -1209,6 +1225,11 @@ const translations = {
     "requirementStatus.3": "Under Development",
     "requirementStatus.4": "Under Testing",
     "requirementStatus.5": "Completed",
+    "requirementStatus.6": "Rejected",
+    "requirementStatus.7": "Postponed",
+    "requirementStatus.8": "Cancelled",
+    "requirementStatus.9": "Returned to Analyst",
+    "requirementStatus.10": "Returned to Manager",
     "requirements.high": "High",
     "requirements.medium": "Medium",
     "requirements.low": "Low",
@@ -2711,7 +2732,7 @@ const translations = {
     "common.pleaseWait": "يرجى الانتظار...",
     "common.noDataFound": "لا توجد بيانات",
     "common.unexpectedError": "حدث خطأ غير متوقع",
-    "common.AddAdhocTask": "إضافة مهمة عاجلة",
+    "common.AddAdhocTask": "إضافة مهمة ",
     "common.project": "المشروع",
     "common.projects": "المشاريع",
     "common.assignee": "المعين",
@@ -3388,6 +3409,22 @@ const translations = {
       'سيؤدي هذا إلى تغيير الحالة إلى "معتمد" وجعله متاحاً لمرحلة البرمجة.',
     "requirements.approveSuccess": "تمت الموافقة على المتطلب بنجاح",
     "requirements.approveError": "فشل في الموافقة على المتطلب",
+    "requirements.return": "إرجاع",
+    "requirements.returnRequirement": "إرجاع المتطلب",
+    "requirements.returnReason": "سبب الإرجاع",
+    "requirements.returnReasonRequired": "سبب الإرجاع مطلوب",
+    "requirements.returnConfirmation":
+      "هل أنت متأكد من أنك تريد إرجاع هذا المتطلب؟ يرجى تقديم سبب للإرجاع.",
+    "requirements.returnConfirmMessage":
+      'هل أنت متأكد من أنك تريد إرجاع المتطلب "{name}"؟',
+    "requirements.returnToAnalyst":
+      "سيؤدي هذا إلى إرجاع المتطلب إلى المحلل لإجراء التعديلات.",
+    "requirements.returnToManager":
+      "سيؤدي هذا إلى إرجاع المتطلب إلى مدير المحللين لإعادة المراجعة.",
+    "requirements.returnSuccess": "تم إرجاع المتطلب بنجاح",
+    "requirements.returnError": "فشل في إرجاع المتطلب",
+    "requirements.returnReasonPlaceholder":
+      "يرجى وصف ما يحتاج إلى تغيير أو تحسين...",
     "requirements.noDevelopmentRequirements": "لا توجد متطلبات قيد البرمجة",
     "requirements.noDevelopmentRequirementsDesc":
       "لا توجد حالياً متطلبات موسومة بأنها قيد البرمجة.",
@@ -3416,6 +3453,11 @@ const translations = {
     "requirementStatus.3": "قيد البرمجة",
     "requirementStatus.4": "قيد الاختبار",
     "requirementStatus.5": "مكتمل",
+    "requirementStatus.6": "مرفوض",
+    "requirementStatus.7": "مؤجل",
+    "requirementStatus.8": "ملغي",
+    "requirementStatus.9": "معاد إلى المحلل",
+    "requirementStatus.10": "معاد إلى المدير",
     "requirements.high": "عالية",
     "requirements.medium": "متوسطة",
     "requirements.low": "منخفضة",
@@ -3451,6 +3493,7 @@ const translations = {
     "tasks.createTask": "إنشاء مهمة",
     "tasks.assignQC": "تعيين مراقب جودة",
     "tasks.viewTask": "عرض المهمة",
+    "tasks.viewTask": "تعديل المهمة",
     "tasks.editTask": "تحرير المهمة",
     "tasks.taskName": "اسم المهمة",
     "tasks.currentAssignees": "الموظفون المعينون الحاليون",
@@ -3941,7 +3984,7 @@ const translations = {
       "هذا المشروع لا يحتوي على أي جداول زمنية بعد.",
     "timeline.noTimelinesGeneral":
       "اختر مشروعاً وأنشئ جدولك الزمني الأول للبدء.",
-    "timeline.createTimeline": "إنشاء جدول زمني",
+    "timeline.createTimeline": "إنشاء مخطط زمني",
     "timeline.viewTimeline": "عرض الجدول الزمني",
     "timeline.selectTimeline": "اختر جدولاً زمنياً",
     "timeline.selectTimelineDescription":
@@ -4021,7 +4064,7 @@ const translations = {
     "timeline.loadingFailed": "فشل تحميل البيانات",
 
     // Timeline Create Modal
-    "timeline.createModal.title": "إنشاء جدول زمني",
+    "timeline.createModal.title": "إنشاء مخطط زمني",
     "timeline.createModal.editTitle": "تحرير المخطط الزمني",
     "timeline.createModal.name": "اسم المخطط الزمني",
     "timeline.createModal.description": "الوصف",
@@ -4209,8 +4252,8 @@ const translations = {
     "timeline.filters.medium": "متوسطة",
     "timeline.filters.high": "عالية",
     "timeline.filters.critical": "حرجة",
-    "timeline.create.title": "إنشاء جدول زمني جديد",
-    "timeline.create.subtitle": "قم بإنشاء جدول زمني جديد لتنظيم مراحل مشروعك",
+    "timeline.create.title": "إنشاء مخطط زمني جديد",
+    "timeline.create.subtitle": "قم بإنشاء مخطط زمني جديد لتنظيم مراحل مشروعك",
     "timeline.create.timelineName": "اسم المخطط الزمني",
     "timeline.create.timelineNamePlaceholder": "أدخل اسم المخطط الزمني",
     "timeline.create.description": "الوصف",
