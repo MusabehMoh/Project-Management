@@ -14,12 +14,14 @@ public class QCQuickActionsController : ApiBaseController
     private readonly ApplicationDbContext _context;
     private readonly IUserService _userService;
     private readonly ILogger<QCQuickActionsController> _logger;
-
+    private readonly ITaskRepository _taskRepository;
     public QCQuickActionsController(
+        ITaskRepository taskRepository,
         ApplicationDbContext context,
         IUserService userService,
         ILogger<QCQuickActionsController> logger)
     {
+        _taskRepository = taskRepository;
         _context = context;
         _userService = userService;
         _logger = logger;
@@ -41,16 +43,14 @@ public class QCQuickActionsController : ApiBaseController
             const int QC_DEPARTMENT_ID = 2;
 
             // Get task IDs that have no dependent tasks
-            var taskIdsWithNoDependents = await _context.Tasks
-                .Where(t => !_context.TaskDependencies.Any(dep => dep.TaskId == t.Id))
-                .Select(t => t.Id)
-                .ToListAsync();
+         
+            var taskIdsWithNoDependents = await _taskRepository.GetTaskIdsWithNoDependentTasksAsync();
             var taskIdsWithNoDependentsSet = new HashSet<int>(taskIdsWithNoDependents);
 
             // Get tasks that are in "In Review" status (completed by developers) 
             // AND do NOT have a QC member assigned yet
             var tasksNeedingQCAssignment = await _context.Tasks
-                .Where(t => t.StatusId == TaskStatusEnum.InReview && t.RoleType=="developer")
+                .Where(t =>  t.RoleType=="developer" && taskIdsWithNoDependents.Contains(t.Id))
                 .Include(t => t.ProjectRequirement)
                     .ThenInclude(pr => pr!.Project)
                 .Include(t => t.Assignments)

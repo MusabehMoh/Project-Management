@@ -231,127 +231,130 @@ export default function QCQuickActions({
         `}
       </style>
       <Card className="w-full shadow-medium border-default-200" dir={direction}>
-      <CardHeader className="flex items-center justify-between pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-xl font-semibold text-foreground">
-              {t("qcDashboard.myActions")}
-            </h3>
-            {!loading && totalActions > 0 && (
-              <Chip
-                className="bg-danger-50 text-danger-600 border border-danger-200"
-                size="sm"
-                style={{
-                  animation: "fadeInOut 2s ease-in-out infinite",
-                }}
-                variant="flat"
-              >
-                <AnimatedCounter duration={600} value={totalActions} />
-              </Chip>
-            )}
-          </div>
-          <p className="text-sm text-default-500 mt-1">
-            {t("qcDashboard.actionsSubtitle")}
-          </p>
-        </div>
-        <Button
-          isIconOnly
-          className="text-default-400 hover:text-default-600"
-          disabled={isRefreshing}
-          size="sm"
-          variant="light"
-          onPress={handleRefresh}
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-          />
-        </Button>
-      </CardHeader>
-
-      <Divider className="bg-default-200" />
-
-      <CardBody className="py-6">
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-20 rounded-lg" />
-            ))}
-          </div>
-        ) : totalActions === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <CheckCircle className="w-16 h-16 text-success opacity-60 mb-4" />
-            <p className="text-default-500 text-sm">
-              {t("qcDashboard.noActions")}
+        <CardHeader className="flex items-center justify-between pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-semibold text-foreground">
+                {t("qcDashboard.myActions")}
+              </h3>
+              {!loading && totalActions > 0 && (
+                <Chip
+                  className="bg-danger-50 text-danger-600 border border-danger-200"
+                  size="sm"
+                  style={{
+                    animation: "fadeInOut 2s ease-in-out infinite",
+                  }}
+                  variant="flat"
+                >
+                  <AnimatedCounter duration={600} value={totalActions} />
+                </Chip>
+              )}
+            </div>
+            <p className="text-sm text-default-500 mt-1">
+              {t("qcDashboard.actionsSubtitle")}
             </p>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <Accordion selectionMode="single" variant="splitted">
-              <AccordionItem
-                key="needsReview"
-                className="border border-default-200 rounded-lg"
-                title={
-                  <div className="flex items-center justify-between w-full">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {t("qcDashboard.needsReview")}
-                    </h3>
-                    <Chip
-                      className="bg-danger-50 text-danger-600"
-                      size="sm"
-                      variant="flat"
-                    >
-                      {tasksNeedingReview.length}
-                    </Chip>
-                  </div>
-                }
-              >
-                <ScrollShadow className="max-h-64" hideScrollBar={true} size={20}>
-                  <div className="space-y-3 pr-2">
-                    {tasksNeedingReview.map((task) => (
-                      <CustomAlert
-                        key={task.id}
-                        color="danger"
-                        description={`${task.projectName} • ${task.requirementName}`}
-                        direction={direction}
-                        title={task.taskName}
+          <Button
+            isIconOnly
+            className="text-default-400 hover:text-default-600"
+            disabled={isRefreshing}
+            size="sm"
+            variant="light"
+            onPress={handleRefresh}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </CardHeader>
+
+        <Divider className="bg-default-200" />
+
+        <CardBody className="py-6">
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 rounded-lg" />
+              ))}
+            </div>
+          ) : totalActions === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <CheckCircle className="w-16 h-16 text-success opacity-60 mb-4" />
+              <p className="text-default-500 text-sm">
+                {t("qcDashboard.noActions")}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Accordion selectionMode="single" variant="splitted">
+                <AccordionItem
+                  key="needsReview"
+                  className="border border-default-200 rounded-lg"
+                  title={
+                    <div className="flex items-center justify-between w-full">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {t("qcDashboard.needsReview")}
+                      </h3>
+                      <Chip
+                        className="bg-danger-50 text-danger-600"
+                        size="sm"
+                        variant="flat"
                       >
-
-                        <Divider className="bg-default-200 my-3" />
-
-                        <div
-                          className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
+                        {tasksNeedingReview.length}
+                      </Chip>
+                    </div>
+                  }
+                >
+                  <ScrollShadow
+                    className="max-h-64"
+                    hideScrollBar={true}
+                    size={20}
+                  >
+                    <div className="space-y-3 pr-2">
+                      {tasksNeedingReview.map((task) => (
+                        <CustomAlert
+                          key={task.id}
+                          color="danger"
+                          description={`${task.projectName} • ${task.requirementName}`}
+                          direction={direction}
+                          title={task.taskName}
                         >
-                          <Button
-                            className="bg-background text-default-700 font-medium border-1 shadow-small"
-                            size="sm"
-                            startContent={<Plus className="w-4 h-4" />}
-                            variant="bordered"
-                            onPress={() => {
-                              setSelectedTaskForCreate(task);
-                              setIsCreateModalOpen(true);
-                            }}
+                          <Divider className="bg-default-200 my-3" />
+
+                          <div
+                            className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
                           >
-                            {t("tasks.assignQC")}
-                          </Button>
-                        </div>
-                      </CustomAlert>
-                    ))}
-                  </div>
-                </ScrollShadow>
-              </AccordionItem>
-            </Accordion>
-          </div>
-        )}
-      </CardBody>
-      <TaskCreateModal
-        isOpen={isCreateModalOpen}
-        parentTask={selectedTaskForCreate}
-        onOpenChange={setIsCreateModalOpen}
-        onTaskCreated={() => {
-          fetchTasks(); // Refresh tasks after creating new one
-        }}
-      />
-    </Card>
+                            <Button
+                              className="bg-background text-default-700 font-medium border-1 shadow-small"
+                              size="sm"
+                              startContent={<Plus className="w-4 h-4" />}
+                              variant="bordered"
+                              onPress={() => {
+                                setSelectedTaskForCreate(task);
+                                setIsCreateModalOpen(true);
+                              }}
+                            >
+                              {t("tasks.assignQC")}
+                            </Button>
+                          </div>
+                        </CustomAlert>
+                      ))}
+                    </div>
+                  </ScrollShadow>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
+        </CardBody>
+        <TaskCreateModal
+          isOpen={isCreateModalOpen}
+          parentTask={selectedTaskForCreate}
+          onOpenChange={setIsCreateModalOpen}
+          onTaskCreated={() => {
+            fetchTasks(); // Refresh tasks after creating new one
+          }}
+        />
+      </Card>
     </>
   );
 }

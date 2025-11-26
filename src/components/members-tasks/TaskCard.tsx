@@ -484,12 +484,12 @@ export const TaskCard = ({
         </div>
       </CardBody>
 
-      <TaskCreateModal
+      {/* <TaskCreateModal
         isOpen={isCreateModalOpen}
         parentTask={task}
         onOpenChange={setIsCreateModalOpen}
         onTaskCreated={onTaskCreated}
-      />
+      /> */}
     </Card>
   );
 };

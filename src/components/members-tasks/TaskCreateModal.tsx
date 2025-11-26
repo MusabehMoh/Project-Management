@@ -14,7 +14,7 @@ import {
 } from "@heroui/modal";
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { Info } from "lucide-react";
-import { getLocalTimeZone, today } from "@internationalized/date";
+import { getLocalTimeZone, today, parseDate } from "@internationalized/date";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -105,8 +105,32 @@ export default function TaskCreateModal({
   // Update form data when parent task changes
   useEffect(() => {
     if (isOpen && parentTask) {
+      // Helper function to convert date string to CalendarDate
+      const parseTaskDate = (dateValue: any) => {
+        if (!dateValue) return null;
+
+        // If it's already a CalendarDate object, return it
+        if (typeof dateValue === "object" && "calendar" in dateValue) {
+          return dateValue;
+        }
+
+        // If it's a string (YYYY-MM-DD), parse it
+        if (typeof dateValue === "string") {
+          try {
+            return parseDate(dateValue);
+          } catch {
+            return null;
+          }
+        }
+
+        return null;
+      };
+
       setFormData((prev) => ({
         ...prev,
+        name: "Qc -" + (parentTask.taskName || ""),
+        startDate: parseTaskDate(parentTask.startDate),
+        endDate: parseTaskDate(parentTask.endDate),
         departmentId: parentTask.department?.id
           ? Number(parentTask.department.id)
           : undefined,

@@ -3,6 +3,7 @@ import { Department, MemberSearchResult } from "./timeline";
 export interface MemberTask {
   id: string;
   name: string;
+    taskName: string;
   description: string;
   startDate: string;
   endDate: string;

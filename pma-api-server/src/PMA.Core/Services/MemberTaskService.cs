@@ -103,20 +103,20 @@ public class MemberTaskService : IMemberTaskService
         bool isQCManager = currentUser.Roles?.Any(r => IsRoleCode(r.Code, RoleCodes.QCManager)) ?? false;
         List<TaskEntity> additionalTasks = new List<TaskEntity>();
         
-        if (isQCManager)
-        {
-            // Get task IDs that have no dependent tasks
-            var noDependentTaskIds = await _taskRepository.GetTaskIdsWithNoDependentTasksAsync();
-            var noDependentTaskIdsSet = new HashSet<int>(noDependentTaskIds);
+        //if (isQCManager)
+        //{
+        //    // Get task IDs that have no dependent tasks
+        //    var noDependentTaskIds = await _taskRepository.GetTaskIdsWithNoDependentTasksAsync();
+        //    var noDependentTaskIdsSet = new HashSet<int>(noDependentTaskIds);
             
-            // Get developer tasks that have no dependent tasks
-            var developerTasksWithNoDependents = await _taskRepository.GetTasksAsync(1, 1000, null, null, null, null, null, null, null, null);
-            var filteredDeveloperTasks = developerTasksWithNoDependents.Tasks
-                .Where(t => t.RoleType == "Developer" && noDependentTaskIdsSet.Contains(t.Id))
-                .ToList();
+        //    // Get developer tasks that have no dependent tasks
+        //    var developerTasksWithNoDependents = await _taskRepository.GetTasksAsync(1, 1000, null, null, null, null, null, null, null, null);
+        //    var filteredDeveloperTasks = developerTasksWithNoDependents.Tasks
+        //        .Where(t => t.RoleType == "Developer" && noDependentTaskIdsSet.Contains(t.Id))
+        //        .ToList();
             
-            additionalTasks.AddRange(filteredDeveloperTasks);
-        }
+        //    additionalTasks.AddRange(filteredDeveloperTasks);
+        //}
 
         // Combine regular tasks with additional tasks for analyst manager
         var allTasks = tasks.Concat(additionalTasks).DistinctBy(t => t.Id).ToList();
