@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 
 import { Project } from "@/types/project";
 import { projectService } from "@/services/api";
+import { PaginationInfo } from "@/types/api";
 
 /**
  * Lightweight hook for timeline page - only loads projects data
@@ -11,6 +12,7 @@ export const useTimelineProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
 
   // Load projects from API with pagination
   const loadProjects = useCallback(
@@ -27,6 +29,7 @@ export const useTimelineProjects = () => {
 
         if (response.success && response.data) {
           setProjects(response.data);
+          setPagination(response.pagination || null);
         } else {
           throw new Error(response.message || "Failed to load projects");
         }
@@ -48,6 +51,7 @@ export const useTimelineProjects = () => {
     projects,
     loading,
     error,
+    pagination,
     loadProjects,
   };
 };

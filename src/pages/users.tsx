@@ -1645,7 +1645,7 @@ export default function UsersPage() {
                             impersonatingUser.userName}
                         </p>
                         <p className="text-small text-default-500">
-                          @{impersonatingUser.userName}
+                          {impersonatingUser.userName}
                         </p>
                       </div>
                     </div>

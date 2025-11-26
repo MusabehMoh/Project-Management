@@ -7,8 +7,7 @@ import { Skeleton } from "@heroui/skeleton";
 import { Alert } from "@heroui/alert";
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
-import { Tooltip } from "@heroui/tooltip";
-import { RefreshCw, AlertTriangle, CheckCircle, Plus } from "lucide-react";
+import { RefreshCw, CheckCircle, Plus } from "lucide-react";
 
 import { useLanguage, Direction } from "@/contexts/LanguageContext";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
@@ -131,8 +130,28 @@ const CustomAlert = React.forwardRef<HTMLDivElement, CustomAlertProps>(
           ]
             .filter(Boolean)
             .join(" "),
+          iconWrapper: ["dark:bg-transparent", classNames.iconWrapper]
+            .filter(Boolean)
+            .join(" "),
+          title: [
+            isRTL ? "text-right" : "text-left",
+            "text-sm font-medium",
+            classNames.title,
+          ]
+            .filter(Boolean)
+            .join(" "),
+          description: [
+            isRTL ? "text-right" : "text-left",
+            "text-xs text-default-500 mt-1",
+            classNames.description,
+          ]
+            .filter(Boolean)
+            .join(" "),
         }}
+        color={color as any}
+        dir={direction}
         title={title}
+        variant="faded"
         {...props}
       >
         {children}
@@ -202,43 +221,56 @@ export default function QCQuickActions({
   }
 
   return (
-    <Card className="w-full shadow-medium">
-      <CardHeader className="flex flex-col items-start px-6 pt-6 pb-4">
-        <div className="flex justify-between items-center w-full">
-          <div className="flex items-center gap-3">
+    <>
+      <style>
+        {`
+          @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+          }
+        `}
+      </style>
+      <Card className="w-full shadow-medium border-default-200" dir={direction}>
+      <CardHeader className="flex items-center justify-between pb-4">
+        <div>
+          <div className="flex items-center gap-2">
             <h3 className="text-xl font-semibold text-foreground">
               {t("qcDashboard.myActions")}
             </h3>
-            {!loading && (
+            {!loading && totalActions > 0 && (
               <Chip
-                className="animate-pulse"
-                color="danger"
+                className="bg-danger-50 text-danger-600 border border-danger-200"
                 size="sm"
+                style={{
+                  animation: "fadeInOut 2s ease-in-out infinite",
+                }}
                 variant="flat"
               >
-                <AnimatedCounter value={totalActions} />
+                <AnimatedCounter duration={600} value={totalActions} />
               </Chip>
             )}
           </div>
-          <Button
-            isIconOnly
-            className="min-w-unit-8 w-unit-8 h-unit-8"
-            isLoading={isRefreshing}
-            size="sm"
-            variant="light"
-            onPress={handleRefresh}
-          >
-            {!isRefreshing && <RefreshCw className="w-4 h-4" />}
-          </Button>
+          <p className="text-sm text-default-500 mt-1">
+            {t("qcDashboard.actionsSubtitle")}
+          </p>
         </div>
-        <p className="text-sm text-default-500 mt-2">
-          {t("qcDashboard.actionsSubtitle")}
-        </p>
+        <Button
+          isIconOnly
+          className="text-default-400 hover:text-default-600"
+          disabled={isRefreshing}
+          size="sm"
+          variant="light"
+          onPress={handleRefresh}
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+          />
+        </Button>
       </CardHeader>
 
-      <Divider />
+      <Divider className="bg-default-200" />
 
-      <CardBody className="px-6 py-4">
+      <CardBody className="py-6">
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -246,125 +278,69 @@ export default function QCQuickActions({
             ))}
           </div>
         ) : totalActions === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <div className="flex flex-col items-center justify-center py-8 text-center">
             <CheckCircle className="w-16 h-16 text-success opacity-60 mb-4" />
             <p className="text-default-500 text-sm">
               {t("qcDashboard.noActions")}
             </p>
           </div>
         ) : (
-          <Accordion
-            className="px-0"
-            itemClasses={{
-              trigger: "py-3 cursor-pointer",
-              title: "text-base font-medium",
-            }}
-            variant="light"
-          >
-            <AccordionItem
-              key="needsReview"
-              aria-label={t("qcDashboard.needsReview")}
-              startContent={<AlertTriangle className="w-5 h-5 text-warning" />}
-              title={
-                <div className="flex items-center gap-2">
-                  <span>{t("qcDashboard.needsReview")}</span>
-                  <Chip color="warning" size="sm" variant="flat">
-                    {tasksNeedingReview.length}
-                  </Chip>
-                </div>
-              }
-            >
-              <ScrollShadow hideScrollBar className="max-h-64" size={20}>
-                <div className="space-y-3 pb-2">
-                  {tasksNeedingReview.map((task) => (
-                    <CustomAlert
-                      key={task.id}
-                      className="mb-3"
-                      classNames={{
-                        title: direction === "rtl" ? "text-right" : "text-left",
-                      }}
-                      color="warning"
-                      direction={direction}
-                      title={
-                        <div className="flex items-center justify-between gap-2">
-                          <span>{task.taskName}</span>
-                          <div className="flex items-center gap-2">
-                            <Chip
-                              color={
-                                task.typeId === 1
-                                  ? "primary"
-                                  : task.typeId === 2
-                                    ? "secondary"
-                                    : "warning"
-                              }
-                              size="sm"
-                              variant="bordered"
-                            >
-                              {task.typeId === 1
-                                ? t("tasks.type.timeline")
-                                : task.typeId === 2
-                                  ? t("tasks.type.changeRequest")
-                                  : t("tasks.type.adhoc")}
-                            </Chip>
-                            <Chip
-                              color={
-                                task.priority === "high"
-                                  ? "danger"
-                                  : task.priority === "medium"
-                                    ? "warning"
-                                    : "default"
-                              }
-                              size="sm"
-                              variant="flat"
-                            >
-                              {t(`priority.${task.priority}`)}
-                            </Chip>
-                          </div>
-                        </div>
-                      }
+          <div className="space-y-4">
+            <Accordion selectionMode="single" variant="splitted">
+              <AccordionItem
+                key="needsReview"
+                className="border border-default-200 rounded-lg"
+                title={
+                  <div className="flex items-center justify-between w-full">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {t("qcDashboard.needsReview")}
+                    </h3>
+                    <Chip
+                      className="bg-danger-50 text-danger-600"
+                      size="sm"
+                      variant="flat"
                     >
-                      <div className="space-y-3 text-sm">
-                        {/* Project & Requirement */}
-                        <div className="text-xs">
-                          <span className="text-default-500 font-medium">
-                            {t("common.project")}:{" "}
-                          </span>
-                          <span className="text-default-700">
-                            {task.projectName}
-                          </span>
-                          <span className="text-default-500 font-medium mx-2">
-                            • {t("requirements.requirement")}:{" "}
-                          </span>
-                          <span className="text-default-700">
-                            {task.requirementName}
-                          </span>
-                        </div>
+                      {tasksNeedingReview.length}
+                    </Chip>
+                  </div>
+                }
+              >
+                <ScrollShadow className="max-h-64" hideScrollBar={true} size={20}>
+                  <div className="space-y-3 pr-2">
+                    {tasksNeedingReview.map((task) => (
+                      <CustomAlert
+                        key={task.id}
+                        color="danger"
+                        description={`${task.projectName} • ${task.requirementName}`}
+                        direction={direction}
+                        title={task.taskName}
+                      >
 
                         <Divider className="bg-default-200 my-3" />
 
-                        {/* Create Task Button */}
-                        <Tooltip content={t("task.createTaskHint")}>
+                        <div
+                          className={`flex items-center gap-1 ${direction === "rtl" ? "justify-start" : "justify-start"}`}
+                        >
                           <Button
-                            className="w-full"
-                            color="primary"
+                            className="bg-background text-default-700 font-medium border-1 shadow-small"
                             size="sm"
                             startContent={<Plus className="w-4 h-4" />}
-                            variant="solid"
+                            variant="bordered"
                             onPress={() => {
                               setSelectedTaskForCreate(task);
                               setIsCreateModalOpen(true);
                             }}
                           >
-                            {t("task.createTask")}
+                            {t("tasks.assignQC")}
                           </Button>
-                        </Tooltip>
-                      </div>
-                    </CustomAlert>
-                  ))}
-                </div>
-              </ScrollShadow>
-            </AccordionItem>
-          </Accordion>
+                        </div>
+                      </CustomAlert>
+                    ))}
+                  </div>
+                </ScrollShadow>
+              </AccordionItem>
+            </Accordion>
+          </div>
         )}
       </CardBody>
       <TaskCreateModal
@@ -376,5 +352,6 @@ export default function QCQuickActions({
         }}
       />
     </Card>
+    </>
   );
 }

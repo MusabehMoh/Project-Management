@@ -14,7 +14,7 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@heroui/modal";
-import { AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Grid, List } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -26,8 +26,9 @@ import {
 import { useTimelines } from "@/hooks/useTimelines";
 import { useTimelineProjects } from "@/hooks/useTimelineProjects";
 import { usePageTitle } from "@/hooks";
-import { timelineService } from "@/services/api";
+import { timelineService, projectService } from "@/services/api";
 import { TimelineView, Timeline } from "@/types/timeline";
+import { Project } from "@/types/project";
 // Import timeline components
 import TimelineTreeView from "@/components/timeline/TimelineTreeView";
 import TimelineDetailsPanel from "@/components/timeline/TimelineDetailsPanel";
@@ -35,10 +36,12 @@ import TimelineCreateModal from "@/components/timeline/TimelineCreateModal";
 import TimelineFilters from "@/components/timeline/TimelineFilters";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import AllProjectsOverview from "@/components/timeline/AllProjectsOverview";
+import ProjectsCardList from "@/components/ProjectsCardList";
 // Import skeleton components
 import TimelineTreeSkeleton from "@/components/timeline/skeletons/TimelineTreeSkeleton";
 import TimelineGanttSkeleton from "@/components/timeline/skeletons/TimelineGanttSkeleton";
 import TimelineSelectionSkeleton from "@/components/timeline/skeletons/TimelineSelectionSkeleton";
+import GlobalPagination from "@/components/GlobalPagination";
 
 export default function TimelinePage() {
   const { t, language } = useLanguage();
@@ -54,18 +57,87 @@ export default function TimelinePage() {
     number | undefined
   >(projectId);
 
-  // Projects hook for all projects (optimized for timeline - no users/owning-units loading)
+  // Projects hook for paginated projects (for AllProjectsOverview cards)
   const {
-    projects,
+    projects: paginatedProjects,
     loading: projectsLoading,
+    pagination: projectsPagination,
     loadProjects,
   } = useTimelineProjects();
 
-  // Effect to load all projects for timeline dropdown
+  // Pagination state (10 items per page for overview cards)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  // Projects overview display mode
+  const [projectsViewMode, setProjectsViewMode] = useState<"list" | "cards">(
+    "list",
+  );
+
+  // State for project team members
+  const [projectTeamMembers, setProjectTeamMembers] = useState<
+    Map<
+      number,
+      Array<{
+        id: number;
+        fullName: string;
+        gradeName: string;
+        avatar?: string;
+      }>
+    >
+  >(new Map());
+
+  // State for projects with timelines and team (optimized single API call)
+  const [projectsWithTimelinesAndTeam, setProjectsWithTimelinesAndTeam] =
+    useState<
+      Array<{
+        id: number;
+        applicationName: string;
+        status: number;
+        statusName: string;
+        startDate: string;
+        expectedCompletionDate: string | null;
+        budget: number | null;
+        hasTimeline: boolean;
+        teamMembers: Array<{
+          id: number;
+          fullName: string;
+          gradeName: string;
+          militaryNumber: string;
+          avatar?: string | null;
+        }>;
+      }>
+    >([]);
+  const [loadingProjectsWithTeam, setLoadingProjectsWithTeam] = useState(false);
+
+  // State for all projects (for select dropdown) - load directly from API
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [allProjectsLoading, setAllProjectsLoading] = useState(false);
+
+  // Effect to load all projects for select dropdown (once on mount)
   useEffect(() => {
-    // Load all projects (up to 100) for the timeline dropdown
-    loadProjects(1, 100);
-  }, [loadProjects]);
+    const loadAllProjectsForDropdown = async () => {
+      setAllProjectsLoading(true);
+      try {
+        const response = await projectService.getProjects(undefined, 1, 1000);
+
+        if (response.success && response.data) {
+          setAllProjects(response.data);
+        }
+      } catch (error) {
+        console.error("Error loading all projects:", error);
+      } finally {
+        setAllProjectsLoading(false);
+      }
+    };
+
+    loadAllProjectsForDropdown();
+  }, []); // Only run once on mount
+
+  // Effect to load paginated projects for overview cards
+  useEffect(() => {
+    loadProjects(currentPage, pageSize);
+  }, [currentPage, pageSize]); // Don't include loadProjects to avoid infinite loop
 
   // State for all projects with their timelines (including projects with no timelines)
   const [projectsWithTimelines, setProjectsWithTimelines] = useState<
@@ -75,6 +147,40 @@ export default function TimelinePage() {
       loading: boolean;
     }>
   >([]);
+
+  // Effect to fetch team members for projects with timelines (optimized single API call)
+  useEffect(() => {
+    const fetchProjectsWithTimelinesAndTeam = async () => {
+      if (projectsViewMode !== "cards") return;
+
+      setLoadingProjectsWithTeam(true);
+      try {
+        const response =
+          await projectService.getProjectsWithTimelinesAndTeam();
+
+        if (response.success && response.data) {
+          setProjectsWithTimelinesAndTeam(response.data);
+
+          // Also populate the teamMembers map for backward compatibility
+          const teamMembersMap = new Map();
+
+          response.data.forEach((project) => {
+            teamMembersMap.set(project.id, project.teamMembers);
+          });
+          setProjectTeamMembers(teamMembersMap);
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching projects with timelines and team:",
+          error,
+        );
+      } finally {
+        setLoadingProjectsWithTeam(false);
+      }
+    };
+
+    fetchProjectsWithTimelinesAndTeam();
+  }, [projectsViewMode]); // Only fetch when switching to cards view
 
   // Timeline state management - only run when projects are loaded and we have a selected project
   const {
@@ -133,9 +239,9 @@ export default function TimelinePage() {
 
   // Load projects with basic timeline info for dropdown (Performance Optimized)
   const loadProjectsWithTimelineInfo = useCallback(async () => {
-    if (!projects || projects.length === 0) return;
+    if (!allProjects || allProjects.length === 0) return;
 
-    const initialProjects = projects.map((project) => ({
+    const initialProjects = allProjects.map((project) => ({
       project,
       timelines: [], // Only basic timeline info for dropdown
       loading: true,
@@ -147,7 +253,7 @@ export default function TimelinePage() {
     const response = await timelineService.getProjectsWithTimelines();
 
     if (response.success && response.data) {
-      const projectsWithTimelineData = projects.map((project) => {
+      const projectsWithTimelineData = allProjects.map((project) => {
         const projectData = response.data.find(
           (p: any) => p.projectId === project.id,
         );
@@ -163,7 +269,7 @@ export default function TimelinePage() {
 
       return;
     }
-  }, [projects]);
+  }, [allProjects]);
 
   // Load full timeline hierarchy for a specific project (only when needed)
   const loadProjectTimelinesHierarchy = useCallback(
@@ -205,7 +311,7 @@ export default function TimelinePage() {
           // Refresh timelines for the current project
           await fetchTimelines();
           // Refresh projects with basic timeline info for the dropdown
-          if (projects.length > 0) {
+          if (allProjects.length > 0) {
             loadProjectsWithTimelineInfo();
           }
           // The useEffect will auto-select the new timeline
@@ -219,7 +325,7 @@ export default function TimelinePage() {
     [
       createTimeline,
       fetchTimelines,
-      projects.length,
+      allProjects.length,
       loadProjectsWithTimelineInfo,
       setSelectedTimeline,
     ],
@@ -233,7 +339,7 @@ export default function TimelinePage() {
 
         if (newSprint) {
           // Refresh projects with basic timeline info for the dropdown
-          if (projects.length > 0) {
+          if (allProjects.length > 0) {
             loadProjectsWithTimelineInfo();
           }
         }
@@ -243,7 +349,7 @@ export default function TimelinePage() {
         throw error; // Re-throw to let the component handle it
       }
     },
-    [createSprint, projects.length, loadProjectsWithTimelineInfo],
+    [createSprint, allProjects.length, loadProjectsWithTimelineInfo],
   );
 
   // Enhanced task update that refreshes dropdown data
@@ -254,7 +360,7 @@ export default function TimelinePage() {
 
         if (updatedTask) {
           // Refresh projects with basic timeline info for the dropdown to reflect changes
-          if (projects.length > 0) {
+          if (allProjects.length > 0) {
             loadProjectsWithTimelineInfo();
           }
         }
@@ -264,7 +370,7 @@ export default function TimelinePage() {
         throw error; // Re-throw to let the component handle it
       }
     },
-    [updateTask, projects.length, loadProjectsWithTimelineInfo],
+    [updateTask, allProjects.length, loadProjectsWithTimelineInfo],
   );
 
   // Enhanced sprint update that refreshes dropdown data
@@ -275,7 +381,7 @@ export default function TimelinePage() {
 
         if (updatedSprint) {
           // Refresh projects with basic timeline info for the dropdown to reflect changes
-          if (projects.length > 0) {
+          if (allProjects.length > 0) {
             loadProjectsWithTimelineInfo();
           }
         }
@@ -285,7 +391,7 @@ export default function TimelinePage() {
         throw error; // Re-throw to let the component handle it
       }
     },
-    [updateSprint, projects.length, loadProjectsWithTimelineInfo],
+    [updateSprint, allProjects.length, loadProjectsWithTimelineInfo],
   );
 
   const refreshData = useCallback(() => {
@@ -295,27 +401,27 @@ export default function TimelinePage() {
     }
 
     // Always refresh all projects with basic timeline info for the dropdown
-    if (projects.length > 0) {
+    if (allProjects.length > 0) {
       loadProjectsWithTimelineInfo();
     }
   }, [
     fetchTimelines,
     selectedProjectId,
-    projects.length,
+    allProjects.length,
     loadProjectsWithTimelineInfo,
   ]);
 
   // Load projects with basic timeline info when projects change - ALWAYS load for dropdown
   useEffect(() => {
-    if (projects.length > 0) {
+    if (allProjects.length > 0) {
       // Always load all projects with basic timeline info for the dropdown
       loadProjectsWithTimelineInfo();
     }
-  }, [projects.length, loadProjectsWithTimelineInfo]); // ✅ Remove selectedProjectId dependency
+  }, [allProjects.length, loadProjectsWithTimelineInfo]); // ✅ Remove selectedProjectId dependency
 
   // Auto-select project and timeline based on taskId parameter
   useEffect(() => {
-    if (!taskId || !projects || projects.length === 0) return;
+    if (!taskId || !allProjects || allProjects.length === 0) return;
 
     const fetchTaskAndSelectProject = async () => {
       try {
@@ -352,7 +458,7 @@ export default function TimelinePage() {
     };
 
     fetchTaskAndSelectProject();
-  }, [taskId, projects, setSearchParams]);
+  }, [taskId, allProjects, setSearchParams]);
 
   // Auto-select timeline when data loads and we have a selected project
   useEffect(() => {
@@ -434,6 +540,47 @@ export default function TimelinePage() {
 
   // Set page title
   usePageTitle("timeline.title");
+
+  // Prepare card data for projects with timelines
+  const projectsCardData = useMemo(() => {
+    return paginatedProjects
+      .filter((project) => {
+        // Check if project has timelines by looking in projectsWithTimelines
+        const projectInfo = projectsWithTimelines.find(
+          (p) => p.project.id === project.id,
+        );
+
+        return projectInfo && projectInfo.timelines.length > 0;
+      })
+      .map((project) => ({
+        id: project.id,
+        name: project.applicationName,
+        statusId: project.status,
+        statusName: getProjectStatusName(project.status),
+        startDate: project.startDate,
+        expectedEndDate: project.expectedCompletionDate,
+        budget: project.budget,
+        teamMembers: projectTeamMembers.get(project.id) || [],
+      }));
+  }, [paginatedProjects, projectsWithTimelines, projectTeamMembers]);
+
+  // Helper function to get status name
+  function getProjectStatusName(statusId: number): string {
+    switch (statusId) {
+      case 1:
+        return t("projects.status.notStarted");
+      case 2:
+        return t("projects.status.inProgress");
+      case 3:
+        return t("projects.status.completed");
+      case 4:
+        return t("projects.status.onHold");
+      case 5:
+        return t("projects.status.cancelled");
+      default:
+        return t("projects.status.notStarted");
+    }
+  }
 
   // UI state
   const [view, setView] = useState<TimelineView>({
@@ -953,7 +1100,57 @@ export default function TimelinePage() {
         {/* Main Content */}
         {!selectedProjectId && !projectsLoading ? (
           // Show all projects overview when no project is selected
-          <AllProjectsOverview projects={projects} />
+          <div className="space-y-4">
+            {/* View Toggle */}
+            <div className="flex justify-end gap-2">
+              <Button
+                isIconOnly
+                color={projectsViewMode === "list" ? "primary" : "default"}
+                size="sm"
+                variant={projectsViewMode === "list" ? "flat" : "light"}
+                onPress={() => setProjectsViewMode("list")}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                isIconOnly
+                color={projectsViewMode === "cards" ? "primary" : "default"}
+                size="sm"
+                variant={projectsViewMode === "cards" ? "flat" : "light"}
+                onPress={() => setProjectsViewMode("cards")}
+              >
+                <Grid className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Projects Display */}
+            {projectsViewMode === "list" ? (
+              <AllProjectsOverview projects={paginatedProjects} />
+            ) : (
+              <ProjectsCardList
+                loading={projectsLoading}
+                projects={projectsCardData}
+                onProjectClick={(project) => {
+                  setSelectedProjectId(project.id);
+                  setSearchParams({ projectId: project.id.toString() });
+                }}
+              />
+            )}
+            
+            {/* Pagination */}
+            {projectsPagination && projectsPagination.totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <GlobalPagination
+                  currentPage={currentPage}
+                  totalPages={projectsPagination.totalPages}
+                  pageSize={pageSize}
+                  totalItems={projectsPagination.totalCount}
+                  onPageChange={setCurrentPage}
+                  isLoading={projectsLoading}
+                />
+              </div>
+            )}
+          </div>
         ) : timelines.length === 0 ? (
           <Card>
             <CardBody className="text-center py-12">

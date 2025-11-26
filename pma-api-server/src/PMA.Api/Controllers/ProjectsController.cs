@@ -342,6 +342,50 @@ public class ProjectsController : ApiBaseController
             return Error<IEnumerable<TimelineWithSprintsDto>>("Internal server error", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Get team members for a project (members who have tasks in this project)
+    /// </summary>
+    [HttpGet("{projectId}/team-members")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<object>>), 200)]
+    public async Task<IActionResult> GetProjectTeamMembers(int projectId)
+    {
+        try
+        {
+            var teamMembers = await _projectService.GetProjectTeamMembersAsync(projectId);
+            
+            return Success(teamMembers, message: "Project team members retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving project team members. ProjectId: {ProjectId}", projectId);
+            return Error<IEnumerable<object>>("Internal server error", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get all projects with timelines and their team members in a single call
+    /// </summary>
+    [HttpGet("with-timelines-and-team")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<ProjectWithTimelinesAndTeamDto>>), 200)]
+    public async Task<IActionResult> GetProjectsWithTimelinesAndTeam()
+    {
+        try
+        {
+            var projects = await _projectService.GetProjectsWithTimelinesAndTeamAsync();
+            
+            return Success(projects, message: "Projects with timelines and team members retrieved successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving projects with timelines and team members. StackTrace: {StackTrace}", ex.StackTrace);
+            return Error<IEnumerable<ProjectWithTimelinesAndTeamDto>>("Internal server error", ex.Message);
+        }
+    }
 }
+
+
+
+
 
 

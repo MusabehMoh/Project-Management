@@ -138,7 +138,52 @@ export class ProjectsApiService {
   async getOwningUnits(): Promise<ApiResponse<OwningUnit[]>> {
     return apiClient.get<OwningUnit[]>("/units");
   }
+
+  /**
+   * Get team members for a project (members who have tasks in this project)
+   */
+  async getProjectTeamMembers(projectId: number): Promise<
+    ApiResponse<
+      Array<{
+        id: number;
+        fullName: string;
+        gradeName: string;
+        militaryNumber: string;
+        avatar?: string | null;
+      }>
+    >
+  > {
+    return apiClient.get(`/projects/${projectId}/team-members`);
+  }
+
+  /**
+   * Get all projects with timelines and their team members in a single call
+   */
+  async getProjectsWithTimelinesAndTeam(): Promise<
+    ApiResponse<
+      Array<{
+        id: number;
+        applicationName: string;
+        status: number;
+        statusName: string;
+        startDate: string;
+        expectedCompletionDate: string | null;
+        budget: number | null;
+        hasTimeline: boolean;
+        teamMembers: Array<{
+          id: number;
+          fullName: string;
+          gradeName: string;
+          militaryNumber: string;
+          avatar?: string | null;
+        }>;
+      }>
+    >
+  > {
+    return apiClient.get("/projects/with-timelines-and-team");
+  }
 }
 
 // Export singleton instance
 export const projectsApi = new ProjectsApiService();
+
