@@ -171,32 +171,23 @@ export default function TimelineDetailsPanel({
       return timeline;
     }
 
-    if (selectedItemType === "sprint") {
-      const sprint = (timeline.sprints || []).find(
-        (s) => s.treeId.toString() === selectedItem,
+    if (selectedItemType === "task") {
+      // Find task directly under timeline
+      const task = (timeline.tasks || []).find(
+        (t) => t.treeId.toString() === selectedItem,
       );
 
-      return sprint || timeline;
+      if (task) return task;
     }
 
-    if (selectedItemType === "task") {
-      for (const sprint of timeline.sprints || []) {
-        // Check requirements structure first
-        for (const requirement of sprint.tasks || []) {
-          const task = (requirement.subtasks || []).find(
-            (t) => t.treeId.toString() === selectedItem,
-          );
+    if (selectedItemType === "subtask") {
+      // Find subtask under tasks
+      for (const task of timeline.tasks || []) {
+        const subtask = (task.subtasks || []).find(
+          (st) => st.treeId.toString() === selectedItem,
+        );
 
-          if (task) return task;
-        }
-        // Check direct sprint tasks (for current mock data structure)
-        if ((sprint as any).tasks) {
-          const task = (sprint as any).tasks.find(
-            (t: any) => t.treeId.toString() === selectedItem,
-          );
-
-          if (task) return task;
-        }
+        if (subtask) return subtask;
       }
     }
 
@@ -239,26 +230,13 @@ export default function TimelineDetailsPanel({
           </p>
           <div className="flex gap-2 mt-1">
             <Chip color="primary" size="sm" variant="flat">
-              {(timeline.sprints || []).length} {t("timeline.sprints")}
-              {(timeline.sprints || []).length !== 1 ? "" : ""}
+              {(timeline.tasks || []).length} {t("timeline.tasks")}
             </Chip>
             <Chip color="warning" size="sm" variant="flat">
-              {(timeline.sprints || []).reduce((acc, sprint) => {
-                // Count from requirements structure
-                const reqSubtasks = (sprint.tasks || []).reduce(
-                  (reqAcc, req) => reqAcc + (req.subtasks?.length || 0),
-                  0,
-                );
-                // Count from direct sprint tasks (for current mock data)
-                const sprintSubtasks =
-                  (sprint as any).tasks?.reduce(
-                    (taskAcc: number, task: any) =>
-                      taskAcc + (task.subtasks?.length || 0),
-                    0,
-                  ) || 0;
-
-                return acc + reqSubtasks + sprintSubtasks;
-              }, 0)}{" "}
+              {(timeline.tasks || []).reduce(
+                (acc, task) => acc + (task.subtasks?.length || 0),
+                0,
+              )}{" "}
               {t("timeline.subtasks")}
             </Chip>
           </div>
@@ -657,10 +635,6 @@ export default function TimelineDetailsPanel({
           </p>
         </div>
       );
-    }
-
-    if (selectedItemType === "sprint" && currentItem !== timeline) {
-      return renderSprintDetails();
     }
 
     if (selectedItemType === "task" && currentItem !== timeline) {

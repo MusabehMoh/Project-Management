@@ -733,7 +733,7 @@ export default function TimelinePage() {
   // Handle item selection
   const handleItemSelect = (
     itemId: string,
-    itemType: "timeline" | "sprint" | "task" | "subtask",
+    itemType: "timeline" | "task" | "subtask",
   ) => {
     setView((prev) => ({
       ...prev,
