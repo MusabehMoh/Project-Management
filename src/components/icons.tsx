@@ -944,3 +944,27 @@ export const SendIcon: React.FC<IconSvgProps> = ({
     </svg>
   );
 };
+
+export const ChevronsUpDownIcon: React.FC<IconSvgProps> = ({
+  size = 18,
+  width,
+  height,
+  ...props
+}) => {
+  return (
+    <svg
+      fill="none"
+      height={size || height}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      width={size || width}
+      {...props}
+    >
+      <polyline points="17,11 12,6 7,11" />
+      <polyline points="17,18 12,13 7,18" />
+    </svg>
+  );
+};

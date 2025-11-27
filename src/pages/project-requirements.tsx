@@ -348,7 +348,7 @@ export default function ProjectRequirementsPage() {
     useState<ProjectRequirement | null>(null);
   const [requirementToDelete, setRequirementToDelete] =
     useState<ProjectRequirement | null>(null);
-  
+
   // Drawer states
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerRequirement, setDrawerRequirement] =
@@ -1731,7 +1731,7 @@ export default function ProjectRequirementsPage() {
                                 >
                                   {t("common.viewDetails")}
                                 </DropdownItem>
-                                
+
                                 {/* Check if any actions are available */}
                                 {(() => {
                                   const canEdit =
@@ -1819,7 +1819,11 @@ export default function ProjectRequirementsPage() {
                                   </DropdownItem>
                                 ) : null}
                                 {requirement.status ===
-                                REQUIREMENT_STATUS.NEW ? (
+                                  REQUIREMENT_STATUS.NEW ||
+                                requirement.status ===
+                                  REQUIREMENT_STATUS.ReturnedToAnalyst ||
+                                requirement.status ===
+                                  REQUIREMENT_STATUS.ReturnedToManager ? (
                                   hasPermission({
                                     actions: ["requirements.send"],
                                   }) ? (

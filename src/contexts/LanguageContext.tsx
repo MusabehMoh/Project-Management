@@ -1918,6 +1918,8 @@ const translations = {
     "timeline.treeView.searchPlaceholder":
       "Search sprints, requirements, tasks...",
     "timeline.treeView.filtered": "Filtered",
+    "timeline.treeView.collapseAll": "Collapse All",
+    "timeline.treeView.noTimelinesFound": "No timelines found",
 
     // Timeline Move Task Modal
     "timeline.moveTask.title": "Move Task",
@@ -3557,7 +3559,7 @@ const translations = {
     "tasks.filterByType": "تصفية حسب النوع",
     "tasks.tasksFound": "{count} مهام موجودة",
     "tasks.allTypes": "جميع الأنواع",
-    "tasks.type.timeline": "مهمة جدول زمني",
+    "tasks.type.timeline": "مهمة مخطط زمني",
     "tasks.type.changeRequest": "طلب تغيير",
     "tasks.type.adhoc": "مهمة عاجلة",
     "tasks.noAssociatedProject": "غير مرتبط بمشروع",
@@ -3984,7 +3986,7 @@ const translations = {
     "timeline.title": "إدارة المخطط الزمني",
     "timeline.subtitle":
       "إدارة الجداول الزمنية للمشاريع والسبرينتات والمتطلبات والمهام",
-    "timeline.newTimeline": "جدول زمني جديد",
+    "timeline.newTimeline": "مخطط زمني جديد",
     "timeline.filters": "المرشحات",
     "timeline.refresh": "تحديث",
     "timeline.selectProjectTimeline": "اختر المشروع والمخطط الزمني",
@@ -3993,8 +3995,8 @@ const translations = {
     "timeline.noProjectsAvailable": "لا توجد مشاريع متاحة",
     "timeline.loadingTimelines": "جاري تحميل الجداول الزمنية...",
     "timeline.noTimelines": "لا توجد جداول زمنية متاحة",
-    "timeline.timeline": "جدول زمني",
-    "timeline.timelines": "جداول زمنية",
+    "timeline.timeline": "مخطط زمني",
+    "timeline.timelines": "مخططات زمنية",
     "timeline.sprints": "السبرينتات",
     "timeline.sprint": "سبرينت",
     "timeline.requirements": "المتطلبات",
@@ -4155,6 +4157,8 @@ const translations = {
     "timeline.selectPredecessors": "اختيار المهام السابقة",
     "timeline.selectPredecessorsPlaceholder": "اختر المهام السابقة...",
     "timeline.treeView.filtered": "مفلتر",
+    "timeline.treeView.collapseAll": "طي الكل",
+    "timeline.treeView.noTimelinesFound": "لم يتم العثور على مخططات زمنية",
 
     // Timeline Move Task Modal
     "timeline.moveTask.title": "نقل المهمة",
