@@ -28,7 +28,7 @@ export function useDraftRequirements(): UseDraftRequirementsResult {
 
       const result =
         await projectRequirementsService.getPendingApprovalRequirements({
-          limit: 10, // Show first 10 draft requirements
+          limit: 5, // Show first 5 draft requirements
           page: 1,
           ...filters,
         });
