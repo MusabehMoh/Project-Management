@@ -445,7 +445,9 @@ public class TasksController : ApiBaseController
 
             // Map back to DTO for response
             var taskDto = _mappingService.MapToTaskDto(updatedTask);
-
+            var projectRequirment=await _projectRequirementService.GetByIdAsync(existingTask.ProjectRequirementId ?? 0);  
+            if(projectRequirment!=null)
+                await _projectService.UpdateProjectStatusByRequirementsAsync(projectRequirment.ProjectId);
             return Success(taskDto, message: "Task updated successfully");
         }
         catch (Exception ex)
@@ -738,7 +740,9 @@ public class TasksController : ApiBaseController
 
             // Map back to DTO for response
             var taskDto = _mappingService.MapToTaskDto(updatedTask);
-
+            var projectRequirment = await _projectRequirementService.GetByIdAsync(existingTask.ProjectRequirementId ?? 0);
+            if (projectRequirment != null)
+                await _projectService.UpdateProjectStatusByRequirementsAsync(projectRequirment.ProjectId);
             return Success(taskDto, message: "Task status updated successfully");
         }
         catch (Exception ex)

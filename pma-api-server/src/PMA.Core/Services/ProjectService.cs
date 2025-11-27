@@ -198,12 +198,13 @@ public class ProjectService : IProjectService
     }
 
     /// <summary>
-    /// Updates project status based on requirement statuses and states.
+    /// Updates project status and progress based on requirement statuses and states.
     /// Logic:
     /// - If project has no requirements: No status change
     /// - If first requirement is created: Project status changes to UnderStudy (2)
     /// - If all requirements are completed: Project status changes to Production (5)
     /// - If any requirement is NOT completed: Project status remains at current state or reverts to UnderDevelopment
+    /// - Progress is calculated as: (completedRequirements / totalRequirements) * 100
     /// </summary>
     public async System.Threading.Tasks.Task<bool> UpdateProjectStatusByRequirementsAsync(int projectId)
     {
@@ -226,9 +227,22 @@ public class ProjectService : IProjectService
             }
 
             var oldStatus = project.Status;
+            var oldProgress = project.Progress;
+
+            // Calculate progress based on completed requirements (excluding cancelled ones)
+            var activeRequirements = requirementsList.Where(r => r.Status != RequirementStatusEnum.Cancelled).ToList();
+            var completedRequirements = activeRequirements.Count(r => r.Status == RequirementStatusEnum.Completed);
+            var totalRequirements = activeRequirements.Count;
+
+            // Calculate progress percentage
+            int newProgress = 0;
+            if (totalRequirements > 0)
+            {
+                newProgress = (int)Math.Round((decimal)completedRequirements / totalRequirements * 100);
+            }
 
             // Check if all requirements are completed
-            var allCompleted = requirementsList.All(r => r.Status == RequirementStatusEnum.Completed);
+            var allCompleted = activeRequirements.All(r => r.Status == RequirementStatusEnum.Completed);
 
             // Check if any requirement is not in completed or cancelled state
             var anyIncomplete = requirementsList.Any(r => 
@@ -240,6 +254,7 @@ public class ProjectService : IProjectService
                 r.Status == RequirementStatusEnum.New ||
                 r.Status == RequirementStatusEnum.ManagerReview ||
                 r.Status == RequirementStatusEnum.Approved);
+            
             if (allCompleted)
             {
                 // All requirements are completed, set project to Production
@@ -250,15 +265,22 @@ public class ProjectService : IProjectService
             {
                 // First requirement created, set project to UnderStudy
                 project.Status = ProjectStatus.UnderStudy;
+                project.Progress = newProgress;
             }
             else if (anyIncomplete && project.Status == ProjectStatus.Production)
             {
                 // If we're in Production but have incomplete requirements, move back to UnderDevelopment
                 project.Status = ProjectStatus.UnderDevelopment;
+                project.Progress = newProgress;
+            }
+            else
+            {
+                // Update progress even if status doesn't change
+                project.Progress = newProgress;
             }
 
-            // Update the project if status changed
-            if (oldStatus != project.Status)
+            // Update the project if status or progress changed
+            if (oldStatus != project.Status || oldProgress != project.Progress)
             {
                 project.UpdatedAt = DateTime.Now;
                 await _projectRepository.UpdateAsync(project);
