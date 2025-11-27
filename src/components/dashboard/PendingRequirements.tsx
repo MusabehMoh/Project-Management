@@ -10,6 +10,7 @@ import { PenTool, Clock, User } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ErrorWithRetry from "@/components/ErrorWithRetry";
 import { useDraftRequirements } from "@/hooks/useDraftRequirements";
+import { usePriorityLookups } from "@/hooks/usePriorityLookups";
 
 interface PendingRequirementsProps {
   className?: string;
@@ -23,35 +24,8 @@ export default function PendingRequirements({
   const { draftRequirements, loading, error, refresh, total } =
     useDraftRequirements();
 
-  const getPriorityColor = (priority: string | number | null | undefined) => {
-    const priorityStr = priority?.toString()?.toLowerCase() || "";
-
-    switch (priorityStr) {
-      case "high":
-        return "danger";
-      case "medium":
-        return "warning";
-      case "low":
-        return "default";
-      default:
-        return "default";
-    }
-  };
-
-  const getPriorityText = (priority: string | number | null | undefined) => {
-    const priorityStr = priority?.toString()?.toLowerCase() || "";
-
-    switch (priorityStr) {
-      case "high":
-        return t("priority.high");
-      case "medium":
-        return t("priority.medium");
-      case "low":
-        return t("priority.low");
-      default:
-        return priority?.toString() || t("priority.unknown");
-    }
-  };
+  // Use the same priority lookups as approval-requests page
+  const { getPriorityColor, getPriorityLabel } = usePriorityLookups();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -217,7 +191,7 @@ export default function PendingRequirements({
                         size="sm"
                         variant="flat"
                       >
-                        {getPriorityText(requirement.priority)}
+                        {getPriorityLabel(requirement.priority)}
                       </Chip>
                     </div>
 
@@ -229,13 +203,13 @@ export default function PendingRequirements({
                     />
 
                     <div className="flex items-center gap-4 text-xs text-default-400">
-                      <div className="flex items-center gap-1">
-                        <User className="w-3 h-3" />
+                      <div className="flex items-center gap-1 min-w-0 flex-1">
+                        <User className="w-3 h-3 flex-shrink-0" />
                         <span className="truncate">
                           {requirement.project.applicationName}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Clock className="w-3 h-3" />
                         <span>{formatDate(requirement.createdAt)}</span>
                       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -54,6 +55,7 @@ export default function RequirementCompletionTracker({
   analystId,
 }: RequirementCompletionTrackerProps) {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
 
   // Global priority lookups
   const { getPriorityColor, getPriorityLabel } = usePriorityLookups();
@@ -178,6 +180,13 @@ export default function RequirementCompletionTracker({
       : `${days} ${t("completion.days")} ${t("completion.daysLeft")}`;
   };
 
+  // Handle requirement click - navigate to project requirements page with auto-scroll
+  const handleRequirementClick = (requirementId: number, projectId: number) => {
+    navigate(
+      `/requirements/${projectId}?highlightRequirement=${requirementId}&scrollTo=${requirementId}`,
+    );
+  };
+
   return (
     <div dir={language === "ar" ? "rtl" : "ltr"}>
       <Card className="w-full shadow-md border border-default-200">
@@ -259,6 +268,8 @@ export default function RequirementCompletionTracker({
                   {paginatedItems.map((item, index) => (
                     <TableRow
                       key={`${item.type}-${item.id || `fallback-${index}`}`}
+                      className="cursor-pointer hover:bg-default-100 transition-colors"
+                      onClick={() => handleRequirementClick(item.id, item.projectId)}
                     >
                       <TableCell>
                         <div className="flex flex-col">

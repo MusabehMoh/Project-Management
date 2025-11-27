@@ -252,9 +252,9 @@ const RequirementCard = ({
           {requirement.status === REQUIREMENT_STATUS.APPROVED && (
             <Button
               className="w-full"
-              color="danger"
+              color="default"
               size="sm"
-              startContent={<CornerUpLeft className="w-3 h-3 flex-shrink-0" />}
+              startContent={<CornerUpLeft className="w-3 h-3 flex-shrink-0 text-danger" />}
               variant="faded"
               onPress={() => onReturn(requirement)}
             >
@@ -1763,7 +1763,7 @@ export default function DevelopmentRequirementsPage() {
             {(onClose) => (
               <>
                 <ModalHeader className="flex items-center gap-2">
-                  <CornerUpLeft className="w-5 h-5 text-warning" />
+                  <CornerUpLeft className="w-5 h-5 text-danger" />
                   <span>{t("requirements.returnRequirement")}</span>
                 </ModalHeader>
                 <ModalBody>
@@ -1792,10 +1792,10 @@ export default function DevelopmentRequirementsPage() {
                     {t("common.cancel")}
                   </Button>
                   <Button
-                    color="danger"
+                    color="default"
                     isDisabled={!returnReason.trim()}
                     isLoading={isReturning}
-                    startContent={<CornerUpLeft className="w-4 h-4" />}
+                    startContent={<CornerUpLeft className="w-4 h-4 text-danger" />}
                     onPress={() => handleReturnSubmit(onClose)}
                   >
                     {t("requirements.return")}
