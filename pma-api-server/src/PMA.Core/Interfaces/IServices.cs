@@ -248,7 +248,7 @@ public interface IProjectRequirementService
     // Update attachment list: manage which attachments to keep/remove by ID only (no file uploads)
      // Status history methods
     System.Threading.Tasks.Task<ProjectRequirementStatusHistory> CreateRequirementStatusHistoryAsync(ProjectRequirementStatusHistory statusHistory);
-    System.Threading.Tasks.Task<IEnumerable<ProjectRequirementStatusHistory>> GetRequirementStatusHistoryAsync(int requirementId);
+    System.Threading.Tasks.Task<IEnumerable<DTOs.RequirementStatusHistoryDto>> GetRequirementStatusHistoryAsync(int requirementId);
 }
 
 public interface ISubTaskService

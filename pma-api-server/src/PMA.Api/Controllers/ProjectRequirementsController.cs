@@ -622,6 +622,26 @@ public class ProjectRequirementsController : ApiBaseController
     }
 
     /// <summary>
+    /// Get status history for a specific requirement
+    /// </summary>
+    [HttpGet("requirements/{id}/history")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetRequirementStatusHistory(int id)
+    {
+        try
+        {
+            var history = await _projectRequirementService.GetRequirementStatusHistoryAsync(id);
+            return Success(history);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while retrieving requirement status history. RequirementId: {RequirementId}", id);
+            return Error<object>("An error occurred while retrieving requirement status history", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Approve a requirement and change its status to approved
     /// </summary>
     [HttpPost("requirements/{id}/approve")]

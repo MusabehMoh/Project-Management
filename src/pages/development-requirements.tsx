@@ -1200,6 +1200,7 @@ export default function DevelopmentRequirementsPage() {
           onCreateTask={openTaskModal}
           onCreateTimeline={openTimelineModal}
           onOpenChange={setIsDrawerOpen}
+          onReturn={openReturnModal}
         />
 
         {/* Task Creation/Edit Modal */}
@@ -1385,7 +1386,7 @@ export default function DevelopmentRequirementsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <DatePicker
                             label={t("tasks.startDate")}
-                            minValue={today(getLocalTimeZone())}
+                            //minValue={today(getLocalTimeZone())}
                             value={developerStartDate}
                             onChange={(date) => {
                               setDeveloperStartDate(date);
@@ -1400,7 +1401,7 @@ export default function DevelopmentRequirementsPage() {
                           />
                           <DatePicker
                             label={t("tasks.endDate")}
-                            minValue={today(getLocalTimeZone())}
+                            //minValue={today(getLocalTimeZone())}
                             value={developerEndDate}
                             onChange={(date) => {
                               setDeveloperEndDate(date);
@@ -1523,7 +1524,7 @@ export default function DevelopmentRequirementsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <DatePicker
                             label={t("tasks.startDate")}
-                            minValue={today(getLocalTimeZone())}
+                            //minValue={today(getLocalTimeZone())}
                             value={qcStartDate}
                             onChange={(date) => {
                               setQcStartDate(date);
@@ -1538,7 +1539,7 @@ export default function DevelopmentRequirementsPage() {
                           />
                           <DatePicker
                             label={t("tasks.endDate")}
-                            minValue={today(getLocalTimeZone())}
+                            //minValue={today(getLocalTimeZone())}
                             value={qcEndDate}
                             onChange={(date) => {
                               setQcEndDate(date);
@@ -1643,7 +1644,7 @@ export default function DevelopmentRequirementsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <DatePicker
                             label={t("tasks.startDate")}
-                            minValue={today(getLocalTimeZone())}
+                            //minValue={today(getLocalTimeZone())}
                             value={designerStartDate}
                             onChange={(date) => {
                               setDesignerStartDate(date);
@@ -1658,7 +1659,7 @@ export default function DevelopmentRequirementsPage() {
                           />
                           <DatePicker
                             label={t("tasks.endDate")}
-                            minValue={today(getLocalTimeZone())}
+                            //minValue={today(getLocalTimeZone())}
                             value={designerEndDate}
                             onChange={(date) => {
                               setDesignerEndDate(date);

@@ -24,7 +24,15 @@ import {
   ScrollShadow,
   Textarea,
 } from "@heroui/react";
-import { Search, Filter, X, Eye, Check, CornerUpLeft } from "lucide-react";
+import {
+  Search,
+  Filter,
+  X,
+  Eye,
+  Check,
+  CornerUpLeft,
+  Pencil,
+} from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import LoadingLogo from "@/components/LoadingLogo";
@@ -38,6 +46,7 @@ import { GlobalPagination } from "@/components/GlobalPagination";
 import { FilePreview } from "@/components/FilePreview";
 import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
+import { REQUIREMENT_STATUS } from "@/constants/projectRequirements";
 import { projectRequirementsService } from "@/services/api";
 import { showSuccessToast, showErrorToast } from "@/utils/toast";
 import "./approval-requests.css";
@@ -154,6 +163,7 @@ const RequirementCard = ({
   onViewDetails,
   onApprove,
   onReturn,
+  onEdit,
   getStatusColor,
   getStatusText,
   getPriorityColor,
@@ -165,6 +175,7 @@ const RequirementCard = ({
   onViewDetails: (requirement: ProjectRequirement) => void;
   onApprove: (requirement: ProjectRequirement) => void;
   onReturn: (requirement: ProjectRequirement) => void;
+  onEdit: (requirement: ProjectRequirement) => void;
   getStatusColor: (
     status: number,
   ) => "warning" | "danger" | "primary" | "secondary" | "success" | "default";
@@ -247,16 +258,29 @@ const RequirementCard = ({
 
         {/* Action buttons */}
         <div className="flex items-center justify-between pt-2 gap-2 mt-auto">
-          <Tooltip content={t("common.viewDetails")}>
-            <Button
-              isIconOnly
-              size="sm"
-              variant="bordered"
-              onPress={() => onViewDetails(requirement)}
-            >
-              <Eye size={16} />
-            </Button>
-          </Tooltip>
+          <div className="flex gap-2">
+            <Tooltip content={t("common.viewDetails")}>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="bordered"
+                onPress={() => onViewDetails(requirement)}
+              >
+                <Eye size={16} />
+              </Button>
+            </Tooltip>
+
+            <Tooltip content={t("common.edit")}>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="bordered"
+                onPress={() => onEdit(requirement)}
+              >
+                <Pencil size={16} />
+              </Button>
+            </Tooltip>
+          </div>
 
           <div className="flex gap-2">
             {/* Return button */}
@@ -269,15 +293,18 @@ const RequirementCard = ({
               {t("requirements.return")}
             </Button>
 
-            {/* Approve button */}
-            <Button
-              size="sm"
-              variant="bordered"
-              onPress={() => onApprove(requirement)}
-            >
-              <Check className="text-success" size={16} />
-              {t("requirements.approve")}
-            </Button>
+            {/* Approve button - hide for returned requirements */}
+            {requirement.status !== REQUIREMENT_STATUS.ReturnedToAnalyst &&
+              requirement.status !== REQUIREMENT_STATUS.ReturnedToMamager && (
+                <Button
+                  size="sm"
+                  variant="bordered"
+                  onPress={() => onApprove(requirement)}
+                >
+                  <Check className="text-success" size={16} />
+                  {t("requirements.approve")}
+                </Button>
+              )}
           </div>
         </div>
       </CardBody>
@@ -422,6 +449,13 @@ export default function ApprovalRequestsPage() {
   const openRequirementDetails = (requirement: ProjectRequirement) => {
     setSelectedRequirementId(requirement.id);
     setIsDrawerOpen(true);
+  };
+
+  // Navigate to project requirements page with edit mode
+  const handleEdit = (requirement: ProjectRequirement) => {
+    navigate(
+      `/requirements/${requirement.projectId}?editRequirement=${requirement.id}`,
+    );
   };
 
   // Function to open approval modal
@@ -706,6 +740,7 @@ export default function ApprovalRequestsPage() {
                 isHighlighted={highlightedRequirementId === requirement.id}
                 requirement={requirement}
                 onApprove={openApprovalModal}
+                onEdit={handleEdit}
                 onReturn={openReturnModal}
                 onViewDetails={openRequirementDetails}
               />

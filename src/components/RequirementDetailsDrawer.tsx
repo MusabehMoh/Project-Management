@@ -12,15 +12,32 @@ import {
   DrawerFooter,
   Button,
   Chip,
+  Tabs,
+  Tab,
+  Badge,
 } from "@heroui/react";
-import { Calendar, Users, Paperclip, Eye, Download, Check } from "lucide-react";
+import {
+  Calendar,
+  Users,
+  Paperclip,
+  Eye,
+  Download,
+  Check,
+  CornerUpLeft,
+  History,
+} from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useFilePreview } from "@/hooks/useFilePreview";
+import { useRequirementHistory } from "@/hooks";
 import { FilePreview } from "@/components/FilePreview";
 import { projectRequirementsService } from "@/services/api";
-import { convertTypeToString } from "@/constants/projectRequirements";
+import {
+  convertTypeToString,
+  REQUIREMENT_STATUS,
+} from "@/constants/projectRequirements";
+import { formatDateTime } from "@/utils/dateFormatter";
 
 // Format date helper
 const formatDate = (dateString: string) => {
@@ -49,6 +66,7 @@ interface RequirementDetailsDrawerProps {
   showTaskTimelineButtons?: boolean;
   onCreateTask?: (requirement: ProjectRequirement) => void;
   onCreateTimeline?: (requirement: ProjectRequirement) => void;
+  onReturn?: (requirement: ProjectRequirement) => void;
 }
 
 export default function RequirementDetailsDrawer({
@@ -64,6 +82,7 @@ export default function RequirementDetailsDrawer({
   showTaskTimelineButtons = false,
   onCreateTask,
   onCreateTimeline,
+  onReturn,
 }: RequirementDetailsDrawerProps) {
   const { t } = useLanguage();
   const { hasPermission } = usePermissions();
@@ -72,6 +91,12 @@ export default function RequirementDetailsDrawer({
   const [loadingAttachmentId, setLoadingAttachmentId] = useState<number | null>(
     null,
   );
+
+  // Fetch requirement history
+  const { history, loading: historyLoading } = useRequirementHistory({
+    requirementId: requirement?.id,
+    enabled: isOpen && !!requirement,
+  });
 
   // File preview hook
   const { previewState, previewFile, closePreview, downloadCurrentFile } =
@@ -384,7 +409,7 @@ export default function RequirementDetailsDrawer({
                     )}
 
                   {/* Task Information */}
-                  {requirement.task && (
+                  {requirement.requirementTask && (
                     <div>
                       <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                         <Users className="w-5 h-5 text-default-400" />
@@ -392,37 +417,39 @@ export default function RequirementDetailsDrawer({
                       </h3>
                       <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg space-y-3">
                         <div className="grid grid-cols-2 gap-4">
-                          {requirement.task.developerId && (
+                          {requirement.requirementTask.developerId && (
                             <div>
                               <h4 className="text-sm font-medium text-default-600 mb-1">
                                 {t("tasks.developer")}
                               </h4>
                               <p className="text-sm">
-                                {requirement.task.developerName ||
-                                  `Developer ID: ${requirement.task.developerId}`}
+                                {requirement.requirementTask.developerName ||
+                                  `Developer ID: ${requirement.requirementTask.developerId}`}
                               </p>
                             </div>
                           )}
-                          {requirement.task.qcId && (
+                          {requirement.requirementTask.qcId && (
                             <div>
                               <h4 className="text-sm font-medium text-default-600 mb-1">
                                 {t("tasks.qcMember")}
                               </h4>
                               <p className="text-sm">
-                                {requirement.task.gradeName +
-                                  requirement.task.qcName ||
-                                  `QC ID: ${requirement.task.qcId}`}
+                                {(requirement.requirementTask.gradeName || "") +
+                                  (requirement.requirementTask.qcName || "") ||
+                                  `QC ID: ${requirement.requirementTask.qcId}`}
                               </p>
                             </div>
                           )}
                         </div>
-                        {requirement.task.createdAt && (
+                        {requirement.requirementTask.createdAt && (
                           <div>
                             <h4 className="text-sm font-medium text-default-600 mb-1">
                               {t("tasks.assignedOn")}
                             </h4>
                             <p className="text-sm">
-                              {formatDate(requirement.task.createdAt)}
+                              {formatDate(
+                                requirement.requirementTask.createdAt,
+                              )}
                             </p>
                           </div>
                         )}
@@ -453,83 +480,170 @@ export default function RequirementDetailsDrawer({
                       </div>
                     </div>
                   )}
+
+                  {/* Status History Section */}
+                  <div className="mt-6 pt-4 border-t border-divider">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <History className="w-4 h-4" />
+                      {t("taskDetails.activity")}
+                    </h3>
+
+                    <Tabs
+                      aria-label={t("requirements.historyTab")}
+                      className="w-full"
+                      variant="underlined"
+                    >
+                      <Tab
+                        key="history"
+                        title={
+                          <div className="flex items-center gap-2">
+                            <History className="w-4 h-4" />
+                            <span>{t("taskDetails.history")}</span>
+                            {history.length > 0 && (
+                              <Badge
+                                color="secondary"
+                                size="sm"
+                                variant="solid"
+                              >
+                                {history.length}
+                              </Badge>
+                            )}
+                          </div>
+                        }
+                      >
+                        {historyLoading ? (
+                          <div className="p-4 text-center">
+                            <p>{t("taskDetails.loadingHistory")}</p>
+                          </div>
+                        ) : history.length > 0 ? (
+                          <div className="space-y-3 p-2">
+                            {history.map((item) => (
+                              <div
+                                key={item.id}
+                                className="bg-default-50 dark:bg-default-100/10 p-3 rounded-lg"
+                              >
+                                <div className="flex justify-between items-start mb-2">
+                                  <span className="text-sm font-medium">
+                                    {item.createdByName ||
+                                      `User ${item.createdBy}`}
+                                  </span>
+                                  <span className="text-xs text-default-500">
+                                    {formatDateTime(item.createdAt, {
+                                      showTime: true,
+                                      language: "en-US",
+                                    })}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-default-600">
+                                  {t("requirements.statusChanged")}
+                                  {": "}
+                                  {getStatusText(item.fromStatus)} →{" "}
+                                  {getStatusText(item.toStatus)}
+                                </p>
+                                {item.reason && (
+                                  <p className="text-sm text-default-500 mt-1 italic">
+                                    {item.reason}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-4 text-center text-default-500">
+                            <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p>{t("taskDetails.noHistory")}</p>
+                          </div>
+                        )}
+                      </Tab>
+                    </Tabs>
+                  </div>
                 </div>
               </DrawerBody>
-              <DrawerFooter className="flex justify-between">
-                <Button color="default" variant="flat" onPress={onClose}>
-                  {t("common.close")}
-                </Button>
-
-                <div className="flex gap-2">
-                  {/* Approval Button for approval requests */}
-                  {showApprovalButton &&
-                    hasPermission({ actions: ["requirements.approve"] }) &&
-                    onApprove && (
-                      <Button
-                        color="success"
-                        onPress={() => {
-                          onClose();
-                          onApprove(requirement);
-                        }}
-                      >
-                        <Check size={16} />
-                        {t("requirements.approve")}
-                      </Button>
-                    )}
-
-                  {/* Task/Timeline Buttons for development requirements */}
-                  {showTaskTimelineButtons && (
-                    <>
-                      {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
-                      {!requirement.timeline &&
-                        hasPermission({
-                          actions: ["requirements.tasks.create"],
-                        }) &&
-                        onCreateTask && (
-                          <Button
-                            color="default"
-                            startContent={
-                              requirement.task ? (
-                                <Eye size={16} />
-                              ) : (
-                                <Users size={16} />
-                              )
-                            }
-                            variant="flat"
-                            onPress={() => onCreateTask(requirement)}
-                          >
-                            {requirement.task
-                              ? t("common.view") + " Task"
-                              : t("common.create") + " Task"}
-                          </Button>
-                        )}
-
-                      {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
-                      {!requirement.task &&
-                        hasPermission({
-                          actions: ["requirements.timelines.create"],
-                        }) &&
-                        onCreateTimeline && (
-                          <Button
-                            color="default"
-                            startContent={
-                              requirement.timeline ? (
-                                <Eye size={16} />
-                              ) : (
-                                <Calendar size={16} />
-                              )
-                            }
-                            variant="flat"
-                            onPress={() => onCreateTimeline(requirement)}
-                          >
-                            {requirement.timeline
-                              ? t("common.view") + " Timeline"
-                              : t("common.create") + " Timeline"}
-                          </Button>
-                        )}
-                    </>
+              <DrawerFooter className="flex gap-2 flex-wrap justify-end">
+                {/* Approval Button for approval requests */}
+                {showApprovalButton &&
+                  hasPermission({ actions: ["requirements.approve"] }) &&
+                  onApprove && (
+                    <Button
+                      color="success"
+                      onPress={() => {
+                        onClose();
+                        onApprove(requirement);
+                      }}
+                    >
+                      <Check size={16} />
+                      {t("requirements.approve")}
+                    </Button>
                   )}
-                </div>
+
+                {/* Task/Timeline Buttons for development requirements */}
+                {showTaskTimelineButtons && (
+                  <>
+                    {/* Business Rule: Show Task button only if requirement doesn't have timeline */}
+                    {!requirement.timeline &&
+                      hasPermission({
+                        actions: ["requirements.tasks.create"],
+                      }) &&
+                      onCreateTask && (
+                        <Button
+                          color="default"
+                          startContent={
+                            requirement.requirementTask ? (
+                              <Eye size={16} />
+                            ) : (
+                              <Users size={16} />
+                            )
+                          }
+                          variant="flat"
+                          onPress={() => onCreateTask(requirement)}
+                        >
+                          {requirement.requirementTask
+                            ? t("tasks.viewTask")
+                            : t("tasks.createTask")}
+                        </Button>
+                      )}
+
+                    {/* Business Rule: Show Timeline button only if requirement doesn't have task */}
+                    {!requirement.requirementTask &&
+                      hasPermission({
+                        actions: ["requirements.timelines.create"],
+                      }) &&
+                      onCreateTimeline && (
+                        <Button
+                          color="default"
+                          startContent={
+                            requirement.timeline ? (
+                              <Eye size={16} />
+                            ) : (
+                              <Calendar size={16} />
+                            )
+                          }
+                          variant="flat"
+                          onPress={() => onCreateTimeline(requirement)}
+                        >
+                          {requirement.timeline
+                            ? t("timeline.viewTimeline")
+                            : t("timeline.createTimeline")}
+                        </Button>
+                      )}
+
+                    {/* Business Rule: Show Return button only for approved requirements */}
+                    {requirement.status === REQUIREMENT_STATUS.APPROVED &&
+                      onReturn && (
+                        <Button
+                          color="danger"
+                          startContent={<CornerUpLeft size={16} />}
+                          variant="flat"
+                          onPress={() => {
+                            onClose();
+                            onReturn(requirement);
+                          }}
+                        >
+                          {t("requirements.return")}
+                        </Button>
+                      )}
+                  </>
+                )}
               </DrawerFooter>
             </>
           )}

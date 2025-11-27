@@ -8,6 +8,7 @@ import type {
   CreateRequirementTaskRequest,
   RequirementTask,
   ProjectRequirementAttachment,
+  RequirementHistoryDto,
 } from "@/types/projectRequirement";
 
 import { apiClient, API_CONFIG } from "./client";
@@ -713,6 +714,26 @@ class ProjectRequirementsService {
     }
 
     return blob;
+  }
+
+  /**
+   * Get status history for a specific requirement
+   */
+  async getRequirementStatusHistory(
+    requirementId: number,
+  ): Promise<ApiResponse<RequirementHistoryDto[]>> {
+    try {
+      return await apiClient.get<RequirementHistoryDto[]>(
+        `/project-requirements/requirements/${requirementId}/history`,
+      );
+    } catch {
+      return {
+        success: false,
+        data: [],
+        message: "Failed to fetch requirement status history",
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 }
 
