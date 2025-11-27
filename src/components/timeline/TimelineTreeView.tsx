@@ -1185,18 +1185,9 @@ export default function TimelineTreeView({
                   handleOpenEditModal("task", task);
                 } else if (key === "delete") {
                   handleDelete(task.id.toString(), "task");
-                } else if (key === "create-subtask") {
-                  handleCreateSubtask(task.id.toString(), task.name);
                 }
               }}
             >
-              {hasPermission({
-                actions: ["subtasks.create"],
-              }) && (
-                <DropdownItem key="create-subtask" startContent={<PlusIcon />}>
-                  {t("timeline.treeView.addSubtask")}
-                </DropdownItem>
-              )}
               {hasPermission({
                 actions: ["timelines.tasks.update"],
               }) && (
