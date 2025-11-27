@@ -420,6 +420,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       } finally {
         setLoading(false);
         setHeaderLoading(false);
+        setInitialLoading(false);
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
     };
@@ -437,17 +438,6 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       fetchTasks(taskParametersRequest);
     }
   }, [taskParametersRequest]);
-
-  /**
-   * Monitor initial count to determine when initial loading is complete
-   * This ensures the UI shows loading state until data is available
-   */
-  useEffect(() => {
-    if (initialCount > 0) {
-      // Tasks have loaded, we can stop showing the initial loading state
-      setInitialLoading(false);
-    }
-  }, [initialCount]);
 
   return {
     tasks,

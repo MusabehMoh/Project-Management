@@ -96,7 +96,7 @@ namespace PMA.Api.Controllers
                 });
 
                 // Use chat completions endpoint (production uses /api/chat/completions)
-                var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{ollamaUrl}/api/chat/completions")
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, ollamaUrl)
                 {
                     Content = new StringContent(jsonContent, Encoding.UTF8, new MediaTypeHeaderValue("application/json"))
                 };
@@ -112,9 +112,9 @@ namespace PMA.Api.Controllers
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Ollama API returned error: {StatusCode}", response.StatusCode);
+                    _logger.LogError("Ollama API returned error: {RequestMessage}", response.RequestMessage);
                     Response.StatusCode = (int)response.StatusCode;
-                    await Response.WriteAsync($"Ollama API error: {response.StatusCode}");
+                    await Response.WriteAsync($"Ollama API error: {response.RequestMessage}");
                     return;
                 }
 
