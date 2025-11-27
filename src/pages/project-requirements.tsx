@@ -1327,7 +1327,7 @@ export default function ProjectRequirementsPage() {
                   startContent={<Plus className="w-4 h-4" />}
                   onPress={handleCreateRequirement}
                 >
-                  {t("requirements.addRequirement")}asd
+                  {t("requirements.addRequirement")}
                 </Button>
               ) : null}
             </div>
