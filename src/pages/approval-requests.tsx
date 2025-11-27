@@ -395,6 +395,10 @@ export default function ApprovalRequestsPage() {
   };
 
   // Use the hook for pending approval requirements
+  // Increase page size when navigating with highlight to ensure requirement is visible
+  const highlightRequirement = searchParams.get("highlightRequirement");
+  const initialPageSizeForHighlight = highlightRequirement ? 100 : 20;
+  
   const {
     requirements,
     loading,
@@ -408,7 +412,7 @@ export default function ApprovalRequestsPage() {
     handlePageSizeChange,
     refreshData,
   } = usePendingApprovalRequirements({
-    initialPageSize: 20,
+    initialPageSize: initialPageSizeForHighlight,
   });
 
   // Drawer state for requirement details

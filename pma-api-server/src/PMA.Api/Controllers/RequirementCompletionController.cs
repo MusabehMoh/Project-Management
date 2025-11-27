@@ -53,21 +53,22 @@ public class RequirementCompletionController : ApiBaseController
                 requirementsQuery = requirementsQuery.Where(pr => pr.ProjectId == projectId.Value);
             }
 
-            // Get overdue requirements (past deadline and not completed)
+            // Get overdue requirements (past deadline and not completed/cancelled/postponed)
             var overdueRequirements = await requirementsQuery
                 .Where(pr => pr.ExpectedCompletionDate.HasValue &&
-                           pr.ExpectedCompletionDate.Value < today &&
+                           pr.ExpectedCompletionDate.Value.Date < today &&
                            pr.Status != RequirementStatusEnum.Completed &&
-                           pr.Status != RequirementStatusEnum.Cancelled)
+                           pr.Status != RequirementStatusEnum.Cancelled &&
+                           pr.Status != RequirementStatusEnum.Postponed)
                 .Select(pr => new
                 {
-                    requirementId = pr.Id,
+                    id = pr.Id,
                     requirementTitle = pr.Name,
                     projectId = pr.ProjectId,
                     projectName = pr.Project != null ? pr.Project.ApplicationName : "N/A",
                     priority = pr.Priority,
                     status = pr.Status,
-                    ExpectedCompletionDate = pr.ExpectedCompletionDate,
+                    expectedCompletionDate = pr.ExpectedCompletionDate,
                     daysOverdue = EF.Functions.DateDiffDay(pr.ExpectedCompletionDate!.Value, today),
                     assignedAnalyst = _context.ProjectAnalysts
                         .Where(pa => pa.ProjectId == pr.ProjectId)
@@ -77,22 +78,23 @@ public class RequirementCompletionController : ApiBaseController
                 .OrderByDescending(r => r.daysOverdue)
                 .ToListAsync();
 
-            // Get at-risk requirements (due within 3 days)
+            // Get at-risk requirements (due within 7 days, not overdue)
             var atRiskRequirements = await requirementsQuery
                 .Where(pr => pr.ExpectedCompletionDate.HasValue &&
-                           pr.ExpectedCompletionDate.Value >= today &&
-                           pr.ExpectedCompletionDate.Value <= today.AddDays(3) &&
-                             pr.Status != RequirementStatusEnum.Completed &&
-                           pr.Status != RequirementStatusEnum.Cancelled)
+                           pr.ExpectedCompletionDate.Value.Date >= today &&
+                           pr.ExpectedCompletionDate.Value.Date <= today.AddDays(7) &&
+                           pr.Status != RequirementStatusEnum.Completed &&
+                           pr.Status != RequirementStatusEnum.Cancelled &&
+                           pr.Status != RequirementStatusEnum.Postponed)
                 .Select(pr => new
                 {
-                    requirementId = pr.Id,
+                    id = pr.Id,
                     requirementTitle = pr.Name,
                     projectId = pr.ProjectId,
                     projectName = pr.Project != null ? pr.Project.ApplicationName : "N/A",
                     priority = pr.Priority,
                     status = pr.Status,
-                    ExpectedCompletionDate = pr.ExpectedCompletionDate,
+                    expectedCompletionDate = pr.ExpectedCompletionDate,
                     daysUntilDeadline = EF.Functions.DateDiffDay(today, pr.ExpectedCompletionDate!.Value),
                     assignedAnalyst = _context.ProjectAnalysts
                         .Where(pa => pa.ProjectId == pr.ProjectId)
@@ -122,19 +124,31 @@ public class RequirementCompletionController : ApiBaseController
                 ? Math.Round((double)completedCount / totalCount * 100, 2) 
                 : 0;
 
-            // Calculate on-time completion rate (completed requirements that were completed before deadline)
-            // Note: This assumes we have an actual completion date field, using ExpectedCompletionDate as placeholder
+            // Calculate on-time completion rate
+            // Requirements completed on or before their expected completion date
+            // Using UpdatedAt as proxy for actual completion date
             var onTimeCompletedCount = await requirementsQuery
                 .Where(pr => pr.Status == RequirementStatusEnum.Completed &&
-                           pr.ExpectedCompletionDate.HasValue)
+                           pr.ExpectedCompletionDate.HasValue &&
+                           pr.UpdatedAt.Date <= pr.ExpectedCompletionDate.Value.Date)
                 .CountAsync();
 
             var onTimeRate = completedCount > 0 
                 ? Math.Round((double)onTimeCompletedCount / completedCount * 100, 2) 
                 : 0;
 
-            // Calculate average delay days (simplified - using 0 as placeholder)
-            var avgDelayDays = 0.0;
+            // Calculate average delay days for late completions
+            // Using UpdatedAt as proxy for actual completion date
+            var lateRequirements = await requirementsQuery
+                .Where(pr => pr.Status == RequirementStatusEnum.Completed &&
+                           pr.ExpectedCompletionDate.HasValue &&
+                           pr.UpdatedAt.Date > pr.ExpectedCompletionDate.Value.Date)
+                .Select(pr => EF.Functions.DateDiffDay(pr.ExpectedCompletionDate!.Value, pr.UpdatedAt))
+                .ToListAsync();
+
+            var avgDelayDays = lateRequirements.Any() 
+                ? lateRequirements.Average() 
+                : 0.0;
 
             var analytics = new
             {

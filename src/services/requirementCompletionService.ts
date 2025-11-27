@@ -11,6 +11,7 @@ export interface RequirementCompletionAnalytics {
   overdueItems: Array<{
     id: number;
     requirementTitle: string;
+    projectId: number;
     priority: string;
     expectedCompletionDate: string;
     daysOverdue: number;
@@ -20,6 +21,7 @@ export interface RequirementCompletionAnalytics {
   atRiskItems: Array<{
     id: number;
     requirementTitle: string;
+    projectId: number;
     priority: string;
     expectedCompletionDate: string;
     daysUntilDeadline: number;
