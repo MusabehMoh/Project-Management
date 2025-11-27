@@ -140,65 +140,9 @@ export default function TimelineTreeView({
     Partial<TimelineEditModalFormData>
   >({});
   const [quickSearch, setQuickSearch] = useState("");
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Popover custom move days (quick moves)
   const [popoverCustomDays, setPopoverCustomDays] = useState<string>("");
-
-  // Scroll detection for showing scroll-to-top button (detect actual scrollable element inside tree)
-  useEffect(() => {
-    const root = containerRef.current;
-
-    if (!root) return;
-
-    // Helper: find the first descendant that actually scrolls
-    const findScrollable = (node: HTMLElement): HTMLElement | null => {
-      // Prefer elements with overflow-y: auto|scroll and real overflow
-      const candidates = Array.from(node.querySelectorAll<HTMLElement>("*"));
-
-      for (const el of [node, ...candidates]) {
-        const style = window.getComputedStyle(el);
-        const overflowY = style.overflowY;
-
-        if (
-          (overflowY === "auto" || overflowY === "scroll") &&
-          el.scrollHeight > el.clientHeight + 1
-        ) {
-          return el;
-        }
-      }
-
-      // Fallback to root if none found
-      return node;
-    };
-
-    const target = findScrollable(root);
-
-    if (!target) return;
-
-    activeScrollRef.current = target;
-
-    const handleScroll = () => {
-      const el = activeScrollRef.current;
-
-      if (!el) return;
-      const { scrollTop, scrollHeight, clientHeight } = el;
-      const nearBottom = scrollTop + clientHeight >= scrollHeight - 24; // within 24px of bottom
-
-      setShowScrollTop(nearBottom);
-    };
-
-    target.addEventListener("scroll", handleScroll, { passive: true });
-    // Initial check after layout settles
-    const t = setTimeout(handleScroll, 50);
-
-    return () => {
-      clearTimeout(t);
-      if (target) {
-        target.removeEventListener("scroll", handleScroll);
-      }
-    };
-  }, [expandedItems]);
 
   // Initialize expanded items when timelines change
   useEffect(() => {
@@ -565,12 +509,7 @@ export default function TimelineTreeView({
     }
   };
 
-  // Navigation helper functions
-  const scrollToTop = () => {
-    const el = activeScrollRef.current || containerRef.current;
 
-    if (el) el.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const scrollToTask = (taskId: string) => {
     // Find task in any timeline
@@ -1415,28 +1354,7 @@ export default function TimelineTreeView({
     </div>
   );
 
-  // Scroll to top button (bottom corner of tree container, show near bottom with fade)
-  const renderScrollToTop = () => (
-    <div
-      className={`absolute bottom-4 ${direction === "rtl" ? "right-4" : "left-4"} z-10 transition-all duration-300 ${
-        showScrollTop
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-1 pointer-events-none"
-      }`}
-    >
-      <Button
-        isIconOnly
-        aria-label="Scroll to top"
-        className="h-8 min-w-8"
-        color="default"
-        size="sm"
-        variant="light"
-        onPress={scrollToTop}
-      >
-        <ChevronRightIcon className="w-3 h-3 rotate-[-90deg]" />
-      </Button>
-    </div>
-  );
+
 
   if (loading) {
     return (
@@ -1488,7 +1406,6 @@ export default function TimelineTreeView({
             </div>
           </CardBody>
         </Card>
-        {renderScrollToTop()}
       </div>
       <TimelineEditModal
         departments={departments}
