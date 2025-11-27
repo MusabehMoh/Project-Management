@@ -38,11 +38,10 @@ export const TaskListView = ({
   const { t, language } = useLanguage();
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 80) return "success";
-    if (progress >= 60) return "primary";
-    if (progress >= 40) return "warning";
+    if (progress >= 70) return "success";  // Green: 70-100%
+    if (progress >= 40) return "warning";  // Yellow: 40-69%
 
-    return "danger";
+    return "danger";  // Red: 0-39%
   };
 
   const formatDate = (dateString: string) => {

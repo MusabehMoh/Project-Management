@@ -837,7 +837,7 @@ export default function TimelineTreeView({
                 {taskResults.map(({ timeline, task }) => (
                   <button
                     key={`task-${task.id}`}
-                    className="w-full text-left p-2 hover:bg-default-100 rounded flex items-center gap-2 text-xs"
+                    className={`w-full p-2 hover:bg-default-100 rounded flex items-center gap-2 text-xs ${direction === "rtl" ? "text-right" : "text-left"}`}
                     onClick={() => scrollToTask(task.id.toString())}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -848,9 +848,9 @@ export default function TimelineTreeView({
                   >
                     <div className="w-3 h-3 bg-purple-500 rounded" />
                     <div className="flex-1">
-                      <div className="font-medium">{task.name}</div>
-                      <div className="text-default-400 text-[10px]">
-                        in {timeline.name}
+                      <div className={`font-medium ${direction === "rtl" ? "text-right" : "text-left"}`}>{task.name}</div>
+                      <div className={`text-default-400 text-[10px] ${direction === "rtl" ? "text-right" : "text-left"}`}>
+                        {direction === "rtl" ? "في" : "in"} {timeline.name}
                       </div>
                     </div>
                     <span className="text-default-500">

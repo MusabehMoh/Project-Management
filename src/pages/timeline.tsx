@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
@@ -48,6 +48,7 @@ export default function TimelinePage() {
   const { t, language } = useLanguage();
   const { phases, getProjectStatusName } = useProjectStatus();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const projectId = searchParams.get("projectId")
     ? parseInt(searchParams.get("projectId")!)
     : undefined;
@@ -77,6 +78,7 @@ export default function TimelinePage() {
   const [projectStatusFilter, setProjectStatusFilter] = useState<string>("all"); // Status filter
   const [projectProgressFilter, setProjectProgressFilter] =
     useState<string>("all"); // Progress filter
+  const [projectSortBy, setProjectSortBy] = useState<string>("name"); // Sort by: name, timelines, tasks
 
   // Debounce search input
   useEffect(() => {
@@ -567,7 +569,7 @@ export default function TimelinePage() {
   // Set page title
   usePageTitle("timeline.title");
 
-  // Prepare card data for projects with timelines (with client-side filtering)
+  // Prepare card data for projects with timelines (with client-side filtering and sorting)
   const projectsCardData = useMemo(() => {
     let filteredProjects = paginatedProjects;
 
@@ -594,7 +596,7 @@ export default function TimelinePage() {
       });
     }
 
-    return filteredProjects.map((project) => ({
+    const cardData = filteredProjects.map((project) => ({
       id: project.id,
       name: project.applicationName,
       statusId: project.status,
@@ -612,7 +614,18 @@ export default function TimelinePage() {
         avatar: member.avatar ?? undefined,
       })),
     }));
-  }, [paginatedProjects, projectStatusFilter, projectProgressFilter]);
+
+    // Apply sorting
+    if (projectSortBy === "name") {
+      cardData.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (projectSortBy === "timelines") {
+      cardData.sort((a, b) => (b.timelineCount || 0) - (a.timelineCount || 0));
+    } else if (projectSortBy === "tasks") {
+      cardData.sort((a, b) => (b.taskCount || 0) - (a.taskCount || 0));
+    }
+
+    return cardData;
+  }, [paginatedProjects, projectStatusFilter, projectProgressFilter, projectSortBy]);
 
   // UI state
   const [view, setView] = useState<TimelineView>({
@@ -938,8 +951,10 @@ export default function TimelinePage() {
                 startContent={<ArrowLeft className="w-4 h-4" />}
                 variant="bordered"
                 onPress={() => {
-                  // Navigate back to overview - pass current selection via state
-                  window.location.href = `/timeline?restore=${selectedProjectId}${selectedTimeline ? `-${selectedTimeline.id}` : ""}`;
+                  // Clear project and timeline selection to go back to overview
+                  setSelectedProjectId(undefined);
+                  setSelectedTimeline(null);
+                  setSearchParams({});
                 }}
               >
                 {t("common.back")}
@@ -1103,122 +1118,135 @@ export default function TimelinePage() {
         {!selectedProjectId ? (
           // Show all projects overview when no project is selected
           <div className="space-y-4">
-            {/* Search and Filter Bar */}
-            <div className="flex flex-col gap-3">
-              {/* Search Bar */}
-              <div className="flex items-center gap-3">
-                <Input
-                  isClearable
-                  className="max-w-md"
-                  classNames={{
-                    input: language === "ar" ? "text-right" : "",
-                    inputWrapper: "border border-default-200",
-                  }}
-                  placeholder={
-                    language === "ar"
-                      ? "البحث عن مشروع..."
-                      : "Search for a project..."
-                  }
-                  startContent={<Search className="w-4 h-4 text-default-400" />}
-                  value={projectSearchInput}
-                  onClear={() => {
-                    setProjectSearchInput("");
-                  }}
-                  onValueChange={setProjectSearchInput}
-                />
-                {projectSearchQuery && (
-                  <span className="text-sm text-default-500">
-                    {projectsPagination?.total || 0}{" "}
-                    {language === "ar" ? "نتيجة" : "results"}
-                  </span>
-                )}
-              </div>
+            {/* Search, Sort, and Filters - All in one responsive line */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Search */}
+              <Input
+                isClearable
+                className="flex-1 min-w-[250px] max-w-md"
+                classNames={{
+                  input: language === "ar" ? "text-right" : "",
+                  inputWrapper: "border border-default-200",
+                }}
+                placeholder={
+                  language === "ar"
+                    ? "البحث عن مشروع..."
+                    : "Search for a project..."
+                }
+                startContent={<Search className="w-4 h-4 text-default-400" />}
+                value={projectSearchInput}
+                onClear={() => {
+                  setProjectSearchInput("");
+                }}
+                onValueChange={setProjectSearchInput}
+              />
+              
+              {/* Sort By */}
+              <Select
+                aria-label={t("projects.sortBy")}
+                className="max-w-[180px]"
+                placeholder={t("projects.sortBy")}
+                selectedKeys={[projectSortBy]}
+                size="sm"
+                onSelectionChange={(keys) => {
+                  const value = Array.from(keys)[0] as string;
+                  setProjectSortBy(value);
+                }}
+              >
+                <SelectItem key="name">{t("projects.sortByName")}</SelectItem>
+                <SelectItem key="timelines">{t("projects.sortByTimelines")}</SelectItem>
+                <SelectItem key="tasks">{t("projects.sortByTasks")}</SelectItem>
+              </Select>
 
-              {/* Filter Row */}
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Status Filter */}
-                <Select
-                  aria-label={t("projects.filterByStatus")}
-                  className="max-w-xs"
-                  disallowEmptySelection={false}
-                  placeholder={t("projects.filterByStatus")}
-                  selectedKeys={
-                    projectStatusFilter !== "all" ? [projectStatusFilter] : []
-                  }
-                  size="sm"
-                  onSelectionChange={(keys) => {
-                    const keysArray = Array.from(keys);
-                    const value =
-                      keysArray.length === 0 ? "all" : (keysArray[0] as string);
+              {/* Status Filter */}
+              <Select
+                aria-label={t("projects.filterByStatus")}
+                className="max-w-[180px]"
+                disallowEmptySelection={false}
+                placeholder={t("projects.filterByStatus")}
+                selectedKeys={
+                  projectStatusFilter !== "all" ? [projectStatusFilter] : []
+                }
+                size="sm"
+                onSelectionChange={(keys) => {
+                  const keysArray = Array.from(keys);
+                  const value =
+                    keysArray.length === 0 ? "all" : (keysArray[0] as string);
 
-                    setProjectStatusFilter(value);
-                  }}
-                >
-                  <SelectItem key="all">{t("common.all")}</SelectItem>
-                  {phases.map((phase) => (
-                    <SelectItem
-                      key={phase.code.toString()}
-                      textValue={getProjectStatusName(phase.code)}
-                    >
-                      {getProjectStatusName(phase.code)}
-                    </SelectItem>
-                  ))}
-                </Select>
-
-                {/* Progress Filter */}
-                <Select
-                  aria-label={t("projects.filterByProgress")}
-                  className="max-w-xs"
-                  disallowEmptySelection={false}
-                  placeholder={t("projects.filterByProgress")}
-                  selectedKeys={
-                    projectProgressFilter !== "all"
-                      ? [projectProgressFilter]
-                      : []
-                  }
-                  size="sm"
-                  onSelectionChange={(keys) => {
-                    const keysArray = Array.from(keys);
-                    const value =
-                      keysArray.length === 0 ? "all" : (keysArray[0] as string);
-
-                    setProjectProgressFilter(value);
-                  }}
-                >
-                  <SelectItem key="all">{t("common.all")}</SelectItem>
-                  <SelectItem key="not-started">
-                    {t("projects.progress.notStarted")}
-                  </SelectItem>
-                  <SelectItem key="in-progress">
-                    {t("projects.progress.inProgress")}
-                  </SelectItem>
-                  <SelectItem key="completed">
-                    {t("projects.progress.completed")}
-                  </SelectItem>
-                </Select>
-
-                {/* Clear Filters Button */}
-                {(projectStatusFilter !== "all" ||
-                  projectProgressFilter !== "all") && (
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    onPress={() => {
-                      setProjectStatusFilter("all");
-                      setProjectProgressFilter("all");
-                    }}
+                  setProjectStatusFilter(value);
+                }}
+              >
+                <SelectItem key="all">{t("common.all")}</SelectItem>
+                {phases.map((phase) => (
+                  <SelectItem
+                    key={phase.code.toString()}
+                    textValue={getProjectStatusName(phase.code)}
                   >
-                    {t("common.clearFilters")}
-                  </Button>
-                )}
+                    {getProjectStatusName(phase.code)}
+                  </SelectItem>
+                ))}
+              </Select>
 
-                {/* Results Count */}
-                <span className="text-sm text-default-500">
-                  {t("common.showing")} {projectsCardData.length}{" "}
-                  {language === "ar" ? "من" : "of"}{" "}
-                  {projectsPagination?.total || 0}
+              {/* Progress Filter */}
+              <Select
+                aria-label={t("projects.filterByProgress")}
+                className="max-w-[180px]"
+                disallowEmptySelection={false}
+                placeholder={t("projects.filterByProgress")}
+                selectedKeys={
+                  projectProgressFilter !== "all"
+                    ? [projectProgressFilter]
+                    : []
+                }
+                size="sm"
+                onSelectionChange={(keys) => {
+                  const keysArray = Array.from(keys);
+                  const value =
+                    keysArray.length === 0 ? "all" : (keysArray[0] as string);
+
+                  setProjectProgressFilter(value);
+                }}
+              >
+                <SelectItem key="all">{t("common.all")}</SelectItem>
+                <SelectItem key="not-started">
+                  {t("projects.progress.notStarted")}
+                </SelectItem>
+                <SelectItem key="in-progress">
+                  {t("projects.progress.inProgress")}
+                </SelectItem>
+                <SelectItem key="completed">
+                  {t("projects.progress.completed")}
+                </SelectItem>
+              </Select>
+
+              {/* Clear Filters Button */}
+              {(projectStatusFilter !== "all" ||
+                projectProgressFilter !== "all") && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={() => {
+                    setProjectStatusFilter("all");
+                    setProjectProgressFilter("all");
+                  }}
+                >
+                  {t("common.clearFilters")}
+                </Button>
+              )}
+
+              {/* Results Count */}
+              {projectSearchQuery && (
+                <span className="text-sm text-default-500 whitespace-nowrap">
+                  {projectsPagination?.total || 0}{" "}
+                  {language === "ar" ? "نتيجة" : "results"}
                 </span>
-              </div>
+              )}
+              
+              <span className="text-sm text-default-500 whitespace-nowrap">
+                {t("common.showing")} {projectsCardData.length}{" "}
+                {language === "ar" ? "من" : "of"}{" "}
+                {projectsPagination?.total || 0}
+              </span>
             </div>
 
             {/* Projects Display - Cards Only */}
