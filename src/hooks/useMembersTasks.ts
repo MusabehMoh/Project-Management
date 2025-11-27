@@ -420,7 +420,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       } finally {
         setLoading(false);
         setHeaderLoading(false);
-        setInitialLoading(false);
+        // setInitialLoading(false);
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
     };
@@ -438,6 +438,13 @@ export const useMembersTasks = (): UseMembersTasksResult => {
       fetchTasks(taskParametersRequest);
     }
   }, [taskParametersRequest]);
+
+  useEffect(() => {
+    if (!loading) {
+      // Stop showing initial loading state once data has loaded (regardless of count)
+      setInitialLoading(false);
+    }
+  }, [loading]);
 
   return {
     tasks,
