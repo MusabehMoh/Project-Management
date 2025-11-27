@@ -52,11 +52,10 @@ export const useTimelineHelpers = (departments: Department[]) => {
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 76) return "success";
-    if (progress >= 51) return "warning";
-    if (progress >= 26) return "primary";
+    if (progress >= 70) return "success";  // Green: 70-100%
+    if (progress >= 40) return "warning";  // Yellow: 40-69%
 
-    return "danger";
+    return "danger";  // Red: 0-39%
   };
 
   const getPriorityColor = (priorityId?: string | number) => {

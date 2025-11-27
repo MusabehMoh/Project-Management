@@ -123,15 +123,14 @@ export function useTimelineFormHelpers(departments: Department[] = []) {
     return colorMap[hexColor] || "default";
   };
 
-  // Progress color mapping
+  // Progress color mapping (consistent with app-wide color scheme)
   const getProgressColor = (
     progress: number,
-  ): "success" | "warning" | "danger" | "primary" => {
-    if (progress >= 80) return "success";
-    if (progress >= 50) return "warning";
-    if (progress >= 20) return "primary";
+  ): "success" | "warning" | "danger" => {
+    if (progress >= 70) return "success";  // Green: 70-100%
+    if (progress >= 40) return "warning";  // Yellow: 40-69%
 
-    return "danger";
+    return "danger";  // Red: 0-39%
   };
 
   // Language-aware name getters

@@ -49,11 +49,10 @@ export default function MyNextDeadline({
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 75) return "success";
-    if (progress >= 50) return "primary";
-    if (progress >= 25) return "warning";
+    if (progress >= 70) return "success";  // Green: 70-100%
+    if (progress >= 40) return "warning";  // Yellow: 40-69%
 
-    return "danger";
+    return "danger";  // Red: 0-39%
   };
 
   if (loading) {

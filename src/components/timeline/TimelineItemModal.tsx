@@ -220,7 +220,6 @@ export default function TimelineItemModal({
 
     // Load members
     if (initialValues?.memberIds && initialValues.memberIds.length > 0) {
-      debugger;
       if (initialValues?.members && initialValues.members.length > 0) {
         setSelectedMembers(initialValues.members);
       } else {
@@ -336,7 +335,6 @@ export default function TimelineItemModal({
 
   const handleInputChange = (field: keyof LocalFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    debugger;
     if (errors[field as keyof typeof errors]) {
       clearError(field as keyof typeof errors);
     }

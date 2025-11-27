@@ -1061,6 +1061,8 @@ const translations = {
     "projects.sortByName": "Project Name",
     "projects.sortByRequirementsCount": "Requirements Count",
     "projects.sortByCompletionRate": "Completion Rate",
+    "projects.sortByTimelines": "Timeline Count",
+    "projects.sortByTasks": "Task Count",
 
     // Project Filter Messages
     "projects.filterActive": "Filter Active",
@@ -1890,6 +1892,7 @@ const translations = {
     "timeline.treeView.cancel": "Cancel",
     "timeline.treeView.saveChanges": "Save Changes",
     "timeline.treeView.editModalTitle": "Edit",
+    "timeline.treeView.noSearchResults": "No results found for your search",
     "timeline.treeView.name": "Name",
     "timeline.treeView.description": "Description",
     "timeline.treeView.startDate": "Start Date",
@@ -3307,6 +3310,8 @@ const translations = {
     "projects.sortByName": "اسم المشروع",
     "projects.sortByRequirementsCount": "عدد المتطلبات",
     "projects.sortByCompletionRate": "معدل الإنجاز",
+    "projects.sortByTimelines": "عدد الجداول الزمنية",
+    "projects.sortByTasks": "عدد المهام",
 
     // Project Filter Messages
     "projects.filterActive": "الفلتر نشط",
@@ -4123,6 +4128,7 @@ const translations = {
     "timeline.treeView.cancel": "إلغاء",
     "timeline.treeView.saveChanges": "حفظ التغييرات",
     "timeline.treeView.editModalTitle": "تحرير",
+    "timeline.treeView.noSearchResults": "لا توجد نتائج للبحث",
     "timeline.treeView.name": "الاسم",
     "timeline.treeView.description": "الوصف",
     "timeline.treeView.startDate": "تاريخ البداية",
