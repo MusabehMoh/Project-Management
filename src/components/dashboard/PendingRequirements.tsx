@@ -199,7 +199,8 @@ export default function PendingRequirements({
                       dangerouslySetInnerHTML={{
                         __html: requirement.description,
                       }}
-                      className="text-xs text-default-500 mb-2 line-clamp-2"
+                      className={`text-xs text-default-500 mb-2 line-clamp-2 ${direction === "rtl" ? "text-right" : "text-left"}`}
+                      dir={direction}
                     />
 
                     <div className="flex items-center gap-4 text-xs text-default-400">
