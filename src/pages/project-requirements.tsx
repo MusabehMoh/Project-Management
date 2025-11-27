@@ -480,18 +480,11 @@ export default function ProjectRequirementsPage() {
         // Open edit modal
         handleEditRequirement(requirement);
 
-        // Remove the parameter from URL
-        searchParams.delete("editRequirement");
-        navigate(
-          {
-            pathname: window.location.pathname,
-            search: searchParams.toString(),
-          },
-          { replace: true },
-        );
+        // Redirect to the project requirements page
+        navigate(`/requirements/${projectId}`, { replace: true });
       }
     }
-  }, [requirements, searchParams, navigate]);
+  }, [requirements, searchParams, navigate, projectId]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
