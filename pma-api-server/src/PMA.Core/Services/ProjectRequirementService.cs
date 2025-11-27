@@ -609,8 +609,21 @@ public class ProjectRequirementService : IProjectRequirementService
         return await _statusHistoryRepository.AddAsync(statusHistory);
     }
 
-    public async Task<IEnumerable<ProjectRequirementStatusHistory>> GetRequirementStatusHistoryAsync(int requirementId)
+    public async Task<IEnumerable<DTOs.RequirementStatusHistoryDto>> GetRequirementStatusHistoryAsync(int requirementId)
     {
-        return await _statusHistoryRepository.GetRequirementStatusHistoryAsync(requirementId);
+        var history = await _statusHistoryRepository.GetRequirementStatusHistoryAsync(requirementId);
+        return history.Select(h => new DTOs.RequirementStatusHistoryDto
+        {
+            Id = h.Id,
+            RequirementId = h.RequirementId,
+            FromStatus = h.FromStatus,
+            ToStatus = h.ToStatus,
+            CreatedBy = h.CreatedBy,
+            CreatedByName = h.CreatedByUser != null 
+                ? $"{h.CreatedByUser.GradeName} {h.CreatedByUser.FullName}"
+                : null,
+            CreatedAt = h.CreatedAt,
+            Reason = h.Reason
+        });
     }
 }

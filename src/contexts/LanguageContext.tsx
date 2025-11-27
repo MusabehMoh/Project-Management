@@ -1248,6 +1248,8 @@ const translations = {
     "requirements.createSuccess": "Requirement created successfully",
     "requirements.updateSuccess": "Requirement updated successfully",
     "requirements.deleteSuccess": "Requirement deleted successfully",
+    "requirements.historyTab": "Status History",
+    "requirements.statusChanged": "Status changed",
     "requirements.sendSuccess":
       "Requirement submitted for approval successfully",
     "requirements.uploadSuccess": "uploaded successfully",
@@ -3487,6 +3489,8 @@ const translations = {
     "requirements.createSuccess": "تم إنشاء المتطلب بنجاح",
     "requirements.updateSuccess": "تم تحديث المتطلب بنجاح",
     "requirements.deleteSuccess": "تم حذف المتطلب بنجاح",
+    "requirements.historyTab": "سجل الحالات",
+    "requirements.statusChanged": "تم تغيير الحالة",
     "requirements.sendSuccess": "تم تقديم المتطلب للموافقة بنجاح",
     "requirements.uploadSuccess": "تم الرفع بنجاح",
     "requirements.uploadError": "فشل في رفع الملف",

@@ -74,6 +74,7 @@ import { parseDate } from "@internationalized/date";
 import { FilePreview } from "@/components/FilePreview";
 import { GlobalPagination } from "@/components/GlobalPagination";
 import AIDiagramGenerator from "@/components/AIDiagramGenerator";
+import RequirementDetailsDrawer from "@/components/RequirementDetailsDrawer";
 import {
   convertTypeToString,
   REQUIREMENT_STATUS,
@@ -347,6 +348,11 @@ export default function ProjectRequirementsPage() {
     useState<ProjectRequirement | null>(null);
   const [requirementToDelete, setRequirementToDelete] =
     useState<ProjectRequirement | null>(null);
+  
+  // Drawer states
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerRequirement, setDrawerRequirement] =
+    useState<ProjectRequirement | null>(null);
   const [requirementToPostpone, setRequirementToPostpone] =
     useState<ProjectRequirement | null>(null);
   const [requirementToUnpostpone, setRequirementToUnpostpone] =
@@ -412,6 +418,12 @@ export default function ProjectRequirementsPage() {
     updateFilters({});
   };
 
+  // Function to open drawer with requirement details
+  const handleViewDetails = (requirement: ProjectRequirement) => {
+    setDrawerRequirement(requirement);
+    setIsDrawerOpen(true);
+  };
+
   // Check if any filters are active
   const hasActiveFilters =
     searchTerm || statusFilter !== null || priorityFilter;
@@ -455,6 +467,31 @@ export default function ProjectRequirementsPage() {
     highlightedRequirement,
     setHighlightedRequirement,
   ]);
+
+  // Handle edit requirement from URL parameter
+  useEffect(() => {
+    const editRequirementId = searchParams.get("editRequirement");
+
+    if (editRequirementId && requirements.length > 0) {
+      const requirementId = parseInt(editRequirementId);
+      const requirement = requirements.find((req) => req.id === requirementId);
+
+      if (requirement) {
+        // Open edit modal
+        handleEditRequirement(requirement);
+
+        // Remove the parameter from URL
+        searchParams.delete("editRequirement");
+        navigate(
+          {
+            pathname: window.location.pathname,
+            search: searchParams.toString(),
+          },
+          { replace: true },
+        );
+      }
+    }
+  }, [requirements, searchParams, navigate]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -1686,6 +1723,15 @@ export default function ProjectRequirementsPage() {
                                 </Button>
                               </DropdownTrigger>
                               <DropdownMenu>
+                                {/* View Details - Always available */}
+                                <DropdownItem
+                                  key="view-details"
+                                  startContent={<Eye className="w-4 h-4" />}
+                                  onPress={() => handleViewDetails(requirement)}
+                                >
+                                  {t("common.viewDetails")}
+                                </DropdownItem>
+                                
                                 {/* Check if any actions are available */}
                                 {(() => {
                                   const canEdit =
@@ -2820,6 +2866,17 @@ export default function ProjectRequirementsPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* Requirement Details Drawer */}
+      <RequirementDetailsDrawer
+        isOpen={isDrawerOpen}
+        requirement={drawerRequirement}
+        getStatusColor={getStatusColor}
+        getStatusText={getStatusText}
+        getPriorityColor={getPriorityColor}
+        getPriorityLabel={getPriorityLabel}
+        onOpenChange={setIsDrawerOpen}
+      />
 
       {/* AI Diagram Generator Modal */}
       <AIDiagramGenerator

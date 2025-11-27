@@ -107,11 +107,11 @@ export default function MembersTasksPage() {
   const [selectedTask, setSelectedTask] = useState<MemberTask | null>(null);
   const { hasAnyRoleById, loading: userLoading, user } = usePermissions();
 
-  // QC Manager should not see Kanban view - default to grid instead
-  const isQCManager = hasAnyRoleById([RoleIds.QUALITY_CONTROL_MANAGER]);
+  // Only Development Manager should see Kanban view - default to grid for others
+  const isDevelopmentManager = hasAnyRoleById([RoleIds.DEVELOPMENT_MANAGER]);
   const [viewType, setViewType] = useState<
     "grid" | "list" | "gantt" | "kanban"
-  >(isQCManager ? "grid" : "kanban");
+  >(isDevelopmentManager ? "kanban" : "grid");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isOptionOpen, setIsOptionOpen] = useState(false);
 
@@ -307,7 +307,6 @@ export default function MembersTasksPage() {
 
     // Upload valid files
     let uploadedCount = 0;
-
     for (const file of validFiles) {
       try {
         const result = await membersTasksService.uploadTaskAttachment(
@@ -330,7 +329,6 @@ export default function MembersTasksPage() {
     // Refresh drawer if any files were uploaded successfully
     if (uploadedCount > 0) {
       const currentTask = selectedTask;
-
       setIsDrawerOpen(false);
       setTimeout(() => {
         setSelectedTask(currentTask);
@@ -360,7 +358,6 @@ export default function MembersTasksPage() {
         setAttachmentToDelete(null);
         // Close and reopen drawer to trigger refetch of attachments
         const currentTask = selectedTask;
-
         setIsDrawerOpen(false);
         setTimeout(() => {
           setSelectedTask(currentTask);
@@ -448,8 +445,7 @@ export default function MembersTasksPage() {
   const [endDateError, setEndDateError] = useState<string | null>(null);
 
   // Delete Attachment Modal state
-  const [isDeleteAttachmentModalOpen, setIsDeleteAttachmentModalOpen] =
-    useState(false);
+  const [isDeleteAttachmentModalOpen, setIsDeleteAttachmentModalOpen] = useState(false);
   const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null);
   const [deleteAttachmentLoading, setDeleteAttachmentLoading] = useState(false);
 
@@ -1294,7 +1290,9 @@ export default function MembersTasksPage() {
               {/* View Toggle */}
               <div className="flex items-center bg-content2 rounded-full p-1">
                 {(["kanban", "grid", "list", "gantt"] as const)
-                  .filter((type) => !(isQCManager && type === "kanban")) // Hide Kanban for QC Manager
+                  .filter(
+                    (type) => !(type === "kanban" && !isDevelopmentManager),
+                  ) // Show Kanban only for Development Manager
                   .map((type) => (
                     <Button
                       key={type}
@@ -1454,7 +1452,7 @@ export default function MembersTasksPage() {
                 />
               </div>
             )}
-            {viewType === "kanban" && !isQCManager && (
+            {viewType === "kanban" && isDevelopmentManager && (
               <div className="mb-8">
                 <MembersTasksKanban
                   loading={loading}
@@ -2015,7 +2013,7 @@ export default function MembersTasksPage() {
                 <ModalHeader className="flex flex-col gap-1">
                   {t("taskDetails.confirmDeleteAttachment").replace(
                     "{fileName}",
-                    attachmentToDelete?.originalName || "",
+                    attachmentToDelete?.originalName || ""
                   )}
                 </ModalHeader>
 
@@ -2026,7 +2024,11 @@ export default function MembersTasksPage() {
                 </ModalBody>
 
                 <ModalFooter>
-                  <Button color="default" variant="light" onPress={onClose}>
+                  <Button
+                    color="default"
+                    variant="light"
+                    onPress={onClose}
+                  >
                     {t("common.cancel")}
                   </Button>
                   <Button

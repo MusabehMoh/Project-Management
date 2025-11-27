@@ -442,9 +442,14 @@ export default function DesignerQuickActions() {
                                 {/* Requirement Description */}
                                 {request.requirementDetails?.description && (
                                   <div className="text-sm text-default-600">
-                                    <p className="line-clamp-2">
-                                      {request.requirementDetails.description}
-                                    </p>
+                                    <div
+                                      dangerouslySetInnerHTML={{
+                                        __html:
+                                          request.requirementDetails
+                                            .description,
+                                      }}
+                                      className="line-clamp-2"
+                                    />
                                   </div>
                                 )}
 
@@ -456,9 +461,12 @@ export default function DesignerQuickActions() {
                                         "Task Details"}
                                       :
                                     </span>
-                                    <p className="mt-1 line-clamp-2">
-                                      {request.task.description}
-                                    </p>
+                                    <div
+                                      dangerouslySetInnerHTML={{
+                                        __html: request.task.description,
+                                      }}
+                                      className="mt-1 line-clamp-2"
+                                    />
                                   </div>
                                 )}
                               </div>

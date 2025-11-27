@@ -48,6 +48,9 @@ export { useTimelineFormValidation } from "./useTimelineFormValidation";
 // Export task activity hook
 export { useTaskActivity } from "./useTaskActivity";
 
+// Export requirement history hook
+export { useRequirementHistory } from "./useRequirementHistory";
+
 // Export types
 export type {
   StatusOption,

@@ -22,6 +22,8 @@ export const REQUIREMENT_STATUS = {
   COMPLETED: 6,
   POSTPONED: 7,
   CANCELLED: 8,
+  ReturnedToAnalyst: 9,
+  ReturnedToMamager: 10,
 } as const;
 
 // Type definitions for the constants

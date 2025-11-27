@@ -15,6 +15,7 @@ public class ProjectRequirementStatusHistoryRepository : Repository<ProjectRequi
     public async Task<IEnumerable<ProjectRequirementStatusHistory>> GetRequirementStatusHistoryAsync(int requirementId)
     {
         return await _context.ProjectRequirementStatusHistory
+            .Include(h => h.CreatedByUser)
             .Where(h => h.RequirementId == requirementId)
             .OrderByDescending(h => h.CreatedAt)
             .ToListAsync();

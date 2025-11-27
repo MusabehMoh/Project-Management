@@ -196,3 +196,14 @@ export interface ProjectRequirementStats {
   totalEstimatedHours: number;
   totalActualHours: number;
 }
+
+export interface RequirementHistoryDto {
+  id: number;
+  requirementId: number;
+  fromStatus: number;
+  toStatus: number;
+  createdBy: number;
+  createdByName?: string;
+  createdAt: string;
+  reason?: string;
+}
