@@ -49,6 +49,7 @@ import {
   MoveIcon,
   CalendarDaysIcon,
   ClockIcon,
+  ChevronsUpDownIcon,
 } from "@/components/icons";
 
 interface TimelineTreeViewProps {
@@ -94,8 +95,47 @@ export default function TimelineTreeView({
   const toasts = useTimelineToasts();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track expanded state for all timelines and their children
+  // Track expanded state using stable canonical keys (avoid treeId changes on refresh)
+  // Format: tl:<timelineId>, task:<taskId>, sub:<subtaskId>
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  // Persist expansion state across refreshes and modal actions
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("timelineTreeExpanded");
+      if (raw) {
+        const arr: string[] = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          setExpandedItems(new Set(arr));
+        }
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "timelineTreeExpanded",
+        JSON.stringify(Array.from(expandedItems)),
+      );
+    } catch {}
+  }, [expandedItems]);
+
+  const getCanonicalId = (
+    type: "timeline" | "task" | "subtask",
+    id: string | number | undefined,
+  ) => {
+    const safeId = id != null ? String(id) : "0";
+    switch (type) {
+      case "timeline":
+        return `tl:${safeId}`;
+      case "task":
+        return `task:${safeId}`;
+      default:
+        return `sub:${safeId}`;
+    }
+  };
 
   const {
     getDepartmentColor,
@@ -144,11 +184,11 @@ export default function TimelineTreeView({
   // Popover custom move days (quick moves)
   const [popoverCustomDays, setPopoverCustomDays] = useState<string>("");
 
-  // Initialize expanded items when timelines change
-  useEffect(() => {
-    // Start with all timelines collapsed by default
-    setExpandedItems(new Set());
-  }, [timelines]);
+  // Preserve expanded state across timeline updates (avoid auto-collapse)
+  // Previously, we reset expansion on every timelines change which collapsed the tree.
+  // Removing that behavior keeps user expansions intact when tasks/timelines update.
+  // If needed in future, we can reconcile new IDs without clearing existing ones.
+  // Intentionally left without side-effects on [timelines].
 
   const activeScrollRef = useRef<HTMLElement | null>(null);
   const hasAutoSelectedTask = useRef(false);
@@ -180,7 +220,9 @@ export default function TimelineTreeView({
             : `timeline-${String(timeline?.id ?? "0")}`;
 
         // Expand timeline
-        setExpandedItems((prev) => new Set([...prev, timelineTreeId]));
+        setExpandedItems((prev) =>
+          new Set(prev).add(getCanonicalId("timeline", timeline.id)),
+        );
 
         // Select and scroll to task after a short delay to allow DOM to update
         setTimeout(() => {
@@ -376,18 +418,12 @@ export default function TimelineTreeView({
       const itemsToExpand = new Set<string>();
 
       filteredTimelines.forEach((timeline) => {
-        const raw = (timeline as any)?.treeId;
-        const timelineTreeId =
-          raw != null && raw !== ""
-            ? String(raw)
-            : `timeline-${String(timeline?.id ?? "0")}`;
-
-        itemsToExpand.add(timelineTreeId);
+        itemsToExpand.add(getCanonicalId("timeline", timeline.id));
 
         (timeline.tasks || []).forEach((task: Task) => {
-          itemsToExpand.add(task.treeId);
+          itemsToExpand.add(getCanonicalId("task", task.id));
           task.subtasks?.forEach((subtask: Subtask) => {
-            itemsToExpand.add(subtask.treeId);
+            itemsToExpand.add(getCanonicalId("subtask", subtask.id));
           });
         });
       });
@@ -420,6 +456,29 @@ export default function TimelineTreeView({
       newExpanded.add(id);
     }
     setExpandedItems(newExpanded);
+  };
+
+  const collapseAll = () => {
+    setExpandedItems(new Set());
+  };
+
+  // Helper function to calculate duration in days between two dates
+  const calculateDuration = (startDate: string, endDate: string): number => {
+    if (!startDate || !endDate) return 0;
+    
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+      
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays;
+    } catch {
+      return 0;
+    }
   };
 
   const handleOpenEditModal = (
@@ -594,7 +653,9 @@ export default function TimelineTreeView({
               ? String(raw)
               : `timeline-${String(targetTimeline?.id ?? "0")}`;
 
-          setExpandedItems((prev) => new Set(prev).add(timelineTreeId));
+          setExpandedItems((prev) =>
+            new Set(prev).add(getCanonicalId("timeline", targetTimeline.id)),
+          );
         }
         toasts.onTaskCreateSuccess();
       } else if (createModalType === "subtask" && onCreateSubtask) {
@@ -726,15 +787,27 @@ export default function TimelineTreeView({
 
     return (
       <div className="mb-4">
-        <Input
-          isClearable
-          placeholder={t("timeline.treeView.searchPlaceholder")}
-          size="sm"
-          startContent={<SearchIcon className="w-4 h-4" />}
-          value={quickSearch}
-          onChange={(e) => setQuickSearch(e.target.value)}
-          onClear={() => setQuickSearch("")}
-        />
+        <div className="flex items-center gap-2 mb-2">
+          <Input
+            isClearable
+            placeholder={t("timeline.treeView.searchPlaceholder")}
+            size="sm"
+            startContent={<SearchIcon className="w-4 h-4" />}
+            value={quickSearch}
+            onChange={(e) => setQuickSearch(e.target.value)}
+            onClear={() => setQuickSearch("")}
+            className="flex-1"
+          />
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            onPress={collapseAll}
+            aria-label={t("timeline.treeView.collapseAll")}
+          >
+            <ChevronsUpDownIcon className="w-4 h-4" />
+          </Button>
+        </div>
         {quickSearch && (
           <div className="mt-2 max-h-60 overflow-y-auto scrollbar-hide space-y-2 bg-default-50 rounded-lg p-2">
             {/* Timeline results */}
@@ -847,17 +920,17 @@ export default function TimelineTreeView({
                   tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleExpanded(safeTimelineTreeId);
+                    toggleExpanded(getCanonicalId("timeline", timeline.id));
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
                       e.stopPropagation();
-                      toggleExpanded(safeTimelineTreeId);
+                      toggleExpanded(getCanonicalId("timeline", timeline.id));
                     }
                   }}
                 >
-                  {expandedItems.has(safeTimelineTreeId) ? (
+                  {expandedItems.has(getCanonicalId("timeline", timeline.id)) ? (
                     <ChevronDownIcon className="w-4 h-4" />
                   ) : (
                     <ChevronRightIcon
@@ -879,6 +952,7 @@ export default function TimelineTreeView({
                   {formatDateRange(timeline.startDate, timeline.endDate, {
                     language,
                     direction: direction === "rtl" ? "rtl" : "ltr",
+                    showTime: false,
                   })}
                 </span>
                 <span>
@@ -1070,10 +1144,10 @@ export default function TimelineTreeView({
                   variant="light"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleExpanded(task.treeId);
+                    toggleExpanded(getCanonicalId("task", task.id));
                   }}
                 >
-                  {expandedItems.has(task.treeId) ? (
+                  {expandedItems.has(getCanonicalId("task", task.id)) ? (
                     <ChevronDownIcon />
                   ) : (
                     <ChevronRightIcon />
@@ -1095,10 +1169,12 @@ export default function TimelineTreeView({
                   {formatDateRange(task.startDate, task.endDate, {
                     language,
                     direction: direction === "rtl" ? "rtl" : "ltr",
+                    showTime: false,
                   })}
                 </span>
                 <span>
-                  {task.duration} {t("timeline.detailsPanel.days")}
+                  {calculateDuration(task.startDate, task.endDate)}{" "}
+                  {t("timeline.detailsPanel.days")}
                 </span>
                 <Chip
                   color={getStatusColor(task.statusId)}
@@ -1212,7 +1288,7 @@ export default function TimelineTreeView({
         </div>
       </div>
       {/* Render subtasks if expanded */}
-      {expandedItems.has(task.treeId) &&
+      {expandedItems.has(getCanonicalId("task", task.id)) &&
         task.subtasks &&
         task.subtasks.map((subtask) => renderSubtask(subtask))}
     </div>
@@ -1251,6 +1327,7 @@ export default function TimelineTreeView({
                     {formatDateRange(subtask.startDate, subtask.endDate, {
                       language,
                       direction: direction === "rtl" ? "rtl" : "ltr",
+                      showTime: false,
                     })}
                   </span>
                 )}
@@ -1382,7 +1459,7 @@ export default function TimelineTreeView({
                 return (
                   <div key={timeline.id}>
                     {renderTimelineHeader(timeline)}
-                    {expandedItems.has(timelineTreeId) &&
+                    {expandedItems.has(getCanonicalId("timeline", timeline.id)) &&
                       (timeline.tasks || []).map((task: Task) =>
                         renderTask(task),
                       )}
