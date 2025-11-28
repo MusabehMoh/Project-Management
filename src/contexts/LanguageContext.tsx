@@ -1351,6 +1351,7 @@ const translations = {
     "timeline.selectPredecessors": "Select Predecessors",
     "timeline.selectPredecessorsPlaceholder": "Choose predecessor tasks...",
     "users.selectEmployee": "Select Employee",
+    "users.selectAtLeastOne": "Please select at least one employee",
 
     // Common keys
     "common.preview": "Preview",
@@ -3710,6 +3711,7 @@ const translations = {
     "users.tryDifferentSearch": "جرب تعديل كلمات البحث أو المرشحات.",
     "users.createFirstUser": "ابدأ بإنشاء مستخدمك الأول.",
     "users.selectEmployee": "اختر موظف",
+    "users.selectAtLeastOne": "الرجاء اختيار موظف واحد على الأقل",
     "users.employeeNotFound": "لم يتم العثور على الموظف",
     "users.assignRoles": "تعيين دور",
     "users.assignActions": "تعيين الصلاحيات",
