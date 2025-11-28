@@ -48,7 +48,7 @@ import AddAdhocTask from "@/components/AddAdhocTask";
 import { PAGE_SIZE_OPTIONS, normalizePageSize } from "@/constants/pagination";
 import DHTMLXGantt from "@/components/timeline/GanttChart/dhtmlx/DhtmlxGantt";
 import { usePermissions } from "@/hooks/usePermissions";
-import useTeamSearch from "@/hooks/useTeamSearch";
+import useTeamSearchByDepartment from "@/hooks/useTeamSearchByDepartment";
 import { validateDateNotInPast } from "@/utils/dateValidation";
 import { MemberSearchResult } from "@/types/timeline";
 import { membersTasksService } from "@/services/api/membersTasksService";
@@ -484,10 +484,14 @@ export default function MembersTasksPage() {
     employees: employees,
     loading: employeeSearchLoading,
     searchEmployees: searchEmployees,
-  } = useTeamSearch({
+  } = useTeamSearchByDepartment({
+    departmentId: user?.roles?.[0]?.department?.id
+      ? Number(user.roles[0].department.id)
+      : 4, // Development Department
     minLength: 1,
     maxResults: 20,
-    loadInitialResults: false,
+    loadInitialResults: true, // Load initial results to populate on focus
+    initialResultsLimit: 20,
   });
 
   const effectivePageSize = normalizePageSize(
@@ -537,9 +541,9 @@ export default function MembersTasksPage() {
     });
   }, [selectedTask, statusOptions, userRoleIds]);
 
-  const handleValidateDateNotInPast = (date: any) => {
-    return validateDateNotInPast(date, t);
-  };
+  // const handleValidateDateNotInPast = (date: any) => {
+  //   return validateDateNotInPast(date, t);
+  // };
 
   const handleChangeAssigneesSubmit = async () => {
     if (typeof changeAssignees === "function") {
@@ -556,26 +560,26 @@ export default function MembersTasksPage() {
       }
 
       // Validate start date is not in the past
-      if (taskStartDate) {
-        const startDateValidation = handleValidateDateNotInPast(taskStartDate);
+      // if (taskStartDate) {
+      //   const startDateValidation = handleValidateDateNotInPast(taskStartDate);
 
-        if (startDateValidation !== true) {
-          setStartDateError(t("common.validation.dateNotInPast"));
+      //   if (startDateValidation !== true) {
+      //     setStartDateError(t("common.validation.dateNotInPast"));
 
-          return;
-        }
-      }
+      //     return;
+      //   }
+      // }
 
       // Validate end date is not in the past
-      if (taskEndDate) {
-        const endDateValidation = handleValidateDateNotInPast(taskEndDate);
+      // if (taskEndDate) {
+      //   const endDateValidation = handleValidateDateNotInPast(taskEndDate);
 
-        if (endDateValidation !== true) {
-          setEndDateError(t("common.validation.dateNotInPast"));
+      //   if (endDateValidation !== true) {
+      //     setEndDateError(t("common.validation.dateNotInPast"));
 
-          return;
-        }
-      }
+      //     return;
+      //   }
+      // }
 
       // Validate end date is after start date if both are provided
       if (taskStartDate && taskEndDate) {
@@ -1584,7 +1588,7 @@ export default function MembersTasksPage() {
                       isInvalid={assigneeModalError}
                       isLoading={employeeSearchLoading}
                       label={t("users.selectEmployee")}
-                      menuTrigger="input"
+                      menuTrigger="focus"
                       placeholder={t("users.searchEmployees")}
                       selectedKey={selectedEmployee?.id.toString()}
                       onInputChange={(value) => {
@@ -1643,7 +1647,7 @@ export default function MembersTasksPage() {
                         errorMessage={startDateError}
                         isInvalid={!!startDateError}
                         label={t("tasks.startDate")}
-                        minValue={today(getLocalTimeZone())}
+                      
                         value={taskStartDate}
                         onChange={(date) => {
                           setTaskStartDate(date);
@@ -1654,8 +1658,7 @@ export default function MembersTasksPage() {
                       <DatePicker
                         errorMessage={endDateError}
                         isInvalid={!!endDateError}
-                        label={t("tasks.endDate")}
-                        minValue={today(getLocalTimeZone())}
+                        label={t("tasks.endDate")} 
                         value={taskEndDate}
                         onChange={(date) => {
                           setTaskEndDate(date);
