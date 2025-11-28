@@ -443,7 +443,7 @@ export default function DevelopmentRequirementsPage() {
     minLength: 1,
     maxResults: 100,
     // Only search when user types to avoid redundant q="" calls
-    loadInitialResults: false,
+    loadInitialResults: true,
     initialResultsLimit: 100,
   });
   const {
@@ -455,7 +455,7 @@ export default function DevelopmentRequirementsPage() {
     minLength: 1,
     maxResults: 100,
     // Only search when user types to avoid redundant q="" calls
-    loadInitialResults: false,
+    loadInitialResults: true,
     initialResultsLimit: 100,
   });
 
@@ -572,112 +572,117 @@ export default function DevelopmentRequirementsPage() {
     // Pre-populate description with requirement description
     setTaskDescription(requirement.description || "");
 
-    // If task exists, pre-populate the form
-    if (requirement.requirementTask) {
-      // Use full developer and QC objects returned from backend
-      // Backend now returns requirementTask.developer and requirementTask.qc as complete Employee entities
-      if (requirement.requirementTask.developer) {
-        setSelectedDevelopers([
-          {
-            id: requirement.requirementTask.developer.id,
-            userName: requirement.requirementTask.developer.userName,
-            militaryNumber:
-              requirement.requirementTask.developer.militaryNumber,
-            fullName: requirement.requirementTask.developer.fullName,
-            gradeName: requirement.requirementTask.developer.gradeName || "",
-            statusId: 0,
-            department: "Development",
-          },
-        ]);
-      }
-
-      if (requirement.requirementTask.qc) {
-        setSelectedQC({
-          id: requirement.requirementTask.qc.id,
-          userName: requirement.requirementTask.qc.userName,
-          militaryNumber: requirement.requirementTask.qc.militaryNumber,
-          fullName: requirement.requirementTask.qc.fullName,
-          gradeName: requirement.requirementTask.qc.gradeName || "",
-          statusId: 0,
-          department: "QC",
-        });
-      }
-
-      // Pre-populate task-specific fields
-      setTaskDescription(
-        requirement.requirementTask.description ||
-          requirement.description ||
-          "",
-      );
-
-      // Parse developer dates from existing task when available
-      setDeveloperStartDate(
-        requirement.requirementTask.developerStartDate
-          ? parseDate(
-              requirement.requirementTask.developerStartDate.split("T")[0],
-            )
-          : null,
-      );
-      setDeveloperEndDate(
-        requirement.requirementTask.developerEndDate
-          ? parseDate(
-              requirement.requirementTask.developerEndDate.split("T")[0],
-            )
-          : null,
-      );
-
-      // Parse QC dates from existing task when available
-      setQcStartDate(
-        requirement.requirementTask.qcStartDate
-          ? parseDate(requirement.requirementTask.qcStartDate.split("T")[0])
-          : null,
-      );
-      setQcEndDate(
-        requirement.requirementTask.qcEndDate
-          ? parseDate(requirement.requirementTask.qcEndDate.split("T")[0])
-          : null,
-      );
-
-      // Prefill QC input display with selected name so the selection is visible
-      const qcDisplay = selectedQC
-        ? `${selectedQC.gradeName} ${selectedQC.fullName}`
-        : "";
-
-      setQcInputValue(qcDisplay);
-    } else {
-      // Reset all fields for new tasks
-      setSelectedDevelopers([]);
-      setSelectedQC(null);
-      setSelectedDesigner(null);
-      // Set developer start date to today by default
-      setDeveloperStartDate(today(getLocalTimeZone()));
-      // Set developer end date to requirement's expected completion date by default
-      setDeveloperEndDate(
-        requirement.expectedCompletionDate
-          ? parseDate(requirement.expectedCompletionDate.split("T")[0])
-          : null,
-      );
-      // Set QC start date to today by default
-      setQcStartDate(today(getLocalTimeZone()));
-      // Set QC end date to requirement's expected completion date by default
-      setQcEndDate(
-        requirement.expectedCompletionDate
-          ? parseDate(requirement.expectedCompletionDate.split("T")[0])
-          : null,
-      );
-      // Set designer start date to today by default
-      setDesignerStartDate(today(getLocalTimeZone()));
-      // Set designer end date to requirement's expected completion date by default
-      setDesignerEndDate(
-        requirement.expectedCompletionDate
-          ? parseDate(requirement.expectedCompletionDate.split("T")[0])
-          : null,
-      );
-      setDeveloperInputValue("");
-      setQcInputValue("");
-      setDesignerInputValue("");
-    }
+    // Reset all fields initially - will be populated by useEffect when selectedRequirement loads
+    setSelectedDevelopers([]);
+    setSelectedQC(null);
+    setSelectedDesigner(null);
+    
+    // Set default dates for new tasks
+    setDeveloperStartDate(today(getLocalTimeZone()));
+    setDeveloperEndDate(
+      requirement.expectedCompletionDate
+        ? parseDate(requirement.expectedCompletionDate.split("T")[0])
+        : null,
+    );
+    setQcStartDate(today(getLocalTimeZone()));
+    setQcEndDate(
+      requirement.expectedCompletionDate
+        ? parseDate(requirement.expectedCompletionDate.split("T")[0])
+        : null,
+    );
+    setDesignerStartDate(today(getLocalTimeZone()));
+    setDesignerEndDate(
+      requirement.expectedCompletionDate
+        ? parseDate(requirement.expectedCompletionDate.split("T")[0])
+        : null,
+    );
+    setDeveloperInputValue("");
+    setQcInputValue("");
+    setDesignerInputValue("");
   };
+
+  // Effect to populate task form when selectedRequirement is loaded
+  useEffect(() => {
+    if (!isTaskModalOpen || !selectedRequirement?.requirementTask) {
+      return;
+    }
+
+    const task = selectedRequirement.requirementTask;
+
+    // Pre-populate developer
+    if (task.developer) {
+      setSelectedDevelopers([
+        {
+          id: task.developer.id,
+          userName: task.developer.userName,
+          militaryNumber: task.developer.militaryNumber,
+          fullName: task.developer.fullName,
+          gradeName: task.developer.gradeName || "",
+          statusId: 0,
+          department: "Development",
+        },
+      ]);
+    }
+
+    // Pre-populate QC
+    if (task.qc) {
+      setSelectedQC({
+        id: task.qc.id,
+        userName: task.qc.userName,
+        militaryNumber: task.qc.militaryNumber,
+        fullName: task.qc.fullName,
+        gradeName: task.qc.gradeName || "",
+        statusId: 0,
+        department: "QC",
+      });
+      
+      // Set QC input display
+      setQcInputValue(`${task.qc.gradeName || ""} ${task.qc.fullName}`);
+    }
+
+    // Pre-populate Designer
+    if (task.designer) {
+      setSelectedDesigner({
+        id: task.designer.id,
+        userName: task.designer.userName,
+        militaryNumber: task.designer.militaryNumber,
+        fullName: task.designer.fullName,
+        gradeName: task.designer.gradeName || "",
+        statusId: 0,
+        department: "Design",
+      });
+      
+      // Set designer input display
+      setDesignerInputValue(`${task.designer.gradeName || ""} ${task.designer.fullName}`);
+    }
+
+    // Pre-populate task description
+    setTaskDescription(task.description || selectedRequirement.description || "");
+
+    // Parse developer dates
+    if (task.developerStartDate) {
+      setDeveloperStartDate(parseDate(task.developerStartDate.split("T")[0]));
+    }
+    if (task.developerEndDate) {
+      setDeveloperEndDate(parseDate(task.developerEndDate.split("T")[0]));
+    }
+
+    // Parse QC dates
+    if (task.qcStartDate) {
+      setQcStartDate(parseDate(task.qcStartDate.split("T")[0]));
+    }
+    if (task.qcEndDate) {
+      setQcEndDate(parseDate(task.qcEndDate.split("T")[0]));
+    }
+
+    // Parse designer dates
+    if (task.designerStartDate) {
+      setDesignerStartDate(parseDate(task.designerStartDate.split("T")[0]));
+    }
+    if (task.designerEndDate) {
+      setDesignerEndDate(parseDate(task.designerEndDate.split("T")[0]));
+    }
+  }, [isTaskModalOpen, selectedRequirement]);
 
   // Function to handle timeline creation or navigation
   const openTimelineModal = (requirement: ProjectRequirement) => {

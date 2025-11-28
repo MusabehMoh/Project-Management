@@ -258,6 +258,8 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
                 .ThenInclude(t => t.Developer)
             .Include(pr => pr.RequirementTask)
                 .ThenInclude(t => t.Qc)
+            .Include(pr => pr.RequirementTask)
+                .ThenInclude(t => t.Designer)
             .Include(pr => pr.Timeline)
             .FirstOrDefaultAsync(pr => pr.Id == id);
 
