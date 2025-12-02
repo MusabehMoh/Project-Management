@@ -862,7 +862,18 @@ export default function ProjectRequirementsPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate AI suggestion");
+        // Try to parse error message from response
+        let errorMessage = "Failed to generate AI suggestion";
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          // If JSON parsing fails, use status text
+          errorMessage = `${response.statusText || "Failed to generate AI suggestion"}`;
+        }
+        throw new Error(errorMessage);
       }
 
       // Read SSE streaming response (OpenAI format)
@@ -984,7 +995,19 @@ export default function ProjectRequirementsPage() {
       }
     } catch (error) {
       console.error("AI generation error:", error);
-      // Remove failed message and show error
+      
+      // Extract error message
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to generate AI suggestion";
+      
+      // Show error toast
+      showErrorToast(
+        language === "ar" ? "خطأ في توليد الوصف" : "AI Generation Error",
+        errorMessage
+      );
+      
+      // Remove failed message and restore conversation
       setConversationHistory(conversationHistory);
     } finally {
       setAIGenerating(false);

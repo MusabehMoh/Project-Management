@@ -2,8 +2,8 @@ import { apiClient } from "./api/client";
 
 export interface RequirementCompletionAnalytics {
   summary: {
-    totalRequirements: number;
-    completedRequirements: number;
+    totalTasks: number;
+    completedTasks: number;
     onTimeCompleted: number;
     onTimeRate: number;
     avgDelayDays: number;

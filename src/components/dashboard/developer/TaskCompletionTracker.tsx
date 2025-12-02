@@ -691,37 +691,83 @@ export default function TaskCompletionTracker({
         </CardHeader>
         <CardBody>
           {/* Overall Progress Summary */}
-          <div className="mb-4 p-4 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-foreground">
-                {t("developerDashboard.overallProgress") || "Overall Progress"}
-              </span>
-              <span className="text-sm text-default-500">
-                {analytics.summary.completedTasks} /{" "}
-                {analytics.summary.totalTasks}
-              </span>
-            </div>
-            <Progress
-              className="mb-2"
-              color="success"
-              size="sm"
-              value={Math.max(
-                0,
-                Math.min(100, analytics.summary.onTimeRate || 0),
-              )}
-            />
-            <div className="flex justify-between text-xs text-default-500">
-              <span>
-                {Math.max(0, Math.min(100, analytics.summary.onTimeRate || 0))}%{" "}
-                {t("developerDashboard.onTime") || "on time"}
-              </span>
-              {analytics.summary.avgDelayDays > 0 && (
-                <span>
-                  {t("developerDashboard.avgDelay") || "Avg delay"}:{" "}
-                  {analytics.summary.avgDelayDays}{" "}
-                  {t("developerDashboard.days") || "days"}
+          <div className="mb-4 space-y-3">
+            {/* Overall Completion Progress */}
+            <div className="p-4 bg-default-50 dark:bg-default-100/50 rounded-lg border border-default-200">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-foreground">
+                  {t("developerDashboard.overallCompletion") || "Overall Completion"}
                 </span>
-              )}
+                <span className="text-sm text-default-500">
+                  {analytics.summary.completedTasks} /{" "}
+                  {analytics.summary.totalTasks}
+                </span>
+              </div>
+              <Progress
+                className="mb-2"
+                color="primary"
+                size="sm"
+                value={
+                  analytics.summary.totalTasks > 0
+                    ? Math.round(
+                        (analytics.summary.completedTasks /
+                          analytics.summary.totalTasks) *
+                          100
+                      )
+                    : 0
+                }
+              />
+              <div className="flex justify-between text-xs text-default-500">
+                <span>
+                  {analytics.summary.totalTasks > 0
+                    ? Math.round(
+                        (analytics.summary.completedTasks /
+                          analytics.summary.totalTasks) *
+                          100
+                      )
+                    : 0}
+                  % {t("developerDashboard.completed") || "completed"}
+                </span>
+                <span>
+                  {analytics.summary.totalTasks - analytics.summary.completedTasks}{" "}
+                  {t("developerDashboard.remaining") || "remaining"}
+                </span>
+              </div>
+            </div>
+
+            {/* On-Time Completion Progress */}
+            <div className="p-4 bg-success-50 dark:bg-success-100/10 rounded-lg border border-success-200 dark:border-success-500/20">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-foreground">
+                  {t("developerDashboard.onTimeProgress") || "On-Time Performance"}
+                </span>
+                <span className="text-sm text-default-500">
+                  {analytics.summary.onTimeCompleted} /{" "}
+                  {analytics.summary.completedTasks}
+                </span>
+              </div>
+              <Progress
+                className="mb-2"
+                color="success"
+                size="sm"
+                value={Math.max(
+                  0,
+                  Math.min(100, analytics.summary.onTimeRate || 0),
+                )}
+              />
+              <div className="flex justify-between text-xs text-default-500">
+                <span>
+                  {Math.max(0, Math.min(100, analytics.summary.onTimeRate || 0))}%{" "}
+                  {t("developerDashboard.onTime") || "on time"}
+                </span>
+                {analytics.summary.avgDelayDays > 0 && (
+                  <span>
+                    {t("developerDashboard.avgDelay") || "Avg delay"}:{" "}
+                    {analytics.summary.avgDelayDays}{" "}
+                    {t("developerDashboard.days") || "days"}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

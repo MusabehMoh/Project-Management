@@ -67,6 +67,7 @@ public class ProjectRequirementRepository : Repository<ProjectRequirement>, IPro
         var totalCount = await query.CountAsync();
         var projectRequirements = await query
             .OrderByDescending(pr => pr.CreatedAt)
+            .OrderByDescending(pr => pr.UpdatedAt)
             .Skip((page - 1) * limit)
             .Take(limit)
             .ToListAsync();

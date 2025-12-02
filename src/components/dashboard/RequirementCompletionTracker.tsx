@@ -227,8 +227,8 @@ export default function RequirementCompletionTracker({
                 {t("completion.overall")}
               </span>
               <span className="text-sm text-default-500">
-                {analytics.summary.completedRequirements} /{" "}
-                {analytics.summary.totalRequirements}
+                {analytics.summary.totalTasks} /{" "}
+                {analytics.summary.completedTasks}
               </span>
             </div>
             <Progress

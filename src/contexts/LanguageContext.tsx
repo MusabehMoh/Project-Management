@@ -692,6 +692,16 @@ const translations = {
     "developerDashboard.assignReviewerSuccess":
       "Reviewer assigned successfully",
     "developerDashboard.assignReviewerError": "Failed to assign reviewer",
+    "developerDashboard.overallCompletion": "Overall Completion",
+    "developerDashboard.onTimeProgress": "On-Time Performance",
+    "developerDashboard.completed": "completed",
+    "developerDashboard.remaining": "remaining",
+
+    // Completion Tracker
+    "completion.overallCompletion": "Overall Completion",
+    "completion.onTimeProgress": "On-Time Performance",
+    "completion.completed": "completed",
+    "completion.remaining": "remaining",
 
     // Developer Workload Performance
     "developerDashboard.workloadPerformance": "Workload Performance",
@@ -2953,6 +2963,16 @@ const translations = {
     "developerDashboard.assignDeveloperError": "فشل في تعيين المطور",
     "developerDashboard.assignReviewerSuccess": "تم تعيين المراجع بنجاح",
     "developerDashboard.assignReviewerError": "فشل في تعيين المراجع",
+    "developerDashboard.overallCompletion": "الإنجاز الكلي",
+    "developerDashboard.onTimeProgress": "الأداء في الوقت المحدد",
+    "developerDashboard.completed": "مكتمل",
+    "developerDashboard.remaining": "متبقي",
+
+    // Completion Tracker
+    "completion.overallCompletion": "الإنجاز الكلي",
+    "completion.onTimeProgress": "الأداء في الوقت المحدد",
+    "completion.completed": "مكتمل",
+    "completion.remaining": "متبقي",
 
     // Developer Workload Performance
     "developerDashboard.workloadPerformance": "أداء أعمال",

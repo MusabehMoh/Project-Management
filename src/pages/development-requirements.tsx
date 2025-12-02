@@ -254,7 +254,9 @@ const RequirementCard = ({
               className="w-full"
               color="default"
               size="sm"
-              startContent={<CornerUpLeft className="w-3 h-3 flex-shrink-0 text-danger" />}
+              startContent={
+                <CornerUpLeft className="w-3 h-3 flex-shrink-0 text-danger" />
+              }
               variant="faded"
               onPress={() => onReturn(requirement)}
             >
@@ -576,26 +578,29 @@ export default function DevelopmentRequirementsPage() {
     setSelectedDevelopers([]);
     setSelectedQC(null);
     setSelectedDesigner(null);
-    
+
     // Set default dates for new tasks
-    setDeveloperStartDate(today(getLocalTimeZone()));
-    setDeveloperEndDate(
-      requirement.expectedCompletionDate
-        ? parseDate(requirement.expectedCompletionDate.split("T")[0])
-        : null,
-    );
-    setQcStartDate(today(getLocalTimeZone()));
-    setQcEndDate(
-      requirement.expectedCompletionDate
-        ? parseDate(requirement.expectedCompletionDate.split("T")[0])
-        : null,
-    );
-    setDesignerStartDate(today(getLocalTimeZone()));
-    setDesignerEndDate(
-      requirement.expectedCompletionDate
-        ? parseDate(requirement.expectedCompletionDate.split("T")[0])
-        : null,
-    );
+    const todayDate = today(getLocalTimeZone());
+    const tomorrowDate = todayDate.add({ days: 1 });
+
+    // Calculate end date: use tomorrow if expectedCompletionDate is in the past
+    let defaultEndDate = null;
+
+    if (requirement.expectedCompletionDate) {
+      const expectedDate = parseDate(
+        requirement.expectedCompletionDate.split("T")[0],
+      );
+
+      defaultEndDate =
+        expectedDate.compare(todayDate) < 0 ? tomorrowDate : expectedDate;
+    }
+
+    setDeveloperStartDate(todayDate);
+    setDeveloperEndDate(defaultEndDate);
+    setQcStartDate(todayDate);
+    setQcEndDate(defaultEndDate);
+    setDesignerStartDate(todayDate);
+    setDesignerEndDate(defaultEndDate);
     setDeveloperInputValue("");
     setQcInputValue("");
     setDesignerInputValue("");
@@ -635,7 +640,7 @@ export default function DevelopmentRequirementsPage() {
         statusId: 0,
         department: "QC",
       });
-      
+
       // Set QC input display
       setQcInputValue(`${task.qc.gradeName || ""} ${task.qc.fullName}`);
     }
@@ -651,13 +656,17 @@ export default function DevelopmentRequirementsPage() {
         statusId: 0,
         department: "Design",
       });
-      
+
       // Set designer input display
-      setDesignerInputValue(`${task.designer.gradeName || ""} ${task.designer.fullName}`);
+      setDesignerInputValue(
+        `${task.designer.gradeName || ""} ${task.designer.fullName}`,
+      );
     }
 
     // Pre-populate task description
-    setTaskDescription(task.description || selectedRequirement.description || "");
+    setTaskDescription(
+      task.description || selectedRequirement.description || "",
+    );
 
     // Parse developer dates
     if (task.developerStartDate) {
@@ -1710,11 +1719,7 @@ export default function DevelopmentRequirementsPage() {
                     }) && (
                       <Button
                         color="primary"
-                        isDisabled={
-                          (selectedDevelopers.length === 0 && !selectedQC) ||
-                          dateValidationErrors.developer !== undefined ||
-                          dateValidationErrors.qc !== undefined
-                        }
+                        isDisabled={selectedDevelopers.length === 0}
                         isLoading={isCreatingTask}
                         onPress={handleTaskSubmit}
                       >
@@ -1800,7 +1805,9 @@ export default function DevelopmentRequirementsPage() {
                     color="default"
                     isDisabled={!returnReason.trim()}
                     isLoading={isReturning}
-                    startContent={<CornerUpLeft className="w-4 h-4 text-danger" />}
+                    startContent={
+                      <CornerUpLeft className="w-4 h-4 text-danger" />
+                    }
                     onPress={() => handleReturnSubmit(onClose)}
                   >
                     {t("requirements.return")}

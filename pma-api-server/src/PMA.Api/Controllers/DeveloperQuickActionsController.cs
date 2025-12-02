@@ -449,20 +449,50 @@ public class DeveloperQuickActionsController : ApiBaseController
                 .ThenInclude(pr => pr!.Project)
                 .ToListAsync();
 
+            // Get completion dates from TaskStatusHistory for all completed tasks
+            var completedTaskIds = allTasks
+                .Where(t => t.StatusId == TaskStatusEnum.Completed)
+                .Select(t => t.Id)
+                .ToList();
+
+            var completionDates = await _context.TaskStatusHistory
+                .Where(h => completedTaskIds.Contains(h.TaskId) && 
+                           h.NewStatus == TaskStatusEnum.Completed)
+                .GroupBy(h => h.TaskId)
+                .Select(g => new
+                {
+                    TaskId = g.Key,
+                    CompletedDate = g.OrderByDescending(h => h.UpdatedAt).First().UpdatedAt
+                })
+                .ToDictionaryAsync(x => x.TaskId, x => x.CompletedDate);
+
             // Calculate summary statistics
             var totalTasks = allTasks.Count;
             var completedTasks = allTasks.Count(t => t.StatusId == TaskStatusEnum.Completed);
+            
+            // Calculate on-time completion based on actual completion date vs end date
+            // A task is on-time if it was completed before or on its end date
             var onTimeCompleted = allTasks.Count(t => 
                 t.StatusId == TaskStatusEnum.Completed && 
-                t.ActualHours <= t.EstimatedHours);
+                completionDates.ContainsKey(t.Id) &&
+                completionDates[t.Id].Date <= t.EndDate.Date);
             var onTimeRate = completedTasks > 0 ? (int)Math.Round((double)onTimeCompleted / completedTasks * 100) : 0;
             
             // Calculate average delay days for overdue completed tasks
-            var overdueCompletedTasks = allTasks.Where(t => 
-                t.StatusId == TaskStatusEnum.Completed && 
-                t.ActualHours > t.EstimatedHours).ToList();
+            // Tasks completed after their end date
+            var overdueCompletedTasks = allTasks
+                .Where(t => 
+                    t.StatusId == TaskStatusEnum.Completed && 
+                    completionDates.ContainsKey(t.Id) &&
+                    completionDates[t.Id].Date > t.EndDate.Date)
+                .Select(t => new
+                {
+                    Task = t,
+                    DelayDays = (completionDates[t.Id].Date - t.EndDate.Date).TotalDays
+                })
+                .ToList();
             var avgDelayDays = overdueCompletedTasks.Any() 
-                ? overdueCompletedTasks.Average(t => (t.ActualHours - t.EstimatedHours) ?? 0)
+                ? overdueCompletedTasks.Average(t => t.DelayDays)
                 : 0;
 
             // Get overdue items (tasks past due date and not completed)

@@ -70,7 +70,7 @@ namespace PMA.Api.Controllers
             try
             {
                 // Get Ollama configuration from appsettings
-                var ollamaUrl = _configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
+                var ollamaBaseUrl = _configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
                 var apiKey = _configuration["Ollama:ApiKey"]; // Get API key from config
                 var defaultModel = _configuration["Ollama:DefaultModel"] ?? "llama3.1:8b";
                 
@@ -80,12 +80,17 @@ namespace PMA.Api.Controllers
                     request.Model = defaultModel;
                 }
                 
+                // Build the correct endpoint URL
+                // If BaseUrl already includes the endpoint path (e.g., "http://localhost:3000/api/chat/completions"), use it as-is
+                // If it's just a base URL (e.g., "http://localhost:11434"), append the endpoint
+                var ollamaUrl = ollamaBaseUrl.Contains("/api/chat") || ollamaBaseUrl.Contains("/v1/chat")
+                    ? ollamaBaseUrl
+                    : $"{ollamaBaseUrl.TrimEnd('/')}/api/chat/completions";
+                
                 _logger.LogInformation("Proxying OpenAI-compatible chat request to Ollama at {OllamaUrl} using model {Model}", 
                     ollamaUrl, request.Model);
 
                 var httpClient = _httpClientFactory.CreateClient();
-
-
                 httpClient.Timeout = TimeSpan.FromMinutes(5); // Longer timeout for AI responses
 
                 // Serialize request to JSON (OpenAI format)
@@ -95,7 +100,7 @@ namespace PMA.Api.Controllers
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
                 });
 
-                // Use chat completions endpoint (production uses /api/chat/completions)
+                // Use chat completions endpoint
                 var httpRequest = new HttpRequestMessage(HttpMethod.Post, ollamaUrl)
                 {
                     Content = new StringContent(jsonContent, Encoding.UTF8, new MediaTypeHeaderValue("application/json"))
@@ -112,9 +117,42 @@ namespace PMA.Api.Controllers
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Ollama API returned error: {RequestMessage}", response.RequestMessage);
+                    // Read the error response body to get detailed error message
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    
+                    _logger.LogError("Ollama API returned error {StatusCode}: {ErrorContent}", 
+                        response.StatusCode, errorContent);
+                    
                     Response.StatusCode = (int)response.StatusCode;
-                    await Response.WriteAsync($"Ollama API error: {response.RequestMessage}");
+                    Response.ContentType = "application/json";
+                    
+                    // Try to parse and return the error message from Ollama
+                    try
+                    {
+                        using var errorDoc = JsonDocument.Parse(errorContent);
+                        if (errorDoc.RootElement.TryGetProperty("detail", out var detail))
+                        {
+                            await Response.WriteAsync(JsonSerializer.Serialize(new { error = detail.GetString() }));
+                        }
+                        else if (errorDoc.RootElement.TryGetProperty("error", out var error))
+                        {
+                            await Response.WriteAsync(JsonSerializer.Serialize(new { error = error.GetString() }));
+                        }
+                        else
+                        {
+                            // Return the full error content if we can't extract a specific message
+                            await Response.WriteAsync(errorContent);
+                        }
+                    }
+                    catch
+                    {
+                        // If JSON parsing fails, return raw error content
+                        await Response.WriteAsync(JsonSerializer.Serialize(new 
+                        { 
+                            error = $"Ollama API error: {errorContent}" 
+                        }));
+                    }
+                    
                     return;
                 }
 

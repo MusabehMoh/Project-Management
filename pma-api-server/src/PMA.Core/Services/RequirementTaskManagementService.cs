@@ -28,6 +28,20 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
     {
         try
         {
+            // Get the project requirement details BEFORE making changes (to capture old status)
+            var requirement = await _projectRequirementService.GetByIdAsync(requirementId);
+            if (requirement == null)
+            {
+                return new RequirementTaskResult
+                {
+                    Success = false,
+                    ErrorMessage = "Project requirement not found"
+                };
+            }
+
+            // Capture the old status before any changes
+            var oldStatus = requirement.Status;
+
             // Create or update the main requirement task
             var requirementTask = await _projectRequirementService.CreateRequirementTaskAsync(requirementId, taskDto);
             if (requirementTask == null)
@@ -39,19 +53,26 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
                 };
             }
 
-            // Get the project requirement details
-            var requirement = await _projectRequirementService.GetByIdAsync(requirementId);
-            if (requirement == null)
-            {
-                return new RequirementTaskResult
-                {
-                    Success = false,
-                    ErrorMessage = "Project requirement not found"
-                };
-            }
-
             // Create tasks for all assigned roles
             var createdTasks = await CreateTasksForAssignedRolesAsync(requirementId, taskDto, requirement);
+
+            // Reload requirement to get updated status (if it was changed during task creation)
+            var updatedRequirement = await _projectRequirementService.GetByIdAsync(requirementId);
+            if (updatedRequirement != null && updatedRequirement.Status != oldStatus)
+            {
+                // Status has changed - log it to ProjectRequirementStatusHistory
+                var statusHistory = new ProjectRequirementStatusHistory
+                {
+                    RequirementId = requirementId,
+                    FromStatus = (int)oldStatus,
+                    ToStatus = (int)updatedRequirement.Status,
+                    CreatedBy = requirementTask.CreatedBy, // Use the task creator as the one who triggered the status change
+                    CreatedAt = DateTime.Now,
+                    Reason = "Status changed automatically when requirement task was created/updated"
+                };
+
+                await _projectRequirementService.CreateRequirementStatusHistoryAsync(statusHistory);
+            }
 
             return new RequirementTaskResult
             {

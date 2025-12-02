@@ -417,42 +417,40 @@ export default function RequirementDetailsDrawer({
                       </h3>
                       <div className="bg-default-50 dark:bg-default-100/10 p-4 rounded-lg space-y-3">
                         <div className="grid grid-cols-2 gap-4">
-                          {requirement.requirementTask.developerId && (
+                          {requirement.requirementTask.developer && (
                             <div>
                               <h4 className="text-sm font-medium text-default-600 mb-1">
                                 {t("tasks.developer")}
                               </h4>
                               <p className="text-sm">
-                                {requirement.requirementTask.developerName ||
-                                  `Developer ID: ${requirement.requirementTask.developerId}`}
+                                {requirement.requirementTask.developer.gradeName}{" "}
+                                {requirement.requirementTask.developer.fullName}
                               </p>
                             </div>
                           )}
-                          {requirement.requirementTask.qcId && (
+                          {requirement.requirementTask.qc && (
                             <div>
                               <h4 className="text-sm font-medium text-default-600 mb-1">
                                 {t("tasks.qcMember")}
                               </h4>
                               <p className="text-sm">
-                                {(requirement.requirementTask.gradeName || "") +
-                                  (requirement.requirementTask.qcName || "") ||
-                                  `QC ID: ${requirement.requirementTask.qcId}`}
+                                {requirement.requirementTask.qc.gradeName}{" "}
+                                {requirement.requirementTask.qc.fullName}
+                              </p>
+                            </div>
+                          )}
+                          {requirement.requirementTask.designer && (
+                            <div>
+                              <h4 className="text-sm font-medium text-default-600 mb-1">
+                                {t("tasks.designer")}
+                              </h4>
+                              <p className="text-sm">
+                                {requirement.requirementTask.designer.gradeName}{" "}
+                                {requirement.requirementTask.designer.fullName}
                               </p>
                             </div>
                           )}
                         </div>
-                        {requirement.requirementTask.createdAt && (
-                          <div>
-                            <h4 className="text-sm font-medium text-default-600 mb-1">
-                              {t("tasks.assignedOn")}
-                            </h4>
-                            <p className="text-sm">
-                              {formatDate(
-                                requirement.requirementTask.createdAt,
-                              )}
-                            </p>
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}

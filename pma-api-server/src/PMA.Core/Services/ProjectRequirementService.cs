@@ -269,23 +269,32 @@ public class ProjectRequirementService : IProjectRequirementService
 
     public async Task<RequirementTask?> CreateRequirementTaskAsync(int requirementId, CreateRequirementTaskDto taskDto)
     {
-        // Validate dates for each role if both are provided
-        if (taskDto.DeveloperStartDate.HasValue && taskDto.DeveloperEndDate.HasValue && 
-            taskDto.DeveloperStartDate.Value > taskDto.DeveloperEndDate.Value)
+        // Validate dates for each role only if that role is selected
+        if ((taskDto.DeveloperIds != null && taskDto.DeveloperIds.Any()) || taskDto.DeveloperId.HasValue)
         {
-            throw new ArgumentException("Developer end date must be after start date");
+            if (taskDto.DeveloperStartDate.HasValue && taskDto.DeveloperEndDate.HasValue && 
+                taskDto.DeveloperStartDate.Value > taskDto.DeveloperEndDate.Value)
+            {
+                throw new ArgumentException("Developer end date must be after start date");
+            }
         }
 
-        if (taskDto.QcStartDate.HasValue && taskDto.QcEndDate.HasValue && 
-            taskDto.QcStartDate.Value > taskDto.QcEndDate.Value)
+        if (taskDto.QcId.HasValue)
         {
-            throw new ArgumentException("QC end date must be after start date");
+            if (taskDto.QcStartDate.HasValue && taskDto.QcEndDate.HasValue && 
+                taskDto.QcStartDate.Value > taskDto.QcEndDate.Value)
+            {
+                throw new ArgumentException("QC end date must be after start date");
+            }
         }
 
-        if (taskDto.DesignerStartDate.HasValue && taskDto.DesignerEndDate.HasValue && 
-            taskDto.DesignerStartDate.Value > taskDto.DesignerEndDate.Value)
+        if (taskDto.DesignerId.HasValue)
         {
-            throw new ArgumentException("Designer end date must be after start date");
+            if (taskDto.DesignerStartDate.HasValue && taskDto.DesignerEndDate.HasValue && 
+                taskDto.DesignerStartDate.Value > taskDto.DesignerEndDate.Value)
+            {
+                throw new ArgumentException("Designer end date must be after start date");
+            }
         }
 
         // Check if a RequirementTask already exists for this requirement
