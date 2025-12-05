@@ -322,7 +322,7 @@ public class ProjectRequirementService : IProjectRequirementService
         var task = new RequirementTask
         {
             ProjectRequirementId = requirementId,
-            DeveloperId = taskDto.DeveloperId,
+            DeveloperId  = taskDto.DeveloperIds[0],
             QcId = taskDto.QcId,
             DesignerId = taskDto.DesignerId,
             Description = taskDto.Description,

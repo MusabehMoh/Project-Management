@@ -65,6 +65,7 @@ namespace PMA.Api.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
+        [AllowAnonymous]
         public async Task Chat([FromBody] OpenAIChatRequest request)
         {
             try
@@ -125,6 +126,13 @@ namespace PMA.Api.Controllers
                     
                     Response.StatusCode = (int)response.StatusCode;
                     Response.ContentType = "application/json";
+
+                    // IMPORTANT: Prevent browser basic-auth popup on 401 by removing WWW-Authenticate
+                    // Some upstream servers (e.g., OpenWebUI) return this header which triggers the prompt
+                    if (Response.Headers.ContainsKey("WWW-Authenticate"))
+                    {
+                        Response.Headers.Remove("WWW-Authenticate");
+                    }
                     
                     // Try to parse and return the error message from Ollama
                     try

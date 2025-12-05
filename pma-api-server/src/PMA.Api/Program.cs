@@ -276,6 +276,29 @@ app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Remove any 'WWW-Authenticate' header from 401 responses to prevent the
+// browser from showing the default Basic/Windows authentication popup.
+// NOTE: This is a safeguard and should not replace proper server-level
+// configuration (e.g., enabling Anonymous Authentication in IIS, or
+// disabling Basic/Windows auth on the public site).
+app.Use(async (context, next) =>
+{
+    await next();
+
+    if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
+    {
+        if (context.Response.Headers.ContainsKey("WWW-Authenticate"))
+        {
+            // Log for diagnostics
+            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("Removing WWW-Authenticate header from 401 response for request path {Path}", context.Request.Path);
+
+            context.Response.Headers.Remove("WWW-Authenticate");
+        }
+    }
+});
+
 app.UseAuditUser();
 
 app.MapControllers();

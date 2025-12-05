@@ -614,6 +614,20 @@ export default function DevelopmentRequirementsPage() {
 
     const task = selectedRequirement.requirementTask;
 
+    // Always reset selections first to clear any previous data
+    setSelectedDevelopers([]);
+    setSelectedQC(null);
+    setSelectedDesigner(null);
+    setDeveloperInputValue("");
+    setQcInputValue("");
+    setDesignerInputValue("");
+    setDeveloperStartDate(null);
+    setDeveloperEndDate(null);
+    setQcStartDate(null);
+    setQcEndDate(null);
+    setDesignerStartDate(null);
+    setDesignerEndDate(null);
+
     // Pre-populate developer
     if (task.developer) {
       setSelectedDevelopers([
