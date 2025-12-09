@@ -123,7 +123,7 @@ const RequirementCard = ({
             <h3 className="text-lg font-semibold text-foreground truncate">
               {requirement.name}
             </h3>
-            <p className="text-sm text-default-500 line-clamp-2 mt-1">
+            <p className="text-sm text-black line-clamp-2 mt-1 font-bold">
               {requirement.project?.applicationName || "N/A"}
             </p>
           </div>

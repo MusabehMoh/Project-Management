@@ -2,6 +2,7 @@ import type { MemberTask } from "@/types/membersTasks";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/skeleton";
@@ -18,6 +19,8 @@ import {
   Calendar as CalendarIcon,
   Lock,
   AlertTriangle,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -85,6 +88,7 @@ export default function MembersTasksKanban({
     x: number;
     y: number;
   } | null>(null);
+  const [isMaximized, setIsMaximized] = useState<boolean>(false);
 
   // Refs to preserve scroll positions
   const scrollRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
@@ -542,11 +546,25 @@ export default function MembersTasksKanban({
 
   return (
     <>
-      <Card className="w-full">
-        <CardHeader className="flex items-center gap-2">
+      <Card className={`w-full ${isMaximized ? 'fixed inset-0 z-50 rounded-none' : ''}`}>
+        <CardHeader className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">
             {t("teamDashboard.kanban.title")}
           </h3>
+          <Tooltip content={isMaximized ? t("common.minimize") : t("common.maximize")}>
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              onPress={() => setIsMaximized(!isMaximized)}
+            >
+              {isMaximized ? (
+                <Minimize2 className="w-4 h-4" />
+              ) : (
+                <Maximize2 className="w-4 h-4" />
+              )}
+            </Button>
+          </Tooltip>
         </CardHeader>
         <Divider />
         <CardBody>
@@ -610,7 +628,7 @@ export default function MembersTasksKanban({
                     }}
                     hideScrollBar
                     className="flex-1 px-3 pb-3 space-y-2"
-                    style={{ maxHeight: "500px" }}
+                    style={{ maxHeight: "700px" }}
                   >
                     {column.tasks.map((task) => {
                       const canDrag = kanbanConfig.canDragFrom(column.id);

@@ -42,6 +42,7 @@ interface UseMembersTasksResult {
   handleStatusChange: (statusId: number) => void;
   handleAssigneeChange: (memberIds: number[]) => void;
   handleTypeChange: (typeId: number) => void;
+  handleDateRangeChange: (startDate: string | null, endDate: string | null) => void;
   handleResetFilters: () => void;
   taskParametersRequest: TaskSearchParams;
 }
@@ -164,6 +165,19 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     setTaskParametersRequest((prev) => ({
       ...prev,
       typeId: typeId,
+    }));
+  }, []);
+
+  /**
+   * Handle date range change
+   */
+  const handleDateRangeChange = useCallback((startDate: string | null, endDate: string | null) => {
+    setTaskParametersRequest((prev) => ({
+      ...prev,
+      dateRange: startDate || endDate ? {
+        start: startDate || "",
+        end: endDate || "",
+      } : undefined,
     }));
   }, []);
 
@@ -465,6 +479,7 @@ export const useMembersTasks = (): UseMembersTasksResult => {
     handleStatusChange,
     handleAssigneeChange,
     handleTypeChange,
+    handleDateRangeChange,
     handleResetFilters,
     taskParametersRequest,
     refreshTasks,

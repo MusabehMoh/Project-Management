@@ -66,13 +66,15 @@ public class MembersTasksController : ApiBaseController
         [FromQuery] int? status = null,
         [FromQuery] int? priority = null,
         [FromQuery] string? search = null,
-        [FromQuery] int? typeId = null)
+        [FromQuery] int? typeId = null,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
     {
         try
         {
             // Service layer handles user context and role-based filtering
             var (memberTasks, totalCount) = await _memberTaskService.GetMemberTasksAsync(
-                page, limit, projectId, primaryAssigneeId, status, priority, departmentId: null, search: search, typeId: typeId);
+                page, limit, projectId, primaryAssigneeId, status, priority, departmentId: null, search: search, typeId: typeId, startDate: startDate, endDate: endDate);
             
             var totalPages = (int)Math.Ceiling((double)totalCount / limit);
             var pagination = new PaginationInfo(page, limit, totalCount, totalPages);

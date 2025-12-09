@@ -81,6 +81,14 @@ export class MembersTasksService {
       params.append("typeId", taskRequest.typeId.toString());
     }
 
+    // Handle date range filter
+    if (taskRequest?.dateRange?.start) {
+      params.append("startDate", taskRequest.dateRange.start);
+    }
+    if (taskRequest?.dateRange?.end) {
+      params.append("endDate", taskRequest.dateRange.end);
+    }
+
     const endpoint = `${this.baseUrl}?${params.toString()}`;
     const res = await apiClient.get<any>(endpoint);
 

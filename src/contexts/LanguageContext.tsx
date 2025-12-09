@@ -208,6 +208,8 @@ const translations = {
     "common.scrollToTop": "Scroll to top",
     "common.overdue": "Overdue",
     "common.success": "Success",
+    "common.maximize": "Maximize",
+    "common.minimize": "Minimize",
 
     // Common Validation Messages
     "common.validation.dateRequired": "Date is required",
@@ -2796,6 +2798,10 @@ const translations = {
     "toast.saveError": "فشل في الحفظ",
     "toast.adhocTaskCreated": "تم إنشاء المهمة العاجلة بنجاح",
     "toast.adhocTaskCreateError": "فشل في إنشاء المهمة العاجلة",
+
+    // Common UI
+    "common.maximize": "تكبير",
+    "common.minimize": "تصغير",
 
     // Table
     "table.noData": "لا توجد بيانات متاحة",

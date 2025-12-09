@@ -32,7 +32,7 @@ public class MemberTaskService : IMemberTaskService
         _designRequestRepository = designRequestRepository;
     }
 
-    public async Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null, string? search = null, int? typeId = null)
+    public async Task<(IEnumerable<TaskDto> MemberTasks, int TotalCount)> GetMemberTasksAsync(int page, int limit, int? projectId = null, int? primaryAssigneeId = null, int? status = null, int? priority = null, int? departmentId = null, string? search = null, int? typeId = null, DateTime? startDate = null, DateTime? endDate = null)
     {
         // Get current user context for filtering logic (similar to ProjectRequirementService pattern)
         var userContext = await _userContextAccessor.GetUserContextAsync();

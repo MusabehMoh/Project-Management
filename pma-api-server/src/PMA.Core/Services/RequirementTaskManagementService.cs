@@ -121,29 +121,21 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
             developerIds.Add(taskDto.DeveloperId.Value);
         }
 
-        // Create a task for each developer
+        // Create a single task for all developers
         if (developerIds.Any())
         {
-            // Handle Developer reassignment - pass all developer IDs for cleanup
-            await CleanupUnassignedRoleTasksAsync(requirementId, "Developer", developerIds);
+            var developerTask = await CreateOrUpdateDeveloperTaskAsync(
+                requirementId, 
+                developerIds.ToList(),
+                taskDto.DeveloperStartDate, 
+                taskDto.DeveloperEndDate,
+                taskDto.Description, 
+                requirement);
             
-            foreach (var developerId in developerIds)
+            if (developerTask != null)
             {
-                var developerTask = await CreateOrUpdateTaskForRoleAsync(
-                    requirementId, 
-                    developerId, 
-                    "Developer", 
-                    taskDto.DeveloperStartDate, 
-                    taskDto.DeveloperEndDate,
-                    TaskStatusEnum.ToDo,
-                    taskDto.Description, 
-                    requirement);
-                
-                if (developerTask != null)
-                {
-                    createdTasks.Add(developerTask);
-                    developerTasks.Add(developerTask);
-                }
+                createdTasks.Add(developerTask);
+                developerTasks.Add(developerTask);
             }
         }
         else
@@ -364,6 +356,63 @@ public class RequirementTaskManagementService : IRequirementTaskManagementServic
         }
 
         return createdTask;
+    }
+
+    /// <summary>
+    /// Creates or updates a single developer task with multiple assignees
+    /// </summary>
+    private async Task<PMA.Core.Entities.Task?> CreateOrUpdateDeveloperTaskAsync(
+        int requirementId,
+        List<int> developerIds,
+        DateTime? startDate,
+        DateTime? endDate,
+        string? description,
+        ProjectRequirement requirement)
+    {
+        // Find existing developer task for this requirement
+        var existingTask = await FindExistingDeveloperTaskAsync(requirementId);
+        
+        if (existingTask != null)
+        {
+            // Update the task
+            existingTask.Description = description ?? existingTask.Description;
+            existingTask.StartDate = startDate ?? existingTask.StartDate;
+            existingTask.EndDate = endDate ?? existingTask.EndDate;
+            existingTask.UpdatedAt = DateTime.Now;
+            
+            await _taskService.UpdateTaskAsync(existingTask);
+            await _taskService.UpdateTaskAssignmentsAsync(existingTask.Id, developerIds);
+            
+            return existingTask;
+        }
+        else
+        {
+            // Create new task
+            var newTask = TaskEntityFactory.CreateChangeRequestTask(
+                requirementId, "Developer", startDate, endDate, description, TaskStatusEnum.ToDo, requirement);
+                
+            var createdTask = await _taskService.CreateTaskAsync(newTask);
+            
+            if (createdTask != null)
+            {
+                await _taskService.UpdateTaskAssignmentsAsync(createdTask.Id, developerIds);
+            }
+            
+            return createdTask;
+        }
+    }
+
+    /// <summary>
+    /// Finds an existing developer task for a specific requirement
+    /// </summary>
+    private async Task<PMA.Core.Entities.Task?> FindExistingDeveloperTaskAsync(int requirementId)
+    {
+        var (allTasks, _) = await _taskService.GetTasksAsync(1, 1000, projectId: null, assigneeId: null, statusId: null);
+        
+        return allTasks.FirstOrDefault(t => 
+            t.ProjectRequirementId == requirementId &&
+            t.TypeId == TaskTypes.ChangeRequest &&
+            t.RoleType == "Developer");
     }
 
     #endregion

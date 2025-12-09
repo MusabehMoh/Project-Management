@@ -391,6 +391,7 @@ export default function MembersTasksPage() {
     handleStatusChange,
     handleAssigneeChange,
     handleTypeChange,
+    handleDateRangeChange,
     handleResetFilters,
     taskParametersRequest,
     refreshTasks,
@@ -508,10 +509,37 @@ export default function MembersTasksPage() {
     taskParametersRequest?.search ?? "",
   );
 
+  // Date filter states - default to last 5 months
+  const getDefaultDateRange = () => {
+    const today = new Date();
+    const fiveMonthsAgo = new Date(today);
+
+    fiveMonthsAgo.setMonth(today.getMonth() - 5);
+
+    return {
+      start: fiveMonthsAgo.toISOString().split("T")[0], // YYYY-MM-DD format
+      end: today.toISOString().split("T")[0],
+    };
+  };
+
+  const defaultDateRange = getDefaultDateRange();
+
+  const [startDate, setStartDate] = useState<string | null>(
+    taskParametersRequest?.dateRange?.start ?? defaultDateRange.start,
+  );
+  const [endDate, setEndDate] = useState<string | null>(
+    taskParametersRequest?.dateRange?.end ?? defaultDateRange.end,
+  );
+
   // Update search when searchTerm changes
   useEffect(() => {
     handleSearchChange(searchTerm);
   }, [searchTerm, handleSearchChange]);
+
+  // Update date range filter when startDate or endDate changes
+  useEffect(() => {
+    handleDateRangeChange(startDate, endDate);
+  }, [startDate, endDate, handleDateRangeChange]);
 
   const isTeamManager = hasAnyRoleById([
     RoleIds.ANALYST_DEPARTMENT_MANAGER,
@@ -855,6 +883,8 @@ export default function MembersTasksPage() {
   // Reset all filters
   const resetAllFilters = () => {
     setSearchTerm("");
+    setStartDate(null);
+    setEndDate(null);
     handleResetFilters();
   };
 
@@ -866,7 +896,8 @@ export default function MembersTasksPage() {
     taskParametersRequest.projectId !== undefined ||
     taskParametersRequest.typeId !== undefined ||
     (taskParametersRequest.memberIds &&
-      taskParametersRequest.memberIds.length > 0);
+      taskParametersRequest.memberIds.length > 0) ||
+    taskParametersRequest.dateRange !== undefined;
 
   const handleRefresh = () => refreshTasks();
 
@@ -1182,6 +1213,33 @@ export default function MembersTasksPage() {
             </div>
           </div>
 
+          {/* Date Range Filters - Separate Row */}
+          <div className="flex flex-col lg:flex-row gap-3 w-full mt-3">
+            {/* Start Date Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <DatePicker
+                className="w-full"
+                label={t("tasks.startDate")}
+                value={startDate ? parseDate(startDate) : null}
+                onChange={(date) => {
+                  setStartDate(date ? date.toString() : null);
+                }}
+              />
+            </div>
+
+            {/* End Date Filter */}
+            <div className="flex-1 min-w-[180px]">
+              <DatePicker
+                className="w-full"
+                label={t("tasks.endDate")}
+                value={endDate ? parseDate(endDate) : null}
+                onChange={(date) => {
+                  setEndDate(date ? date.toString() : null);
+                }}
+              />
+            </div>
+          </div>
+
           {/* Active Filters display row - Count, Clear button, and chips all on same line */}
           {hasActiveFilters && (
             <div className="flex items-center justify-between gap-4">
@@ -1259,6 +1317,16 @@ export default function MembersTasksPage() {
                       : taskParametersRequest.typeId === 2
                         ? t("tasks.type.changeRequest")
                         : t("tasks.type.adhoc")}
+                  </Chip>
+                )}
+                {taskParametersRequest.dateRange?.start && (
+                  <Chip color="primary" size="sm" variant="flat">
+                    {t("tasks.startDate")}: {taskParametersRequest.dateRange.start}
+                  </Chip>
+                )}
+                {taskParametersRequest.dateRange?.end && (
+                  <Chip color="primary" size="sm" variant="flat">
+                    {t("tasks.endDate")}: {taskParametersRequest.dateRange.end}
                   </Chip>
                 )}
               </div>
