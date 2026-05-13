@@ -52,6 +52,8 @@ public class Project
     [Required]
     public Priority Priority { get; set; }
 
+    public bool IsClassified { get; set; } = false;
+
   
     [Required]
     [Range(0, 100)]
@@ -70,10 +72,10 @@ public class Project
 
     [ForeignKey("ProjectId")]
     public ICollection<ProjectAnalyst>? ProjectAnalysts { get; set; }
-     
+
+    public ICollection<ProjectManagerAssignment>? ProjectManagers { get; set; }
 
     public ICollection<Task>? Tasks { get; set; }
-    public ICollection<ProjectRequirement>? ProjectRequirements { get; set; }
     public ICollection<Timeline>? Timelines { get; set; }
 }
 
