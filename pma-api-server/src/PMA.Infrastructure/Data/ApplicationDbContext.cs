@@ -33,14 +33,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<Lookup> Lookups { get; set; }
     //public DbSet<MemberTask> MemberTasks { get; set; }
     //public DbSet<MemberTaskAssignment> MemberTaskAssignments { get; set; }
-    public DbSet<ProjectRequirement> ProjectRequirements { get; set; }
-    public DbSet<ProjectRequirementAttachment> ProjectRequirementAttachments { get; set; }
-    public DbSet<RequirementTask> RequirementTasks { get; set; }
-    public DbSet<Timeline> Timelines { get; set; } 
+    public DbSet<Timeline> Timelines { get; set; }
     public DbSet<CalendarEvent> CalendarEvents { get; set; }
     public DbSet<CalendarEventAssignment> CalendarEventAssignments { get; set; }
- 
+
     public DbSet<ProjectAnalyst> ProjectAnalysts { get; set; }
+    public DbSet<ProjectManagerAssignment> ProjectManagerAssignments { get; set; }
  
     
     // New DbSets for task assignments and dependencies
@@ -48,7 +46,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<TaskDependency> TaskDependencies { get; set; }
     public DbSet<TaskAttachment> TaskAttachments { get; set; }
     public DbSet<TaskStatusHistory> TaskStatusHistory { get; set; }
-    public DbSet<ProjectRequirementStatusHistory> ProjectRequirementStatusHistory { get; set; }
     public DbSet<DesignRequest> DesignRequests { get; set; }
 
     // Audit logging DbSets

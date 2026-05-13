@@ -41,6 +41,7 @@ import { APP_CONFIG } from "@/config/environment";
 import logoImageLight from "@/assets/ChatGPT Image Aug 13, 2025, 11_15_09 AM.png";
 import logoImageDark from "@/assets/whitemodlogo.png";
 import { RoleIds } from "@/constants/roles";
+import { BarChart2 } from "lucide-react";
 
 // Theme-aware logo component
 const ThemeLogo = ({ className }: { className?: string }) => {
@@ -148,60 +149,23 @@ const AnimatedNavItem = ({
   );
 };
 
-// Management Dropdown Component
+// Management Dropdown Component (Admin only)
 const ManagementDropdown = ({
   t,
   isAdmin,
-  hasPermission,
-  hasAnyRoleById,
   navigate,
   currentPath,
 }: {
   t: (key: string) => string;
   isAdmin: () => boolean;
-  hasPermission: (permissions: any) => boolean;
-  hasAnyRoleById: (roleIds: number[]) => boolean;
   navigate: (path: string) => void;
   currentPath: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Check if user has access to management features
-  const hasUsersAccess =
-    isAdmin() || hasPermission({ actions: ["users.read"] });
-  const hasDepartmentsAccess =
-    isAdmin() ||
-    hasPermission({
-      actions: ["departments.read"],
-    });
-  const hasDepartmentMembersAccess = hasAnyRoleById([
-    RoleIds.ANALYST_DEPARTMENT_MANAGER,
-    RoleIds.DEVELOPMENT_MANAGER,
-    RoleIds.QUALITY_CONTROL_MANAGER,
-    RoleIds.DESIGNER_MANAGER,
-  ]);
-  const hasCompanyEmployeesAccess = hasAnyRoleById([
-    RoleIds.ANALYST_DEPARTMENT_MANAGER,
-    RoleIds.DEVELOPMENT_MANAGER,
-    RoleIds.QUALITY_CONTROL_MANAGER,
-    RoleIds.DESIGNER_MANAGER,
-  ]);
+  if (!isAdmin()) return null;
 
-  // Don't render if user has no access to any management features
-  if (
-    !hasUsersAccess &&
-    !hasDepartmentsAccess &&
-    !hasDepartmentMembersAccess &&
-    !hasCompanyEmployeesAccess
-  ) {
-    return null;
-  }
-
-  const isActive =
-    currentPath === "/users" ||
-    currentPath === "/departments" ||
-    currentPath === "/department-members" ||
-    currentPath === "/company-employees";
+  const isActive = currentPath === "/users";
 
   return (
     <Dropdown
@@ -247,64 +211,18 @@ const ManagementDropdown = ({
         className="min-w-[200px]"
         variant="flat"
       >
-        {hasUsersAccess ? (
-          <DropdownItem
-            key="users"
-            className={clsx(
-              "transition-all duration-200",
-              currentPath === "/users" && "bg-primary/10 text-primary",
-            )}
-            startContent={<User size={16} />}
-            textValue="User Management"
-            onPress={() => navigate("/users")}
-          >
-            {t("nav.userManagement")}
-          </DropdownItem>
-        ) : null}
-        {hasDepartmentMembersAccess ? (
-          <DropdownItem
-            key="department-members"
-            className={clsx(
-              "transition-all duration-200",
-              currentPath === "/department-members" &&
-                "bg-primary/10 text-primary",
-            )}
-            startContent={<UsersIcon size={16} />}
-            textValue="Department Members"
-            onPress={() => navigate("/department-members")}
-          >
-            {t("nav.departmentMembers")}
-          </DropdownItem>
-        ) : null}
-        {hasCompanyEmployeesAccess ? (
-          <DropdownItem
-            key="company-employees"
-            className={clsx(
-              "transition-all duration-200",
-              currentPath === "/company-employees" &&
-                "bg-primary/10 text-primary",
-            )}
-            startContent={<Building2 size={16} />}
-            textValue="Company Employees"
-            onPress={() => navigate("/company-employees")}
-          >
-            {t("nav.companyEmployees")}
-          </DropdownItem>
-        ) : null}
-        {hasDepartmentsAccess ? (
-          <DropdownItem
-            key="departments"
-            className={clsx(
-              "transition-all duration-200",
-              currentPath === "/departments" && "bg-primary/10 text-primary",
-            )}
-            startContent={<Building2 size={16} />}
-            textValue="Department Management"
-            onPress={() => navigate("/departments")}
-          >
-            {t("nav.departmentManagement")}
-          </DropdownItem>
-        ) : null}
+        <DropdownItem
+          key="users"
+          className={clsx(
+            "transition-all duration-200",
+            currentPath === "/users" && "bg-primary/10 text-primary",
+          )}
+          startContent={<User size={16} />}
+          textValue="User Management"
+          onPress={() => navigate("/users")}
+        >
+          {t("nav.userManagement")}
+        </DropdownItem>
       </DropdownMenu>
     </Dropdown>
   );
@@ -313,93 +231,18 @@ const ManagementDropdown = ({
 // Project management specific nav items
 const getProjectNavItems = (
   t: (key: string) => string,
-  hasPermission: any,
-  isAdmin: any,
-  hasAnyRoleById: any,
+  isAdmin: () => boolean,
+  hasAnyRoleById: (ids: number[]) => boolean,
 ) => {
-  const baseItems = [{ label: t("nav.dashboard"), href: "/" }];
-
-  const conditionalItems = [];
-
-  // Add projects link if user has admin role or project read permission
-  if (
-    isAdmin() ||
-    hasPermission({
-      actions: ["projects.read"],
-    })
-  ) {
-    conditionalItems.push({ label: t("nav.projects"), href: "/projects" });
-  }
-
-  const adminItems: Array<{ label: string; href: string }> = [];
-
-  // Development Manager specific items
-  const developmentItems = [];
-
-  if (hasAnyRoleById([RoleIds.DEVELOPMENT_MANAGER, RoleIds.ADMINISTRATOR])) {
-    developmentItems.push({
-      label: t("nav.developmentRequirements"),
-      href: "/development-requirements",
-    });
-    // Add timeline for Development Managers
-    developmentItems.push({ label: t("nav.timeline"), href: "/timeline" });
-  }
-
-  // Designer Manager specific items - Design Requests
-  if (hasAnyRoleById([RoleIds.DESIGNER_MANAGER, RoleIds.ADMINISTRATOR])) {
-    developmentItems.push({
-      label: t("nav.designRequests"),
-      href: "/design-requests",
-    });
-  }
-
-  // Requirements specific items
-  const requirementsItems = [];
-
-  if (
-    hasAnyRoleById([
-      RoleIds.ADMINISTRATOR,
-      RoleIds.ANALYST,
-      RoleIds.ANALYST_DEPARTMENT_MANAGER,
-    ])
-  ) {
-    requirementsItems.push({
-      label: t("nav.requirements"),
-      href: "/requirements",
-    });
-  }
-
-  // Add approval requests for users who can approve requirements
-  if (
-    hasAnyRoleById([RoleIds.ADMINISTRATOR, RoleIds.ANALYST_DEPARTMENT_MANAGER])
-  ) {
-    requirementsItems.push({
-      label: t("requirements.approvalRequests"),
-      href: "/approval-requests",
-    });
-  }
-
-  // Member tasks or Team Tasks for manager
-  if (
-    hasAnyRoleById([
-      RoleIds.ANALYST_DEPARTMENT_MANAGER,
-      RoleIds.DEVELOPMENT_MANAGER,
-      RoleIds.QUALITY_CONTROL_MANAGER,
-      RoleIds.DESIGNER_MANAGER,
-      RoleIds.ADMINISTRATOR,
-    ])
-  ) {
-    developmentItems.push({ label: t("nav.teamTasks"), href: "/tasks" });
-  } else {
-    developmentItems.push({ label: t("nav.tasks"), href: "/tasks" });
-  }
+  const isAdminOrPM = isAdmin() || hasAnyRoleById([RoleIds.PROJECT_MANAGER]);
+  if (!isAdminOrPM) return [{ label: t("nav.dashboard"), href: "/" }];
 
   return [
-    ...baseItems,
-    ...conditionalItems,
-    ...requirementsItems,
-    ...developmentItems,
-    ...adminItems,
+    { label: t("nav.dashboard"), href: "/" },
+    { label: t("nav.projects"), href: "/projects" },
+    { label: "حجم العمل", href: "/workload" },
+    { label: "الموظفون", href: "/employees" },
+    { label: t("nav.timeline"), href: "/timeline" },
   ];
 };
 
@@ -415,12 +258,7 @@ export const Navbar = () => {
   const { isImpersonating, stopImpersonation } = useImpersonation();
   const { notifications, unreadCount, markAsRead, markAllAsRead, isConnected } =
     useNotifications();
-  const projectNavItems = getProjectNavItems(
-    t,
-    hasPermission,
-    isAdmin,
-    hasAnyRoleById,
-  );
+  const projectNavItems = getProjectNavItems(t, isAdmin, hasAnyRoleById);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentPath, setCurrentPath] = useState("");
@@ -640,8 +478,6 @@ export const Navbar = () => {
           >
             <ManagementDropdown
               currentPath={currentPath}
-              hasAnyRoleById={hasAnyRoleById}
-              hasPermission={hasPermission}
               isAdmin={isAdmin}
               navigate={navigate}
               t={t}
@@ -913,8 +749,8 @@ export const Navbar = () => {
             </NavbarMenuItem>
           ))}
 
-          {/* Add Management Items for Mobile */}
-          {(isAdmin() || hasPermission({ actions: ["users.read"] })) && (
+          {/* Admin-only: User Management */}
+          {isAdmin() && (
             <NavbarMenuItem
               className="animate-in slide-in-from-left duration-500"
               style={{
@@ -940,46 +776,8 @@ export const Navbar = () => {
             </NavbarMenuItem>
           )}
 
-          {(isAdmin() ||
-            hasPermission({
-              actions: ["departments.read"],
-            })) && (
-            <NavbarMenuItem
-              className="animate-in slide-in-from-left duration-500"
-              style={{
-                animationDelay: `${(projectNavItems.length + 2) * 100}ms`,
-              }}
-            >
-              <Link
-                className={clsx(
-                  "transition-all duration-300 hover:scale-105 active:scale-95",
-                  "hover:text-primary font-medium",
-                  currentPath === "/departments" &&
-                    "border-l-2 border-primary pl-2",
-                )}
-                color={
-                  currentPath === "/departments" ? "primary" : "foreground"
-                }
-                href="/departments"
-                size="lg"
-                onClick={(e) => handleNav(e, "/departments")}
-              >
-                <div className="flex items-center gap-2">
-                  <Building2 size={16} />
-                  {t("nav.departmentManagement")}
-                </div>
-              </Link>
-            </NavbarMenuItem>
-          )}
-
-          {/* Department Members - Managerial roles only */}
-          {hasAnyRoleById([
-            RoleIds.ADMINISTRATOR,
-            RoleIds.ANALYST_DEPARTMENT_MANAGER,
-            RoleIds.DEVELOPMENT_MANAGER,
-            RoleIds.QUALITY_CONTROL_MANAGER,
-            RoleIds.DESIGNER_MANAGER,
-          ]) && (
+          {/* Removed: old role-based items (departments, dept-members, company-employees) */}
+          {false && (
             <NavbarMenuItem
               className="animate-in slide-in-from-left duration-500"
               style={{
